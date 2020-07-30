@@ -46,7 +46,9 @@ import com.sumologic.client.SumoServerException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
+import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
+import io.harness.ecs.EcsContainerDetails;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.k8s.model.HelmVersion;
@@ -118,11 +120,14 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EncryptionType.class, 5123);
     kryo.register(EncryptedDataDetail.class, 5125);
     kryo.register(ImageDetails.class, 5151);
+    kryo.register(ContainerInfo.Status.class, 5076);
+    kryo.register(ContainerInfo.class, 5075);
 
     kryo.register(K8sPod.class, 7145);
     kryo.register(K8sContainer.class, 7146);
     kryo.register(AuditGlobalContextData.class, 7172);
     kryo.register(PurgeGlobalContextData.class, 7173);
+    kryo.register(EcsContainerDetails.class, 7179);
     kryo.register(OidcGrantType.class, 7318);
 
     kryo.register(ElastiGroup.class, 1025);

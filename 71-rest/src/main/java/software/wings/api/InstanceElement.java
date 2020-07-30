@@ -10,7 +10,7 @@ import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
-import software.wings.cloudprovider.aws.EcsContainerDetails;
+import io.harness.ecs.EcsContainerDetails;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.VerificationElement;

@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.aws;
+package io.harness.ecs;
 
 import lombok.Builder;
 import lombok.Data;

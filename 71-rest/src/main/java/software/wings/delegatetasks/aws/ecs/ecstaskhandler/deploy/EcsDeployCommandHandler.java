@@ -11,6 +11,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
@@ -21,7 +22,6 @@ import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;

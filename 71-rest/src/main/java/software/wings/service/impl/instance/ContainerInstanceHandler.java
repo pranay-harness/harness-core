@@ -540,7 +540,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
         boolean isControllerNamesRetrievable = emptyIfNull(containerDeploymentInfo.getContainerInfoList())
                                                    .stream()
-                                                   .map(software.wings.cloudprovider.ContainerInfo::getWorkloadName)
+                                                   .map(io.harness.container.ContainerInfo::getWorkloadName)
                                                    .anyMatch(EmptyPredicate::isNotEmpty);
         /*
          We need controller names only if release name is not set

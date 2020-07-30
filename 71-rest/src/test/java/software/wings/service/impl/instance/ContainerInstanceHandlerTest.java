@@ -53,6 +53,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
@@ -96,7 +97,6 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.impl.ContainerMetadata;

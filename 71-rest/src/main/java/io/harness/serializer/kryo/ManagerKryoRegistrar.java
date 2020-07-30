@@ -412,8 +412,6 @@ import software.wings.beans.yaml.GitPullResult;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.YamlType;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
-import software.wings.cloudprovider.ContainerInfo;
-import software.wings.cloudprovider.aws.EcsContainerDetails;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -1131,8 +1129,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GitPushResult.class, 5210);
     kryo.register(YamlType.class, 5211);
     kryo.register(CodeDeployDeploymentInfo.class, 5077);
-    kryo.register(ContainerInfo.Status.class, 5076);
-    kryo.register(ContainerInfo.class, 5075);
+
     kryo.register(BuildSourceExecutionResponse.class, 5620);
     kryo.register(BuildSourceParameters.BuildSourceRequestType.class, 5621);
     kryo.register(BuildSourceParameters.class, 5618);
@@ -1476,7 +1473,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GCSHelmRepoConfig.class, 7176);
     kryo.register(JiraCustomFieldValue.class, 7177);
     kryo.register(AwsSecretsManagerConfig.class, 7178);
-    kryo.register(EcsContainerDetails.class, 7179);
     kryo.register(LocalEncryptionConfig.class, 7180);
     kryo.register(K8sTrafficSplitTaskParameters.class, 7181);
     kryo.register(K8sTrafficSplitResponse.class, 7182);

@@ -13,6 +13,14 @@
             <artifactId>scribejava-apis</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>me.snowdrop</groupId>
             <artifactId>istio-client-uberjar</artifactId>
         </dependency>

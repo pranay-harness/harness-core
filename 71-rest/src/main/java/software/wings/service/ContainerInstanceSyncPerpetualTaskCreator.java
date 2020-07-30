@@ -218,7 +218,7 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
       Set<String> controllers =
           emptyIfNull(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())
               .stream()
-              .map(software.wings.cloudprovider.ContainerInfo::getWorkloadName)
+              .map(io.harness.container.ContainerInfo::getWorkloadName)
               .filter(EmptyPredicate::isNotEmpty)
               .collect(Collectors.toSet());
       if (isNotEmpty(controllers)) {

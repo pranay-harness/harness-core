@@ -1,11 +1,11 @@
 package software.wings.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.container.ContainerInfo;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.Label;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 import java.util.List;

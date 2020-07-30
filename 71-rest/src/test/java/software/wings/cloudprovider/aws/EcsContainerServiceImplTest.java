@@ -58,6 +58,8 @@ import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
+import io.harness.ecs.EcsContainerDetails;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.junit.Before;
@@ -70,7 +72,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Arrays;

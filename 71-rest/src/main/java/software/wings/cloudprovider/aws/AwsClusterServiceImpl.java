@@ -15,6 +15,7 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import io.harness.container.ContainerInfo;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -22,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ClusterConfiguration;
-import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;

@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
@@ -21,7 +22,6 @@ import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.service.intfc.SettingsService;

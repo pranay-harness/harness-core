@@ -1,11 +1,11 @@
-package software.wings.cloudprovider;
+package io.harness.container;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.ecs.EcsContainerDetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.cloudprovider.aws.EcsContainerDetails;
 
 /**
  * Created by brett on 4/6/17

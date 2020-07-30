@@ -5,12 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.sm.ContainerHelper.generateInstanceDetails;
 
 import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;

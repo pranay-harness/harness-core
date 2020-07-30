@@ -29,6 +29,7 @@ import com.google.common.io.Resources;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutUndoCommand;
 import io.harness.k8s.kubectl.Utils;
@@ -55,7 +56,6 @@ import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;

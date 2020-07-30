@@ -37,6 +37,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -61,7 +62,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;

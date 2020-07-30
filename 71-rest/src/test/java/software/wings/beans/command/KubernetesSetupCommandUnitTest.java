@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.KubernetesConfig;
@@ -52,7 +53,6 @@ import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceSpecification;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
 
 import java.time.Clock;
 import java.util.Arrays;

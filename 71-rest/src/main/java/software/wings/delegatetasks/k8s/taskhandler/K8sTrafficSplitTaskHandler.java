@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.Kind;
@@ -34,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.k8s.istio.IstioDestinationWeight;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
