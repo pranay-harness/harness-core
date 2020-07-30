@@ -28,7 +28,6 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFil
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
-import software.wings.graphql.datafetcher.ce.recommendation.dto.QLWorkloadTypeFilter;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
@@ -183,8 +182,8 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
       }
       if (filter.getWorkloadType() != null) {
         field = query.field(K8sWorkloadRecommendationKeys.workloadType);
-        QLWorkloadTypeFilter workloadTypeFilter = filter.getWorkloadType();
-        utils.setEnumFilter(field, workloadTypeFilter);
+        QLIdFilter workloadTypeFilter = filter.getWorkloadType();
+        utils.setIdFilter(field, workloadTypeFilter);
       }
     }
   }

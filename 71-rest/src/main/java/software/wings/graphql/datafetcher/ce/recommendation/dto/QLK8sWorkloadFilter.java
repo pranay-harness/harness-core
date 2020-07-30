@@ -10,5 +10,5 @@ public class QLK8sWorkloadFilter {
   QLIdFilter cluster;
   QLIdFilter namespace;
   QLIdFilter workloadName;
-  QLWorkloadTypeFilter workloadType;
+  QLIdFilter workloadType;
 }

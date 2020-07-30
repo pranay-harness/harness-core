@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.ce.recommendation;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.graphql.datafetcher.ce.recommendation.dto.QLWorkloadType.Deployment;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -26,13 +25,10 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFil
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
-import software.wings.graphql.datafetcher.ce.recommendation.dto.QLWorkloadType;
-import software.wings.graphql.datafetcher.ce.recommendation.dto.QLWorkloadTypeFilter;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
-import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.security.UserThreadLocal;
@@ -140,10 +136,8 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
             .workloadName(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"my-nginx"}).build())
             .build(),
         QLK8sWorkloadFilter.builder()
-            .workloadType(QLWorkloadTypeFilter.builder()
-                              .operator(QLEnumOperator.EQUALS)
-                              .values(new QLWorkloadType[] {Deployment})
-                              .build())
+            .workloadType(
+                QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"Deployment"}).build())
             .build());
     QLK8SWorkloadRecommendationConnection qlk8SWorkloadRecommendationConnection =
         k8sWorkloadRecommendationsDataFetcher.fetchConnection(filters, DUMMY_PAGE_QUERY_PARAMS, null);

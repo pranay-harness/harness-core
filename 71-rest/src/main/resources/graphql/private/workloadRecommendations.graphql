@@ -7,7 +7,7 @@ input WorkloadFilter {
   cluster: IdFilter
   namespace: IdFilter
   workloadName: IdFilter
-  workloadType: WorkloadTypeFilter
+  workloadType: IdFilter
 }
 
 type WorkloadRecommendationConnection {
