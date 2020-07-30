@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static io.harness.network.Http.connectableHttpUrl;
+import static io.harness.network.Http.connectableJenkinsHttpUrl;
 import static io.harness.validation.Validator.equalCheck;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.JobDetails.JobParameter;
@@ -188,7 +188,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       }
     }
 
-    if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
+    if (!connectableJenkinsHttpUrl(jenkinsConfig.getJenkinsUrl())) {
       throw new ArtifactServerException("Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl(), USER);
     }
 
