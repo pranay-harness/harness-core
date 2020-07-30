@@ -30,6 +30,10 @@ RUN chgrp harness /home/harness
 
 USER harness
 
+RUN mkdir -p /home/harness/bin
+
+ENV PATH="/home/harness/bin:${PATH}"
+
 WORKDIR /opt/harness-delegate
 
 RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
