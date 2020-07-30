@@ -79,6 +79,7 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -1516,15 +1517,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowExecution savedWorkflowExecution;
     if (shouldNotQueueWorkflow(workflowExecution, workflow)) {
+      // set startTs before starting the actual execution, because after the starting event
+      // we can have FAILED status in stateExecutionInstance (ex.: ApprovalState)
+      setWorkflowExecutionStartTs(workflowExecution);
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
-      // check if the first state is APPROVAL state => update startTs
-      boolean isApproval = APPROVAL.name().equals(stateExecutionInstance.getStateType())
-          || APPROVAL_RESUME.name().equals(stateExecutionInstance.getStateType());
-      if (isApproval && workflowExecution.getStartTs() == null) {
-        setWorkflowExecutionStartTs(workflowExecution);
-      } else {
-        updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
-      }
+      updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING, false);
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
       if (workflowExecution.getWorkflowType() == PIPELINE) {
@@ -1549,7 +1546,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                          .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
                                          .filter(WorkflowExecutionKeys.uuid, workflowExecution.getUuid())
                                          .field(WorkflowExecutionKeys.status)
-                                         .in(Collections.singletonList(PAUSED));
+                                         .in(ImmutableList.of(NEW, QUEUED, PREPARING));
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis());
@@ -2023,16 +2020,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     lastGoodReleaseInfo(workflowElement, workflowExecution);
   }
   @Override
-  public void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status) {
+  public void updateStartStatus(
+      String appId, String workflowExecutionId, ExecutionStatus status, boolean shouldUpdateStartTs) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecutionKeys.appId, appId)
                                          .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
                                          .field(WorkflowExecutionKeys.status)
                                          .in(asList(NEW, QUEUED, PREPARING));
 
-    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                        .set(WorkflowExecutionKeys.status, status)
-                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis());
+    UpdateOperations<WorkflowExecution> updateOps;
+    if (shouldUpdateStartTs) {
+      updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                      .set(WorkflowExecutionKeys.status, status)
+                      .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis());
+    } else {
+      updateOps =
+          wingsPersistence.createUpdateOperations(WorkflowExecution.class).set(WorkflowExecutionKeys.status, status);
+    }
 
     wingsPersistence.update(query, updateOps);
   }
