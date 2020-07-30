@@ -8,6 +8,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassw
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
+import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -27,7 +28,7 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void castToKubernetesDelegateCredential() {
+  public void castToKubernetesDelegateCredentialTest() {
     String delegateName = "testDeleagete";
     KubernetesDelegateDetails delegateCredential =
         KubernetesDelegateDetails.builder().delegateName(delegateName).build();
@@ -39,10 +40,30 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
     }
   }
 
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void castManualCredentialToKubernetesDelegateCredentialTest() {
+    String delegateName = "testDeleagete";
+    String masterURL = "masterURL";
+    String userName = "userName";
+    String password = "password";
+    String cacert = "cacert";
+    K8sUserNamePassword k8sUserNamePassword =
+        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
+    KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
+                                                            .masterUrl(masterURL)
+                                                            .authType(KubernetesAuthType.USER_PASSWORD)
+                                                            .auth(k8sUserNamePassword)
+                                                            .build();
+    KubernetesDelegateDetails delegateDetails =
+        kubernetesConfigCastHelper.castToKubernetesDelegateCredential(kubernetesClusterDetails);
+  }
+
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void castToManualKubernetesCredentials() {
+  public void castToManualKubernetesCredentialsTest() {
     String masterURL = "masterURL";
     String userName = "userName";
     String password = "password";
@@ -60,5 +81,16 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
     } catch (ClassCastException ex) {
       assertThat(false).isTrue();
     }
+  }
+
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void castDelegateCredsToManualKubernetesCredentialsTest() {
+    String delegateName = "testDeleagete";
+    KubernetesDelegateDetails delegateCredential =
+        KubernetesDelegateDetails.builder().delegateName(delegateName).build();
+    KubernetesClusterDetails kubernetesClusterConfig =
+        kubernetesConfigCastHelper.castToManualKubernetesCredentials(delegateCredential);
   }
 }

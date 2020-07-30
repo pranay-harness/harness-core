@@ -1,7 +1,6 @@
 package io.harness.connector.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.connector.entities.embedded.ConnectivityStatus;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -47,7 +46,6 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
-  @NotEmpty ConnectivityStatus status;
 
   @NotNull @Singular @Size(max = 128) List<String> tags;
   // todo deepak: Add createdBy once user entity is decided

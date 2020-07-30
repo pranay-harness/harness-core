@@ -38,7 +38,7 @@ public class ProjectScopeHelper {
   }
 
   public List<String> getProjectIdentifiers(List<Connector> connectors) {
-    if (connectors.isEmpty()) {
+    if (isEmpty(connectors)) {
       return Collections.emptyList();
     }
     return connectors.stream().map(Connector::getProjectIdentifier).collect(Collectors.toList());

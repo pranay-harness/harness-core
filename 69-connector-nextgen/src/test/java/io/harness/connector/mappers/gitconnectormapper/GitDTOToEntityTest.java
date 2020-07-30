@@ -77,19 +77,15 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                         .authorName("authorName")
                                                         .commitMessage("commitMessage")
                                                         .build();
-    GitSyncConfig gitSyncConfig =
-        GitSyncConfig.builder().isSyncEnabled(true).customCommitAttributes(customCommitAttributes).build();
     GitSSHAuthenticationDTO httpAuthentication =
         GitSSHAuthenticationDTO.builder().gitConnectionType(ACCOUNT).url(url).encryptedSshKey(sshKeyReference).build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitSyncConfig(gitSyncConfig).gitAuthType(SSH).gitAuth(httpAuthentication).build();
+    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().gitAuthType(SSH).gitAuth(httpAuthentication).build();
     GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
-    assertThat(gitConfig.isSupportsGitSync()).isTrue();
+    assertThat(gitConfig.isSupportsGitSync()).isFalse();
     assertThat(gitConfig.getUrl()).isEqualTo(url);
     assertThat(gitConfig.getConnectionType()).isEqualTo(ACCOUNT);
     assertThat(gitConfig.getAuthType()).isEqualTo(SSH);
-    assertThat(gitConfig.getCustomCommitAttributes()).isEqualTo(customCommitAttributes);
     GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
     assertThat(gitSSHAuthentication.getSshKeyReference()).isEqualTo(sshKeyReference);
   }

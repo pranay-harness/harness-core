@@ -5,6 +5,7 @@ import static io.harness.connector.entities.Connector.Scope.ORGANIZATION;
 import static io.harness.connector.entities.Connector.Scope.PROJECT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -52,7 +53,8 @@ public class ConnectorMapper {
     return connector;
   }
 
-  private Connector.Scope getScopeFromConnectorDTO(ConnectorRequestDTO connectorRequestDTO) {
+  @VisibleForTesting
+  Connector.Scope getScopeFromConnectorDTO(ConnectorRequestDTO connectorRequestDTO) {
     if (isNotBlank(connectorRequestDTO.getProjectIdentifer())) {
       return PROJECT;
     }

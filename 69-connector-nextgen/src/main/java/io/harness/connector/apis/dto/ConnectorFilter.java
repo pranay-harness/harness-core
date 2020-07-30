@@ -1,7 +1,6 @@
 package io.harness.connector.apis.dto;
 
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.opencensus.tags.Tags;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,7 +14,7 @@ public class ConnectorFilter {
   String orgId;
   ConnectorType type;
   // todo: @deepak Add tags here
-  List<Tags> tag;
+  List<String> tag;
   Long lastActivity;
   String name;
 }
