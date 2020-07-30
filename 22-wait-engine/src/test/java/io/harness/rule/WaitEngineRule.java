@@ -76,14 +76,13 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(WaitEngineRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
-            //            .add(OrchestrationTestKryoRegistrar.class)
             .build();
       }
     });
 
     modules.add(mongoTypeModule(annotations));
 
-    modules.addAll(WaiterModule.getInstance().cumulativeDependencies());
+    modules.add(WaiterModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override
@@ -109,7 +108,7 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       }
     });
 
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new VersionModule());
     modules.add(new ProviderModule() {
       @Provides

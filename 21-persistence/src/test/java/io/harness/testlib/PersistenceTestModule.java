@@ -8,6 +8,6 @@ import io.harness.testlib.module.TestMongoModule;
 public abstract class PersistenceTestModule extends PersistenceModule {
   @Override
   protected Module getMongoModule() {
-    return new TestMongoModule();
+    return TestMongoModule.getInstance();
   }
 }

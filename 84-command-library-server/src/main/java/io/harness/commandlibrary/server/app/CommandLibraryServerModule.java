@@ -6,7 +6,6 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -18,8 +17,6 @@ import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
-import io.harness.delegate.beans.DelegateAsyncTaskResponse;
-import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -101,11 +98,6 @@ public class CommandLibraryServerModule extends AbstractModule {
     } catch (IOException e) {
       throw new UnexpectedException("Could not load versionInfo.yaml", e);
     }
-
-    MapBinder<Class, String> morphiaClasses =
-        MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
-    morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
-    morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
   }
 
   private void bindCommandArchiveHandlers() {

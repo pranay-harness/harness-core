@@ -4,13 +4,10 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
-import io.harness.delegate.beans.DelegateAsyncTaskResponse;
-import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -169,9 +166,5 @@ public class VerificationServiceModule extends AbstractModule {
     } catch (IOException e) {
       throw new RuntimeException("Could not load versionInfo.yaml", e);
     }
-    MapBinder<Class, String> morphiaClasses =
-        MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
-    morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
-    morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
   }
 }

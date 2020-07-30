@@ -2,7 +2,8 @@ package io.harness.testlib.module;
 
 import static io.harness.govern.Switch.unhandled;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -11,7 +12,6 @@ import com.google.inject.name.Named;
 
 import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
-import io.harness.govern.DependencyModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.mongo.index.migrator.Migrator;
@@ -21,10 +21,21 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
 
-import java.util.Set;
+import java.util.Map;
 
 @Slf4j
-public class TestMongoModule extends DependencyModule implements MongoRuleMixin {
+public class TestMongoModule extends AbstractModule implements MongoRuleMixin {
+  private static volatile TestMongoModule instance;
+
+  public static TestMongoModule getInstance() {
+    if (instance == null) {
+      instance = new TestMongoModule();
+    }
+    return instance;
+  }
+
+  private TestMongoModule() {}
+
   @Provides
   @Named("databaseName")
   @Singleton
@@ -91,9 +102,11 @@ public class TestMongoModule extends DependencyModule implements MongoRuleMixin 
     return datastore;
   }
 
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of();
+  @Provides
+  @Singleton
+  @Named("morphiaClasses")
+  Map<Class, String> morphiaCustomCollectionNames() {
+    return ImmutableMap.<Class, String>builder().build();
   }
 
   @Override

@@ -53,7 +53,7 @@ public class CVNextGenCommonTestRule implements InjectorRuleMixin, MethodRule, M
 
     });
     modules.add(TimeModule.getInstance());
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new CVNextGenCommonsServiceModule());
     return modules;
   }

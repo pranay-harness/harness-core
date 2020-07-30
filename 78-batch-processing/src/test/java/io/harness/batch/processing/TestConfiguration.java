@@ -29,7 +29,7 @@ public class TestConfiguration implements MongoRuleMixin {
 
   @Bean
   TestMongoModule testMongoModule() {
-    return new TestMongoModule();
+    return TestMongoModule.getInstance();
   }
 
   @Bean

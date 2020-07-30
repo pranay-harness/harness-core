@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -13,6 +14,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
@@ -20,6 +22,8 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
@@ -59,6 +63,7 @@ import software.wings.service.intfc.DelegateProfileService;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
@@ -117,6 +122,18 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .build();
+      }
+    });
+
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerQueueModule());

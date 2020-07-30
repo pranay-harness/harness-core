@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
@@ -26,7 +27,9 @@ import org.mongodb.morphia.mapping.DefaultCreator;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -62,6 +65,13 @@ public class ApiServiceRule implements MethodRule, InjectorRuleMixin {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return Collections.emptyMap();
       }
     });
     modules.add(MorphiaModule.getInstance());

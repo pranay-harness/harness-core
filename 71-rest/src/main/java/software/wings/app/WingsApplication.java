@@ -16,6 +16,7 @@ import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
 import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -28,6 +29,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
@@ -62,6 +64,8 @@ import io.harness.configuration.DeployMode;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.perpetualtask.DataCollectionPerpetualTaskServiceClient;
 import io.harness.delay.DelayEventListener;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -351,6 +355,18 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .build();
+      }
+    });
+
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerQueueModule());

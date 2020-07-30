@@ -83,7 +83,7 @@ public class OrchestrationBeansRule implements MethodRule, InjectorRuleMixin, Mo
         });
       }
     });
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(TestMongoModule.getInstance());
     modules.addAll(new OrchestrationBeansModule().cumulativeDependencies());
     return modules;
   }

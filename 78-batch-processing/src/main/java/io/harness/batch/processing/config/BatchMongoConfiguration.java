@@ -40,6 +40,6 @@ public class BatchMongoConfiguration {
   @Bean
   @Profile("!test")
   public MongoModule mongoModule() {
-    return new MongoModule(true);
+    return MongoModule.getInstance();
   }
 }

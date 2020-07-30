@@ -4,6 +4,7 @@ import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -12,6 +13,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.MetricRegistry;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
@@ -28,6 +30,8 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.commandlibrary.server.resources.CommandStoreResource;
 import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticationFilter;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -57,6 +61,7 @@ import software.wings.security.ThreadLocalUserProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -133,7 +138,18 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(MongoModule.getInstance());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .build();
+      }
+    });
 
     modules.add(new CommandLibraryServerModule(configuration));
     modules.add(new CommandLibrarySharedModule(false));
