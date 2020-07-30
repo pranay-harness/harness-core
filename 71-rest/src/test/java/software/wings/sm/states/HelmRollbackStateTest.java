@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
@@ -15,7 +16,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.container.HelmChartSpecification;
-import software.wings.beans.container.ImageDetails;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;

@@ -15,7 +15,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,13 +30,11 @@ import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-import io.harness.oidc.model.OidcTokenRequestData;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,10 +57,10 @@ import java.util.List;
 import java.util.Map;
 
 public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
-  @Mock private OidcTokenRetriever oidcTokenRetriever;
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock LogCallback logCallback;
   @Mock private EncryptionService encryptionService;
+  @Spy @InjectMocks private OidcTokenRetriever oidcTokenRetriever;
   @Spy @InjectMocks ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   @Before
@@ -127,49 +124,6 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     KubernetesConfig kubeConfig = clusterConfig.createKubernetesConfig("namespace");
     String configFileContent = containerDeploymentDelegateHelper.getConfigFileContent(kubeConfig);
     assertThat(expected).isEqualTo(configFileContent);
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testRetrieveOpenIdAccessToken_ExceptionTest() throws Exception {
-    doThrow(new InvalidRequestException("abc")).when(oidcTokenRetriever).getAccessToken(any());
-
-    try {
-      containerDeploymentDelegateHelper.retrieveOpenIdAccessToken(OidcTokenRequestData.builder().build());
-    } catch (Exception e) {
-      assertThat(e instanceof InvalidRequestException).isTrue();
-      assertThat(e.getMessage()).isEqualTo("Failed to fetch OpenId Access Token. Invalid request: abc");
-    }
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testGetOidcIdToken() throws Exception {
-    OpenIdOAuth2AccessToken accessToken = mock(OpenIdOAuth2AccessToken.class);
-    doReturn("oidcIdToken").when(accessToken).getOpenIdToken();
-    doReturn(accessToken).when(oidcTokenRetriever).getAccessToken(any());
-
-    KubernetesClusterConfig clusterConfig = KubernetesClusterConfig.builder()
-                                                .authType(OIDC)
-                                                .accountId("accId")
-                                                .oidcClientId("clientId".toCharArray())
-                                                .oidcGrantType(OidcGrantType.password)
-                                                .oidcIdentityProviderUrl("url")
-                                                .oidcUsername("user")
-                                                .oidcPassword("pwd".toCharArray())
-                                                .masterUrl("masterUrl")
-                                                .oidcSecret("secret".toCharArray())
-                                                .build();
-
-    KubernetesConfig kubeConfig = clusterConfig.createKubernetesConfig("namespace");
-    String oidcIdToken = containerDeploymentDelegateHelper.getOidcIdToken(kubeConfig);
-    assertThat(oidcIdToken).isEqualTo("oidcIdToken");
-
-    doReturn(null).when(oidcTokenRetriever).getAccessToken(any());
-    oidcIdToken = containerDeploymentDelegateHelper.getOidcIdToken(kubeConfig);
-    assertThat(oidcIdToken).isEqualTo(null);
   }
 
   @Test

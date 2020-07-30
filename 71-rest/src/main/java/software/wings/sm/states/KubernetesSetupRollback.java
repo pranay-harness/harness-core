@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.k8s.model.ImageDetails;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
@@ -27,7 +28,6 @@ import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
-import software.wings.beans.container.ImageDetails;
 import software.wings.sm.ExecutionContext;
 
 /**

@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import com.esotericsoftware.kryo.NotNull;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
@@ -23,7 +24,6 @@ import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.K8ExecuteCommandTaskParams;
 import software.wings.delegatetasks.citasks.ExecuteCommandTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;

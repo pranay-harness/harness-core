@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -38,7 +39,6 @@ import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilder;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;

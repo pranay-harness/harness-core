@@ -11,6 +11,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.KubernetesConvention;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -31,7 +32,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.KubernetesConvention;
 
 import java.util.List;
 /**

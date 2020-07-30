@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -22,7 +23,6 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.ci.CIK8CleanupTaskParams;
 import software.wings.delegatetasks.citasks.CICleanupTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;

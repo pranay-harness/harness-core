@@ -336,7 +336,6 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.EcsSteadyStateCheckParams;
 import software.wings.beans.container.EcsSteadyStateCheckResponse;
 import software.wings.beans.container.HelmChartSpecification;
-import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.IstioConfig;
 import software.wings.beans.container.KubernetesBlueGreenConfig;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -999,7 +998,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EcsSteadyStateCheckParams.class, 5370);
     kryo.register(EcsSteadyStateCheckResponse.class, 5371);
     kryo.register(HelmChartSpecification.class, 5269);
-    kryo.register(ImageDetails.class, 5151);
+
     kryo.register(IstioConfig.class, 5466);
     kryo.register(KubernetesBlueGreenConfig.class, 5364);
     kryo.register(KubernetesContainerTask.class, 5179);

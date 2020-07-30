@@ -1,12 +1,22 @@
 package io.harness.k8s.oidc;
 
 import static io.harness.k8s.K8sConstants.OPEN_ID;
+import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
+import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.oidc.model.OidcTokenRequestData;
 import io.harness.rule.Owner;
@@ -107,5 +117,46 @@ public class OidcTokenRetrieverTest extends CategoryTest {
         service, OidcTokenRequestData.builder().grantType(OidcGrantType.client_credentials.name()).build());
     Mockito.verify(service, Mockito.times(1)).getAccessTokenClientCredentialsGrant();
     Mockito.verify(service, Mockito.never()).getAccessTokenPasswordGrant(Matchers.any(), Matchers.any());
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testRetrieveOpenIdAccessToken_ExceptionTest() throws Exception {
+    doThrow(new InvalidRequestException("abc")).when(spyOidcTokenRetriever).getAccessToken(any());
+
+    try {
+      spyOidcTokenRetriever.retrieveOpenIdAccessToken(OidcTokenRequestData.builder().build());
+    } catch (Exception e) {
+      assertThat(e instanceof InvalidRequestException).isTrue();
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetOidcIdToken() throws Exception {
+    OpenIdOAuth2AccessToken accessToken = mock(OpenIdOAuth2AccessToken.class);
+    doReturn("oidcIdToken").when(accessToken).getOpenIdToken();
+    doReturn(accessToken).when(spyOidcTokenRetriever).getAccessToken(any());
+
+    KubernetesConfig kubeConfig = KubernetesConfig.builder()
+                                      .authType(OIDC)
+                                      .accountId("accId")
+                                      .oidcClientId("clientId".toCharArray())
+                                      .oidcGrantType(OidcGrantType.password)
+                                      .oidcIdentityProviderUrl("url")
+                                      .oidcUsername("user")
+                                      .oidcPassword("pwd".toCharArray())
+                                      .masterUrl("masterUrl")
+                                      .oidcSecret("secret".toCharArray())
+                                      .build();
+
+    String oidcIdToken = spyOidcTokenRetriever.getOidcIdToken(kubeConfig);
+    assertThat(oidcIdToken).isEqualTo("oidcIdToken");
+
+    doReturn(null).when(spyOidcTokenRetriever).getAccessToken(any());
+    oidcIdToken = spyOidcTokenRetriever.getOidcIdToken(kubeConfig);
+    assertThat(oidcIdToken).isEqualTo(null);
   }
 }

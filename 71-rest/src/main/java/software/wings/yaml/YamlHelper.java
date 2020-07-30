@@ -4,9 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
 import io.harness.eraro.ErrorCode;
@@ -14,6 +11,8 @@ import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+import io.harness.yaml.YamlRepresenter;
+import io.harness.yaml.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -32,8 +31,6 @@ import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.GitSyncWebhook.GitSyncWebhookKeys;
 
-import java.io.BufferedReader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -94,17 +91,6 @@ public class YamlHelper {
     return representer;
   }
 
-  public static DumperOptions getDumperOptions() {
-    DumperOptions dumpOpts = new DumperOptions();
-    // dumpOpts.setPrettyFlow(true);
-    dumpOpts.setPrettyFlow(false); // keeps the empty square brackets together
-    dumpOpts.setDefaultFlowStyle(FlowStyle.BLOCK);
-    dumpOpts.setDefaultScalarStyle(ScalarStyle.PLAIN);
-    dumpOpts.setIndent(2);
-
-    return dumpOpts;
-  }
-
   public static RestResponse<YamlPayload> getYamlRestResponse(
       YamlGitService yamlGitSyncService, String entityId, String accountId, BaseYaml theYaml, String payloadName) {
     RestResponse rr = new RestResponse<>();
@@ -154,58 +140,8 @@ public class YamlHelper {
   }
 
   public static String toYamlString(BaseYaml theYaml) {
-    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    return cleanupYaml(yaml.dump(theYaml));
-  }
-
-  public static String cleanupYaml(String yaml) {
-    // instead of removing the first line - we should remove any line that starts with two exclamation points
-    return cleanUpDoubleExclamationLines(yaml);
-  }
-
-  private static String cleanUpDoubleExclamationLines(String content) {
-    StringBuilder sb = new StringBuilder();
-
-    BufferedReader bufReader = new BufferedReader(new StringReader(content));
-
-    String line;
-
-    try {
-      while ((line = bufReader.readLine()) != null) {
-        String trimmedLine = line.trim();
-
-        // check for line starting with two exclamation points
-        if (trimmedLine.length() >= 2 && trimmedLine.charAt(0) == '!' && trimmedLine.charAt(1) == '!') {
-          continue;
-        } else {
-          // we need to remove lines BUT we have to add the dash to the NEXT line!
-          if (trimmedLine.length() >= 4 && trimmedLine.charAt(0) == '-' && trimmedLine.charAt(1) == ' '
-              && trimmedLine.charAt(2) == '!' && trimmedLine.charAt(3) == '!') {
-            line = bufReader.readLine();
-            if (line != null) {
-              char[] chars = line.toCharArray();
-
-              for (int i = 0; i < chars.length; i++) {
-                if (chars[i] != ' ') {
-                  if (i >= 2) {
-                    chars[i - 2] = '-';
-                    sb.append(new String(chars)).append('\n');
-                    break;
-                  }
-                }
-              }
-            }
-            continue;
-          }
-        }
-
-        sb.append(line).append('\n');
-      }
-    } catch (Exception e) {
-      logger.error("", e);
-    }
-
-    return sb.toString();
+    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlUtils.getDumperOptions());
+    return YamlUtils.cleanupYaml(yaml.dump(theYaml));
   }
 
   public static <E> List<E> findDifferenceBetweenLists(List<E> itemsA, List<E> itemsB) {

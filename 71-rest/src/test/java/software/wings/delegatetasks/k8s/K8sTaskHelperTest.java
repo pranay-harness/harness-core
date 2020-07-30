@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
@@ -51,7 +52,6 @@ import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
-import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import com.google.common.base.Charsets;
@@ -69,6 +69,7 @@ import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -126,7 +127,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
 import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
-import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import wiremock.com.google.common.collect.Lists;

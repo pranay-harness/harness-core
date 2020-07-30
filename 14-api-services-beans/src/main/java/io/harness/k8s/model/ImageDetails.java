@@ -1,4 +1,4 @@
-package software.wings.beans.container;
+package io.harness.k8s.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

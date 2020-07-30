@@ -37,9 +37,9 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.k8s.KubernetesHelperService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import software.wings.service.impl.KubernetesHelperService;
 
 import java.util.ArrayList;
 import java.util.List;

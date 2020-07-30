@@ -1,8 +1,8 @@
 package software.wings.beans.command;
 
+import io.harness.k8s.model.ImageDetails;
 import lombok.Data;
 import software.wings.beans.container.ContainerTask;
-import software.wings.beans.container.ImageDetails;
 
 @Data
 public class ContainerSetupParams {

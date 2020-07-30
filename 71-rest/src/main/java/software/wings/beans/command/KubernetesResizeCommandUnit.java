@@ -1,16 +1,16 @@
 package software.wings.beans.command;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
+import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
+import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
+import static io.harness.k8s.KubernetesConvention.getServiceNameFromControllerName;
+import static io.harness.k8s.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
-import static software.wings.service.impl.KubernetesHelperService.printVirtualServiceRouteWeights;
-import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
-import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
-import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
 
 import com.google.inject.Inject;
 

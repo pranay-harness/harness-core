@@ -26,6 +26,7 @@ import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PR
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
+import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -54,7 +55,6 @@ import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHA
 import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;

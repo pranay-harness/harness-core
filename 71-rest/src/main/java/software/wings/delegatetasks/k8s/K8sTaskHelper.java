@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.kubectl.GetJobCommand.getPrintableCommand;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
@@ -45,7 +46,6 @@ import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHa
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static software.wings.sm.states.k8s.K8sApplyState.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
-import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -70,6 +70,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -144,7 +145,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
 import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
-import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 

@@ -7,9 +7,9 @@ import static io.harness.common.CIExecutionConstants.LITE_ENGINE_IMAGE_NAME;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_IMAGE_TAG;
 import static io.harness.govern.Switch.unhandled;
 
+import io.harness.k8s.model.ImageDetails;
 import lombok.experimental.UtilityClass;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
-import software.wings.beans.container.ImageDetails;
 
 /**
  * Provides image details for internally used containers

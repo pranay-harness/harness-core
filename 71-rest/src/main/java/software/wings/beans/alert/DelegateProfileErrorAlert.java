@@ -2,10 +2,10 @@ package software.wings.beans.alert;
 
 import static java.lang.String.format;
 
+import io.harness.k8s.KubernetesConvention;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.utils.KubernetesConvention;
 
 @Data
 @Builder

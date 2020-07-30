@@ -135,29 +135,6 @@ public class ContainerDeploymentDelegateHelper {
     config.setClientKey(getEncodedChars(config.getClientKey()));
   }
 
-  public String getOidcIdToken(KubernetesConfig config) {
-    OidcTokenRequestData oidcTokenRequestData = createOidcTokenRequestData(config);
-
-    OpenIdOAuth2AccessToken openIdOAuth2AccessToken = retrieveOpenIdAccessToken(oidcTokenRequestData);
-    if (openIdOAuth2AccessToken != null) {
-      return openIdOAuth2AccessToken.getOpenIdToken();
-    }
-
-    return null;
-  }
-
-  private OidcTokenRequestData createOidcTokenRequestData(KubernetesConfig config) {
-    return OidcTokenRequestData.builder()
-        .providerUrl(config.getOidcIdentityProviderUrl())
-        .clientId(config.getOidcClientId() == null ? null : new String(config.getOidcClientId()))
-        .grantType(config.getOidcGrantType().name())
-        .clientSecret(config.getOidcSecret() == null ? null : new String(config.getOidcSecret()))
-        .username(config.getOidcUsername())
-        .password(config.getOidcPassword() == null ? null : new String(config.getOidcPassword()))
-        .scope(config.getOidcScopes())
-        .build();
-  }
-
   public String getConfigFileContent(KubernetesConfig config) {
     encodeCharsIfNeeded(config);
 
@@ -166,7 +143,7 @@ public class ContainerDeploymentDelegateHelper {
     }
 
     if (KubernetesClusterAuthType.OIDC == config.getAuthType()) {
-      OidcTokenRequestData oidcTokenRequestData = createOidcTokenRequestData(config);
+      OidcTokenRequestData oidcTokenRequestData = oidcTokenRetriever.createOidcTokenRequestData(config);
       return generateKubeConfigStringForOpenID(config, oidcTokenRequestData);
     }
 
@@ -191,7 +168,8 @@ public class ContainerDeploymentDelegateHelper {
 
   @VisibleForTesting
   String generateKubeConfigStringForOpenID(KubernetesConfig config, OidcTokenRequestData oidcTokenRequestData) {
-    OpenIdOAuth2AccessToken openIdOAuth2AccessToken = retrieveOpenIdAccessToken(oidcTokenRequestData);
+    OpenIdOAuth2AccessToken openIdOAuth2AccessToken =
+        oidcTokenRetriever.retrieveOpenIdAccessToken(oidcTokenRequestData);
 
     String clientIdData =
         isNotEmpty(oidcTokenRequestData.getClientId()) ? CLIENT_ID_KEY + oidcTokenRequestData.getClientId() : EMPTY;
@@ -218,26 +196,6 @@ public class ContainerDeploymentDelegateHelper {
         .replace(OIDC_ISSUER_URL, providerUrl)
         .replace(OIDC_RERESH_TOKEN, refreshToken)
         .replace(OIDC_AUTH_NAME, authConfigName);
-  }
-
-  @VisibleForTesting
-  OpenIdOAuth2AccessToken retrieveOpenIdAccessToken(OidcTokenRequestData oidcTokenRequestData) {
-    OpenIdOAuth2AccessToken accessToken = null;
-    Exception ex = null;
-    try {
-      accessToken = oidcTokenRetriever.getAccessToken(oidcTokenRequestData);
-    } catch (InterruptedException intEx) {
-      Thread.currentThread().interrupt();
-      ex = intEx;
-    } catch (Exception e) {
-      ex = e;
-    }
-
-    if (ex != null) {
-      throw new InvalidRequestException(
-          "Failed to fetch OpenId Access Token. " + ExceptionUtils.getMessage(ex), ex, WingsException.USER);
-    }
-    return accessToken;
   }
 
   public String getKubeConfigFileContent(ContainerServiceParams containerServiceParam) {

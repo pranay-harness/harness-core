@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
+import static io.harness.k8s.KubernetesHelperService.toDisplayYaml;
 import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME;
 
 import com.google.inject.Inject;

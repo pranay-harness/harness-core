@@ -7,12 +7,12 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
  */
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.k8s.KubernetesConvention.getKubernetesRegistrySecretName;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.SECRET_FILE_MODE;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.SECRET_VOLUME_NAME;
-import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -30,10 +30,10 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.harness.k8s.model.ImageDetails;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.SecretVarParams;
-import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
 import java.util.ArrayList;

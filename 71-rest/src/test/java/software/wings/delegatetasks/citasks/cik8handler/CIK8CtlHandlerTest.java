@@ -48,6 +48,7 @@ import io.fabric8.kubernetes.client.dsl.TtyExecErrorable;
 import io.fabric8.kubernetes.client.dsl.TtyExecOutputErrorable;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.PodNotFoundException;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -61,7 +62,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretParams;
-import software.wings.beans.container.ImageDetails;
 
 import java.io.InputStream;
 import java.io.OutputStream;

@@ -18,6 +18,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -29,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
-import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;

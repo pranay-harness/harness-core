@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -23,7 +24,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.service.impl.KubernetesHelperService;
 
 public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
   @InjectMocks @Inject private HarnessKubernetesClientFactory harnessKubernetesClientFactory;

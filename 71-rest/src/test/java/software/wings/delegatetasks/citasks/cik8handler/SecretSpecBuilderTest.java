@@ -20,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -41,7 +42,6 @@ import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretParams;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
