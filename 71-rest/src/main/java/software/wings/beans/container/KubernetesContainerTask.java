@@ -3,10 +3,10 @@ package software.wings.beans.container;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.k8s.KubernetesHelperService.toYaml;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
-import static software.wings.service.impl.KubernetesHelperService.toYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -25,6 +25,7 @@ import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.k8s.KubernetesConvention;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,7 +35,6 @@ import org.apache.commons.io.LineIterator;
 import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.stencils.EnumData;
-import software.wings.utils.KubernetesConvention;
 
 import java.io.IOException;
 import java.io.StringReader;

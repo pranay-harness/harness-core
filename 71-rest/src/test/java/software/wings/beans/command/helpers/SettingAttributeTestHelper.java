@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.amazonaws.regions.Regions;
+import io.harness.k8s.model.ImageDetails;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
@@ -25,7 +26,6 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
-import software.wings.beans.container.ImageDetails;
 import software.wings.utils.WingsTestConstants;
 
 public class SettingAttributeTestHelper {

@@ -26,6 +26,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.KubernetesConvention;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
@@ -64,7 +65,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
-import software.wings.utils.KubernetesConvention;
 
 import java.util.Arrays;
 import java.util.Collections;

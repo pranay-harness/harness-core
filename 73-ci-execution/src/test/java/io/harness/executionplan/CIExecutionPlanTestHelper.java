@@ -25,6 +25,7 @@ import io.harness.beans.yaml.extended.artifact.DockerHubArtifactStreamYaml;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.yaml.core.Artifact;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
@@ -35,7 +36,6 @@ import io.harness.yaml.core.intfc.Infrastructure;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
-import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;

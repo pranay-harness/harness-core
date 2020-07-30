@@ -21,6 +21,7 @@ import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import org.junit.Before;
@@ -33,7 +34,6 @@ import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
-import software.wings.beans.container.ImageDetails;
 
 import java.io.IOException;
 import java.util.Arrays;

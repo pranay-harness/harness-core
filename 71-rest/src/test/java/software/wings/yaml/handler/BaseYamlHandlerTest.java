@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import io.harness.yaml.YamlUtils;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import software.wings.WingsBaseTest;
@@ -19,9 +20,9 @@ public class BaseYamlHandlerTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   protected String getYamlContent(BaseYaml yaml) {
-    Yaml yamlFormatter = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
+    Yaml yamlFormatter = new Yaml(YamlHelper.getRepresenter(), YamlUtils.getDumperOptions());
     String dump = yamlFormatter.dump(yaml);
-    return YamlHelper.cleanupYaml(dump);
+    return YamlUtils.cleanupYaml(dump);
   }
 
   protected BaseYaml getYaml(String yamlString, Class<? extends BaseYaml> yamlClass) throws IOException {

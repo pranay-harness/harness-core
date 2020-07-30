@@ -1,4 +1,4 @@
-package software.wings.yaml;
+package io.harness.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;

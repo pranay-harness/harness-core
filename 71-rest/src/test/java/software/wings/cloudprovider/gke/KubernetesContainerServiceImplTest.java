@@ -78,6 +78,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -93,7 +94,6 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.service.impl.KubernetesHelperService;
 
 import java.time.Clock;
 import java.util.HashMap;

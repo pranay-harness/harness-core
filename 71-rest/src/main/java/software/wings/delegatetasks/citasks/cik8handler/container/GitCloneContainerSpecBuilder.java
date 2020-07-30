@@ -5,6 +5,7 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
  * private git repositories using basic auth and SSH keys.
  */
 
+import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_CONTAINER_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_CLONE_IMAGE_NAME;
@@ -14,7 +15,6 @@ import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConst
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_SSH_VOL_MOUNT_PATH;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_SSH_VOL_NAME;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants.GIT_USERNAME_ENV_VAR;
-import static software.wings.utils.KubernetesConvention.getKubernetesGitSecretName;
 
 import com.google.inject.Singleton;
 
@@ -34,13 +34,13 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.ImageDetails;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
-import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIVolumeResponse;

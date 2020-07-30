@@ -11,7 +11,11 @@ import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.k8s.K8sConstants;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.oidc.model.OidcTokenRequestData;
 
@@ -95,5 +99,48 @@ public class OidcTokenRetriever {
     }
 
     return token;
+  }
+
+  public OidcTokenRequestData createOidcTokenRequestData(KubernetesConfig config) {
+    return OidcTokenRequestData.builder()
+        .providerUrl(config.getOidcIdentityProviderUrl())
+        .clientId(config.getOidcClientId() == null ? null : new String(config.getOidcClientId()))
+        .grantType(config.getOidcGrantType().name())
+        .clientSecret(config.getOidcSecret() == null ? null : new String(config.getOidcSecret()))
+        .username(config.getOidcUsername())
+        .password(config.getOidcPassword() == null ? null : new String(config.getOidcPassword()))
+        .scope(config.getOidcScopes())
+        .build();
+  }
+
+  @VisibleForTesting
+  public OpenIdOAuth2AccessToken retrieveOpenIdAccessToken(OidcTokenRequestData oidcTokenRequestData) {
+    OpenIdOAuth2AccessToken accessToken = null;
+    Exception ex = null;
+    try {
+      accessToken = getAccessToken(oidcTokenRequestData);
+    } catch (InterruptedException intEx) {
+      Thread.currentThread().interrupt();
+      ex = intEx;
+    } catch (Exception e) {
+      ex = e;
+    }
+
+    if (ex != null) {
+      throw new InvalidRequestException(
+          "Failed to fetch OpenId Access Token. " + ExceptionUtils.getMessage(ex), ex, WingsException.USER);
+    }
+    return accessToken;
+  }
+
+  public String getOidcIdToken(KubernetesConfig config) {
+    OidcTokenRequestData oidcTokenRequestData = createOidcTokenRequestData(config);
+
+    OpenIdOAuth2AccessToken openIdOAuth2AccessToken = retrieveOpenIdAccessToken(oidcTokenRequestData);
+    if (openIdOAuth2AccessToken != null) {
+      return openIdOAuth2AccessToken.getOpenIdToken();
+    }
+
+    return null;
   }
 }

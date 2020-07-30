@@ -1,10 +1,10 @@
 package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.k8s.model.ImageDetails;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.ContainerTask;
-import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.IstioConfig;
 import software.wings.beans.container.KubernetesBlueGreenConfig;
 import software.wings.beans.container.KubernetesPortProtocol;

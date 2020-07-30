@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.k8s.KubernetesConvention;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -21,7 +22,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.utils.KubernetesConvention;
 
 @Singleton
 @Slf4j

@@ -1,9 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
+import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
+import static io.harness.k8s.KubernetesHelperService.isRunningInCluster;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.service.impl.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
-import static software.wings.service.impl.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
-import static software.wings.service.impl.KubernetesHelperService.isRunningInCluster;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

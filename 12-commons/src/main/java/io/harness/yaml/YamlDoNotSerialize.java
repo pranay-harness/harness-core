@@ -1,4 +1,4 @@
-package software.wings.yaml;
+package io.harness.yaml;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

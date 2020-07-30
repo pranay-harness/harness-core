@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
@@ -8,8 +8,8 @@ import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.ImageDetails;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.container.ImageDetails;
 
 import java.util.Optional;
 import java.util.regex.Matcher;

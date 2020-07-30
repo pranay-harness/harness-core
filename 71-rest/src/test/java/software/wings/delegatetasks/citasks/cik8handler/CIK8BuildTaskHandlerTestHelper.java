@@ -6,6 +6,7 @@ import static software.wings.beans.ci.pod.SecretParams.Type.FILE;
 import static software.wings.beans.ci.pod.SecretParams.Type.TEXT;
 import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET_KEY;
 
+import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -25,7 +26,6 @@ import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.SecretParams;
-import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;

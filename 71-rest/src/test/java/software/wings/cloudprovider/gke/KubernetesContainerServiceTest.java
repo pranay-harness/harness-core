@@ -20,6 +20,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.K8sResourcePermissionImpl;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
@@ -35,7 +36,6 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.service.impl.KubernetesHelperService;
 
 import java.time.Clock;
 import java.util.Arrays;

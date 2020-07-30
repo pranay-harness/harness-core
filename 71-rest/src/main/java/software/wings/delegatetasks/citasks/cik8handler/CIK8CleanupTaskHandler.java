@@ -9,6 +9,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
@@ -17,7 +18,6 @@ import software.wings.beans.ci.CICleanupTaskParams;
 import software.wings.beans.ci.CIK8CleanupTaskParams;
 import software.wings.delegatetasks.citasks.CICleanupTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import javax.validation.constraints.NotNull;

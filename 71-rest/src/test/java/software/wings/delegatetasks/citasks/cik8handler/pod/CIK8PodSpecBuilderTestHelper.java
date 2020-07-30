@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
@@ -22,7 +23,6 @@ import software.wings.beans.ci.pod.ContainerSecrets;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
-import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
 import java.util.ArrayList;

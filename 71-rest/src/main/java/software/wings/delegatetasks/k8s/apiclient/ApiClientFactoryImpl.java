@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.k8s.apiclient;
 
+import static io.harness.k8s.KubernetesHelperService.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.service.impl.KubernetesHelperService.encode;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

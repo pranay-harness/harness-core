@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package io.harness.k8s;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER;
@@ -11,6 +11,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getHomeDir;
 import static io.harness.govern.Switch.noop;
+import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.network.Http.joinHostPort;
 import static java.lang.String.format;
@@ -18,7 +19,6 @@ import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.utils.KubernetesConvention.DASH;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -51,8 +51,11 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
+import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.logging.LogCallback;
 import io.harness.network.Http;
+import io.harness.yaml.YamlRepresenter;
+import io.harness.yaml.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
@@ -74,10 +77,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.yaml.YamlHelper;
-import software.wings.yaml.YamlRepresenter;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,8 +110,7 @@ import javax.net.ssl.X509TrustManager;
 @Singleton
 @Slf4j
 public class KubernetesHelperService {
-  @Inject private EncryptionService encryptionService;
-  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private OidcTokenRetriever oidcTokenRetriever;
 
   public static void validateNamespace(String namespace) {
     if (isBlank(namespace)) {
@@ -212,7 +210,7 @@ public class KubernetesHelperService {
 
     Config config = configBuilder.build();
     if (KubernetesClusterAuthType.OIDC == kubernetesConfig.getAuthType()) {
-      config.setOauthToken(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig));
+      config.setOauthToken(oidcTokenRetriever.getOidcIdToken(kubernetesConfig));
     }
 
     return config;
@@ -424,8 +422,8 @@ public class KubernetesHelperService {
   }
 
   public static String toDisplayYaml(Object entity) {
-    Yaml yaml = new Yaml(new YamlRepresenter(true), YamlHelper.getDumperOptions());
-    return YamlHelper.cleanupYaml(yaml.dump(entity));
+    Yaml yaml = new Yaml(new YamlRepresenter(true), YamlUtils.getDumperOptions());
+    return YamlUtils.cleanupYaml(yaml.dump(entity));
   }
 
   public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,

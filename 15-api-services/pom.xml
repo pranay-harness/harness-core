@@ -13,6 +13,10 @@
             <artifactId>scribejava-apis</artifactId>
         </dependency>
         <dependency>
+            <groupId>me.snowdrop</groupId>
+            <artifactId>istio-client-uberjar</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>compile</scope>
@@ -35,6 +39,11 @@
         <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>joor</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
