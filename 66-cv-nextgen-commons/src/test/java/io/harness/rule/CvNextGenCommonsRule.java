@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -28,7 +29,9 @@ import org.mongodb.morphia.mapping.DefaultCreator;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -54,6 +57,13 @@ public class CvNextGenCommonsRule implements MethodRule, InjectorRuleMixin, Mong
             .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return Collections.emptyMap();
       }
     });
 

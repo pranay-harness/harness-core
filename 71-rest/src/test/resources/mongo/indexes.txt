@@ -1,3 +1,5 @@
+!!!custom_delegateAsyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+!!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 !!!testDummies {"name": "appId_1", "background": true} {"appId": 1}
 !!!testDummies {"name": "createdAt_1", "background": true} {"createdAt": 1}
 !!!testIndexes {"name": "index", "background": true} {"name": 1, "test": 1}
@@ -150,7 +152,6 @@ cvFeedbackRecords {"name": "stateExecutionId_1", "background": true} {"stateExec
 dashboardSettings {"name": "accountId_1", "background": true} {"accountId": 1}
 delayQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 delayQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-delegateAsyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateCallbacks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateConnectionResults {"name": "criteria_1", "background": true} {"criteria": 1}
 delegateConnectionResults {"name": "delegateConnectionResultsIdx", "unique": true} {"accountId": 1, "delegateId": 1, "criteria": 1}
@@ -167,7 +168,6 @@ delegateSelectionLogRecords {"name": "validUntil_1", "background": true, "expire
 delegateSequenceConfig {"name": "appId_1", "background": true} {"appId": 1}
 delegateSequenceConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateSequenceConfig {"name": "uniqueDelegateSequenceIdx", "unique": true} {"accountId": 1, "hostName": 1, "sequenceNum": 1}
-delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateTasks {"name": "index", "background": true} {"status": 1, "expiry": 1}
 delegateTasks {"name": "pulling", "background": true} {"accountId": 1, "status": 1, "data.async": 1, "expiry": 1}
 delegateTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

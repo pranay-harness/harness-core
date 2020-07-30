@@ -7,7 +7,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
@@ -146,7 +145,6 @@ public class MorphiaModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
     MapBinder<String, TestExecution> testExecutionMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
     if (!binder().currentStage().name().equals("TOOL")) {

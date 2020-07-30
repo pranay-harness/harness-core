@@ -60,7 +60,7 @@ public class EventServiceTestRule implements MethodRule, InjectorRuleMixin, Mong
     modules.add(new EventServiceModule(
         EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()));
 
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(TestMongoModule.getInstance());
     return modules;
   }
 

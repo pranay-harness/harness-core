@@ -69,6 +69,8 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
 
   @Override
   protected void configure() {
+    install(WaiterModule.getInstance());
+
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class);
@@ -112,7 +114,7 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.<DependencyModule>of(
-        WaiterModule.getInstance(), OrchestrationBeansModule.getInstance(), OrchestrationQueueModule.getInstance());
+        OrchestrationBeansModule.getInstance(), OrchestrationQueueModule.getInstance());
   }
 
   @Override

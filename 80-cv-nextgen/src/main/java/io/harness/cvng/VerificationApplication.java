@@ -7,6 +7,7 @@ import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SEC
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
@@ -16,6 +17,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,6 +70,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
@@ -148,7 +151,16 @@ public class VerificationApplication extends Application<VerificationConfigurati
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(new MongoModule());
+    modules.add(MongoModule.getInstance());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder().build();
+      }
+    });
+
     modules.add(MorphiaModule.getInstance());
     modules.add(new CVServiceModule());
     modules.add(new MetricRegistryModule(metricRegistry));

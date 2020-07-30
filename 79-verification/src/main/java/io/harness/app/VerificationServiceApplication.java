@@ -15,6 +15,7 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.common.VerificationConstants.NUM_LOG_RECORDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -26,6 +27,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.MetricRegistry;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
@@ -42,6 +44,8 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -105,6 +109,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
@@ -206,7 +211,19 @@ public class VerificationServiceApplication extends Application<VerificationServ
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(new MongoModule());
+    modules.add(MongoModule.getInstance());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .build();
+      }
+    });
+
     modules.add(MorphiaModule.getInstance());
     modules.add(new VerificationServiceModule(configuration));
     modules.add(new VerificationServiceSchedulerModule(configuration));

@@ -32,7 +32,7 @@ public class CVNextGenTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       }
     });
     modules.add(new CVNextGenCommonsServiceModule());
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(TestMongoModule.getInstance());
     modules.add(new CVServiceModule());
     modules.add(new VerificationManagerClientModule("http://test-host"));
     return modules;

@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.morphia.MorphiaModule;
 import io.harness.serializer.EventsFrameworkRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -65,7 +64,6 @@ public class EventRule implements MethodRule, InjectorRuleMixin {
       }
     });
 
-    modules.add(MorphiaModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

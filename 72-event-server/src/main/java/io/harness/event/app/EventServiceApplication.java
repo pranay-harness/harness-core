@@ -3,12 +3,14 @@ package io.harness.event.app;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
@@ -28,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -79,7 +82,17 @@ public class EventServiceApplication {
       }
     });
 
-    modules.add(new MongoModule());
+    modules.add(MongoModule.getInstance());
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder().build();
+      }
+    });
+
     modules.add(MorphiaModule.getInstance());
     modules.add(new EventServiceModule(config));
 

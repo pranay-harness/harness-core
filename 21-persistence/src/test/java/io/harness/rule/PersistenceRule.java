@@ -112,7 +112,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
 
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(TestMongoModule.getInstance());
 
     modules.add(new ProviderModule() {
       @Provides

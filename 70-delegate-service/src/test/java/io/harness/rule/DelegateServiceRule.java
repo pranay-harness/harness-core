@@ -63,7 +63,7 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
     });
 
     modules.add(new DelegateServiceModule());
-    modules.add(new TestMongoModule());
+    modules.add(TestMongoModule.getInstance());
     modules.add(MorphiaModule.getInstance());
 
     modules.add(mongoTypeModule(annotations));

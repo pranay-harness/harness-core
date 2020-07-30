@@ -1,11 +1,12 @@
 package io.harness.ng;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Names;
+import com.google.inject.name.Named;
 
 import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
@@ -41,6 +42,7 @@ import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -50,6 +52,16 @@ public class NextGenModule extends DependencyModule {
 
   public NextGenModule(NextGenConfiguration appConfig) {
     this.appConfig = appConfig;
+  }
+
+  @Provides
+  @Singleton
+  @Named("morphiaClasses")
+  Map<Class, String> morphiaCustomCollectionNames() {
+    return ImmutableMap.<Class, String>builder()
+        .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+        .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+        .build();
   }
 
   @Override
@@ -120,11 +132,6 @@ public class NextGenModule extends DependencyModule {
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
-
-    MapBinder<Class, String> morphiaClasses =
-        MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
-    morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
-    morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
 
     bind(RemotePerpetualTaskServiceClientManager.class).to(RemotePerpetualTaskServiceClientManagerImpl.class);
   }

@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
@@ -14,7 +14,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import io.harness.exception.UnexpectedException;
-import io.harness.govern.DependencyModule;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.morphia.MorphiaModule;
@@ -27,7 +26,16 @@ import org.mongodb.morphia.ObjectFactory;
 import java.util.Set;
 
 @Slf4j
-public class MongoModule extends DependencyModule {
+public class MongoModule extends AbstractModule {
+  private static volatile MongoModule instance;
+
+  public static MongoModule getInstance() {
+    if (instance == null) {
+      instance = new MongoModule();
+    }
+    return instance;
+  }
+
   public static final MongoClientOptions defaultMongoClientOptions = MongoClientOptions.builder()
                                                                          .retryWrites(true)
                                                                          .connectTimeout(30000)
@@ -46,20 +54,13 @@ public class MongoModule extends DependencyModule {
     return datastore;
   }
 
-  private boolean inSpring;
-
-  public MongoModule(boolean inSpring) {
-    this.inSpring = inSpring;
+  private MongoModule() {
     try {
       registerLogger(MorphiaLoggerFactory.class);
     } catch (Exception e) {
       // happens when MorphiaLoggerFactory.get has already been called.
       logger.warn("Failed to register logger", e);
     }
-  }
-
-  public MongoModule() {
-    this(false);
   }
 
   @Override
@@ -81,11 +82,9 @@ public class MongoModule extends DependencyModule {
   @Singleton
   public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, @Named("morphiaClasses") Set<Class> classes,
       Morphia morphia, ObjectFactory objectFactory, IndexManager indexManager) {
-    if (!inSpring) {
-      for (Class clazz : classes) {
-        if (morphia.getMapper().getMCMap().get(clazz.getName()).getCollectionName().startsWith("!!!custom_")) {
-          throw new UnexpectedException(format("The custom collection name for %s is not provided", clazz.getName()));
-        }
+    for (Class clazz : classes) {
+      if (morphia.getMapper().getMCMap().get(clazz.getName()).getCollectionName().startsWith("!!!custom_")) {
+        throw new UnexpectedException(format("The custom collection name for %s is not provided", clazz.getName()));
       }
     }
 
@@ -138,10 +137,5 @@ public class MongoModule extends DependencyModule {
       uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));
     }
     return uri.getDatabase();
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of();
   }
 }

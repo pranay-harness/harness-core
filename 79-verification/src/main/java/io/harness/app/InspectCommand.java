@@ -1,5 +1,6 @@
 package io.harness.app;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -8,7 +9,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.dropwizard.Application;
@@ -24,9 +25,11 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.mongodb.morphia.AdvancedDatastore;
+import software.wings.app.IndexMigratorModule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class InspectCommand<T extends io.dropwizard.Configuration> extends ConfiguredCommand<T> {
@@ -53,12 +56,14 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
 
     List<Module> modules = new ArrayList<>();
     modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        MapBinder<Class, String> morphiaClasses =
-            MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
-        morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
-        morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
+      @Provides
+      @Singleton
+      @Named("morphiaClasses")
+      Map<Class, String> morphiaCustomCollectionNames() {
+        return ImmutableMap.<Class, String>builder()
+            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .build();
       }
 
       @Provides
@@ -67,7 +72,8 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
         return verificationServiceConfiguration.getMongoConnectionFactory();
       }
     });
-    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(MongoModule.getInstance());
+    modules.add(new IndexMigratorModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
