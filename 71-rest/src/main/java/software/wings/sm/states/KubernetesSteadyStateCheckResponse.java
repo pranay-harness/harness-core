@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
@@ -8,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.List;
 

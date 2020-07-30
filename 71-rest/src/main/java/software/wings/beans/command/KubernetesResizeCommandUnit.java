@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.container.ContainerInfo.Status.SUCCESS;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
@@ -10,16 +11,17 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.harness.container.ContainerInfo;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogLevel;
 import lombok.Builder;
@@ -40,9 +42,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;

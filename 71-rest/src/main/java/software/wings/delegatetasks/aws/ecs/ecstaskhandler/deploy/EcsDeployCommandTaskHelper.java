@@ -15,6 +15,7 @@ import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
 import com.amazonaws.services.ecs.model.Service;
+import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.AwsAutoScalarConfig;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;

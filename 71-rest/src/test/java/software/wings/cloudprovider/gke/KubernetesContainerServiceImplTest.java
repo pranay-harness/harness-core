@@ -76,6 +76,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.dsl.DeployableScalableResource;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesHelperService;
@@ -92,7 +93,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 
 import java.time.Clock;

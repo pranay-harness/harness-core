@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.ecs.response;
 
+import io.harness.container.ContainerInfo;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.ContainerServiceData;
-import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.List;
 

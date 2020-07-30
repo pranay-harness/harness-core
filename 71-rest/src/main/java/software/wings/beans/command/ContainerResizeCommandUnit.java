@@ -10,6 +10,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -22,7 +23,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder;
-import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.utils.Misc;
 

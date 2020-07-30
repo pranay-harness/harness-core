@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.gke;
+package io.harness.k8s;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -11,12 +11,12 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.VersionInfo;
+import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
-import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.LinkedHashMap;
 import java.util.List;

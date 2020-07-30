@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.container.ContainerInfo;
+import io.harness.container.ContainerInfo.Status;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -29,8 +31,6 @@ import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.ContainerInfo;
-import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
