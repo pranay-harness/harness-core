@@ -48,7 +48,7 @@ public class GitConfigSummaryMapperTest extends CategoryTest {
                               .customCommitAttributes(customCommitAttributes)
                               .authenticationDetails(gitUserNamePasswordAuthentication)
                               .build();
-    GitConfigSummaryDTO gitConfigSummaryDTO = gitConfigSummaryMapper.createGitConfigSummaryDTO(gitConfig);
+    GitConfigSummaryDTO gitConfigSummaryDTO = gitConfigSummaryMapper.toConnectorConfigSummaryDTO(gitConfig);
     assertThat(gitConfigSummaryDTO).isNotNull();
     assertThat(gitConfigSummaryDTO.getUrl()).isEqualTo(url);
   }

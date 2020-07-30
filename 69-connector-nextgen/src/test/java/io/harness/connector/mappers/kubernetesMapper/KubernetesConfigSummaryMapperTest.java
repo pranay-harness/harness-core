@@ -44,7 +44,7 @@ public class KubernetesConfigSummaryMapperTest extends CategoryTest {
     KubernetesClusterConfig kubernetesClusterConfig =
         KubernetesClusterConfig.builder().credentialType(INHERIT_FROM_DELEGATE).credential(delegateCredential).build();
     KubernetesConfigSummaryDTO kubernetesConfigSummaryDTO =
-        kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO(kubernetesClusterConfig);
+        kubernetesConfigSummaryMapper.toConnectorConfigSummaryDTO(kubernetesClusterConfig);
     assertThat(kubernetesConfigSummaryDTO).isNotNull();
     assertThat(kubernetesConfigSummaryDTO.getDelegateName()).isEqualTo(delegateName);
     assertThat(kubernetesConfigSummaryDTO.getMasterURL()).isBlank();
@@ -71,7 +71,7 @@ public class KubernetesConfigSummaryMapperTest extends CategoryTest {
                                                           .build();
 
     KubernetesConfigSummaryDTO kubernetesConfigSummaryDTO =
-        kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO(kubernetesClusterConfig);
+        kubernetesConfigSummaryMapper.toConnectorConfigSummaryDTO(kubernetesClusterConfig);
     assertThat(kubernetesConfigSummaryDTO).isNotNull();
     assertThat(kubernetesConfigSummaryDTO.getMasterURL()).isEqualTo(masterURL);
     assertThat(kubernetesConfigSummaryDTO.getDelegateName()).isBlank();

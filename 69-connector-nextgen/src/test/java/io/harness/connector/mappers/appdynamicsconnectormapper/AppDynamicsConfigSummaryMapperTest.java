@@ -42,7 +42,7 @@ public class AppDynamicsConfigSummaryMapperTest extends CategoryTest {
                                               .build();
 
     AppDynamicsConfigSummaryDTO appDynamicsConfigSummaryDTO =
-        appDynamicsConfigSummaryMapper.createAppDynamicsConfigSummaryDTO(appDynamicsConfig);
+        appDynamicsConfigSummaryMapper.toConnectorConfigSummaryDTO(appDynamicsConfig);
 
     assertThat(appDynamicsConfigSummaryDTO).isNotNull();
     assertThat(appDynamicsConfigSummaryDTO.getUsername()).isEqualTo(appDynamicsConfig.getUsername());

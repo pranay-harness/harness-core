@@ -11,13 +11,9 @@ import io.harness.connector.apis.dto.ConnectorConfigSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO.ConnectorSummaryDTOBuilder;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConfig;
-import io.harness.connector.entities.embedded.gitconnector.GitConfig;
-import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConfigSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
-import io.harness.exception.UnsupportedOperationException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -30,6 +26,7 @@ public class ConnectorSummaryMapper {
   private GitConfigSummaryMapper gitConfigSummaryMapper;
   private AppDynamicsConfigSummaryMapper appDynamicsConfigSummaryMapper;
   private static final String EMPTY_STRING = "";
+  @Inject private Map<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapperMap;
 
   public ConnectorSummaryDTO writeConnectorSummaryDTO(Connector connector, String accountName,
       Map<String, String> orgIdentifierOrgNameMap, Map<String, String> projectIdentifierProjectNameMap) {
@@ -74,17 +71,8 @@ public class ConnectorSummaryMapper {
   }
 
   private ConnectorConfigSummaryDTO createConnectorDetailsDTO(Connector connector) {
-    // todo @deepak: Change this design to something so that switch case is not required
-    switch (connector.getType()) {
-      case KUBERNETES_CLUSTER:
-        return kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO((KubernetesClusterConfig) connector);
-      case GIT:
-        return gitConfigSummaryMapper.createGitConfigSummaryDTO((GitConfig) connector);
-      case APP_DYNAMICS:
-        return appDynamicsConfigSummaryMapper.createAppDynamicsConfigSummaryDTO((AppDynamicsConfig) connector);
-      default:
-        throw new UnsupportedOperationException(
-            String.format("The connector type [%s] is invalid", connector.getType()));
-    }
+    ConnectorConfigSummaryDTOMapper connectorDTOToEntityMapper =
+        connectorConfigSummaryDTOMapperMap.get(connector.getType().toString());
+    return connectorDTOToEntityMapper.toConnectorConfigSummaryDTO(connector);
   }
 }

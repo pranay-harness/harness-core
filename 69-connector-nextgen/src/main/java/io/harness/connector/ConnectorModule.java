@@ -4,12 +4,16 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.connector.impl.ConnectorServiceImpl;
+import io.harness.connector.mappers.ConnectorConfigSummaryDTOMapper;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConfigSummaryMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
+import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
+import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.connector.services.ConnectorService;
@@ -45,6 +49,14 @@ public class ConnectorModule extends AbstractModule {
         .to(KubernetesEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName()).to(AppDynamicsEntityToDTO.class);
+
+    MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
+        MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
+        .to(KubernetesConfigSummaryMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitConfigSummaryMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
+        .to(AppDynamicsConfigSummaryMapper.class);
   }
 
   private void registerRequiredBindings() {

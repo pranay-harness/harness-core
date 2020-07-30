@@ -41,6 +41,7 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
   String identifier = "identiifier";
   List<String> tags = Arrays.asList("tag1", "tag2");
   String accountName = "Test Account";
+  @Mock private Map<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapperMap;
 
   @Before
   public void setUp() throws Exception {
@@ -71,7 +72,8 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
 
     KubernetesConfigSummaryDTO kubernetesSummary =
         KubernetesConfigSummaryDTO.builder().masterURL("masterURL").delegateName(null).build();
-    when(kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO(any())).thenReturn(kubernetesSummary);
+    when(connectorConfigSummaryDTOMapperMap.get(any())).thenReturn(kubernetesConfigSummaryMapper);
+    when(kubernetesConfigSummaryMapper.toConnectorConfigSummaryDTO(any())).thenReturn(kubernetesSummary);
   }
 
   private void assertConnectorSummaryFieldsAreCorrect(ConnectorSummaryDTO connectorSummaryDTO) {
