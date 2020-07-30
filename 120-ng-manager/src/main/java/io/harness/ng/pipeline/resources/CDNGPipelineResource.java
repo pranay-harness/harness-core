@@ -1,8 +1,6 @@
 package io.harness.ng.pipeline.resources;
 
 import static io.harness.utils.PageUtils.getPageRequest;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import com.google.inject.Inject;
 
@@ -10,20 +8,28 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.beans.dto.CDPipelineDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.RestQueryFilterParser;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -38,7 +44,14 @@ import javax.ws.rs.QueryParam;
 
 @Api("pipelines")
 @Path("pipelines")
-@Produces(APPLICATION_JSON)
+@Produces({"application/json", "text/yaml"})
+@Consumes({"application/json", "text/yaml"})
+@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@ApiResponses(value =
+    {
+      @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+    })
 @Slf4j
 public class CDNGPipelineResource {
   private PipelineService ngPipelineService;
@@ -48,76 +61,35 @@ public class CDNGPipelineResource {
   private static final EmbeddedUser EMBEDDED_USER =
       EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
 
-  @Inject
-  public CDNGPipelineResource(PipelineService ngPipelineService, NgPipelineExecutionService ngPipelineExecutionService,
-      RestQueryFilterParser restQueryFilterParser) {
-    this.ngPipelineService = ngPipelineService;
-    this.restQueryFilterParser = restQueryFilterParser;
-    this.ngPipelineExecutionService = ngPipelineExecutionService;
-  }
-
   @GET
   @Path("/{pipelineIdentifier}")
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
-  public ResponseDTO<CDPipelineDTO> getPipelineByIdentifier(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
-      @PathParam("pipelineIdentifier") String pipelineId) {
+  public ResponseDTO<Optional<CDPipelineResponseDTO>> getPipelineByIdentifier(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
+      @QueryParam("projectIdentifier") String projectId, @PathParam("pipelineIdentifier") String pipelineId) {
     logger.info("Get pipeline");
     return ResponseDTO.newResponse(ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId));
   }
 
   @GET
-  @Path("/{pipelineIdentifier}")
-  @Produces({"text/yaml"})
-  @Consumes({"text/yaml"})
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipelineYaml")
-  public ResponseDTO<String> getNgPipelineByIdentifier(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
-      @PathParam("pipelineIdentifier") String pipelineId) {
-    logger.info("Get pipeline");
-    return ResponseDTO.newResponse(
-        ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId).getYamlPipeline());
-  }
-
-  // In case UI team fails to parse yaml from above API due to Response DTO wrapper, we will suggest below temporary API
-  // for demo use
-  @GET
-  @Path("/yaml/{pipelineIdentifier}")
-  @Produces({"text/yaml"})
-  @Consumes({"text/yaml"})
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipelineYamlString")
-  public String getNgPipelineByIdentifierYaml(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
-      @PathParam("pipelineIdentifier") String pipelineId) {
-    logger.info("Get pipeline");
-    return ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId).getYamlPipeline();
-  }
-
-  @GET
-  @Produces({APPLICATION_JSON, "text/yaml"})
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
-  public ResponseDTO<Page<CDPipelineDTO>> getListOfPipelines(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
-      @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort) {
+  public ResponseDTO<Page<CDPipelineResponseDTO>> getListOfPipelines(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
+      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filterQuery,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
+      @QueryParam("sort") List<String> sort) {
     logger.info("Get List of pipelines");
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, CDPipeline.class);
-    Page<CDPipelineDTO> pipelines =
+    Page<CDPipelineResponseDTO> pipelines =
         ngPipelineService.getPipelines(accountId, orgId, projectId, criteria, getPageRequest(page, size, sort));
     return ResponseDTO.newResponse(pipelines);
   }
 
   @POST
-  @Consumes({TEXT_PLAIN, "text/yaml"})
-  @Produces({TEXT_PLAIN, "text/yaml"})
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create a Pipeline", nickname = "postPipeline")
@@ -129,27 +101,26 @@ public class CDNGPipelineResource {
   }
 
   @PUT
-  @Consumes({TEXT_PLAIN, "text/yaml"})
-  @Produces({TEXT_PLAIN, "text/yaml"})
+  @Path("/{pipelineIdentifier}")
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
   public ResponseDTO<String> updatePipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
       @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
-      @NotNull String yaml) {
-    logger.info("Creating pipeline");
-    return ResponseDTO.newResponse(ngPipelineService.updatePipeline(yaml, accountId, orgId, projectId));
+      @PathParam("pipelineIdentifier") String pipelineId, @NotNull String yaml) {
+    logger.info("Updating pipeline");
+    return ResponseDTO.newResponse(ngPipelineService.updatePipeline(yaml, accountId, orgId, projectId, pipelineId));
   }
 
   @POST
-  @Produces({"application/json", "text/html"})
-  @Consumes({"application/json", "text/html"})
+  @Produces({"text/dummy"})
+  @Consumes({"text/dummy"})
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create a Pipeline", nickname = "postPipelineDummy")
-  public ResponseDTO<CDPipelineDTO> dummyCreatePipelineForSwagger(
+  public ResponseDTO<CDPipelineRequestDTO> dummyCreatePipelineForSwagger(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId, @NotNull @Valid CDPipelineDTO yaml) {
+      @NotNull @QueryParam("projectIdentifier") String projectId, @NotNull @Valid CDPipelineRequestDTO yaml) {
     logger.info("Creating pipeline");
     return ResponseDTO.newResponse(yaml);
   }
@@ -162,9 +133,14 @@ public class CDNGPipelineResource {
   public ResponseDTO<PlanExecution> runPipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
       @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
       @QueryParam("appId") String appId, @PathParam("identifier") @NotEmpty String pipelineId) {
-    CDPipelineDTO cdPipelineDTO = ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
+    Optional<CDPipelineResponseDTO> cdPipelineRequestDTO =
+        ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId);
     // TODO: remove APPID once the dependency is moved.
-    return ResponseDTO.newResponse(ngPipelineExecutionService.triggerPipeline(
-        cdPipelineDTO.getYamlPipeline(), accountId, orgId, projectId, EMBEDDED_USER));
+    String yaml = "";
+    if (cdPipelineRequestDTO.isPresent()) {
+      yaml = cdPipelineRequestDTO.get().getYamlPipeline();
+    }
+    return ResponseDTO.newResponse(
+        ngPipelineExecutionService.triggerPipeline(yaml, accountId, orgId, projectId, EMBEDDED_USER));
   }
 }
