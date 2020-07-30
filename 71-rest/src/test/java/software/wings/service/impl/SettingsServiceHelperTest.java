@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,6 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InstanaConfig;
-import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;

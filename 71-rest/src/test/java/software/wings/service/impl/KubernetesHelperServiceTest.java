@@ -13,6 +13,8 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import okhttp3.OkHttpClient;
@@ -22,8 +24,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.KubernetesClusterAuthType;
-import software.wings.beans.KubernetesConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
 

@@ -18,11 +18,11 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;

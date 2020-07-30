@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -19,7 +20,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.KubernetesClusterAuthType.OIDC;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -32,6 +32,7 @@ import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.logging.LogCallback;
@@ -46,7 +47,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
