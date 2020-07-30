@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static java.util.Collections.singletonList;
+import static io.harness.network.Http.connectableJenkinsHttpUrl;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
@@ -11,6 +11,7 @@ import software.wings.beans.command.JenkinsTaskParams;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 11/2/17
@@ -24,13 +25,23 @@ public class JenkinsValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(
-        Arrays.stream(getParameters())
-            .filter(o -> o instanceof JenkinsTaskParams || o instanceof JenkinsConfig)
-            .map(obj
-                -> (obj instanceof JenkinsConfig ? (JenkinsConfig) obj : ((JenkinsTaskParams) obj).getJenkinsConfig())
-                       .getJenkinsUrl())
-            .findFirst()
-            .orElse(null));
+    return Arrays.stream(getParameters())
+        .filter(o -> o instanceof JenkinsTaskParams || o instanceof JenkinsConfig)
+        .map(obj
+            -> (obj instanceof JenkinsConfig ? (JenkinsConfig) obj : ((JenkinsTaskParams) obj).getJenkinsConfig())
+                   .getJenkinsUrl())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<DelegateConnectionResult> validate() {
+    return getCriteria()
+        .stream()
+        .map(criteria
+            -> DelegateConnectionResult.builder()
+                   .criteria(criteria)
+                   .validated(connectableJenkinsHttpUrl(criteria))
+                   .build())
+        .collect(Collectors.toList());
   }
 }

@@ -108,6 +108,36 @@ public class Http {
             }
           });
 
+  LoadingCache<String, Integer> jenkinsResponseCodeForValidation =
+      CacheBuilder.newBuilder()
+          .maximumSize(100)
+          .expireAfterWrite(2, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, Integer>() {
+            @Override
+            public Integer load(String url) throws IOException {
+              logger.info("Testing connectivity");
+              // Create a trust manager that does not validate certificate chains
+              // Install the all-trusting trust manager
+              HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+              // Create all-trusting host name verifier
+              HostnameVerifier allHostsValid = (s, sslSession) -> true;
+              // Install the all-trusting host verifier
+              HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+              HttpURLConnection connection = getHttpsURLConnection(url);
+              try {
+                connection.setRequestMethod("GET");
+                // Set increased timeout since Jenkins servers might be slow
+                connection.setConnectTimeout(150000);
+                connection.setReadTimeout(150000);
+                int responseCode = connection.getResponseCode();
+                logger.info("Returned code {}", responseCode);
+                return responseCode;
+              } finally {
+                connection.disconnect();
+              }
+            }
+          });
+
   public static boolean checkResponseCode(int responseCode) {
     return responseCode != 400;
   }
@@ -116,6 +146,17 @@ public class Http {
     try (UrlLogContext ignore = new UrlLogContext(url, OVERRIDE_ERROR)) {
       try {
         return checkResponseCode(responseCodeForValidation.get(url));
+      } catch (Exception e) {
+        logger.info("Could not connect: {}", e.getMessage());
+      }
+    }
+    return false;
+  }
+
+  public static boolean connectableJenkinsHttpUrl(String url) {
+    try (UrlLogContext ignore = new UrlLogContext(url, OVERRIDE_ERROR)) {
+      try {
+        return checkResponseCode(jenkinsResponseCodeForValidation.get(url));
       } catch (Exception e) {
         logger.info("Could not connect: {}", e.getMessage());
       }
