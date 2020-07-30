@@ -9,7 +9,9 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGCoreBaseTest;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
@@ -19,7 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
   @Inject ServiceEntityServiceImpl serviceEntityService;
@@ -75,11 +79,11 @@ public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
     assertThat(updatedServiceResponse.getIdentifier()).isEqualTo(updateServiceRequest.getIdentifier());
     assertThat(updatedServiceResponse.getName()).isEqualTo(updateServiceRequest.getName());
     assertThat(updatedServiceResponse.getDescription()).isEqualTo(updateServiceRequest.getDescription());
-    assertThat(updatedServiceResponse.getId()).isEqualTo(createdService.getId());
 
     updateServiceRequest.setAccountId("NEW_ACCOUNT");
     assertThatThrownBy(() -> serviceEntityService.update(updateServiceRequest))
         .isInstanceOf(InvalidRequestException.class);
+    updatedServiceResponse.setAccountId("ACCOUNT_ID");
 
     // Upsert operations
     ServiceEntity upsertServiceRequest = ServiceEntity.builder()
@@ -104,14 +108,18 @@ public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
     Page<ServiceEntity> list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
     assertThat(list.getContent().size()).isEqualTo(1);
-    assertThat(list.getContent().get(0)).isEqualTo(updatedServiceResponse);
+    assertThat(ServiceElementMapper.writeDTO(list.getContent().get(0)))
+        .isEqualTo(ServiceElementMapper.writeDTO(updatedServiceResponse));
 
     criteriaFromServiceFilter = ServiceFilterHelper.createCriteria("ACCOUNT_ID", "ORG_ID", null);
 
     list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
     assertThat(list.getContent().size()).isEqualTo(2);
-    assertThat(list.getContent()).containsOnly(updatedServiceResponse, upsertService);
+    List<ServiceResponseDTO> dtoList =
+        list.getContent().stream().map(ServiceElementMapper::writeDTO).collect(Collectors.toList());
+    assertThat(dtoList).containsOnly(
+        ServiceElementMapper.writeDTO(updatedServiceResponse), ServiceElementMapper.writeDTO(upsertService));
 
     // Delete operations
     boolean delete = serviceEntityService.delete("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_SERVICE");

@@ -113,6 +113,17 @@ public class ServiceResourceTest extends BaseTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  public void testUpsert() {
+    doReturn(serviceEntity).when(serviceEntityService).upsert(serviceEntity);
+    Optional<ServiceResponseDTO> response =
+        serviceResource.upsert(serviceEntity.getAccountId(), serviceRequestDTO).getData();
+    assertThat(response).isPresent();
+    assertThat(response.get()).isEqualTo(serviceResponseDTO);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
   public void testListServices() {
     Criteria criteria = ServiceFilterHelper.createCriteria("", "", "");
     Pageable pageable = PageUtils.getPageRequest(0, 10, null);

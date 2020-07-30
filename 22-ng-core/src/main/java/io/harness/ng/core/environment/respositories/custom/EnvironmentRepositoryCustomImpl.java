@@ -2,7 +2,9 @@ package io.harness.ng.core.environment.respositories.custom;
 
 import com.google.inject.Inject;
 
+import com.mongodb.client.result.UpdateResult;
 import io.harness.ng.core.environment.beans.Environment;
+import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,5 +26,18 @@ public class EnvironmentRepositoryCustomImpl implements EnvironmentRepositoryCus
     List<Environment> projects = mongoTemplate.find(query, Environment.class);
     return PageableExecutionUtils.getPage(
         projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Environment.class));
+  }
+
+  @Override
+  public UpdateResult upsert(Criteria criteria, Environment environment) {
+    Query query = new Query(criteria);
+    return mongoTemplate.upsert(query, EnvironmentFilterHelper.getUpdateOperations(environment), Environment.class);
+  }
+
+  @Override
+  public UpdateResult update(Criteria criteria, Environment environment) {
+    Query query = new Query(criteria);
+    return mongoTemplate.updateFirst(
+        query, EnvironmentFilterHelper.getUpdateOperations(environment), Environment.class);
   }
 }
