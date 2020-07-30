@@ -47,8 +47,8 @@ public class CommandServiceImpl implements CommandService {
     Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
     if (savedCommand != null && pushToYaml) {
       ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
-      String accountId = appService.getAccountIdByAppId(command.getAppId());
-      yamlPushService.pushYamlChangeSet(accountId, null, serviceCommand, Type.CREATE, command.isSyncFromGit(), false);
+      yamlPushService.pushYamlChangeSet(
+          serviceCommand.getAccountId(), null, serviceCommand, Type.CREATE, command.isSyncFromGit(), false);
     }
     return savedCommand;
   }
