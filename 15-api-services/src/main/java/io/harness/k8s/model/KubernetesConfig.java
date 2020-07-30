@@ -1,16 +1,10 @@
-package software.wings.beans;
+package io.harness.k8s.model;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.k8s.model.OidcGrantType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by bzane on 2/28/17
- */
-@JsonTypeName("KUBERNETES")
 @Data
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
 public class KubernetesConfig {

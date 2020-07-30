@@ -52,6 +52,7 @@ import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.ManifestType;
@@ -142,5 +143,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(SettingVariableTypes.class, 5131);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
     kryo.register(HelmVersion.class, 7303);
+    kryo.register(KubernetesClusterAuthType.class, 7317);
   }
 }

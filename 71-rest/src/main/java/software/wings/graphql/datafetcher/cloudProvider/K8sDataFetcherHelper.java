@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.utils.RequestField;
-import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesClusterConfig.KubernetesClusterConfigBuilder;
 import software.wings.beans.SettingAttribute;

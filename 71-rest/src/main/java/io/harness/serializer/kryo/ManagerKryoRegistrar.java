@@ -217,9 +217,7 @@ import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LocalEncryptionConfig;
@@ -1060,7 +1058,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(KerberosConfig.class, 5549);
     kryo.register(KmsConfig.class, 5183);
     kryo.register(KubernetesClusterConfig.class, 5244);
-    kryo.register(KubernetesConfig.class, 5015);
+
     kryo.register(LambdaTestEvent.class, 5604);
     kryo.register(LicenseInfo.class, 5511);
     kryo.register(NameValuePair.class, 5226);
@@ -1616,7 +1614,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaAnalyzeMetrics.class, 7315);
     kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
 
-    kryo.register(KubernetesClusterAuthType.class, 7317);
     kryo.register(AwsVPC.class, 7319);
     kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);

@@ -7,6 +7,7 @@ import static software.wings.service.impl.KubernetesHelperService.encode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.k8s.model.KubernetesConfig;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.util.ClientBuilder;
@@ -14,7 +15,6 @@ import io.kubernetes.client.util.credentials.AccessTokenAuthentication;
 import io.kubernetes.client.util.credentials.ClientCertificateAuthentication;
 import io.kubernetes.client.util.credentials.UsernamePasswordAuthentication;
 import okhttp3.OkHttpClient;
-import software.wings.beans.KubernetesConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 

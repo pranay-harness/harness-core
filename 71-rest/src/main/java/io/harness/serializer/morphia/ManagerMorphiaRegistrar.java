@@ -234,7 +234,6 @@ import software.wings.beans.JiraConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsLegacyConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.License;
 import software.wings.beans.LocalEncryptionConfig;
@@ -1304,7 +1303,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.JiraConfig", JiraConfig.class);
     w.put("beans.KmsConfig", KmsConfig.class);
     w.put("beans.KubernetesClusterConfig", KubernetesClusterConfig.class);
-    w.put("beans.KubernetesConfig", KubernetesConfig.class);
     w.put("beans.LocalEncryptionConfig", LocalEncryptionConfig.class);
     w.put("beans.MultiServiceOrchestrationWorkflow", MultiServiceOrchestrationWorkflow.class);
     w.put("beans.NewRelicConfig", NewRelicConfig.class);

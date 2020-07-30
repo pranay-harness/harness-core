@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;

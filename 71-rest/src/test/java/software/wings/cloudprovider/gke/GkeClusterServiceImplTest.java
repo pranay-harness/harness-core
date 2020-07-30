@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +44,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.GcpHelperService;
 

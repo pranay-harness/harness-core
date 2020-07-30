@@ -8,7 +8,7 @@ import io.fabric8.kubernetes.client.Client;
 import io.fabric8.kubernetes.client.ExtensionAdapter;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.exception.InvalidRequestException;
-import software.wings.beans.KubernetesConfig;
+import io.harness.k8s.model.KubernetesConfig;
 import software.wings.delegatetasks.k8s.exception.K8sClusterException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;

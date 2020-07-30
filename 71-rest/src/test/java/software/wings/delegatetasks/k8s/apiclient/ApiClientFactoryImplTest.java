@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.auth.ApiKeyAuth;
@@ -15,7 +16,6 @@ import okio.ByteString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.KubernetesConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
