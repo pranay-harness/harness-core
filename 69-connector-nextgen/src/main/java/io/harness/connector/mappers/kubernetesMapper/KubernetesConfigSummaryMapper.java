@@ -6,15 +6,16 @@ import com.google.inject.Singleton;
 import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO;
 import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO.KubernetesConfigSummaryDTOBuilder;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
+import io.harness.connector.mappers.ConnectorConfigSummaryDTOMapper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
-public class KubernetesConfigSummaryMapper {
+public class KubernetesConfigSummaryMapper implements ConnectorConfigSummaryDTOMapper<KubernetesClusterConfig> {
   private KubernetesConfigCastHelper kubernetesConfigCastHelper;
-  public KubernetesConfigSummaryDTO createKubernetesConfigSummaryDTO(KubernetesClusterConfig connector) {
+  public KubernetesConfigSummaryDTO toConnectorConfigSummaryDTO(KubernetesClusterConfig connector) {
     KubernetesConfigSummaryDTOBuilder builder = KubernetesConfigSummaryDTO.builder();
     populateURLORDelegateName(builder, connector);
     return builder.build();
