@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
@@ -22,6 +23,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(Connector.class);
     set.add(KubernetesClusterConfig.class);
     set.add(GitConfig.class);
+    set.add(AppDynamicsConfig.class);
   }
 
   @Override

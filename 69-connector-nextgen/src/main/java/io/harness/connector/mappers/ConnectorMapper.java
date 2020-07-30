@@ -13,6 +13,8 @@ import io.harness.connector.FullyQualitifedIdentifierHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
@@ -30,6 +32,8 @@ public class ConnectorMapper {
   KubernetesEntityToDTO kubernetesEntityToDTO;
   GitDTOToEntity gitDTOToEntity;
   GitEntityToDTO gitEntityToDTO;
+  AppDynamicsDTOToEntity appDynamicsDTOToEntity;
+  AppDynamicsEntityToDTO appDynamicsEntityToDTO;
 
   @Inject private Map<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapperMap;
   @Inject private Map<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapperMap;

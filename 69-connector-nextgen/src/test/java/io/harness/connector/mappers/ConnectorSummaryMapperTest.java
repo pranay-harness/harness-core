@@ -76,7 +76,7 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
 
   private void assertConnectorSummaryFieldsAreCorrect(ConnectorSummaryDTO connectorSummaryDTO) {
     assertThat(connectorSummaryDTO).isNotNull();
-    assertThat(connectorSummaryDTO.getConnectorDetials()).isNotNull();
+    assertThat(connectorSummaryDTO.getConnectorDetails()).isNotNull();
     assertThat(connectorSummaryDTO.getCategories()).isEqualTo(Collections.singletonList(CLOUD_PROVIDER));
     assertThat(connectorSummaryDTO.getType()).isEqualTo(KUBERNETES_CLUSTER);
     assertThat(connectorSummaryDTO.getCreatedAt()).isGreaterThan(0);

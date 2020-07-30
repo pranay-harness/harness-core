@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ConnectorType {
   KUBERNETES_CLUSTER("K8sCluster"),
-  GIT("Git");
+  GIT("Git"),
+  APP_DYNAMICS("AppDynamics");
 
   private final String displayName;
 

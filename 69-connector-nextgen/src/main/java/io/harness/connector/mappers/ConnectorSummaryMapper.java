@@ -11,8 +11,10 @@ import io.harness.connector.apis.dto.ConnectorConfigSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO.ConnectorSummaryDTOBuilder;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConfigSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.exception.UnsupportedOperationException;
@@ -26,6 +28,7 @@ import java.util.Map;
 public class ConnectorSummaryMapper {
   private KubernetesConfigSummaryMapper kubernetesConfigSummaryMapper;
   private GitConfigSummaryMapper gitConfigSummaryMapper;
+  private AppDynamicsConfigSummaryMapper appDynamicsConfigSummaryMapper;
   private static final String EMPTY_STRING = "";
 
   public ConnectorSummaryDTO writeConnectorSummaryDTO(Connector connector, String accountName,
@@ -37,7 +40,7 @@ public class ConnectorSummaryMapper {
                                                              .accountName(accountName)
                                                              .categories(connector.getCategories())
                                                              .type(connector.getType())
-                                                             .connectorDetials(createConnectorDetailsDTO(connector))
+                                                             .connectorDetails(createConnectorDetailsDTO(connector))
                                                              .tags(connector.getTags())
                                                              .createdAt(connector.getCreatedAt())
                                                              .lastModifiedAt(connector.getLastModifiedAt())
@@ -77,6 +80,8 @@ public class ConnectorSummaryMapper {
         return kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO((KubernetesClusterConfig) connector);
       case GIT:
         return gitConfigSummaryMapper.createGitConfigSummaryDTO((GitConfig) connector);
+      case APP_DYNAMICS:
+        return appDynamicsConfigSummaryMapper.createAppDynamicsConfigSummaryDTO((AppDynamicsConfig) connector);
       default:
         throw new UnsupportedOperationException(
             String.format("The connector type [%s] is invalid", connector.getType()));
