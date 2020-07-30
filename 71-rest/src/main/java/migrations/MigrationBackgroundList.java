@@ -12,6 +12,7 @@ import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
 import migrations.all.AddAccountIdToNewRelicMetricAnalysisRecords;
+import migrations.all.AddAccountIdToServiceCommands;
 import migrations.all.AddAccountIdToServiceVariables;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
@@ -237,7 +238,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(135, BaseMigration.class))
         .add(Pair.of(136, BaseMigration.class))
         .add(Pair.of(137, BaseMigration.class))
-        .add(Pair.of(138, BaseMigration.class))
+        .add(Pair.of(138, RemoveDeletedAppIdsFromUserGroups.class))
         .add(Pair.of(139, AddAccountIdToTriggers.class))
         .add(Pair.of(140, AddAccountIdToCommandLogs.class))
         .add(Pair.of(141, AddAccountIdToEntityVersion.class))
@@ -245,6 +246,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(143, AddAccountIdToServiceVariables.class))
         .add(Pair.of(144, AddAccountIdToActivityCollection.class))
         .add(Pair.of(145, RemoveDeletedAppIdsFromUserGroups.class))
+        .add(Pair.of(146, AddAccountIdToServiceCommands.class))
         .build();
   }
 }

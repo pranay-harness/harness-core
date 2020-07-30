@@ -1728,6 +1728,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // validate service command name
     validateCommandName(serviceCommand.getName());
 
+    String accountId = appService.getAccountIdByAppId(appId);
+    serviceCommand.setAccountId(accountId);
+
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
     entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
         serviceCommand.getName(), EntityVersion.ChangeType.CREATED, notes);

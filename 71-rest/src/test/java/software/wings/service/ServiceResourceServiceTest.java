@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -2785,5 +2786,26 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                               .runtime("runTime")
                               .build()))
         .build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSaveServiceCommandWithAccountId() {
+    ServiceCommand serviceCommand =
+        aServiceCommand().withName("START").withAppId(APP_ID).withServiceId(SERVICE_ID).build();
+    serviceCommand.setCommand(aCommand().withGraph(getGraph()).build());
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(entityVersionService.newEntityVersion(
+             APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.CREATED, null))
+        .thenReturn(anEntityVersion().withVersion(2).build());
+    when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
+        .thenAnswer(invocation -> {
+          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          command.setUuid(ID_KEY);
+          assertThat(command.getAccountId()).isEqualTo(ACCOUNT_ID);
+          return command;
+        });
+    srs.addCommand(APP_ID, SERVICE_ID, serviceCommand, false);
   }
 }

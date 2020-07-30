@@ -11,6 +11,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -39,6 +41,8 @@ public class ServiceCommand extends Base {
   private Integer defaultVersion;
 
   private boolean targetToAllEnv = true;
+
+  @FdIndex @Getter @Setter private String accountId;
 
   @Transient private Command command;
 
@@ -303,6 +307,7 @@ public class ServiceCommand extends Base {
 
   public static final class Builder {
     private String name;
+    private String accountId;
     private String serviceId;
     private Map<String, EntityVersion> envIdVersionMap = new HashMap<>();
     private Integer defaultVersion;
@@ -328,6 +333,11 @@ public class ServiceCommand extends Base {
 
     public Builder withName(String name) {
       this.name = name;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -414,6 +424,7 @@ public class ServiceCommand extends Base {
     public Builder but() {
       return aServiceCommand()
           .withName(name)
+          .withAccountId(accountId)
           .withServiceId(serviceId)
           .withEnvIdVersionMap(envIdVersionMap)
           .withDefaultVersion(defaultVersion)
@@ -432,6 +443,7 @@ public class ServiceCommand extends Base {
     public ServiceCommand build() {
       ServiceCommand serviceCommand = new ServiceCommand();
       serviceCommand.setName(name);
+      serviceCommand.setAccountId(accountId);
       serviceCommand.setServiceId(serviceId);
       serviceCommand.setEnvIdVersionMap(envIdVersionMap);
       serviceCommand.setDefaultVersion(defaultVersion);
