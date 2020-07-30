@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SKIPPED;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
@@ -140,7 +141,11 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
           ? executeShellCommand(commandUnitExecutorService, (Command) commandUnit, context)
           : commandUnitExecutorService.execute(commandUnit, context);
       if (FAILURE == commandExecutionStatus) {
-        break;
+        if (COMMAND == commandUnit.getCommandUnitType() && ((Command) commandUnit).getCommandUnits().isEmpty()) {
+          commandExecutionStatus = SKIPPED;
+        } else {
+          break;
+        }
       }
     }
 

@@ -36,7 +36,7 @@ public class OrchestrationEventEmitterTest extends OrchestrationTest {
   @Inject private Injector injector;
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = PRASHANT, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTestEmitEvent() {
     OrchestrationSubject subject = spy(new OrchestrationSubject());
