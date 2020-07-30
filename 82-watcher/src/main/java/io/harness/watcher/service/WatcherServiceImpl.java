@@ -725,20 +725,32 @@ public class WatcherServiceImpl implements WatcherService {
     return false;
   }
 
-  private void switchStorage() throws Exception {
+  private void switchStorage() {
     logger.info("Switching Storage");
     downloadRunScriptsBeforeRestartingDelegateAndWatcher();
     restartDelegate();
     restartWatcher();
   }
 
-  private void downloadRunScriptsBeforeRestartingDelegateAndWatcher() throws Exception {
-    List<String> expectedDelegateVersions = findExpectedDelegateVersions();
-    for (String expectedVersion : expectedDelegateVersions) {
-      if (multiVersion) {
-        downloadRunScripts(expectedVersion, expectedVersion, true);
-      } else {
-        downloadRunScripts(".", expectedVersion, true);
+  private void downloadRunScriptsBeforeRestartingDelegateAndWatcher() {
+    if (!isDiskFull()) {
+      try {
+        List<String> expectedDelegateVersions = findExpectedDelegateVersions();
+        for (String expectedVersion : expectedDelegateVersions) {
+          if (multiVersion) {
+            downloadRunScripts(expectedVersion, expectedVersion, true);
+          } else {
+            downloadRunScripts(".", expectedVersion, true);
+          }
+        }
+      } catch (IOException ioe) {
+        if (ioe.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+          lastAvailableDiskSpace.set(getDiskFreeSpace());
+          logger.error("Download run script, Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+        }
+        logger.error("Error download run script", ioe);
+      } catch (Exception e) {
+        logger.error("Error downloading or starting run script", e);
       }
     }
   }
@@ -751,7 +763,7 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
-  private void upgradeJre(String delegateJreVersion, String migrateToJreVersion) throws Exception {
+  private void upgradeJre(String delegateJreVersion, String migrateToJreVersion) {
     restartDelegateToUpgradeJre(delegateJreVersion, migrateToJreVersion);
     restartWatcherToUpgradeJre(migrateToJreVersion);
   }
@@ -763,7 +775,7 @@ public class WatcherServiceImpl implements WatcherService {
    * @param migrateToJreVersion
    * @throws Exception
    */
-  private void restartDelegateToUpgradeJre(String delegateJreVersion, String migrateToJreVersion) throws Exception {
+  private void restartDelegateToUpgradeJre(String delegateJreVersion, String migrateToJreVersion) {
     if (!delegateJreVersion.equals(migrateToJreVersion)
         && clock.millis() - delegateRestartedToUpgradeJreAt > DELEGATE_RESTART_TO_UPGRADE_JRE_TIMEOUT) {
       logger.debug("Delegate JRE: {} MigrateTo JRE: {} ", delegateJreVersion, migrateToJreVersion);
@@ -778,7 +790,7 @@ public class WatcherServiceImpl implements WatcherService {
    * @param migrateToJreVersion
    * @throws Exception
    */
-  private void restartWatcherToUpgradeJre(String migrateToJreVersion) throws Exception {
+  private void restartWatcherToUpgradeJre(String migrateToJreVersion) {
     if (!migrateToJreVersion.equals(watcherJreVersion) && !watcherRestartedToUpgradeJre) {
       logger.debug("Watcher JRE: {} MigrateTo JRE: {} ", watcherJreVersion, migrateToJreVersion);
       downloadRunScriptsBeforeRestartingDelegateAndWatcher();
