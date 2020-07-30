@@ -122,7 +122,8 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
               message.getAppId(), workflowExecution.getUuid());
         }
 
-        workflowExecutionService.updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), status);
+        workflowExecutionService.updateStartStatus(
+            workflowExecution.getAppId(), workflowExecution.getUuid(), status, true);
       } catch (Exception e) {
         logger.error("Exception in generating execution log context", e);
       }
