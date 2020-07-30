@@ -120,6 +120,17 @@ public class EnvironmentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  public void testUpsert() {
+    doReturn(environmentEntity).when(environmentService).upsert(environmentEntity);
+    Optional<EnvironmentResponseDTO> response =
+        environmentResource.upsert(environmentEntity.getAccountId(), environmentRequestDTO).getData();
+    assertThat(response).isPresent();
+    assertThat(response.get()).isEqualTo(environmentResponseDTO);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
   public void testListServices() {
     Criteria criteria = EnvironmentFilterHelper.createCriteria("", "", "");
     Pageable pageable = PageUtils.getPageRequest(0, 10, null);

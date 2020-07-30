@@ -92,6 +92,16 @@ public class ServiceResource {
     return ResponseDTO.newResponse(Optional.ofNullable(ServiceElementMapper.writeDTO(updatedService)));
   }
 
+  @PUT
+  @Path("upsert")
+  @ApiOperation(value = "Upsert a service by identifier", nickname = "upsertService")
+  public ResponseDTO<Optional<ServiceResponseDTO>> upsert(
+      @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+    ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
+    ServiceEntity upsertedService = serviceEntityService.upsert(requestService);
+    return ResponseDTO.newResponse(Optional.ofNullable(ServiceElementMapper.writeDTO(upsertedService)));
+  }
+
   @GET
   @ApiOperation(value = "Gets Service list for a project", nickname = "getServiceListForProject")
   public ResponseDTO<NGPageResponse<ServiceResponseDTO>> listServicesForProject(

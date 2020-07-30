@@ -7,15 +7,15 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.client.result.UpdateResult;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.ng.core.service.respositories.spring.ServiceRepository;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,27 +62,30 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   public ServiceEntity update(@Valid ServiceEntity requestService) {
     validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
         requestService.getProjectIdentifier(), requestService.getIdentifier());
-    Optional<ServiceEntity> existingService = get(requestService.getAccountId(), requestService.getOrgIdentifier(),
-        requestService.getProjectIdentifier(), requestService.getIdentifier());
-    if (!existingService.isPresent()) {
-      throw new InvalidRequestException(
-          String.format("No service exists with the Identifier %s", requestService.getIdentifier()));
-    }
     setName(requestService);
-    return update(existingService.get(), requestService);
+    Criteria criteria = getServiceEqualityCriteria(requestService);
+    UpdateResult updateResult = serviceRepository.update(criteria, requestService);
+    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
+      throw new InvalidRequestException(String.format(
+          "Service [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+          requestService.getIdentifier(), requestService.getProjectIdentifier(), requestService.getOrgIdentifier()));
+    }
+    return requestService;
   }
 
   @Override
-  public ServiceEntity upsert(ServiceEntity requestService) {
-    Optional<ServiceEntity> existingService = get(requestService.getAccountId(), requestService.getOrgIdentifier(),
+  public ServiceEntity upsert(@Valid ServiceEntity requestService) {
+    validatePresenceOfRequiredFields(requestService.getAccountId(), requestService.getOrgIdentifier(),
         requestService.getProjectIdentifier(), requestService.getIdentifier());
     setName(requestService);
-    return existingService.map(serviceEntity -> update(serviceEntity, requestService))
-        .orElseGet(() -> create(requestService));
-  }
-
-  private ServiceEntity update(ServiceEntity existingService, ServiceEntity requestService) {
-    return serviceRepository.save(applyUpdateToServiceEntity(existingService, requestService));
+    Criteria criteria = getServiceEqualityCriteria(requestService);
+    UpdateResult upsertResult = serviceRepository.upsert(criteria, requestService);
+    if (!upsertResult.wasAcknowledged()) {
+      throw new InvalidRequestException(String.format(
+          "Service [%s] under Project[%s], Organization [%s] couldn't be upserted.", requestService.getIdentifier(),
+          requestService.getProjectIdentifier(), requestService.getOrgIdentifier()));
+    }
+    return requestService;
   }
 
   @Override
@@ -97,18 +100,20 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
     return true;
   }
 
-  @SneakyThrows
-  private ServiceEntity applyUpdateToServiceEntity(ServiceEntity existingService, ServiceEntity requestService) {
-    requestService.setId(existingService.getId());
-    requestService.setVersion(existingService.getVersion());
-    requestService.setCreatedAt(existingService.getCreatedAt());
-    BeanUtils.copyProperties(requestService, existingService);
-    return existingService;
-  }
-
   private void setName(ServiceEntity requestService) {
     if (isEmpty(requestService.getName())) {
       requestService.setName(requestService.getIdentifier());
     }
+  }
+
+  private Criteria getServiceEqualityCriteria(@Valid ServiceEntity requestService) {
+    return Criteria.where(ServiceEntityKeys.accountId)
+        .is(requestService.getAccountId())
+        .and(ServiceEntityKeys.orgIdentifier)
+        .is(requestService.getOrgIdentifier())
+        .and(ServiceEntityKeys.projectIdentifier)
+        .is(requestService.getProjectIdentifier())
+        .and(ServiceEntityKeys.identifier)
+        .is(requestService.getIdentifier());
   }
 }

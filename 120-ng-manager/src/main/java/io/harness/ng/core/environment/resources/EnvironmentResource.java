@@ -92,6 +92,16 @@ public class EnvironmentResource {
     return ResponseDTO.newResponse(Optional.ofNullable(EnvironmentMapper.writeDTO(updatedEnvironment)));
   }
 
+  @PUT
+  @Path("upsert")
+  @ApiOperation(value = "Upsert an environment by identifier", nickname = "upsertEnvironment")
+  public ResponseDTO<Optional<EnvironmentResponseDTO>> upsert(
+      @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
+    Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
+    Environment updatedEnvironment = environmentService.upsert(requestEnvironment);
+    return ResponseDTO.newResponse(Optional.ofNullable(EnvironmentMapper.writeDTO(updatedEnvironment)));
+  }
+
   @GET
   @ApiOperation(value = "Gets environment list for a project", nickname = "getEnvironmentListForProject")
   public ResponseDTO<NGPageResponse<EnvironmentResponseDTO>> listEnvironmentsForProject(

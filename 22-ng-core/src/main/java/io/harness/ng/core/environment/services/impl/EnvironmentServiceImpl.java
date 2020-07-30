@@ -7,14 +7,15 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.client.result.UpdateResult;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.environment.beans.Environment;
+import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.ng.core.environment.respositories.spring.EnvironmentRepository;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -57,24 +58,32 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   public Environment update(@Valid Environment requestEnvironment) {
     validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
         requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
-    Optional<Environment> existingEnvironment =
-        get(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-            requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
-    if (!existingEnvironment.isPresent()) {
-      throw new InvalidRequestException(
-          String.format("No environment exists with the Identifier %s", requestEnvironment.getIdentifier()));
-    }
     setName(requestEnvironment);
-    return update(existingEnvironment.get(), requestEnvironment);
+    Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment);
+    UpdateResult updateResult = environmentRepository.update(criteria, requestEnvironment);
+    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
+      throw new InvalidRequestException(
+          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+              requestEnvironment.getOrgIdentifier()));
+    }
+    return requestEnvironment;
   }
 
   @Override
   public Environment upsert(Environment requestEnvironment) {
-    Optional<Environment> existingEnvironment =
-        get(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-            requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
+    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
     setName(requestEnvironment);
-    return existingEnvironment.map(env -> update(env, requestEnvironment)).orElseGet(() -> create(requestEnvironment));
+    Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment);
+    UpdateResult updateResult = environmentRepository.upsert(criteria, requestEnvironment);
+    if (!updateResult.wasAcknowledged()) {
+      throw new InvalidRequestException(
+          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be upserted.",
+              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+              requestEnvironment.getOrgIdentifier()));
+    }
+    return requestEnvironment;
   }
 
   @Override
@@ -94,22 +103,20 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
   }
 
-  private Environment update(Environment existingEnvironment, Environment requestEnvironment) {
-    Environment environment = applyUpdateToEnvironmentEntity(existingEnvironment, requestEnvironment);
-    return environmentRepository.save(environment);
-  }
-
-  private Environment applyUpdateToEnvironmentEntity(Environment existingEnvironment, Environment requestEnvironment) {
-    requestEnvironment.setId(existingEnvironment.getId());
-    requestEnvironment.setVersion(existingEnvironment.getVersion());
-    requestEnvironment.setCreatedAt(existingEnvironment.getCreatedAt());
-    BeanUtils.copyProperties(requestEnvironment, existingEnvironment);
-    return existingEnvironment;
-  }
-
   private void setName(Environment requestEnvironment) {
     if (isEmpty(requestEnvironment.getName())) {
       requestEnvironment.setName(requestEnvironment.getIdentifier());
     }
+  }
+
+  private Criteria getEnvironmentEqualityCriteria(Environment requestEnvironment) {
+    return Criteria.where(EnvironmentKeys.accountId)
+        .is(requestEnvironment.getAccountId())
+        .and(EnvironmentKeys.orgIdentifier)
+        .is(requestEnvironment.getOrgIdentifier())
+        .and(EnvironmentKeys.projectIdentifier)
+        .is(requestEnvironment.getProjectIdentifier())
+        .and(EnvironmentKeys.identifier)
+        .is(requestEnvironment.getIdentifier());
   }
 }

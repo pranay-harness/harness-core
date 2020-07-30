@@ -10,7 +10,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGCoreBaseTest;
 import io.harness.ng.core.environment.beans.Environment;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
+import io.harness.ng.core.environment.mappers.EnvironmentMapper;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
 import org.junit.Test;
@@ -19,7 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class EnvironmentServiceImplTest extends NGCoreBaseTest {
   @Inject EnvironmentServiceImpl environmentService;
@@ -74,11 +78,11 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     assertThat(updatedEnvironment.getProjectIdentifier()).isEqualTo(updateEnvironmentRequest.getProjectIdentifier());
     assertThat(updatedEnvironment.getIdentifier()).isEqualTo(updateEnvironmentRequest.getIdentifier());
     assertThat(updatedEnvironment.getName()).isEqualTo(updateEnvironmentRequest.getName());
-    assertThat(updatedEnvironment.getId()).isEqualTo(createdEnvironment.getId());
 
     updateEnvironmentRequest.setIdentifier("NEW_ENV");
     assertThatThrownBy(() -> environmentService.update(updateEnvironmentRequest))
         .isInstanceOf(InvalidRequestException.class);
+    updatedEnvironment.setIdentifier("IDENTIFIER");
 
     // Upsert operations
     Environment upsertEnvironmentRequest = Environment.builder()
@@ -102,7 +106,8 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     Page<Environment> list = environmentService.list(criteriaFromFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
     assertThat(list.getContent().size()).isEqualTo(1);
-    assertThat(list.getContent().get(0)).isEqualTo(updatedEnvironment);
+    assertThat(EnvironmentMapper.writeDTO(list.getContent().get(0)))
+        .isEqualTo(EnvironmentMapper.writeDTO(updatedEnvironment));
 
     criteriaFromFilter = EnvironmentFilterHelper.createCriteria("ACCOUNT_ID", "ORG_ID", null);
     pageRequest = PageUtils.getPageRequest(0, 100, null);
@@ -110,7 +115,10 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     list = environmentService.list(criteriaFromFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
     assertThat(list.getContent().size()).isEqualTo(2);
-    assertThat(list.getContent()).containsOnly(updatedEnvironment, upsertEnv);
+    List<EnvironmentResponseDTO> dtoList =
+        list.getContent().stream().map(EnvironmentMapper::writeDTO).collect(Collectors.toList());
+    assertThat(dtoList).containsOnly(
+        EnvironmentMapper.writeDTO(updatedEnvironment), EnvironmentMapper.writeDTO(upsertEnv));
 
     // Delete operations
     boolean delete = environmentService.delete("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_ENV");
