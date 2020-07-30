@@ -2,16 +2,14 @@ package io.harness.cvng.client;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_NEXTGEN_RESOURCE_PREFIX;
-import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_HISTOGRAM_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_RESOURCE_PATH;
-import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAMPLE_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEARCH_PATH;
+import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION_RESPONSE_PATH;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.CVHistogram;
 import io.harness.cvng.beans.MetricPackDTO;
-import io.harness.cvng.beans.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkSavedSearch;
+import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -41,12 +39,8 @@ public interface VerificationManagerClient {
   Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(@Query("accountId") String accountId,
       @Query("connectorId") String connectorId, @Query("requestGuid") String requestGuid);
 
-  @GET(SPLUNK_RESOURCE_PATH + SPLUNK_HISTOGRAM_PATH)
-  Call<RestResponse<CVHistogram>> getHistogram(@Query("accountId") String accountId,
-      @Query("connectorId") String connectorId, @Query("query") String query, @Query("requestGuid") String requestGuid);
-
-  @GET(SPLUNK_RESOURCE_PATH + SPLUNK_SAMPLE_PATH)
-  Call<RestResponse<SplunkSampleResponse>> getSamples(@Query("accountId") String accountId,
+  @GET(SPLUNK_RESOURCE_PATH + SPLUNK_VALIDATION_RESPONSE_PATH)
+  Call<RestResponse<SplunkValidationResponse>> getSamples(@Query("accountId") String accountId,
       @Query("connectorId") String connectorId, @Query("query") String query, @Query("requestGuid") String requestGuid);
 
   @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")

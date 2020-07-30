@@ -9,9 +9,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.cvng.beans.CVHistogram;
-import io.harness.cvng.beans.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkSavedSearch;
+import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -105,21 +104,13 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
   }
 
   @Override
-  public CVHistogram getHistogram(String accountId, String connectorId, String query, String requestGuid) {
+  public SplunkValidationResponse getValidationResponse(
+      String accountId, String connectorId, String query, String requestGuid) {
     final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
     SyncTaskContext taskContext = getSyncTaskContext(accountId);
     return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
-        .getHistogram((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query, requestGuid);
-  }
-
-  @Override
-  public SplunkSampleResponse getSamples(String accountId, String connectorId, String query, String requestGuid) {
-    final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
-    SyncTaskContext taskContext = getSyncTaskContext(accountId);
-    return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
-        .getSamples((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query, requestGuid);
+        .getValidationResponse((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query, requestGuid);
   }
 
   private List<EncryptedDataDetail> getEncryptionDetails(SettingAttribute settingAttribute) {
