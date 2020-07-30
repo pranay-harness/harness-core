@@ -38,7 +38,7 @@ public class OrgScopeHelper {
   }
 
   public List<String> getOrgIdentifiers(List<Connector> connectors) {
-    if (connectors.isEmpty()) {
+    if (isEmpty(connectors)) {
       return Collections.emptyList();
     }
     return connectors.stream().map(Connector::getOrgIdentifier).collect(Collectors.toList());

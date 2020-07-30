@@ -1,4 +1,4 @@
-package io.harness.connector.impl;
+package io.harness.connector.validator;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ManagerDelegateServiceDriver;
-import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;

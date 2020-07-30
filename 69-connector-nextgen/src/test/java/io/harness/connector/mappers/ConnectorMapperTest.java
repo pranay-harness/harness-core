@@ -1,5 +1,8 @@
 package io.harness.connector.mappers;
 
+import static io.harness.connector.entities.Connector.Scope.ACCOUNT;
+import static io.harness.connector.entities.Connector.Scope.ORGANIZATION;
+import static io.harness.connector.entities.Connector.Scope.PROJECT;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,7 +77,7 @@ public class ConnectorMapperTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void testToConnector() {
+  public void testToConnectorTest() {
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(KubernetesAuthType.USER_PASSWORD)
                                               .credentials(KubernetesUserNamePasswordDTO.builder()
@@ -107,7 +110,7 @@ public class ConnectorMapperTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void testWriteDTO() {
+  public void testWriteDTOTest() {
     K8sUserNamePassword k8sUserNamePassword =
         K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
@@ -128,5 +131,22 @@ public class ConnectorMapperTest extends CategoryTest {
     assertThat(connectorRequestDTO.getName()).isEqualTo(name);
     assertThat(connectorRequestDTO.getIdentifier()).isEqualTo(identifier);
     assertThat(connectorRequestDTO.getConnectorType()).isEqualTo(KUBERNETES_CLUSTER);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void getScopeFromConnectorDTOTest() {
+    ConnectorRequestDTO connectorDTO = ConnectorRequestDTO.builder().build();
+    Connector.Scope accountScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
+    assertThat(accountScope).isEqualTo(ACCOUNT);
+
+    connectorDTO.setOrgIdentifier("orgIdentifier");
+    Connector.Scope orgScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
+    assertThat(orgScope).isEqualTo(ORGANIZATION);
+
+    connectorDTO.setProjectIdentifer("projectIdentifier");
+    Connector.Scope projectScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
+    assertThat(projectScope).isEqualTo(PROJECT);
   }
 }

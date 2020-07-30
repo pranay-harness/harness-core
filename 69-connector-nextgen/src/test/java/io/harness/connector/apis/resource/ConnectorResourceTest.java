@@ -16,6 +16,7 @@ import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.impl.ConnectorServiceImpl;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -134,5 +135,23 @@ public class ConnectorResourceTest extends CategoryTest {
         "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
     Mockito.verify(connectorService, times(1)).validateTheIdentifierIsUnique(any(), any(), any(), any());
     assertThat(result.getData()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void validateTest() {
+    ResponseDTO<ConnectorValidationResult> result =
+        connectorResource.validate(randomConnectorRequestDTO, accountIdentifier);
+    Mockito.verify(connectorService, times(1)).validate(eq(randomConnectorRequestDTO), eq(accountIdentifier));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testConnectionResourceTest() {
+    ResponseDTO<ConnectorValidationResult> validationResult = connectorResource.testConnection(
+        "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
+    Mockito.verify(connectorService, times(1)).testConnection(any(), any(), any(), any());
   }
 }

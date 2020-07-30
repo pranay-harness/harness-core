@@ -28,32 +28,27 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConnectorSummaryMapperTest extends CategoryTest {
   @InjectMocks ConnectorSummaryMapper connectorSummaryMapper;
   @Mock KubernetesConfigSummaryMapper kubernetesConfigSummaryMapper;
+  Connector connector;
+  String name = "name";
+  String description = "description";
+  String identifier = "identiifier";
+  List<String> tags = Arrays.asList("tag1", "tag2");
+  String accountName = "Test Account";
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    KubernetesConfigSummaryDTO kubernetesSummary =
-        KubernetesConfigSummaryDTO.builder().masterURL("masterURL").delegateName(null).build();
-    when(kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO(any())).thenReturn(kubernetesSummary);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.DEEPAK)
-  @Category(UnitTests.class)
-  public void writeConnectorSummaryDTO() {
     String masterURL = "masterURL";
     String userName = "userName";
     String password = "password";
     String cacert = "cacert";
-    String description = "description";
-    String name = "name";
-    String identifier = "identiifier";
-    List<String> tags = Arrays.asList("tag1", "tag2");
     K8sUserNamePassword k8sUserNamePassword =
         K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
@@ -61,10 +56,10 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
                                                             .auth(k8sUserNamePassword)
                                                             .build();
-    Connector connector = KubernetesClusterConfig.builder()
-                              .credentialType(MANUAL_CREDENTIALS)
-                              .credential(kubernetesClusterDetails)
-                              .build();
+    connector = KubernetesClusterConfig.builder()
+                    .credentialType(MANUAL_CREDENTIALS)
+                    .credential(kubernetesClusterDetails)
+                    .build();
     connector.setDescription(description);
     connector.setName(name);
     connector.setType(KUBERNETES_CLUSTER);
@@ -74,9 +69,12 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
     connector.setCreatedAt(1L);
     connector.setLastModifiedAt(1L);
 
-    ConnectorSummaryDTO connectorSummaryDTO =
-        connectorSummaryMapper.writeConnectorSummaryDTO(connector, null, null, null);
+    KubernetesConfigSummaryDTO kubernetesSummary =
+        KubernetesConfigSummaryDTO.builder().masterURL("masterURL").delegateName(null).build();
+    when(kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO(any())).thenReturn(kubernetesSummary);
+  }
 
+  private void assertConnectorSummaryFieldsAreCorrect(ConnectorSummaryDTO connectorSummaryDTO) {
     assertThat(connectorSummaryDTO).isNotNull();
     assertThat(connectorSummaryDTO.getConnectorDetials()).isNotNull();
     assertThat(connectorSummaryDTO.getCategories()).isEqualTo(Collections.singletonList(CLOUD_PROVIDER));
@@ -86,5 +84,65 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
     assertThat(connectorSummaryDTO.getDescription()).isEqualTo(description);
     assertThat(connectorSummaryDTO.getIdentifier()).isEqualTo(identifier);
     assertThat(connectorSummaryDTO.getTags()).isEqualTo(tags);
+    assertThat(connectorSummaryDTO.getAccountName()).isEqualTo(accountName);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void writeConnectorSummaryDTOTest() {
+    connector.setOrgIdentifier(null);
+    connector.setProjectIdentifier(null);
+    ConnectorSummaryDTO connectorSummaryDTO =
+        connectorSummaryMapper.writeConnectorSummaryDTO(connector, accountName, null, null);
+    assertConnectorSummaryFieldsAreCorrect(connectorSummaryDTO);
+    assertThat(connectorSummaryDTO.getOrgName()).isBlank();
+    assertThat(connectorSummaryDTO.getProjectName()).isBlank();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void writeConnectorSummaryDTOForOrgLevelConnectorTest() {
+    String orgIdentifier = "orgIdentifier";
+    String orgName = "orgName";
+    Map<String, String> orgIdOrgNameMap = new HashMap<String, String>() {
+      { put(orgIdentifier, orgName); }
+    };
+    connector.setScope(Connector.Scope.ORGANIZATION);
+    connector.setOrgIdentifier(orgIdentifier);
+    connector.setProjectIdentifier(null);
+    ConnectorSummaryDTO connectorSummaryDTO =
+        connectorSummaryMapper.writeConnectorSummaryDTO(connector, accountName, orgIdOrgNameMap, null);
+    assertConnectorSummaryFieldsAreCorrect(connectorSummaryDTO);
+    assertThat(connectorSummaryDTO.getOrgName()).isEqualTo(orgName);
+    assertThat(connectorSummaryDTO.getProjectName()).isBlank();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void writeConnectorSummaryDTOForProjectLevelConnectorTest() {
+    String orgIdentifier = "orgIdentifier";
+    String orgName = "orgName";
+    Map<String, String> orgIdOrgNameMap = new HashMap<String, String>() {
+      { put(orgIdentifier, orgName); }
+    };
+
+    String projectIdentifier = "projectIdentifier";
+    String projectName = "projectName";
+    Map<String, String> projectIdProjectNameMap = new HashMap<String, String>() {
+      { put(projectIdentifier, projectName); }
+    };
+
+    connector.setScope(Connector.Scope.PROJECT);
+    connector.setOrgIdentifier(orgIdentifier);
+    connector.setProjectIdentifier(projectIdentifier);
+
+    ConnectorSummaryDTO connectorSummaryDTO = connectorSummaryMapper.writeConnectorSummaryDTO(
+        connector, accountName, orgIdOrgNameMap, projectIdProjectNameMap);
+    assertConnectorSummaryFieldsAreCorrect(connectorSummaryDTO);
+    assertThat(connectorSummaryDTO.getOrgName()).isEqualTo(orgName);
+    assertThat(connectorSummaryDTO.getProjectName()).isEqualTo(projectName);
   }
 }

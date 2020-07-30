@@ -24,7 +24,7 @@ public class ConnectorFilterHelper {
       criteria.and(ConnectorKeys.projectIdentifier).is(connectorFilter.getProjectId());
     }
     if (connectorFilter.getType() != null) {
-      criteria.and(ConnectorKeys.type).is(connectorFilter.getType());
+      criteria.and(ConnectorKeys.type).is(connectorFilter.getType().name());
     }
     if (isNotEmpty(connectorFilter.getName())) {
       criteria.and(ConnectorKeys.name).regex(connectorFilter.getName());

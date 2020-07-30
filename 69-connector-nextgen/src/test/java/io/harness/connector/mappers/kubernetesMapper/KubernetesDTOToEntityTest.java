@@ -27,6 +27,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -59,6 +60,30 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     assertThat(k8Config.getCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
     KubernetesDelegateDetails kubernetesCredential = (KubernetesDelegateDetails) k8Config.getCredential();
     assertThat(kubernetesCredential.getDelegateName()).isEqualTo(delegateName);
+  }
+
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testToKubernetesClusterConfigForManualWhenWrongCredTypeGiven() {
+    KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
+        KubernetesClusterConfigDTO.builder()
+            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+            .config(KubernetesClusterDetailsDTO.builder().build())
+            .build();
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+  }
+
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testToKubernetesClusterConfigForDelegateWhenWrongCredTypeGiven() {
+    KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
+        KubernetesClusterConfigDTO.builder()
+            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+            .config(KubernetesDelegateDetailsDTO.builder().build())
+            .build();
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
   }
 
   @Test
@@ -200,5 +225,69 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     assertThat(kubernetesClusterDetails.getAuthType()).isEqualTo(SERVICE_ACCOUNT);
     K8sServiceAccount kubernetesCredential = (K8sServiceAccount) kubernetesClusterDetails.getAuth();
     assertThat(kubernetesCredential.getServiceAcccountToken()).isEqualTo(serviceAccountKey);
+  }
+
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testToManualConfigWhenUserGaveWrongTypeForServiceAccountAuth() {
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(USER_PASSWORD)
+                                              .credentials(KubernetesServiceAccountDTO.builder().build())
+                                              .build();
+    KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
+        KubernetesClusterConfigDTO.builder()
+            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+            .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
+            .build();
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+  }
+
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testToManualConfigWhenUserGaveWrongTypeForUserNamePwdAuth() {
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(SERVICE_ACCOUNT)
+                                              .credentials(KubernetesUserNamePasswordDTO.builder().build())
+                                              .build();
+    KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
+        KubernetesClusterConfigDTO.builder()
+            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+            .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
+            .build();
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+  }
+
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testToManualConfigWhenUserGaveWrongTypeForClientKeyAuth() {
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(OPEN_ID_CONNECT)
+                                              .credentials(KubernetesClientKeyCertDTO.builder().build())
+                                              .build();
+    KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
+        KubernetesClusterConfigDTO.builder()
+            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+            .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
+            .build();
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+  }
+
+  @Test(expected = UnexpectedException.class)
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testToManualConfigWhenUserGaveWrongTypeForOIDCAuth() {
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(CLIENT_KEY_CERT)
+                                              .credentials(KubernetesOpenIdConnectDTO.builder().build())
+                                              .build();
+    KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
+        KubernetesClusterConfigDTO.builder()
+            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+            .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
+            .build();
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
   }
 }
