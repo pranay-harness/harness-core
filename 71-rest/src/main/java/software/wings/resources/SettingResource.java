@@ -357,7 +357,7 @@ public class SettingResource {
     boolean yamlGitConfigsDeleted =
         yamlGitService.retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(accountId, gitConnectorsToRetain);
     if (yamlGitConfigsDeleted) {
-      logger.info("Deleted Yaml Git Configs of accountId {} of remaining git connectors");
+      logger.info("Deleted Yaml Git Configs of accountId {} of remaining git connectors", accountId);
     }
     logger.info("Completed processing git connector and yaml git config deletions for accountId {}", accountId);
     return new RestResponse();
