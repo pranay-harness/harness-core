@@ -1,9 +1,8 @@
 package software.wings.service.intfc.splunk;
 
 import com.splunk.Service;
-import io.harness.cvng.beans.CVHistogram;
-import io.harness.cvng.beans.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkSavedSearch;
+import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -56,10 +55,7 @@ public interface SplunkDelegateService {
   @DelegateTaskType(TaskType.SPLUNK_GET_SAVED_SEARCHES)
   List<SplunkSavedSearch> getSavedSearches(
       SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String requestGuid);
-  @DelegateTaskType(TaskType.SPLUNK_GET_HISTOGRAM)
-  CVHistogram getHistogram(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid);
-  @DelegateTaskType(TaskType.SPLUNK_GET_SAMPLE)
-  SplunkSampleResponse getSamples(
+  @DelegateTaskType(TaskType.SPLUNK_NEXT_GEN_VALIDATION_TASK)
+  SplunkValidationResponse getValidationResponse(
       SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid);
 }

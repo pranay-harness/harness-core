@@ -21,4 +21,5 @@ public interface CVNextGenConstants {
   String SPLUNK_SAVED_SEARCH_PATH = "saved-searches";
   String SPLUNK_HISTOGRAM_PATH = "histogram";
   String SPLUNK_SAMPLE_PATH = "samples";
+  String SPLUNK_VALIDATION_RESPONSE_PATH = "validation";
 }

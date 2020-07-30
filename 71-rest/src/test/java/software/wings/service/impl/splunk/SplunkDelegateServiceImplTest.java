@@ -21,10 +21,13 @@ import com.splunk.JobCollection;
 import com.splunk.SavedSearch;
 import com.splunk.SavedSearchCollection;
 import com.splunk.Service;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.beans.CVHistogram;
-import io.harness.cvng.beans.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkSavedSearch;
+import io.harness.cvng.beans.SplunkValidationResponse;
+import io.harness.cvng.beans.SplunkValidationResponse.Histogram;
+import io.harness.cvng.beans.SplunkValidationResponse.SampleLog;
+import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +41,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.WingsBaseTest;
 import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -50,13 +52,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 @Slf4j
-public class SplunkDelegateServiceImplTest extends WingsBaseTest {
+public class SplunkDelegateServiceImplTest extends CategoryTest {
   private SplunkConfig config;
   private String requestGuid;
   private String accountId;
@@ -167,13 +170,13 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
     when(jobCollection.create(any(), any())).thenReturn(job);
     when(job.getResults(any()))
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
-    CVHistogram histogram =
-        splunkDelegateService.getHistogram(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+    Histogram histogram = splunkDelegateService.getHistogram(splunkConfig, new ArrayList<>(), "exception", requestGuid);
     verify(jobCollection).create(eq("search exception | timechart count span=6h | table _time, count"), any());
     assertThat(histogram.getQuery()).isEqualTo("exception");
     assertThat(histogram.getBars()).hasSize(29);
     assertThat(histogram.getBars().get(0))
-        .isEqualTo(CVHistogram.Bar.builder().count(10).timestamp(1589889600000L).build());
+        .isEqualTo(Histogram.Bar.builder().count(10).timestamp(1589889600000L).build());
+    assertThat(histogram.getCount()).isEqualTo(389L);
     ThirdPartyApiCallLog apiCallLog = captureThirdPartyAPICallLog();
     assertThat(apiCallLog.getTitle()).isEqualTo("Fetch request to splunk-url");
     assertThat(apiCallLog.getStateExecutionId()).isEqualTo(requestGuid);
@@ -207,7 +210,11 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
     assertThat(samples.getRawSampleLogs()).hasSize(10);
     assertThat(samples.getRawSampleLogs().get(0))
         .isEqualTo(
-            "2020-05-26 18:10:39,278 [GitChangeSet] INFO  software.wings.yaml.gitSync.GitChangeSetRunnable - Not continuing with GitChangeSetRunnable job");
+            SampleLog.builder()
+                .raw(
+                    "2020-05-26 18:10:39,278 [GitChangeSet] INFO  software.wings.yaml.gitSync.GitChangeSetRunnable - Not continuing with GitChangeSetRunnable job")
+                .timestamp(1590059151845L)
+                .build());
     assertThat(samples.getSample())
         .isEqualTo(JsonUtils.asObject("{\n"
                 + "            \"linecount\": \"1\",\n"
@@ -230,6 +237,53 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
                       .value("search exception | head 10")
                       .build());
     assertThat(apiCallLog.getResponse()).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetValidationResponse() throws IOException {
+    Service service = mock(Service.class);
+    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
+    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    JobCollection jobCollection = mock(JobCollection.class);
+    when(service.getJobs()).thenReturn(jobCollection);
+    Job job = mock(Job.class);
+    when(jobCollection.create(any(), any())).thenReturn(job);
+    when(job.getResults(any()))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_query.json"))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
+    SplunkValidationResponse validationResponse =
+        splunkDelegateService.getValidationResponse(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+    verify(jobCollection).create(eq("search exception | head 10"), any());
+    assertThat(validationResponse.getQueryDurationMillis()).isEqualTo(Duration.ofDays(7).toMillis());
+    assertThat(validationResponse.getHistogram()).isNotNull();
+    assertThat(validationResponse.getSamples()).isNotNull();
+    assertThat(validationResponse.getErrorMessage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetValidationResponse_withErrorMessage() throws IOException {
+    Service service = mock(Service.class);
+    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
+    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    JobCollection jobCollection = mock(JobCollection.class);
+    when(service.getJobs()).thenReturn(jobCollection);
+    Job job = mock(Job.class);
+    when(jobCollection.create(any(), any())).thenReturn(job);
+    when(job.getResults(any()))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_invalid_query.json"))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
+    SplunkValidationResponse validationResponse =
+        splunkDelegateService.getValidationResponse(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+    verify(jobCollection).create(eq("search exception | head 10"), any());
+    assertThat(validationResponse.getQueryDurationMillis()).isEqualTo(Duration.ofDays(7).toMillis());
+    assertThat(validationResponse.getHistogram()).isNotNull();
+    assertThat(validationResponse.getSamples()).isNotNull();
+    assertThat(validationResponse.getErrorMessage())
+        .isEqualTo("Wrong kind of splunk query. Query should have raw(_raw field) message. Please check the query");
   }
 
   @Test

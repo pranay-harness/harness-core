@@ -22,10 +22,13 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.SavedSearchCollection;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
-import io.harness.cvng.beans.CVHistogram;
-import io.harness.cvng.beans.CVHistogram.CVHistogramBuilder;
-import io.harness.cvng.beans.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkSavedSearch;
+import io.harness.cvng.beans.SplunkValidationResponse;
+import io.harness.cvng.beans.SplunkValidationResponse.Histogram;
+import io.harness.cvng.beans.SplunkValidationResponse.Histogram.HistogramBuilder;
+import io.harness.cvng.beans.SplunkValidationResponse.SampleLog;
+import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
+import io.harness.cvng.beans.SplunkValidationResponse.SplunkValidationResponseBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -56,7 +59,6 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -79,6 +81,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
   private static final long BAR_DURATION_IN_HOURS = 6;
+  private static final Duration SPLUNK_VALIDATION_API_QUERY_DURATION = Duration.ofDays(7);
   private static final String INVALID_SPLUNK_QUERY_MSG_SAMPLES_API =
       "Wrong kind of splunk query. Query should have raw(_raw field) message. Please check the query";
 
@@ -202,47 +205,50 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     return splunkSavedSearches;
   }
 
-  @Override
-  public CVHistogram getHistogram(
+  public Histogram getHistogram(
       SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
     Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
     Preconditions.checkNotNull(query, "query can not be null");
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
     ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
     long now = Instant.now().toEpochMilli();
-    long nowMinus7Days = Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli();
+    long nowMinus7Days = Instant.now().minus(SPLUNK_VALIDATION_API_QUERY_DURATION).toEpochMilli();
     String histogramQuery = getHistogramQuery(query);
     addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), histogramQuery, nowMinus7Days, now);
-    CVHistogramBuilder cvHistogram =
-        CVHistogram.builder().query(query).intervalMs(Duration.ofHours(BAR_DURATION_IN_HOURS).toMillis());
+    HistogramBuilder histogramBuilder = Histogram.builder()
+                                            .query(query)
+                                            .intervalMs(Duration.ofHours(BAR_DURATION_IN_HOURS).toMillis())
+                                            .splunkQuery(histogramQuery);
 
     try {
       ResultsReaderJson resultsReaderJson = executeSearch(splunkService, histogramQuery, nowMinus7Days, now);
 
       Event event;
       List<Event> events = new ArrayList<>();
+      long totalCount = 0;
       while ((event = resultsReaderJson.getNextEvent()) != null) {
         String time = event.get("_time");
         long timestamp = SPLUNK_DATE_FORMATER.parse(time).getTime();
-        String count = event.get("count");
-        cvHistogram.addBar(CVHistogram.Bar.builder().count(Long.parseLong(count)).timestamp(timestamp).build());
+        long count = Long.parseLong(event.get("count"));
+        totalCount += count;
+        histogramBuilder.addBar(Histogram.Bar.builder().count(count).timestamp(timestamp).build());
         events.add(event);
       }
+      histogramBuilder = histogramBuilder.count(totalCount);
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_OK, JsonUtils.asJson(events), FieldType.JSON);
       delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
     } catch (IOException | ParseException e) {
       throw new IllegalStateException(e);
     }
-    return cvHistogram.build();
+    return histogramBuilder.build();
   }
 
   @NotNull
   private String getHistogramQuery(String query) {
     return "search " + query + " | timechart count span=" + BAR_DURATION_IN_HOURS + "h | table _time, count";
   }
-
-  @Override
+  @VisibleForTesting
   public SplunkSampleResponse getSamples(
       SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
     Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
@@ -251,10 +257,10 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
     ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
     long now = Instant.now().toEpochMilli();
-    long nowMinus7Days = Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli();
+    long nowMinus7Days = Instant.now().minus(SPLUNK_VALIDATION_API_QUERY_DURATION).toEpochMilli();
     addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), getSamplesQuery, nowMinus7Days, now);
     ResultsReaderJson resultsReaderJson;
-    List<String> results = new ArrayList<>();
+    List<SampleLog> results = new ArrayList<>();
     Map<String, String> sample = new HashMap<>();
     List<Event> events = new ArrayList<>();
     String errorMessage = null;
@@ -269,11 +275,14 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
         if (rawMessage == null) {
           errorMessage = INVALID_SPLUNK_QUERY_MSG_SAMPLES_API;
         } else {
-          results.add(rawMessage);
+          results.add(SampleLog.builder()
+                          .raw(rawMessage)
+                          .timestamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime())
+                          .build());
         }
         events.add(event);
       }
-    } catch (IOException e) {
+    } catch (IOException | ParseException e) {
       throw new IllegalStateException(e);
     }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
@@ -289,9 +298,27 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
     return SplunkSampleResponse.builder()
         .sample(withoutInternalFields)
+        .splunkQuery(getSamplesQuery)
         .rawSampleLogs(results)
         .errorMessage(errorMessage)
         .build();
+  }
+
+  @Override
+  public SplunkValidationResponse getValidationResponse(
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
+    SplunkSampleResponse splunkSampleResponse = getSamples(splunkConfig, encryptedDataDetails, query, requestGuid);
+    Histogram histogram = getHistogram(splunkConfig, encryptedDataDetails, query, requestGuid);
+    SplunkValidationResponseBuilder response =
+        SplunkValidationResponse.builder().samples(splunkSampleResponse).histogram(histogram);
+    if (splunkSampleResponse.getErrorMessage() != null) {
+      response = response.errorMessage(splunkSampleResponse.getErrorMessage());
+    }
+    if (histogram.getErrorMessage() != null) {
+      response = response.errorMessage(histogram.getErrorMessage());
+    }
+    response.queryDurationMillis(SPLUNK_VALIDATION_API_QUERY_DURATION.toMillis());
+    return response.build();
   }
 
   private ResultsReaderJson executeSearch(Service service, String query, long startTimeMs, long endTimeMs)

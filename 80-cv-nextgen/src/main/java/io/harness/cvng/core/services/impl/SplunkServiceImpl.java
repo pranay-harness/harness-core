@@ -2,9 +2,8 @@ package io.harness.cvng.core.services.impl;
 
 import com.google.inject.Inject;
 
-import io.harness.cvng.beans.CVHistogram;
-import io.harness.cvng.beans.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkSavedSearch;
+import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.core.services.api.SplunkService;
@@ -21,13 +20,8 @@ public class SplunkServiceImpl implements SplunkService {
   }
 
   @Override
-  public CVHistogram getHistogram(String accountId, String connectorId, String query, String requestGuid) {
-    return requestExecutor.execute(verificationManagerClient.getHistogram(accountId, connectorId, query, requestGuid))
-        .getResource();
-  }
-
-  @Override
-  public SplunkSampleResponse getSamples(String accountId, String connectorId, String query, String requestGuid) {
+  public SplunkValidationResponse getValidationResponse(
+      String accountId, String connectorId, String query, String requestGuid) {
     return requestExecutor.execute(verificationManagerClient.getSamples(accountId, connectorId, query, requestGuid))
         .getResource();
   }
