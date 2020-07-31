@@ -134,6 +134,22 @@ public class GcbServiceImpl implements GcbService {
     }
   }
 
+  @Override
+  public GcbBuildDetails cancelBuild(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String buildId) {
+    try {
+      Response<GcbBuildDetails> response =
+          getRestClient(GcbRestClient.class, GCB_BASE_URL)
+              .cancelBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig), buildId)
+              .execute();
+      if (!response.isSuccessful()) {
+        throw new GcbClientException(response.errorBody().string());
+      }
+      return response.body();
+    } catch (IOException e) {
+      throw new GcbClientException(GCP_ERROR_MESSAGE, e);
+    }
+  }
+
   @VisibleForTesting
   <T> T getRestClient(final Class<T> client, String baseUrl) {
     OkHttpClient okHttpClient = getOkHttpClientBuilder()

@@ -80,6 +80,8 @@ public class GcbTask extends AbstractDelegateRunnableTask {
         return startGcbBuild(params);
       case POLL:
         return pollGcbBuild(params);
+      case CANCEL:
+        return cancelBuild(params);
       default:
         throw new UnsupportedOperationException(format("Unsupported TaskType: %s", params.getType()));
     }
@@ -104,6 +106,12 @@ public class GcbTask extends AbstractDelegateRunnableTask {
     GcbBuildDetails build = buildOperationDetails.getOperationMeta().getBuild();
     params.setBuildId(build.getId());
     params.setBuildName(buildOperationDetails.getName());
+    return gcbDelegateResponseOf(params, build);
+  }
+
+  protected GcbDelegateResponse cancelBuild(final @NotNull GcbTaskParams params) {
+    GcbBuildDetails build =
+        gcbService.cancelBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
     return gcbDelegateResponseOf(params, build);
   }
 

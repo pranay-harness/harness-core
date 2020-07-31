@@ -116,19 +116,19 @@ public class GcbExecutionDataTest extends CategoryTest {
     artifacts.setImages(IMAGES);
 
     GcbExecutionData expected = new GcbExecutionData(ACTIVITY_ID, GcbExecutionData.GCB_URL + BUILD_ID, BUILD_ID, TAGS,
-        WORKING, BUILD_NAME, BUILD_NAME, SUBSTITUTIONS, LOGS_URL, IMAGES, null, null);
+        WORKING, BUILD_NAME, BUILD_NAME, SUBSTITUTIONS, LOGS_URL, IMAGES, null, null, null);
 
-    GcbDelegateResponse delegateResponse =
-        gcbDelegateResponseOf(GcbTaskParams.builder().buildId(BUILD_ID).buildName(BUILD_NAME).build(),
-            GcbBuildDetails.builder()
-                .tags(TAGS)
-                .status(WORKING)
-                .createTime(CREATE_TIME)
-                .substitutions(SUBSTITUTIONS)
-                .logUrl(LOGS_URL)
-                .artifacts(artifacts)
-                .build());
-    GcbExecutionData actual = new GcbExecutionData(ACTIVITY_ID).withDelegateResponse(delegateResponse);
+    GcbDelegateResponse delegateResponse = gcbDelegateResponseOf(
+        GcbTaskParams.builder().activityId(ACTIVITY_ID).buildId(BUILD_ID).buildName(BUILD_NAME).build(),
+        GcbBuildDetails.builder()
+            .tags(TAGS)
+            .status(WORKING)
+            .createTime(CREATE_TIME)
+            .substitutions(SUBSTITUTIONS)
+            .logUrl(LOGS_URL)
+            .artifacts(artifacts)
+            .build());
+    GcbExecutionData actual = new GcbExecutionData().withDelegateResponse(delegateResponse);
     assertThat(actual).isEqualTo(expected);
   }
 }

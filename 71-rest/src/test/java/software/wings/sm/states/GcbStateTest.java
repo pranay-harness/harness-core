@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.VGLIJIN;
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -48,6 +49,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.api.ExecutionDataValue;
 import software.wings.api.GcbExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -96,7 +98,7 @@ public class GcbStateTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    doReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(context).fetchRequiredApp();
+    doReturn(anApplication().accountId(ACCOUNT_ID).appId(APP_ID).build()).when(context).fetchRequiredApp();
     doReturn(APP_ID).when(context).getAppId();
     doReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build()).when(context).getEnv();
 
@@ -180,13 +182,18 @@ public class GcbStateTest extends CategoryTest {
   @Test
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)
-  public void handleAbortEventShouldSetErrorMessage() {
-    ExecutionContext executionContext = mock(ExecutionContext.class);
+  public void handleAbortEventShouldSetCancelledStatus() {
     GcbExecutionData gcbExecutionData = mock(GcbExecutionData.class);
-
-    when(executionContext.getStateExecutionData()).thenReturn(gcbExecutionData);
-    state.handleAbortEvent(executionContext);
-    verify(gcbExecutionData).setErrorMsg(anyString());
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(new GcpConfig());
+    when(settingService.get(anyString())).thenReturn(settingAttribute);
+    when(secretManager.getEncryptionDetails(any(GcpConfig.class), anyString(), anyString())).thenReturn(emptyList());
+    when(context.getStateExecutionData()).thenReturn(gcbExecutionData);
+    when(gcbExecutionData.getExecutionDetails())
+        .thenReturn(singletonMap("buildNo", ExecutionDataValue.builder().value("123").build()));
+    when(gcbExecutionData.getActivityId()).thenReturn(ACTIVITY_ID);
+    state.handleAbortEvent(context);
+    verify(gcbExecutionData).setBuildStatus(GcbBuildStatus.CANCELLED);
   }
 
   @Test
@@ -224,19 +231,15 @@ public class GcbStateTest extends CategoryTest {
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)
   public void shouldQueuePollDelegateTask() {
-    ExecutionContext executionContext = mock(ExecutionContext.class);
     GcbTaskParams gcbTaskParams = GcbTaskParams.builder().build();
     GcbDelegateResponse delegateResponse =
         gcbDelegateResponseOf(gcbTaskParams, GcbBuildDetails.builder().status(GcbBuildStatus.WORKING).build());
-    GcbExecutionData gcbExecutionData = mock(GcbExecutionData.class);
+    GcbExecutionData gcbExecutionData = new GcbExecutionData();
 
-    doReturn(gcbExecutionData).when(executionContext).getStateExecutionData();
-    when(executionContext.fetchRequiredApp()).thenReturn(mock(Application.class));
-    when(executionContext.fetchRequiredApp().getAccountId()).thenReturn("accountId");
-    when(executionContext.fetchRequiredApp().getAppId()).thenReturn("appId");
-    when(executionContext.fetchInfraMappingId()).thenReturn("infrastructureId");
+    doReturn(gcbExecutionData).when(context).getStateExecutionData();
+    when(context.fetchInfraMappingId()).thenReturn("infrastructureId");
 
-    ExecutionResponse actual = state.startPollTask(executionContext, delegateResponse);
+    ExecutionResponse actual = state.startPollTask(context, delegateResponse);
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskCaptor.capture());
 
@@ -246,8 +249,8 @@ public class GcbStateTest extends CategoryTest {
 
     DelegateTask delegateTask = delegateTaskCaptor.getValue();
 
-    assertThat(delegateTask.getAccountId()).isEqualTo("accountId");
-    assertThat(delegateTask.getAppId()).isEqualTo("appId");
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
     assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo("infrastructureId");
     assertThat(delegateTask.getData())
         .isEqualTo(TaskData.builder()

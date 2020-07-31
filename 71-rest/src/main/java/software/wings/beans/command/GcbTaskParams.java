@@ -21,15 +21,17 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 public class GcbTaskParams implements ExecutionCapabilityDemander {
-  public enum GcbTaskType { START, POLL }
+  public enum GcbTaskType { START, POLL, CANCEL }
 
-  @NotNull private String appId;
-  @NotNull private String unitName;
-  @NotNull private GcbTaskType type;
-  @NotNull private String activityId;
-  @NotNull private GcpConfig gcpConfig;
-  @NotNull private List<EncryptedDataDetail> encryptedDataDetails;
-  @NotNull private GcbOptions gcbOptions;
+  @Nullable private String appId;
+  @Nullable private String unitName;
+  @Nullable private GcbTaskType type;
+  @Nullable private String activityId;
+  @Nullable private GcpConfig gcpConfig;
+  @Nullable private List<EncryptedDataDetail> encryptedDataDetails;
+  @Nullable private GcbOptions gcbOptions;
+  @Nullable private String gcpConfigId;
+  @Nullable private String accountId;
 
   @Nullable private GitConfig gitConfig;
   @Nullable private String buildId;
