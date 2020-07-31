@@ -4,6 +4,8 @@ import io.harness.OrchestrationPersistenceConfig;
 import io.harness.cdng.CDNGPersistenceConfig;
 import io.harness.connector.ConnectorPersistenceConfig;
 import io.harness.gitsync.GitSyncPersistenceConfig;
+import io.harness.springdata.PersistenceModule;
+import io.harness.springdata.SpringPersistenceConfig;
 
 public class NextGenPersistenceModule extends PersistenceModule {
   @Override

@@ -115,7 +115,7 @@ public class ExportExecutionsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExportExecutions() {
     ExportExecutionsRequestLimitChecks limitChecks = ExportExecutionsRestUtils.getLimitChecks(

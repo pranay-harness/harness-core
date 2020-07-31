@@ -2,7 +2,7 @@ package io.harness.app.impl;
 
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.app.CIManagerPersistenceConfig;
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
 
 public class CIManagerPersistenceTestModule extends PersistenceTestModule {

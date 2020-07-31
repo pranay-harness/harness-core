@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness.springdata;
 
 import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
@@ -51,7 +51,7 @@ public abstract class SpringPersistenceConfig extends AbstractMongoConfiguration
   @Bean(name = "primary")
   @Primary
   @Override
-  public MongoTemplate mongoTemplate() {
-    return new MongoTemplate(mongoClient(), getDatabaseName());
+  public MongoTemplate mongoTemplate() throws Exception {
+    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
 }

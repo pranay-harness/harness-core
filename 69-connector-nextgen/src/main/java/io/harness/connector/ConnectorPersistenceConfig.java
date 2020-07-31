@@ -5,7 +5,7 @@ import com.google.inject.Injector;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.exception.GeneralException;
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.SpringPersistenceConfig;
 import org.reflections.Reflections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;

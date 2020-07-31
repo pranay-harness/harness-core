@@ -1,7 +1,7 @@
 package io.harness.rule;
 
 import io.harness.OrchestrationPersistenceConfig;
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
 
 public class OrchestrationPersistenceTestModule extends PersistenceTestModule {

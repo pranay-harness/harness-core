@@ -3,7 +3,7 @@ package software.wings.app;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.SpringPersistenceConfig;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration

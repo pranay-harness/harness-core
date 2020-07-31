@@ -2,8 +2,8 @@ package software.wings.app;
 
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.OrchestrationStepsPersistenceConfig;
-import io.harness.ng.PersistenceModule;
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.PersistenceModule;
+import io.harness.springdata.SpringPersistenceConfig;
 
 public class WingsPersistenceModule extends PersistenceModule {
   @Override
