@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.wings.beans.command.GcbTaskParams;
@@ -30,12 +30,12 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Data
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
-@RequiredArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class GcbExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   public static final String GCB_URL = "https://console.cloud.google.com/cloud-build/builds/";
-  @NotNull private final String activityId;
+  @NotNull private String activityId;
   @Nullable private String buildUrl;
   @Nullable private String buildNo;
   @Nullable private List<String> tags;
@@ -47,10 +47,12 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
   @Nullable private List<String> images;
   @Nullable private String artifactLocation;
   @Nullable private List<String> artifacts;
+  @Nullable private String gcpConfigId;
 
   @NotNull
   public GcbExecutionData withDelegateResponse(@NotNull final GcbState.GcbDelegateResponse delegateResponse) {
     GcbTaskParams params = delegateResponse.getParams();
+    activityId = delegateResponse.getParams().getActivityId();
     name = params.getBuildName();
     buildNo = params.getBuildId();
     buildUrl = GCB_URL + buildNo;
@@ -60,6 +62,9 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
     createTime = buildDetails.getCreateTime();
     substitutions = buildDetails.getSubstitutions();
     logUrl = buildDetails.getLogUrl();
+    if (delegateResponse.getParams().getGcbOptions() != null) {
+      gcpConfigId = delegateResponse.getParams().getGcbOptions().getGcpConfigId();
+    }
     final GcbArtifacts gcbArtifacts = buildDetails.getArtifacts();
     if (gcbArtifacts != null) {
       images = gcbArtifacts.getImages();

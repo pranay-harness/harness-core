@@ -32,4 +32,8 @@ public interface GcbRestClient {
   @GET("v1/projects/{projectId}/triggers")
   Call<GcbBuildTriggers> getAllTriggers(
       @Header("Authorization") String bearerAuthHeader, @Path(value = "projectId") String projectId);
+
+  @POST("v1/projects/{projectId}/builds/{buildId}:cancel")
+  Call<GcbBuildDetails> cancelBuild(@Header("Authorization") String bearerAuthHeader,
+      @Path(value = "projectId") String projectId, @Path(value = "buildId") String buildId);
 }

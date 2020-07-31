@@ -8,8 +8,10 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.TaskType.GCB;
+import static software.wings.beans.command.GcbTaskParams.GcbTaskType.CANCEL;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.POLL;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.START;
+import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.CANCELLED;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.REMOTE;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.TRIGGER;
 
@@ -259,18 +261,29 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(waitId))
-        .stateExecutionData(gcbExecutionData)
+        .stateExecutionData(gcbExecutionData.withDelegateResponse(delegateResponse))
         .executionStatus(RUNNING)
         .build();
   }
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    if (context == null || context.getStateExecutionData() == null) {
-      return;
-    }
-    context.getStateExecutionData().setErrorMsg(
-        "Job did not complete within timeout " + (getTimeoutMillis() / 1000) + " (s)");
+    GcbTaskParams params =
+        GcbTaskParams.builder()
+            .type(CANCEL)
+            .gcpConfig(
+                (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
+                    .getValue())
+            .accountId(context.getAccountId())
+            .buildId(String.valueOf(context.getStateExecutionData().getExecutionDetails().get("buildNo").getValue()))
+            .encryptedDataDetails(secretManager.getEncryptionDetails(
+                (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
+                    .getValue(),
+                context.getAppId(), context.getWorkflowExecutionId()))
+            .build();
+    delegateService.queueTask(
+        delegateTaskOf(((GcbExecutionData) context.getStateExecutionData()).getActivityId(), context, params));
+    ((GcbExecutionData) context.getStateExecutionData()).setBuildStatus(CANCELLED);
   }
 
   @NotNull
