@@ -18,6 +18,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
@@ -41,7 +42,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "resourceConstraint", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                           UpdatedByAware, AccountAccess {
+                                           UpdatedByAware, AccountAccess, ResourceRestraint {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String NAME_KEY = "name";
 
@@ -57,4 +58,9 @@ public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedA
   @Min(value = 1) @Max(value = 1000) private int capacity;
   private Constraint.Strategy strategy;
   private boolean harnessOwned;
+
+  @Override
+  public String getClaimant() {
+    return accountId;
+  }
 }
