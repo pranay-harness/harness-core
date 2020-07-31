@@ -31,9 +31,12 @@ import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
+import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
+import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
+import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -1753,8 +1756,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
-    kryo.register(GcbArtifactObjects.class, 8046);
     kryo.register(PVCParams.class, 7459);
     kryo.register(GitConfig.UrlType.class, 7460);
+    kryo.register(EmailStepParameters.class, 7461);
+    kryo.register(ShellScriptStepParameters.class, 7462);
+    kryo.register(WaitStepParameters.class, 7463);
+    kryo.register(GcbArtifactObjects.class, 7464);
   }
 }

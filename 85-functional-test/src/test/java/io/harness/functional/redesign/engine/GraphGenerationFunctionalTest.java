@@ -30,6 +30,7 @@ import io.harness.rule.Owner;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.section.SectionStep;
+import io.harness.state.io.StepParameters;
 import io.harness.testframework.framework.Setup;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -71,7 +72,6 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
-  //@Ignore("Alternative to JsonTypeInfo on Outcomes/StepParameter  needs to be seen")
   public void shouldGenerateGraph() {
     PlanExecution planExecutionResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
@@ -208,6 +208,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                           ObjectMapper mapper = new ObjectMapper();
                           mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                           mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
+                          mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
                           return mapper;
                         }))
                         .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
@@ -240,6 +241,21 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
             .build();
       }
       return null;
+    }
+  }
+
+  @JsonDeserialize(using = StepParametersTestDeserializer.class)
+  private abstract static class StepParametersTestMixin {}
+
+  private static class StepParametersTestDeserializer extends StdDeserializer<StepParameters> {
+    StepParametersTestDeserializer() {
+      super(StepParameters.class);
+    }
+
+    @Override
+    public StepParameters deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+      JsonNode node = p.getCodec().readTree(p);
+      return new StepParameters() {};
     }
   }
 }

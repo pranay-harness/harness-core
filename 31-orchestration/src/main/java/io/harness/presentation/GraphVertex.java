@@ -8,6 +8,7 @@ import io.harness.data.Outcome;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepParameters;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class GraphVertex implements Serializable {
   private String stepType;
   private Status status;
   private FailureInfo failureInfo;
+  private StepParameters stepParameters;
 
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;

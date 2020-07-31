@@ -17,7 +17,11 @@ import io.harness.presentation.GraphVertex;
 import io.harness.presentation.Subgraph;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.state.core.dummy.DummySectionOutcome;
+import io.harness.state.core.dummy.DummySectionStepParameters;
 import io.harness.state.core.dummy.DummySectionStepTransput;
+import io.harness.state.core.fork.ForkStepParameters;
+import io.harness.state.core.section.SectionStepParameters;
+import io.harness.state.core.section.chain.SectionChainStepParameters;
 
 @OwnedBy(CDC)
 public class OrchestrationKryoRegister implements KryoRegistrar {
@@ -37,6 +41,11 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(Graph.class, 3110);
     kryo.register(GraphVertex.class, 3111);
     kryo.register(Subgraph.class, 3112);
+
+    kryo.register(ForkStepParameters.class, 3113);
+    kryo.register(SectionStepParameters.class, 3114);
+    kryo.register(DummySectionStepParameters.class, 3115);
+    kryo.register(SectionChainStepParameters.class, 3116);
 
     // Put promoted classes here and do not change the id
     kryo.register(DelayEventNotifyData.class, 7273);
