@@ -133,7 +133,7 @@ public class ServiceStepPlanCreator
   /** Method returns actual Service object by resolving useFromStage if present. */
   private ServiceConfig getActualServiceConfig(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
     if (serviceConfig.getUseFromStage() != null) {
-      if (serviceConfig.getServiceDef() != null) {
+      if (serviceConfig.getServiceDefinition() != null) {
         throw new InvalidArgumentsException("KubernetesServiceSpec should not exist with UseFromStage.");
       }
       //  Add validation for not chaining of stages

@@ -35,7 +35,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DockerHubArtifactConfig implements ArtifactConfig {
   /** Docker hub registry connector. */
-  @Wither String connectorIdentifier;
+  @Wither String dockerhubConnector;
   /** Images in repos need to be referenced via a path. */
   @Wither String imagePath;
   /** Tag refers to exact tag number. */
@@ -54,7 +54,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
 
   @Override
   public String getUniqueHash() {
-    List<String> valuesList = Arrays.asList(connectorIdentifier, imagePath);
+    List<String> valuesList = Arrays.asList(dockerhubConnector, imagePath);
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
@@ -63,7 +63,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
     return DockerArtifactSource.builder()
         .accountId(accountId)
         .sourceType(getSourceType())
-        .dockerHubConnector(connectorIdentifier)
+        .dockerHubConnector(dockerhubConnector)
         .imagePath(imagePath)
         .uniqueHash(getUniqueHash())
         .build();
@@ -76,7 +76,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
       tagRegex = "*";
     }
     return DockerArtifactSourceAttributes.builder()
-        .dockerhubConnector(connectorIdentifier)
+        .dockerhubConnector(dockerhubConnector)
         .imagePath(imagePath)
         .tag(tag)
         .tagRegex(tagRegex)
@@ -100,8 +100,8 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) overrideConfig;
     DockerHubArtifactConfig resultantConfig = this;
-    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getConnectorIdentifier())) {
-      resultantConfig = resultantConfig.withConnectorIdentifier(dockerHubArtifactConfig.getConnectorIdentifier());
+    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getDockerhubConnector())) {
+      resultantConfig = resultantConfig.withDockerhubConnector(dockerHubArtifactConfig.getDockerhubConnector());
     }
     if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getImagePath())) {
       resultantConfig = resultantConfig.withImagePath(dockerHubArtifactConfig.getImagePath());

@@ -13,7 +13,7 @@ import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorType;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -21,9 +21,13 @@ import io.harness.plan.PlanNode;
 import io.harness.state.StepType;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
-import io.harness.yaml.core.intfc.Stage;
+import io.harness.yaml.core.ParallelStageElement;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+import io.harness.yaml.core.intfc.StageType;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,13 +35,13 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class StagesPlanCreator
-    extends AbstractPlanCreatorWithChildren<List<Stage>> implements SupportDefinedExecutorPlanCreator<List<Stage>> {
+public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<StageElementWrapper>>
+    implements SupportDefinedExecutorPlanCreator<List<StageElementWrapper>> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
   public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      List<Stage> stagesList, CreateExecutionPlanContext context) {
+      List<StageElementWrapper> stagesList, CreateExecutionPlanContext context) {
     Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
     List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, stagesList);
     childrenPlanMap.put("STAGES", planForStages);
@@ -45,7 +49,7 @@ public class StagesPlanCreator
   }
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(List<Stage> input,
+  public CreateExecutionPlanResponse createPlanForSelf(List<StageElementWrapper> input,
       Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
     List<CreateExecutionPlanResponse> planForStages = planForChildrenMap.get("STAGES");
     final PlanNode stagesPlanNode = prepareStagesNode(planForStages);
@@ -63,28 +67,44 @@ public class StagesPlanCreator
         .collect(Collectors.toList());
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForStages(CreateExecutionPlanContext context, List<Stage> stages) {
-    return stages.stream()
-        .map(stage -> getPlanCreatorForStage(context, stage).createPlan(stage, context))
-        .collect(Collectors.toList());
+  private List<CreateExecutionPlanResponse> getPlanForStages(
+      CreateExecutionPlanContext context, List<StageElementWrapper> stages) {
+    List<CreateExecutionPlanResponse> list = new ArrayList<>();
+    for (StageElementWrapper stage : stages) {
+      CreateExecutionPlanResponse plan;
+      if (stage instanceof ParallelStageElement) {
+        ParallelStageElement parallelStage = (ParallelStageElement) stage;
+        plan = getPlanCreatorForParallelStage(context, parallelStage).createPlan(parallelStage, context);
+      } else {
+        StageElement stageElement = (StageElement) stage;
+        plan = getPlanCreatorForStage(context, stageElement.getStageType())
+                   .createPlan(stageElement.getStageType(), context);
+      }
+      list.add(plan);
+    }
+    return list;
   }
 
-  private ExecutionPlanCreator<Stage> getPlanCreatorForStage(CreateExecutionPlanContext context, Stage stage) {
+  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(CreateExecutionPlanContext context, StageType stage) {
     return planCreatorHelper.getExecutionPlanCreator(
-        PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for  stage");
+        PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for stage");
+  }
+
+  private ExecutionPlanCreator<ParallelStageElement> getPlanCreatorForParallelStage(
+      CreateExecutionPlanContext context, ParallelStageElement parallelStage) {
+    return planCreatorHelper.getExecutionPlanCreator(PlanCreatorType.STAGE_PLAN_CREATOR.getName(), parallelStage,
+        context, "no execution plan creator found for  parallelStage");
   }
 
   private PlanNode prepareStagesNode(List<CreateExecutionPlanResponse> planForStages) {
     final String nodeId = generateUuid();
-
     final String STAGES = "stages";
-
     return PlanNode.builder()
         .uuid(nodeId)
         .name(STAGES)
         .identifier(STAGES)
         .stepType(StepType.builder().type(SectionChainStep.STEP_TYPE.getType()).build())
-        .group(StepGroup.STAGES.name())
+        .group(StepOutcomeGroup.STAGES.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForStages.stream()
                                               .map(CreateExecutionPlanResponse::getStartingNodeId)
@@ -100,7 +120,8 @@ public class StagesPlanCreator
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     final Object objectToPlan = searchContext.getObjectToPlan();
     return getSupportedTypes().contains(searchContext.getType())
-        && objectToPlan instanceof List<?> && ((List<?>) objectToPlan).stream().allMatch(o -> o instanceof Stage);
+        && objectToPlan
+        instanceof List<?> && ((List<?>) objectToPlan).stream().allMatch(o -> o instanceof StageElementWrapper);
   }
 
   @Override
@@ -109,7 +130,7 @@ public class StagesPlanCreator
   }
 
   @Override
-  public String getPlanNodeType(List<Stage> input) {
+  public String getPlanNodeType(List<StageElementWrapper> input) {
     return PlanNodeType.STAGES.name();
   }
 }

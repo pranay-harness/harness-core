@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @Builder
 public class PipelineInfrastructure implements Outcome {
-  private InfrastructureDef infrastructureDef;
+  private InfrastructureDef infrastructureDefinition;
   @Wither private InfraUseFromStage useFromStage;
   private EnvironmentYaml environment;
   private List<Step> steps;

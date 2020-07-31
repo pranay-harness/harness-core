@@ -1,6 +1,6 @@
 package io.harness.executionplan.plancreator.beans;
 
-public enum StepGroup {
+public enum StepOutcomeGroup {
   STAGE,
   STEP,
   PHASE,

@@ -21,7 +21,7 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
-import io.harness.yaml.core.intfc.Stage;
+import io.harness.yaml.core.intfc.StageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
@@ -56,8 +56,8 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
   private String podName;
 
   @Override
-  public ExecutionElement modifyExecutionPlan(ExecutionElement execution, Stage stage) {
-    IntegrationStage integrationStage = (IntegrationStage) stage;
+  public ExecutionElement modifyExecutionPlan(ExecutionElement execution, StageType stageType) {
+    IntegrationStage integrationStage = (IntegrationStage) stageType;
     return getCILiteEngineTaskExecution(integrationStage);
   }
 

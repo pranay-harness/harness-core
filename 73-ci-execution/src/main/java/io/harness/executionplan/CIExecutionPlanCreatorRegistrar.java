@@ -5,10 +5,10 @@ import com.google.inject.Singleton;
 
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.GenericStepPlanCreator;
+import io.harness.executionplan.plancreator.ParallelStagePlanCreator;
 import io.harness.executionplan.plancreator.ParallelStepPlanCreator;
-import io.harness.executionplan.plancreator.StageElementPlanCreator;
 import io.harness.executionplan.plancreator.StagesPlanCreator;
-import io.harness.executionplan.plancreator.StepElementPlanCreator;
 import io.harness.plancreators.CIPipelinePlanCreator;
 import io.harness.plancreators.ExecutionPlanCreator;
 import io.harness.plancreators.IntegrationStagePlanCreator;
@@ -18,13 +18,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CIExecutionPlanCreatorRegistrar {
   @Inject private ExecutionPlanCreatorRegistry executionPlanCreatorRegistry;
-  @Inject private StepElementPlanCreator genericStepPlanCreator;
-  @Inject private StageElementPlanCreator stageElementPlanCreator;
+  @Inject private GenericStepPlanCreator genericStepPlanCreator;
+  @Inject private StagesPlanCreator stagesPlanCreator;
   @Inject private CIPipelinePlanCreator ciPipelinePlanCreator;
   @Inject private IntegrationStagePlanCreator integrationStagePlanCreator;
   @Inject private ExecutionPlanCreator executionPlanCreator;
   @Inject private ParallelStepPlanCreator parallelStepPlanCreator;
-  @Inject private StagesPlanCreator stagesPlanCreator;
+  @Inject private ParallelStagePlanCreator parallelStagePlanCreator;
 
   public void register() {
     logger.info("Start: register execution plan creators");
@@ -34,7 +34,7 @@ public class CIExecutionPlanCreatorRegistrar {
     register(executionPlanCreator);
     register(parallelStepPlanCreator);
     register(stagesPlanCreator);
-    register(stageElementPlanCreator);
+    register(parallelStagePlanCreator);
     logger.info("Done: register execution plan creators");
   }
   private void register(SupportDefinedExecutorPlanCreator<?> executionPlanCreator) {

@@ -22,6 +22,7 @@ public class SidecarArtifact implements SidecarArtifactWrapper {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ArtifactConfig artifactConfig;
 
+  // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
   public SidecarArtifact(String identifier, String type, ArtifactConfig artifactConfig) {
     this.identifier = identifier;

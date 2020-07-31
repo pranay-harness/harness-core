@@ -10,14 +10,14 @@ pipeline:
           service:
             name: manager
             identifier: manager
-            serviceDef:
+            serviceDefinition:
               type: "Kubernetes"
               spec:
                 artifacts:
                   primary:
                     type: Dockerhub
                     spec:
-                      connectorIdentifier: "https://registry.hub.docker.com/"
+                      dockerhubConnector: "https://registry.hub.docker.com/"
                       imagePath: "library/ubuntu"
                       tag: "latest"
                       tagRegex: "groov*"
@@ -26,14 +26,14 @@ pipeline:
                         identifier: sidecar1
                         type: Dockerhub
                         spec:
-                          connectorIdentifier: "https://registry.hub.docker.com/"
+                          dockerhubConnector: "https://registry.hub.docker.com/"
                           imagePath: "library/redis"
                           tag: "latest"
                     - sidecar:
                         identifier: sidecar2
                         type: Dockerhub
                         spec:
-                          connectorIdentifier: "https://registry.hub.docker.com/"
+                          dockerhubConnector: "https://registry.hub.docker.com/"
                           imagePath: "library/mongo"
                           tag: "latest"
           execution:
@@ -76,14 +76,14 @@ pipeline:
           service:
             name: delegate
             identifier: delegate
-            serviceDef:
+            serviceDefinition:
               type: Kubernetes
               spec:
                 artifacts:
                   primary:
                     type: Dockerhub
                     spec:
-                      connectorIdentifier: "https://registry.hub.docker.com/"
+                      dockerhubConnector: "https://registry.hub.docker.com/"
                       imagePath: "library/nginx"
                       tag: "latest"
           execution:

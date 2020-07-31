@@ -31,6 +31,7 @@ public class ManifestConfig implements ManifestConfigWrapper {
     }
   }
 
+  // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
   public ManifestConfig(String identifier, String type, ManifestAttributes manifestAttributes) {
     this.identifier = identifier;

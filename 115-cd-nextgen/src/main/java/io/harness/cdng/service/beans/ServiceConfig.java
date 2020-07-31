@@ -15,7 +15,7 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig> {
   @NotNull private String identifier;
   @Wither @NotNull private String name;
   @Wither private String description;
-  private ServiceDefinition serviceDef;
+  private ServiceDefinition serviceDefinition;
   @Wither private StageOverridesConfig stageOverrides;
 
   public ServiceConfig applyUseFromStage(ServiceConfig serviceConfigToUseFrom) {

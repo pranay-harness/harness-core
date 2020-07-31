@@ -20,7 +20,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.core.Parallel;
+import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
@@ -89,7 +89,7 @@ public class CIPipelineYamlTest extends CIBeansTest {
                                                                         .branch("master")
                                                                         .build())
                                                       .build(),
-                                        Parallel.builder()
+                                        ParallelStepElement.builder()
                                             .sections(asList(StepElement.builder()
                                                                  .identifier("runLint")
                                                                  .type("run")

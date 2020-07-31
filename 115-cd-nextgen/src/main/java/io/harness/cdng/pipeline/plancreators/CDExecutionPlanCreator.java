@@ -22,7 +22,7 @@ import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.core.impl.CreateExecutionPlanResponseImpl.CreateExecutionPlanResponseImplBuilder;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -106,7 +106,7 @@ public class CDExecutionPlanCreator extends AbstractPlanCreatorWithChildren<Exec
         .name(EXECUTION)
         .identifier(EXECUTION)
         .stepType(SectionChainStep.STEP_TYPE)
-        .group(StepGroup.EXECUTION.name())
+        .group(StepOutcomeGroup.EXECUTION.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForSteps.stream()
                                               .map(CreateExecutionPlanResponse::getStartingNodeId)

@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -21,10 +21,13 @@ import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class K8sRollingStepTest extends CDNGBaseTest {
+public class K8sRollingStepTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock StepDependencyService stepDependencyService;
   @InjectMocks private K8sRollingStep k8sRollingStep;
 

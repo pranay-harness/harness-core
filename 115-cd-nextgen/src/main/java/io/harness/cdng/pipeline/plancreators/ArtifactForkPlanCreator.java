@@ -116,7 +116,7 @@ public class ArtifactForkPlanCreator
 
   private List<ArtifactStepParameters> getArtifactsWithCorrespondingOverrides(ServiceConfig serviceConfig) {
     Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
-    ArtifactListConfig artifacts = serviceConfig.getServiceDef().getServiceSpec().getArtifacts();
+    ArtifactListConfig artifacts = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     if (artifacts != null) {
       if (artifacts.getPrimary() == null) {
         throw new InvalidArgumentsException("Primary artifact cannot be null.");
@@ -166,7 +166,7 @@ public class ArtifactForkPlanCreator
         && serviceConfig.getStageOverrides().getUseArtifactOverrideSets() != null) {
       for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets()) {
         List<ArtifactOverrideSets> artifactOverrideSetsList =
-            serviceConfig.getServiceDef()
+            serviceConfig.getServiceDefinition()
                 .getServiceSpec()
                 .getArtifactOverrideSets()
                 .stream()

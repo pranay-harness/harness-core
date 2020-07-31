@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.execution.status.Status;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.ng.core.environment.beans.Environment;
@@ -18,7 +18,6 @@ import io.harness.state.io.StepResponse;
 
 public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("ENVIRONMENT").build();
-
   @Inject private EnvironmentService environmentService;
 
   @Override
@@ -33,7 +32,7 @@ public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepPara
         .status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name("environment")
-                         .group(StepGroup.STAGE.name())
+                         .group(StepOutcomeGroup.STAGE.name())
                          .outcome(environmentYaml)
                          .build())
         .build();
@@ -41,16 +40,16 @@ public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepPara
 
   private Environment getEnvironmentObject(EnvironmentYaml environmentYaml, Ambiance ambiance) {
     String accountId = AmbianceHelper.getAccountId(ambiance);
-    String projectId = AmbianceHelper.getProjectIdentifier(ambiance);
-    String orgId = AmbianceHelper.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
+    String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return Environment.builder()
         .name(environmentYaml.getName())
         .accountId(accountId)
         .type(environmentYaml.getType())
         .identifier(environmentYaml.getIdentifier())
-        .orgIdentifier(orgId)
-        .projectIdentifier(projectId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
         .tags(environmentYaml.getTags())
         .build();
   }

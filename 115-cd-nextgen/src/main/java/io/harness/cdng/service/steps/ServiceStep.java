@@ -7,6 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
@@ -19,10 +20,12 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
+import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -44,6 +47,7 @@ import java.util.Optional;
 public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("SERVICE_STEP").build();
   @Inject private OutcomeService outcomeService;
+  @Inject private ServiceEntityService serviceEntityService;
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
@@ -87,8 +91,9 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
                                       .name(OutcomeExpressionConstants.SERVICE.getName())
                                       .outcome(createServiceOutcome(serviceConfig, responseNotifyDataList))
-                                      .group(StepGroup.STAGE.name())
+                                      .group(StepOutcomeGroup.STAGE.name())
                                       .build());
+      serviceEntityService.upsert(getServiceEntity(serviceConfig, ambiance));
     }
     return responseBuilder.build();
   }
@@ -101,7 +106,7 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
             .displayName(serviceConfig.getName())
             .identifier(serviceConfig.getIdentifier())
             .description(serviceConfig.getDescription())
-            .deploymentType(serviceConfig.getServiceDef().getServiceSpec().getType());
+            .deploymentType(serviceConfig.getServiceDefinition().getServiceSpec().getType());
 
     // Fetch all outcomes of the children.
     List<String> outcomeInstanceIds = responseNotifyDataList.stream()
@@ -137,5 +142,20 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
 
   private void handleArtifactOutcome(ArtifactsOutcome artifactsOutcome, ServiceOutcomeBuilder outcomeBuilder) {
     outcomeBuilder.artifacts(artifactsOutcome);
+  }
+
+  private ServiceEntity getServiceEntity(ServiceConfig serviceConfig, Ambiance ambiance) {
+    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
+    String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
+
+    return ServiceEntity.builder()
+        .identifier(serviceConfig.getIdentifier())
+        .name(serviceConfig.getName())
+        .description(serviceConfig.getDescription())
+        .projectIdentifier(projectIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .accountId(accountId)
+        .build();
   }
 }

@@ -10,7 +10,7 @@ pipeline:
           service:
             identifier: manager
             name: manager
-            serviceDef:
+            serviceDefinition:
               type: Kubernetes
               spec:
                 manifests:
@@ -51,7 +51,7 @@ pipeline:
                   value: GCP
                 - key: team
                   value: cdp
-            infrastructureDef:
+            infrastructureDefinition:
               type: KubernetesDirect
               spec:
                 # Spec for Infrastructure Type kubernetes-direct

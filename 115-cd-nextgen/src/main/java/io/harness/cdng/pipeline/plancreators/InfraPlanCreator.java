@@ -96,10 +96,11 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
             .name(infraIdentifier)
             .identifier(infraIdentifier)
             .stepType(InfrastructureStep.STEP_TYPE)
-            .stepParameters(InfraStepParameters.builder()
-                                .infrastructure(pipelineInfrastructure.getInfrastructureDef().getInfrastructure())
-                                .infrastructureOverrides(infraOverrides)
-                                .build())
+            .stepParameters(
+                InfraStepParameters.builder()
+                    .infrastructure(pipelineInfrastructure.getInfrastructureDefinition().getInfrastructure())
+                    .infrastructureOverrides(infraOverrides)
+                    .build())
             .facilitatorObtainment(FacilitatorObtainment.builder()
                                        .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                        .build());
@@ -138,7 +139,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
   private PipelineInfrastructure getActualInfraConfig(
       PipelineInfrastructure infrastructure, CreateExecutionPlanContext context) {
     if (infrastructure.getUseFromStage() != null) {
-      if (infrastructure.getInfrastructureDef() != null) {
+      if (infrastructure.getInfrastructureDefinition() != null) {
         throw new InvalidArgumentsException("Infrastructure should not exist with UseFromStage.");
       }
       //  Add validation for not chaining of stages

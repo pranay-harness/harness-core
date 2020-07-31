@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -24,6 +25,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
+import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
@@ -51,6 +54,7 @@ public class ServiceStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock OutcomeService outcomeService;
+  @Mock ServiceEntityService serviceEntityService;
   @InjectMocks ServiceStep serviceStep;
 
   @Test
@@ -92,7 +96,7 @@ public class ServiceStepTest extends CategoryTest {
         ServiceConfig.builder()
             .identifier("s1")
             .name("s1")
-            .serviceDef(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
+            .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build(),
         Collections.singletonList(
             StepResponseNotifyData.builder()
@@ -142,22 +146,37 @@ public class ServiceStepTest extends CategoryTest {
     ManifestOutcome manifestOutcome = ManifestOutcome.builder().manifestAttributes(Collections.emptyList()).build();
     doReturn(Arrays.asList(artifactsOutcome, manifestOutcome)).when(outcomeService).fetchOutcomes(any());
 
-    Ambiance ambiance = Ambiance.builder().build();
+    HashMap<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put(SetupAbstractionKeys.accountId, "accountId");
+    setupAbstractions.put(SetupAbstractionKeys.projectIdentifier, "projectId");
+    setupAbstractions.put(SetupAbstractionKeys.orgIdentifier, "orgId");
+    Ambiance ambiance = Ambiance.builder().setupAbstractions(setupAbstractions).build();
+
     ServiceConfig serviceConfig =
         ServiceConfig.builder()
             .identifier("IDENTIFIER")
             .name("DISPLAY")
-            .serviceDef(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
+            .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build();
     ServiceConfig serviceConfigOverrides =
         ServiceConfig.builder()
-            .identifier("IDENTIFIER1")
+            .identifier("IDENTIFIER")
             .name("DISPLAY")
             .description("DESCRIPTION")
-            .serviceDef(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
+            .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build();
     ServiceStepParameters stepParameters =
         ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceConfigOverrides).build();
+
+    ServiceEntity serviceEntity = ServiceEntity.builder()
+                                      .accountId("accountId")
+                                      .orgIdentifier("orgId")
+                                      .projectIdentifier("projectId")
+                                      .identifier("IDENTIFIER")
+                                      .name("DISPLAY")
+                                      .description("DESCRIPTION")
+                                      .build();
+    doReturn(serviceEntity).when(serviceEntityService).upsert(serviceEntity);
 
     StepResponse stepResponse = serviceStep.handleChildrenResponse(ambiance, stepParameters, responseDataMap);
     Collection<StepOutcome> stepOutcomes = stepResponse.getStepOutcomes();

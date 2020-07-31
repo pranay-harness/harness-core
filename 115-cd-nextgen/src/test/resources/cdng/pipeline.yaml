@@ -9,14 +9,14 @@ pipeline:
       spec:
         service:
           identifier: manager
-          serviceDef:
+          serviceDefinition:
             type: Kubernetes
             spec:
               artifacts:
                 primary:
                   type: Dockerhub
                   spec:
-                    connectorIdentifier: "https://registry.hub.docker.com/"
+                    dockerhubConnector: "https://registry.hub.docker.com/"
                     imagePath: "library/nginx"
                     tag: "1.19"
               manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
@@ -81,7 +81,7 @@ pipeline:
               value: cdp
           # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
           # Dynamic type ???
-          infrastructureDef:
+          infrastructureDefinition:
             # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
             # Dynamic type ???
             type: KubernetesDirect
@@ -141,14 +141,14 @@ pipeline:
       spec:
         service:
           identifier: manager
-          serviceDef:
+          serviceDefinition:
             type: Kubernetes
             spec:
               artifacts:
                 primary:
                   type: Dockerhub
                   spec:
-                    connectorIdentifier: "https://registry.hub.docker.com/"
+                    dockerhubConnector: "https://registry.hub.docker.com/"
                     imagePath: "library/nginx"
                     tag: "1.18"
               manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
@@ -193,7 +193,7 @@ pipeline:
                 value: cdp
           # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
           # Dynamic type ???
-          infrastructureDef:
+          infrastructureDefinition:
             # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
             # Dynamic type ???
             type: KubernetesDirect

@@ -5,8 +5,9 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.yaml.core.Parallel;
+import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.StepGroupElement;
 
 /**
  * ExecutionWrapper is abstraction that represents steps or step collections
@@ -16,6 +17,7 @@ import io.harness.yaml.core.StepElement;
 @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = StepElement.class, name = "step")
-  , @JsonSubTypes.Type(value = Parallel.class, name = "parallel")
+  , @JsonSubTypes.Type(value = ParallelStepElement.class, name = "parallel"),
+      @JsonSubTypes.Type(value = StepGroupElement.class, name = "stepGroup")
 })
 public interface ExecutionWrapper {}

@@ -49,7 +49,7 @@ public class ArtifactYamlTest extends CategoryTest {
     assertThat(((StageElement) stageWrapper).getStageType()).isInstanceOf(DeploymentStage.class);
     DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
     KubernetesServiceSpec serviceSpec =
-        (KubernetesServiceSpec) deploymentStage.getService().getServiceDef().getServiceSpec();
+        (KubernetesServiceSpec) deploymentStage.getService().getServiceDefinition().getServiceSpec();
     assertThat(serviceSpec).isNotNull();
 
     assertThat(serviceSpec.getArtifacts().getPrimary()).isNotNull();
@@ -82,7 +82,7 @@ public class ArtifactYamlTest extends CategoryTest {
     assertThat(dockerArtifactSource.getImagePath()).isEqualTo("library/redis");
     assertThat(dockerArtifactSource.getUniqueHash())
         .isEqualTo(ArtifactUtils.generateUniqueHashFromStringList(
-            Arrays.asList(dockerArtifact.getConnectorIdentifier(), dockerArtifact.getImagePath())));
+            Arrays.asList(dockerArtifact.getDockerhubConnector(), dockerArtifact.getImagePath())));
     assertThat(dockerArtifactSource.getSourceType()).isEqualTo(ArtifactSourceType.DOCKER_HUB);
 
     ArtifactSourceAttributes sourceAttributes = dockerArtifact.getSourceAttributes();
@@ -92,7 +92,7 @@ public class ArtifactYamlTest extends CategoryTest {
         .isEqualTo(DockerArtifactServiceImpl.class);
     assertThat(dockerArtifactSourceAttributes.getImagePath()).isEqualTo(dockerArtifact.getImagePath());
     assertThat(dockerArtifactSourceAttributes.getDockerhubConnector())
-        .isEqualTo(dockerArtifact.getConnectorIdentifier());
+        .isEqualTo(dockerArtifact.getDockerhubConnector());
     assertThat(dockerArtifactSourceAttributes.getTag()).isEqualTo(dockerArtifact.getTag());
   }
 }

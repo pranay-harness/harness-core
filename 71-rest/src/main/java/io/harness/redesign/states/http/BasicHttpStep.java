@@ -8,6 +8,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -50,17 +51,21 @@ public class BasicHttpStep
                                                 .build();
 
     String waitId = generateUuid();
-    return DelegateTask.builder()
-        .accountId(ambiance.getSetupAbstractions().get("accountId"))
-        .waitId(waitId)
-        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, (String) ambiance.getSetupAbstractions().get("appId"))
-        .data(TaskData.builder()
-                  .taskType(TaskType.HTTP.name())
-                  .parameters(new Object[] {httpTaskParameters})
-                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                  .build())
-        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, waitId)
-        .build();
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder()
+            .accountId(ambiance.getSetupAbstractions().get("accountId"))
+            .waitId(waitId)
+            .data(TaskData.builder()
+                      .taskType(TaskType.HTTP.name())
+                      .parameters(new Object[] {httpTaskParameters})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, waitId);
+    String appId = ambiance.getSetupAbstractions().get("appId");
+    if (appId != null) {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId);
+    }
+    return delegateTaskBuilder.build();
   }
 
   @Override

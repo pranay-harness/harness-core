@@ -13,11 +13,10 @@ import io.harness.cdng.artifact.repository.ArtifactSourceDao;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 import software.wings.utils.WingsTestConstants;
 
 public class ArtifactSourceDaoTest extends CDNGBaseTest {
-  @Inject @InjectMocks ArtifactSourceDao artifactSourceDao;
+  @Inject ArtifactSourceDao artifactSourceDao;
 
   DockerArtifactSource dockerArtifactSource = DockerArtifactSource.builder()
                                                   .dockerHubConnector("DOCKER_CONNECTOR")
