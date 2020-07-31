@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.logging.Misc.normalizeExpression;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
@@ -12,7 +13,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.LOAD_BALANCER_DETAILS;
-import static software.wings.utils.Misc.normalizeExpression;
 
 import com.google.inject.Inject;
 
@@ -25,6 +25,7 @@ import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.Misc;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
@@ -54,7 +55,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
 import software.wings.utils.AsgConvention;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;

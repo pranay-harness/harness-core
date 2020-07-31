@@ -30,6 +30,7 @@ import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbSetupRe
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.Misc;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import lombok.Getter;
@@ -51,7 +52,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement.SpotinstTrafficShiftAlbSetupElementBuilder;
-import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.HashMap;

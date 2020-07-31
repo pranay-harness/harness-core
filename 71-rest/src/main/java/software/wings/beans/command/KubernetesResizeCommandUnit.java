@@ -24,6 +24,7 @@ import io.harness.exception.WingsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,7 +46,6 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Comparator;

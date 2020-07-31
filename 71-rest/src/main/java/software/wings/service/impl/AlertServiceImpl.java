@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.logging.Misc.getDurationString;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -24,7 +25,6 @@ import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.AlertType.RESOURCE_USAGE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
-import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

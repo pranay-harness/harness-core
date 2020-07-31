@@ -2,6 +2,7 @@ package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.Misc.getDurationString;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.common.NotificationConstants.ABORTED_COLOR;
@@ -9,7 +10,6 @@ import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
 import static software.wings.common.NotificationConstants.FAILED_COLOR;
 import static software.wings.common.NotificationConstants.PAUSED_COLOR;
 import static software.wings.common.NotificationConstants.RESUMED_COLOR;
-import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;

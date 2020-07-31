@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static software.wings.common.VerificationConstants.DD_ECS_HOST_NAME;
 import static software.wings.common.VerificationConstants.DD_HOST_NAME_EXPRESSION;
@@ -10,7 +11,6 @@ import static software.wings.common.VerificationConstants.DD_K8s_HOST_NAME;
 import static software.wings.metrics.MetricType.ERROR;
 import static software.wings.metrics.MetricType.RESP_TIME;
 import static software.wings.metrics.MetricType.THROUGHPUT;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;

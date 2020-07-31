@@ -6,6 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
+import static io.harness.logging.Misc.replaceUnicodeWithDot;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DEMO_APPLICAITON_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_TS_STATE_EXECUTION_ID;
@@ -15,8 +17,6 @@ import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECT
 import static software.wings.metrics.ThresholdType.ALERT_WHEN_HIGHER;
 import static software.wings.metrics.ThresholdType.ALERT_WHEN_LOWER;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
-import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

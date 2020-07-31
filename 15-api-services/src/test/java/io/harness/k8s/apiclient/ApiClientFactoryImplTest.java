@@ -1,10 +1,7 @@
-package software.wings.delegatetasks.k8s.apiclient;
+package io.harness.k8s.apiclient;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,8 +13,6 @@ import okio.ByteString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.nio.charset.StandardCharsets;
 
@@ -73,22 +68,18 @@ public class ApiClientFactoryImplTest extends CategoryTest {
       + "H9WINAUEjk6+GrpN1HJdUrT3nYcwCn8RnLkBvh/OcKoTgRbC9lhRxA==\n"
       + "-----END RSA PRIVATE KEY-----\n";
 
-  private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   private ApiClientFactory apiClientFactory;
 
   @Before
   public void setUp() throws Exception {
-    containerDeploymentDelegateHelper = mock(ContainerDeploymentDelegateHelper.class);
-    apiClientFactory = new ApiClientFactoryImpl(containerDeploymentDelegateHelper);
+    apiClientFactory = new ApiClientFactoryImpl();
   }
 
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testNoReadTimeout() throws Exception {
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
-        .thenReturn(KubernetesConfig.builder().masterUrl("https://34.66.78.221").build());
-    assertThat(apiClientFactory.getClient(K8sClusterConfig.builder().build()).getHttpClient().readTimeoutMillis())
+    assertThat(apiClientFactory.getClient(KubernetesConfig.builder().build()).getHttpClient().readTimeoutMillis())
         .isEqualTo(0);
   }
 
@@ -96,13 +87,12 @@ public class ApiClientFactoryImplTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetClientWithServiceTokenAuth() throws Exception {
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
-        .thenReturn(KubernetesConfig.builder()
-                        .masterUrl("https://34.66.78.221")
-                        .serviceAccountToken("service-token".toCharArray())
-                        .build());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
+                                            .masterUrl("https://34.66.78.221")
+                                            .serviceAccountToken("service-token".toCharArray())
+                                            .build();
 
-    ApiClient client = apiClientFactory.getClient(K8sClusterConfig.builder().build());
+    ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     assertThat(client.getBasePath()).isEqualTo("https://34.66.78.221");
     assertThat(client.getAuthentication("BearerToken")).isInstanceOfSatisfying(ApiKeyAuth.class, apiKeyAuth -> {
       assertThat(apiKeyAuth.getApiKeyPrefix()).isEqualTo("Bearer");
@@ -114,14 +104,13 @@ public class ApiClientFactoryImplTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetClientWithBasicAuth() throws Exception {
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
-        .thenReturn(KubernetesConfig.builder()
-                        .masterUrl("https://34.66.78.221")
-                        .username("avmohan")
-                        .password("test".toCharArray())
-                        .build());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
+                                            .masterUrl("https://34.66.78.221")
+                                            .username("avmohan")
+                                            .password("test".toCharArray())
+                                            .build();
 
-    ApiClient client = apiClientFactory.getClient(K8sClusterConfig.builder().build());
+    ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     assertThat(client.getBasePath()).isEqualTo("https://34.66.78.221");
     assertThat(client.isVerifyingSsl()).isEqualTo(false);
     assertThat(client.getAuthentication("BearerToken")).isInstanceOfSatisfying(ApiKeyAuth.class, apiKeyAuth -> {
@@ -135,14 +124,13 @@ public class ApiClientFactoryImplTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetClientWithClientCertificateAuth() throws Exception {
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
-        .thenReturn(KubernetesConfig.builder()
-                        .masterUrl("https://34.66.78.221")
-                        .clientCert(TEST_CERT.toCharArray())
-                        .clientKey(TEST_KEY.toCharArray())
-                        .build());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
+                                            .masterUrl("https://34.66.78.221")
+                                            .clientCert(TEST_CERT.toCharArray())
+                                            .clientKey(TEST_KEY.toCharArray())
+                                            .build();
 
-    ApiClient client = apiClientFactory.getClient(K8sClusterConfig.builder().build());
+    ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     assertThat(client.getBasePath()).isEqualTo("https://34.66.78.221");
     assertThat(client.isVerifyingSsl()).isEqualTo(false);
     assertThat(client.getKeyManagers()).isNotEmpty();

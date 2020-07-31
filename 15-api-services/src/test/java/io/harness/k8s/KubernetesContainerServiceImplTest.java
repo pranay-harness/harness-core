@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.gke;
+package io.harness.k8s;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -16,7 +16,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.PASSWORD;
 
 import com.google.common.util.concurrent.TimeLimiter;
 
@@ -78,8 +77,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
-import io.harness.k8s.K8sGlobalConfigService;
-import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -92,8 +89,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 
 import java.time.Clock;
 import java.util.HashMap;
@@ -109,6 +104,7 @@ import java.util.concurrent.TimeUnit;
 public class KubernetesContainerServiceImplTest extends CategoryTest {
   public static final String MASTER_URL = "masterUrl";
   public static final String USERNAME = "username";
+  public static final char[] PASSWORD = "PASSWORD".toCharArray();
 
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder()
                                                                 .masterUrl(MASTER_URL)
@@ -202,7 +198,6 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Mock private ExtensionsAPIGroupClient extensionsAPIGroupClient;
   @Mock private AppsAPIGroupClient appsAPIGroupClient;
 
-  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private TimeLimiter timeLimiter;
   @Mock private Clock clock;
@@ -342,8 +337,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSetControllerPodCount() {
-    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
-        KUBERNETES_CONFIG, "foo", "bar", 0, 3, 10, new ExecutionLogCallback());
+    List<ContainerInfo> containerInfos =
+        kubernetesContainerService.setControllerPodCount(KUBERNETES_CONFIG, "foo", "bar", 0, 3, 10, null);
 
     ArgumentCaptor<Integer> args = ArgumentCaptor.forClass(Integer.class);
     verify(scalableReplicationController).scale(args.capture());

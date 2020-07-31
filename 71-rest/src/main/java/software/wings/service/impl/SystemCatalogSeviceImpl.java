@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.logging.Misc;
 import io.harness.stream.BoundedInputStream;
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.WingsPersistence;
@@ -16,7 +17,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
-import software.wings.utils.Misc;
 
 import java.io.BufferedInputStream;
 import java.io.File;

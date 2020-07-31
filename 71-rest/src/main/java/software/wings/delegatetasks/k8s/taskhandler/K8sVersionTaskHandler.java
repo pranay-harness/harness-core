@@ -4,7 +4,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.inject.Inject;
 
+import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
 import io.kubernetes.client.openapi.ApiClient;
@@ -14,8 +16,8 @@ import io.kubernetes.client.openapi.models.VersionInfo;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.delegatetasks.k8s.apiclient.ApiClientFactoryImpl;
 import software.wings.delegatetasks.k8s.logging.K8sVersionLogContext;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -25,6 +27,7 @@ import software.wings.helpers.ext.k8s.response.K8sVersionResponse;
 @Slf4j
 public class K8sVersionTaskHandler extends K8sTaskHandler {
   @Inject private transient ApiClientFactoryImpl apiClientFactory;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -56,7 +59,8 @@ public class K8sVersionTaskHandler extends K8sTaskHandler {
   }
 
   public VersionInfo getK8sVersionInfo(K8sClusterConfig k8sClusterConfig) throws ApiException {
-    ApiClient client = apiClientFactory.getClient(k8sClusterConfig);
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+    ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     VersionApi apiInstance = new VersionApi(client);
     return apiInstance.getCode();
   }

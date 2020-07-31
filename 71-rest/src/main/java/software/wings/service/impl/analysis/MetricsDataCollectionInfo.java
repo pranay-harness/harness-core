@@ -1,8 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
-import static software.wings.utils.Misc.replaceUnicodeWithDot;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
+import static io.harness.logging.Misc.replaceUnicodeWithDot;
 
 import com.google.common.base.Preconditions;
 

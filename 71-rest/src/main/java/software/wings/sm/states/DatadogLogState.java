@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static software.wings.common.VerificationConstants.DATA_DOG_DEFAULT_HOSTNAME;
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.base.Preconditions;
 

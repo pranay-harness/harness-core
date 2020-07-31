@@ -25,13 +25,13 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.Service;
 import io.harness.CategoryTest;
+import io.harness.k8s.KubernetesContainerServiceImpl;
 import io.harness.k8s.model.KubernetesConfig;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
-import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.rules.Integration;
 
 import java.io.IOException;

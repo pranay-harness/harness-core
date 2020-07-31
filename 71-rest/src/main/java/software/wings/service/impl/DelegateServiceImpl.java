@@ -121,6 +121,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
+import io.harness.logging.Misc;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.Http;
 import io.harness.observer.Subject;
@@ -207,7 +208,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.Misc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

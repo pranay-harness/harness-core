@@ -72,6 +72,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.k8s.KubernetesHelperService;
+import io.harness.logging.Misc;
 import io.harness.observer.Subject;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.QueuePublisher;
@@ -177,7 +178,6 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.HostValidationService;
-import software.wings.utils.Misc;
 import software.wings.utils.Utils;
 
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package software.wings.beans.command;
+package io.harness.k8s.model;
 
 public enum ContainerApiVersions {
   KUBERNETES_V1("v1"),

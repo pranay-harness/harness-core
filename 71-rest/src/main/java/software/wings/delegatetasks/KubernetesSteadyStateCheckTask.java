@@ -12,6 +12,7 @@ import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
@@ -19,7 +20,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.KubernetesSteadyStateCheckParams;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -5,13 +5,13 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
+import static io.harness.logging.Misc.replaceUnicodeWithDot;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.Integer.max;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
-import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
