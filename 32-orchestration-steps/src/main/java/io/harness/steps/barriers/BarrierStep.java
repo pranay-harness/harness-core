@@ -13,7 +13,7 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.persistence.HPersistence;
+import io.harness.mongo.OrchestrationMongoTemplate;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -47,7 +47,7 @@ public class BarrierStep
     BarrierExecutionInstance barrierExecutionInstance =
         barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
     barrierExecutionInstance.setBarrierState(DOWN);
-    HPersistence.retry(() -> barrierService.save(barrierExecutionInstance));
+    OrchestrationMongoTemplate.retry(() -> barrierService.save(barrierExecutionInstance));
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
         .stepOutcome(
