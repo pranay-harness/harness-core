@@ -81,14 +81,6 @@ import javax.validation.constraints.NotNull;
 @CdIndex(name = "service_guard",
     fields = { @Field(WorkflowExecutionKeys.appId)
                , @Field(value = WorkflowExecutionKeys.startTs) })
-@CdIndex(name = "lastDeployedSearch",
-    fields =
-    {
-      @Field(WorkflowExecutionKeys.appId)
-      , @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.workflowId),
-          @Field(WorkflowExecutionKeys.infraMappingIds),
-          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-    })
 @CdIndex(
     name = "appId_endTs", fields = { @Field(WorkflowExecutionKeys.appId)
                                      , @Field(value = WorkflowExecutionKeys.endTs) })

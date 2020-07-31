@@ -3865,10 +3865,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(
       List<String> appIds, long epochMilli, String[] projectedKeys) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .field(WorkflowExecutionKeys.createdAt)
-                                         .greaterThanOrEq(epochMilli)
                                          .field(WorkflowExecutionKeys.appId)
                                          .in(appIds)
+                                         .field(WorkflowExecutionKeys.createdAt)
+                                         .greaterThanOrEq(epochMilli)
                                          .field(WorkflowExecutionKeys.pipelineExecutionId)
                                          .doesNotExist();
     for (String projectedKey : projectedKeys) {
@@ -3881,10 +3881,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private HIterator<WorkflowExecution> obtainWorkflowExecutionIterator(
       String accountId, long epochMilli, String[] projectedKeys) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .field(WorkflowExecutionKeys.createdAt)
-                                         .greaterThanOrEq(epochMilli)
                                          .field(WorkflowExecutionKeys.accountId)
                                          .equal(accountId)
+                                         .field(WorkflowExecutionKeys.createdAt)
+                                         .greaterThanOrEq(epochMilli)
                                          .field(WorkflowExecutionKeys.pipelineExecutionId)
                                          .doesNotExist();
     for (String projectedKey : projectedKeys) {
@@ -3920,8 +3920,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private WorkflowExecution fetchLastSuccessDeployment(String appId, String workflowId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
-        .filter(WorkflowExecutionKeys.workflowId, workflowId)
         .filter(WorkflowExecutionKeys.appId, appId)
+        .filter(WorkflowExecutionKeys.workflowId, workflowId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order("-createdAt")
         .get();
@@ -3931,9 +3931,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     FindOptions findOptions = new FindOptions();
     Query<WorkflowExecution> workflowExecutionQuery =
         wingsPersistence.createQuery(WorkflowExecution.class)
-            .filter(WorkflowExecutionKeys.status, SUCCESS)
             .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
-            .filter(WorkflowExecutionKeys.workflowId, workflowExecution.getWorkflowId());
+            .filter(WorkflowExecutionKeys.workflowId, workflowExecution.getWorkflowId())
+            .filter(WorkflowExecutionKeys.status, SUCCESS);
     if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
       workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds());
     }
@@ -3947,10 +3947,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution fetchWorkflowExecution(
       String appId, List<String> serviceIds, List<String> envIds, String workflowId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
-        .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
-        .filter(WorkflowExecutionKeys.workflowId, workflowId)
         .filter("appId", appId)
+        .filter(WorkflowExecutionKeys.workflowId, workflowId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
+        .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
         .field("serviceIds")
         .in(serviceIds)
         .field("envIds")
@@ -4116,9 +4116,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution fetchLastWorkflowExecution(String appId, String workflowId, String serviceId, String envId) {
     Query<WorkflowExecution> workflowExecutionQuery = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                          .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
+                                                          .filter(WorkflowExecutionKeys.appId, appId)
                                                           .filter(WorkflowExecutionKeys.workflowId, workflowId)
-                                                          .filter(WorkflowExecutionKeys.appId, appId);
+                                                          .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION);
 
     if (StringUtils.isNotBlank(serviceId)) {
       workflowExecutionQuery.field(WorkflowExecutionKeys.serviceIds).in(Arrays.asList(serviceId));
@@ -4136,9 +4136,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String workflowId, String envId, int pageOffset, int pageLimit) {
     PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
-            .addFilter(WorkflowExecutionKeys.workflowType, Operator.EQ, ORCHESTRATION)
-            .addFilter(WorkflowExecutionKeys.workflowId, Operator.EQ, workflowId)
             .addFilter(WorkflowExecutionKeys.appId, Operator.EQ, appId)
+            .addFilter(WorkflowExecutionKeys.workflowId, Operator.EQ, workflowId)
+            .addFilter(WorkflowExecutionKeys.workflowType, Operator.EQ, ORCHESTRATION)
             .addFilter(WorkflowExecutionKeys.envIds, Operator.IN, Arrays.asList(envId))
             .withLimit(String.valueOf(pageLimit))
             .withOffset(String.valueOf(pageOffset))
@@ -4227,8 +4227,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String infraMappingId, int limit, List<String> fieldList, boolean forInclusion) {
     final Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                                .filter(WorkflowExecutionKeys.appId, appId)
-                                               .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
                                                .filter(WorkflowExecutionKeys.status, SUCCESS)
+                                               .filter(WorkflowExecutionKeys.workflowType, ORCHESTRATION)
                                                .filter(WorkflowExecutionKeys.infraMappingIds, infraMappingId);
 
     emptyIfNull(fieldList).forEach(field -> query.project(field, forInclusion));
