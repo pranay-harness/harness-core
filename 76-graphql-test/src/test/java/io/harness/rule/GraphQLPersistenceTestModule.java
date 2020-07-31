@@ -3,7 +3,7 @@ package io.harness.rule;
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.OrchestrationStepsPersistenceConfig;
 import io.harness.connector.ConnectorPersistenceConfig;
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
 import software.wings.app.WingsPersistenceConfig;
 

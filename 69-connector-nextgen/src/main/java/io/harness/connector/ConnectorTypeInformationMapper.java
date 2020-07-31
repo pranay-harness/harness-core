@@ -53,7 +53,7 @@ public class ConnectorTypeInformationMapper implements TypeInformationMapper {
     if (typeToAliasMap.containsKey(typeClass.getType())) {
       return typeToAliasMap.get(typeClass.getType());
     }
-    logger.error("No Alias recorded for OrchestrationEntity {}. Using fully qualified path", type.getType().getName());
+    logger.error("No Alias recorded for Connector Entity {}. Using fully qualified path", type.getType().getName());
     return Alias.of(type.getType().getName());
   }
 

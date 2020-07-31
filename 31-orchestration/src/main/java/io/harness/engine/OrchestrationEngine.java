@@ -12,7 +12,7 @@ import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.execution.status.Status.positiveStatuses;
 import static io.harness.execution.status.Status.resumableStatuses;
-import static io.harness.ng.SpringDataMongoUtils.setUnset;
+import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

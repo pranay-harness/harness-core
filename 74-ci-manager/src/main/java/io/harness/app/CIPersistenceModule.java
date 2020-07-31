@@ -1,8 +1,8 @@
 package io.harness.app;
 
 import io.harness.OrchestrationPersistenceConfig;
-import io.harness.ng.PersistenceModule;
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.PersistenceModule;
+import io.harness.springdata.SpringPersistenceConfig;
 import software.wings.app.WingsPersistenceConfig;
 
 public class CIPersistenceModule extends PersistenceModule {

@@ -2,7 +2,7 @@ package io.harness.executionplan.rule;
 
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.connector.ConnectorPersistenceConfig;
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
 import software.wings.app.WingsPersistenceConfig;
 

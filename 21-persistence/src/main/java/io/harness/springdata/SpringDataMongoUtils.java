@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness.springdata;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 

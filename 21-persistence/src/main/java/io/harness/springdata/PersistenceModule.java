@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness.springdata;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;

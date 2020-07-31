@@ -1,6 +1,6 @@
 package io.harness;
 
-import io.harness.ng.SpringPersistenceConfig;
+import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
 
 public class OrchestrationStepsPersistenceTestModule extends PersistenceTestModule {

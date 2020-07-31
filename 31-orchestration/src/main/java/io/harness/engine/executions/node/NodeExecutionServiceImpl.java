@@ -1,7 +1,7 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.ng.SpringDataMongoUtils.returnNewOptions;
+import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
