@@ -21,7 +21,7 @@ import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -92,7 +92,7 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
         .name(deploymentStage.getName())
         .identifier(deploymentStage.getIdentifier())
         .stepType(SectionChainStep.STEP_TYPE)
-        .group(StepGroup.STAGE.name())
+        .group(StepOutcomeGroup.STAGE.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeId(planForService.getStartingNodeId())
                             .childNodeId(planForInfrastructure.getStartingNodeId())

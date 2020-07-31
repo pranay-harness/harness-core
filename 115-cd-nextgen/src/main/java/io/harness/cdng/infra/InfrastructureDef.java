@@ -18,6 +18,7 @@ public class InfrastructureDef {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   Infrastructure infrastructure;
 
+  // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
   public InfrastructureDef(String type, Infrastructure infrastructure) {
     this.type = type;

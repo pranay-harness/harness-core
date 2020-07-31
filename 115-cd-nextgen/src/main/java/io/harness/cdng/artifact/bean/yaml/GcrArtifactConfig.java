@@ -29,7 +29,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GcrArtifactConfig implements ArtifactConfig {
   /** GCP connector to connect to Google Container Registry. */
-  @Wither String connectorIdentifier;
+  @Wither String gcrConnector;
   /** Registry where the artifact source is located. */
   @Wither String registryHostname;
   /** Images in repos need to be referenced via a path. */
@@ -46,7 +46,7 @@ public class GcrArtifactConfig implements ArtifactConfig {
 
   @Override
   public String getUniqueHash() {
-    List<String> valuesList = Arrays.asList(connectorIdentifier, registryHostname, imagePath);
+    List<String> valuesList = Arrays.asList(gcrConnector, registryHostname, imagePath);
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
@@ -69,8 +69,8 @@ public class GcrArtifactConfig implements ArtifactConfig {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     GcrArtifactConfig gcrArtifactSpecConfig = (GcrArtifactConfig) overrideConfig;
     GcrArtifactConfig resultantConfig = this;
-    if (EmptyPredicate.isNotEmpty(gcrArtifactSpecConfig.getConnectorIdentifier())) {
-      resultantConfig = resultantConfig.withConnectorIdentifier(gcrArtifactSpecConfig.getConnectorIdentifier());
+    if (EmptyPredicate.isNotEmpty(gcrArtifactSpecConfig.getGcrConnector())) {
+      resultantConfig = resultantConfig.withGcrConnector(gcrArtifactSpecConfig.getGcrConnector());
     }
     if (EmptyPredicate.isNotEmpty(gcrArtifactSpecConfig.getImagePath())) {
       resultantConfig = resultantConfig.withImagePath(gcrArtifactSpecConfig.getImagePath());

@@ -20,9 +20,9 @@ import java.util.Optional;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class ExecutionElement {
-  @NotEmpty private final List<ExecutionWrapper> steps;
-  private final List<ExecutionWrapper> rollbackSteps;
+public class ExecutionElement {
+  @NotEmpty List<ExecutionWrapper> steps;
+  List<ExecutionWrapper> rollbackSteps;
 
   @ConstructorProperties({"steps", "rollbackSteps"})
   public ExecutionElement(List<ExecutionWrapper> steps, List<ExecutionWrapper> rollbackSteps) {

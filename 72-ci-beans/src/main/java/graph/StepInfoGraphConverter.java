@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.yaml.core.Graph;
-import io.harness.yaml.core.Parallel;
+import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Singleton
@@ -40,9 +41,9 @@ public class StepInfoGraphConverter {
         // process single step
         StepSpecType spec = ((StepElement) section).getStepSpecType();
         currentSectionGraph = handleStepSection((CIStepInfo) spec);
-      } else if (section instanceof Parallel) {
+      } else if (section instanceof ParallelStepElement) {
         // process parallel section
-        currentSectionGraph = handleParallelSection((Parallel) section);
+        currentSectionGraph = handleParallelSection((ParallelStepElement) section);
       } else if (section instanceof Graph) {
         // process graph section
         currentSectionGraph = handleGraphSection((Graph) section);
@@ -90,10 +91,12 @@ public class StepInfoGraphConverter {
     return stepInfoGraph;
   }
 
-  private StepInfoGraph handleParallelSection(Parallel parallel) {
+  private StepInfoGraph handleParallelSection(ParallelStepElement parallelStepElement) {
     StepInfoGraph stepInfoGraph = StepInfoGraph.builder().build();
 
-    List<StepElement> parallelSections = parallel.getSections();
+    // TODO(harsh): Please handle StepGroup here.
+    List<StepElement> parallelSections =
+        parallelStepElement.getSections().stream().map(section -> (StepElement) section).collect(Collectors.toList());
     // skip if null
     if (isEmpty(parallelSections)) {
       return stepInfoGraph;

@@ -5,7 +5,7 @@ import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.execution.status.Status;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
@@ -35,7 +35,7 @@ public class InfrastructureStep implements Step, SyncExecutable<InfraStepParamet
         .stepOutcome(StepOutcome.builder()
                          .outcome(infrastructure)
                          .name(OutcomeExpressionConstants.INFRASTRUCTURE.getName())
-                         .group(StepGroup.STAGE.name())
+                         .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();
   }

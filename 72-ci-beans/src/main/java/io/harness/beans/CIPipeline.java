@@ -41,6 +41,7 @@ public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInf
   private String name;
   private String description;
   private List<Tag> tags;
+  // TODO(harsh): Please change list element type to StageElementWrapper to support parallel stages
   private List<StageElement> stages;
 
   @FdIndex private String accountId;

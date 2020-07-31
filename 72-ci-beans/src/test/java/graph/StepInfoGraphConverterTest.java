@@ -10,7 +10,7 @@ import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.Parallel;
+import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import org.junit.Ignore;
@@ -33,14 +33,14 @@ public class StepInfoGraphConverterTest extends CIBeansTest {
     executionSectionList.add(
         StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-before-2").build()).build());
 
-    List<StepElement> parallelList = new ArrayList<>();
+    List<ExecutionWrapper> parallelList = new ArrayList<>();
     parallelList.add(
         StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-parallel-1").build()).build());
     parallelList.add(
         StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-parallel-2").build()).build());
     parallelList.add(
         StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-parallel-3").build()).build());
-    executionSectionList.add(Parallel.builder().sections(parallelList).build());
+    executionSectionList.add(ParallelStepElement.builder().sections(parallelList).build());
 
     executionSectionList.add(
         StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-after-1").build()).build());

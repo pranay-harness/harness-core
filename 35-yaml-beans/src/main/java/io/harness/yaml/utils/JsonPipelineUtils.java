@@ -6,7 +6,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -19,21 +18,22 @@ import java.io.IOException;
 import java.net.URL;
 
 /**
- * YamlPipelineUtils is used to convert arbitrary class from yaml file.
+ * JsonPipelineUtils is used to convert arbitrary class from yaml file.
  * ObjectMapper is preconfigured for yaml parsing. It uses custom
  * {@link JsonSubtypeResolver} which is responsible for scanning entire code base
- * and registering classes that are extending base interfaces or abstract classes defined in this framworkd
+ * and registering classes that are extending base interfaces or abstract classes defined in this framework
  * End user will typically extend interface and define {@link com.fasterxml.jackson.annotation.JsonTypeName} annotation
  * with proper type name. This way framework is decoupled from concrete implementations.
  */
 @UtilityClass
-public class YamlPipelineUtils {
+public class JsonPipelineUtils {
   private final ObjectMapper mapper;
 
   static {
-    mapper = new ObjectMapper(new YAMLFactory());
+    mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
@@ -71,7 +71,17 @@ public class YamlPipelineUtils {
     return mapper.readValue(yaml, cls);
   }
 
-  public String writeString(Object value) throws JsonProcessingException {
+  /**
+   * Write Json String
+   *
+   * @param value Java Object
+   * @return String
+   * @throws JsonProcessingException Signals the Json parsing exception
+   */
+  public String writeJsonString(Object value) throws JsonProcessingException {
     return mapper.writeValueAsString(value);
+  }
+  public ObjectMapper getMapper() {
+    return mapper;
   }
 }

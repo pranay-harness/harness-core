@@ -7,8 +7,10 @@ import com.google.inject.name.Names;
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.impl.ExecutionPlanCreatorRegistryImpl;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
+import io.harness.executionplan.plancreator.ParallelStagePlanCreator;
 import io.harness.executionplan.plancreator.ParallelStepPlanCreator;
 import io.harness.executionplan.plancreator.StagesPlanCreator;
+import io.harness.executionplan.plancreator.StepGroupPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.executionplan.service.impl.ExecutionPlanCreatorServiceImpl;
@@ -36,9 +38,11 @@ public class ExecutionPlanModule extends DependencyModule {
   protected void configure() {
     bind(ExecutionPlanCreatorService.class).to(ExecutionPlanCreatorServiceImpl.class).in(SINGLETON);
     bind(ExecutionPlanCreatorRegistry.class).to(ExecutionPlanCreatorRegistryImpl.class).in(SINGLETON);
-    bind(ParallelStepPlanCreator.class).in(SINGLETON);
     bind(ExecutionPlanCreatorHelper.class).in(SINGLETON);
+    bind(ParallelStepPlanCreator.class).in(SINGLETON);
     bind(StagesPlanCreator.class).in(SINGLETON);
+    bind(StepGroupPlanCreator.class).in(SINGLETON);
+    bind(ParallelStagePlanCreator.class).in(SINGLETON);
     bind(GenericStepPlanCreator.class).in(SINGLETON);
 
     bind(StepDependencyResolver.class)

@@ -11,7 +11,7 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -19,6 +19,7 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 import io.harness.state.StepType;
+import io.harness.yaml.core.StepElement;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -26,12 +27,12 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator<GenericStepInfo> {
+public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator<StepElement> {
   @Inject private StepDependencyService stepDependencyService;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(GenericStepInfo genericStepInfo, CreateExecutionPlanContext context) {
-    final PlanNode genericStepPlanNode = prepareStepExecutionNode(genericStepInfo, context);
+  public CreateExecutionPlanResponse createPlan(StepElement stepElement, CreateExecutionPlanContext context) {
+    final PlanNode genericStepPlanNode = prepareStepExecutionNode(stepElement, context);
 
     return CreateExecutionPlanResponse.builder()
         .planNode(genericStepPlanNode)
@@ -39,18 +40,19 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
         .build();
   }
 
-  private PlanNode prepareStepExecutionNode(GenericStepInfo genericStepInfo, CreateExecutionPlanContext context) {
+  private PlanNode prepareStepExecutionNode(StepElement stepElement, CreateExecutionPlanContext context) {
     final String nodeId = generateUuid();
     String nodeName;
 
-    if (EmptyPredicate.isEmpty(genericStepInfo.getDisplayName())) {
-      nodeName = genericStepInfo.getIdentifier();
+    if (EmptyPredicate.isEmpty(stepElement.getName())) {
+      nodeName = stepElement.getIdentifier();
     } else {
-      nodeName = genericStepInfo.getDisplayName();
+      nodeName = stepElement.getName();
     }
     PlanNodeBuilder planNodeBuilder = PlanNode.builder();
 
     // Add Step dependencies.
+    GenericStepInfo genericStepInfo = (GenericStepInfo) stepElement.getStepSpecType();
     Map<String, StepDependencySpec> stepDependencyMap = genericStepInfo.getInputStepDependencyList(context);
     if (EmptyPredicate.isNotEmpty(stepDependencyMap)) {
       stepDependencyMap.forEach(
@@ -61,9 +63,9 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
 
     planNodeBuilder.uuid(nodeId)
         .name(nodeName)
-        .identifier(genericStepInfo.getIdentifier())
+        .identifier(stepElement.getIdentifier())
         .stepType(StepType.builder().type(genericStepInfo.getStepType().getType()).build())
-        .group(StepGroup.STEP.name())
+        .group(StepOutcomeGroup.STEP.name())
         .stepParameters(genericStepInfo.getStepParameters())
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(genericStepInfo.getFacilitatorType()).build())
@@ -75,7 +77,7 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     return getSupportedTypes().contains(searchContext.getType())
-        && searchContext.getObjectToPlan() instanceof GenericStepInfo;
+        && searchContext.getObjectToPlan() instanceof StepElement;
   }
 
   @Override

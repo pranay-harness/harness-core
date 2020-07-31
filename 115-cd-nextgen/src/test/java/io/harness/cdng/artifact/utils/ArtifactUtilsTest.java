@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
@@ -24,7 +24,7 @@ import org.junit.experimental.categories.Category;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArtifactUtilsTest extends CDNGBaseTest {
+public class ArtifactUtilsTest extends CategoryTest {
   private final DockerArtifactSourceAttributes dockerArtifactSourceAttributes =
       DockerArtifactSourceAttributes.builder()
           .dockerhubConnector("DOCKER_CONNECTOR")

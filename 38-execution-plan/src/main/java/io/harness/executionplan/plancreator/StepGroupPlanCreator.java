@@ -1,7 +1,8 @@
 package io.harness.executionplan.plancreator;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.util.Collections.singletonList;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -11,20 +12,19 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.plancreator.beans.PlanCreatorType;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
-import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.state.StepType;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
-import io.harness.yaml.core.StageElement;
-import io.harness.yaml.core.intfc.StageType;
+import io.harness.yaml.core.StepGroupElement;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,28 +32,28 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class StageElementPlanCreator extends AbstractPlanCreatorWithChildren<List<StageElement>>
-    implements SupportDefinedExecutorPlanCreator<List<StageElement>> {
+public class StepGroupPlanCreator extends AbstractPlanCreatorWithChildren<StepGroupElement>
+    implements SupportDefinedExecutorPlanCreator<StepGroupElement> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      List<StageElement> stagesList, CreateExecutionPlanContext context) {
+  protected Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
+      StepGroupElement stepGroupElement, CreateExecutionPlanContext context) {
     Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, stagesList);
-    childrenPlanMap.put("STAGES", planForStages);
+    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, stepGroupElement.getSteps());
+    childrenPlanMap.put("STEPS", planForSteps);
     return childrenPlanMap;
   }
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(List<StageElement> input,
+  protected CreateExecutionPlanResponse createPlanForSelf(StepGroupElement stepGroupElement,
       Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForStages = planForChildrenMap.get("STAGES");
-    final PlanNode stagesPlanNode = prepareStagesNode(planForStages);
+    List<CreateExecutionPlanResponse> planForSteps = planForChildrenMap.get("STEPS");
+    final PlanNode stepGroupNode = prepareStepGroupNode(stepGroupElement, planForSteps);
     return CreateExecutionPlanResponse.builder()
-        .planNode(stagesPlanNode)
-        .planNodes(getPlanNodes(planForStages))
-        .startingNodeId(stagesPlanNode.getUuid())
+        .planNode(stepGroupNode)
+        .planNodes(getPlanNodes(planForSteps))
+        .startingNodeId(stepGroupNode.getUuid())
         .build();
   }
 
@@ -64,31 +64,30 @@ public class StageElementPlanCreator extends AbstractPlanCreatorWithChildren<Lis
         .collect(Collectors.toList());
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForStages(
-      CreateExecutionPlanContext context, List<StageElement> stages) {
-    return stages.stream()
-        .map(stage -> getPlanCreatorForStage(context, stage.getStageType()).createPlan(stage.getStageType(), context))
+  private List<CreateExecutionPlanResponse> getPlanForSteps(
+      CreateExecutionPlanContext context, List<ExecutionWrapper> stepsSection) {
+    return stepsSection.stream()
+        .map(step -> getPlanCreatorForStep(context, step).createPlan(step, context))
         .collect(Collectors.toList());
   }
 
-  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(CreateExecutionPlanContext context, StageType stage) {
+  private ExecutionPlanCreator<ExecutionWrapper> getPlanCreatorForStep(
+      CreateExecutionPlanContext context, ExecutionWrapper step) {
     return planCreatorHelper.getExecutionPlanCreator(
-        PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for  stage");
+        STEP_PLAN_CREATOR.getName(), step, context, format("No execution plan creator found for step [%s]", step));
   }
 
-  private PlanNode prepareStagesNode(List<CreateExecutionPlanResponse> planForStages) {
+  private PlanNode prepareStepGroupNode(
+      StepGroupElement stepGroupElement, List<CreateExecutionPlanResponse> planForSteps) {
     final String nodeId = generateUuid();
-
-    final String STAGES = "stages";
-
     return PlanNode.builder()
         .uuid(nodeId)
-        .name(STAGES)
-        .identifier(STAGES)
-        .stepType(StepType.builder().type(SectionChainStep.STEP_TYPE.getType()).build())
-        .group(StepGroup.STAGES.name())
+        .name(stepGroupElement.getName())
+        .identifier(stepGroupElement.getIdentifier())
+        .stepType(SectionChainStep.STEP_TYPE)
+        .group(StepOutcomeGroup.STEP.name())
         .stepParameters(SectionChainStepParameters.builder()
-                            .childNodeIds(planForStages.stream()
+                            .childNodeIds(planForSteps.stream()
                                               .map(CreateExecutionPlanResponse::getStartingNodeId)
                                               .collect(Collectors.toList()))
                             .build())
@@ -100,19 +99,17 @@ public class StageElementPlanCreator extends AbstractPlanCreatorWithChildren<Lis
 
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
-    final Object objectToPlan = searchContext.getObjectToPlan();
     return getSupportedTypes().contains(searchContext.getType())
-        && objectToPlan
-        instanceof List<?> && ((List<?>) objectToPlan).stream().allMatch(o -> o instanceof StageElement);
+        && searchContext.getObjectToPlan() instanceof StepGroupElement;
   }
 
   @Override
   public List<String> getSupportedTypes() {
-    return singletonList(PlanCreatorType.STAGES_PLAN_CREATOR.getName());
+    return Collections.singletonList(STEP_PLAN_CREATOR.getName());
   }
 
   @Override
-  public String getPlanNodeType(List<StageElement> input) {
-    return PlanNodeType.STAGES.name();
+  protected String getPlanNodeType(StepGroupElement input) {
+    return PlanNodeType.STEP.name();
   }
 }

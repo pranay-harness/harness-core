@@ -1,8 +1,7 @@
 package io.harness.executionplan.plancreator;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
-import static java.lang.String.format;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
 
 import com.google.inject.Inject;
 
@@ -11,6 +10,7 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.PlanCreatorType;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -19,54 +19,55 @@ import io.harness.plan.PlanNode;
 import io.harness.state.StepType;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
-import io.harness.yaml.core.ParallelStepElement;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
-import lombok.extern.slf4j.Slf4j;
+import io.harness.yaml.core.ParallelStageElement;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+import io.harness.yaml.core.intfc.StageType;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
-public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreator<ParallelStepElement> {
+public class ParallelStagePlanCreator implements SupportDefinedExecutorPlanCreator<ParallelStageElement> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
   public CreateExecutionPlanResponse createPlan(
-      ParallelStepElement parallelStepElement, CreateExecutionPlanContext context) {
-    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, parallelStepElement);
-    final PlanNode parallelExecutionNode = prepareParallelExecutionNode(
-        planForSteps.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList()));
+      ParallelStageElement parallelStageElement, CreateExecutionPlanContext context) {
+    List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, parallelStageElement.getSections());
+    PlanNode parallelExecutionNode = prepareParallelExecutionNode(
+        planForStages.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList()));
     return CreateExecutionPlanResponse.builder()
         .planNode(parallelExecutionNode)
-        .planNodes(planForSteps.stream()
+        .planNodes(planForStages.stream()
                        .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
                        .collect(Collectors.toList()))
         .startingNodeId(parallelExecutionNode.getUuid())
         .build();
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForSteps(
-      CreateExecutionPlanContext context, ParallelStepElement parallelStepElement) {
-    return parallelStepElement.getSections()
-        .stream()
-        .map(step -> getPlanCreatorForStep(context, step).createPlan(step, context))
+  private List<CreateExecutionPlanResponse> getPlanForStages(
+      CreateExecutionPlanContext context, List<StageElementWrapper> stages) {
+    return stages.stream()
+        .map(stageElementWrapper -> (StageElement) stageElementWrapper)
+        .map(stageElement
+            -> getPlanCreatorForStage(context, stageElement.getStageType())
+                   .createPlan(stageElement.getStageType(), context))
         .collect(Collectors.toList());
   }
 
-  private ExecutionPlanCreator<ExecutionWrapper> getPlanCreatorForStep(
-      CreateExecutionPlanContext context, ExecutionWrapper step) {
+  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(CreateExecutionPlanContext context, StageType stage) {
     return planCreatorHelper.getExecutionPlanCreator(
-        STEP_PLAN_CREATOR.getName(), step, context, format("no execution plan creator found for step [%s]", step));
+        PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for stage");
   }
 
   private PlanNode prepareParallelExecutionNode(List<String> childNodeIds) {
-    final String parallelStepUuid = generateUuid();
+    final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
-        .uuid(parallelStepUuid)
-        .name("parallel-step")
-        .identifier("parallel-step-" + parallelStepUuid)
+        .uuid(deploymentStageUid)
+        .name("parallel-stage")
+        .identifier("parallel-stage-" + deploymentStageUid)
         .stepType(StepType.builder().type(ForkStep.STEP_TYPE.getType()).build())
         .group(StepOutcomeGroup.STEP.name())
         .stepParameters(ForkStepParameters.builder().parallelNodeIds(childNodeIds).build())
@@ -80,11 +81,11 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     return getSupportedTypes().contains(searchContext.getType())
-        && searchContext.getObjectToPlan() instanceof ParallelStepElement;
+        && searchContext.getObjectToPlan() instanceof ParallelStageElement;
   }
 
   @Override
   public List<String> getSupportedTypes() {
-    return Collections.singletonList(STEP_PLAN_CREATOR.getName());
+    return Collections.singletonList(STAGE_PLAN_CREATOR.getName());
   }
 }

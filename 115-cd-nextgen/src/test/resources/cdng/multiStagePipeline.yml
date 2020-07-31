@@ -9,14 +9,14 @@ pipeline:
         spec:
           service:
             identifier: manager
-            serviceDef:
+            serviceDefinition:
               type: "Kubernetes"
               spec:
                 artifacts:
                   primary:
                     type: Dockerhub
                     spec:
-                      connectorIdentifier: "https://registry.hub.docker.com/"
+                      dockerhubConnector: "https://registry.hub.docker.com/"
                       imagePath: "library/nginx"
                       tag: "1.18"
                 manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}
@@ -63,7 +63,7 @@ pipeline:
                   value: cdp
             # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
             # Dynamic type ???
-            infrastructureDef:
+            infrastructureDefinition:
               # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
               # Dynamic type ???
               type: KubernetesDirect
@@ -132,12 +132,25 @@ pipeline:
               overrides:
                 environment:
                   identifier: prodInfra
-                infrastructureDef:
+                infrastructureDefinition:
                   type: KubernetesDirect
                   spec:
                     releaseName: testingProd
           execution:
             steps:
+              - stepGroup:
+                  name: StepGroup1
+                  identifier: StepGroup1
+                  steps:
+                    - parallel:
+                        - step:
+                            name: http step 1
+                            identifier: httpStep1
+                            type: Http
+                            spec:
+                              socketTimeoutMillis: 1000
+                              method: GET
+                              url: http://httpstat.us/200
               - step:
                   name: "Rollout Deployment"
                   identifier: rolloutDeployment2

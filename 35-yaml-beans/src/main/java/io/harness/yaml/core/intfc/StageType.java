@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /** Base Interface for different stage types. **/
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
-public interface StageType {
+public interface StageType extends WithIdentifier {
   void setIdentifier(String identifier);
   void setName(String name);
 }

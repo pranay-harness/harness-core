@@ -23,6 +23,7 @@ public class ServiceDefinition {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ServiceSpec serviceSpec;
 
+  // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
   public ServiceDefinition(String type, ServiceSpec serviceSpec) {
     this.type = type;

@@ -4,7 +4,9 @@ import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import lombok.experimental.UtilityClass;
 
 import java.util.Optional;
@@ -46,12 +48,23 @@ public class PlanCreatorConfigUtils {
     Optional<CDPipeline> pipelineConfig = getPipelineConfig(context);
     if (pipelineConfig.isPresent()) {
       CDPipeline pipeline = pipelineConfig.get();
-      return pipeline.getStages()
-          .stream()
-          .map(stage -> (DeploymentStage) ((StageElement) stage).getStageType())
-          .filter(deploymentStage -> deploymentStage.getIdentifier().equals(stageIdentifier))
-          .findFirst()
-          .orElse(null);
+      for (StageElementWrapper stage : pipeline.getStages()) {
+        if (stage instanceof StageElement) {
+          DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stage).getStageType();
+          if (deploymentStage.getIdentifier().equals(stageIdentifier)) {
+            return deploymentStage;
+          }
+        } else if (stage instanceof ParallelStageElement) {
+          ParallelStageElement parallelStage = (ParallelStageElement) stage;
+          for (StageElementWrapper stageElement : parallelStage.getSections()) {
+            DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageElement).getStageType();
+            if (deploymentStage.getIdentifier().equals(stageIdentifier)) {
+              return deploymentStage;
+            }
+          }
+        }
+      }
+      return null;
     } else {
       throw new IllegalArgumentException("Pipeline config doesn't exist.");
     }

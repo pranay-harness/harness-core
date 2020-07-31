@@ -75,6 +75,14 @@ public class PipelinePlanTest extends CDNGBaseTest {
         planNodes.stream().filter(p -> p.getIdentifier().equals("execution")).collect(Collectors.toList());
     assertThat(executionNodesList.size()).isEqualTo(2);
 
+    List<PlanNode> stepGroupNodesList =
+        planNodes.stream().filter(p -> p.getIdentifier().equals("StepGroup1")).collect(Collectors.toList());
+    assertThat(stepGroupNodesList.size()).isEqualTo(1);
+
+    List<PlanNode> httpStepNodesList =
+        planNodes.stream().filter(p -> p.getIdentifier().equals("httpStep1")).collect(Collectors.toList());
+    assertThat(httpStepNodesList.size()).isEqualTo(1);
+
     List<PlanNode> stage1RollOutNodesList =
         planNodes.stream().filter(p -> p.getIdentifier().equals("rolloutDeployment1")).collect(Collectors.toList());
     assertThat(stage1RollOutNodesList.size()).isEqualTo(1);

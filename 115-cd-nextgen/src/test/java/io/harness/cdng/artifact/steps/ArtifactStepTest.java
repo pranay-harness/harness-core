@@ -7,8 +7,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.inject.Inject;
-
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
@@ -49,7 +47,7 @@ public class ArtifactStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) Ambiance ambiance;
-  @Spy @Inject @InjectMocks ArtifactStep artifactStep;
+  @Spy @InjectMocks ArtifactStep artifactStep;
 
   Map<String, ResponseData> responseDataMap = new HashMap<>();
 
@@ -85,11 +83,8 @@ public class ArtifactStepTest extends CategoryTest {
 
   private ArtifactStepParameters getStepParametersForDocker() {
     return ArtifactStepParameters.builder()
-        .artifact(DockerHubArtifactConfig.builder()
-                      .connectorIdentifier("CONNECTOR")
-                      .imagePath("imagePath")
-                      .tag("tag")
-                      .build())
+        .artifact(
+            DockerHubArtifactConfig.builder().dockerhubConnector("CONNECTOR").imagePath("imagePath").tag("tag").build())
         .build();
   }
 
@@ -142,7 +137,7 @@ public class ArtifactStepTest extends CategoryTest {
   public void testApplyArtifactOverrides() {
     DockerHubArtifactConfig dockerHubArtifactConfig = DockerHubArtifactConfig.builder()
                                                           .artifactType(ArtifactUtils.PRIMARY_ARTIFACT)
-                                                          .connectorIdentifier("CONNECTOR")
+                                                          .dockerhubConnector("CONNECTOR")
                                                           .imagePath("IMAGE")
                                                           .tag("TAG1")
                                                           .build();
@@ -157,7 +152,7 @@ public class ArtifactStepTest extends CategoryTest {
     assertThat(finalArtifact).isInstanceOf(DockerHubArtifactConfig.class);
     DockerHubArtifactConfig artifact = (DockerHubArtifactConfig) finalArtifact;
     assertThat(artifact.getArtifactType()).isEqualTo(ArtifactUtils.PRIMARY_ARTIFACT);
-    assertThat(artifact.getConnectorIdentifier()).isEqualTo("CONNECTOR");
+    assertThat(artifact.getDockerhubConnector()).isEqualTo("CONNECTOR");
     assertThat(artifact.getTag()).isEqualTo("TAG2");
     assertThat(artifact.getImagePath()).isEqualTo("IMAGE2");
     assertThat(artifact.getTagRegex()).isEqualTo(null);

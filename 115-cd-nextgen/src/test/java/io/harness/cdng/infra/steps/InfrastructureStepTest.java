@@ -3,6 +3,7 @@ package io.harness.cdng.infra.steps;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
@@ -12,7 +13,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class InfrastructureStepTest {
+public class InfrastructureStepTest extends CategoryTest {
   private InfrastructureStep infrastructureStep = new InfrastructureStep();
 
   @Test

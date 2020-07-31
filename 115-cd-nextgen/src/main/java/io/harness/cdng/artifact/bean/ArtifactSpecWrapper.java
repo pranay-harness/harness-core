@@ -22,6 +22,7 @@ public class ArtifactSpecWrapper {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ArtifactConfig artifactConfig;
 
+  // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
   public ArtifactSpecWrapper(String type, ArtifactConfig artifactConfig) {
     this.type = type;

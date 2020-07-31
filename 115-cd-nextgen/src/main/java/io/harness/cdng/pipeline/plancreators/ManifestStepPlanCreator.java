@@ -49,7 +49,7 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .identifier(MANIFESTS)
         .stepType(ManifestStep.STEP_TYPE)
         .stepParameters(ManifestStepParameters.builder()
-                            .serviceSpecManifests(serviceConfig.getServiceDef().getServiceSpec().getManifests())
+                            .serviceSpecManifests(serviceConfig.getServiceDefinition().getServiceSpec().getManifests())
                             .stageOverrideManifests(stageOverrideManifests)
                             .manifestOverrideSets(manifestOverrideSets)
                             .build())
@@ -66,7 +66,7 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
           .getUseManifestOverrideSets()
           .stream()
           .map(useManifestOverrideSet
-              -> serviceConfig.getServiceDef()
+              -> serviceConfig.getServiceDefinition()
                      .getServiceSpec()
                      .getManifestOverrideSets()
                      .stream()
