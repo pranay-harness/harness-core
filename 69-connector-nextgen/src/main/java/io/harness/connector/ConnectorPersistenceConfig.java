@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.exception.GeneralException;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.springdata.SpringPersistenceConfig;
 import org.reflections.Reflections;
 import org.springframework.context.annotation.Bean;
@@ -38,7 +39,7 @@ public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
   @Bean(name = "connectorMongoTemplate")
   @Primary
   public MongoTemplate connectorMongoTemplate() throws Exception {
-    return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
 
   @Bean

@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.beans.converters.SweepingOutputReadMongoConverter;
 import io.harness.beans.converters.SweepingOutputWriteMongoConverter;
 import io.harness.exception.GeneralException;
+import io.harness.mongo.OrchestrationMongoTemplate;
 import io.harness.mongo.OrchestrationTypeInformationMapper;
 import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceConfig;
@@ -54,7 +55,7 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
   @Bean(name = "orchestrationMongoTemplate")
   @Primary
   public MongoTemplate orchestrationMongoTemplate() throws Exception {
-    return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    return new OrchestrationMongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
 
   @Bean
