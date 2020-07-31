@@ -15,11 +15,20 @@ import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.k8s.K8sRollingOutcome;
+import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
+import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
+import io.harness.cdng.k8s.K8sRollingStepInfo;
+import io.harness.cdng.k8s.K8sRollingStepParameters;
+import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
+import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
+import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
+import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
@@ -29,6 +38,7 @@ import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
+import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
 import io.harness.serializer.KryoRegistrar;
 
 public class NGKryoRegistrar implements KryoRegistrar {
@@ -63,5 +73,15 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestOverrideSets.class, 8043);
     kryo.register(ArtifactOverrideSets.class, 8044);
     kryo.register(StoreConfigWrapper.class, 8045);
+    kryo.register(CDPipelineSetupParameters.class, 8046);
+    kryo.register(DeploymentStageStepParameters.class, 8047);
+    kryo.register(HttpStepInfo.class, 8048);
+    kryo.register(K8sRollingRollbackStepInfo.class, 8049);
+    kryo.register(K8sRollingRollbackStepParameters.class, 8050);
+    kryo.register(K8sRollingStepInfo.class, 8051);
+    kryo.register(K8sRollingStepParameters.class, 8052);
+    kryo.register(ManifestFetchParameters.class, 8053);
+    kryo.register(ManifestStepParameters.class, 8054);
+    kryo.register(ShellScriptStepInfo.class, 8055);
   }
 }

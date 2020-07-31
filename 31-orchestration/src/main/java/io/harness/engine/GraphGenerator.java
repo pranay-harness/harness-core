@@ -85,6 +85,7 @@ public class GraphGenerator {
                                     .stepType(currentNode.getNode().getStepType().getType())
                                     .status(currentNode.getStatus())
                                     .failureInfo(currentNode.getFailureInfo())
+                                    .stepParameters(currentNode.getResolvedStepParameters())
                                     .interruptHistories(currentNode.getInterruptHistories())
                                     .outcomes(outcomeService.findAllByRuntimeId(
                                         currentNode.getAmbiance().getPlanExecutionId(), currentNode.getUuid()))
