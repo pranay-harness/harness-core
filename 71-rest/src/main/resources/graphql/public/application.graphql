@@ -3,7 +3,8 @@ extend type Query {
   application(applicationId: String!): Application @dataFetcher(name: application)
 
   # Get details about Harness Applications.
-  applications(limit: Int!, offset: Int): ApplicationConnection @dataFetcher(name: applicationConnection)
+  applications(filters: [ApplicationFilter], limit: Int!, offset: Int): ApplicationConnection
+    @dataFetcher(name: applicationConnection)
   # Fetch details about a Harness Application by it's name
   applicationByName(name: String!): Application @dataFetcher(name: application)
 }
@@ -31,4 +32,22 @@ type Application {
 type ApplicationConnection {
   pageInfo: PageInfo
   nodes: [Application]
+}
+
+enum ApplicationFilterType {
+  Application
+}
+
+input ApplicationFilter {
+  application: IdFilter
+  tag: ApplicationTagFilter
+}
+
+input ApplicationTagFilter {
+  entityType: ApplicationTagType
+  tags: [TagInput]
+}
+
+enum ApplicationTagType {
+  APPLICATION
 }
