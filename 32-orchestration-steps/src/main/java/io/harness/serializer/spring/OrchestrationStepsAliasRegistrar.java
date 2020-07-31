@@ -4,6 +4,7 @@ import io.harness.spring.AliasRegistrar;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 
 import java.util.Map;
 
@@ -13,5 +14,6 @@ public class OrchestrationStepsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("barrierExecutionInstance", BarrierExecutionInstance.class);
     orchestrationElements.put("barrierStepParameters", BarrierStepParameters.class);
     orchestrationElements.put("barrierOutcome", BarrierOutcome.class);
+    orchestrationElements.put("resourceRestraintInstance", ResourceRestraintInstance.class);
   }
 }
