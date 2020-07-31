@@ -93,6 +93,7 @@ public class LoopedPipelineWithResumeTest extends AbstractFunctionalTest {
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.PDC, bearerToken);
     infrastructureDefinition2 = infrastructureDefinitionGenerator.ensurePDC(seed, owners, "PDC2");
 
+    resetCache(application.getAccountId());
     Workflow templatizedWorkflow1 = getWorkflow("exit 0", "LoopTest1 ");
     Workflow templatizedWorkflow2 = getWorkflow("exit 1", "LoopTest2 ");
     Workflow templatizedWorkflow3 = getWorkflow("exit 0", "LoopTest3 ");
@@ -160,7 +161,7 @@ public class LoopedPipelineWithResumeTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void triggerPipelineFailureWithResumeAPI() {
     ImmutableMap<String, String> pipelineVariables =

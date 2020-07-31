@@ -87,6 +87,7 @@ public class LoopedPipelineTest extends AbstractFunctionalTest {
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.PDC, bearerToken);
     infrastructureDefinition2 = infrastructureDefinitionGenerator.ensurePDC(seed, owners, "PDC2");
 
+    resetCache(application.getAccountId());
     Workflow workflow = workflowUtils.getRollingK8sWorkflow(
         "Looped-Pipeline" + System.currentTimeMillis(), service, infrastructureDefinition1);
     Workflow savedWorkflow =
