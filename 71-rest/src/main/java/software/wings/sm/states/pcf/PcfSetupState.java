@@ -3,6 +3,7 @@ package software.wings.sm.states.pcf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.Misc.normalizeExpression;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
@@ -17,7 +18,6 @@ import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
-import static software.wings.utils.Misc.normalizeExpression;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.primitives.Ints;

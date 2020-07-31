@@ -1,10 +1,9 @@
-package software.wings.delegatetasks.k8s.apiclient;
+package io.harness.k8s.apiclient;
 
 import static io.harness.k8s.KubernetesHelperService.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.k8s.model.KubernetesConfig;
@@ -15,23 +14,13 @@ import io.kubernetes.client.util.credentials.AccessTokenAuthentication;
 import io.kubernetes.client.util.credentials.ClientCertificateAuthentication;
 import io.kubernetes.client.util.credentials.UsernamePasswordAuthentication;
 import okhttp3.OkHttpClient;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class ApiClientFactoryImpl implements ApiClientFactory {
-  private final ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-
-  @Inject
-  public ApiClientFactoryImpl(ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper) {
-    this.containerDeploymentDelegateHelper = containerDeploymentDelegateHelper;
-  }
-
   @Override
-  public ApiClient getClient(K8sClusterConfig k8sClusterConfig) {
-    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+  public ApiClient getClient(KubernetesConfig kubernetesConfig) {
     return fromKubernetesConfig(kubernetesConfig);
   }
 

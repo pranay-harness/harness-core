@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.logging;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -6,10 +6,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.exception.ExceptionUtils;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
-import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -90,7 +86,7 @@ public class Misc {
   }
 
   public static void logAllMessages(
-      Throwable ex, ManagerExecutionLogCallback executionLogCallback, CommandExecutionStatus commandExecutionStatus) {
+      Throwable ex, LogCallback executionLogCallback, CommandExecutionStatus commandExecutionStatus) {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < MAX_CAUSES) {

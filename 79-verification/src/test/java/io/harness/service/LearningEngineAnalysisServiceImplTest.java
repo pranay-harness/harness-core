@@ -1,5 +1,6 @@
 package io.harness.service;
 
+import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.NANDAN;
@@ -9,7 +10,6 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

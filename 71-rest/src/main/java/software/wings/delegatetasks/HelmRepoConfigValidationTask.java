@@ -6,7 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static software.wings.common.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.google.inject.Inject;
 

@@ -1,10 +1,10 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.logging.Misc.isLong;
 import static java.util.Arrays.asList;
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
-import static software.wings.utils.Misc.isLong;
 
 import com.google.inject.Inject;
 

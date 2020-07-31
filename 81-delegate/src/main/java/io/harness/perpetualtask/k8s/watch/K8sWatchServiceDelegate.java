@@ -9,6 +9,8 @@ import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
+import io.harness.k8s.apiclient.ApiClientFactory;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.serializer.KryoSerializer;
@@ -24,8 +26,8 @@ import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.delegatetasks.k8s.apiclient.ApiClientFactory;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.io.Closeable;
@@ -52,17 +54,19 @@ public class K8sWatchServiceDelegate {
 
   private final Map<String, WatcherGroup> watchMap; // <id, Watch>
   private final KryoSerializer kryoSerializer; // <id, Watch>
+  private final ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   @Inject
   public K8sWatchServiceDelegate(WatcherFactory watcherFactory, KubernetesClientFactory kubernetesClientFactory,
       SharedInformerFactoryFactory sharedInformerFactoryFactory, ApiClientFactory apiClientFactory,
-      KryoSerializer kryoSerializer) {
+      KryoSerializer kryoSerializer, ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper) {
     this.watcherFactory = watcherFactory;
     this.kubernetesClientFactory = kubernetesClientFactory;
     this.sharedInformerFactoryFactory = sharedInformerFactoryFactory;
     this.apiClientFactory = apiClientFactory;
     this.watchMap = new ConcurrentHashMap<>();
     this.kryoSerializer = kryoSerializer;
+    this.containerDeploymentDelegateHelper = containerDeploymentDelegateHelper;
   }
 
   @Value
@@ -102,7 +106,9 @@ public class K8sWatchServiceDelegate {
                                           .clusterName(params.getClusterName())
                                           .kubeSystemUid(kubeSystemUid)
                                           .build();
-      ApiClient apiClient = apiClientFactory.getClient(k8sClusterConfig);
+
+      KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+      ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
       SharedInformerFactory sharedInformerFactory =
           sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails);
       sharedInformerFactory.startAllRegisteredInformers();

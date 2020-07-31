@@ -19,6 +19,7 @@ import static io.harness.k8s.KubernetesConvention.getStageServiceName;
 import static io.harness.k8s.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static io.harness.k8s.KubernetesHelperService.toDisplayYaml;
 import static io.harness.k8s.KubernetesHelperService.toYaml;
+import static io.harness.k8s.model.ContainerApiVersions.KUBERNETES_V1;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -33,7 +34,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
-import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
@@ -95,12 +95,15 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.K8sConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesConvention;
+import io.harness.k8s.model.ContainerApiVersions;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
@@ -134,7 +137,6 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -160,7 +162,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   public static final String HARNESS_KUBERNETES_APP_LABEL_KEY = "harness.io/application";
   public static final String HARNESS_KUBERNETES_SERVICE_LABEL_KEY = "harness.io/service";
   public static final String HARNESS_KUBERNETES_ENV_LABEL_KEY = "harness.io/environment";
-  public static final String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
   public static final String HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY = "harness.io/service-infra-id";
   @Transient private static final Pattern envVarPattern = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]*$");
   @Transient private static final String LOAD_BALANCER = "LoadBalancer";
@@ -652,7 +653,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private String getRevisionFromService(Service service) {
-    return service.getSpec().getSelector().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
+    return service.getSpec().getSelector().get(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY);
   }
 
   private ImmutableMap<String, String> getLabels(KubernetesSetupParams setupParams) {
@@ -672,7 +673,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return ImmutableMap.<String, String>builder()
         .put(HARNESS_KUBERNETES_MANAGED_LABEL_KEY, "true")
         .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName())
-        .put(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
+        .put(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
         .build();
   }
 
@@ -688,7 +689,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       KubernetesSetupParams setupParams, String revision) {
     return ImmutableMap.<String, String>builder()
         .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName())
-        .put(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
+        .put(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
         .build();
   }
 
@@ -1197,7 +1198,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
             destinationRuleSpecNested.addNewSubset()
                 .withName(revision.get().toString())
-                .addToLabels(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision.get().toString())
+                .addToLabels(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision.get().toString())
                 .endSubset();
           }
         }
@@ -1206,7 +1207,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     destinationRuleSpecNested.addNewSubset()
         .withName(String.valueOf(currentRevision))
-        .addToLabels(HARNESS_KUBERNETES_REVISION_LABEL_KEY, String.valueOf(currentRevision))
+        .addToLabels(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY, String.valueOf(currentRevision))
         .endSubset();
 
     virtualServiceHttpNested.endHttp();
@@ -1483,7 +1484,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private int getRevisionNumber(HasMetadata kubernetesResource) {
     return isNotVersioned || kubernetesResource == null
         ? 0
-        : Integer.parseInt(kubernetesResource.getMetadata().getLabels().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY));
+        : Integer.parseInt(
+              kubernetesResource.getMetadata().getLabels().get(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY));
   }
 
   private HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig, String name) {

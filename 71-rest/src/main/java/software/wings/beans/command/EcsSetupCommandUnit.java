@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +23,6 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandle
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
-import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.Map;

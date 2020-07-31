@@ -15,6 +15,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,7 +25,6 @@ import software.wings.api.ContainerServiceData;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Comparator;

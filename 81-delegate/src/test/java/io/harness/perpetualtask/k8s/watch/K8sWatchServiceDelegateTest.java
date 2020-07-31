@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.NamespaceOperationsImpl;
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -29,8 +30,8 @@ import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.delegatetasks.k8s.apiclient.ApiClientFactory;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.util.UUID;
@@ -52,8 +53,10 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
     watcherFactory = mock(WatcherFactory.class);
     SharedInformerFactoryFactory sharedInformerFactoryFactory = mock(SharedInformerFactoryFactory.class);
     ApiClientFactory apiClientFactory = mock(ApiClientFactory.class);
-    this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(
-        watcherFactory, kubernetesClientFactory, sharedInformerFactoryFactory, apiClientFactory, kryoSerializer);
+    ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper = mock(ContainerDeploymentDelegateHelper.class);
+
+    this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(watcherFactory, kubernetesClientFactory,
+        sharedInformerFactoryFactory, apiClientFactory, kryoSerializer, containerDeploymentDelegateHelper);
     podWatcher = mock(PodWatcher.class);
     nodeWatcher = mock(NodeWatcher.class);
     clusterEventWatcher = mock(ClusterEventWatcher.class);

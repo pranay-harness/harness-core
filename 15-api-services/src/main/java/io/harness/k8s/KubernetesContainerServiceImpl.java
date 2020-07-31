@@ -1,15 +1,18 @@
-package software.wings.cloudprovider.gke;
+package io.harness.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.k8s.K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getServiceNameFromControllerName;
+import static io.harness.k8s.model.ContainerApiVersions.KUBERNETES_V1;
+import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -23,9 +26,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
-import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
-import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
-import static software.wings.common.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -90,13 +90,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.k8s.K8sGlobalConfigService;
-import io.harness.k8s.K8sResourcePermissionImpl;
-import io.harness.k8s.KubernetesContainerService;
-import io.harness.k8s.KubernetesHelperService;
+import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
@@ -115,9 +113,6 @@ import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
-import software.wings.delegatetasks.k8s.apiclient.ApiClientFactoryImpl;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.utils.Misc;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -142,11 +137,9 @@ import java.util.stream.Collectors;
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
 
-  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
-  @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private K8sResourcePermissionImpl k8sResourcePermission;
 
   @Override

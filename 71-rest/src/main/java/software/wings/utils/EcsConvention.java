@@ -2,6 +2,8 @@ package software.wings.utils;
 
 import static org.apache.commons.lang3.StringUtils.trim;
 
+import io.harness.logging.Misc;
+
 import java.util.regex.Pattern;
 
 /**

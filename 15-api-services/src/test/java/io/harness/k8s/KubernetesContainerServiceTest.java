@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.gke;
+package io.harness.k8s;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.HANTANG;
@@ -18,9 +18,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.k8s.K8sGlobalConfigService;
-import io.harness.k8s.K8sResourcePermissionImpl;
-import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
@@ -35,7 +32,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 
 import java.time.Clock;
 import java.util.Arrays;
@@ -44,7 +40,6 @@ import java.util.List;
 public class KubernetesContainerServiceTest extends CategoryTest {
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().namespace("default").build();
 
-  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private TimeLimiter timeLimiter;
   @Mock private Clock clock;

@@ -18,6 +18,7 @@ import com.amazonaws.services.ecs.model.Service;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.Misc;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ContainerServiceData;
@@ -32,7 +33,6 @@ import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;

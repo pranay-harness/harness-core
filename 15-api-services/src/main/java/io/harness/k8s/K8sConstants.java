@@ -47,4 +47,6 @@ public interface K8sConstants {
       + "        " + OIDC_RERESH_TOKEN + "\n"
       + "        " + OIDC_ISSUER_URL + "\n"
       + "      " + OIDC_AUTH_NAME + "\n";
+
+  String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
 }

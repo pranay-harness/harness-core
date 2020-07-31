@@ -21,6 +21,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,6 @@ import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.sm.states.pcf.PcfPluginState;
-import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.IOException;

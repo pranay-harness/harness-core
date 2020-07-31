@@ -1,4 +1,4 @@
-package software.wings.common;
+package io.harness.state;
 
 public interface StateConstants {
   /**

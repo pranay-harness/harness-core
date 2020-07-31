@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
+import io.harness.k8s.apiclient.ApiClientFactoryImpl;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.ApiException;
@@ -22,7 +24,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.delegatetasks.k8s.apiclient.ApiClientFactoryImpl;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -33,6 +35,9 @@ public class K8sVersionTaskHandlerTest extends WingsBaseTest {
   @Mock private ApiClientFactoryImpl apiClientFactory;
   @Mock private K8sTaskParameters k8sTaskParameters;
   @Mock private K8sClusterConfig k8sClusterConfig;
+  @Mock private KubernetesConfig kubernetesConfig;
+  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+
   @InjectMocks @Spy private K8sVersionTaskHandler k8sVersionTaskHandler;
 
   private KubernetesClusterConfig kubernetesClusterConfig;
@@ -125,7 +130,8 @@ public class K8sVersionTaskHandlerTest extends WingsBaseTest {
   public void testGetK8sVersionInfo() throws ApiException {
     final String MASTER_URL = "https://125.19.67.142";
 
-    doReturn(Config.fromUrl(MASTER_URL, false)).when(apiClientFactory).getClient(k8sClusterConfig);
+    doReturn(Config.fromUrl(MASTER_URL, false)).when(apiClientFactory).getClient(kubernetesConfig);
+    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(k8sClusterConfig);
     VersionInfo versionInfo1 = k8sVersionTaskHandler.getK8sVersionInfo(k8sClusterConfig);
   }
 }

@@ -35,6 +35,7 @@ import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.exception.WingsException;
+import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -76,7 +77,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.AwsStateHelper;
-import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.ArrayList;

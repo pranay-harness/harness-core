@@ -69,6 +69,7 @@ import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
+import io.harness.k8s.KubernetesContainerServiceImpl;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -142,7 +143,6 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
-import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsMongoPersistence;

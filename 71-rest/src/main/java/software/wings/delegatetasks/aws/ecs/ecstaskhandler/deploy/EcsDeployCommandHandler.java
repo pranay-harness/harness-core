@@ -15,6 +15,7 @@ import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ContainerServiceData;
@@ -28,7 +29,6 @@ import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;

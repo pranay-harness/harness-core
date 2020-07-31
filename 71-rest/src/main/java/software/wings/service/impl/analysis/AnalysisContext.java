@@ -1,9 +1,9 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
+import static io.harness.logging.Misc.replaceUnicodeWithDot;
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
-import static software.wings.utils.Misc.replaceDotWithUnicode;
-import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Nullable;

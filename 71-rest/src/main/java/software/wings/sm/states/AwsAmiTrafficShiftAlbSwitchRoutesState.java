@@ -24,6 +24,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.Misc;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,7 +51,6 @@ import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
-import software.wings.utils.Misc;
 
 import java.util.HashMap;
 import java.util.List;

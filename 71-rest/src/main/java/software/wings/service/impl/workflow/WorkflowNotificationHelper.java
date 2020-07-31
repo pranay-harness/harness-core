@@ -9,6 +9,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.Misc.getDurationString;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -19,7 +20,6 @@ import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
 import static software.wings.sm.StateType.PHASE;
-import static software.wings.utils.Misc.getDurationString;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

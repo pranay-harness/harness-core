@@ -16,6 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
