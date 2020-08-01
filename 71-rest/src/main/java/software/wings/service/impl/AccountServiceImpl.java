@@ -210,10 +210,11 @@ public class AccountServiceImpl implements AccountService {
   private static final String SOFTWARE_WINGS = "software.wings";
   private static final String IO_HARNESS = "io.harness";
 
-  private static Set<Class<? extends PersistentEntity>> seperateDeletionEntities =
+  private static Set<Class<? extends PersistentEntity>> separateDeletionEntities =
       new HashSet<>(Arrays.asList(Account.class, User.class, SSOSettings.class));
 
   @Inject ServiceClassLocator serviceClassLocator;
+  @Inject private AccountDao accountDao;
 
   @Inject protected AuthService authService;
   @Inject protected HarnessCacheManager harnessCacheManager;
@@ -271,9 +272,9 @@ public class AccountServiceImpl implements AccountService {
 
     account.setAppId(GLOBAL_APP_ID);
     account.setAccountKey(generateSecretKey());
-    licenseService.addLicenseInfo(account);
+    LicenseUtils.addLicenseInfo(account);
 
-    wingsPersistence.save(account);
+    accountDao.save(account);
 
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountCreated, account);
@@ -283,7 +284,7 @@ public class AccountServiceImpl implements AccountService {
       if (account.isForImport()) {
         logger.info("Creating the account for import only, no default account entities will be created");
       } else {
-        createDefaultAccountEntities(account, fromDataGen);
+        createDefaultAccountEntities(account);
         // Schedule default account level jobs.
         scheduleAccountLevelJobs(account.getUuid());
       }
@@ -358,7 +359,7 @@ public class AccountServiceImpl implements AccountService {
     return false;
   }
 
-  private void createDefaultAccountEntities(Account account, boolean fromDataGen) {
+  private void createDefaultAccountEntities(Account account) {
     createDefaultRoles(account)
         .stream()
         .filter(role -> RoleType.ACCOUNT_ADMIN == role.getRoleType())
@@ -381,7 +382,7 @@ public class AccountServiceImpl implements AccountService {
       }
     });
 
-    enableFeatureFlags(account, fromDataGen);
+    enableFeatureFlags(account);
     sampleDataProviderService.createK8sV2SampleApp(account);
     createDefaultOrganization(account.getUuid());
   }
@@ -400,7 +401,7 @@ public class AccountServiceImpl implements AccountService {
     }
   }
 
-  private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
+  private void enableFeatureFlags(@NotNull Account account) {
     featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
   }
@@ -440,7 +441,7 @@ public class AccountServiceImpl implements AccountService {
   public Account get(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     notNullCheck("Account is null for the given id:" + accountId, account, USER);
-    licenseService.decryptLicenseInfo(account, false);
+    LicenseUtils.decryptLicenseInfo(account, false);
     return account;
   }
 
@@ -465,7 +466,7 @@ public class AccountServiceImpl implements AccountService {
       return;
     }
 
-    accounts.forEach(account -> licenseService.decryptLicenseInfo(account, false));
+    accounts.forEach(account -> LicenseUtils.decryptLicenseInfo(account, false));
   }
 
   @Override
@@ -538,7 +539,7 @@ public class AccountServiceImpl implements AccountService {
     morphia.getMapper().getMappedClasses().forEach(mc -> {
       Class<? extends PersistentEntity> clazz = (Class<? extends PersistentEntity>) mc.getClazz();
       if (mc.getEntityAnnotation() != null && isAnnotatedExportable(clazz)
-          && !seperateDeletionEntities.contains(clazz)) {
+          && !separateDeletionEntities.contains(clazz)) {
         // Find out non-abstract classes with both 'Entity' and 'HarnessEntity' annotation.
         logger.info("Collection '{}' is exportable", clazz.getName());
         toBeExported.add(clazz);
@@ -825,7 +826,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account update(@Valid Account account) {
-    licenseService.decryptLicenseInfo(account, false);
+    LicenseUtils.decryptLicenseInfo(account, false);
 
     UpdateOperations<Account> updateOperations =
         wingsPersistence.createUpdateOperations(Account.class)
@@ -847,7 +848,7 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
-    licenseService.decryptLicenseInfo(updatedAccount, false);
+    LicenseUtils.decryptLicenseInfo(updatedAccount, false);
 
     publishAccountChangeEvent(updatedAccount);
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
@@ -884,7 +885,7 @@ public class AccountServiceImpl implements AccountService {
     List<Account> accountList = new ArrayList<>();
     try (HIterator<Account> iterator = new HIterator<>(query.fetch())) {
       for (Account account : iterator) {
-        licenseService.decryptLicenseInfo(account, false);
+        LicenseUtils.decryptLicenseInfo(account, false);
         accountList.add(account);
       }
     }
@@ -1166,11 +1167,6 @@ public class AccountServiceImpl implements AccountService {
       logger.warn(err);
       throw new InvalidRequestException(err);
     }
-  }
-
-  @Override
-  public boolean setAccountStatus(String accountId, String accountStatus) {
-    return setAccountStatusInternal(get(accountId), accountStatus);
   }
 
   private boolean setAccountStatusInternal(Account account, String accountStatus) {

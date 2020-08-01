@@ -374,11 +374,11 @@ public class LicenseServiceTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpireAfterDays(1);
 
-    String generatedLicense = licenseService.generateLicense(licenseInfo);
+    String generatedLicense = LicenseUtils.generateLicense(licenseInfo);
 
     Account account = new Account();
     account.setEncryptedLicenseInfo(decodeBase64(generatedLicense));
-    Account accountWithDecryptedInfo = licenseService.decryptLicenseInfo(account, false);
+    Account accountWithDecryptedInfo = LicenseUtils.decryptLicenseInfo(account, false);
     assertThat(accountWithDecryptedInfo).isNotNull();
     assertThat(accountWithDecryptedInfo.getLicenseInfo()).isNotNull();
     assertThat(accountWithDecryptedInfo.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
@@ -411,6 +411,6 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   private String getEncryptedString(LicenseInfo licenseInfo) {
-    return licenseService.generateLicense(licenseInfo);
+    return LicenseUtils.generateLicense(licenseInfo);
   }
 }

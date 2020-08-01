@@ -1,18 +1,17 @@
 package software.wings.licensing;
 
-import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.configuration.DeployMode;
+import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.ccm.license.CeLicenseType;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.security.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -28,17 +27,16 @@ import software.wings.beans.LicenseInfo;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.service.impl.AccountDao;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
-import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
-import java.nio.charset.Charset;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -59,22 +57,24 @@ public class LicenseServiceImpl implements LicenseService {
   private static final String EMAIL_BODY_ACCOUNT_EXPIRED = "Customer License has Expired";
   private static final String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
 
-  private AccountService accountService;
-  private WingsPersistence wingsPersistence;
-  private GenericDbCache dbCache;
-  private ExecutorService executorService;
-  private LicenseProvider licenseProvider;
-  private EmailNotificationService emailNotificationService;
-  private EventPublishHelper eventPublishHelper;
+  private final AccountService accountService;
+  private final AccountDao accountDao;
+  private final WingsPersistence wingsPersistence;
+  private final GenericDbCache dbCache;
+  private final ExecutorService executorService;
+  private final LicenseProvider licenseProvider;
+  private final EmailNotificationService emailNotificationService;
+  private final EventPublishHelper eventPublishHelper;
   private List<String> trialDefaultContacts;
   private List<String> paidDefaultContacts;
 
   @Inject
-  public LicenseServiceImpl(AccountService accountService, WingsPersistence wingsPersistence, GenericDbCache dbCache,
-      ExecutorService executorService, LicenseProvider licenseProvider,
+  public LicenseServiceImpl(AccountService accountService, AccountDao accountDao, WingsPersistence wingsPersistence,
+      GenericDbCache dbCache, ExecutorService executorService, LicenseProvider licenseProvider,
       EmailNotificationService emailNotificationService, EventPublishHelper eventPublishHelper,
       MainConfiguration mainConfiguration) {
     this.accountService = accountService;
+    this.accountDao = accountDao;
     this.wingsPersistence = wingsPersistence;
     this.dbCache = dbCache;
     this.executorService = executorService;
@@ -206,167 +206,6 @@ public class LicenseServiceImpl implements LicenseService {
   }
 
   @Override
-  public Account addLicenseInfo(Account account) {
-    String deployMode = System.getenv().get(DeployMode.DEPLOY_MODE);
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    if (licenseInfo == null) {
-      if (!DeployMode.isOnPrem(deployMode)) {
-        throw new InvalidRequestException("Invalid / Null license info", USER);
-      } else {
-        return account;
-      }
-    }
-
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo);
-    account.setEncryptedLicenseInfo(encryptedLicenseInfo);
-    return account;
-  }
-
-  private byte[] getEncryptedLicenseInfo(LicenseInfo licenseInfo) {
-    if (licenseInfo == null) {
-      throw new InvalidRequestException("Invalid / Null license info", USER);
-    }
-
-    if (!AccountStatus.isValid(licenseInfo.getAccountStatus())) {
-      throw new InvalidRequestException("Invalid / Null license info account status", USER);
-    }
-
-    if (!AccountType.isValid(licenseInfo.getAccountType())) {
-      throw new InvalidRequestException("Invalid / Null license info account type", USER);
-    }
-
-    if (licenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
-      licenseInfo.setExpiryTime(-1L);
-    } else {
-      int expiryInDays = licenseInfo.getExpireAfterDays();
-      if (expiryInDays > 0) {
-        licenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
-      } else if (licenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
-        if (licenseInfo.getAccountType().equals(AccountType.TRIAL)) {
-          licenseInfo.setExpiryTime(LicenseUtils.getDefaultTrialExpiryTime());
-        } else if (licenseInfo.getAccountType().equals(AccountType.PAID)) {
-          licenseInfo.setExpiryTime(LicenseUtils.getDefaultPaidExpiryTime());
-        } else if (licenseInfo.getAccountType().equals(AccountType.ESSENTIALS)) {
-          licenseInfo.setExpiryTime(LicenseUtils.getDefaultEssentialsExpiryTime());
-        }
-      }
-    }
-
-    if (licenseInfo.getExpiryTime() == 0L) {
-      throw new InvalidRequestException("No expiry set. Cannot proceed.", USER);
-    }
-
-    if (licenseInfo.getAccountType().equals(AccountType.TRIAL)) {
-      licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.TRIAL));
-    } else if (licenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
-      licenseInfo.setLicenseUnits(InstanceLimitProvider.defaults(AccountType.COMMUNITY));
-    }
-
-    if (licenseInfo.getLicenseUnits() <= 0) {
-      throw new InvalidRequestException("Invalid number of license units. Cannot proceed.", USER);
-    }
-
-    return EncryptionUtils.encrypt(LicenseUtils.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
-  }
-
-  private long getExpiryTime(int numberOfDays) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.DATE, numberOfDays);
-    calendar.set(Calendar.HOUR, 11);
-    calendar.set(Calendar.MINUTE, 59);
-    calendar.set(Calendar.SECOND, 59);
-    calendar.set(Calendar.MILLISECOND, 0);
-    calendar.set(Calendar.AM_PM, Calendar.PM);
-    return calendar.getTimeInMillis();
-  }
-
-  private byte[] getEncryptedLicenseInfoForUpdate(LicenseInfo currentLicenseInfo, LicenseInfo newLicenseInfo) {
-    if (newLicenseInfo == null) {
-      throw new InvalidRequestException("Invalid / Null license info for update", USER);
-    }
-
-    if (currentLicenseInfo == null) {
-      return getEncryptedLicenseInfo(newLicenseInfo);
-    }
-
-    if (isNotEmpty(newLicenseInfo.getAccountStatus())) {
-      if (!AccountStatus.isValid(newLicenseInfo.getAccountStatus())) {
-        throw new InvalidRequestException("Invalid / Null license info account status", USER);
-      }
-      currentLicenseInfo.setAccountStatus(newLicenseInfo.getAccountStatus());
-    }
-
-    int resetLicenseUnitsCount = 0;
-    long resetExpiryTime = 0;
-    if (isNotEmpty(newLicenseInfo.getAccountType())) {
-      if (!AccountType.isValid(newLicenseInfo.getAccountType())) {
-        throw new InvalidRequestException("Invalid / Null license info account type", USER);
-      }
-
-      if (isNotEmpty(newLicenseInfo.getAccountType())
-          && !currentLicenseInfo.getAccountType().equals(newLicenseInfo.getAccountType())) {
-        if (AccountType.TRIAL.equals(newLicenseInfo.getAccountType())) {
-          resetLicenseUnitsCount = InstanceLimitProvider.defaults(AccountType.TRIAL);
-          resetExpiryTime = LicenseUtils.getDefaultTrialExpiryTime();
-        } else if (AccountType.COMMUNITY.equals(newLicenseInfo.getAccountType())) {
-          resetLicenseUnitsCount = InstanceLimitProvider.defaults(AccountType.COMMUNITY);
-          resetExpiryTime = -1L;
-        } else if (AccountType.PAID.equals(newLicenseInfo.getAccountType())) {
-          resetExpiryTime = LicenseUtils.getDefaultPaidExpiryTime();
-        } else if (AccountType.ESSENTIALS.equals(newLicenseInfo.getAccountType())) {
-          resetExpiryTime = LicenseUtils.getDefaultEssentialsExpiryTime();
-        }
-      }
-      currentLicenseInfo.setAccountType(newLicenseInfo.getAccountType());
-    }
-
-    if (isEmpty(currentLicenseInfo.getAccountStatus())) {
-      throw new InvalidRequestException("Null license info account status. Cannot proceed with update", USER);
-    }
-
-    if (isEmpty(currentLicenseInfo.getAccountType())) {
-      throw new InvalidRequestException("Null license info account type. Cannot proceed with update", USER);
-    }
-
-    if (currentLicenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
-      currentLicenseInfo.setExpiryTime(-1L);
-    } else {
-      int expiryInDays = newLicenseInfo.getExpireAfterDays();
-      if (expiryInDays > 0) {
-        currentLicenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
-      } else if (newLicenseInfo.getExpiryTime() > 0
-          && newLicenseInfo.getExpiryTime() != currentLicenseInfo.getExpiryTime()) {
-        if (newLicenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
-          throw new InvalidRequestException("Expiry time less than current time. Cannot proceed with update", USER);
-        }
-        currentLicenseInfo.setExpiryTime(newLicenseInfo.getExpiryTime());
-      } else {
-        if (resetExpiryTime > 0) {
-          currentLicenseInfo.setExpiryTime(resetExpiryTime);
-        }
-      }
-    }
-
-    if (currentLicenseInfo.getExpiryTime() == 0L) {
-      throw new InvalidRequestException("No expiry set. Cannot proceed with update", USER);
-    }
-
-    if (newLicenseInfo.getLicenseUnits() > 0) {
-      currentLicenseInfo.setLicenseUnits(newLicenseInfo.getLicenseUnits());
-    } else if (resetLicenseUnitsCount > 0) {
-      currentLicenseInfo.setLicenseUnits(resetLicenseUnitsCount);
-    }
-
-    if (currentLicenseInfo.getLicenseUnits() <= 0) {
-      throw new InvalidRequestException("Invalid number of license units. Cannot proceed with update", USER);
-    }
-
-    return EncryptionUtils.encrypt(
-        LicenseUtils.convertToString(currentLicenseInfo).getBytes(Charset.forName("UTF-8")), null);
-  }
-
-  @Override
   public boolean updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo) {
     Account accountInDB = accountService.get(accountId);
     notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
@@ -379,7 +218,7 @@ public class LicenseServiceImpl implements LicenseService {
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
 
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfoForUpdate(oldLicenseInfo, licenseInfo);
+    byte[] encryptedLicenseInfo = LicenseUtils.getEncryptedLicenseInfoForUpdate(oldLicenseInfo, licenseInfo);
 
     updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
     updateOperations.set(AccountKeys.licenseInfo, licenseInfo);
@@ -388,11 +227,39 @@ public class LicenseServiceImpl implements LicenseService {
     updateEmailSentToSales(accountId, false);
     dbCache.invalidate(Account.class, accountId);
     Account updatedAccount = wingsPersistence.get(Account.class, accountId);
-    decryptLicenseInfo(updatedAccount, false);
+    LicenseUtils.decryptLicenseInfo(updatedAccount, false);
     //    refreshUsersForAccountUpdate(updatedAccount);
 
     eventPublishHelper.publishLicenseChangeEvent(accountId, oldAccountType, licenseInfo.getAccountType());
     return true;
+  }
+
+  @Override
+  public boolean startCeLimitedTrial(@NotEmpty String accountId) {
+    Account account = accountDao.get(accountId);
+    Preconditions.checkNotNull(account);
+
+    CeLicenseInfo currCeLicenseInfo = account.getCeLicenseInfo();
+    if (currCeLicenseInfo != null) {
+      throw new InvalidRequestException("CE Limited Trial license has already started");
+    }
+
+    CeLicenseInfo ceLicenseInfo = CeLicenseInfo.builder()
+                                      .licenseType(CeLicenseType.LIMITED_TRIAL)
+                                      .expiryTime(CeLicenseType.LIMITED_TRIAL.getDefaultExpiryTime())
+                                      .build();
+    updateCeLicense(accountId, ceLicenseInfo);
+    return true;
+  }
+
+  @Override
+  public void updateCeLicense(@NotEmpty String accountId, CeLicenseInfo ceLicenseInfo) {
+    accountDao.updateCeLicense(accountId, ceLicenseInfo);
+    if (Instant.now().toEpochMilli() < ceLicenseInfo.getExpiryTime()) {
+      accountService.updateCloudCostEnabled(accountId, true);
+    } else {
+      accountService.updateCloudCostEnabled(accountId, false);
+    }
   }
 
   @Override
@@ -413,38 +280,9 @@ public class LicenseServiceImpl implements LicenseService {
     updateEmailSentToSales(accountId, false);
     dbCache.invalidate(Account.class, accountId);
     Account updatedAccount = wingsPersistence.get(Account.class, accountId);
-    decryptLicenseInfo(updatedAccount, false);
+    LicenseUtils.decryptLicenseInfo(updatedAccount, false);
     //    refreshUsersForAccountUpdate(updatedAccount);
     return updatedAccount;
-  }
-
-  @Override
-  public Account decryptLicenseInfo(Account account, boolean setExpiry) {
-    if (account == null) {
-      return null;
-    }
-
-    byte[] encryptedLicenseInfo = account.getEncryptedLicenseInfo();
-    if (isNotEmpty(encryptedLicenseInfo)) {
-      byte[] decryptedBytes = EncryptionUtils.decrypt(encryptedLicenseInfo, null);
-      if (isNotEmpty(decryptedBytes)) {
-        LicenseInfo licenseInfo = LicenseUtils.convertToObject(decryptedBytes, setExpiry);
-        account.setLicenseInfo(licenseInfo);
-      } else {
-        logger.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");
-      }
-    }
-
-    return account;
-  }
-
-  @Override
-  public String generateLicense(LicenseInfo licenseInfo) {
-    if (licenseInfo == null) {
-      throw new InvalidRequestException("Invalid license info", USER);
-    }
-
-    return encodeBase64(getEncryptedLicenseInfo(licenseInfo));
   }
 
   @Override
@@ -470,7 +308,7 @@ public class LicenseServiceImpl implements LicenseService {
 
           if (noLicenseInfoInDB || !Arrays.equals(encryptedLicenseInfo, encryptedLicenseInfoFromDB)) {
             account.setEncryptedLicenseInfo(encryptedLicenseInfo);
-            decryptLicenseInfo(account, true);
+            LicenseUtils.decryptLicenseInfo(account, true);
             LicenseInfo licenseInfo = account.getLicenseInfo();
             if (licenseInfo != null) {
               updateAccountLicense(account.getUuid(), licenseInfo);

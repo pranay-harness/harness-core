@@ -100,8 +100,6 @@ public interface AccountService {
    */
   Collection<FeatureFlag> getFeatureFlags(@NotBlank String accountId);
 
-  boolean setAccountStatus(String accountId, String accountStatus);
-
   boolean setAuthenticationMechanism(String accountId, AuthenticationMechanism authenticationMechanism);
 
   boolean isFeatureFlagEnabled(String featureName, String accountId);

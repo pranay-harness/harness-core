@@ -38,7 +38,7 @@ public class LicenseDataMigration implements Migration {
         try {
           account = records.next();
 
-          Account accountWithDecryptedLicenseInfo = licenseService.decryptLicenseInfo(account, false);
+          Account accountWithDecryptedLicenseInfo = LicenseUtils.decryptLicenseInfo(account, false);
           LicenseInfo licenseInfo = accountWithDecryptedLicenseInfo.getLicenseInfo();
           if (licenseInfo == null) {
             continue;

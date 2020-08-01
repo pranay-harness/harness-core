@@ -1,5 +1,6 @@
 package software.wings.licensing;
 
+import io.harness.ccm.license.CeLicenseInfo;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
@@ -11,15 +12,13 @@ public interface LicenseService {
 
   void checkForLicenseExpiry(Account account);
 
-  Account addLicenseInfo(Account account);
-
   boolean updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo);
 
+  void updateCeLicense(@NotEmpty String accountId, CeLicenseInfo ceLicenseInfo);
+
+  boolean startCeLimitedTrial(@NotEmpty String accountId);
+
   Account updateAccountSalesContacts(@NotEmpty String accountId, List<String> salesContacts);
-
-  Account decryptLicenseInfo(Account account, boolean setExpiry);
-
-  String generateLicense(LicenseInfo licenseInfo);
 
   void updateAccountLicenseForOnPrem(String encryptedLicenseInfoBase64String);
 

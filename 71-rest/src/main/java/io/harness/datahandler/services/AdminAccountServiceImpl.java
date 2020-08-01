@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.exception.InvalidRequestException;
@@ -50,6 +51,12 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   }
 
   @Override
+  public CeLicenseInfo updateCeLicense(String accountId, CeLicenseInfo ceLicenseInfo) {
+    licenseService.updateCeLicense(accountId, ceLicenseInfo);
+    return getCeLicense(accountId);
+  }
+
+  @Override
   public List<AccountSummary> getPaginatedAccountSummaries(String offset, int pageSize) {
     PageRequest<Account> accountPageRequest =
         aPageRequest().withOffset(offset).withLimit(String.valueOf(pageSize)).build();
@@ -77,6 +84,15 @@ public class AdminAccountServiceImpl implements AdminAccountService {
     Account account = accountService.get(accountId);
     if (account != null) {
       return account.getLicenseInfo();
+    }
+    return null;
+  }
+
+  @Override
+  public CeLicenseInfo getCeLicense(String accountId) {
+    Account account = accountService.get(accountId);
+    if (account != null) {
+      return account.getCeLicenseInfo();
     }
     return null;
   }
