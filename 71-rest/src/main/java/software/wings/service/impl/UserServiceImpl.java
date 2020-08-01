@@ -2211,7 +2211,7 @@ public class UserServiceImpl implements UserService {
 
     List<Account> accounts = user.getAccounts();
     if (isNotEmpty(accounts)) {
-      accounts.forEach(account -> licenseService.decryptLicenseInfo(account, false));
+      accounts.forEach(account -> LicenseUtils.decryptLicenseInfo(account, false));
     }
 
     return user;
@@ -2454,12 +2454,11 @@ public class UserServiceImpl implements UserService {
   }
 
   private Account setupTrialAccount(String accountName, String companyName) {
-    Account account = Account.Builder.anAccount()
-                          .withAccountName(accountName)
-                          .withCompanyName(companyName)
-                          .withLicenseInfo(LicenseInfo.builder().accountType(AccountType.TRIAL).build())
-                          .build();
-    return setupAccount(account);
+    Account.Builder accountBuilder = Account.Builder.anAccount()
+                                         .withAccountName(accountName)
+                                         .withCompanyName(companyName)
+                                         .withLicenseInfo(LicenseInfo.builder().accountType(AccountType.TRIAL).build());
+    return setupAccount(accountBuilder.build());
   }
 
   private Account setupAccount(Account account) {

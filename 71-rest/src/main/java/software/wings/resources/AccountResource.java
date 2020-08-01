@@ -8,6 +8,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import static software.wings.utils.Utils.urlDecode;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -44,6 +45,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.scheduler.ServiceInstanceUsageCheckerJob;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
@@ -77,13 +79,27 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 public class AccountResource {
-  @Inject private AccountService accountService;
-  @Inject private UserService userService;
-  @Inject private LicenseService licenseService;
-  @Inject private AccountPermissionUtils accountPermissionUtils;
-  @Inject private FeatureService featureService;
-  @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;
-  @Inject private GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
+  private final AccountService accountService;
+  private final UserService userService;
+  private final Provider<LicenseService> licenseServiceProvider;
+  private final AccountPermissionUtils accountPermissionUtils;
+  private final FeatureService featureService;
+  private final PersistentScheduler jobScheduler;
+  private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
+
+  @Inject
+  public AccountResource(AccountService accountService, UserService userService,
+      Provider<LicenseService> licenseServiceProvider, AccountPermissionUtils accountPermissionUtils,
+      FeatureService featureService, @Named("BackgroundJobScheduler") PersistentScheduler jobScheduler,
+      GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler) {
+    this.accountService = accountService;
+    this.userService = userService;
+    this.licenseServiceProvider = licenseServiceProvider;
+    this.accountPermissionUtils = accountPermissionUtils;
+    this.featureService = featureService;
+    this.jobScheduler = jobScheduler;
+    this.gcpMarketPlaceApiHandler = gcpMarketPlaceApiHandler;
+  }
 
   @GET
   @Path("{accountId}/status")
@@ -245,7 +261,8 @@ public class AccountResource {
             throw new WingsException("Can not update account license. Account is using restricted features");
           }
         }
-        boolean licenseUpdated = licenseService.updateAccountLicense(accountId, licenseUpdateInfo.getLicenseInfo());
+        boolean licenseUpdated =
+            licenseServiceProvider.get().updateAccountLicense(accountId, licenseUpdateInfo.getLicenseInfo());
         if (migration != null) {
           featureService.complyFeatureUsagesWithRestrictions(accountId, requiredInfoToComply);
           // Special Case. Enforce Service Instances Limits only for COMMUNITY account
@@ -273,8 +290,21 @@ public class AccountResource {
   public RestResponse<Boolean> updateAccountLicense(
       @PathParam("accountId") @NotEmpty String accountId, @NotNull LicenseInfo licenseInfo) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Updating account license", accountId);
+      logger.info("Updating account license");
       return updateAccountLicense(accountId, LicenseUpdateInfo.builder().licenseInfo(licenseInfo).build());
+    }
+  }
+
+  @POST
+  @Path("/continuous-efficiency/{accountId}/startTrial")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Boolean> startCeTrial(@PathParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Starting CE Trial license.");
+      licenseServiceProvider.get().startCeLimitedTrial(accountId);
+      return new RestResponse<>(Boolean.TRUE);
     }
   }
 
@@ -297,7 +327,7 @@ public class AccountResource {
         accountPermissionUtils.checkIfHarnessUser("User not allowed to update account sales contacts");
     if (response == null) {
       response = new RestResponse<>(
-          licenseService.updateAccountSalesContacts(accountId, salesContactsInfo.getSalesContacts()));
+          licenseServiceProvider.get().updateAccountSalesContacts(accountId, salesContactsInfo.getSalesContacts()));
     }
     return response;
   }
@@ -311,7 +341,7 @@ public class AccountResource {
     RestResponse<String> response =
         accountPermissionUtils.checkIfHarnessUser("User not allowed to generate a new license");
     if (response == null) {
-      response = new RestResponse<>(licenseService.generateLicense(licenseInfo));
+      response = new RestResponse<>(LicenseUtils.generateLicense(licenseInfo));
     }
     return response;
   }

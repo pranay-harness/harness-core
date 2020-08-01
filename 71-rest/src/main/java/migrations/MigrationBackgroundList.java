@@ -29,6 +29,7 @@ import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAccountidToTimeSeriesMLScores;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
+import migrations.all.AddCeFullTrialLicenseToCurrentAccounts;
 import migrations.all.AddCommitTimeToGitSyncError;
 import migrations.all.AddHarnessOwnedToResourceConstraint;
 import migrations.all.AddInfraMappingNameToInstanceData;
@@ -248,6 +249,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(145, RemoveDeletedAppIdsFromUserGroups.class))
         .add(Pair.of(146, AddAccountIdToServiceCommands.class))
         .add(Pair.of(147, AddAccountIdToServiceVariables.class))
+        .add(Pair.of(148, AddCeFullTrialLicenseToCurrentAccounts.class))
         .build();
   }
 }

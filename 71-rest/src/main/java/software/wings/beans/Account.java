@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
 import io.harness.iterator.PersistentRegularIterable;
@@ -63,7 +64,9 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private List<String> salesContacts;
 
-  private LicenseInfo licenseInfo;
+  @Getter @Setter private LicenseInfo licenseInfo;
+
+  @Getter private CeLicenseInfo ceLicenseInfo;
 
   private Set<AccountEvent> accountEvents;
 
@@ -210,14 +213,6 @@ public class Account extends Base implements PersistentRegularIterable {
    */
   public void setLicenseId(String licenseId) {
     this.licenseId = licenseId;
-  }
-
-  public LicenseInfo getLicenseInfo() {
-    return licenseInfo;
-  }
-
-  public void setLicenseInfo(LicenseInfo licenseInfo) {
-    this.licenseInfo = licenseInfo;
   }
 
   @JsonIgnore

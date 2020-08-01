@@ -19,6 +19,7 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
+import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
@@ -72,7 +73,7 @@ public class MarketoLeadDataMigration implements Migration {
             continue;
           }
 
-          Account accountWithDecryptedLicenseInfo = licenseService.decryptLicenseInfo(account, false);
+          Account accountWithDecryptedLicenseInfo = LicenseUtils.decryptLicenseInfo(account, false);
           LicenseInfo licenseInfo = accountWithDecryptedLicenseInfo.getLicenseInfo();
           if (licenseInfo == null) {
             continue;

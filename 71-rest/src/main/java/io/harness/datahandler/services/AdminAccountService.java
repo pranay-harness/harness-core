@@ -1,5 +1,6 @@
 package io.harness.datahandler.services;
 
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
@@ -14,6 +15,8 @@ import java.util.List;
 public interface AdminAccountService {
   LicenseInfo updateLicense(String accountId, LicenseUpdateInfo licenseUpdateInfo);
 
+  CeLicenseInfo updateCeLicense(String accountId, CeLicenseInfo celicenseInfo);
+
   List<AccountSummary> getPaginatedAccountSummaries(String offset, int pageSize);
 
   AccountSummary getAccountSummaryByAccountId(String accountId);
@@ -21,6 +24,8 @@ public interface AdminAccountService {
   ConfiguredLimit updateLimit(String accountId, ActionType actionType, Limit limit);
 
   LicenseInfo getLicense(String accountId);
+
+  CeLicenseInfo getCeLicense(String accountId);
 
   List<ConfiguredLimit> getLimitsConfiguredForAccount(String accountId);
 
