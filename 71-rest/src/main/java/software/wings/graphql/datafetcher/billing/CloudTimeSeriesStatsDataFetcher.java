@@ -42,13 +42,18 @@ public class CloudTimeSeriesStatsDataFetcher
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
+    boolean isDiscountsAggregationPresent = cloudBillingHelper.fetchIfDiscountsAggregationPresent(aggregateFunction);
     boolean isAWSCloudProvider = false;
-    SqlObject leftJoin = null;
+    List<SqlObject> leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
       String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
       isAWSCloudProvider = cloudProvider.equals("AWS");
-      leftJoin = cloudBillingHelper.getLeftJoin(cloudProvider);
+      leftJoin = new ArrayList<>();
+      leftJoin.add(cloudBillingHelper.getLeftJoin(cloudProvider));
+      if (isDiscountsAggregationPresent && !isAWSCloudProvider) {
+        leftJoin.add(cloudBillingHelper.getCreditsLeftJoin());
+      }
       String tableName = cloudBillingHelper.getTableName(cloudBillingHelper.getCloudProvider(filters));
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
       filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);

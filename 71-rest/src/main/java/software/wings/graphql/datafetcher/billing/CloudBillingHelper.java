@@ -41,6 +41,7 @@ public class CloudBillingHelper {
   private static final String leftJoinTemplate = " LEFT JOIN UNNEST(%s) as %s";
   private static final String tags = "tags";
   private static final String labels = "labels";
+  private static final String credits = "credits";
 
   private Cache<String, String> billingDataPipelineRecordCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
@@ -122,6 +123,11 @@ public class CloudBillingHelper {
     return labelsFilterPresent || labelsGroupByPresent;
   }
 
+  public Boolean fetchIfDiscountsAggregationPresent(List<CloudBillingAggregate> aggregateFunction) {
+    return aggregateFunction.stream().anyMatch(
+        aggregation -> aggregation.getColumnName().equals(CloudBillingAggregate.BILLING_GCP_CREDITS));
+  }
+
   @NotNull
   public Function<CloudBillingFilter, Condition> getFiltersMapper(
       boolean isAWSCloudProvider, boolean isQueryRawTableRequired) {
@@ -153,5 +159,9 @@ public class CloudBillingHelper {
     } else {
       return CloudBillingAggregate::toFunctionCall;
     }
+  }
+
+  public SqlObject getCreditsLeftJoin() {
+    return new CustomSql(String.format(leftJoinTemplate, credits, credits));
   }
 }

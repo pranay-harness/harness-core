@@ -15,7 +15,6 @@ import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingSortCriteria;
-import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingTrendStatsDTO;
 import io.harness.rule.Owner;
@@ -31,6 +30,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
@@ -40,8 +40,11 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   private static final String UN_BLENDED_COST = "unblendedCost";
   private static final String BLENDED_COST = "awsBlendedCost";
+  private static final String DISCOUNTS = "discount";
   private static final String START_TIME = "startTime";
   private static final String CLOUD_PROVIDER = "AWS";
+  private static final String CLOUD_PROVIDER_GCP = "GCP";
+  private static final String LABELS_KEY = "lablesKey";
   private static final String STATS_LABEL = "statsLabel";
   private static final String STATS_VALUE = "statsValue";
   private static final String STATS_DESCRIPTION = "statsDescription";
@@ -94,12 +97,16 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+    doCallRealMethod().when(cloudBillingHelper).fetchIfDiscountsAggregationPresent(anyList());
+    List<CloudBillingFilter> billingFilters = Arrays.asList(
+        getCloudProviderFilter(new String[] {CLOUD_PROVIDER_GCP}), getLabelsKeyFilter(new String[] {LABELS_KEY}));
 
     when(preAggregateBillingService.getPreAggregateFilterValueStats(
              anyString(), anyList(), anyList(), anyString(), any()))
         .thenReturn(null);
     PreAggregateBillingTrendStatsDTO data = (PreAggregateBillingTrendStatsDTO) cloudTrendStatsDataFetcher.fetch(
-        ACCOUNT1_ID, null, filters, Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null);
+        ACCOUNT1_ID, Collections.singletonList(getBillingAggregate(QLCCMAggregateOperation.SUM, DISCOUNTS)),
+        billingFilters, null, null);
     assertThat(data).isNotNull();
   }
 
@@ -131,15 +138,9 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     return CloudBillingAggregate.builder().operationType(operation).columnName(columnName).build();
   }
 
-  private CloudBillingGroupBy getLabelsKeyGroupBy() {
-    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
-    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsKey);
-    return cloudBillingGroupBy;
-  }
-
-  private CloudBillingGroupBy getLabelsValueGroupBy() {
-    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
-    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsValue);
-    return cloudBillingGroupBy;
+  private CloudBillingFilter getLabelsKeyFilter(String[] labelsKey) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setLabelsKey(CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(labelsKey).build());
+    return cloudBillingFilter;
   }
 }

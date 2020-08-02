@@ -43,14 +43,16 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   @Override
   public PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName,
-      SqlObject leftJoin) {
+      List<SqlObject> leftJoin) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingTimeSeriesStats need at least one groupBy");
     SelectQuery query = dataHelper.getQuery(
         aggregateFunction, groupByObjects, conditions, sort, true, leftJoin != null, tableName.contains(awsRawTable));
     if (leftJoin != null) {
       query.addFromTable(RawBillingTableSchema.table);
-      query.addCustomJoin(leftJoin);
+      for (SqlObject join : leftJoin) {
+        query.addCustomJoin(join);
+      }
     }
     // Replacing the Default Table with the Table in the context
     String timeSeriesDataQuery = query.toString();
@@ -71,13 +73,15 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   @Override
   public PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(String accountId,
       List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort,
-      String queryTableName, List<CloudBillingFilter> filters, SqlObject leftJoin) {
+      String queryTableName, List<CloudBillingFilter> filters, List<SqlObject> leftJoin) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingEntityStats need at least one groupBy");
     SelectQuery query = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
     if (leftJoin != null) {
       query.addFromTable(RawBillingTableSchema.table);
-      query.addCustomJoin(leftJoin);
+      for (SqlObject join : leftJoin) {
+        query.addCustomJoin(join);
+      }
     }
     // Replacing the Default Table with the Table in the context
     String entityDataQuery = query.toString();
@@ -93,7 +97,9 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
         false);
     if (leftJoin != null) {
       prevQuery.addFromTable(RawBillingTableSchema.table);
-      prevQuery.addCustomJoin(leftJoin);
+      for (SqlObject join : leftJoin) {
+        prevQuery.addCustomJoin(join);
+      }
     }
     String prevEntityDataQuery = prevQuery.toString();
     prevEntityDataQuery = prevEntityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
@@ -129,7 +135,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
 
   @Override
   public PreAggregateBillingTrendStatsDTO getPreAggregateBillingTrendStats(List<SqlObject> aggregateFunction,
-      List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters, SqlObject leftJoin) {
+      List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters, List<SqlObject> leftJoin) {
     PreAggregatedCostDataStats preAggregatedCostDataStats =
         getAggregatedCostData(aggregateFunction, conditions, queryTableName, leftJoin);
     List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
@@ -177,11 +183,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   }
 
   public PreAggregatedCostDataStats getAggregatedCostData(
-      List<SqlObject> aggregateFunction, List<Condition> conditions, String queryTableName, SqlObject leftJoin) {
+      List<SqlObject> aggregateFunction, List<Condition> conditions, String queryTableName, List<SqlObject> leftJoin) {
     SelectQuery query = dataHelper.getQuery(aggregateFunction, null, conditions, null, false);
     if (leftJoin != null) {
       query.addFromTable(RawBillingTableSchema.table);
-      query.addCustomJoin(leftJoin);
+      for (SqlObject join : leftJoin) {
+        query.addCustomJoin(join);
+      }
     }
     // Replacing the Default Table with the Table in the context
     String trendStatsQuery = query.toString();

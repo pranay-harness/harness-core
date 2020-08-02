@@ -14,6 +14,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -36,14 +37,19 @@ public class CloudEntityStatsDataFetcher
     String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
     boolean isAWSCloudProvider = cloudProvider.equals("AWS");
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
-    SqlObject leftJoin = null;
+    boolean isDiscountsAggregationPresent = cloudBillingHelper.fetchIfDiscountsAggregationPresent(aggregateFunction);
+    List<SqlObject> leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
       String tableName = cloudBillingHelper.getTableName(cloudBillingHelper.getCloudProvider(filters));
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
       filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
       groupByList = cloudBillingHelper.removeAndReturnCloudProviderGroupBy(groupByList);
-      leftJoin = cloudBillingHelper.getLeftJoin(cloudProvider);
+      leftJoin = new ArrayList<>();
+      leftJoin.add(cloudBillingHelper.getLeftJoin(cloudProvider));
+      if (isDiscountsAggregationPresent && !isAWSCloudProvider) {
+        leftJoin.add(cloudBillingHelper.getCreditsLeftJoin());
+      }
     } else {
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
     }

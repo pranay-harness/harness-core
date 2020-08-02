@@ -9,14 +9,14 @@ import java.util.List;
 public interface PreAggregateBillingService {
   PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName,
-      SqlObject leftJoin);
+      List<SqlObject> leftJoin);
 
   PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(String accountId,
       List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort,
-      String queryTableName, List<CloudBillingFilter> filters, SqlObject leftJoin);
+      String queryTableName, List<CloudBillingFilter> filters, List<SqlObject> leftJoin);
 
   PreAggregateBillingTrendStatsDTO getPreAggregateBillingTrendStats(List<SqlObject> aggregateFunction,
-      List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters, SqlObject leftJoin);
+      List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters, List<SqlObject> leftJoin);
 
   PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(String accountId, List<Object> groupByObjects,
       List<Condition> conditions, String queryTableName, SqlObject leftJoin);

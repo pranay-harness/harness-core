@@ -152,6 +152,6 @@ public class BillingDataPipelineServiceImplTest {
   @Category(UnitTests.class)
   public void shouldTestPreAggregateTableSchema() {
     TableInfo tableInfo = billingDataPipelineService.getPreAggregateTableInfo(dataSetId);
-    assertThat(tableInfo.getDefinition().getSchema().getFields().size()).isEqualTo(19);
+    assertThat(tableInfo.getDefinition().getSchema().getFields().size()).isEqualTo(20);
   }
 }

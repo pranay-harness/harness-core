@@ -22,5 +22,7 @@ public class PreAggregateBillingEntityDataPoint {
   String gcpSkuDescription;
   String gcpSkuId;
   String gcpLabel;
+  double gcpDiscount;
   double gcpTotalCost;
+  double gcpSubTotalCost;
 }

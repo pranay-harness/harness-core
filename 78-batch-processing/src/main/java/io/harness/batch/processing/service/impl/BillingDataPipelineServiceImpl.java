@@ -148,15 +148,15 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       + "TIMESTAMP_TRUNC(usagestartdate, DAY) >=       TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 3 DAY), DAY) "
       + "GROUP BY awsServicecode, region, awsAvailabilityzone, awsUsageaccountid, awsInstancetype, awsUsagetype, startTime;";
 
-  private static final String GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE = "DELETE FROM `%s.preAggregated`%n"
-      + "WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"GCP\";%n"
-      + "INSERT INTO `%s.preAggregated` (cost, gcpProduct,gcpSkuId,gcpSkuDescription, startTime,gcpProjectId,region,zone,gcpBillingAccountId,cloudProvider)%n"
+  private static final String GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE = "DELETE FROM `%s.preAggregated` "
+      + "WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"GCP\"; "
+      + "INSERT INTO `%s.preAggregated` (cost, gcpProduct,gcpSkuId,gcpSkuDescription, startTime,gcpProjectId,region,zone,gcpBillingAccountId,cloudProvider, discount)"
       + "SELECT SUM(cost) AS cost, service.description AS gcpProduct, sku.id AS gcpSkuId, sku.description AS gcpSkuDescription,"
       + " TIMESTAMP_TRUNC(usage_start_time, DAY) as startTime, project.id AS gcpProjectId, location.region AS region, location.zone AS zone,"
-      + " billing_account_id AS gcpBillingAccountId, \"GCP\" AS cloudProvider FROM `%s.gcp_billing_export*` WHERE DATE(usage_start_time) <= "
-      + "DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND DATE(usage_start_time) >= "
-      + "DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 3 DAY) GROUP BY service.description, sku.id, sku.description, startTime,"
-      + " project.id, location.region, location.zone, billing_account_id;";
+      + " billing_account_id AS gcpBillingAccountId, \"GCP\" AS cloudProvider, SUM(credits.amount) as discount FROM `%s.gcp_billing_export*` "
+      + "LEFT JOIN UNNEST(credits) as credits WHERE DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), "
+      + "INTERVAL 1 DAY) AND DATE(usage_start_time) >= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 3 DAY) "
+      + "GROUP BY service.description, sku.id, sku.description, startTime, project.id, location.region, location.zone, billing_account_id;";
 
   private static final String RUN_ONCE_GCP_SCHEDULED_QUERY_TEMPLATE = "SELECT * FROM `%s.gcp_billing_export_*`;";
 
@@ -534,10 +534,11 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
         TimePartitioning.newBuilder(TimePartitioning.Type.DAY).setField("startTime").build();
 
     Schema schema = Schema.of(Field.of("cost", StandardSQLTypeName.FLOAT64),
-        Field.of("gcpProduct", StandardSQLTypeName.STRING), Field.of("gcpSkuId", StandardSQLTypeName.STRING),
-        Field.of("gcpSkuDescription", StandardSQLTypeName.STRING), Field.of("startTime", StandardSQLTypeName.TIMESTAMP),
-        Field.of("gcpProjectId", StandardSQLTypeName.STRING), Field.of("region", StandardSQLTypeName.STRING),
-        Field.of("zone", StandardSQLTypeName.STRING), Field.of("gcpBillingAccountId", StandardSQLTypeName.STRING),
+        Field.of("discount", StandardSQLTypeName.FLOAT64), Field.of("gcpProduct", StandardSQLTypeName.STRING),
+        Field.of("gcpSkuId", StandardSQLTypeName.STRING), Field.of("gcpSkuDescription", StandardSQLTypeName.STRING),
+        Field.of("startTime", StandardSQLTypeName.TIMESTAMP), Field.of("gcpProjectId", StandardSQLTypeName.STRING),
+        Field.of("region", StandardSQLTypeName.STRING), Field.of("zone", StandardSQLTypeName.STRING),
+        Field.of("gcpBillingAccountId", StandardSQLTypeName.STRING),
         Field.of("cloudProvider", StandardSQLTypeName.STRING), Field.of("awsBlendedRate", StandardSQLTypeName.STRING),
         Field.of("awsBlendedCost", StandardSQLTypeName.FLOAT64),
         Field.of("awsUnblendedRate", StandardSQLTypeName.STRING),
