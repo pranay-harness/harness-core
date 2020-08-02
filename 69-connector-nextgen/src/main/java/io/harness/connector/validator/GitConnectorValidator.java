@@ -16,6 +16,7 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnknownEnumTypeException;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
@@ -51,7 +52,8 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
       case SSH:
         throw new InvalidRequestException("Not implemented");
       default:
-        throw new IllegalStateException("Unexpected value: " + gitConfig.getGitAuthType());
+        throw new UnknownEnumTypeException("Git Authentication Type",
+            gitConfig.getGitAuthType() == null ? null : gitConfig.getGitAuthType().getDisplayName());
     }
   }
 

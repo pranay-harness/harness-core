@@ -29,7 +29,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.UnsupportedOperationException;
+import io.harness.exception.UnknownEnumTypeException;
 
 @Singleton
 public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<KubernetesClusterConfig> {
@@ -47,8 +47,10 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
           kubernetesConfigCastHelper.castToManualKubernetesCredentials(kubernetesClusterConfig.getCredential());
       return createManualKubernetessCredentialsDTO(kubernetesClusterDetails);
     } else {
-      throw new UnsupportedOperationException(
-          String.format("The kubernetes credential type [%s] is invalid", kubernetesClusterConfig.getCredentialType()));
+      throw new UnknownEnumTypeException("Kubernetes credential type",
+          kubernetesClusterConfig.getCredentialType() == null
+              ? null
+              : kubernetesClusterConfig.getCredentialType().getDisplayName());
     }
   }
 
@@ -81,8 +83,9 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
         manualCredentials = createOpenIdConnectDTO(k8sOpenIdConnect);
         break;
       default:
-        throw new UnsupportedOperationException(
-            String.format("The manual credential type [%s] is invalid", kubernetesClusterDetails.getAuthType()));
+        throw new UnknownEnumTypeException("Kubernetes Manual Credential type",
+            kubernetesClusterDetails.getAuthType() == null ? null
+                                                           : kubernetesClusterDetails.getAuthType().getDisplayName());
     }
     return KubernetesClusterConfigDTO.builder()
         .kubernetesCredentialType(MANUAL_CREDENTIALS)
