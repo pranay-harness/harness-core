@@ -25,7 +25,10 @@ import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReport
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TOTAL_CLUSTER_IDLE_COST;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TOTAL_CLUSTER_UNALLOCATED_COST;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.WORKLOAD;
+import static software.wings.sm.states.ApprovalState.JSON;
 
+import com.google.api.client.util.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.WeeklyReportEntityData;
@@ -33,11 +36,18 @@ import io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplat
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
+import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CECommunications;
+import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.communication.entities.CommunicationSource;
 import io.harness.ccm.communication.entities.CommunicationType;
+import io.harness.rest.RestResponse;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import org.apache.commons.text.StrSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import software.wings.beans.Account;
@@ -45,7 +55,9 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -73,6 +85,7 @@ public class WeeklyReportServiceImpl {
   @Autowired private CEMailNotificationService emailNotificationService;
   @Autowired private CECommunicationsServiceImpl ceCommunicationsService;
   @Autowired private AccountShardService accountShardService;
+  @Autowired private CESlackWebhookService ceSlackWebhookService;
 
   private static final int MAX_RETRY_COUNT = 4;
   private static final long WEEK_IN_MILLISECONDS = 604800000L;
@@ -270,10 +283,10 @@ public class WeeklyReportServiceImpl {
       }
 
       costValues.put(COMMUNICATION_SOURCE, CommunicationSource.EMAIL.getName());
-
       templateHelper.populateCostDataForTemplate(templateModel, costValues);
 
       templateModel.put("DATE", reportDateRange);
+      costValues.put("DATE", reportDateRange);
       try {
         templateModel.put("url", templateHelper.buildAbsoluteUrl(String.format(OVERVIEW_URL, accountId)));
       } catch (URISyntaxException e) {
@@ -289,6 +302,17 @@ public class WeeklyReportServiceImpl {
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
       emailNotificationService.send(emailData);
+
+      // Sending report on Slack
+      CESlackWebhook webhook = ceSlackWebhookService.getByAccountId(accountId);
+      if (webhook.isSendCostReport()) {
+        templateHelper.populateSlackUrls(costValues);
+        try {
+          sendReportOnSlack(costValues, webhook.getWebhookUrl());
+        } catch (IOException e) {
+          logger.error("Error in sending report on slack", e);
+        }
+      }
     });
   }
 
@@ -408,5 +432,38 @@ public class WeeklyReportServiceImpl {
     List<CECommunications> entries =
         ceCommunicationsService.getEnabledEntries(accountId, CommunicationType.WEEKLY_REPORT);
     return entries.stream().map(CECommunications::getEmailId).collect(Collectors.toList());
+  }
+
+  private boolean sendReportOnSlack(Map<String, String> values, String webhookUrl) throws IOException {
+    URL templateUrl = this.getClass().getResource("/slack/weekly-report.json");
+    String loadedTemplate = "";
+    StrSubstitutor sub = new StrSubstitutor(values);
+    try {
+      loadedTemplate = Resources.toString(templateUrl, Charsets.UTF_8);
+    } catch (IOException e) {
+      logger.error("Error in loading given template ", e);
+    }
+    RequestBody confirmationBody = RequestBody.create(JSON, sub.replace(loadedTemplate));
+    slackPostRequest(confirmationBody, webhookUrl);
+    return true;
+  }
+
+  private static RestResponse<Boolean> slackPostRequest(RequestBody body, String responseUrl) throws IOException {
+    OkHttpClient client = new OkHttpClient();
+    Request request1 = new Request.Builder()
+                           .url(responseUrl)
+                           .post(body)
+                           .addHeader("Content-Type", "application/json")
+                           .addHeader("Accept", "*/*")
+                           .addHeader("Cache-Control", "no-cache")
+                           .addHeader("Host", "hooks.slack.com")
+                           .addHeader("accept-encoding", "gzip, deflate")
+                           .addHeader("content-length", "798")
+                           .addHeader("Connection", "keep-alive")
+                           .addHeader("cache-control", "no-cache")
+                           .build();
+
+    client.newCall(request1).execute();
+    return new RestResponse<>();
   }
 }

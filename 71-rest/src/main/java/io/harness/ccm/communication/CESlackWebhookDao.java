@@ -20,6 +20,7 @@ public class CESlackWebhookDao {
     UpdateOperations<CESlackWebhook> updateOperations = persistence.createUpdateOperations(CESlackWebhook.class);
     if (null != slackWebhook.getWebhookUrl()) {
       updateOperations.set(CESlackWebhookKeys.webhookUrl, slackWebhook.getWebhookUrl());
+      updateOperations.set(CESlackWebhookKeys.sendCostReport, slackWebhook.isSendCostReport());
     }
     return persistence.upsert(query, updateOperations, upsertReturnNewOptions);
   }

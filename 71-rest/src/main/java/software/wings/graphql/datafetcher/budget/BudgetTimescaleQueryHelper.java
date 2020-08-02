@@ -36,6 +36,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +61,7 @@ public class BudgetTimescaleQueryHelper {
         while (!successful && retryCount < MAX_RETRY) {
           try (Connection connection = timeScaleDBService.getDBConnection();
                Statement statement = connection.createStatement()) {
-            resultSet = statement.executeQuery(query);
+            statement.execute(query);
             successful = true;
           } catch (SQLException e) {
             retryCount++;
@@ -88,7 +89,7 @@ public class BudgetTimescaleQueryHelper {
   private BudgetAlertsQueryMetadata getInsertQueryForBudgetAlert(BudgetAlertsData data) {
     BudgetAlertsQueryMetadataBuilder queryMetaDataBuilder = BudgetAlertsQueryMetadata.builder();
     InsertQuery insertQuery = new InsertQuery(schema.getBudgetAlertsTable());
-    insertQuery.addColumn(schema.getTime(), data.getTime());
+    insertQuery.addColumn(schema.getTime(), new Timestamp(data.getTime()));
     insertQuery.addColumn(schema.getBudgetId(), data.getBudgetId());
     insertQuery.addColumn(schema.getAccountId(), data.getAccountId());
     insertQuery.addColumn(schema.getAlertThreshold(), data.getAlertThreshold());

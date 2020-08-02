@@ -3,6 +3,7 @@ package io.harness.batch.processing.billing.timeseries.helper;
 import static io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl.COMMUNICATION_SOURCE;
 
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.ccm.communication.entities.CommunicationSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,7 @@ public class WeeklyReportTemplateHelper {
   public static final String COST_DIFF_AMOUNT = "_COST_DIFF";
   public static final String COST_TREND = "_COST_TREND";
   public static final String COST_AVAILABLE = "_COST_AVAILABLE";
+  public static final String SLACK_URL = "_SLACK_URL";
 
   public static final String DECREASE = "DECREASE";
   public static final String INCREASE = "INCREASE";
@@ -117,6 +119,16 @@ public class WeeklyReportTemplateHelper {
     } else {
       return COST_NOT_AVAILABLE;
     }
+  }
+
+  public void populateSlackUrls(Map<String, String> values) {
+    values.put(COMMUNICATION_SOURCE, CommunicationSource.SLACK.getName());
+    values.put(APPLICATION + SLACK_URL, getEntityDetailsUrl(APPLICATION, values));
+    values.put(SERVICE + SLACK_URL, getEntityDetailsUrl(SERVICE, values));
+    values.put(ENVIRONMENT + SLACK_URL, getEntityDetailsUrl(ENVIRONMENT, values));
+    values.put(CLUSTER + SLACK_URL, getEntityDetailsUrl(CLUSTER, values));
+    values.put(NAMESPACE + SLACK_URL, getEntityDetailsUrl(NAMESPACE, values));
+    values.put(WORKLOAD + SLACK_URL, getEntityDetailsUrl(WORKLOAD, values));
   }
 
   private String getEntityDetailsUrl(String entity, Map<String, String> values) {
