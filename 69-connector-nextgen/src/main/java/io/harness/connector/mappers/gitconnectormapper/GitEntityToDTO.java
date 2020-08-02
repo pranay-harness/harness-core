@@ -11,7 +11,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnknownEnumTypeException;
 
 @Singleton
 public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
@@ -33,13 +33,12 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
       case SSH:
         return createSSHAuthenticationDTO(gitConfig);
       default:
-        throw new InvalidRequestException(
-            String.format("The supplied git authentication type %s is invalid", gitConfig.getAuthType()));
+        throw new UnknownEnumTypeException("Git Authentication Type",
+            gitConfig.getAuthType() == null ? null : gitConfig.getAuthType().getDisplayName());
     }
   }
 
   private GitHTTPAuthenticationDTO createHTTPAuthenticationDTO(GitConfig gitConfig) {
-    // todo @deepak: Add the cast checks here
     GitUserNamePasswordAuthentication userNamePasswordAuth =
         (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
     return GitHTTPAuthenticationDTO.builder()
@@ -52,7 +51,6 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
   }
 
   private GitSSHAuthenticationDTO createSSHAuthenticationDTO(GitConfig gitConfig) {
-    // todo @deepak: Add the cast checks here
     GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
     return GitSSHAuthenticationDTO.builder()
         .gitConnectionType(gitConfig.getConnectionType())

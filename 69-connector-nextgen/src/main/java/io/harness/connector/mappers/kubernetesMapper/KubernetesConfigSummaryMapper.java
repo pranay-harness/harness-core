@@ -8,6 +8,7 @@ import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO.Kube
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.mappers.ConnectorConfigSummaryDTOMapper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.exception.UnknownEnumTypeException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -29,8 +30,8 @@ public class KubernetesConfigSummaryMapper implements ConnectorConfigSummaryDTOM
       builder.masterURL(
           kubernetesConfigCastHelper.castToManualKubernetesCredentials(connector.getCredential()).getMasterUrl());
     } else {
-      throw new UnsupportedOperationException(
-          String.format("The kubernetes config type %s is invalid", connector.getCredentialType()));
+      throw new UnknownEnumTypeException("Kubernetes credential type",
+          connector.getCredentialType() == null ? null : connector.getCredentialType().getDisplayName());
     }
   }
 }

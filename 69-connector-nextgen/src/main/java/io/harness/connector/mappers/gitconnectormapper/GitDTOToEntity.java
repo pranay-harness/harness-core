@@ -14,7 +14,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnknownEnumTypeException;
 
 @Singleton
 public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> {
@@ -36,27 +36,11 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
   }
 
   private String getBranchName(GitConfigDTO gitConfigDTO) {
-    switch (gitConfigDTO.getGitAuthType()) {
-      case HTTP:
-        return ((GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth()).getBranchName();
-      case SSH:
-        return ((GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth()).getBranchName();
-      default:
-        throw new InvalidRequestException(
-            String.format("The git auth type  %s doesn't exists", gitConfigDTO.getGitAuth()));
-    }
+    return gitConfigDTO.getGitAuth().getBranchName();
   }
 
   private GitConnectionType getGitConnectionLevel(GitConfigDTO gitConfigDTO) {
-    switch (gitConfigDTO.getGitAuthType()) {
-      case HTTP:
-        return ((GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth()).getGitConnectionType();
-      case SSH:
-        return ((GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth()).getGitConnectionType();
-      default:
-        throw new InvalidRequestException(
-            String.format("The git auth type  %s doesn't exists", gitConfigDTO.getGitAuth()));
-    }
+    return gitConfigDTO.getGitAuth().getGitConnectionType();
   }
 
   private boolean isGitSyncSupported(GitConfigDTO gitConfigDTO) {
@@ -74,14 +58,14 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
   }
 
   private GitAuthentication getGitAuthentication(GitAuthenticationDTO gitAuthenticationDTO, GitAuthType gitAuthType) {
-    // todo: @deepak Have some different design pattern, should have swich case here also
     switch (gitAuthType) {
       case HTTP:
         return getHTTPGitAuthentication((GitHTTPAuthenticationDTO) gitAuthenticationDTO);
       case SSH:
         return getSSHGitAuthentication((GitSSHAuthenticationDTO) gitAuthenticationDTO);
       default:
-        throw new InvalidRequestException(String.format("The git auth type %s doesn't exists", gitAuthType));
+        throw new UnknownEnumTypeException(
+            "Git Authentication Type", gitAuthType == null ? null : gitAuthType.getDisplayName());
     }
   }
 
@@ -98,13 +82,6 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
   }
 
   private String getGitURL(GitConfigDTO gitConfig) {
-    switch (gitConfig.getGitAuthType()) {
-      case HTTP:
-        return ((GitHTTPAuthenticationDTO) gitConfig.getGitAuth()).getUrl();
-      case SSH:
-        return ((GitSSHAuthenticationDTO) gitConfig.getGitAuth()).getUrl();
-      default:
-        throw new InvalidRequestException(String.format("The git level %s doesn't exists", gitConfig.getGitAuth()));
-    }
+    return gitConfig.getGitAuth().getUrl();
   }
 }
