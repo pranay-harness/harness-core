@@ -13,6 +13,7 @@ import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -29,9 +30,10 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort) {
+    boolean isDiscountsAggregationPresent = cloudBillingHelper.fetchIfDiscountsAggregationPresent(aggregateFunction);
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, Collections.EMPTY_LIST);
     boolean isAWSCloudProvider = false;
-    SqlObject leftJoin = null;
+    List<SqlObject> leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
       String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
@@ -39,7 +41,11 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       String tableName = cloudBillingHelper.getTableName(cloudProvider);
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
       filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
-      leftJoin = cloudBillingHelper.getLeftJoin(cloudProvider);
+      leftJoin = new ArrayList<>();
+      leftJoin.add(cloudBillingHelper.getLeftJoin(cloudProvider));
+      if (isDiscountsAggregationPresent && !isAWSCloudProvider) {
+        leftJoin.add(cloudBillingHelper.getCreditsLeftJoin());
+      }
     } else {
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
     }

@@ -43,6 +43,8 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   private static final String UN_BLENDED_COST = "unblendedCost";
   private static final String BLENDED_COST = "blendedCost";
+  private static final String COST = "cost";
+  private static final String DISCOUNT = "discount";
   private static final String SERVICE_NAME = "service";
   private static final String CLOUD_PROVIDER = "AWS";
   private static final String LABELS_KEY = "labelKey";
@@ -110,6 +112,31 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
 
     PreAggregateBillingEntityStatsDTO data =
         (PreAggregateBillingEntityStatsDTO) cloudEntityStatsDataFetcher.fetch(ACCOUNT1_ID, cloudBillingAggregates,
+            Arrays.asList(getLablesKeyFilter(new String[] {LABELS_KEY}),
+                getLablesValueFilter(new String[] {LABELS_VALUE}), getCloudProviderFilter(new String[] {"GCP"})),
+            Collections.emptyList(), null, 5, 0);
+    assertThat(data).isNull();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldFetchWithLabelsAggregateDiscount() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
+    doCallRealMethod().when(cloudBillingHelper).getLeftJoin(anyString());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+    doCallRealMethod().when(cloudBillingHelper).fetchIfDiscountsAggregationPresent(anyList());
+    List<CloudBillingAggregate> aggregations = new ArrayList<>();
+    aggregations.add(getBillingAggregate(DISCOUNT));
+    aggregations.add(getBillingAggregate(COST));
+    when(preAggregateBillingService.getPreAggregateBillingEntityStats(
+             anyString(), anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
+        .thenReturn(null);
+
+    PreAggregateBillingEntityStatsDTO data =
+        (PreAggregateBillingEntityStatsDTO) cloudEntityStatsDataFetcher.fetch(ACCOUNT1_ID, aggregations,
             Arrays.asList(getLablesKeyFilter(new String[] {LABELS_KEY}),
                 getLablesValueFilter(new String[] {LABELS_VALUE}), getCloudProviderFilter(new String[] {"GCP"})),
             Collections.emptyList(), null, 5, 0);

@@ -34,6 +34,7 @@ public class PreAggregateConstants {
   public static final String entityConstantGcpSkuId = "gcpSkuId";
   public static final String entityConstantGcpSku = "gcpSkuDescription";
   public static final String entityConstantGcpCost = "sum_cost";
+  public static final String entityConstantGcpDiscount = "sum_discount";
   public static final String entityConstantRawTableGcpBillingAccount = "billing_account_id";
   public static final String entityConstantRawTableGcpProjectId = "project_id";
   public static final String entityConstantRawTableGcpProduct = "service_description";

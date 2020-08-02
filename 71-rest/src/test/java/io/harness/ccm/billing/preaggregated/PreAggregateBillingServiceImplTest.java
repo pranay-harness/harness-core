@@ -15,7 +15,9 @@ import com.google.cloud.bigquery.TableResult;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -76,6 +78,8 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   private static final String ID = "id";
   private static final String NAME = "name";
   private static final String TYPE = "type";
+  private static final String leftJoinTemplate = " LEFT JOIN UNNEST(%s) as %s";
+  private static final String labels = "labels";
   private static final long MIN_START_TIME = 0L;
   private static final long MAX_START_TIME = currentMillis;
   private static final Double COST = 1.0;
@@ -84,11 +88,13 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   private List<Condition> conditions = new ArrayList<>();
   private List<Object> groupByObjects = new ArrayList<>();
   private List<CloudBillingFilter> filters = new ArrayList<>();
+  private List<SqlObject> leftJoinList = null;
 
   @Before
   public void setup() throws InterruptedException {
     calendar1 = new GregorianCalendar(2020, Calendar.JANUARY, 1);
     calendar2 = new GregorianCalendar(2020, Calendar.JANUARY, 31);
+    leftJoinList = Collections.singletonList(new CustomSql(String.format(leftJoinTemplate, labels, labels)));
     Condition startTimeCondition =
         BinaryCondition.greaterThanOrEq(PreAggregatedTableSchema.startTime, Timestamp.of(calendar1.getTime()));
     Condition endTimeCondition =
@@ -175,9 +181,29 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
+  public void getPreAggregateBillingTimeSeriesStatsWithLeftJoin() {
+    PreAggregateBillingTimeSeriesStatsDTO stats = preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, leftJoinList);
+    assertThat(stats.getStats()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
   public void getPreAggregateEntitySeriesStats() {
     PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
         ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters, null);
+    assertThat(stats.getStats()).isNotNull();
+    assertThat(stats.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
+    assertThat(stats.getStats().get(0).getAwsBlendedCost()).isEqualTo(COST);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateEntitySeriesStatsWithLeftJoin() {
+    PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
+        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters, leftJoinList);
     assertThat(stats.getStats()).isNotNull();
     assertThat(stats.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
     assertThat(stats.getStats().get(0).getAwsBlendedCost()).isEqualTo(COST);
@@ -232,6 +258,18 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateBillingTrendStats() {
     PreAggregateBillingTrendStatsDTO stats =
         preAggregateBillingService.getPreAggregateBillingTrendStats(null, conditions, TABLE_NAME, filters, null);
+    assertThat(stats.getBlendedCost()).isNotNull();
+    assertThat(stats.getBlendedCost().getStatsValue()).isEqualTo(STATS_VALUE);
+    assertThat(stats.getBlendedCost().getStatsLabel()).isEqualTo(STATS_LABEL);
+    assertThat(stats.getBlendedCost().getStatsDescription()).isEqualTo(STATS_DESCRIPTION);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getPreAggregateBillingTrendStatsWithLeftJoin() {
+    PreAggregateBillingTrendStatsDTO stats = preAggregateBillingService.getPreAggregateBillingTrendStats(
+        null, conditions, TABLE_NAME, filters, leftJoinList);
     assertThat(stats.getBlendedCost()).isNotNull();
     assertThat(stats.getBlendedCost().getStatsValue()).isEqualTo(STATS_VALUE);
     assertThat(stats.getBlendedCost().getStatsLabel()).isEqualTo(STATS_LABEL);

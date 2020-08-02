@@ -23,6 +23,7 @@ public class RawBillingTableSchema {
   public static final DbColumn gcpSkuId;
   public static final DbColumn gcpSkuDescription;
   public static final DbColumn cost;
+  public static final DbColumn discount;
   public static final DbColumn zone;
   public static final DbColumn region;
   public static final DbColumn startTime;
@@ -61,6 +62,7 @@ public class RawBillingTableSchema {
     gcpProduct = table.addColumn("service.description");
     gcpSkuId = table.addColumn("sku.id");
     gcpSkuDescription = table.addColumn("sku.description");
+    discount = table.addColumn("credits.amount");
     labelsKey = table.addColumn("labels.key");
     labelsValue = table.addColumn("labels.value");
 

@@ -66,6 +66,8 @@ type CloudEntityData {
   gcpSkuId: String
   gcpLabel: String
   gcpTotalCost: Number
+  gcpDiscount: Number
+  gcpSubTotalCost: Number
   costTrend: Number
 }
 

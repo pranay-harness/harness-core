@@ -46,7 +46,7 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
   @InjectMocks CloudTimeSeriesStatsDataFetcher cloudTimeSeriesStatsDataFetcher;
 
   private static final String COST = "unblendedCost";
-  private static final String DISCOUNT = "awsBlendedCost";
+  private static final String DISCOUNT = "discount";
   private static final String SERVICE = "service";
   private static final String LINKED_ACCOUNT = "linkedAccount";
   private static final String USAGE_TYPE = "usageType";
@@ -144,6 +144,20 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
     QLData data = cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, null,
+        Collections.singletonList(getCloudProviderFilter(new String[] {"GCP"})),
+        Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null, 5, 0);
+    assertThat(data).isEqualTo(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testTimeSeriesDataFetcherWithLabelsAggregationDiscount() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+    doCallRealMethod().when(cloudBillingHelper).fetchIfDiscountsAggregationPresent(cloudBillingAggregates);
+    QLData data = cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, cloudBillingAggregates,
         Collections.singletonList(getCloudProviderFilter(new String[] {"GCP"})),
         Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null, 5, 0);
     assertThat(data).isEqualTo(PreAggregateBillingTimeSeriesStatsDTO.builder().build());

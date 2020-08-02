@@ -2,6 +2,7 @@ package io.harness.ccm.billing.graphql;
 
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.AliasedObject;
+import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.RawBillingTableSchema;
@@ -70,6 +71,9 @@ public class CloudBillingAggregate {
         break;
       case PRE_AGG_START_TIME:
         functionCall.addColumnParams(RawBillingTableSchema.startTime);
+        break;
+      case BILLING_GCP_CREDITS:
+        functionCall.addCustomParams(new CustomSql(RawBillingTableSchema.discount.getColumnNameSQL()));
         break;
       default:
         break;

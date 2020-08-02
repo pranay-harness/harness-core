@@ -16,6 +16,7 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpBillingAccount;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpDiscount;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpLabelKey;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpLabelValue;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoProduct;
@@ -127,6 +128,7 @@ public class PreAggregatedBillingDataHelper {
     for (FieldValueList row : result.iterateAll()) {
       QLBillingDataPointBuilder billingDataPointBuilder = QLBillingDataPoint.builder();
       Timestamp startTimeTruncatedTimestamp = null;
+      Double value = Double.valueOf(0);
       for (Field field : fields) {
         switch (field.getType().getStandardType()) {
           case TIMESTAMP:
@@ -136,13 +138,14 @@ public class PreAggregatedBillingDataHelper {
             setTimeSeriesDataPointKey(row, field, billingDataPointBuilder);
             break;
           case FLOAT64:
-            billingDataPointBuilder.value(getNumericValue(row, field));
+            value += getNumericValue(row, field);
             break;
           default:
             break;
         }
       }
 
+      billingDataPointBuilder.value(billingDataHelper.getRoundedDoubleValue(value));
       List<QLBillingDataPoint> dataPoints = new ArrayList<>();
       if (timeSeriesDataPointsMap.containsKey(startTimeTruncatedTimestamp)) {
         dataPoints = timeSeriesDataPointsMap.get(startTimeTruncatedTimestamp);
@@ -377,6 +380,7 @@ public class PreAggregatedBillingDataHelper {
       Instant trendFilterStartTime) {
     PreAggregateBillingEntityDataPointBuilder dataPointBuilder = PreAggregateBillingEntityDataPoint.builder();
     PreAggregatedCostDataBuilder preAggregatedCostDataBuilder = PreAggregatedCostData.builder();
+    Double gcpCost = Double.valueOf(0);
     dataPointBuilder.id(totalStringValueConstant);
     for (Field field : fields) {
       String value = null;
@@ -471,13 +475,22 @@ public class PreAggregatedBillingDataHelper {
           break;
         case entityConstantGcpCost:
           double cost = getNumericValue(row, field);
-          preAggregatedCostDataBuilder.cost(cost);
+          gcpCost += cost;
           dataPointBuilder.gcpTotalCost(billingDataHelper.getRoundedDoubleValue(cost));
+          break;
+        case entityConstantGcpDiscount:
+          double discount = getNumericValue(row, field);
+          gcpCost += discount;
+          dataPointBuilder.gcpDiscount(billingDataHelper.getRoundedDoubleValue(discount));
           break;
         default:
           break;
       }
     }
+
+    preAggregatedCostDataBuilder.cost(gcpCost);
+    dataPointBuilder.gcpSubTotalCost(billingDataHelper.getRoundedDoubleValue(gcpCost));
+
     PreAggregatedCostData preAggregatedCostData =
         preAggregatedCostDataBuilder.maxStartTime(getTimeStampValue(row, maxPreAggStartTimeConstant))
             .minStartTime(getTimeStampValue(row, minPreAggStartTimeConstant))
@@ -527,6 +540,7 @@ public class PreAggregatedBillingDataHelper {
   void processTrendDataAndAppendToList(FieldList fields, FieldValueList row,
       PreAggregatedCostDataBuilder blendedCostData, PreAggregatedCostDataBuilder unBlendedCostData,
       PreAggregatedCostDataBuilder costDataBuilder) {
+    Double gcpCost = Double.valueOf(0);
     for (Field field : fields) {
       switch (field.getName()) {
         case entityConstantAwsBlendedCost:
@@ -536,7 +550,8 @@ public class PreAggregatedBillingDataHelper {
           unBlendedCostData.cost(getNumericValue(row, field));
           break;
         case entityConstantGcpCost:
-          costDataBuilder.cost(getNumericValue(row, field));
+        case entityConstantGcpDiscount:
+          gcpCost += getNumericValue(row, field);
           break;
         case minPreAggStartTimeConstant:
           long minStartTime = getTimeStampValue(row, field);
@@ -554,6 +569,7 @@ public class PreAggregatedBillingDataHelper {
           break;
       }
     }
+    costDataBuilder.cost(billingDataHelper.getRoundedDoubleValue(gcpCost));
   }
 
   protected QLBillingStatsInfo getCostBillingStats(PreAggregatedCostData costData, PreAggregatedCostData prevCostData,
@@ -873,7 +889,7 @@ public class PreAggregatedBillingDataHelper {
   protected void processDataPrevDataAndAppendToList(
       FieldList fields, FieldValueList row, Map<String, PreAggregatedCostData> idToPrevBillingDataMap) {
     String id = totalStringValueConstant;
-    Double cost = null;
+    Double cost = Double.valueOf(0);
     for (Field field : fields) {
       switch (field.getName()) {
         case entityConstantRegion:
@@ -915,7 +931,8 @@ public class PreAggregatedBillingDataHelper {
         case entityConstantRawTableAwsBlendedCost:
         case entityConstantRawTableAwsUnBlendedCost:
         case entityConstantGcpCost:
-          cost = getNumericValue(row, field);
+        case entityConstantGcpDiscount:
+          cost += getNumericValue(row, field);
           break;
         default:
           break;
