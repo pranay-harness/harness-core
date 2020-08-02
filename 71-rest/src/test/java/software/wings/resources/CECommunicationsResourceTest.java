@@ -85,7 +85,7 @@ public class CECommunicationsResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testAddEmail() {
     RESOURCES.client()
-        .target(format("/ceCommunications/%s?type=%s&email=%s", accountId, type, email))
+        .target(format("/ceCommunications/%s?type=%s&email=%s&enable=%s", accountId, type, email, true))
         .request()
         .post(entity(communications, MediaType.APPLICATION_JSON), new GenericType<RestResponse<CECommunications>>() {});
     verify(communicationsService).update(accountId, email, type, true, false);

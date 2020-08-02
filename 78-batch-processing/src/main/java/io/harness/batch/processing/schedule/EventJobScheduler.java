@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
+import io.harness.batch.processing.budgets.service.impl.BudgetAlertsServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
@@ -41,6 +42,7 @@ public class EventJobScheduler {
   @Autowired private BillingDataPipelineHealthStatusService billingDataPipelineHealthStatusService;
   @Autowired private GcpScheduledQueryTriggerAction gcpScheduledQueryTriggerAction;
   @Autowired private ProductMetricsService productMetricsService;
+  @Autowired private BudgetAlertsServiceImpl budgetAlertsService;
 
   @PostConstruct
   public void orderJobs() {
@@ -113,6 +115,16 @@ public class EventJobScheduler {
       logger.info("Weekly billing report generated and send");
     } catch (Exception ex) {
       logger.error("Exception while running weeklyReportJob", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 30 14 * * ?")
+  public void runBudgetAlertsJob() {
+    try {
+      budgetAlertsService.sendBudgetAlerts();
+      logger.info("Budget alerts send");
+    } catch (Exception ex) {
+      logger.error("Exception while running budgetAlertsJob", ex);
     }
   }
 

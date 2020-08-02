@@ -13,7 +13,9 @@ import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
+import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CECommunications;
+import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -42,6 +44,7 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
   @Mock private WeeklyReportTemplateHelper templateHelper;
   @Mock private CECommunicationsServiceImpl ceCommunicationsService;
   @Mock private AccountShardService accountShardService;
+  @Mock private CESlackWebhookService ceSlackWebhookService;
   @InjectMocks private WeeklyReportServiceImpl weeklyReportService;
 
   @Mock Statement statement;
@@ -75,6 +78,8 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
         .thenReturn(Arrays.asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build()));
     when(ceCommunicationsService.getEnabledEntries(any(), any()))
         .thenReturn(Arrays.asList(CECommunications.builder().emailId("mailId").build()));
+    when(ceSlackWebhookService.getByAccountId(ACCOUNT_ID))
+        .thenReturn(CESlackWebhook.builder().webhookUrl("URL").sendCostReport(false).build());
   }
 
   @Test

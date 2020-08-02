@@ -69,8 +69,9 @@ public class CECommunicationsResource {
   @Timed
   @ExceptionMetered
   public RestResponse enableViaEmail(@PathParam("accountId") String accountId,
-      @QueryParam("type") CommunicationType type, @QueryParam("email") String email) {
-    communicationsService.update(accountId, email, type, true, false);
+      @QueryParam("type") CommunicationType type, @QueryParam("email") String email,
+      @QueryParam("enable") boolean enable) {
+    communicationsService.update(accountId, email, type, enable, false);
     return new RestResponse<>();
   }
 
