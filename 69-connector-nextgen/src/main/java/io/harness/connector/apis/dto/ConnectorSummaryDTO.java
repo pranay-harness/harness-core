@@ -1,5 +1,6 @@
 package io.harness.connector.apis.dto;
 
+import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import lombok.Builder;
@@ -31,6 +32,8 @@ public class ConnectorSummaryDTO {
   Long createdAt;
   Long lastModifiedAt;
   Long version;
+
+  ConnectorConnectivityDetails status;
 
   // todo @deepak: Add the createdBy lastUpdatedBy
 }

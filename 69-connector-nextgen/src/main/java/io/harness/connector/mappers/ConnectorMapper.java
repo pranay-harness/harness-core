@@ -83,6 +83,7 @@ public class ConnectorMapper {
         .createdAt(connector.getCreatedAt())
         .lastModifiedAt(connector.getLastModifiedAt())
         .connectorType(connector.getType())
+        .status(connector.getStatus())
         .build();
   }
 

@@ -42,6 +42,7 @@ public class ConnectorSummaryMapper {
                                                              .createdAt(connector.getCreatedAt())
                                                              .lastModifiedAt(connector.getLastModifiedAt())
                                                              .version(connector.getVersion())
+                                                             .status(connector.getStatus())
                                                              .tags(connector.getTags());
     if (connector.getScope() == ORGANIZATION) {
       connectorSummaryBuilder.orgName(getOrgNameFromMap(connector.getOrgIdentifier(), orgIdentifierOrgNameMap));
