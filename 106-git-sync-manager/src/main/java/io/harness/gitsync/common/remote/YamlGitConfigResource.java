@@ -75,7 +75,7 @@ public class YamlGitConfigResource {
   @ApiOperation(value = "List Git Sync", nickname = "listGitSync")
   public List<GitSyncConfigDTO> list(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId) {
-    List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.get(projectId, organizationId, accountId);
+    List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.orderedGet(projectId, organizationId, accountId);
     return yamlGitConfigDTOs.stream().map(YamlGitConfigMapper::toSetupGitSyncDTO).collect(Collectors.toList());
   }
 }

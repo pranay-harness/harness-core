@@ -13,6 +13,8 @@ public interface YamlGitConfigService {
 
   List<YamlGitConfigDTO> get(String projectId, String orgId, String accountId);
 
+  List<YamlGitConfigDTO> orderedGet(String projectIdentifier, String orgIdentifier, String accountId);
+
   YamlGitConfigDTO getByIdentifier(String projectId, String orgId, String accountId, String identifier);
 
   List<YamlGitConfigDTO> updateDefault(

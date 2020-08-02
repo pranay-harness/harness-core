@@ -15,6 +15,7 @@ import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig.YamlGitFolderConfigRepository;
+import io.harness.gitsync.common.helper.YamlGitConfigDTOComparator;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import lombok.AllArgsConstructor;
@@ -42,6 +43,26 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeOrderByCreatedAtAsc(
             accountId, orgIdentifier, projectIdentifier, scope);
     return getYamlGitConfigDTOsFromYamlGitFolderConfig(yamlGitConfigs);
+  }
+
+  @Override
+  public List<YamlGitConfigDTO> orderedGet(String projectIdentifier, String orgIdentifier, String accountId) {
+    Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
+    List<YamlGitFolderConfig> yamlGitFolderConfigs =
+        yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeOrderByCreatedAtAsc(
+            accountId, orgIdentifier, projectIdentifier, scope);
+    List<YamlGitConfigDTO> yamlGitConfigDTO = getYamlGitConfigDTOsFromYamlGitFolderConfig(yamlGitFolderConfigs);
+    List<YamlGitConfig> yamlGitConfig = yamlGitConfigRepository.getByAccountIdAndOrganizationIdAndProjectIdAndScope(
+        accountId, orgIdentifier, projectIdentifier, scope);
+    return orderYamlGitConfigByCreatedAt(yamlGitConfigDTO, yamlGitConfig);
+  }
+
+  private List<YamlGitConfigDTO> orderYamlGitConfigByCreatedAt(
+      List<YamlGitConfigDTO> yamlGitConfigDTOs, List<YamlGitConfig> yamlGitConfig) {
+    List<String> yamlGitConfigsIds = yamlGitConfig.stream().map(YamlGitConfig::getUuid).collect(Collectors.toList());
+    return yamlGitConfigDTOs.stream()
+        .sorted(new YamlGitConfigDTOComparator(yamlGitConfigsIds))
+        .collect(Collectors.toList());
   }
 
   @Override
