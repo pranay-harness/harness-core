@@ -1,5 +1,7 @@
 package io.harness.connector.impl;
 
+import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
+import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
@@ -13,6 +15,7 @@ import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.mappers.ConnectorSummaryMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
@@ -148,10 +151,24 @@ public class ConnectorServiceImpl implements ConnectorService {
     if (connectorOptional.isPresent()) {
       ConnectorDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
       ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
-      return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountIdentifier);
+      ConnectorValidationResult validationResult =
+          connectionValidator.validate(connectorDTO.getConnectorConfig(), accountIdentifier);
+      updateConnectivityStatusOfConnector(connectorOptional.get(), validationResult);
+      return validationResult;
     } else {
       throw new InvalidRequestException(
           createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+    }
+  }
+
+  private void updateConnectivityStatusOfConnector(
+      Connector connector, ConnectorValidationResult connectorValidationResult) {
+    if (connectorValidationResult != null) {
+      connector.setStatus(ConnectorConnectivityDetails.builder()
+                              .status(connectorValidationResult.isValid() ? SUCCESS : FAILURE)
+                              .errorMessage(connectorValidationResult.getErrorMessage())
+                              .build());
+      connectorRepository.save(connector);
     }
   }
 }

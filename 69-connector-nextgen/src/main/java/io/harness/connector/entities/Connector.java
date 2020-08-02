@@ -52,6 +52,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
+  ConnectorConnectivityDetails status;
 
   public enum Scope { ACCOUNT, ORGANIZATION, PROJECT }
 
