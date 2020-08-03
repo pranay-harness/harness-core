@@ -208,6 +208,7 @@ public class WorkloadSpecWriterTest extends CategoryTest {
     ArgumentCaptor<K8sWorkloadRecommendation> captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
     verify(workloadRecommendationDao).save(captor.capture());
     assertThat(captor.getAllValues()).hasSize(1);
+    assertThat(captor.getValue().isDirty()).isTrue();
     Map<String, ContainerRecommendation> containerRecommendations = captor.getValue().getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(2).containsOnlyKeys("ctr-b", "ctr-c");
     assertThat(containerRecommendations.get("ctr-b").getCurrent())

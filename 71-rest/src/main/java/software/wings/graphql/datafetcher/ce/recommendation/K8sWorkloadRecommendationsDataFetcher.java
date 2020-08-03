@@ -75,15 +75,18 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
         ((Query<K8sWorkloadRecommendation>) populateFilters(
              wingsPersistence, filters, K8sWorkloadRecommendation.class, true))
             .order(Sort.descending(K8sWorkloadRecommendationKeys.estimatedSavings))
-            .field(K8sWorkloadRecommendationKeys.lastUpdatedAt)
-            .greaterThanOrEq(Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(2)).toEpochMilli())
-            .field(K8sWorkloadRecommendationKeys.populated)
-            .equal(Boolean.TRUE);
+            .field(K8sWorkloadRecommendationKeys.validRecommendation)
+            .equal(Boolean.TRUE)
+            .field(K8sWorkloadRecommendationKeys.lastDayCostAvailable)
+            .equal(Boolean.TRUE)
+            .field(K8sWorkloadRecommendationKeys.numDays)
+            .greaterThanOrEq(1)
+            .field(K8sWorkloadRecommendationKeys.lastReceivedUtilDataAt)
+            .greaterThanOrEq(Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(2)));
     QLK8SWorkloadRecommendationConnectionBuilder connectionBuilder = QLK8SWorkloadRecommendationConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, k8sWorkloadRecommendation -> {
       Collection<? extends QLContainerRecommendation> containerRecommendations =
           entityToDtoCr(k8sWorkloadRecommendation.getContainerRecommendations());
-      int numDays = containerRecommendations.stream().mapToInt(QLContainerRecommendation::getNumDays).max().orElse(0);
       connectionBuilder.node(QLK8sWorkloadRecommendation.builder()
                                  .clusterId(k8sWorkloadRecommendation.getClusterId())
                                  .clusterName(clusterNameCache.get(k8sWorkloadRecommendation.getClusterId()))
@@ -92,7 +95,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
                                  .workloadName(k8sWorkloadRecommendation.getWorkloadName())
                                  .workloadType(k8sWorkloadRecommendation.getWorkloadType())
                                  .estimatedSavings(k8sWorkloadRecommendation.getEstimatedSavings())
-                                 .numDays(numDays)
+                                 .numDays(k8sWorkloadRecommendation.getNumDays())
                                  .build());
     }));
     return connectionBuilder.build();

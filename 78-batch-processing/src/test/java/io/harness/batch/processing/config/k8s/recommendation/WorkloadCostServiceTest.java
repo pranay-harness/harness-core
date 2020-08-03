@@ -60,8 +60,8 @@ public class WorkloadCostServiceTest extends CategoryTest {
                                 .name("manager")
                                 .kind("Deployment")
                                 .build();
-    Instant begin = Instant.EPOCH.plus(Duration.ofHours(1).plusMinutes(3));
-    Instant end = Instant.EPOCH.plus(Duration.ofDays(1).plusHours(1).plusMinutes(3));
+    Instant begin = Instant.EPOCH.plus(Duration.ofDays(1));
+    Instant end = Instant.EPOCH.plus(Duration.ofDays(2));
     Cost actualCost = workloadCostService.getActualCost(workloadId, begin, end);
     assertThat(actualCost).isEqualTo(Cost.builder().cpu(cpuCost).memory(memoryCost).build());
     verify(statement).setString(1, workloadId.getAccountId());
@@ -85,8 +85,8 @@ public class WorkloadCostServiceTest extends CategoryTest {
                                 .name("manager")
                                 .kind("Deployment")
                                 .build();
-    Instant begin = Instant.EPOCH.plus(Duration.ofHours(1).plusMinutes(3));
-    Instant end = Instant.EPOCH.plus(Duration.ofDays(1).plusHours(1).plusMinutes(3));
+    Instant begin = Instant.EPOCH.plus(Duration.ofDays(1));
+    Instant end = Instant.EPOCH.plus(Duration.ofDays(2));
     assertThat(workloadCostService.getActualCost(workloadId, begin, end)).isNull();
   }
 
@@ -103,8 +103,8 @@ public class WorkloadCostServiceTest extends CategoryTest {
                                 .name("manager")
                                 .kind("Deployment")
                                 .build();
-    Instant begin = Instant.EPOCH.plus(Duration.ofHours(1).plusMinutes(3));
-    Instant end = Instant.EPOCH.plus(Duration.ofDays(1).plusHours(1).plusMinutes(3));
+    Instant begin = Instant.EPOCH.plus(Duration.ofDays(1));
+    Instant end = Instant.EPOCH.plus(Duration.ofDays(2));
     assertThat(workloadCostService.getActualCost(workloadId, begin, end)).isNull();
   }
 }

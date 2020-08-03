@@ -21,16 +21,13 @@ import java.util.stream.Collectors;
 class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
   private final WorkloadRecommendationDao workloadRecommendationDao;
 
-  // account level cache
-  private final Map<ResourceId, K8sWorkloadRecommendation> workloadToRecommendation;
-
   WorkloadSpecWriter(WorkloadRecommendationDao workloadRecommendationDao) {
     this.workloadRecommendationDao = workloadRecommendationDao;
-    this.workloadToRecommendation = new HashMap<>();
   }
 
   @Override
-  public void write(List<? extends PublishedMessage> items) throws Exception {
+  public void write(List<? extends PublishedMessage> items) {
+    Map<ResourceId, K8sWorkloadRecommendation> workloadToRecommendation = new HashMap<>();
     for (PublishedMessage item : items) {
       String accountId = item.getAccountId();
       K8sWorkloadSpec k8sWorkloadSpec = (K8sWorkloadSpec) item.getMessage();
@@ -68,12 +65,8 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
                                     .orElse(null))
                      .build()));
       recommendation.setContainerRecommendations(updatedRecommendations);
+      recommendation.setDirty(true);
     }
-    updateRecommendations();
-  }
-
-  private void updateRecommendations() {
     workloadToRecommendation.values().forEach(workloadRecommendationDao::save);
-    workloadToRecommendation.clear();
   }
 }
