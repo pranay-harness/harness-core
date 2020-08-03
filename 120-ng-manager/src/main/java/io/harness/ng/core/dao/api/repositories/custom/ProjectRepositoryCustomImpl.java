@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
@@ -21,6 +22,14 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   @Override
   public Page<Project> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
+    List<Project> projects = mongoTemplate.find(query, Project.class);
+    return PageableExecutionUtils.getPage(
+        projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Project.class));
+  }
+
+  @Override
+  public Page<Project> findAll(TextCriteria textCriteria, Criteria criteria, Pageable pageable) {
+    Query query = new Query(criteria).with(pageable).addCriteria(textCriteria);
     List<Project> projects = mongoTemplate.find(query, Project.class);
     return PageableExecutionUtils.getPage(
         projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Project.class));

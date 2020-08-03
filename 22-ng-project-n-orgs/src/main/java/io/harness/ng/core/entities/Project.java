@@ -6,6 +6,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.ng.ModuleType;
 import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
@@ -39,6 +40,11 @@ import javax.validation.constraints.Size;
 @CdIndex(name = "acctModulesOrgIdx",
     fields = { @Field(ProjectKeys.accountIdentifier)
                , @Field(ProjectKeys.modules), @Field(ProjectKeys.orgIdentifier) })
+@CdIndex(name = "nameTagsProjectSearchIdx",
+    fields =
+    {
+      @Field(value = ProjectKeys.name, type = IndexType.TEXT), @Field(value = ProjectKeys.tags, type = IndexType.TEXT)
+    })
 @RsqlQueryable(fields = { @Field(ProjectKeys.modules)
                           , @Field(ProjectKeys.orgIdentifier) })
 @Entity(value = "projects", noClassnameStored = true)
