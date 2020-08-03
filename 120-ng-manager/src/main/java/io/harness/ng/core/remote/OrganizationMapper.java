@@ -29,6 +29,7 @@ public class OrganizationMapper {
         .accountIdentifier(organization.getAccountIdentifier())
         .name(organization.getName())
         .tags(organization.getTags())
+        .lastModifiedAt(organization.getLastModifiedAt())
         .build();
   }
 

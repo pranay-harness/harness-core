@@ -21,4 +21,5 @@ public class OrganizationDTO {
   String color;
   String description;
   @Size(max = 128) List<String> tags;
+  Long lastModifiedAt;
 }
