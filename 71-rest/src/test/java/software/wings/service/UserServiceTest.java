@@ -288,33 +288,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
-  public void testSendUserInvitationToOnlySsoAccountMail() {
-    Account account = anAccount()
-                          .withUuid(generateUuid())
-                          .withAccountName("account_name")
-                          .withCompanyName("company_name")
-                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
-                          .withAppId(generateUuid())
-                          .build();
-
-    User user = anUser()
-                    .uuid(generateUuid())
-                    .appId(generateUuid())
-                    .defaultAccountId(account.getUuid())
-                    .email("useremail@harness.io")
-                    .name("user_name")
-                    .build();
-
-    when(emailDataNotificationService.send(any(EmailData.class))).thenReturn(true);
-    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn("base_url");
-
-    userService.sendUserInvitationToOnlySsoAccountMail(account, user);
-    verify(emailDataNotificationService, atLeastOnce()).send(any(EmailData.class));
-  }
-
-  @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
   public void TC0_testLogout() {
     String token = "token";
     User user = anUser()

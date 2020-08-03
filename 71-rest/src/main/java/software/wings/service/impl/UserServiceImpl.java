@@ -659,14 +659,15 @@ public class UserServiceImpl implements UserService {
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
     model.put("message", "You have been added to Harness Account: " + account.getAccountName());
 
-    // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
-    if (account.getAuthenticationMechanism() == AuthenticationMechanism.USER_PASSWORD) {
-      return model;
-    }
-
     SSOSettings ssoSettings = getSSOSettings(account);
-
     model.put("ssoUrl", checkGetDomainName(account, ssoSettings.getUrl()));
+
+    boolean shouldMailContainTwoFactorInfo = user.isTwoFactorAuthenticationEnabled();
+    model.put("shouldMailContainTwoFactorInfo", Boolean.toString(shouldMailContainTwoFactorInfo));
+    model.put("totpSecret", user.getTotpSecretKey());
+    String otpUrl = totpAuthHandler.generateOtpUrl(account.getCompanyName(), user.getEmail(), user.getTotpSecretKey());
+    model.put("totpUrl", otpUrl);
+
     return model;
   }
 
@@ -895,7 +896,7 @@ public class UserServiceImpl implements UserService {
     user.setImported(userInvite.getImportedByScim());
 
     user = save(user, accountId);
-    checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
 
     if (!isInviteAcceptanceRequired) {
       addUserToUserGroups(accountId, user, userInvite.getUserGroups(), false, true);
