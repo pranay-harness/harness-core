@@ -12,12 +12,13 @@ import java.util.EnumSet;
 public enum Status {
   // In Progress statuses : All the in progress statuses named with ing in the end
   RUNNING,
+
+  INTERVENTION_WAITING,
   TIMED_WAITING,
   ASYNC_WAITING,
   TASK_WAITING,
 
   DISCONTINUING,
-  PAUSING,
 
   // Final Statuses : All the final statuses named with ed in the end
   QUEUED,
@@ -31,14 +32,14 @@ public enum Status {
 
   // Status Groups
   private static final EnumSet<Status> FINALIZABLE_STATUSES =
-      EnumSet.of(QUEUED, RUNNING, PAUSED, PAUSING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
+      EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
   private static final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED);
 
   private static final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
 
   private static final EnumSet<Status> RESUMABLE_STATUSES =
-      EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING);
+      EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING);
 
   private static final EnumSet<Status> FLOWING_STATUSES =
       EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
@@ -72,14 +73,16 @@ public enum Status {
   public static EnumSet<Status> obtainAllowedStartSet(Status status) {
     switch (status) {
       case RUNNING:
-        return EnumSet.of(QUEUED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, PAUSED);
+        return EnumSet.of(QUEUED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED);
+      case INTERVENTION_WAITING:
+        return BROKE_STATUSES;
+      case TIMED_WAITING:
       case ASYNC_WAITING:
       case TASK_WAITING:
-      case TIMED_WAITING:
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING);
       case DISCONTINUING:
-        return EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, PAUSED);
+        return EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED);
       case SKIPPED:
         return EnumSet.of(QUEUED);
       case QUEUED:

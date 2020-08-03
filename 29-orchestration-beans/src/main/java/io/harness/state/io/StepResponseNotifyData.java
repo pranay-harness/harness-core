@@ -17,7 +17,7 @@ public class StepResponseNotifyData implements ResponseData {
   String identifier;
   String nodeUuid;
   String group;
-  List<StepOutcomeRef> stepOutcomesRefs;
+  List<StepOutcomeRef> stepOutcomeRefs;
   FailureInfo failureInfo;
   Status status;
 }

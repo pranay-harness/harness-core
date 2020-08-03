@@ -6,7 +6,8 @@ import io.harness.registries.RegistryKey;
 
 @OwnedBy(HarnessTeam.CDC)
 public enum OrchestrationEventType implements RegistryKey {
-  ORCHESTRATION_START("ORCHESTRATION_START");
+  ORCHESTRATION_START("ORCHESTRATION_START"),
+  INTERVENTION_WAIT_START("INTERVENTION_WAIT_START");
 
   String type;
 

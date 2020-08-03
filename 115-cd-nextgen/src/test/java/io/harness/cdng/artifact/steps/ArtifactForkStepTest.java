@@ -80,7 +80,7 @@ public class ArtifactForkStepTest extends CategoryTest {
 
     StepResponseNotifyData stepResponseNotifyData =
         StepResponseNotifyData.builder()
-            .stepOutcomesRefs(
+            .stepOutcomeRefs(
                 Collections.singletonList(StepOutcomeRef.builder().instanceId("node1").name("node1").build()))
             .status(Status.SUCCEEDED)
             .build();

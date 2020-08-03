@@ -100,7 +100,7 @@ public class ServiceStepTest extends CategoryTest {
             .build(),
         Collections.singletonList(
             StepResponseNotifyData.builder()
-                .stepOutcomesRefs(Collections.singletonList(StepOutcomeRef.builder().instanceId("1").name("1").build()))
+                .stepOutcomeRefs(Collections.singletonList(StepOutcomeRef.builder().instanceId("1").name("1").build()))
                 .build()));
 
     assertThat(serviceOutcome.getManifests()).isNotEmpty();
@@ -136,7 +136,7 @@ public class ServiceStepTest extends CategoryTest {
 
     StepResponseNotifyData stepResponseNotifyData =
         StepResponseNotifyData.builder()
-            .stepOutcomesRefs(
+            .stepOutcomeRefs(
                 Collections.singletonList(StepOutcomeRef.builder().instanceId("node1").name("node1").build()))
             .status(Status.SUCCEEDED)
             .build();
