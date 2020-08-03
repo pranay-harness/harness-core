@@ -1,5 +1,6 @@
 package io.harness.k8s.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 
@@ -18,6 +19,7 @@ public class K8sPod {
   private boolean newPod;
   private Map<String, String> labels;
 
+  @JsonIgnore
   public String getColor() {
     if (labels != null) {
       return labels.get(HarnessLabels.color);
