@@ -27,6 +27,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class AccountProjectResourceTest extends CategoryTest {
 
     when(organizationService.list(any(), any())).thenReturn(Page.empty());
     final NGPageResponse<ProjectDTO> allProjectDTOS =
-        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, null, 0, 10, null).getData();
+        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, null, null, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", allProjectDTOS);
     assertEquals("Count of DTOs should match", projectList.size(), allProjectDTOS.getTotalElements());
     assertNotNull("Page contents should not be null", allProjectDTOS.getContent());
@@ -105,7 +106,7 @@ public class AccountProjectResourceTest extends CategoryTest {
     when(organizationService.list(any(), any())).thenReturn(Page.empty());
     String filterQuery = "modules=in=(" + moduleType + ")";
     final NGPageResponse<ProjectDTO> projectDTOS =
-        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, filterQuery, 0, 10, null).getData();
+        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, filterQuery, null, 0, 10, null).getData();
 
     assertNotNull(projectDTOS);
     assertNotNull("Page contents should not be null", projectDTOS.getContent());
@@ -122,5 +123,33 @@ public class AccountProjectResourceTest extends CategoryTest {
         assertTrue("Fetched DTO should be present ", isPresentInResult);
       }
     });
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testList_For_Search() {
+    String orgIdentifier = randomAlphabetic(10);
+    String accountIdentifier = randomAlphabetic(10);
+
+    List<Project> projectList = new ArrayList<>();
+
+    projectList.add(createProject(orgIdentifier, accountIdentifier, ModuleType.CD));
+    projectList.add(createProject(orgIdentifier, accountIdentifier, ModuleType.CD));
+    when(projectService.list(any(TextCriteria.class), any(Criteria.class), any(Pageable.class)))
+        .thenReturn(PageTestUtils.getPage(projectList, 2));
+
+    when(organizationService.list(any(), any())).thenReturn(Page.empty());
+    String search = "text";
+    final NGPageResponse<ProjectDTO> projectDTOS =
+        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, "", search, 0, 10, null).getData();
+
+    assertNotNull(projectDTOS);
+    assertNotNull("Page contents should not be null", projectDTOS.getContent());
+
+    List<ProjectDTO> returnedDTOs = projectDTOS.getContent();
+
+    assertNotNull("Returned project DTOs page should not null ", returnedDTOs);
+    assertEquals(returnedDTOs.size(), projectList.size());
   }
 }

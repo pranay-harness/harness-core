@@ -3,8 +3,10 @@ package io.harness.ng.core.entities;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.persistence.PersistentEntity;
@@ -35,6 +37,12 @@ import javax.validation.constraints.Size;
 @CdUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier",
     fields = { @Field(OrganizationKeys.accountIdentifier)
                , @Field(OrganizationKeys.identifier) })
+@CdIndex(name = "nameTagsOrganizationSearchIdx",
+    fields =
+    {
+      @Field(value = OrganizationKeys.name, type = IndexType.TEXT)
+      , @Field(value = OrganizationKeys.tags, type = IndexType.TEXT)
+    })
 public class Organization implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @Trimmed @NotEmpty String accountIdentifier;

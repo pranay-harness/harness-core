@@ -2,6 +2,7 @@ package io.harness.ng.core.remote;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -25,6 +26,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api("accountProjects")
+@Api("account-projects")
 @Path("projects")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
@@ -54,7 +56,8 @@ public class AccountProjectResource {
   @GET
   @ApiOperation(value = "Gets Project list based on filter", nickname = "getProjectListBasedOnFilter")
   public ResponseDTO<NGPageResponse<ProjectDTO>> listProjectsBasedOnFilter(
-      @QueryParam("accountIdentifier") String accountIdentifier, @QueryParam("filterQuery") String filterQuery,
+      @QueryParam("accountIdentifier") String accountIdentifier,
+      @QueryParam("filterQuery") @DefaultValue("") String filterQuery, @QueryParam("search") String search,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("sort") List<String> sort) {
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, Project.class)
@@ -62,8 +65,14 @@ public class AccountProjectResource {
                             .is(accountIdentifier)
                             .and(ProjectKeys.deleted)
                             .ne(Boolean.TRUE);
-    Page<ProjectDTO> projects =
-        projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
+    Page<ProjectDTO> projects;
+    if (isNotBlank(search)) {
+      TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(search);
+      projects =
+          projectService.list(textCriteria, criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
+    } else {
+      projects = projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
+    }
     List<String> orgIdentifiers =
         projects.getContent().stream().map(ProjectDTO::getOrgIdentifier).collect(Collectors.toList());
     Criteria orgCriteria = Criteria.where(OrganizationKeys.accountIdentifier)

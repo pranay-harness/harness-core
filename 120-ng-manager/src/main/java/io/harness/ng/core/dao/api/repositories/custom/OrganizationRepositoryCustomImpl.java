@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
@@ -21,6 +22,14 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   @Override
   public Page<Organization> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
+    List<Organization> organizations = mongoTemplate.find(query, Organization.class);
+    return PageableExecutionUtils.getPage(
+        organizations, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Organization.class));
+  }
+
+  @Override
+  public Page<Organization> findAll(TextCriteria textCriteria, Criteria criteria, Pageable pageable) {
+    Query query = new Query(criteria).with(pageable).addCriteria(textCriteria);
     List<Organization> organizations = mongoTemplate.find(query, Organization.class);
     return PageableExecutionUtils.getPage(
         organizations, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Organization.class));
