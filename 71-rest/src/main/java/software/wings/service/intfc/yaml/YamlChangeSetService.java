@@ -43,6 +43,8 @@ public interface YamlChangeSetService {
    */
   YamlChangeSet get(@NotEmpty String accountId, @NotEmpty String changeSetId);
 
+  boolean updateStatusAndIncrementPushCount(String accountId, String changeSetId, Status newStatus);
+
   /**
    * Update status boolean.
    *

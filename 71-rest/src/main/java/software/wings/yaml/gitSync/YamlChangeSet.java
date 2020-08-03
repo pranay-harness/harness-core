@@ -61,16 +61,18 @@ public class YamlChangeSet extends Base {
   @Default private Integer retryCount = 0;
   private String messageCode;
   private String queueKey;
+  @Default private Integer pushRetryCount = 0;
   private GitSyncMetadata gitSyncMetadata;
 
   public enum Status { QUEUED, RUNNING, FAILED, COMPLETED, SKIPPED }
   public static final List<Status> terminalStatusList =
       ImmutableList.of(Status.FAILED, Status.COMPLETED, Status.SKIPPED);
+
   @Builder
   public YamlChangeSet(String appId, String accountId, List<GitFileChange> gitFileChanges, Status status,
       boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId,
       GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String messageCode, String queueKey,
-      GitSyncMetadata gitSyncMetadata) {
+      GitSyncMetadata gitSyncMetadata, Integer pushRetryCount) {
     this.appId = appId;
     this.accountId = accountId;
     this.gitFileChanges = gitFileChanges;
@@ -85,5 +87,6 @@ public class YamlChangeSet extends Base {
     this.messageCode = messageCode;
     this.queueKey = queueKey;
     this.gitSyncMetadata = gitSyncMetadata;
+    this.pushRetryCount = pushRetryCount;
   }
 }

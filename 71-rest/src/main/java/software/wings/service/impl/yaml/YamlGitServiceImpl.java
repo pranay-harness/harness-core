@@ -140,6 +140,7 @@ import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -159,6 +160,7 @@ public class YamlGitServiceImpl implements YamlGitService {
    * The constant SETUP_ENTITY_ID.
    */
   public static final String SETUP_ENTITY_ID = "setup";
+  public static final Integer PUSH_IF_NOT_HEAD_MAX_RETRY_COUNT = 3;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
@@ -589,6 +591,14 @@ public class YamlGitServiceImpl implements YamlGitService {
       ensureValidNameSyntax(gitFileChanges);
 
       logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
+
+      String lastProcessedGitCommitId =
+          Optional
+              .ofNullable(fetchLastProcessedGitCommitId(accountId, Collections.singletonList(yamlGitConfig.getUuid())))
+              .map(GitCommit::getCommitId)
+              .orElse(null);
+      boolean pushOnlyIfHeadSeen = shouldPushOnlyIfHeadSeen(yamlChangeSet, lastProcessedGitCommitId);
+
       String waitId = generateUuid();
       List<String> yamlChangeSetIds = new ArrayList<>();
       yamlChangeSetIds.add(yamlChangeSetId);
@@ -606,6 +616,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                         .forcePush(true)
                                                         .yamlChangeSetIds(yamlChangeSetIds)
                                                         .yamlGitConfig(yamlGitConfig)
+                                                        .lastProcessedGitCommit(lastProcessedGitCommitId)
+                                                        .pushOnlyIfHeadSeen(pushOnlyIfHeadSeen)
                                                         .build()})
                                                 .timeout(gitRequestTimeout)
                                                 .build())
@@ -622,6 +634,12 @@ public class YamlGitServiceImpl implements YamlGitService {
             taskId);
       }
     }
+  }
+
+  @VisibleForTesting
+  boolean shouldPushOnlyIfHeadSeen(YamlChangeSet yamlChangeSet, String lastProcessedGitCommitId) {
+    return !PUSH_IF_NOT_HEAD_MAX_RETRY_COUNT.equals(yamlChangeSet.getPushRetryCount()) && !yamlChangeSet.isFullSync()
+        && !isEmpty(lastProcessedGitCommitId);
   }
 
   /**

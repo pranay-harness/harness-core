@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
@@ -7,9 +8,12 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -49,6 +53,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -92,7 +97,7 @@ public class GitClientImplTest extends WingsBaseTest {
   private static final String GIT_USER = "git";
 
   @Mock private GitClientHelper gitClientHelper;
-  @Inject @InjectMocks private GitClientImpl gitClient;
+  @Inject @InjectMocks @Spy private GitClientImpl gitClient;
   private static final String localSSHKey_Rathna = "-----BEGIN RSA PRIVATE KEY-----\n"
       + "MIIJKgIBAAKCAgEAr5ie92WRMDDjZvRsJ+18Izj3jU+NO8xdpFrDYpzcXmb6UTCY\n"
       + "+l8g62kuNtZiH15omD/VyD6O1oNRHlexJz+aWadOsxkXGV2+s8eQMgOP6QtMmZEq\n"
@@ -483,5 +488,15 @@ public class GitClientImplTest extends WingsBaseTest {
     } catch (InterruptedException | TimeoutException | IOException ex) {
       fail("Should not reach here.");
     }
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testEnsureLastProcessedCommitIsHead() {
+    doReturn("abc").when(gitClient).getHeadCommit(any());
+    gitClient.ensureLastProcessedCommitIsHead(true, "abc", null);
+    assertThatThrownBy(() -> gitClient.ensureLastProcessedCommitIsHead(true, "xyz", null));
+    gitClient.ensureLastProcessedCommitIsHead(eq(false), eq("abc"), any());
   }
 }

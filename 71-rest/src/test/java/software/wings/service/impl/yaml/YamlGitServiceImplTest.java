@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
@@ -19,6 +20,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
+import static software.wings.service.impl.yaml.YamlGitServiceImpl.PUSH_IF_NOT_HEAD_MAX_RETRY_COUNT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -222,5 +224,16 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
     verify(waitNotifyEngine, times(1)).waitForAllOn(eq(GENERAL), any(GitCommandCallback.class), anyString());
     verify(yamlChangeSetService, times(0))
         .updateStatus(eq(ACCOUNT_ID), eq("changesetId"), any(YamlChangeSet.Status.class));
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testShouldPushOnlyIfHeadSeen() {
+    YamlChangeSet yamlChangeSet =
+        YamlChangeSet.builder().pushRetryCount(PUSH_IF_NOT_HEAD_MAX_RETRY_COUNT - 1).fullSync(true).build();
+    assertThat(yamlGitService.shouldPushOnlyIfHeadSeen(yamlChangeSet, "random")).isFalse();
+    assertThat(yamlGitService.shouldPushOnlyIfHeadSeen(YamlChangeSet.builder().build(), "random")).isTrue();
+    assertThat(yamlGitService.shouldPushOnlyIfHeadSeen(YamlChangeSet.builder().build(), "")).isFalse();
   }
 }

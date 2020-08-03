@@ -1,13 +1,16 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.yaml.gitSync.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.QUEUED;
+import static software.wings.yaml.gitSync.YamlChangeSet.Status.RUNNING;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
 
 import com.google.inject.Inject;
@@ -217,5 +220,17 @@ public class YamlChangeSetServiceImplTest extends WingsBaseTest {
         yamlChangeSetService.get(accountId, changeSetNotToBeSkipped.getUuid());
     assertThat(updatedChangeSetWithLessRetries.getStatus()).isEqualTo(QUEUED);
     assertThat(updatedChangeSetWithLessRetries.getMessageCode()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testUpdateStatusAndIncrementPushCount() {
+    YamlChangeSet yamlChangeSet = YamlChangeSet.builder().status(RUNNING).accountId(ACCOUNT_ID).build();
+    wingsPersistence.save(yamlChangeSet);
+    yamlChangeSetService.updateStatusAndIncrementPushCount(ACCOUNT_ID, yamlChangeSet.getUuid(), QUEUED);
+    YamlChangeSet yamlChangeSetAfterUpdate = yamlChangeSetService.get(ACCOUNT_ID, yamlChangeSet.getUuid());
+    assertThat(yamlChangeSetAfterUpdate.getStatus()).isEqualTo(QUEUED);
+    assertThat(yamlChangeSetAfterUpdate.getPushRetryCount()).isEqualTo(1);
   }
 }

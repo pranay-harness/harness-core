@@ -308,6 +308,21 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
+  public boolean updateStatusAndIncrementPushCount(String accountId, String changeSetId, Status newStatus) {
+    YamlChangeSet yamlChangeSet = get(accountId, changeSetId);
+    if (yamlChangeSet != null) {
+      UpdateOperations<YamlChangeSet> updateOperations =
+          wingsPersistence.createUpdateOperations(YamlChangeSet.class).set(YamlChangeSetKeys.status, newStatus);
+      updateOperations.inc(YamlChangeSetKeys.pushRetryCount);
+      UpdateResults status = wingsPersistence.update(yamlChangeSet, updateOperations);
+      return status.getUpdatedCount() != 0;
+    } else {
+      logger.warn("No YamlChangeSet found");
+    }
+    return false;
+  }
+
+  @Override
   public boolean updateStatus(String accountId, String changeSetId, Status newStatus) {
     YamlChangeSet yamlChangeSet = get(accountId, changeSetId);
     if (yamlChangeSet != null) {
