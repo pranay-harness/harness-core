@@ -161,7 +161,7 @@ public class AwsAmiServiceDeployState extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return StateTimeoutUtils.getAmiStateTimeoutFromContext(context);
+    return awsStateHelper.getAmiStateTimeoutFromContext(context);
   }
 
   protected Activity crateActivity(ExecutionContext context) {

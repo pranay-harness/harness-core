@@ -2,6 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.TMACARI;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -52,5 +54,16 @@ public class AwsAmiRollbackSwitchRoutesStateTest extends WingsBaseTest {
     doThrow(new RuntimeException("Error msg")).when(mockContext).getContextElement(any());
     state.execute(mockContext);
     assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> mockContext.getContextElement(any()));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAbortEvent() {
+    assertThat(state.isDownsizeOldAsg()).isEqualTo(false);
+    state.setDownsizeOldAsg(true);
+    assertThat(state.isDownsizeOldAsg()).isEqualTo(true);
+    state.setDownsizeOldAsg(false);
+    assertThat(state.isDownsizeOldAsg()).isEqualTo(false);
   }
 }

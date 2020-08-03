@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
@@ -66,16 +65,12 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.Key;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiDeployStateExecutionData;
@@ -131,9 +126,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({StateTimeoutUtils.class})
-@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private AwsHelperService mockAwsHelperService;
   @Mock private SettingsService mockSettingsService;
@@ -470,8 +462,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    mockStatic(StateTimeoutUtils.class);
-    when(StateTimeoutUtils.getAmiStateTimeoutFromContext(any())).thenReturn(10);
+    doReturn(10).when(mockAwsStateHelper).getAmiStateTimeoutFromContext(any());
     assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }
