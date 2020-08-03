@@ -428,7 +428,9 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.beans.template.CopiedTemplateMetadata;
 import software.wings.beans.template.ImportedTemplate;
+import software.wings.beans.template.ImportedTemplateMetadata;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
@@ -1601,6 +1603,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("yaml.errorhandling.HarnessToGitErrorDetails", HarnessToGitErrorDetails.class);
     w.put("yaml.gitSync.GitFileProcessingSummary", GitFileProcessingSummary.class);
     w.put("yaml.gitSync.GitSyncMetadata", GitSyncMetadata.class);
+    w.put("beans.template.ImportedTemplateMetadata", ImportedTemplateMetadata.class);
+    w.put("beans.template.CopiedTemplateMetadata", CopiedTemplateMetadata.class);
     w.put(cf + "response.CloudFormationCommandExecutionResponse", CloudFormationCommandExecutionResponse.class);
     w.put(cf + "response.CloudFormationCreateStackResponse", CloudFormationCreateStackResponse.class);
 
