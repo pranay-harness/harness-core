@@ -85,7 +85,7 @@ public class ArtifactForkStep implements Step, ChildrenExecutable<ForkStepParame
   ArtifactsOutcome createArtifactsOutcome(List<StepResponseNotifyData> responseNotifyDataList) {
     // Fetch all outcomes of the children.
     List<String> outcomeInstanceIds = responseNotifyDataList.stream()
-                                          .flatMap(notifyData -> notifyData.getStepOutcomesRefs().stream())
+                                          .flatMap(notifyData -> notifyData.getStepOutcomeRefs().stream())
                                           .map(StepOutcomeRef::getInstanceId)
                                           .collect(toList());
     List<Outcome> outcomes = outcomeService.fetchOutcomes(outcomeInstanceIds);

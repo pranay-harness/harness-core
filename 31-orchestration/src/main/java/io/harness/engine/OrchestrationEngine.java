@@ -298,7 +298,7 @@ public class OrchestrationEngine {
       PlanNode planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
                                                 .nodeUuid(planNode.getUuid())
-                                                .stepOutcomesRefs(outcomeRefs)
+                                                .stepOutcomeRefs(outcomeRefs)
                                                 .failureInfo(failureInfo)
                                                 .identifier(planNode.getIdentifier())
                                                 .group(planNode.getGroup())
