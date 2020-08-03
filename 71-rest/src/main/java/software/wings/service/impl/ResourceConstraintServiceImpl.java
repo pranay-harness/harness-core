@@ -183,7 +183,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   public Set<String> updateActiveConstraints(String appId, String workflowExecutionId) {
     final Query<ResourceConstraintInstance> query =
         wingsPersistence.createQuery(ResourceConstraintInstance.class, appId == null ? excludeAuthority : allChecks)
-            .filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name());
+            .field(ResourceConstraintInstanceKeys.state)
+            .in(asList(State.ACTIVE.name(), State.BLOCKED.name()));
 
     if (appId != null) {
       query.filter(ResourceConstraintInstanceKeys.appId, appId);
@@ -521,7 +522,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
             .filter(ResourceConstraintInstanceKeys.appId, context.get(ResourceConstraintInstanceKeys.appId))
             .filter(ResourceConstraintInstanceKeys.uuid, consumerId.getValue())
             .filter(ResourceConstraintInstanceKeys.resourceUnit, unit.getValue())
-            .filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name());
+            .field(ResourceConstraintInstanceKeys.state)
+            .in(asList(State.BLOCKED.name(), State.ACTIVE.name()));
 
     final UpdateOperations<ResourceConstraintInstance> ops =
         wingsPersistence.createUpdateOperations(ResourceConstraintInstance.class)
