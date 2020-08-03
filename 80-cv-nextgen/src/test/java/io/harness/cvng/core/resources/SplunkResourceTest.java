@@ -78,8 +78,7 @@ public class SplunkResourceTest extends CVNextGenBaseTest {
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);
     List<ValidationError> validationError = response.readEntity(new GenericType<List<ValidationError>>() {});
-    // TODO: will fix this in another PR. The exception mapper is not working correctly
-    assertThat(validationError.get(0).getField()).isEqualTo("arg2");
+    assertThat(validationError.get(0).getField()).isEqualTo("query");
     assertThat(validationError.get(0).getMessage()).isEqualTo("may not be null");
   }
 }
