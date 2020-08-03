@@ -9,12 +9,16 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.beans.InfrastructureMapping;
@@ -28,7 +32,9 @@ import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Singleton
 public class AwsStateHelper {
   public static final String HOST = "host";
@@ -113,5 +119,20 @@ public class AwsStateHelper {
                             .build())
                    .build())
         .collect(toList());
+  }
+
+  public Integer getAmiStateTimeoutFromContext(ExecutionContext context) {
+    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    if (serviceSetupElement == null || serviceSetupElement.getAutoScalingSteadyStateTimeout() == null
+        || Integer.valueOf(0).equals(serviceSetupElement.getAutoScalingSteadyStateTimeout())) {
+      return null;
+    }
+    try {
+      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()));
+    } catch (Exception e) {
+      logger.warn("Could not convert {} minutes to millis, falling back to default timeout",
+          serviceSetupElement.getAutoScalingSteadyStateTimeout());
+      return null;
+    }
   }
 }

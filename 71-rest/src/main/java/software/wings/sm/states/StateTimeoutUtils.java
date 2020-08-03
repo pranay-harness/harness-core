@@ -4,7 +4,6 @@ import com.google.common.primitives.Ints;
 
 import io.harness.context.ContextElementType;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.EcsSetupElement;
 import software.wings.sm.ExecutionContext;
 
@@ -21,14 +20,5 @@ public class StateTimeoutUtils {
       return null;
     }
     return Ints.checkedCast(TimeUnit.MINUTES.toMillis(ecsSetupElement.getServiceSteadyStateTimeout()));
-  }
-
-  public static Integer getAmiStateTimeoutFromContext(ExecutionContext context) {
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    if (serviceSetupElement == null || serviceSetupElement.getAutoScalingSteadyStateTimeout() == null
-        || serviceSetupElement.getAutoScalingSteadyStateTimeout().equals(0)) {
-      return null;
-    }
-    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()));
   }
 }

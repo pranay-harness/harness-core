@@ -11,35 +11,10 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.EcsSetupElement;
 import software.wings.sm.ExecutionContextImpl;
 
 public class StateTimeoutUtilsTest extends WingsBaseTest {
-  @Test
-  @Owner(developers = TMACARI)
-  @Category(UnitTests.class)
-  public void testGetAmiStateTimeoutFromContext() {
-    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    doReturn(null).when(mockContext).getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    assertThat(StateTimeoutUtils.getAmiStateTimeoutFromContext(mockContext)).isEqualTo(null);
-
-    doReturn(AmiServiceSetupElement.builder().autoScalingSteadyStateTimeout(10).build())
-        .when(mockContext)
-        .getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    assertThat(StateTimeoutUtils.getAmiStateTimeoutFromContext(mockContext)).isEqualTo(600000);
-
-    doReturn(AmiServiceSetupElement.builder().autoScalingSteadyStateTimeout(0).build())
-        .when(mockContext)
-        .getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    assertThat(StateTimeoutUtils.getAmiStateTimeoutFromContext(mockContext)).isEqualTo(null);
-
-    doReturn(AmiServiceSetupElement.builder().autoScalingSteadyStateTimeout(null).build())
-        .when(mockContext)
-        .getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    assertThat(StateTimeoutUtils.getAmiStateTimeoutFromContext(mockContext)).isEqualTo(null);
-  }
-
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)

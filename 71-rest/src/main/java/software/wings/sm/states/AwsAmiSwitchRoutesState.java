@@ -68,6 +68,7 @@ public class AwsAmiSwitchRoutesState extends State {
   @Inject protected transient ActivityService activityService;
   @Inject protected transient SecretManager secretManager;
   @Inject protected transient DelegateService delegateService;
+  @Inject protected transient AwsStateHelper awsStateHelper;
 
   public AwsAmiSwitchRoutesState(String name) {
     super(name, StateType.AWS_AMI_SWITCH_ROUTES.name());
@@ -100,7 +101,7 @@ public class AwsAmiSwitchRoutesState extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return StateTimeoutUtils.getAmiStateTimeoutFromContext(context);
+    return awsStateHelper.getAmiStateTimeoutFromContext(context);
   }
 
   @Override

@@ -11,7 +11,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -27,18 +26,14 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.beans.Activity;
@@ -57,15 +52,13 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({StateTimeoutUtils.class})
-@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private ActivityService mockActivityService;
   @Mock private SecretManager mockSecretManager;
   @Mock private DelegateService mockDelegateService;
+  @Mock private AwsStateHelper mockAwsStateHelper;
 
   @InjectMocks private AwsAmiSwitchRoutesState state = new AwsAmiSwitchRoutesState("stateName");
 
@@ -128,6 +121,18 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteWhenNoServiceSetupElement() {
+    state.setDownsizeOldAsg(true);
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doReturn(null).when(mockContext).getContextElement(any());
+    ExecutionResponse response = state.execute(mockContext);
+    assertThat(response.getErrorMessage()).isEqualTo("Did not find Setup context element. Skipping rollback");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
@@ -141,8 +146,14 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    PowerMockito.mockStatic(StateTimeoutUtils.class);
-    when(StateTimeoutUtils.getAmiStateTimeoutFromContext(any())).thenReturn(10);
+    doReturn(10).when(mockAwsStateHelper).getAmiStateTimeoutFromContext(any());
     assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAbortEvent() {
+    state.handleAbortEvent(mock(ExecutionContextImpl.class));
   }
 }
