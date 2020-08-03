@@ -12,11 +12,11 @@ import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.cdng.NGModule;
+import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.ConnectorModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
-import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.govern.DependencyModule;
@@ -147,7 +147,7 @@ public class NextGenModule extends DependencyModule {
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.of(
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
                                             .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
                                             .build()),
         ExecutionPlanModule.getInstance());
