@@ -66,7 +66,7 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @Getter @Setter private LicenseInfo licenseInfo;
 
-  @Getter private CeLicenseInfo ceLicenseInfo;
+  @Getter @Setter private CeLicenseInfo ceLicenseInfo;
 
   private Set<AccountEvent> accountEvents;
 
@@ -110,6 +110,8 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long licenseExpiryCheckIteration;
   @FdIndex private Long gitSyncExpiryCheckIteration;
   @FdIndex private Long secretManagerValidationIterator;
+  @FdIndex private Long ceLicenseExpiryIteration;
+
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
 
@@ -382,6 +384,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.ceLicenseExpiryIteration.equals(fieldName)) {
+      this.ceLicenseExpiryIteration = nextIteration;
+      return;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -411,6 +418,10 @@ public class Account extends Base implements PersistentRegularIterable {
       return this.gitSyncExpiryCheckIteration;
     }
 
+    else if (AccountKeys.ceLicenseExpiryIteration.equals(fieldName)) {
+      return this.ceLicenseExpiryIteration;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -433,6 +444,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private DelegateConfiguration delegateConfiguration;
     private Map<String, String> defaults = new HashMap<>();
     private LicenseInfo licenseInfo;
+    private CeLicenseInfo ceLicenseInfo;
     private boolean emailSentToSales;
     private Set<String> whitelistedDomains;
     private long lastLicenseExpiryReminderSentAt;
@@ -522,6 +534,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withCeLicenseInfo(CeLicenseInfo ceLicenseInfo) {
+      this.ceLicenseInfo = ceLicenseInfo;
+      return this;
+    }
+
     public Builder withEmailSentToSales(boolean emailSentToSales) {
       this.emailSentToSales = emailSentToSales;
       return this;
@@ -568,6 +585,7 @@ public class Account extends Base implements PersistentRegularIterable {
           .withDelegateConfiguration(delegateConfiguration)
           .withDefaults(defaults)
           .withLicenseInfo(licenseInfo)
+          .withCeLicenseInfo(ceLicenseInfo)
           .withEmailSentToSales(emailSentToSales)
           .withWhitelistedDomains(whitelistedDomains)
           .withLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt)
@@ -591,6 +609,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setDelegateConfiguration(delegateConfiguration);
       account.setDefaults(defaults);
       account.setLicenseInfo(licenseInfo);
+      account.setCeLicenseInfo(ceLicenseInfo);
       account.setEmailSentToSales(emailSentToSales);
       account.setWhitelistedDomains(whitelistedDomains);
       account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
@@ -628,5 +647,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
     public static final String subdomainUrl = "subdomainUrl";
     public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
+    public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
+    public static final String ceLicenseInfo = "ceLicenseInfo";
   }
 }

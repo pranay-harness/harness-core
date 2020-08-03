@@ -56,6 +56,7 @@ import io.harness.ccm.KubernetesClusterHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.license.CeLicenseExpiryHandler;
 import io.harness.commandlibrary.client.CommandLibraryServiceClientModule;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
@@ -818,6 +819,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
     injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
+    injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {
