@@ -41,6 +41,7 @@ import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapa
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
+import io.harness.delegate.beans.git.EntityScope;
 import io.harness.delegate.beans.git.GitCommand;
 import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -48,6 +49,12 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandRequest;
 import io.harness.delegate.beans.git.GitCommandResult;
+import io.harness.delegate.beans.git.GitCommitAndPushRequest;
+import io.harness.delegate.beans.git.GitCommitAndPushResult;
+import io.harness.delegate.beans.git.GitCommitResult;
+import io.harness.delegate.beans.git.GitFileChange;
+import io.harness.delegate.beans.git.GitPushResult;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.ArtifactServerException;
@@ -195,5 +202,16 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureVMSSTaskExecutionResponse.class, 19084);
     kryo.register(AzureVMSSTaskResponse.class, 19085);
     kryo.register(AzureVMSSTaskType.class, 19086);
+    kryo.register(YamlGitConfigDTO.class, 19087);
+    kryo.register(GitFileChange.class, 19088);
+    kryo.register(GitCommitAndPushRequest.class, 19089);
+    kryo.register(GitCommitAndPushResult.class, 19090);
+    kryo.register(EntityScope.class, 19091);
+    kryo.register(GitPushResult.class, 19092);
+    kryo.register(GitCommitResult.class, 19093);
+    kryo.register(GitFileChange.ChangeType.class, 19094);
+    kryo.register(YamlGitConfigDTO.RootFolder.class, 19095);
+    kryo.register(EntityScope.Scope.class, 19096);
+    kryo.register(GitPushResult.RefUpdate.class, 19097);
   }
 }

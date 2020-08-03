@@ -19,6 +19,8 @@ import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
+import io.harness.delegate.beans.git.GitCommitAndPushRequest;
+import io.harness.delegate.beans.git.GitCommitAndPushResult;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,6 +81,23 @@ public class NGGitCommandTaskTest extends WingsBaseTest {
                                 .gitCommandType(GitCommandType.VALIDATE)
                                 .build();
     doReturn(null).when(gitClient).validate(any());
+    doReturn(null).when(encryptionService).decrypt(any());
+    ResponseData response = ngGitCommandValidationTask.run(task);
+    assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);
+    assertThat(((GitCommandExecutionResponse) response).getGitCommandStatus()).isEqualTo(GitCommandStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testHandleCommitAndPush() {
+    GitCommandParams task = GitCommandParams.builder()
+                                .gitConfig(gitConfig)
+                                .encryptionDetails(Collections.emptyList())
+                                .gitCommandRequest(GitCommitAndPushRequest.builder().build())
+                                .gitCommandType(GitCommandType.COMMIT_AND_PUSH)
+                                .build();
+    doReturn(GitCommitAndPushResult.builder().build()).when(gitClient).commitAndPush(any(), any(), any(), any());
     doReturn(null).when(encryptionService).decrypt(any());
     ResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);

@@ -15,4 +15,5 @@ public class GitCommandParams implements TaskParameters {
   GitConfigDTO gitConfig;
   GitCommandType gitCommandType;
   List<EncryptedDataDetail> encryptionDetails;
+  GitCommandRequest gitCommandRequest;
 }
