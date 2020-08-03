@@ -35,6 +35,7 @@ public class ProjectMapper {
         .color(project.getColor())
         .tags(project.getTags())
         .modules(project.getModules())
+        .lastModifiedAt(project.getLastModifiedAt())
         .build();
   }
 

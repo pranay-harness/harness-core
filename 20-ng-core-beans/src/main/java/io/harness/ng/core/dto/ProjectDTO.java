@@ -25,4 +25,5 @@ public class ProjectDTO {
   String description;
   List<String> owners;
   List<String> tags;
+  Long lastModifiedAt;
 }
