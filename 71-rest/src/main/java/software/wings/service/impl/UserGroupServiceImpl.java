@@ -412,6 +412,11 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updateMembers(UserGroup userGroup, boolean sendNotification, boolean toBeAudited) {
+    if (userGroup.getMembers() != null) {
+      logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
+          userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
+          userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
+    }
     Set<String> newMemberIds = Sets.newHashSet();
     if (isNotEmpty(userGroup.getMembers())) {
       newMemberIds = userGroup.getMembers()
@@ -420,9 +425,13 @@ public class UserGroupServiceImpl implements UserGroupService {
                          .map(User::getUuid)
                          .collect(Collectors.toSet());
     }
+
+    logger.info("New members of userGroup={} in account={} are: {}", userGroup.getName(), userGroup.getAccountId(),
+        newMemberIds.toString());
+
     UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
 
-    if (UserGroupUtils.isAdminUserGroup(existingUserGroup) && newMemberIds.size() < 1) {
+    if (UserGroupUtils.isAdminUserGroup(existingUserGroup) && newMemberIds.isEmpty()) {
       throw new WingsException(
           ErrorCode.UPDATE_NOT_ALLOWED, "Account Administrator user group must have at least one user");
     }
@@ -431,21 +440,42 @@ public class UserGroupServiceImpl implements UserGroupService {
         ? Sets.newHashSet()
         : Sets.newHashSet(existingUserGroup.getMemberIds());
 
+    if (existingUserGroup.getMembers() != null) {
+      logger.info("Existing members of userGroup={} in account={} are: {} and their emails are: {}",
+          existingUserGroup.getName(), existingUserGroup.getAccountId(), existingMemberIds.toString(),
+          existingUserGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
+    }
+
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.memberIds, newMemberIds);
     UserGroup updatedUserGroup = update(userGroup, operations);
 
+    Set<String> updatedMemberIds =
+        isEmpty(updatedUserGroup.getMemberIds()) ? Sets.newHashSet() : Sets.newHashSet(updatedUserGroup.getMemberIds());
+
+    if (updatedUserGroup.getMembers() != null) {
+      logger.info("Updated userGroup={} in account={}. Member Ids={}, Member Emails={}", updatedUserGroup.getName(),
+          updatedUserGroup.getAccountId(), updatedMemberIds.toString(),
+          updatedUserGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
+    }
+
     // auditing addition/removal of users in/from user group
     if (toBeAudited) {
       Set<String> memberIdsToBeAdded = Sets.difference(newMemberIds, existingMemberIds);
-      Set<String> memberIdsTOBeRemoved = Sets.difference(existingMemberIds, newMemberIds);
+      Set<String> memberIdsToBeRemoved = Sets.difference(existingMemberIds, newMemberIds);
+
+      logger.info("Update userGroup={} in account={}. Members to be added={}", updatedUserGroup.getName(),
+          updatedUserGroup.getAccountId(), memberIdsToBeAdded);
+      logger.info("Update userGroup={} in account={}. Members to be removed={}", updatedUserGroup.getName(),
+          updatedUserGroup.getAccountId(), memberIdsToBeRemoved);
+
       auditServiceHelper.reportForAuditingUsingAccountId(
           userGroup.getAccountId(), userGroup, updatedUserGroup, Type.UPDATE);
       memberIdsToBeAdded.forEach(userId -> {
         User user = userService.get(userId);
         auditServiceHelper.reportForAuditingUsingAccountId(userGroup.getAccountId(), null, user, Type.ADD);
       });
-      memberIdsTOBeRemoved.forEach(userId -> {
+      memberIdsToBeRemoved.forEach(userId -> {
         User user = userService.get(userId);
         auditServiceHelper.reportForAuditingUsingAccountId(userGroup.getAccountId(), null, user, Type.REMOVE);
       });
@@ -462,7 +492,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (sendNotification) {
       // Send added role email for all newly added users to the group
-      Set newlyAddedMemberIds = Sets.difference(newMemberIds, existingMemberIds);
+      Set<String> newlyAddedMemberIds = Sets.difference(newMemberIds, existingMemberIds);
       Account account = accountService.get(updatedUserGroup.getAccountId());
       updatedUserGroup.getMembers().forEach(member -> {
         if (newlyAddedMemberIds.contains(member.getUuid())) {
