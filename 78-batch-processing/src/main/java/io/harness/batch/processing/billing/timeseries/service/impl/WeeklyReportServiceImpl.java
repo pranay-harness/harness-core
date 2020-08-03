@@ -39,7 +39,7 @@ import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CESlackWebhook;
-import io.harness.ccm.communication.entities.CommunicationSource;
+import io.harness.ccm.communication.entities.CommunicationMedium;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rest.RestResponse;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -131,7 +131,7 @@ public class WeeklyReportServiceImpl {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String OVERVIEW_URL = "/account/%s/continuous-efficiency/overview";
 
-  public static final String COMMUNICATION_SOURCE = "COMMUNICATION_SOURCE";
+  public static final String COMMUNICATION_MEDIUM = "utm_medium";
 
   public void generateAndSendWeeklyReport() {
     List<Account> ceEnabledAccounts = accountShardService.getCeEnabledAccounts();
@@ -282,7 +282,8 @@ public class WeeklyReportServiceImpl {
         return;
       }
 
-      costValues.put(COMMUNICATION_SOURCE, CommunicationSource.EMAIL.getName());
+      costValues.put(COMMUNICATION_MEDIUM, CommunicationMedium.EMAIL.getName());
+
       templateHelper.populateCostDataForTemplate(templateModel, costValues);
 
       templateModel.put("DATE", reportDateRange);
