@@ -20,6 +20,7 @@ import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.ccm.license.CeLicenseType;
 import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
@@ -1764,5 +1765,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(WaitStepParameters.class, 7463);
     kryo.register(GcbArtifactObjects.class, 7464);
     kryo.register(CeLicenseInfo.class, 7465);
+    kryo.register(CeLicenseType.class, 7466);
   }
 }
