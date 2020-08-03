@@ -115,6 +115,11 @@ public class GitCommandCallback implements NotifyCallback {
         GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
 
         if (gitCommandExecutionResponse.getGitCommandStatus() == GitCommandStatus.FAILURE) {
+          if (gitCommandType == COMMIT_AND_PUSH
+              && gitCommandExecutionResponse.getErrorCode() == ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT) {
+            handleCommitAndPushFailureWhenUnseenHead(accountId, changeSetId);
+            return;
+          }
           if (changeSetId != null) {
             logger.warn("Git Command failed [{}]", gitCommandExecutionResponse.getErrorMessage());
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
@@ -187,6 +192,13 @@ public class GitCommandCallback implements NotifyCallback {
         logger.warn("Unexpected notify response data: [{}]", notifyResponseData);
         updateChangeSetFailureStatusSafely();
       }
+    }
+  }
+
+  private void handleCommitAndPushFailureWhenUnseenHead(String accountId, String changeSetId) {
+    logger.info("Remote head commit did not match local head commit. Requeuing changeset [{}] again.", changeSetId);
+    if (changeSetId != null) {
+      yamlChangeSetService.updateStatusAndIncrementPushCount(accountId, changeSetId, Status.QUEUED);
     }
   }
 

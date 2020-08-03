@@ -61,6 +61,7 @@ import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -381,6 +382,8 @@ public class GitClientImpl implements GitClient {
   public synchronized GitCommitResult commit(GitOperationContext gitOperationContext) {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
     GitCommitRequest gitCommitRequest = gitOperationContext.getGitCommitRequest();
+    boolean pushOnlyIfHeadSeen = gitCommitRequest.isPushOnlyIfHeadSeen();
+    String lastProcessedCommit = gitCommitRequest.getLastProcessedGitCommit();
 
     List<String> filesToAdd = new ArrayList<>();
 
@@ -401,6 +404,8 @@ public class GitClientImpl implements GitClient {
             gitCommitRequest);
         return GitCommitResult.builder().build(); // do nothing
       }
+
+      ensureLastProcessedCommitIsHead(pushOnlyIfHeadSeen, lastProcessedCommit, git);
 
       StringBuilder commitMessage = prepareCommitMessage(gitConfig, status);
       String authorName = isNotBlank(gitConfig.getAuthorName()) ? gitConfig.getAuthorName() : HARNESS_IO_KEY_;
@@ -423,6 +428,29 @@ public class GitClientImpl implements GitClient {
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       throw new YamlException("Error in writing commit", ADMIN_SRE);
+    }
+  }
+
+  @VisibleForTesting
+  void ensureLastProcessedCommitIsHead(boolean pushOnlyIfHeadSeen, String lastProcessedCommit, Git git) {
+    if (!pushOnlyIfHeadSeen || isEmpty(lastProcessedCommit)) {
+      return;
+    }
+    String headCommit = getHeadCommit(git);
+    if (!lastProcessedCommit.equals(headCommit)) {
+      throw new YamlException(String.format("Git commit failed. Encountered unseen commit [%s] expected [%s]",
+                                  headCommit, lastProcessedCommit),
+          ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT, ADMIN_SRE);
+    }
+  }
+
+  @VisibleForTesting
+  String getHeadCommit(Git git) {
+    try {
+      ObjectId id = git.getRepository().resolve(Constants.HEAD);
+      return id.getName();
+    } catch (Exception ex) {
+      throw new YamlException("Error in getting the head commit to the git", ex, USER_ADMIN);
     }
   }
 

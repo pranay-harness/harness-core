@@ -440,7 +440,9 @@ public enum ErrorCode {
 
   SHELL_EXECUTION_EXCEPTION,
 
-  TEMPLATE_NOT_FOUND;
+  TEMPLATE_NOT_FOUND,
+
+  GIT_UNSEEN_REMOTE_HEAD_COMMIT;
 
   private Status status = BAD_REQUEST;
   private String description;

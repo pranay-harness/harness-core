@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -282,5 +283,20 @@ public class GitCommandCallbackTest extends CategoryTest {
     List<GitFileChange> allFilesProcessed =
         commandCallback.getAllFilesSuccessFullyProccessed(fileChangesPartOfYamlChangeSet, filesCommited);
     assertThat(allFilesProcessed.size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testGitUnseenHead() {
+    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
+                                          .gitCommandStatus(GitCommandStatus.FAILURE)
+                                          .errorCode(ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT)
+                                          .build();
+
+    Map<String, ResponseData> map = new HashMap<>();
+    map.put("key", notifyResponseData);
+    commandCallback.notify(map);
+    verify(yamlChangeSetService, times(1)).updateStatusAndIncrementPushCount(any(), any(), any());
   }
 }
