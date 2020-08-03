@@ -27,6 +27,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationBuilder;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -34,6 +35,8 @@ import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.security.UserThreadLocal;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetcherTest {
@@ -92,53 +95,9 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldFetchRecommendation() throws Exception {
-    K8sWorkloadRecommendation recommendation = K8sWorkloadRecommendation.builder()
-                                                   .populated(true)
-                                                   .accountId(ACCOUNT1_ID)
-                                                   .clusterId(clusterId)
-                                                   .namespace("default")
-                                                   .workloadType("Deployment")
-                                                   .workloadName("my-nginx")
-                                                   .containerRecommendation("nginx",
-                                                       ContainerRecommendation.builder()
-                                                           .containerName("nginx")
-                                                           .current(ResourceRequirement.builder()
-                                                                        .request("cpu", "1")
-                                                                        .request("memory", "1Gi")
-                                                                        .limit("cpu", "1")
-                                                                        .limit("memory", "1Gi")
-                                                                        .build())
-                                                           .burstable(ResourceRequirement.builder()
-                                                                          .request("cpu", "50m")
-                                                                          .request("memory", "10Mi")
-                                                                          .limit("cpu", "200m")
-                                                                          .limit("memory", "40Mi")
-                                                                          .build())
-                                                           .guaranteed(ResourceRequirement.builder()
-                                                                           .request("cpu", "200m")
-                                                                           .request("memory", "40Mi")
-                                                                           .limit("cpu", "200m")
-                                                                           .limit("memory", "40Mi")
-                                                                           .build())
-                                                           .numDays(7)
-                                                           .build())
-                                                   .estimatedSavings(BigDecimal.valueOf(100.0))
-                                                   .build();
+    K8sWorkloadRecommendation recommendation = getK8sWorkloadRecommendationBuilder().build();
     hPersistence.save(recommendation);
-    List<QLK8sWorkloadFilter> filters = ImmutableList.of(
-        QLK8sWorkloadFilter.builder()
-            .cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {clusterId}).build())
-            .build(),
-        QLK8sWorkloadFilter.builder()
-            .namespace(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"default"}).build())
-            .build(),
-        QLK8sWorkloadFilter.builder()
-            .workloadName(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"my-nginx"}).build())
-            .build(),
-        QLK8sWorkloadFilter.builder()
-            .workloadType(
-                QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"Deployment"}).build())
-            .build());
+    List<QLK8sWorkloadFilter> filters = getFilters();
     QLK8SWorkloadRecommendationConnection qlk8SWorkloadRecommendationConnection =
         k8sWorkloadRecommendationsDataFetcher.fetchConnection(filters, DUMMY_PAGE_QUERY_PARAMS, null);
     List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
@@ -193,5 +152,125 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                        .estimatedSavings(BigDecimal.valueOf(100.0))
                        .numDays(7)
                        .build());
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldHideRecommendationIfNoRecentUtilData() throws Exception {
+    K8sWorkloadRecommendation recommendation =
+        getK8sWorkloadRecommendationBuilder().lastReceivedUtilDataAt(Instant.now().minus(Duration.ofDays(3))).build();
+    hPersistence.save(recommendation);
+    List<QLK8sWorkloadFilter> filters = getFilters();
+    QLK8SWorkloadRecommendationConnection qlk8SWorkloadRecommendationConnection =
+        k8sWorkloadRecommendationsDataFetcher.fetchConnection(filters, DUMMY_PAGE_QUERY_PARAMS, null);
+    List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
+    assertThat(nodes).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldHideRecommendationIfNoLastDayCostAvailable() throws Exception {
+    K8sWorkloadRecommendation recommendation =
+        getK8sWorkloadRecommendationBuilder().lastDayCostAvailable(false).build();
+    hPersistence.save(recommendation);
+    List<QLK8sWorkloadFilter> filters = getFilters();
+    QLK8SWorkloadRecommendationConnection qlk8SWorkloadRecommendationConnection =
+        k8sWorkloadRecommendationsDataFetcher.fetchConnection(filters, DUMMY_PAGE_QUERY_PARAMS, null);
+    List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
+    assertThat(nodes).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldHideEmptyRecommendation() throws Exception {
+    K8sWorkloadRecommendation recommendation = getK8sWorkloadRecommendationBuilder()
+                                                   .containerRecommendation("nginx",
+                                                       ContainerRecommendation.builder()
+                                                           .containerName("nginx")
+                                                           .current(ResourceRequirement.builder()
+                                                                        .request("cpu", "1")
+                                                                        .request("memory", "1Gi")
+                                                                        .limit("cpu", "1")
+                                                                        .limit("memory", "1Gi")
+                                                                        .build())
+                                                           .numDays(7)
+                                                           .build())
+                                                   .build();
+
+    hPersistence.save(recommendation);
+    List<QLK8sWorkloadFilter> filters = getFilters();
+    QLK8SWorkloadRecommendationConnection qlk8SWorkloadRecommendationConnection =
+        k8sWorkloadRecommendationsDataFetcher.fetchConnection(filters, DUMMY_PAGE_QUERY_PARAMS, null);
+    List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
+    assertThat(nodes).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldHideRecomendationIfAnyContainerHasLessThan24hUtilData() throws Exception {
+    K8sWorkloadRecommendation recommendation = getK8sWorkloadRecommendationBuilder().numDays(0).build();
+    hPersistence.save(recommendation);
+    List<QLK8sWorkloadFilter> filters = getFilters();
+    QLK8SWorkloadRecommendationConnection qlk8SWorkloadRecommendationConnection =
+        k8sWorkloadRecommendationsDataFetcher.fetchConnection(filters, DUMMY_PAGE_QUERY_PARAMS, null);
+    List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
+    assertThat(nodes).isEmpty();
+  }
+
+  private K8sWorkloadRecommendationBuilder getK8sWorkloadRecommendationBuilder() {
+    return K8sWorkloadRecommendation.builder()
+        .accountId(ACCOUNT1_ID)
+        .clusterId(clusterId)
+        .namespace("default")
+        .workloadType("Deployment")
+        .workloadName("my-nginx")
+        .lastReceivedUtilDataAt(Instant.now().minus(Duration.ofHours(12)))
+        .lastDayCostAvailable(true)
+        .containerRecommendation("nginx",
+            ContainerRecommendation.builder()
+                .containerName("nginx")
+                .current(ResourceRequirement.builder()
+                             .request("cpu", "1")
+                             .request("memory", "1Gi")
+                             .limit("cpu", "1")
+                             .limit("memory", "1Gi")
+                             .build())
+                .burstable(ResourceRequirement.builder()
+                               .request("cpu", "50m")
+                               .request("memory", "10Mi")
+                               .limit("cpu", "200m")
+                               .limit("memory", "40Mi")
+                               .build())
+                .guaranteed(ResourceRequirement.builder()
+                                .request("cpu", "200m")
+                                .request("memory", "40Mi")
+                                .limit("cpu", "200m")
+                                .limit("memory", "40Mi")
+                                .build())
+                .numDays(7)
+                .build())
+        .numDays(7)
+        .estimatedSavings(BigDecimal.valueOf(100.0));
+  }
+
+  private ImmutableList<QLK8sWorkloadFilter> getFilters() {
+    return ImmutableList.of(
+        QLK8sWorkloadFilter.builder()
+            .cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {clusterId}).build())
+            .build(),
+        QLK8sWorkloadFilter.builder()
+            .namespace(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"default"}).build())
+            .build(),
+        QLK8sWorkloadFilter.builder()
+            .workloadName(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"my-nginx"}).build())
+            .build(),
+        QLK8sWorkloadFilter.builder()
+            .workloadType(
+                QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"Deployment"}).build())
+            .build());
   }
 }

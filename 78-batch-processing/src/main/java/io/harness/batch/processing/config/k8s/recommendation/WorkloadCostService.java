@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -17,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Service
@@ -39,11 +41,17 @@ public class WorkloadCostService {
     BigDecimal memory;
   }
 
+  private boolean isTruncatedToDay(Instant instant) {
+    return instant.truncatedTo(ChronoUnit.DAYS).equals(instant);
+  }
+
   /**
-   * Get actual cost incurred by this workload, in a given period (trucated to days)
+   * Get actual cost incurred by this workload, in a given period (truncated to days)
    */
   public Cost getActualCost(ResourceId workloadId, Instant begin, Instant end) {
     checkState(timeScaleDBService.isValid());
+    checkArgument(isTruncatedToDay(begin));
+    checkArgument(isTruncatedToDay(end));
     for (int retryCount = 0; retryCount < 5; retryCount++) {
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = connection.prepareStatement(WORKLOAD_COST_QUERY)) {

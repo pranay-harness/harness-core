@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.annotation.StoreIn;
 import io.harness.data.structure.MongoMapSanitizer;
 import io.harness.mongo.index.CdUniqueIndex;
@@ -59,52 +61,80 @@ public class K8sWorkloadRecommendation
 
   @EqualsAndHashCode.Exclude @FdTtlIndex Instant ttl;
 
-  boolean populated;
+  // Timestamp at which we last sampled util data for this workload
+  // max(lastSampleStart) across containerCheckpoints
+  Instant lastReceivedUtilDataAt;
+
+  // Timestamp at which we last computed recommendations for this workload
+  Instant lastComputedRecommendationAt;
+
+  // For intermediate stages in batch-processing
+  boolean dirty;
+
+  // Set to true if we have non-empty recommendations
+  boolean validRecommendation;
+
+  // To avoid showing recommendation if cost computation cannot be done due to lastDay's cost not being available
+  boolean lastDayCostAvailable;
+
+  // number of days of data (min across containers)
+  int numDays;
 
   @PostLoad
   public void postLoad() {
-    for (ContainerRecommendation cr : containerRecommendations.values()) {
-      if (cr.getCurrent() != null) {
-        cr.setCurrent(ResourceRequirement.builder()
-                          .requests(SANITIZER.decodeDotsInKey(cr.getCurrent().getRequests()))
-                          .limits(SANITIZER.decodeDotsInKey(cr.getCurrent().getLimits()))
-                          .build());
-      }
-      if (cr.getBurstable() != null) {
-        cr.setBurstable(ResourceRequirement.builder()
-                            .requests(SANITIZER.decodeDotsInKey(cr.getBurstable().getRequests()))
-                            .limits(SANITIZER.decodeDotsInKey(cr.getBurstable().getLimits()))
+    if (containerRecommendations != null) {
+      for (ContainerRecommendation cr : containerRecommendations.values()) {
+        if (cr.getCurrent() != null) {
+          cr.setCurrent(ResourceRequirement.builder()
+                            .requests(SANITIZER.decodeDotsInKey(cr.getCurrent().getRequests()))
+                            .limits(SANITIZER.decodeDotsInKey(cr.getCurrent().getLimits()))
                             .build());
-      }
-      if (cr.getGuaranteed() != null) {
-        cr.setGuaranteed(ResourceRequirement.builder()
-                             .requests(SANITIZER.decodeDotsInKey(cr.getGuaranteed().getRequests()))
-                             .limits(SANITIZER.decodeDotsInKey(cr.getGuaranteed().getLimits()))
-                             .build());
+        }
+        if (cr.getBurstable() != null) {
+          cr.setBurstable(ResourceRequirement.builder()
+                              .requests(SANITIZER.decodeDotsInKey(cr.getBurstable().getRequests()))
+                              .limits(SANITIZER.decodeDotsInKey(cr.getBurstable().getLimits()))
+                              .build());
+        }
+        if (cr.getGuaranteed() != null) {
+          cr.setGuaranteed(ResourceRequirement.builder()
+                               .requests(SANITIZER.decodeDotsInKey(cr.getGuaranteed().getRequests()))
+                               .limits(SANITIZER.decodeDotsInKey(cr.getGuaranteed().getLimits()))
+                               .build());
+        }
       }
     }
   }
 
   @PrePersist
   public void prePersist() {
-    for (ContainerRecommendation cr : containerRecommendations.values()) {
-      if (cr.getCurrent() != null) {
-        cr.setCurrent(ResourceRequirement.builder()
-                          .requests(SANITIZER.encodeDotsInKey(cr.getCurrent().getRequests()))
-                          .limits(SANITIZER.encodeDotsInKey(cr.getCurrent().getLimits()))
-                          .build());
-      }
-      if (cr.getBurstable() != null) {
-        cr.setBurstable(ResourceRequirement.builder()
-                            .requests(SANITIZER.encodeDotsInKey(cr.getBurstable().getRequests()))
-                            .limits(SANITIZER.encodeDotsInKey(cr.getBurstable().getLimits()))
+    // set validRecommendation to false in case empty recommendation
+    validRecommendation = false;
+    if (containerRecommendations != null) {
+      validRecommendation = true;
+      for (ContainerRecommendation cr : containerRecommendations.values()) {
+        if (!isEmpty(cr.getCurrent())) {
+          cr.setCurrent(ResourceRequirement.builder()
+                            .requests(SANITIZER.encodeDotsInKey(cr.getCurrent().getRequests()))
+                            .limits(SANITIZER.encodeDotsInKey(cr.getCurrent().getLimits()))
                             .build());
-      }
-      if (cr.getGuaranteed() != null) {
-        cr.setGuaranteed(ResourceRequirement.builder()
-                             .requests(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getRequests()))
-                             .limits(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getLimits()))
-                             .build());
+        }
+        if (isEmpty(cr.getBurstable())) {
+          validRecommendation = false;
+        } else {
+          cr.setBurstable(ResourceRequirement.builder()
+                              .requests(SANITIZER.encodeDotsInKey(cr.getBurstable().getRequests()))
+                              .limits(SANITIZER.encodeDotsInKey(cr.getBurstable().getLimits()))
+                              .build());
+        }
+        if (isEmpty(cr.getGuaranteed())) {
+          validRecommendation = false;
+        } else {
+          cr.setGuaranteed(ResourceRequirement.builder()
+                               .requests(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getRequests()))
+                               .limits(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getLimits()))
+                               .build());
+        }
       }
     }
   }
