@@ -2,13 +2,13 @@ package io.harness.ccm.communication.entities;
 
 import lombok.Getter;
 
-public enum CommunicationSource {
+public enum CommunicationMedium {
   EMAIL("email"),
   SLACK("slack");
 
   @Getter private final String name;
 
-  CommunicationSource(String name) {
+  CommunicationMedium(String name) {
     this.name = name;
   }
 }
