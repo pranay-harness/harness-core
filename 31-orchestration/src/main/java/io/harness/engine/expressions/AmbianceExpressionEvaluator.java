@@ -27,7 +27,6 @@ import io.harness.expression.RegexFunctor;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.HashMap;
@@ -50,14 +49,13 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 @Redesign
-@EqualsAndHashCode(callSuper = true)
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private OutcomeService outcomeService;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 
-  private final Ambiance ambiance;
+  protected final Ambiance ambiance;
   private final Set<NodeExecutionEntityType> entityTypes;
   private final boolean refObjectSpecific;
   private final Map<String, String> groupAliases;
