@@ -229,7 +229,12 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     for (Instance instance : instancesInDB) {
       ContainerInstanceKey key = instance.getContainerInstanceKey();
       String namespace = isNotBlank(key.getNamespace()) ? key.getNamespace() : "";
-      instancesInDBMap.put(key.getContainerId() + namespace, instance);
+      String instanceMapKey = key.getContainerId() + namespace;
+      if (!instancesInDBMap.containsKey(instanceMapKey)) {
+        instancesInDBMap.put(instanceMapKey, instance);
+      } else {
+        instancesInDBMap.put(instanceMapKey + instance.getUuid(), instance);
+      }
     }
 
     // Find the instances that were yet to be added to db
@@ -632,7 +637,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
                             .type(type)
                             .containerServiceName(containerSvcName)
                             .namespace(namespace)
-                            .releaseName(releaseName)
+                            .releaseName(isNotEmpty(releaseName) ? releaseName : null)
                             .build(),
             instance);
       } else {

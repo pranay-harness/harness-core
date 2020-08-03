@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.k8s.model.HarnessLabelValues.colorBlue;
 import static io.harness.k8s.model.HarnessLabelValues.colorGreen;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -1762,5 +1763,79 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
 
     verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_2_ID));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesAndDeleteAnomalicDupplicates() {
+    final List<Instance> instances = asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:1").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_1")
+                              .controllerName("controllerName:1")
+                              .podName("pod:1")
+                              .releaseName(null)
+                              .build())
+            .lastWorkflowExecutionId("1")
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_2_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:1").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_1")
+                              .controllerName("controllerName:1")
+                              .podName("pod:1")
+                              .releaseName("")
+                              .build())
+            .lastWorkflowExecutionId("2")
+            .build());
+
+    ContainerSyncResponse responseData = ContainerSyncResponse.builder()
+                                             .containerInfoList(asList(KubernetesContainerInfo.builder()
+                                                                           .controllerName("controllerName:1")
+                                                                           .podName("pod:1")
+                                                                           .namespace("default")
+                                                                           .serviceName("service_a_1")
+                                                                           .clusterName(KUBE_CLUSTER)
+                                                                           .build(),
+                                                 KubernetesContainerInfo.builder()
+                                                     .controllerName("controllerName:1")
+                                                     .podName("pod:2")
+                                                     .namespace("default")
+                                                     .serviceName("service_a_1")
+                                                     .clusterName(KUBE_CLUSTER)
+                                                     .build()))
+                                             .controllerName("controllerName:1")
+                                             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                             .build();
+    ContainerInfrastructureMapping infrastructureMapping;
+    infrastructureMapping = DirectKubernetesInfrastructureMapping.builder()
+                                .infraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
+                                .build();
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
+
+    verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_2_ID));
+    ArgumentCaptor<Instance> instanceToBeSaved = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(1)).save(instanceToBeSaved.capture());
+
+    Instance savedInstance = instanceToBeSaved.getValue();
+    assertThat(savedInstance.getInstanceInfo()).isNotNull();
+    assertThat(savedInstance.getInstanceInfo()).isInstanceOf(KubernetesContainerInfo.class);
+    KubernetesContainerInfo savedInstanceInfo = (KubernetesContainerInfo) savedInstance.getInstanceInfo();
+    assertThat(savedInstanceInfo.getControllerName()).isEqualTo("controllerName:1");
+    assertThat(savedInstanceInfo.getPodName()).isEqualTo("pod:2");
+    assertThat(savedInstanceInfo.getServiceName()).isEqualTo("service_a_1");
+    assertThat(savedInstanceInfo.getClusterName()).isEqualTo(KUBE_CLUSTER);
+    assertThat(savedInstanceInfo.getNamespace()).isEqualTo("default");
+    assertThat(savedInstanceInfo.getReleaseName()).isNull();
   }
 }
