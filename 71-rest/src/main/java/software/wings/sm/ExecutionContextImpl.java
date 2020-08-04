@@ -1179,10 +1179,19 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
     InfraMappingElementBuilder builder =
         InfraMappingElement.builder().name(name).infraId(infrastructureMapping.getUuid());
+
     populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
     populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
 
+    CloudProvider cloudProvider = findCloudProviderElement(infrastructureMapping);
+    builder.cloudProvider(cloudProvider);
     return builder.build();
+  }
+
+  private CloudProvider findCloudProviderElement(InfrastructureMapping infrastructureMapping) {
+    // upon rerunning the workflow the whole object is repopulated
+    String computeProviderName = infrastructureMapping.getComputeProviderName();
+    return CloudProvider.builder().name(computeProviderName).build();
   }
 
   @Override

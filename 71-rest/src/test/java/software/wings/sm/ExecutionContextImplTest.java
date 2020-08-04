@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -68,6 +69,8 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.InfraMappingElement;
+import software.wings.api.InfraMappingElement.CloudProvider;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -82,6 +85,7 @@ import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -93,12 +97,14 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingVariableTypes;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,6 +131,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   @Before
   public void setup() {
@@ -998,5 +1005,33 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     verify(sweepingOutputService, times(1))
         .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.WORKFLOW));
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void ensureCloudProviderParamInInfraMappingElement() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+    Reflect.on(context).set("featureFlagService", featureFlagService);
+    Reflect.on(context).set("serviceResourceService", serviceResourceService);
+    Reflect.on(context).set("infrastructureMappingService", infrastructureMappingService);
+
+    doReturn(PhaseElement.builder().build())
+        .when(context)
+        .getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+
+    doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
+
+    doReturn(GcpKubernetesInfrastructureMapping.builder()
+                 .computeProviderSettingId("gcp-id")
+                 .computeProviderName("gcp-name")
+                 .build())
+        .when(infrastructureMappingService)
+        .get(anyString(), anyString());
+
+    InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();
+    CloudProvider cloudProvider = infraMappingElement.getCloudProvider();
+    assertThat(cloudProvider.getName()).isEqualTo("gcp-name");
   }
 }

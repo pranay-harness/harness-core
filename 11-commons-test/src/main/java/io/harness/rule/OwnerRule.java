@@ -152,6 +152,8 @@ public class OwnerRule implements TestRule {
   public static final String HINGER = "abhinav.hinger";
   public static final String TATHAGAT = "tathagat.chaurasiya";
   public static final String TMACARI = "tudor.macari";
+  public static final String NAMAN = "naman.verma";
+
   @Deprecated public static final String UNKNOWN = "unknown";
 
   private static DevInfoBuilder defaultDevInfo(String user) {
@@ -259,6 +261,7 @@ public class OwnerRule implements TestRule {
           .put(HINGER, defaultDevInfo(HINGER).slack("U015DTMV2A2").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .put(TMACARI, defaultDevInfo(TMACARI).slack("U0172NX6SGY").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(NAMAN, defaultDevInfo(NAMAN).slack("U0173M823CN").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));
