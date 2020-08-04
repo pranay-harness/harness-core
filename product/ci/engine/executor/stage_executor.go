@@ -25,7 +25,7 @@ type StageExecutor interface {
 }
 
 // NewStageExecutor creates a stage executor
-func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts []uint,
+func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts []uint, debug bool,
 	log *zap.SugaredLogger) StageExecutor {
 	unitExecutor := NewUnitExecutor(stepLogPath, tmpFilePath, log)
 	parallelExecutor := NewParallelExecutor(stepLogPath, tmpFilePath, workerPorts, log)
@@ -34,6 +34,7 @@ func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts
 		stepLogPath:      stepLogPath,
 		tmpFilePath:      tmpFilePath,
 		workerPorts:      workerPorts,
+		debug:            debug,
 		unitExecutor:     unitExecutor,
 		parallelExecutor: parallelExecutor,
 		log:              log,
@@ -46,6 +47,7 @@ type stageExecutor struct {
 	tmpFilePath      string // File path to store generated temporary files
 	encodedStage     string // Stage in base64 encoded format
 	workerPorts      []uint // GRPC server ports for worker lite-engines that are used for parallel steps
+	debug            bool   //If true, enables debug mode for checking run step logs by not exitting CI-addon
 	unitExecutor     UnitExecutor
 	parallelExecutor ParallelExecutor
 }
@@ -53,7 +55,10 @@ type stageExecutor struct {
 // Executes steps in a stage
 func (e *stageExecutor) Run() error {
 	ctx := context.Background()
-	defer e.stopAddonServer(ctx)
+	if e.debug == false {
+		defer e.stopAddonServer(ctx)
+	}
+
 	for _, port := range e.workerPorts {
 		defer e.stopWorkerLiteEngine(ctx, port)
 	}
@@ -133,8 +138,8 @@ func (e *stageExecutor) decodeStage(encodedStage string) (*pb.Execution, error) 
 }
 
 // ExecuteStage executes a stage of the pipeline
-func ExecuteStage(input, logpath, tmpFilePath string, workerPorts []uint, log *zap.SugaredLogger) {
-	executor := NewStageExecutor(input, logpath, tmpFilePath, workerPorts, log)
+func ExecuteStage(input, logpath, tmpFilePath string, workerPorts []uint, debug bool, log *zap.SugaredLogger) {
+	executor := NewStageExecutor(input, logpath, tmpFilePath, workerPorts, debug, log)
 	if err := executor.Run(); err != nil {
 		log.Fatalw(
 			"error while executing steps in a stage",
