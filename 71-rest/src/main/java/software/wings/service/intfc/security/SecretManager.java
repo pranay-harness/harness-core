@@ -132,6 +132,9 @@ public interface SecretManager extends OwnedByAccount {
 
   boolean deleteSecretUsingUuid(String uuId);
 
+  String saveFile(String accountId, String kmsId, String name, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream, boolean scopedToAccount, boolean hiddenFromListing);
+
   String saveFile(String accountId, String kmsId, String name, long fileSize, UsageRestrictions usageRestrictions,
       BoundedInputStream inputStream, boolean scopedToAccount);
 
@@ -151,6 +154,10 @@ public interface SecretManager extends OwnedByAccount {
   boolean deleteFile(String accountId, String uuId);
 
   boolean deleteFile(String accountId, String uuId, Map<String, String> runtimeParameters);
+
+  PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
+      String appIdFromRequest, String envIdFromRequest, boolean details, boolean listHidden)
+      throws IllegalAccessException;
 
   PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException;

@@ -213,6 +213,12 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public String saveFile(String accountId, String kmsId, String name, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream, boolean scopedToAccount, boolean hiddenFromListing) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public String saveFile(String accountId, String kmsId, String name, long fileSize,
       UsageRestrictions usageRestrictions, BoundedInputStream inputStream, boolean scopedToAccount) {
     throw new UnsupportedOperationException();
@@ -255,6 +261,13 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public boolean deleteFile(String accountId, String uuId, Map<String, String> runtimeParameters) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
+      String appIdFromRequest, String envIdFromRequest, boolean details, boolean listHidden)
+      throws IllegalAccessException {
     throw new UnsupportedOperationException();
   }
 

@@ -258,8 +258,8 @@ public abstract class TerraformProvisionState extends State {
 
     String planName = String.format(TF_NAME_PREFIX, context.getWorkflowExecutionId());
 
-    String terraformPlanSecretManagerId = secretManager.saveFile(context.getAccountId(), null, planName,
-        terraformPlan.length, null, new BoundedInputStream(new ByteArrayInputStream(terraformPlan)), true);
+    String terraformPlanSecretManagerId = secretManager.saveFile(context.getAccountId(), null, planName, null,
+        new BoundedInputStream(new ByteArrayInputStream(terraformPlan)), true, true);
 
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
