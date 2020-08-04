@@ -1,10 +1,10 @@
 # Filename: Dockerfile
-FROM alpine:3.11.6
+FROM alpine:3.12
 CMD ["/bin/sh"]
 
 # replace with  secure repositories
-RUN sed -i '1 c https://alpine.global.ssl.fastly.net/alpine/v3.11/main' /etc/apk/repositories
-RUN sed -i '2 c https://alpine.global.ssl.fastly.net/alpine/v3.11/community' /etc/apk/repositories
+RUN sed -i '1 c https://alpine.global.ssl.fastly.net/alpine/v3.12/main' /etc/apk/repositories
+RUN sed -i '2 c https://alpine.global.ssl.fastly.net/alpine/v3.12/community' /etc/apk/repositories
 
 #upgrade existing packages
 RUN apk upgrade --available && sync
@@ -19,9 +19,8 @@ RUN cp /usr/lib/jvm/java-1.8-openjdk/jre/lib/amd64/jli/libjli.so /lib/
 # install python3
 RUN apk add --no-cache python3
 
-#install pip and Upgrade
+#install pip
 RUN apk add --no-cache py-pip
-RUN pip3 install -U --no-cache-dir pip
 
 #install more packages like awscli & Kubectl
 RUN pip3 install --no-cache pyarmor 
@@ -33,3 +32,14 @@ RUN kubectl version --client
 
 #install few more Utilities
 RUN apk add --no-cache protobuf build-base shadow
+
+#upgrade outdated packages
+
+#pip upgrade: install package pip-uprade-outdated, upgrade packages and uninstall additional package
+RUN pip list --outdated
+RUN pip install pip-upgrade-outdated
+RUN pip_upgrade_outdated -3 -v
+RUN pip uninstall -y pip-upgrade-outdated
+
+#upgrade existing packages
+RUN apk upgrade --available && sync
