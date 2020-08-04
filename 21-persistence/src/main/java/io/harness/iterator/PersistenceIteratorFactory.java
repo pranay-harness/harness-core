@@ -1,5 +1,6 @@
 package io.harness.iterator;
 
+import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
@@ -57,9 +58,9 @@ public final class PersistenceIteratorFactory {
     private Duration interval;
   }
 
-  public <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator<T>
-  createPumpIteratorWithDedicatedThreadPool(
-      PumpExecutorOptions options, Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
+  private <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator<T>
+  createIteratorWithDedicatedThreadPool(PersistenceIterator.ProcessMode processMode, PumpExecutorOptions options,
+      Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
     if (!workersConfiguration.confirmWorkerIsActive(cls)) {
       logger.info("Worker {} is disabled in this setup", cls.getName());
       return null;
@@ -74,7 +75,7 @@ public final class PersistenceIteratorFactory {
     InstrumentedExecutorService instrumentedExecutorService =
         new InstrumentedExecutorService(executor, metricRegistry, iteratorName);
 
-    MongoPersistenceIterator<T, F> iterator = builder.mode(PUMP)
+    MongoPersistenceIterator<T, F> iterator = builder.mode(processMode)
                                                   .executorService(instrumentedExecutorService)
                                                   .semaphore(new Semaphore(options.getPoolSize()))
                                                   .build();
@@ -83,9 +84,21 @@ public final class PersistenceIteratorFactory {
     executor.scheduleAtFixedRate(iterator::process, random.nextInt((int) millis), millis, TimeUnit.MILLISECONDS);
 
     if (iterator.getSchedulingType() == IRREGULAR || iterator.getSchedulingType() == IRREGULAR_SKIP_MISSED) {
-      executor.schedule(() -> iterator.recoverAfterPause(), random.nextInt((int) millis), TimeUnit.MILLISECONDS);
+      executor.schedule(iterator::recoverAfterPause, random.nextInt((int) millis), TimeUnit.MILLISECONDS);
     }
 
     return iterator;
+  }
+
+  public <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator<T>
+  createLoopIteratorWithDedicatedThreadPool(
+      PumpExecutorOptions options, Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
+    return createIteratorWithDedicatedThreadPool(LOOP, options, cls, builder);
+  }
+
+  public <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator<T>
+  createPumpIteratorWithDedicatedThreadPool(
+      PumpExecutorOptions options, Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
+    return createIteratorWithDedicatedThreadPool(PUMP, options, cls, builder);
   }
 }
