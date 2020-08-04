@@ -167,7 +167,7 @@ func (e *parallelExecutor) executeRemoteStep(ctx context.Context, w worker, step
 
 	_, err = c.Client().ExecuteStep(ctx, &pb.ExecuteStepRequest{Step: step})
 	if err != nil {
-		e.log.Warnw("Unable to send execute step request", "error_msg", zap.Error(err))
+		e.log.Warnw("Failed to execute remote step request", "error_msg", zap.Error(err))
 		return errors.Wrap(err, "Could not send execute step request")
 	}
 	return nil

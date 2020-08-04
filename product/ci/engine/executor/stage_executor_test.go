@@ -154,7 +154,7 @@ func TestStageRun(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		e := NewStageExecutor(tc.encodedStage, tc.logPath, tmpFilePath, nil, log.Sugar())
+		e := NewStageExecutor(tc.encodedStage, tc.logPath, tmpFilePath, nil, false, log.Sugar())
 		got := e.Run()
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
@@ -182,7 +182,7 @@ func TestExecuteStage(t *testing.T) {
 		return nil, errors.New("Could not create client")
 	}
 
-	ExecuteStage(emptyStage, logPath, tmpFilePath, ports, log.Sugar())
+	ExecuteStage(emptyStage, logPath, tmpFilePath, ports, false, log.Sugar())
 }
 
 func TestStopAddonServer(t *testing.T) {

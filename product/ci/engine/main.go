@@ -27,6 +27,7 @@ type stageSchema struct {
 	LogPath     string `arg:"--logpath, required" help:"relative file path to store logs of steps"`
 	TmpFilePath string `arg:"--tmppath, required" help:"relative file path to store temporary files"`
 	WorkerPorts []uint `arg:"--ports" help:"list of grpc server ports for worker lite engines"`
+	Debug       bool   `arg:"--debug" help:"Enables debug mode for checking run step logs by not exitting CI-addon"`
 }
 
 // schema for executing a unit step
@@ -77,7 +78,7 @@ func main() {
 	log.Infow("CI lite engine is starting")
 	switch {
 	case args.Stage != nil:
-		executeStage(args.Stage.Input, args.Stage.LogPath, args.Stage.TmpFilePath, args.Stage.WorkerPorts, log)
+		executeStage(args.Stage.Input, args.Stage.LogPath, args.Stage.TmpFilePath, args.Stage.WorkerPorts, args.Stage.Debug, log)
 	case args.Step != nil:
 		executor.ExecuteStep(args.Step.Input, args.Step.LogPath, args.Step.TmpFilePath, log)
 	case args.Server != nil:
