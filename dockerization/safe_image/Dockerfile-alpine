@@ -38,7 +38,8 @@ RUN apk add --no-cache protobuf build-base shadow
 #pip upgrade: install package pip-uprade-outdated, upgrade packages and uninstall additional package
 RUN pip list --outdated
 RUN pip install pip-upgrade-outdated
-RUN pip_upgrade_outdated -3 -v
+RUN pip_upgrade_outdated -3 -v -x distlib -x rsa -x docutils
+RUN pip list --outdated
 RUN pip uninstall -y pip-upgrade-outdated
 
 #upgrade existing packages
