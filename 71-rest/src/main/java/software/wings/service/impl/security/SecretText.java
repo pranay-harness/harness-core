@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.security.encryption.EncryptedDataParams;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import software.wings.settings.UsageRestrictions;
 
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Set;
  */
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "SecretTextKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SecretText {
   private String name;
@@ -24,4 +26,5 @@ public class SecretText {
   private String kmsId;
   private Map<String, String> runtimeParameters;
   private boolean scopedToAccount;
+  private boolean hideFromListing;
 }

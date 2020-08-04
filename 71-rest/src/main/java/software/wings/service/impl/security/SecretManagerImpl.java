@@ -63,6 +63,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -126,6 +127,7 @@ import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.security.encryption.setupusage.SecretSetupUsageService;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.SettingServiceHelper;
+import software.wings.service.impl.security.SecretText.SecretTextKeys;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -1838,6 +1840,18 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public String saveFile(String accountId, String kmsId, String name, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream, boolean scopedToAccount, boolean hiddenFromListing) {
+    return upsertFileInternal(accountId, kmsId, null, inputStream.getSize(), inputStream,
+        SecretText.builder()
+            .name(name)
+            .usageRestrictions(usageRestrictions)
+            .scopedToAccount(scopedToAccount)
+            .hideFromListing(hiddenFromListing)
+            .build());
+  }
+
+  @Override
   public String saveFile(String accountId, String kmsId, String name, long fileSize,
       UsageRestrictions usageRestrictions, BoundedInputStream inputStream, boolean scopedToAccount) {
     return upsertFileInternal(accountId, kmsId, null, fileSize, inputStream,
@@ -2021,11 +2035,13 @@ public class SecretManagerImpl implements SecretManager {
     UsageRestrictions usageRestrictions = null;
     boolean scopedToAccount = false;
     String name = null;
+    boolean hideFromListing = false;
 
     if (secretText != null) {
       name = secretText.getName();
       usageRestrictions = secretText.getUsageRestrictions();
       scopedToAccount = secretText.isScopedToAccount();
+      hideFromListing = secretText.isHideFromListing();
     }
 
     boolean update = false;
@@ -2201,6 +2217,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setUsageRestrictions(usageRestrictions);
     encryptedData.setScopedToAccount(scopedToAccount);
     encryptedData.setBase64Encoded(true);
+    encryptedData.setHideFromListing(hideFromListing);
 
     String recordId;
     try {
@@ -2326,6 +2343,29 @@ public class SecretManagerImpl implements SecretManager {
       }
     }
     return deleteFile(accountId, uuId);
+  }
+
+  @Override
+  public PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
+      String appIdFromRequest, String envIdFromRequest, boolean details, boolean listHidden)
+      throws IllegalAccessException {
+    if (!listHidden) {
+      addFilterHideFromListing(pageRequest);
+    }
+
+    return listSecrets(accountId, pageRequest, appIdFromRequest, envIdFromRequest, details);
+  }
+
+  private void addFilterHideFromListing(PageRequest<EncryptedData> pageRequest) {
+    SearchFilter op1 = SearchFilter.builder().fieldName(SecretTextKeys.hideFromListing).op(Operator.NOT_EXISTS).build();
+
+    SearchFilter op2 = SearchFilter.builder()
+                           .fieldName(SecretTextKeys.hideFromListing)
+                           .op(Operator.EQ)
+                           .fieldValues(new Object[] {Boolean.FALSE})
+                           .build();
+
+    pageRequest.addFilter(SecretTextKeys.hideFromListing, Operator.OR, op1, op2);
   }
 
   @Override

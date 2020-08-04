@@ -137,6 +137,8 @@ public class EncryptedData extends Base
 
   @JsonIgnore private NGEncryptedDataMetadata ngMetadata;
 
+  @Default private boolean hideFromListing = false;
+
   public String getKmsId() {
     if (encryptionType == LOCAL) {
       return accountId;

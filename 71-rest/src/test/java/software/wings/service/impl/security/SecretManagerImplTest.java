@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
@@ -28,10 +29,14 @@ import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.stream.BoundedInputStream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,6 +72,7 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -723,5 +729,56 @@ public class SecretManagerImplTest extends WingsBaseTest {
         assertNull(encryptedData.getBackupEncryptedValue());
       }
     }
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testSaveFile_hideFromListing() {
+    byte[] fileContent = "fileContent".getBytes();
+    String recordId = secretManager.saveFile(account.getUuid(), account.getUuid(), secretName,
+        UsageRestrictions.builder().build(), new BoundedInputStream(new ByteArrayInputStream(fileContent)), true, true);
+
+    byte[] savedFileContent = secretManager.getFileContents(account.getUuid(), recordId);
+    assertThat(savedFileContent).isEqualTo(fileContent);
+
+    EncryptedData savedData = secretManager.getSecretById(account.getUuid(), recordId);
+    assertThat(savedData.getName()).isEqualTo(secretName);
+    assertThat(savedData.isHideFromListing()).isEqualTo(true);
+
+    secretManager.deleteSecret(account.getUuid(), recordId);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testListSecrets() throws IllegalAccessException {
+    byte[] hiddenFileContent = "hiddenFileContent".getBytes();
+    String hiddenFileRecordId = secretManager.saveFile(account.getUuid(), account.getUuid(), "hidenFileName", null,
+        new BoundedInputStream(new ByteArrayInputStream(hiddenFileContent)), true, true);
+
+    byte[] fileContent = "fileContent".getBytes();
+    String recordId = secretManager.saveFile(account.getUuid(), account.getUuid(), "fileName", null,
+        new BoundedInputStream(new ByteArrayInputStream(fileContent)), true, false);
+
+    PageRequest<EncryptedData> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("type", SearchFilter.Operator.EQ, SettingVariableTypes.CONFIG_FILE);
+    pageRequest.addFilter("accountId", SearchFilter.Operator.EQ, account.getUuid());
+
+    // show all files
+    PageResponse<EncryptedData> retrievedSecretsAll =
+        secretManager.listSecrets(account.getUuid(), pageRequest, null, null, false, true);
+    assertThat(retrievedSecretsAll.getResponse().size()).isEqualTo(2);
+
+    // don't show hidden files
+    PageResponse<EncryptedData> retrievedSecretsHideHidden =
+        secretManager.listSecrets(account.getUuid(), pageRequest, null, null, false, false);
+    assertThat(retrievedSecretsHideHidden.getResponse().size()).isEqualTo(1);
+    EncryptedData retrievedSecret = retrievedSecretsHideHidden.getResponse().get(0);
+    assertThat(retrievedSecret.isHideFromListing()).isEqualTo(false);
+    assertThat(retrievedSecret.getName()).isEqualTo("fileName");
+
+    secretManager.deleteSecret(account.getUuid(), hiddenFileRecordId);
+    secretManager.deleteSecret(account.getUuid(), recordId);
   }
 }

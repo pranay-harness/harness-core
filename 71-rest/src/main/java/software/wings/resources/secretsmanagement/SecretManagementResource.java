@@ -275,7 +275,9 @@ public class SecretManagementResource {
     try {
       pageRequest.addFilter("type", Operator.EQ, type);
       pageRequest.addFilter("accountId", Operator.EQ, accountId);
-      return new RestResponse<>(secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details));
+
+      return new RestResponse<>(
+          secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details, false));
     } catch (IllegalAccessException e) {
       throw new WingsException(e);
     }

@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
@@ -574,8 +573,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         ((TerraformProvisionInheritPlanElement) executionResponse.getContextElements().get(0)).getProvisionerId())
         .isEqualTo(PROVISIONER_ID);
     verify(secretManager, times(1))
-        .saveFile(anyString(), anyString(), anyString(), anyInt(), any(UsageRestrictions.class),
-            any(BoundedInputStream.class), anyBoolean());
+        .saveFile(anyString(), anyString(), anyString(), any(UsageRestrictions.class), any(BoundedInputStream.class),
+            anyBoolean(), anyBoolean());
     verify(sweepingOutputService, times(1)).save(any(SweepingOutputInstance.class));
     verify(executionContext, times(1)).prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class));
   }
