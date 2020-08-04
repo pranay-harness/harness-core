@@ -58,6 +58,13 @@ public abstract class NexusArtifactStreamsGenerator implements ArtifactStreamsGe
       builder.groupId(nexusArtifactStream.getGroupId());
       builder.artifactPaths(nexusArtifactStream.getArtifactPaths());
       builder.repositoryFormat(repositoryFormat);
+    } else if (repositoryFormat.equals(RepositoryFormat.docker.name())) {
+      Preconditions.checkNotNull(nexusArtifactStream.getJobname());
+      Preconditions.checkNotNull(nexusArtifactStream.getImageName());
+      builder.jobname(nexusArtifactStream.getJobname());
+      builder.imageName(nexusArtifactStream.getPackageName());
+      builder.dockerRegistryUrl(nexusArtifactStream.getPackageName());
+      builder.repositoryFormat(repositoryFormat);
     } else if (repositoryFormat.equals(RepositoryFormat.npm.name())
         || repositoryFormat.equals(RepositoryFormat.nuget.name())) {
       Preconditions.checkNotNull(nexusArtifactStream.getJobname());
