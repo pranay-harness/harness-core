@@ -63,10 +63,8 @@ public class ArtifactStreamPTaskManager implements ArtifactStreamServiceObserver
     if (artifactStream.getPerpetualTaskId() != null) {
       try (AutoLogContext ignore1 = new AccountLogContext(artifactStream.getAccountId(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new ArtifactStreamLogContext(artifactStream.getUuid(), OVERRIDE_ERROR)) {
-        if (!perpetualTaskService.deleteTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
-          logger.error(
-              format("Unable to delete artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
-        }
+        artifactStreamPTaskHelper.deletePerpetualTask(
+            artifactStream.getAccountId(), artifactStream.getPerpetualTaskId());
       }
     }
   }

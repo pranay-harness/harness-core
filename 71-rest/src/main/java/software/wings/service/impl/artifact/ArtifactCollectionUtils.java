@@ -855,6 +855,16 @@ public class ArtifactCollectionUtils {
   public boolean skipArtifactStreamIteration(ArtifactStream artifactStream, boolean isCollection) {
     String prefix = isCollection ? "ASYNC_ARTIFACT_CRON" : "ASYNC_ARTIFACT_CLEANUP_CRON";
     String action = isCollection ? "collection" : "cleanup";
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())) {
+      logger.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
+          artifactStream.getUuid(), action);
+      return true;
+    } else if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
+      // If perpetual task is not enabled but the artifact stream still has a perpetual task id, delete the perpetual
+      // task.
+      artifactStreamPTaskHelper.deletePerpetualTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId());
+    }
+
     if (artifactStream.getFailedCronAttempts() > ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS) {
       logger.warn(
           "{}: Artifact {} disabled for artifactStream due to too many failures, type: {}, id: {}, failed count: {}",
@@ -885,22 +895,6 @@ public class ArtifactCollectionUtils {
             settingAttribute.getConnectivityError());
         return true;
       }
-    }
-
-    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())
-        && isNotEmpty(artifactStream.getPerpetualTaskId())) {
-      logger.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
-          artifactStream.getUuid(), action);
-      return true;
-    }
-
-    if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
-      if (!perpetualTaskService.deleteTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
-        logger.error(
-            format("Unable to delete artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
-      }
-      artifactStream.setPerpetualTaskId(null);
-      artifactStreamService.update(artifactStream);
     }
 
     if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
