@@ -4,8 +4,8 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.NgManagerTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class ServiceResourceTest extends BaseTest {
+public class ServiceResourceTest extends NgManagerTest {
   @Mock ServiceEntityServiceImpl serviceEntityService;
   @InjectMocks ServiceResource serviceResource;
 

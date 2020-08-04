@@ -8,8 +8,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class CVConfigServiceImplTest extends CVNextGenBaseTest {
+public class CVConfigServiceImplTest extends CvNextGenTest {
   @Inject private CVConfigService cvConfigService;
   private String accountId;
   private String connectorId;

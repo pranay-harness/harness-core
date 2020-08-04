@@ -21,6 +21,7 @@ import io.harness.govern.ProviderModule;
 import io.harness.mongo.IndexManager;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -79,6 +80,14 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .build();
       }
     });
 

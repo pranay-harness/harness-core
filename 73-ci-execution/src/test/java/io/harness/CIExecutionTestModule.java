@@ -7,21 +7,32 @@ import com.google.inject.Singleton;
 
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.managerclient.ManagerClientFactory;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 
 import java.util.Set;
 
-public class CIExecutionTestRule extends AbstractModule {
+public class CIExecutionTestModule extends AbstractModule {
   @Provides
   @Singleton
-  Set<Class<? extends KryoRegistrar>> registrars() {
+  Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
         .addAll(CiExecutionRegistrars.kryoRegistrars)
         .add(TestPersistenceKryoRegistrar.class)
+        .build();
+  }
+
+  @Provides
+  @Singleton
+  Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+    return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+        .addAll(CiExecutionRegistrars.morphiaRegistrars)
+        .add(TestPersistenceMorphiaRegistrar.class)
         .build();
   }
 

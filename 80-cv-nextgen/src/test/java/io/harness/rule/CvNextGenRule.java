@@ -1,37 +1,40 @@
 package io.harness.rule;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
+import io.harness.cvng.CVNextGenCommonsServiceModule;
+import io.harness.cvng.CVServiceModule;
+import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.morphia.MorphiaModule;
+import io.harness.mongo.MongoPersistence;
+import io.harness.morphia.MorphiaRegistrar;
+import io.harness.persistence.HPersistence;
 import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.ObjectFactory;
-import org.mongodb.morphia.mapping.DefaultCreator;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -52,7 +55,7 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(CvNextGenRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
@@ -61,20 +64,25 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
       @Provides
       @Singleton
-      @Named("morphiaClasses")
-      Map<Class, String> morphiaCustomCollectionNames() {
-        return Collections.emptyMap();
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(CvNextGenRegistrars.morphiaRegistrars)
+            .add(TestPersistenceMorphiaRegistrar.class)
+            .build();
       }
     });
 
-    modules.add(MorphiaModule.getInstance());
-    modules.add(new ProviderModule() {
-      @Provides
-      @Singleton
-      ObjectFactory objectFactory() {
-        return new DefaultCreator();
+    modules.add(mongoTypeModule(annotations));
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
+    modules.add(new CVNextGenCommonsServiceModule());
+    modules.add(TestMongoModule.getInstance());
+    modules.add(new CVServiceModule());
+    modules.add(new VerificationManagerClientModule("http://test-host"));
     return modules;
   }
 

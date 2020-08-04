@@ -44,6 +44,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
@@ -53,8 +54,10 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.TestManagerRegistrar;
+import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.ManagerTestMorphiaRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -167,8 +170,14 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return getKryoRegistrars();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return getMorphiaRegistrars();
       }
     });
     addQueueModules(modules);
@@ -201,8 +210,16 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
   protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
         .addAll(ManagerRegistrars.kryoRegistrars)
-        .add(TestManagerRegistrar.class)
+        .add(TestManagerKryoRegistrar.class)
         .add(TestPersistenceKryoRegistrar.class)
+        .build();
+  }
+
+  protected Set<Class<? extends MorphiaRegistrar>> getMorphiaRegistrars() {
+    return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+        .addAll(ManagerRegistrars.morphiaRegistrars)
+        .add(ManagerTestMorphiaRegistrar.class)
+        .add(TestPersistenceMorphiaRegistrar.class)
         .build();
   }
 

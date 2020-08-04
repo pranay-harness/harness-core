@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CvNextGenTest;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -25,7 +25,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-public class GenericExceptionMapperTest extends CVNextGenBaseTest {
+public class GenericExceptionMapperTest extends CvNextGenTest {
   private GenericExceptionMapper<?> genericExceptionMapper;
   @Mock private ResourceInfo resourceInfo;
   @Before

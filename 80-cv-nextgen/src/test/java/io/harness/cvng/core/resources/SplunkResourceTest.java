@@ -10,8 +10,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.exception.ValidationError;
@@ -30,7 +30,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-public class SplunkResourceTest extends CVNextGenBaseTest {
+public class SplunkResourceTest extends CvNextGenTest {
   @Inject private static SplunkResource splunkResource = new SplunkResource();
   @Mock private SplunkService splunkService;
   private String accountId;

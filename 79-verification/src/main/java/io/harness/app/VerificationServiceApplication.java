@@ -70,6 +70,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.ServiceGuardAccountPoller;
@@ -78,6 +79,7 @@ import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.VerificationKryoRegistrar;
+import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -190,8 +192,16 @@ public class VerificationServiceApplication extends Application<VerificationServ
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(VerificationKryoRegistrar.class).build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .add(VerificationMorphiaRegistrar.class)
+            .build();
       }
     });
     modules.add(MetricsInstrumentationModule.builder()

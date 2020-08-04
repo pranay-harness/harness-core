@@ -21,6 +21,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
@@ -30,6 +31,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -74,11 +76,20 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(OrchestrationRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
             .add(OrchestrationTestKryoRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(OrchestrationRegistrars.morphiaRegistrars)
+            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
     });

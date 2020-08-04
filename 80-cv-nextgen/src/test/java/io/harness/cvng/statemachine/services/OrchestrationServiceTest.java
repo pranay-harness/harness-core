@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.models.VerificationType;
@@ -36,7 +36,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class OrchestrationServiceTest extends CVNextGenBaseTest {
+public class OrchestrationServiceTest extends CvNextGenTest {
   @Inject HPersistence hPersistence;
 
   @Mock AnalysisStateMachineService mockStateMachineService;

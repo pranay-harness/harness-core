@@ -13,14 +13,16 @@ import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.CIBeansRegistrar;
-import io.harness.serializer.kryo.CIExecutionRegistrar;
+import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -50,13 +52,22 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ManagerRegistrars.kryoRegistrars)
-            .add(CIBeansRegistrar.class)
-            .add(CIExecutionRegistrar.class)
+            .add(CIBeansKryoRegistrar.class)
             .add(CvNextGenCommonsBeansKryoRegistrar.class)
             .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .add(CIBeansMorphiaRegistrar.class)
+            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
     });

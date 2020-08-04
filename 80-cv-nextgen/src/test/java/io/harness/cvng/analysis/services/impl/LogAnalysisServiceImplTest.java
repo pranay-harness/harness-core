@@ -7,8 +7,8 @@ import static org.mockito.Matchers.anySet;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.analysis.beans.LogAnalysisCluster;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class LogAnalysisServiceImplTest extends CVNextGenBaseTest {
+public class LogAnalysisServiceImplTest extends CvNextGenTest {
   private String cvConfigId;
   @Inject private HPersistence hPersistence;
   @Mock private LearningEngineTaskService learningEngineTaskService;

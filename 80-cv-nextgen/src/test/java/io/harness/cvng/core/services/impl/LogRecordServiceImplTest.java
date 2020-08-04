@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.LogRecord.LogRecordKeys;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class LogRecordServiceImplTest extends CVNextGenBaseTest {
+public class LogRecordServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Inject private LogRecordService logRecordService;
   private String accountId;

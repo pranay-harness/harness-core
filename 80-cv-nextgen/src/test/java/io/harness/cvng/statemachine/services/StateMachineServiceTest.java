@@ -11,8 +11,8 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Injector;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
@@ -39,7 +39,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
-public class StateMachineServiceTest extends CVNextGenBaseTest {
+public class StateMachineServiceTest extends CvNextGenTest {
   private String cvConfigId;
   private CVConfig cvConfig;
 

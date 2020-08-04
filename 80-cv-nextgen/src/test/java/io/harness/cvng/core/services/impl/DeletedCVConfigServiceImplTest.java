@@ -8,8 +8,8 @@ import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class DeletedCVConfigServiceImplTest extends CVNextGenBaseTest {
+public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
   @Mock private HPersistence hPersistence;
   @Mock private DataCollectionTaskService dataCollectionTaskService;
   @InjectMocks private DeletedCVConfigService deletedCVConfigServiceWithMocks = new DeletedCVConfigServiceImpl();

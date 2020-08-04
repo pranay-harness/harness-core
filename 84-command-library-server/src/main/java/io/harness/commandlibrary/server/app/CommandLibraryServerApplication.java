@@ -39,7 +39,9 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.CommandLibraryServer;
 import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
@@ -158,8 +160,16 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(CommonsRegistrars.kryoRegistrars).build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(CommandLibraryServer.morphiaRegistrars)
+            .build();
       }
     });
 

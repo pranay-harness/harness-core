@@ -20,7 +20,7 @@ import io.harness.serializer.KryoRegistrar;
  * Class will register all kryo classes
  */
 
-public class CIBeansRegistrar implements KryoRegistrar {
+public class CIBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(K8PodDetails.class, 100001);

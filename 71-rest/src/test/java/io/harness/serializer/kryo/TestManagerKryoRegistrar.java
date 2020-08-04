@@ -9,7 +9,7 @@ import software.wings.sm.StateMachineExecutionCallbackMock;
 import software.wings.sm.StateMachineExecutorTest.CustomExecutionEventAdvisor;
 import software.wings.sm.StateMachineTest.TestStateExecutionData;
 
-public class TestManagerRegistrar implements KryoRegistrar {
+public class TestManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     int index = 71 * 10000;

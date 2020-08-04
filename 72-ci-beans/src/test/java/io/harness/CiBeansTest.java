@@ -8,5 +8,5 @@ import org.junit.Rule;
 @Slf4j
 public abstract class CiBeansTest extends CategoryTest {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
-  @Rule public CiBeansRule apiServiceRule = new CiBeansRule(lifecycleRule.getClosingFactory());
+  @Rule public CiBeansRule ciBeansRule = new CiBeansRule(lifecycleRule.getClosingFactory());
 }

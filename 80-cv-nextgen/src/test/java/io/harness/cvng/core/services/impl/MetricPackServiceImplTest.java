@@ -10,9 +10,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
@@ -36,7 +36,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MetricPackServiceImplTest extends CVNextGenBaseTest {
+public class MetricPackServiceImplTest extends CvNextGenTest {
   @Inject private MetricPackService metricPackService;
   @Inject private HPersistence hPersistence;
   private String accountId;

@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -15,7 +15,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AppDynamicsDataCollectionInfoMapperTest extends CVNextGenBaseTest {
+public class AppDynamicsDataCollectionInfoMapperTest extends CvNextGenTest {
   @Inject private AppDynamicsDataCollectionInfoMapper mapper;
   @Test
   @Owner(developers = KAMAL)

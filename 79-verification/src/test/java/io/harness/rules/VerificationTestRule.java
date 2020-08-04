@@ -13,8 +13,10 @@ import io.harness.app.VerificationServiceModule;
 import io.harness.app.VerificationServiceSchedulerModule;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.mongo.MongoConfig;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.VerificationKryoRegistrar;
+import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.TestMongoModule;
 import software.wings.rules.SetupScheduler;
@@ -65,6 +67,14 @@ public class VerificationTestRule extends WingsRule {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
         .addAll(super.getKryoRegistrars())
         .add(VerificationKryoRegistrar.class)
+        .build();
+  }
+
+  @Override
+  protected Set<Class<? extends MorphiaRegistrar>> getMorphiaRegistrars() {
+    return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+        .addAll(super.getMorphiaRegistrars())
+        .add(VerificationMorphiaRegistrar.class)
         .build();
   }
 

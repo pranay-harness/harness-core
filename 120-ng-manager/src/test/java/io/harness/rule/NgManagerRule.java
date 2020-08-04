@@ -1,20 +1,25 @@
 package io.harness.rule;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import io.harness.factory.ClosingFactory;
-import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.morphia.MorphiaModule;
+import io.harness.mongo.MongoPersistence;
+import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.CoreModule;
+import io.harness.ng.core.CorePersistenceTestModule;
+import io.harness.ng.core.SecretManagementModule;
+import io.harness.persistence.HPersistence;
+import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.NGRegistrars;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.NextGenRegistrars;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -22,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.ObjectFactory;
-import org.mongodb.morphia.mapping.DefaultCreator;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -44,25 +47,30 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
     List<Module> modules = new ArrayList<>();
-    modules.add(new ClosingFactoryModule(closingFactory));
-    modules.add(KryoModule.getInstance());
-    modules.add(new ProviderModule() {
-      @Provides
-      @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(NGRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
-            .build();
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
-
-    modules.add(MorphiaModule.getInstance());
+    modules.add(mongoTypeModule(annotations));
+    modules.add(new CoreModule());
+    modules.add(new CorePersistenceTestModule());
+    modules.add(KryoModule.getInstance());
+    modules.add(new SecretManagementModule());
+    modules.add(new SecretManagementClientModule(
+        SecretManagerClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      ObjectFactory objectFactory() {
-        return new DefaultCreator();
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
+        return NextGenRegistrars.kryoRegistrars;
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return NextGenRegistrars.morphiaRegistrars;
       }
     });
     return modules;

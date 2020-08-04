@@ -22,6 +22,7 @@ import io.harness.gitsync.GitSyncModule;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.NgAsyncTaskGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
@@ -109,8 +110,16 @@ public class NextGenModule extends DependencyModule {
     install(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NextGenRegistrars.kryoRegistrars).build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(NextGenRegistrars.morphiaRegistrars)
+            .build();
       }
     });
     install(new AbstractModule() {

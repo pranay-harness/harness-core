@@ -1,13 +1,19 @@
 package io.harness.cvng;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.serializer.CvNextGenCommonsRegistrars;
+import io.harness.serializer.KryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -20,6 +26,7 @@ import org.junit.runners.model.Statement;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class CVNextGenCommonTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   @Override
@@ -50,7 +57,21 @@ public class CVNextGenCommonTestRule implements InjectorRuleMixin, MethodRule, M
       }
     });
     modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
+            .build();
+      }
 
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)
+            .build();
+      }
     });
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());

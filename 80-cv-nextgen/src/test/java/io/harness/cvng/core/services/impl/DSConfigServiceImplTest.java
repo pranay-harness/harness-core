@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.ServiceMapping;
 import io.harness.cvng.core.beans.DSConfig;
@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class DSConfigServiceImplTest extends CVNextGenBaseTest {
+public class DSConfigServiceImplTest extends CvNextGenTest {
   @Inject DSConfigService dsConfigService;
   private String accountId;
   private String connectorId;
