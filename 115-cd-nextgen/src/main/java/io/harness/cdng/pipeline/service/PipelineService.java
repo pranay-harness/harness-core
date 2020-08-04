@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.service;
 
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -11,6 +12,6 @@ public interface PipelineService {
   String createPipeline(String yaml, String accountId, String orgId, String projectId);
   String updatePipeline(String yaml, String accountId, String orgId, String projectId, String pipelineId);
   Optional<CDPipelineResponseDTO> getPipeline(String pipelineId, String accountId, String orgId, String projectId);
-  Page<CDPipelineResponseDTO> getPipelines(
+  Page<CDPipelineSummaryResponseDTO> getPipelines(
       String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable);
 }

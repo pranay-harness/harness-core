@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.PipelineServiceImpl;
@@ -75,11 +76,11 @@ public class CDNGPipelineResourceTest extends CategoryTest {
     doReturn(Optional.of(cdPipelineResponseDTO))
         .when(pipelineService)
         .getPipeline(cdPipelineRequestDTO.getCdPipeline().getIdentifier(), "ACCOUNT_ID", "ORG_ID", "PROJECT_ID");
-    Optional<CDPipelineResponseDTO> pipelineResponse =
+    CDPipelineResponseDTO pipelineResponse =
         cdngPipelineResource.getPipelineByIdentifier("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "managerServiceDeployment")
             .getData();
-    assertThat(pipelineResponse).isPresent();
-    assertThat(pipelineResponse.get()).isEqualTo(cdPipelineResponseDTO);
+    assertThat(pipelineResponse).isNotNull();
+    assertThat(pipelineResponse).isEqualTo(cdPipelineResponseDTO);
   }
 
   @Test
@@ -116,7 +117,7 @@ public class CDNGPipelineResourceTest extends CategoryTest {
         .when(pipelineService)
         .getPipelines(anyString(), anyString(), anyString(), any(Criteria.class), any(Pageable.class));
 
-    List<CDPipelineResponseDTO> content =
+    List<CDPipelineSummaryResponseDTO> content =
         cdngPipelineResource.getListOfPipelines("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "", 10, 10, null)
             .getData()
             .getContent();

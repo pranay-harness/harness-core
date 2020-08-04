@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.mappers;
 
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import lombok.experimental.UtilityClass;
 
@@ -26,6 +27,14 @@ public class PipelineDtoMapper {
         .cdPipeline(cdPipelineEntity.getCdPipeline())
         .yamlPipeline(cdPipelineEntity.getYamlPipeline())
         .executionsPlaceHolder(new ArrayList<>())
+        .build();
+  }
+  public CDPipelineSummaryResponseDTO preparePipelineSummary(CDPipelineEntity cdPipelineEntity) {
+    return CDPipelineSummaryResponseDTO.builder()
+        .identifier(cdPipelineEntity.getIdentifier())
+        .description(cdPipelineEntity.getCdPipeline().getDescription())
+        .name(cdPipelineEntity.getCdPipeline().getName())
+        .tags(cdPipelineEntity.getCdPipeline().getTags())
         .build();
   }
 }

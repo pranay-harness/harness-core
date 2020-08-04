@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.beans.entities.CDPipelineEntity;
 import io.harness.cdng.pipeline.mappers.PipelineDtoMapper;
 import io.harness.cdng.pipeline.repository.PipelineRepository;
@@ -83,7 +84,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public Page<CDPipelineResponseDTO> getPipelines(
+  public Page<CDPipelineSummaryResponseDTO> getPipelines(
       String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable) {
     // TODO: Remove usage of mongotemplate from here and move to repository
     criteria = criteria.and(CDPipelineEntity.PipelineNGKeys.accountId)
@@ -93,6 +94,6 @@ public class PipelineServiceImpl implements PipelineService {
                    .and(CDPipelineEntity.PipelineNGKeys.orgIdentifier)
                    .is(orgId);
     Page<CDPipelineEntity> list = pipelineRepository.findAll(criteria, pageable);
-    return list.map(PipelineDtoMapper::writePipelineDto);
+    return list.map(PipelineDtoMapper::preparePipelineSummary);
   }
 }

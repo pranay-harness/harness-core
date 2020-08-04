@@ -10,6 +10,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
+import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.PipelineService;
 import io.harness.execution.PlanExecution;
@@ -66,25 +67,25 @@ public class CDNGPipelineResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
-  public ResponseDTO<Optional<CDPipelineResponseDTO>> getPipelineByIdentifier(
+  public ResponseDTO<CDPipelineResponseDTO> getPipelineByIdentifier(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
       @QueryParam("projectIdentifier") String projectId, @PathParam("pipelineIdentifier") String pipelineId) {
     logger.info("Get pipeline");
-    return ResponseDTO.newResponse(ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId));
+    return ResponseDTO.newResponse(ngPipelineService.getPipeline(pipelineId, accountId, orgId, projectId).orElse(null));
   }
 
   @GET
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
-  public ResponseDTO<Page<CDPipelineResponseDTO>> getListOfPipelines(
+  public ResponseDTO<Page<CDPipelineSummaryResponseDTO>> getListOfPipelines(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
       @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort) {
     logger.info("Get List of pipelines");
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, CDPipeline.class);
-    Page<CDPipelineResponseDTO> pipelines =
+    Page<CDPipelineSummaryResponseDTO> pipelines =
         ngPipelineService.getPipelines(accountId, orgId, projectId, criteria, getPageRequest(page, size, sort));
     return ResponseDTO.newResponse(pipelines);
   }
