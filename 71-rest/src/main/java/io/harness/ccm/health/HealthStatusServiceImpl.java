@@ -230,11 +230,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
       String delegateId = perpetualTaskRecord.getDelegateId();
       if (isNullOrEmpty(delegateId)) {
-        if (perpetualTaskRecord.getState().equals(PerpetualTaskState.TASK_UNASSIGNED.name())) {
+        if (perpetualTaskRecord.getState().equals(PerpetualTaskState.TASK_UNASSIGNED)) {
           errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
-        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_DELEGATE_AVAILABLE.name())) {
+        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_DELEGATE_AVAILABLE)) {
           errors.add(DELEGATE_NOT_AVAILABLE);
-        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name())) {
+        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_ELIGIBLE_DELEGATES)) {
           errors.add(NO_ELIGIBLE_DELEGATE);
         }
         continue;

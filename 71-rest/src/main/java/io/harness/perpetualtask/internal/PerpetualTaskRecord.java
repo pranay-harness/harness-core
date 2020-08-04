@@ -13,6 +13,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextKeys;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -54,7 +55,7 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   long timeoutMillis;
   String delegateId;
   String taskDescription;
-  String state;
+  PerpetualTaskState state;
   long lastHeartbeat;
 
   List<Long> assignerIterations;

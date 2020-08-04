@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.google.protobuf.Any;
 
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -51,14 +50,12 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testResetDelegateIdForTaskWithClientParams() {
-    String state = UUIDGenerator.generateUuid();
-
     PerpetualTaskClientContext clientContext = getClientContext();
     PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
     perpetualTaskRecord.setClientContext(clientContext);
 
     String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
-    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, state, null);
+    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, null);
     PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
 
     assertThat(task).isNotNull();
@@ -70,15 +67,13 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void testResetDelegateIdForTaskWithTaskParams() {
-    String state = UUIDGenerator.generateUuid();
-
     PerpetualTaskClientContext clientContext = getClientContextWithTaskParams();
     PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
     perpetualTaskRecord.setClientContext(clientContext);
 
     String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
 
-    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, state, null);
+    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, null);
     PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
     assertThat(task).isNotNull();
     assertThat(task.getDelegateId()).isEqualTo("");
@@ -88,7 +83,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
         PerpetualTaskExecutionBundle.newBuilder()
             .setTaskParams(Any.pack(AwsSshInstanceSyncPerpetualTaskParams.getDefaultInstance()))
             .build();
-    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, state, executionBundle);
+    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, executionBundle);
 
     task = perpetualTaskRecordDao.getTask(taskId);
     assertThat(task).isNotNull();

@@ -139,7 +139,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   }
 
   private PerpetualTaskRecord getPerpetualTaskRecord(String delegateId, PerpetualTaskState state) {
-    return PerpetualTaskRecord.builder().delegateId(delegateId).state(state.name()).build();
+    return PerpetualTaskRecord.builder().delegateId(delegateId).state(state).build();
   }
 
   @Test
