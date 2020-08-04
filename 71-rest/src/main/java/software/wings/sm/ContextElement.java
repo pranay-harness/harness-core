@@ -2,11 +2,8 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
-import software.wings.api.ServiceElement;
 
 import java.util.Map;
 
@@ -14,8 +11,6 @@ import java.util.Map;
  * Interface for all RepeatElements.
  */
 @OwnedBy(CDC)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
-@JsonSubTypes({ @JsonSubTypes.Type(value = ServiceElement.class, name = "ServiceElement") })
 public interface ContextElement {
   String WORKFLOW = "workflow";
   String DEPLOYMENT_URL = "deploymentUrl";
