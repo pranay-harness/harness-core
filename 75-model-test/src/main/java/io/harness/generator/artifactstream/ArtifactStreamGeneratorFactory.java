@@ -11,6 +11,7 @@ import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams
 public class ArtifactStreamGeneratorFactory {
   @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private EcrArtifactStreamStreamsGenerator ecrArtifactStreamGenerator;
+  @Inject private AzureArtifactStreamsGenerator azureArtifactStreamGenerator;
   @Inject private DockerArtifactStreamStreamsGenerator dockerArtifactStreamGenerator;
   @Inject private JenkinsArtifactStreamStreamsGenerator jenkinsArtifactStreamStreamsGenerator;
   @Inject private AmazonS3ArtifactStreamStreamsGenerator amazonS3ArtifactStreamStreamsGenerator;
@@ -21,6 +22,8 @@ public class ArtifactStreamGeneratorFactory {
   @Inject private BambooArtifactStreamGenerator bambooArtifactStreamGenerator;
   @Inject private Nexus2MavenArtifactStreamsGenerator nexus2MavenArtifactStreamsGenerator;
   @Inject private Nexus3MavenArtifactStreamsGenerator nexus3MavenArtifactStreamsGenerator;
+  @Inject private Nexus3NpmArtifactStreamsGenerator nexus3NpmArtifactStreamsGenerator;
+  @Inject private Nexus3DockerArtifactStreamsGenerator nexus3DockerArtifactStreamsGenerator;
 
   public ArtifactStreamsGenerator getArtifactStreamGenerator(ArtifactStreams artifactStreams) {
     if (ArtifactStreams.HARNESS_SAMPLE_ECR == artifactStreams) {
@@ -28,6 +31,9 @@ public class ArtifactStreamGeneratorFactory {
     }
     if (ArtifactStreams.HARNESS_SAMPLE_DOCKER == artifactStreams) {
       return dockerArtifactStreamGenerator;
+    }
+    if (ArtifactStreams.HARNESS_SAMPLE_AZURE == artifactStreams) {
+      return azureArtifactStreamGenerator;
     }
     if (ArtifactStreams.ARTIFACTORY_ECHO_WAR == artifactStreams || ArtifactStreams.PCF == artifactStreams) {
       return artifactoryArtifactStreamStreamsGenerator;
@@ -64,6 +70,12 @@ public class ArtifactStreamGeneratorFactory {
         || ArtifactStreams.NEXUS2_NPM_METADATA_ONLY_PARAMETERIZED == artifactStreams
         || ArtifactStreams.NEXUS2_NUGET_METADATA_ONLY_PARAMETERIZED == artifactStreams) {
       return nexus2MavenArtifactStreamsGenerator;
+    }
+    if (ArtifactStreams.NEXUS3_NPM_METADATA_ONLY == artifactStreams) {
+      return nexus3MavenArtifactStreamsGenerator;
+    }
+    if (ArtifactStreams.NEXUS3_DOCKER_METADATA_ONLY == artifactStreams) {
+      return nexus3DockerArtifactStreamsGenerator;
     }
     if (ArtifactStreams.NEXUS3_MAVEN_METADATA_ONLY == artifactStreams) {
       return nexus3MavenArtifactStreamsGenerator;

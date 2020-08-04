@@ -68,7 +68,8 @@ public class ServiceGenerator {
     PCF_V2_TEST,
     PCF_V2_REMOTE_TEST,
     HELM_S3,
-    WINDOWS_TEST_DOWNLOAD
+    WINDOWS_TEST_DOWNLOAD,
+    ARTIFACTORY_GENERIC_TEST
   }
 
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
@@ -76,7 +77,9 @@ public class ServiceGenerator {
       case GENERIC_TEST:
         return ensureGenericTest(seed, owners, "Test Service");
       case FUNCTIONAL_TEST:
-        return ensureFunctionalTest(seed, owners, "FunctionalTest Service");
+        return ensureFunctionalTest(seed, owners, "Functional Test Service");
+      case ARTIFACTORY_GENERIC_TEST:
+        return ensureGenericArtifactoryTest(seed, owners, "Artifactory Test Service");
       case KUBERNETES_GENERIC_TEST:
         return ensureKubernetesGenericTest(seed, owners);
       case WINDOWS_TEST:
@@ -279,6 +282,16 @@ public class ServiceGenerator {
     return service;
   }
 
+  public Service ensureAzureTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_AZURE);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
   public Service ensureGenericTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(
@@ -291,6 +304,13 @@ public class ServiceGenerator {
 
   public Service ensureFunctionalTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
+    return owners.obtainService();
+  }
+
+  public Service ensureGenericArtifactoryTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
     artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     return owners.obtainService();
@@ -309,10 +329,45 @@ public class ServiceGenerator {
     return owners.obtainService();
   }
 
+  public Service ensureAmazonS3GenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.IIS_APP).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_IIS_APP_S3);
+    return owners.obtainService();
+  }
+
   public Service ensureBambooGenericTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
     artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.BAMBOO_METADATA_ONLY);
+    return owners.obtainService();
+  }
+
+  public Service ensureJenkinsGenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.WAR).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.JENKINS_METADATA_ONLY);
+    return owners.obtainService();
+  }
+
+  public Service ensureNexusMavenGenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.JAR).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.NEXUS3_MAVEN_METADATA_ONLY);
+    return owners.obtainService();
+  }
+
+  public Service ensureNexusNpmGenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.JAR).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.NEXUS3_NPM_METADATA_ONLY);
+    return owners.obtainService();
+  }
+
+  public Service ensureNexusDockerGenericTest(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build()));
+    artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.NEXUS3_DOCKER_METADATA_ONLY);
     return owners.obtainService();
   }
 

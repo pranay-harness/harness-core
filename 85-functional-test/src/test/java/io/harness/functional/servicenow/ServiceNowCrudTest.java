@@ -30,12 +30,11 @@ import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.generator.ServiceGenerator;
-import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +46,6 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.SSHExecutionCredential;
-import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -62,18 +60,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class ServiceNowCrudTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject private ServiceGenerator serviceGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   private final Seed seed = new Seed(0);
   private Application application;
   private Environment environment;
-  private Service service;
   private Owners owners;
   private SettingAttribute setting;
 
@@ -83,15 +80,18 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
 
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST);
     assertThat(application).isNotNull();
-
-    service = serviceGenerator.ensurePredefined(seed, owners, Services.FUNCTIONAL_TEST);
-    assertThat(service).isNotNull();
+    resetCache(application.getAccountId());
+    logger.info("Application generated successfully");
 
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
     assertThat(environment).isNotNull();
+    resetCache(environment.getAccountId());
+    logger.info("Environment generated successfully");
 
     setting = settingGenerator.ensurePredefined(seed, owners, Settings.SERVICENOW_CONNECTOR);
     assertThat(setting).isNotNull();
+    resetCache(setting.getAccountId());
+    logger.info("Servicenow Connector generated successfully");
   }
 
   @Test
@@ -112,6 +112,7 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
 
     Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(
         bearerToken, application.getAccountId(), application.getUuid(), snowFTWorkflow);
+    logger.info("Workflow created successfully: {}", savedWorkflow.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
@@ -121,17 +122,21 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
 
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    logger.info("Workflow started successfully: {}", savedWorkflow.getUuid());
 
-    Awaitility.await()
-        .atMost(120, TimeUnit.SECONDS)
-        .pollInterval(5, TimeUnit.SECONDS)
-        .until(()
-                   -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
-                          .getStatus()
-                == ExecutionStatus.SUCCESS);
+    Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+      final WorkflowExecution currentWorkflowExecution =
+          workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid());
+      logger.info("Current workflow execution status: {}", currentWorkflowExecution.getStatus());
+      return currentWorkflowExecution.getStatus() == ExecutionStatus.SUCCESS;
+    });
+
+    logger.info("Workflow completed successfully: {}", savedWorkflow.getUuid());
 
     WorkflowExecution completedExecution =
         workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), false);
+
+    logger.info("Workflow execution details fetched successfully: {}", savedWorkflow.getUuid());
 
     assertThat(completedExecution).isNotNull();
     Map<String, ExecutionDataValue> executionSummary =
