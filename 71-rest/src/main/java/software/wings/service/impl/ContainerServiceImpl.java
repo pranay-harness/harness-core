@@ -18,6 +18,7 @@ import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Task;
+import com.hazelcast.util.Preconditions;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.harness.eraro.ErrorCode;
@@ -278,7 +279,7 @@ public class ContainerServiceImpl implements ContainerService {
       encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails());
 
       KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
-      kubernetesContainerService.validate(kubernetesConfig, kubernetesClusterConfig.cloudCostEnabled());
+      kubernetesContainerService.validate(kubernetesConfig);
       return true;
     } else if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
@@ -287,6 +288,18 @@ public class ContainerServiceImpl implements ContainerService {
     }
     throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
         .addParam("args", "Unknown setting value type: " + value.getType());
+  }
+
+  @Override
+  public Boolean validateCE(ContainerServiceParams containerServiceParams) {
+    String namespace = containerServiceParams.getNamespace();
+    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    Preconditions.checkInstanceOf(
+        KubernetesClusterConfig.class, value, "SettingAttribute should be instanceof KubernetesClusterConfig.");
+    KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
+    KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
+    kubernetesContainerService.validateCEPermissions(kubernetesConfig);
+    return true;
   }
 
   @Override

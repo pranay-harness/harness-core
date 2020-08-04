@@ -231,8 +231,7 @@ public class SettingValidationService {
       validateAwsConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof KubernetesClusterConfig) {
       if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
-        boolean isCloudCostEnabled = ccmSettingService.isCloudCostEnabled(settingAttribute);
-        validateKubernetesClusterConfig(settingAttribute, encryptedDataDetails, isCloudCostEnabled);
+        validateKubernetesClusterConfig(settingAttribute, encryptedDataDetails);
       }
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
@@ -343,7 +342,7 @@ public class SettingValidationService {
   }
 
   private boolean validateKubernetesClusterConfig(
-      SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails, boolean isCloudCostEnabled) {
+      SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     SettingValue settingValue = settingAttribute.getValue();
     Preconditions.checkArgument(((KubernetesClusterConfig) settingValue).isSkipValidation() == false);
 
@@ -356,10 +355,13 @@ public class SettingValidationService {
                                                         .settingAttribute(settingAttribute)
                                                         .encryptionDetails(encryptedDataDetails)
                                                         .namespace(namespace)
-                                                        .cloudCostEnabled(isCloudCostEnabled)
                                                         .build();
+
+    boolean isCloudCostEnabled = ccmSettingService.isCloudCostEnabled(settingAttribute);
+
     try {
-      return containerService.validate(containerServiceParams);
+      return containerService.validate(containerServiceParams)
+          && (!isCloudCostEnabled || containerService.validateCE(containerServiceParams));
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }

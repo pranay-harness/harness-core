@@ -340,6 +340,7 @@ public enum TaskType {
   CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTROLLER_NAMES_WITH_LABELS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
+  CONTAINER_CE_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   LIST_CLUSTERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_VALIDATION(TaskGroup.CONTAINER, ContainerDummyTask.class, ContainerValidation.class),
