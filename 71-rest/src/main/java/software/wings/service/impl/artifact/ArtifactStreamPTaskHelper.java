@@ -61,7 +61,7 @@ public class ArtifactStreamPTaskHelper {
           // If artifact stream is not updated, it doesn't know about the perpetual task. So the perpetual task becomes
           // a zombie and is never reset or deleted on config change. It might try to do regular collection along with
           // perpetual task which can lead to race conditions.
-          perpetualTaskService.deleteTask(artifactStream.getAccountId(), perpetualTaskId);
+          deletePerpetualTask(artifactStream.getAccountId(), perpetualTaskId);
         }
       }
     } catch (Exception ex) {
@@ -88,5 +88,12 @@ public class ArtifactStreamPTaskHelper {
                                          .build();
     return perpetualTaskService.createTask(
         PerpetualTaskType.ARTIFACT_COLLECTION, accountId, clientContext, schedule, false, "");
+  }
+
+  public void deletePerpetualTask(String accountId, String perpetualTaskId) {
+    artifactStreamService.detachPerpetualTaskId(perpetualTaskId);
+    if (!perpetualTaskService.deleteTask(accountId, perpetualTaskId)) {
+      logger.error(format("Unable to delete artifact collection perpetual task: %s", perpetualTaskId));
+    }
   }
 }

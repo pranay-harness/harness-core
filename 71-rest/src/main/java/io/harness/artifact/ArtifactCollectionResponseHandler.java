@@ -27,6 +27,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.impl.artifact.ArtifactStreamPTaskHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -47,6 +48,7 @@ public class ArtifactCollectionResponseHandler {
 
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Inject private ArtifactService artifactService;
   @Inject private TriggerService triggerService;
   @Inject private PerpetualTaskService perpetualTaskService;
@@ -59,7 +61,8 @@ public class ArtifactCollectionResponseHandler {
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       ArtifactStream artifactStream = artifactStreamService.get(buildSourceExecutionResponse.getArtifactStreamId());
       if (artifactStream == null) {
-        perpetualTaskService.deleteTask(accountId, perpetualTaskId);
+        logger.warn("Got empty artifact stream in buildSourceExecutionResponse");
+        artifactStreamPTaskHelper.deletePerpetualTask(accountId, perpetualTaskId);
         return;
       }
 
@@ -175,12 +178,6 @@ public class ArtifactCollectionResponseHandler {
 
     alertService.openAlert(
         artifactStream.getAccountId(), null, AlertType.ARTIFACT_COLLECTION_FAILED, artifactCollectionFailedAlert);
-
-    if (!perpetualTaskService.deleteTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
-      logger.error(String.format(
-          "Unable to delete artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
-    }
-    artifactStream.setPerpetualTaskId(null);
-    artifactStreamService.update(artifactStream);
+    artifactStreamPTaskHelper.deletePerpetualTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId());
   }
 }

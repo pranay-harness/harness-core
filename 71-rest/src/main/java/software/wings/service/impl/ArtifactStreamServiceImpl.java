@@ -1053,6 +1053,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
+  public boolean detachPerpetualTaskId(String perpetualTaskId) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
+                                      .filter(ArtifactStreamKeys.perpetualTaskId, perpetualTaskId);
+    UpdateOperations<ArtifactStream> updateOperations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class).unset(ArtifactStreamKeys.perpetualTaskId);
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+
+    return updateResults.getUpdatedCount() >= 1;
+  }
+
+  @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String artifactStreamId) {
     List<OwnedByArtifactStream> services =
         ServiceClassLocator.descendingServices(this, ArtifactStreamServiceImpl.class, OwnedByArtifactStream.class);

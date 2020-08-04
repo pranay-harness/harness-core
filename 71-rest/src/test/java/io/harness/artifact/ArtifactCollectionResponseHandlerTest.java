@@ -43,6 +43,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.impl.artifact.ArtifactStreamPTaskHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -56,9 +57,10 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
   private static final String PERPETUAL_TASK_ID = "PERPETUAL_TASK_ID";
 
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
+  @Mock private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Mock private ArtifactService artifactService;
   @Mock private TriggerService triggerService;
-  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private PerpetualTaskService perpetualTaskService;
   @Mock private AlertService alertService;
   @Mock private FeatureFlagService featureFlagService;
@@ -112,7 +114,7 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
     buildSourceExecutionResponse.setArtifactStreamId("random");
     artifactCollectionResponseHandler.processArtifactCollectionResult(
         ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
-    verify(perpetualTaskService).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
+    verify(artifactStreamPTaskHelper).deletePerpetualTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
   }
 
   @Test
@@ -121,7 +123,10 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
   public void shouldNotProcessWhenFeatureDisabled() {
     when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_PERPETUAL_TASK), any())).thenReturn(false);
     BuildSourceExecutionResponse buildSourceExecutionResponse =
-        BuildSourceExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+        BuildSourceExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .build();
     artifactCollectionResponseHandler.processArtifactCollectionResult(
         ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
     verify(perpetualTaskService, never()).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID, null);

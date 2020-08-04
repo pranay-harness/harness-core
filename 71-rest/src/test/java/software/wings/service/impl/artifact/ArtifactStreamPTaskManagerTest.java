@@ -104,11 +104,11 @@ public class ArtifactStreamPTaskManagerTest extends CategoryTest {
 
     enableFeatureFlag();
     manager.onDeleted(artifactStream);
-    verify(perpetualTaskService, times(1)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(artifactStreamPTaskHelper, times(1)).deletePerpetualTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     when(perpetualTaskService.deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(false);
     manager.onDeleted(artifactStream);
-    verify(perpetualTaskService, times(2)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(artifactStreamPTaskHelper, times(2)).deletePerpetualTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
   }
 
   private void enableFeatureFlag() {
