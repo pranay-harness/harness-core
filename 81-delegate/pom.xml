@@ -41,6 +41,10 @@
             <artifactId>client-java</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java-extended</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.atmosphere</groupId>
             <artifactId>wasync</artifactId>
         </dependency>
@@ -86,6 +90,12 @@
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock</artifactId>
+            <classifier>standalone</classifier>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>

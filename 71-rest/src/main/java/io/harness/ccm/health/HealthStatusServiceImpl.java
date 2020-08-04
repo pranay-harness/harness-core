@@ -245,20 +245,15 @@ public class HealthStatusServiceImpl implements HealthStatusService {
           clusterRecord.getAccountId(), clusterRecord.getUuid(), recentTimestamp);
       if (ceExceptionRecord != null) {
         String exceptionMessage = ceExceptionRecord.getMessage();
-        if (exceptionMessage.contains("/apis/metrics.k8s.io/v1beta1/nodes. Message: 404")) {
-          errors.add(METRICS_SERVER_NOT_FOUND);
-        }
         if (exceptionMessage.contains("Service: AmazonECS; Status Code: 400; Error Code: ClusterNotFoundException;")) {
           errors.add(AWS_ECS_CLUSTER_NOT_FOUND);
         }
-        if (exceptionMessage.contains("Message: Unauthorized.") && exceptionMessage.contains("code=401")
-            && exceptionMessage.contains("/api/v1beta1/nodes")) {
+        if (exceptionMessage.startsWith("code=[401]")) {
           errors.add(K8S_PERMISSIONS_MISSING);
         }
-        if ((exceptionMessage.contains("pods is forbidden") || exceptionMessage.contains("nodes is forbidden"))
-            && (exceptionMessage.contains("cannot watch resource")
-                   || exceptionMessage.contains("cannot list resource"))) {
-          errors.add(K8S_PERMISSIONS_MISSING);
+        // assuming un-deserializable response i.e., "404 page not found\n" is thrown only when metrics server is absent
+        if (exceptionMessage.contains("JsonSyntaxException")) {
+          errors.add(METRICS_SERVER_NOT_FOUND);
         }
       }
 

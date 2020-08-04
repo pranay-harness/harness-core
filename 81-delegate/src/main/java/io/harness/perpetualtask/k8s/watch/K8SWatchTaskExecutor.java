@@ -2,23 +2,21 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static org.apache.commons.lang3.StringUtils.contains;
+import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Timestamp;
 
-import io.fabric8.kubernetes.api.model.Node;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.k8s.apiclient.ApiClientFactoryImpl;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
@@ -27,12 +25,15 @@ import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
-import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
+import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.collector.K8sMetricCollector;
 import io.harness.serializer.KryoSerializer;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1Node;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Pod;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
-import software.wings.delegatetasks.k8s.exception.K8sClusterException;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.time.Duration;
@@ -52,17 +53,20 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private Map<String, Instant> clusterSyncLastPublished = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
-  private final KubernetesClientFactory kubernetesClientFactory;
   private final K8sWatchServiceDelegate k8sWatchServiceDelegate;
+  private final ApiClientFactoryImpl apiClientFactory;
   private final KryoSerializer kryoSerializer;
+  private final ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   @Inject
-  public K8SWatchTaskExecutor(EventPublisher eventPublisher, KubernetesClientFactory kubernetesClientFactory,
-      K8sWatchServiceDelegate k8sWatchServiceDelegate, KryoSerializer kryoSerializer) {
+  public K8SWatchTaskExecutor(EventPublisher eventPublisher, K8sWatchServiceDelegate k8sWatchServiceDelegate,
+      ApiClientFactoryImpl apiClientFactory, KryoSerializer kryoSerializer,
+      ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper) {
     this.eventPublisher = eventPublisher;
-    this.kubernetesClientFactory = kubernetesClientFactory;
     this.k8sWatchServiceDelegate = k8sWatchServiceDelegate;
+    this.apiClientFactory = apiClientFactory;
     this.kryoSerializer = kryoSerializer;
+    this.containerDeploymentDelegateHelper = containerDeploymentDelegateHelper;
   }
 
   @Override
@@ -76,8 +80,12 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         logger.info("Ensured watch exists with id {}.", watchId);
         K8sClusterConfig k8sClusterConfig =
             (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
-        K8sMetricsClient k8sMetricsClient =
-            kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
+
+        KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+
+        DefaultK8sMetricsClient k8sMetricsClient =
+            new DefaultK8sMetricsClient(apiClientFactory.getClient(kubernetesConfig));
+
         taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);
         clusterSyncLastPublished.putIfAbsent(taskId.getId(), heartbeatTime);
         if (clusterSyncLastPublished.get(taskId.getId()).plus(Duration.ofHours(1)).isBefore(now)) {
@@ -98,34 +106,20 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                 })
             .collectAndPublishMetrics(now);
 
-      } catch (K8sClusterException ke) {
-        try {
-          eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
-                                            .setClusterId(watchTaskParams.getClusterId())
-                                            .setMessage((String) ke.getParams().get("reason"))
-                                            .build(),
-              HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
-        } catch (Exception ex) {
-          logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
-        }
-      } catch (Exception e) {
-        // suppress metrics server not present error.
-        if (!(e instanceof KubernetesClientException
-                && (contains(e.getMessage(), "Message: 404 page not found")
-                       || ((e.getMessage().contains("pods is forbidden")
-                               || e.getMessage().contains("nodes is forbidden"))
-                              && (e.getMessage().contains("cannot watch resource")
-                                     || e.getMessage().contains("cannot list resource")))))) {
-          logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
-        }
-        try {
-          String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
-          eventPublisher.publishMessage(
-              CeExceptionMessage.newBuilder().setClusterId(watchTaskParams.getClusterId()).setMessage(message).build(),
-              HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
-        } catch (Exception ex) {
-          logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
-        }
+      } catch (JsonSyntaxException ex) {
+        publishError(CeExceptionMessage.newBuilder()
+                         .setClusterId(watchTaskParams.getClusterId())
+                         .setMessage(ex.toString())
+                         .build(),
+            taskId);
+      } catch (ApiException ex) {
+        publishError(CeExceptionMessage.newBuilder()
+                         .setClusterId(watchTaskParams.getClusterId())
+                         .setMessage(format("code=[%s] %s", ex.getCode(), ex.getResponseBody()))
+                         .build(),
+            taskId);
+      } catch (Exception ex) {
+        logger.error("Unknown error occured from {} while collecting metrics.", taskId, ex);
       }
       return PerpetualTaskResponse.builder()
           .responseCode(200)
@@ -135,24 +129,30 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     }
   }
 
+  private void publishError(CeExceptionMessage ceExceptionMessage, PerpetualTaskId taskId) {
+    try {
+      eventPublisher.publishMessage(
+          ceExceptionMessage, HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
+    } catch (Exception ex) {
+      logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+    }
+  }
+
   @VisibleForTesting
-  static void publishClusterSyncEvent(
-      KubernetesClient client, EventPublisher eventPublisher, K8sWatchTaskParams watchTaskParams, Instant pollTime) {
-    List<String> nodeUidList = client.nodes()
-                                   .list()
+  static void publishClusterSyncEvent(DefaultK8sMetricsClient client, EventPublisher eventPublisher,
+      K8sWatchTaskParams watchTaskParams, Instant pollTime) throws ApiException {
+    List<String> nodeUidList = client.listNode(null, null, null, null, null, null, null, null, null)
                                    .getItems()
                                    .stream()
-                                   .map(Node::getMetadata)
-                                   .map(ObjectMeta::getUid)
+                                   .map(V1Node::getMetadata)
+                                   .map(V1ObjectMeta::getUid)
                                    .collect(Collectors.toList());
-    List<String> podUidList = client.pods()
-                                  .inAnyNamespace()
-                                  .list()
+    List<String> podUidList = client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null)
                                   .getItems()
                                   .stream()
                                   .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
-                                  .map(Pod::getMetadata)
-                                  .map(ObjectMeta::getUid)
+                                  .map(V1Pod::getMetadata)
+                                  .map(V1ObjectMeta::getUid)
                                   .collect(Collectors.toList());
     Timestamp timestamp = HTimestamps.fromInstant(pollTime);
     K8SClusterSyncEvent k8SClusterSyncEvent = K8SClusterSyncEvent.newBuilder()

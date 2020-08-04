@@ -81,7 +81,7 @@ public class K8sMetricCollector {
   }
 
   private void collectNodeMetrics() {
-    List<NodeMetrics> nodeMetricsList = k8sMetricsClient.nodeMetrics().list().getItems();
+    List<NodeMetrics> nodeMetricsList = k8sMetricsClient.nodeMetrics().list().getObject().getItems();
     for (NodeMetrics nodeMetrics : nodeMetricsList) {
       long nodeCpuNano = K8sResourceStandardizer.getCpuNano(nodeMetrics.getUsage().getCpu());
       long nodeMemoryBytes = K8sResourceStandardizer.getMemoryByte(nodeMetrics.getUsage().getMemory());
@@ -92,7 +92,7 @@ public class K8sMetricCollector {
   }
 
   private void collectPodMetricsAndContainerStates() {
-    List<PodMetrics> podMetricsList = k8sMetricsClient.podMetrics().inAnyNamespace().list().getItems();
+    List<PodMetrics> podMetricsList = k8sMetricsClient.podMetrics().list().getObject().getItems();
     for (PodMetrics podMetrics : podMetricsList) {
       if (!isEmpty(podMetrics.getContainers())) {
         long podCpuNano = 0;
