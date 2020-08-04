@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
@@ -45,4 +46,6 @@ public class BillingDataPipelineRecord implements PersistentEntity, UuidAware, C
   private String preAggregatedScheduledQueryStatus;
   private String awsFallbackTableScheduledQueryStatus;
   private Instant lastSuccessfulS3Sync;
+
+  private List<String> awsLinkedAccountsToExclude;
 }

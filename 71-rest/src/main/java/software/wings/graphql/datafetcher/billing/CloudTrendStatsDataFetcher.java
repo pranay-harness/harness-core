@@ -32,12 +32,11 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort) {
     boolean isDiscountsAggregationPresent = cloudBillingHelper.fetchIfDiscountsAggregationPresent(aggregateFunction);
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, Collections.EMPTY_LIST);
-    boolean isAWSCloudProvider = false;
+    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
+    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
     List<SqlObject> leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
-      String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
-      isAWSCloudProvider = cloudProvider.equals("AWS");
       String tableName = cloudBillingHelper.getTableName(cloudProvider);
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
       filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
@@ -48,6 +47,10 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       }
     } else {
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
+    }
+
+    if (isAWSCloudProvider) {
+      cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
     }
 
     return preAggregateBillingService.getPreAggregateBillingTrendStats(

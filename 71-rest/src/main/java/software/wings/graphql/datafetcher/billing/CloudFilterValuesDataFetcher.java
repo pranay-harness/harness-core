@@ -42,6 +42,11 @@ public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<Cloud
     } else {
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
     }
+
+    if (isAWSCloudProvider) {
+      cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
+    }
+
     return preAggregateBillingService.getPreAggregateFilterValueStats(accountId,
         Optional.ofNullable(groupByList)
             .map(Collection::stream)

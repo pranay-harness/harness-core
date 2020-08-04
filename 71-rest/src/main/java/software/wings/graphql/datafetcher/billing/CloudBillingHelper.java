@@ -16,13 +16,16 @@ import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.exception.InvalidRequestException;
 import org.jetbrains.annotations.NotNull;
 import software.wings.app.MainConfiguration;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,15 +46,20 @@ public class CloudBillingHelper {
   private static final String labels = "labels";
   private static final String credits = "credits";
 
-  private Cache<String, String> billingDataPipelineRecordCache =
+  private Cache<String, BillingDataPipelineCacheObject> billingDataPipelineRecordCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
 
-  public String geDataPipelineMetadata(String accountId) {
-    return billingDataPipelineRecordCache.get(accountId, key -> getDataSetId(key));
+  public BillingDataPipelineCacheObject getDataPipelineMetadata(String accountId) {
+    return billingDataPipelineRecordCache.get(accountId, key -> getBillingDataPipelineCacheObject(key));
   }
 
-  public String getDataSetId(String accountId) {
-    return billingDataPipelineRecordDao.fetchBillingPipelineMetaDataFromAccountId(accountId).getDataSetId();
+  public BillingDataPipelineCacheObject getBillingDataPipelineCacheObject(String accountId) {
+    BillingDataPipelineRecord billingDataPipelineRecord =
+        billingDataPipelineRecordDao.fetchBillingPipelineMetaDataFromAccountId(accountId);
+    return BillingDataPipelineCacheObject.builder()
+        .dataSetId(billingDataPipelineRecord.getDataSetId())
+        .awsLinkedAccountsToExclude(billingDataPipelineRecord.getAwsLinkedAccountsToExclude())
+        .build();
   }
 
   public String getCloudProviderTableName(String accountId) {
@@ -61,7 +69,7 @@ public class CloudBillingHelper {
   public String getCloudProviderTableName(String accountId, String tableName) {
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
     String projectId = ceSetUpConfig.getGcpProjectId();
-    String dataSetId = geDataPipelineMetadata(accountId);
+    String dataSetId = getDataPipelineMetadata(accountId).getDataSetId();
     return format("%s.%s.%s", projectId, dataSetId, tableName);
   }
 
@@ -163,5 +171,26 @@ public class CloudBillingHelper {
 
   public SqlObject getCreditsLeftJoin() {
     return new CustomSql(String.format(leftJoinTemplate, credits, credits));
+  }
+
+  public void processAndAddLinkedAccountsFilter(String accountId, List<CloudBillingFilter> filters) {
+    String[] linkedAccounts = getLinkedAccounts(accountId);
+    if (linkedAccounts != null) {
+      CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+      cloudBillingFilter.setAwsLinkedAccount(
+          CloudBillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(linkedAccounts).build());
+      filters.add(cloudBillingFilter);
+    }
+  }
+
+  private String[] getLinkedAccounts(String accountId) {
+    BillingDataPipelineCacheObject dataPipelineMetadata = getDataPipelineMetadata(accountId);
+    List<String> awsLinkedAccountsToExclude = dataPipelineMetadata.getAwsLinkedAccountsToExclude();
+
+    if (awsLinkedAccountsToExclude != null && awsLinkedAccountsToExclude.size() > 0) {
+      String[] linkedAccounts = new String[awsLinkedAccountsToExclude.size()];
+      return awsLinkedAccountsToExclude.toArray(linkedAccounts);
+    }
+    return null;
   }
 }
