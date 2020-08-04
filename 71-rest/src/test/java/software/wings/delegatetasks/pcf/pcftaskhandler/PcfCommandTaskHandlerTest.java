@@ -4,11 +4,13 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -17,6 +19,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.delegatetasks.pcf.PcfCommandTaskHelper.DELIMITER;
+import static software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType.RUNNING_COUNT;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 
@@ -25,6 +29,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -681,6 +686,42 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(pcfInfraMappingDataResponse.getRouteMaps()).hasSize(2);
     assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R1")).isTrue();
     assertThat(pcfInfraMappingDataResponse.getRouteMaps().contains("R2")).isTrue();
+
+    // Fetch running count
+    String appNamePrefix = "App";
+    ApplicationSummary applicationSummary = ApplicationSummary.builder()
+                                                .id("id1")
+                                                .name(appNamePrefix + DELIMITER + "1")
+                                                .diskQuota(1)
+                                                .instances(1)
+                                                .memoryLimit(1)
+                                                .requestedState("RUNNING")
+                                                .runningInstances(2)
+                                                .build();
+    doReturn(Collections.singletonList(applicationSummary))
+        .when(pcfDeploymentManager)
+        .getPreviousReleases(any(PcfRequestConfig.class), eq(appNamePrefix));
+    pcfCommandRequest.setApplicationNamePrefix(appNamePrefix);
+    pcfCommandRequest.setActionType(RUNNING_COUNT);
+    pcfCommandExecutionResponse =
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+    assertThat(pcfInfraMappingDataResponse).isNotNull();
+    assertThat(pcfInfraMappingDataResponse.getRunningInstanceCount()).isEqualTo(2);
+
+    // Fetch running count failure
+    doThrow(Exception.class)
+        .when(pcfDeploymentManager)
+        .getPreviousReleases(any(PcfRequestConfig.class), eq(appNamePrefix));
+    pcfCommandExecutionResponse =
+        pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    assertThat(pcfCommandExecutionResponse).isNotNull();
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+
+    PcfCommandDeployRequest deployRequest = PcfCommandDeployRequest.builder().build();
+    assertThatThrownBy(
+        () -> pcfDataFetchCommandTaskHandler.executeTaskInternal(deployRequest, null, executionLogCallback))
+        .isInstanceOf(InvalidArgumentsException.class);
   }
 
   @Test

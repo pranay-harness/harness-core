@@ -1,13 +1,16 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -17,6 +20,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,6 +63,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -100,6 +106,8 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -120,6 +128,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Arrays;
@@ -609,5 +618,55 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     FieldUtils.writeField(pcfRouteSwapState, "pcfStateHelper", mockPcfStateHelper, true);
     doReturn(10).when(mockPcfStateHelper).getStateTimeoutMillis(context, DEFAULT_PCF_TASK_TIMEOUT_MIN, false);
     assertThat(pcfRouteSwapState.getTimeoutMillis(context)).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testExecute_pcfAPP_handleAsyncResponse() {
+    PcfCommandExecutionResponse response =
+        PcfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
+    PcfRouteUpdateStateExecutionData executionData = PcfRouteUpdateStateExecutionData.builder().build();
+
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doReturn(executionData).when(context).getStateExecutionData();
+
+    ExecutionResponse executionResponse =
+        pcfRouteSwapState.handleAsyncResponse(context, ImmutableMap.of(ACTIVITY_ID, response));
+
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData().getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    doThrow(WingsException.class).when(activityService).updateStatus(any(), any(), any());
+    assertThatThrownBy(() -> pcfRouteSwapState.handleAsyncResponse(context, ImmutableMap.of(ACTIVITY_ID, response)))
+        .isInstanceOf(WingsException.class);
+
+    doThrow(Exception.class).when(activityService).updateStatus(any(), any(), any());
+    assertThatThrownBy(() -> pcfRouteSwapState.handleAsyncResponse(context, ImmutableMap.of(ACTIVITY_ID, response)))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testExecute_pcfAPP_handleAsyncInternal() {
+    MapRouteState state = new MapRouteState("test", StateType.PCF_MAP_ROUTE.name());
+    ActivityService mockActivityService = mock(ActivityService.class);
+    on(state).set("activityService", mockActivityService);
+    PcfCommandExecutionResponse response = PcfCommandExecutionResponse.builder()
+                                               .commandExecutionStatus(SUCCESS)
+                                               .pcfCommandResponse(PcfDeployCommandResponse.builder().build())
+                                               .build();
+    PcfRouteUpdateStateExecutionData executionData = PcfRouteUpdateStateExecutionData.builder().build();
+
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doReturn(executionData).when(context).getStateExecutionData();
+
+    ExecutionResponse executionResponse = state.handleAsyncInternal(context, ImmutableMap.of(ACTIVITY_ID, response));
+
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData().getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 }
