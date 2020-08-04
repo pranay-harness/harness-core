@@ -1,15 +1,17 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +23,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
@@ -106,13 +109,48 @@ public class ContainerServiceImplTest extends WingsBaseTest {
                                   .build())
             .build();
 
-    doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class), anyBoolean());
+    doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class));
     assertThat(containerService.validate(containerServiceParams)).isTrue();
 
     containerServiceParams.setSettingAttribute(
         SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build());
     doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class));
     assertThat(containerService.validate(containerServiceParams)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testValidateCE() {
+    ContainerServiceParams containerServiceParams =
+        ContainerServiceParams.builder()
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
+                                  .withValue(KubernetesClusterConfig.builder().build())
+                                  .build())
+            .build();
+
+    doNothing().when(kubernetesContainerService).validateCEPermissions(any(KubernetesConfig.class));
+    assertThat(containerService.validateCE(containerServiceParams)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testValidateCEthrowsException() {
+    final String MESSAGE = "MESSAGE";
+    ContainerServiceParams containerServiceParams =
+        ContainerServiceParams.builder()
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
+                                  .withValue(KubernetesClusterConfig.builder().build())
+                                  .build())
+            .build();
+
+    doThrow(new InvalidRequestException(MESSAGE))
+        .when(kubernetesContainerService)
+        .validateCEPermissions(any(KubernetesConfig.class));
+    assertThatThrownBy(() -> containerService.validateCE(containerServiceParams))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessage(MESSAGE);
   }
 
   @Test

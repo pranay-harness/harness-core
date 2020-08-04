@@ -35,7 +35,6 @@ public interface KubernetesContainerService {
   List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
   void validate(KubernetesConfig kubernetesConfig);
-  void validate(KubernetesConfig kubernetesConfig, boolean cloudCostEnabled);
 
   @SuppressWarnings("squid:S1452") List<? extends HasMetadata> listControllers(KubernetesConfig kubernetesConfig);
 
@@ -131,4 +130,6 @@ public interface KubernetesContainerService {
   CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource);
 
   VersionInfo getVersion(KubernetesConfig kubernetesConfig);
+
+  void validateCEPermissions(KubernetesConfig kubernetesConfig);
 }

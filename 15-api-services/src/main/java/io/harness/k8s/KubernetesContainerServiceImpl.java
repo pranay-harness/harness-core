@@ -356,14 +356,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void validate(KubernetesConfig kubernetesConfig, boolean cloudCostEnabled) {
+  public void validate(KubernetesConfig kubernetesConfig) {
     listControllers(kubernetesConfig);
-
-    if (cloudCostEnabled) {
-      validateCEPermissions(kubernetesConfig);
-    }
   }
 
+  @Override
   public void validateCEPermissions(KubernetesConfig kubernetesConfig) {
     AuthorizationV1Api apiClient = ApiClientFactoryImpl.getAuthorizationClient(kubernetesConfig);
 
@@ -374,14 +371,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     List<V1SubjectAccessReviewStatus> response = k8sResourcePermission.validate(apiClient, cePermissions, 12);
     String result = k8sResourcePermission.buildResponse(cePermissions, response);
     if (!result.isEmpty()) {
-      throw new InvalidRequestException("The provided serviceaccount is missing the following permissions.\n" + result
-          + "Please grant these required permissions to the service account.");
+      throw new InvalidRequestException("CE: The provided serviceaccount is missing the following permissions.\n"
+          + result + "Please grant these required permissions to the service account.");
     }
-  }
-
-  @Override
-  public void validate(KubernetesConfig kubernetesConfig) {
-    validate(kubernetesConfig, false);
   }
 
   @Override
