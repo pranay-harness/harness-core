@@ -36,6 +36,7 @@ import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.service.impl.yaml.YamlProcessingLogContext.BRANCH_NAME;
 import static software.wings.service.impl.yaml.YamlProcessingLogContext.CHANGESET_ID;
@@ -360,6 +361,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, VERIFICATION_PROVIDERS_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, NOTIFICATION_GROUPS_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, GLOBAL_TEMPLATE_LIBRARY_FOLDER));
+    gitFileChanges.add(generateGitFileChangeForDelete(accountId, SOURCE_REPO_PROVIDERS_FOLDER));
 
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, DEFAULTS_YAML));
 
