@@ -44,6 +44,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
 
@@ -79,7 +80,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
   @Override
   public Integer getTimeoutMillis() {
-    return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+    return StateTimeoutUtils.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
   }
 
   @Override

@@ -66,6 +66,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.states.utils.StateTimeoutUtils;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StateTimeoutUtils.class})

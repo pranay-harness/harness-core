@@ -179,6 +179,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.time.Instant;
@@ -1455,10 +1456,10 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getTimeoutInMillis() {
-    assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(null)).isNull();
-    assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(0)).isNull();
-    assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(10)).isEqualTo(600000);
-    assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(Integer.MAX_VALUE)).isEqualTo(null);
+    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(null)).isNull();
+    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(0)).isNull();
+    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(10)).isEqualTo(600000);
+    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(Integer.MAX_VALUE)).isEqualTo(null);
   }
 
   @Test
