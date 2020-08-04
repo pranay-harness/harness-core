@@ -129,5 +129,7 @@ public enum ContextElementType {
 
   K8S,
 
-  TERRAFORM_INHERIT_PLAN
+  TERRAFORM_INHERIT_PLAN,
+
+  AZURE_VMSS_SETUP
 }
