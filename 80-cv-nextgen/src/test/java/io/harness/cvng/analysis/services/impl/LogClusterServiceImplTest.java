@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.ClusteredLog;
@@ -35,7 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class LogClusterServiceImplTest extends CVNextGenBaseTest {
+public class LogClusterServiceImplTest extends CvNextGenTest {
   private String cvConfigId;
   @Mock LearningEngineTaskService learningEngineTaskService;
   @Inject HPersistence hPersistence;

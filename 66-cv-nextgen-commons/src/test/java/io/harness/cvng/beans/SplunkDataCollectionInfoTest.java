@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.io.Resources;
 
+import io.harness.CvNextGenCommonsTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenCommonBaseTest;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;
@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SplunkDataCollectionInfoTest extends CVNextGenCommonBaseTest {
+public class SplunkDataCollectionInfoTest extends CvNextGenCommonsTest {
   private DataCollectionDSLService dataCollectionDSLService;
   private String code;
 

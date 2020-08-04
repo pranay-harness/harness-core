@@ -3,21 +3,23 @@ package io.harness.morphia;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
 import io.harness.reflection.CodeUtils;
 import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
 import org.mongodb.morphia.mapping.MappedClass;
-import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -37,33 +39,24 @@ public class MorphiaModule extends AbstractModule {
     return instance;
   }
 
-  protected MorphiaModule() {}
+  private MorphiaModule() {}
 
-  private static synchronized Set<Class> collectMorphiaClasses() {
-    Set<Class> morphiaClasses = new ConcurrentHashSet<>();
-
+  @Provides
+  @Named("morphiaClasses")
+  @Singleton
+  Set<Class> classes(Set<Class<? extends MorphiaRegistrar>> registrars) {
+    Set<Class> classes = new HashSet<>();
     try {
-      Reflections reflections = new Reflections("io.harness.serializer.morphia");
-      for (Class clazz : reflections.getSubTypesOf(MorphiaRegistrar.class)) {
+      for (Class clazz : registrars) {
         Constructor<?> constructor = clazz.getConstructor();
         final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
-
-        morphiaRegistrar.registerClasses(morphiaClasses);
+        morphiaRegistrar.registerClasses(classes);
       }
     } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
       throw new GeneralException("Failed initializing morphia", e);
     }
 
-    return morphiaClasses;
-  }
-
-  private static Set<Class> morphiaClasses = collectMorphiaClasses();
-
-  @Provides
-  @Named("morphiaClasses")
-  @Singleton
-  Set<Class> classes() {
-    return morphiaClasses;
+    return classes;
   }
 
   @Provides
@@ -95,7 +88,7 @@ public class MorphiaModule extends AbstractModule {
     return morphia;
   }
 
-  public void testAutomaticSearch() {
+  public void testAutomaticSearch(Provider<Set<Class>> classesProvider) {
     Morphia morphia;
     try {
       morphia = new Morphia();
@@ -111,8 +104,8 @@ public class MorphiaModule extends AbstractModule {
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
-      if (!morphiaClasses.contains(cls.getClazz())) {
-        logger.error(cls.getClazz().getName());
+      if (!classesProvider.get().contains(cls.getClazz())) {
+        logger.error("Class {} is missing in the registrars", cls.getClazz().getName());
         success = false;
       }
     }
@@ -122,10 +115,9 @@ public class MorphiaModule extends AbstractModule {
     }
   }
 
-  public void testAllRegistrars() {
-    Reflections reflections = new Reflections("io.harness.serializer.morphia");
+  public void testAllRegistrars(Provider<Set<Class<? extends MorphiaRegistrar>>> registrarsProvider) {
     try {
-      for (Class clazz : reflections.getSubTypesOf(MorphiaRegistrar.class)) {
+      for (Class clazz : registrarsProvider.get()) {
         Constructor<?> constructor = null;
         constructor = clazz.getConstructor();
         final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
@@ -148,8 +140,14 @@ public class MorphiaModule extends AbstractModule {
     MapBinder<String, TestExecution> testExecutionMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
     if (!binder().currentStage().name().equals("TOOL")) {
-      testExecutionMapBinder.addBinding("Morphia test registration").toInstance(() -> testAutomaticSearch());
-      testExecutionMapBinder.addBinding("Morphia test registrars").toInstance(() -> testAllRegistrars());
+      Provider<Set<Class>> providerClasses =
+          getProvider(Key.get(new TypeLiteral<Set<Class>>() {}, Names.named("morphiaClasses")));
+      testExecutionMapBinder.addBinding("Morphia test registration")
+          .toInstance(() -> testAutomaticSearch(providerClasses));
+      Provider<Set<Class<? extends MorphiaRegistrar>>> providerRegistrars =
+          getProvider(Key.get(new TypeLiteral<Set<Class<? extends MorphiaRegistrar>>>() {}));
+      testExecutionMapBinder.addBinding("Morphia test registrars")
+          .toInstance(() -> testAllRegistrars(providerRegistrars));
     }
   }
 }

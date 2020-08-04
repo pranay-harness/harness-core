@@ -13,8 +13,8 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
@@ -42,7 +42,7 @@ import org.mockito.MockitoAnnotations;
 import java.time.Instant;
 import java.util.UUID;
 
-public class VerificationTaskServiceImplTest extends CVNextGenBaseTest {
+public class VerificationTaskServiceImplTest extends CvNextGenTest {
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVConfigService cvConfigService;

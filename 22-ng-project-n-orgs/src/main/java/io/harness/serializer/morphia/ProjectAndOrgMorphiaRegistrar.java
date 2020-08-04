@@ -12,7 +12,7 @@ import io.harness.ng.core.entities.Project;
 
 import java.util.Set;
 
-public class ProjectAndOrgMorphiaClassesRegistrar implements MorphiaRegistrar {
+public class ProjectAndOrgMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Project.class);

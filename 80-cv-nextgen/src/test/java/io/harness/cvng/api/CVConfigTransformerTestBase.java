@@ -2,12 +2,12 @@ package io.harness.cvng.api;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.CvNextGenTest;
 import io.harness.cvng.core.beans.DSConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import org.junit.Before;
 
-public class CVConfigTransformerTestBase extends CVNextGenBaseTest {
+public class CVConfigTransformerTestBase extends CvNextGenTest {
   protected String identifier;
   protected String accountId;
   protected String projectIdentifier;

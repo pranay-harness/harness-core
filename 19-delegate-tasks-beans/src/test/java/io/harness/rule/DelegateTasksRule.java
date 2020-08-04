@@ -11,10 +11,10 @@ import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaModule;
-import io.harness.serializer.EventsServerRegistrars;
+import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -34,10 +34,10 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-public class EventServerRule implements MethodRule, InjectorRuleMixin {
+public class DelegateTasksRule implements MethodRule, InjectorRuleMixin {
   ClosingFactory closingFactory;
 
-  public EventServerRule(ClosingFactory closingFactory) {
+  public DelegateTasksRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
   }
 
@@ -62,10 +62,17 @@ public class EventServerRule implements MethodRule, InjectorRuleMixin {
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(EventsServerRegistrars.kryoRegistrars)
-            .add(TestPersistenceKryoRegistrar.class)
+            .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -76,7 +83,6 @@ public class EventServerRule implements MethodRule, InjectorRuleMixin {
         return Collections.emptyMap();
       }
     });
-
     modules.add(MorphiaModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides

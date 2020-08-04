@@ -27,13 +27,15 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoConfig;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.TestManagerRegistrar;
+import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -135,12 +137,21 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CvNextGenCommonsBeansKryoRegistrar.class)
             .add(TestPersistenceKryoRegistrar.class)
-            .add(TestManagerRegistrar.class)
+            .add(TestManagerKryoRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
     });

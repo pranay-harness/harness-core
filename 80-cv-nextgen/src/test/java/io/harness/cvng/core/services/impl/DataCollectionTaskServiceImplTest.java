@@ -17,8 +17,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
+public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;

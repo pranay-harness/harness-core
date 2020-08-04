@@ -16,9 +16,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
+public class TimeSeriesServiceImplTest extends CvNextGenTest {
   private String cvConfigId;
   private String accountId;
   private String connectorId;

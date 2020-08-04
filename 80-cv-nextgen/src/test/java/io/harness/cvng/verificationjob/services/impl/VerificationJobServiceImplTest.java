@@ -8,8 +8,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class VerificationJobServiceImplTest extends CVNextGenBaseTest {
+public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Inject private VerificationJobService verificationJobService;
   private String identifier;
   private String accountId;

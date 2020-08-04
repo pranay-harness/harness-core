@@ -10,8 +10,8 @@ import static org.assertj.core.data.Offset.offset;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -44,7 +44,7 @@ import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AnomalyServiceImplTest extends CVNextGenBaseTest {
+public class AnomalyServiceImplTest extends CvNextGenTest {
   @Inject private AnomalyService anomalyService;
   @Inject private MetricPackService metricPackService;
   @Inject private CVConfigService cvConfigService;

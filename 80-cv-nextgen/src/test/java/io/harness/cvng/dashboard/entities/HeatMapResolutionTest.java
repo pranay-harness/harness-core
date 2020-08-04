@@ -8,8 +8,8 @@ import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.TWELV
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-public class HeatMapResolutionTest extends CVNextGenBaseTest {
+public class HeatMapResolutionTest extends CvNextGenTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)

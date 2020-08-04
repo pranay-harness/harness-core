@@ -11,6 +11,7 @@ import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.ApiServiceBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -61,9 +62,17 @@ public class ApiServiceRule implements MethodRule, InjectorRuleMixin {
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(ApiServiceBeansRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -74,6 +83,7 @@ public class ApiServiceRule implements MethodRule, InjectorRuleMixin {
         return Collections.emptyMap();
       }
     });
+
     modules.add(MorphiaModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides

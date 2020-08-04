@@ -2,10 +2,12 @@ package io.harness;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.kryo.WaitEngineKryoRegister;
+import io.harness.serializer.morphia.WaitEngineMorphiaRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -15,5 +17,12 @@ public class WaitEngineRegistrars {
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .add(WaitEngineKryoRegister.class)
+          .build();
+
+  public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
+      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+          .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
+          .add(WaitEngineMorphiaRegistrar.class)
           .build();
 }

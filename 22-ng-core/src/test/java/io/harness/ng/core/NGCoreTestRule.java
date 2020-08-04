@@ -8,12 +8,12 @@ import com.google.inject.Singleton;
 
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGCoreRegistrars;
-import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -38,11 +38,18 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(NGCoreRegistrars.kryoRegistrars)
-            .addAll(PersistenceRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(NGCoreRegistrars.morphiaRegistrars)
             .build();
       }
     });

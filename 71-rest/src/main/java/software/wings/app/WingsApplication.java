@@ -88,6 +88,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.QuartzCleaner;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.ForwardingPerpetualTaskServiceClient;
@@ -319,8 +320,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+      }
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .build();
       }
     });
 

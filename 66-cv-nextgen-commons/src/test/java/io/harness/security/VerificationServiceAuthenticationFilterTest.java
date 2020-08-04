@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenCommonsTest;
 import io.harness.beans.ClientType;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenCommonBaseTest;
 import io.harness.entity.HarnessApiKey;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -28,7 +28,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
 
-public class VerificationServiceAuthenticationFilterTest extends CVNextGenCommonBaseTest {
+public class VerificationServiceAuthenticationFilterTest extends CvNextGenCommonsTest {
   @Mock private ResourceInfo resourceInfo;
   @Mock private ContainerRequestContext containerRequestContext;
   @Inject private HPersistence hPersistence;

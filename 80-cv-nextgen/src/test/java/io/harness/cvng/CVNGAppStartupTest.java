@@ -9,6 +9,7 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.dropwizard.testing.ResourceHelpers;
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.glassfish.jersey.client.JerseyClientBuilder;
@@ -21,7 +22,7 @@ import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
-public class CVNGAppStartupTest extends CVNextGenBaseTest {
+public class CVNGAppStartupTest extends CvNextGenTest {
   public static MongoServer MONGO_SERVER;
   public static DropwizardTestSupport<VerificationConfiguration> SUPPORT;
 

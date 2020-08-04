@@ -12,8 +12,8 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
@@ -38,7 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class LearningEngineTaskServiceImplTest extends CVNextGenBaseTest {
+public class LearningEngineTaskServiceImplTest extends CvNextGenTest {
   @Inject HPersistence hPersistence;
 
   @Mock HPersistence mockHPersistence;

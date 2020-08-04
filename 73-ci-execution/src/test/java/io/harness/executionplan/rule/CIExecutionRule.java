@@ -6,7 +6,7 @@ import com.google.inject.Module;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.CIExecutionServiceModule;
-import io.harness.CIExecutionTestRule;
+import io.harness.CIExecutionTestModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
@@ -34,7 +34,7 @@ import java.util.List;
 
 public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
-  @Rule public CIExecutionTestRule testRule = new CIExecutionTestRule();
+  @Rule public CIExecutionTestModule testRule = new CIExecutionTestModule();
   public CIExecutionRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
   }
@@ -46,7 +46,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-    modules.add(new CIExecutionTestRule());
+    modules.add(new CIExecutionTestModule());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

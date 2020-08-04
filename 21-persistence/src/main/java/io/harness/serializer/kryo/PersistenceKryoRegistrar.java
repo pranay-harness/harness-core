@@ -1,15 +1,12 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.beans.EmbeddedUser;
 import io.harness.serializer.KryoRegistrar;
 
-/**
- * Class will register all kryo classes
- */
-
-public class CIExecutionRegistrar implements KryoRegistrar {
+public class PersistenceKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
-    // No class to register
+    kryo.register(EmbeddedUser.class, 5021);
   }
 }

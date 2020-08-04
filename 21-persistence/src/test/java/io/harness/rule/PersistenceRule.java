@@ -23,6 +23,7 @@ import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.queue.MongoQueueConsumer;
 import io.harness.mongo.queue.MongoQueuePublisher;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
@@ -37,6 +38,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -101,10 +103,19 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(PersistenceRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(PersistenceRegistrars.morphiaRegistrars)
+            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
     });

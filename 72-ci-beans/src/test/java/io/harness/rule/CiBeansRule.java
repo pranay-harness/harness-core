@@ -11,10 +11,12 @@ import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -62,10 +64,19 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(CiBeansRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(CiBeansRegistrars.morphiaRegistrars)
+            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

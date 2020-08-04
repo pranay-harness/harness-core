@@ -34,8 +34,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.CIBeansRegistrar;
-import io.harness.serializer.kryo.CIExecutionRegistrar;
+import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -94,8 +93,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ManagerRegistrars.kryoRegistrars)
-            .add(CIBeansRegistrar.class)
-            .add(CIExecutionRegistrar.class)
+            .add(CIBeansKryoRegistrar.class)
             .build();
       }
     });

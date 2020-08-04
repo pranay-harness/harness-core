@@ -1,17 +1,17 @@
 package io.harness.event.app;
 
-import static io.harness.event.app.EventServiceTestRule.DEFAULT_ACCOUNT_ID;
-import static io.harness.event.app.EventServiceTestRule.DEFAULT_ACCOUNT_SECRET;
-import static io.harness.event.app.EventServiceTestRule.DEFAULT_DELEGATE_ID;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.grpc.IdentifierKeys.DELEGATE_ID;
+import static io.harness.rule.EventServiceRule.DEFAULT_ACCOUNT_ID;
+import static io.harness.rule.EventServiceRule.DEFAULT_ACCOUNT_SECRET;
+import static io.harness.rule.EventServiceRule.DEFAULT_DELEGATE_ID;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.CategoryTest;
+import io.harness.EventServerTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.grpc.PublishedMessage;
@@ -22,7 +22,6 @@ import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
@@ -33,9 +32,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class EventServiceApplicationTest extends CategoryTest {
-  @Rule public final EventServiceTestRule eventServiceTestRule = new EventServiceTestRule();
-
+public class EventServiceApplicationTest extends EventServerTest {
   @Inject private HPersistence hPersistence;
 
   @Inject private EventPublisher eventPublisher;

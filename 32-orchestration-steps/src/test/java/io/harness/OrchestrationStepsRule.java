@@ -18,11 +18,13 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
@@ -70,6 +72,14 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
             .build();
       }
     });

@@ -8,8 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -28,7 +28,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-public class CVConfigResourceTest extends CVNextGenBaseTest {
+public class CVConfigResourceTest extends CvNextGenTest {
   @Inject private Injector injector;
   @Inject private static CVConfigResource cvConfigResource = new CVConfigResource();
 

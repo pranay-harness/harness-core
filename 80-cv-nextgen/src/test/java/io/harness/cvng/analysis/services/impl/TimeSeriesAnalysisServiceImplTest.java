@@ -11,8 +11,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
@@ -54,7 +54,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
+public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Mock LearningEngineTaskService learningEngineTaskService;
   @Mock TimeSeriesService mockTimeSeriesService;
   @Mock AnomalyService anomalyService;

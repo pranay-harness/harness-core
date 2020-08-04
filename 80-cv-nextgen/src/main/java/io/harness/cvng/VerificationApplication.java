@@ -57,10 +57,11 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.kryo.CVNGKryoRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -130,8 +131,18 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(CVNGKryoRegistrar.class).build();
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CvNextGenRegistrars.kryoRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(CvNextGenRegistrars.morphiaRegistrars)
+            .build();
       }
     });
     modules.add(MetricsInstrumentationModule.builder()

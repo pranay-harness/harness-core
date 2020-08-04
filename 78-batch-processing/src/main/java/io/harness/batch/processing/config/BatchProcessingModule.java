@@ -9,8 +9,10 @@ import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.CESlackWebhookServiceImpl;
 import io.harness.mongo.MongoConfig;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -39,8 +41,14 @@ public class BatchProcessingModule extends AbstractModule {
 
   @Provides
   @Singleton
-  Set<Class<? extends KryoRegistrar>> registrars() {
+  Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
     return Collections.emptySet();
+  }
+
+  @Provides
+  @Singleton
+  Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+    return ManagerRegistrars.morphiaRegistrars;
   }
 
   @Provides

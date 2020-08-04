@@ -1,9 +1,11 @@
-package io.harness.event.app;
+package io.harness.rule;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import io.harness.event.app.EventServiceConfig;
+import io.harness.event.app.EventServiceModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
@@ -12,7 +14,6 @@ import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.grpc.server.Connector;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.InjectorRuleMixin;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import lombok.Getter;
@@ -29,16 +30,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class EventServiceTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
-  static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  static final String DEFAULT_ACCOUNT_SECRET = "2f6b0988b6fb3370073c3d0505baee59";
-  static final String DEFAULT_DELEGATE_ID = "G0yG0f9gQhKsr1xBErpUFg";
+public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
+  public static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  public static final String DEFAULT_ACCOUNT_SECRET = "2f6b0988b6fb3370073c3d0505baee59";
+  public static final String DEFAULT_DELEGATE_ID = "G0yG0f9gQhKsr1xBErpUFg";
 
-  private static final String QUEUE_FILE_PATH =
+  public static final String QUEUE_FILE_PATH =
       Paths.get(FileUtils.getTempDirectoryPath(), UUID.randomUUID().toString()).toString();
   private static final int PORT = 9890;
 
-  @Getter private final ClosingFactory closingFactory = new ClosingFactory();
+  @Getter private ClosingFactory closingFactory;
+
+  public EventServiceRule(ClosingFactory closingFactory) {
+    this.closingFactory = closingFactory == null ? new ClosingFactory() : closingFactory;
+  }
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
