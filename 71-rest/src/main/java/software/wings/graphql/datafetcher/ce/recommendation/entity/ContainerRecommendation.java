@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ContainerRecommendation {
-  String containerName;
   ResourceRequirement current;
   ResourceRequirement burstable;
   ResourceRequirement guaranteed;

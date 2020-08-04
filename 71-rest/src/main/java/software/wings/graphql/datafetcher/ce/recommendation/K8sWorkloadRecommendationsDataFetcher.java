@@ -103,17 +103,20 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
 
   private Collection<? extends QLContainerRecommendation> entityToDtoCr(
       Map<String, ContainerRecommendation> containerRecommendations) {
-    return containerRecommendations.values()
+    return containerRecommendations.entrySet()
         .stream()
-        .map(containerRecommendation
-            -> QLContainerRecommendation.builder()
-                   .containerName(containerRecommendation.getContainerName())
-                   .current(entityToDto(containerRecommendation.getCurrent()))
-                   .burstable(entityToDto(containerRecommendation.getBurstable()))
-                   .guaranteed(entityToDto(containerRecommendation.getGuaranteed()))
-                   .numDays(containerRecommendation.getNumDays())
-                   .totalSamplesCount(containerRecommendation.getTotalSamplesCount())
-                   .build())
+        .map(containerRecommendationEntry -> {
+          String containerName = containerRecommendationEntry.getKey();
+          ContainerRecommendation containerRecommendation = containerRecommendationEntry.getValue();
+          return QLContainerRecommendation.builder()
+              .containerName(containerName)
+              .current(entityToDto(containerRecommendation.getCurrent()))
+              .burstable(entityToDto(containerRecommendation.getBurstable()))
+              .guaranteed(entityToDto(containerRecommendation.getGuaranteed()))
+              .numDays(containerRecommendation.getNumDays())
+              .totalSamplesCount(containerRecommendation.getTotalSamplesCount())
+              .build();
+        })
         .collect(Collectors.toList());
   }
 
