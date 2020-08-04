@@ -1,4 +1,4 @@
-package io.harness.beans.seriazlier;
+package io.harness.beans.serializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +9,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.product.ci.engine.proto.Step;
+import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
@@ -39,11 +39,11 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
 
                                   .build();
     String serialize = protobufSerializer.serialize(runStepInfo);
-    Step runStep = Step.parseFrom(Base64.decodeBase64(serialize));
-    assertThat(runStep.getUnit().getId()).isEqualTo(RUN_STEP_ID);
-    assertThat(runStep.getUnit().getDisplayName()).isEqualTo(RUN_STEP);
-    assertThat(runStep.getUnit().getRun().getContext().getNumRetries()).isEqualTo(RETRY);
-    assertThat(runStep.getUnit().getRun().getContext().getExecutionTimeoutSecs()).isEqualTo(TIMEOUT);
-    assertThat(runStep.getUnit().getRun().getCommands(0)).isEqualTo(MVN_CLEAN_INSTALL);
+    UnitStep runStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
+    assertThat(runStep.getId()).isEqualTo(RUN_STEP_ID);
+    assertThat(runStep.getDisplayName()).isEqualTo(RUN_STEP);
+    assertThat(runStep.getRun().getContext().getNumRetries()).isEqualTo(RETRY);
+    assertThat(runStep.getRun().getContext().getExecutionTimeoutSecs()).isEqualTo(TIMEOUT);
+    assertThat(runStep.getRun().getCommands(0)).isEqualTo(MVN_CLEAN_INSTALL);
   }
 }

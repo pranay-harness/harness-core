@@ -57,7 +57,7 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(buildSetupUtils.executeCISetupTask(any(), any())).thenReturn(restResponse);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
+        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").build());
 
     buildEnvSetupStep.executeSync(null, BuildEnvSetupStepInfo.builder().build(), null, null);
 

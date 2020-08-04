@@ -10,6 +10,7 @@ import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VAL
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.ADDON_CONTAINER;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,9 +53,14 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   private static final String UUID = "UUID";
   private static final String NAME = "name";
 
-  private static final List<String> command = Collections.unmodifiableList(Arrays.asList("/bin/sh", "-c"));
-  private static final List<String> args =
-      Collections.unmodifiableList(Arrays.asList("trap : TERM INT; (while true; do sleep 1000; done) & wait"));
+  private static final List<String> command =
+      Collections.unmodifiableList(Arrays.asList("/step-exec/.harness/bin/ci-lite-engine"));
+  private static final List<String> args = Collections.unmodifiableList(Arrays.asList("stage", "--input",
+      "CjASLgoFcnVuLTESC2J1aWxkU2NyaXB0GhgKES4vYnVpbGQtc2NyaXB0LnNoEgMQsAkKdgp0CghwYXJhbGxlbBIEbmFtZRowCgd0ZXN0LXAxEgt0ZXN0U2NyaXB0MRoYChEuL3Rlc3Qtc2NyaXB0MS5zaBIDELAJGjAKB3Rlc3QtcDISC3Rlc3RTY3JpcHQyGhgKES4vdGVzdC1zY3JpcHQyLnNoEgMQsAkK8AEK7QEKCHBhcmFsbGVsEgRuYW1lGlYKCXB1Ymxpc2gtMTJJEkcKDH4vRG9ja2VyZmlsZRICfi8aMwocdXMuZ2NyLmlvL2NpLXBsYXkvcG9ydGFsOnYwMRIRCg1nY3ItY29ubmVjdG9yEAEYBBqCAQoJcHVibGlzaC0yMnUScwoMfi9Eb2NrZXJmaWxlEgJ+LxpfCkggaHR0cHM6Ly85ODc5MjMxMzI4NzkuZGtyLmVjci5ldS13ZXN0LTEuYW1hem9uYXdzLmNvbS9jaS1wbGF5L3BvcnRhbDp2MDESEQoNZWNyLWNvbm5lY3RvchACGAU=",
+      "--logpath", "/step-exec/.harness/logs/", "--tmppath", "/step-exec/.harness/tmp/", "--ports", "9001", "--debug"));
+
+  private static final List<String> args2 = Collections.unmodifiableList(Arrays.asList(
+      "server", "--port", "9001", "--logpath", "/step-exec/.harness/logs/", "--tmppath", "/step-exec/.harness/tmp/"));
 
   @Before
   public void setUp() {
@@ -64,27 +71,33 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldCreatePodParameters() throws IOException {
-    K8BuildJobEnvInfo.PodsSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfo();
+    K8BuildJobEnvInfo.PodsSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod();
 
-    // when(k8BuildSetupUtils.getPodParams(any(), any())).thenReturn(executionNode);buildSetupUtils.executeCISetupTask()
     CIK8PodParams<CIK8ContainerParams> podParams =
-        k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default", command, args, null);
+        k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default",
+            ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true);
 
-    Map<String, EncryptedVariableWithType> envSecretVars = new HashMap<>();
+    Map<String, EncryptedVariableWithType> envSecretVars = new LinkedHashMap<>();
     envSecretVars.put(ACCESS_KEY_MINIO_VARIABLE, null);
     envSecretVars.put(SECRET_KEY_MINIO_VARIABLE, null);
+    envSecretVars.put("VAR1", EncryptedVariableWithType.builder().build());
+    envSecretVars.put("VAR2", EncryptedVariableWithType.builder().build());
+
     envSecretVars.putAll(ciExecutionPlanTestHelper.getEncryptedSecrets());
 
-    Map<String, String> envVars = new HashMap<>();
-    envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
+    Map<String, String> envVars = new LinkedHashMap<>();
     envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
+    envVars.put("VAR3", "value3");
+    envVars.put("VAR4", "value4");
+    envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
+
     envVars.putAll(ciExecutionPlanTestHelper.getEnvVars());
 
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     assertThat(podParams.getContainerParamsList().get(0))
         .isEqualTo(CIK8ContainerParams.builder()
-                       .name(ciExecutionPlanTestHelper.getPodName())
+                       .name("build-setup1")
                        .containerResourceParams(ContainerResourceParams.builder()
                                                     .resourceLimitMemoryMiB(1000)
                                                     .resourceLimitMilliCpu(1000)
@@ -104,6 +117,28 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
                        .build());
 
     assertThat(podParams.getContainerParamsList().get(1))
+        .isEqualTo(CIK8ContainerParams.builder()
+                       .name("build-setup2")
+                       .containerResourceParams(ContainerResourceParams.builder()
+                                                    .resourceLimitMemoryMiB(1000)
+                                                    .resourceLimitMilliCpu(1000)
+                                                    .resourceRequestMemoryMiB(1000)
+                                                    .resourceRequestMilliCpu(1000)
+                                                    .build())
+                       .containerType(CIContainerType.STEP_EXECUTOR)
+                       .commands(command)
+                       .containerSecrets(ContainerSecrets.builder().encryptedSecrets(envSecretVars).build())
+                       .envVars(envVars)
+                       .args(args2)
+                       .ports(singletonList(9001))
+                       .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                                      .connectorName("testConnector")
+                                                      .imageDetails(imageDetails)
+                                                      .build())
+                       .volumeToMountPath(map)
+                       .build());
+
+    assertThat(podParams.getContainerParamsList().get(2))
         .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER)
                        .containerSecrets(ContainerSecrets.builder().build())
                        .build());

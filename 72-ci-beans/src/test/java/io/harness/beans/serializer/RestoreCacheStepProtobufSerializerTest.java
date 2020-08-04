@@ -1,4 +1,4 @@
-package io.harness.beans.seriazlier;
+package io.harness.beans.serializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +9,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.product.ci.engine.proto.Step;
+import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
@@ -31,12 +31,13 @@ public class RestoreCacheStepProtobufSerializerTest extends CIBeansTest {
                                                     .key(RESTORE_KEY)
                                                     .failIfNotExist(true)
                                                     .build();
-    String serialize = protobufSerializer.serialize(restoreCacheStepInfo);
-    Step restoreStep = Step.parseFrom(Base64.decodeBase64(serialize));
 
-    assertThat(restoreStep.getUnit().getRestoreCache().getKey()).isEqualTo(RESTORE_KEY);
-    assertThat(restoreStep.getUnit().getDisplayName()).isEqualTo(RESTORE_CACHE);
-    assertThat(restoreStep.getUnit().getId()).isEqualTo(RESTORE_ID);
-    assertThat(restoreStep.getUnit().getRestoreCache().getFailIfNotExist()).isTrue();
+    String serialize = protobufSerializer.serialize(restoreCacheStepInfo);
+    UnitStep restoreStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
+
+    assertThat(restoreStep.getRestoreCache().getKey()).isEqualTo(RESTORE_KEY);
+    assertThat(restoreStep.getDisplayName()).isEqualTo(RESTORE_CACHE);
+    assertThat(restoreStep.getId()).isEqualTo(RESTORE_ID);
+    assertThat(restoreStep.getRestoreCache().getFailIfNotExist()).isTrue();
   }
 }

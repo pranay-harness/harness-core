@@ -23,7 +23,6 @@ import javax.validation.constraints.NotNull;
 public class K8PodDetails implements PersistentEntity, UuidAware, ContextElement, AccountAccess {
   private String namespace;
   private String clusterName;
-  private String podName;
   private long lastUpdatedAt;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex private String accountId;

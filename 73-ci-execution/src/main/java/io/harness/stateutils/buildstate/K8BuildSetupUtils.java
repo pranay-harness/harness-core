@@ -6,11 +6,10 @@ import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.SETUP_TASK_ARGS;
-import static io.harness.common.CIExecutionConstants.SH_COMMAND;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.ADDON_CONTAINER;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.LITE_ENGINE_CONTAINER;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
@@ -27,8 +26,10 @@ import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
@@ -45,14 +46,18 @@ import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.PVCParams;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -78,8 +83,7 @@ public class K8BuildSetupUtils {
       // TODO Use k8 connector from element input
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
           buildEnvSetupStepInfo.getGitConnectorIdentifier(), buildEnvSetupStepInfo.getBranchName(),
-          getPodParams(podSetupInfo, namespace, SH_COMMAND, Collections.singletonList(SETUP_TASK_ARGS),
-              publishStepConnectorIdentifier)));
+          getPodParams(podSetupInfo, namespace, null, publishStepConnectorIdentifier, false)));
 
     } catch (Exception e) {
       logger.error("build state execution failed", e);
@@ -97,15 +101,14 @@ public class K8BuildSetupUtils {
     try {
       PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
-      List<String> command = liteEngineTaskUtils.getLiteEngineCommand();
-      List<String> arguments = liteEngineTaskUtils.getLiteEngineArguments(liteEngineTaskStepInfo);
       Set<String> publishStepConnectorIdentifier =
           ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
 
       // TODO Use k8 connector from element input
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
           liteEngineTaskStepInfo.getGitConnectorIdentifier(), liteEngineTaskStepInfo.getBranchName(),
-          getPodParams(podSetupInfo, namespace, command, arguments, publishStepConnectorIdentifier)));
+          getPodParams(podSetupInfo, namespace, liteEngineTaskStepInfo, publishStepConnectorIdentifier,
+              liteEngineTaskStepInfo.isUsePVC())));
     } catch (Exception e) {
       logger.error("lite engine task state execution failed", e);
     }
@@ -113,9 +116,17 @@ public class K8BuildSetupUtils {
   }
 
   public CIK8PodParams<CIK8ContainerParams> getPodParams(PodSetupInfo podSetupInfo, String namespace,
-      List<String> commands, List<String> args, Set<String> publishStepConnectorIdentifier) {
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Set<String> publishStepConnectorIdentifier, boolean usePVC) {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
+    List<String> ports = podSetupInfo.getPodSetupParams()
+                             .getContainerDefinitionInfos()
+                             .stream()
+                             .map(ContainerDefinitionInfo::getPorts)
+                             .filter(EmptyPredicate::isNotEmpty)
+                             .flatMap(Collection::stream)
+                             .map(Object::toString)
+                             .collect(Collectors.toList());
 
     // user input container with custom entry point
     List<CIK8ContainerParams> containerParams =
@@ -123,24 +134,7 @@ public class K8BuildSetupUtils {
             .getContainerDefinitionInfos()
             .stream()
             .map(containerDefinitionInfo
-                -> CIK8ContainerParams.builder()
-                       .name(containerDefinitionInfo.getName())
-                       .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
-                       .containerType(CIContainerType.STEP_EXECUTOR)
-                       .envVars(getCIExecutorEnvVariables(containerDefinitionInfo))
-                       .containerSecrets(ContainerSecrets.builder()
-                                             .encryptedSecrets(getSecretEnvVars(containerDefinitionInfo))
-                                             .build())
-                       .commands(commands)
-                       .args(args)
-                       .imageDetailsWithConnector(
-                           ImageDetailsWithConnector.builder()
-                               .imageDetails(containerDefinitionInfo.getContainerImageDetails().getImageDetails())
-                               .connectorName(
-                                   containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier())
-                               .build())
-                       .volumeToMountPath(map)
-                       .build())
+                -> createCIK8ContainerParams(containerDefinitionInfo, map, liteEngineTaskStepInfo, ports))
             .collect(toList());
 
     CIK8ContainerParamsBuilder addOnCik8ContainerParamsBuilder =
@@ -153,14 +147,54 @@ public class K8BuildSetupUtils {
     // include addon container
     containerParams.add(addOnCik8ContainerParamsBuilder.build());
 
+    List<PVCParams> pvcParams = new ArrayList<>();
+    if (usePVC) {
+      pvcParams = asList(podSetupInfo.getPvcParams());
+    }
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())
         .namespace(namespace)
         .stepExecVolumeName(STEP_EXEC)
         .stepExecWorkingDir(STEP_EXEC_WORKING_DIR)
         .containerParamsList(containerParams)
+        .pvcParamList(pvcParams)
         .initContainerParamsList(Collections.singletonList(
             InternalContainerParamsProvider.getContainerParams(LITE_ENGINE_CONTAINER).build()))
+        .build();
+  }
+
+  private CIK8ContainerParams createCIK8ContainerParams(ContainerDefinitionInfo containerDefinitionInfo,
+      Map<String, String> volumeToMountPath, LiteEngineTaskStepInfo liteEngineTaskStepInfo, List<String> ports) {
+    List<String> commands = liteEngineTaskUtils.getLiteEngineCommand();
+    List<String> args;
+    if (containerDefinitionInfo.getContainerType() == CIContainerType.STEP_EXECUTOR
+        && containerDefinitionInfo.isMainLiteEngine()) {
+      args = liteEngineTaskUtils.getMainLiteEngineArguments(liteEngineTaskStepInfo, ports);
+    } else {
+      args = liteEngineTaskUtils.getWorkerLiteEngineArguments(
+          containerDefinitionInfo.getPorts()
+              .stream()
+              .findFirst()
+              .orElseThrow(() -> new InvalidArgumentsException("ports can not be empty for worker container"))
+              .toString());
+    }
+
+    return CIK8ContainerParams.builder()
+        .name(containerDefinitionInfo.getName())
+        .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
+        .containerType(CIContainerType.STEP_EXECUTOR)
+        .envVars(getCIExecutorEnvVariables(containerDefinitionInfo))
+        .containerSecrets(
+            ContainerSecrets.builder().encryptedSecrets(getSecretEnvVars(containerDefinitionInfo)).build())
+        .commands(commands)
+        .ports(containerDefinitionInfo.getPorts())
+        .args(args)
+        .imageDetailsWithConnector(
+            ImageDetailsWithConnector.builder()
+                .imageDetails(containerDefinitionInfo.getContainerImageDetails().getImageDetails())
+                .connectorName(containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier())
+                .build())
+        .volumeToMountPath(volumeToMountPath)
         .build();
   }
 

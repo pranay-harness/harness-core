@@ -24,6 +24,7 @@ public class ContainerDefinitionInfo {
   @NotEmpty private CIContainerType containerType;
   @NotEmpty private ContainerResourceParams containerResourceParams;
   private List<String> commands;
+  private boolean isMainLiteEngine;
   private List<String> args;
   private List<Integer> ports;
   private Map<String, String> volumeToMountPath;

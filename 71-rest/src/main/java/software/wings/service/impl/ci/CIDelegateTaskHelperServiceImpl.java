@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.k8s.model.KubernetesConfig;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -81,7 +80,6 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
     KubernetesClusterConfig kubernetesClusterConfig = null;
     List<EncryptedDataDetail> encryptedDataDetails = null;
-    KubernetesConfig kubernetesConfig = null;
     if (googleCloud != null) {
       kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
@@ -95,6 +93,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
         CIK8PodParams.<CIK8ContainerParams>builder()
             .name(podParams.getName())
             .namespace(podParams.getNamespace())
+            .pvcParamList(podParams.getPvcParamList())
             .stepExecVolumeName(STEP_EXEC)
             .stepExecWorkingDir(podParams.getStepExecWorkingDir())
             .gitFetchFilesConfig(gitFetchFilesConfig)
@@ -169,7 +168,6 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
     KubernetesClusterConfig kubernetesClusterConfig = null;
     List<EncryptedDataDetail> encryptedDataDetails = null;
-    KubernetesConfig kubernetesConfig = null;
     if (googleCloud != null) {
       kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
@@ -206,7 +204,6 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
     KubernetesClusterConfig kubernetesClusterConfig = null;
     List<EncryptedDataDetail> encryptedDataDetails = null;
-    KubernetesConfig kubernetesConfig = null;
     if (googleCloud != null) {
       kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);

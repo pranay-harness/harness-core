@@ -1,4 +1,4 @@
-package io.harness.beans.seriazlier;
+package io.harness.beans.serializer;
 
 import static io.harness.product.ci.addon.proto.AuthType.BASIC_AUTH;
 
@@ -17,7 +17,6 @@ import io.harness.product.ci.addon.proto.Destination;
 import io.harness.product.ci.addon.proto.LocationType;
 import io.harness.product.ci.addon.proto.UploadFile;
 import io.harness.product.ci.engine.proto.PublishArtifactsStep;
-import io.harness.product.ci.engine.proto.Step;
 import io.harness.product.ci.engine.proto.UnitStep;
 import org.apache.commons.codec.binary.Base64;
 
@@ -32,7 +31,7 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
     return Base64.encodeBase64String(convertRestoreCacheStepInfo(stepInfo).toByteArray());
   }
 
-  public Step convertRestoreCacheStepInfo(PublishStepInfo publishStepInfo) {
+  public UnitStep convertRestoreCacheStepInfo(PublishStepInfo publishStepInfo) {
     PublishArtifactsStep.Builder publishArtifactsStepBuilder = PublishArtifactsStep.newBuilder();
     publishStepInfo.getPublishArtifacts().forEach(artifact -> {
       switch (artifact.getType()) {
@@ -48,12 +47,10 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
           break;
       }
     });
-    return Step.newBuilder()
-        .setUnit(UnitStep.newBuilder()
-                     .setId(publishStepInfo.getIdentifier())
-                     .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
-                     .setPublishArtifacts(publishArtifactsStepBuilder.build())
-                     .build())
+    return UnitStep.newBuilder()
+        .setId(publishStepInfo.getIdentifier())
+        .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
+        .setPublishArtifacts(publishArtifactsStepBuilder.build())
         .build();
   }
 

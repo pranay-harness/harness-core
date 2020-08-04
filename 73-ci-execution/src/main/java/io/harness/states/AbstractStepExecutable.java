@@ -42,11 +42,9 @@ public abstract class AbstractStepExecutable implements Step, SyncExecutable<CIS
           ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
       final String namespace = k8PodDetails.getNamespace();
       final String clusterName = k8PodDetails.getClusterName();
-      final String podName = k8PodDetails.getPodName();
 
       K8ExecCommandParams k8ExecCommandParams =
           K8ExecCommandParams.builder()
-              .podName(podName)
               .containerName(CONTAINER_NAME)
               .mountPath(MOUNT_PATH)
               .relStdoutFilePath(REL_STDOUT_FILE_PATH + "-" + ciStepInfo.getIdentifier())

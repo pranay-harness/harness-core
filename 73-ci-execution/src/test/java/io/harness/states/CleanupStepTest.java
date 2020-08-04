@@ -54,7 +54,7 @@ public class CleanupStepTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCleanupTask(any(), any(), any())).thenReturn(requestCall);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
+        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").build());
     cleanupStep.executeSync(ambiance, CleanupStepInfo.builder().build(), null, null);
 
     verify(managerCIResource, times(1)).podCleanupTask(any(), any(), any());
@@ -70,7 +70,7 @@ public class CleanupStepTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCleanupTask(any(), any(), any())).thenThrow(new RuntimeException());
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
+        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").build());
 
     cleanupStep.executeSync(ambiance, CleanupStepInfo.builder().build(), null, null);
 

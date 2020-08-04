@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.ci.pod.PVCParams;
 
 import java.util.List;
 
@@ -14,11 +14,11 @@ import java.util.List;
  */
 
 @Data
-@Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PodSetupInfo {
   private PodSetupParams podSetupParams;
+  private PVCParams pvcParams;
   @NotEmpty private String name;
 
   @Data

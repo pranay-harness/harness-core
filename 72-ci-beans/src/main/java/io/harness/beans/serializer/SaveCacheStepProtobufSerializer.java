@@ -1,8 +1,7 @@
-package io.harness.beans.seriazlier;
+package io.harness.beans.serializer;
 
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.product.ci.engine.proto.SaveCacheStep;
-import io.harness.product.ci.engine.proto.Step;
 import io.harness.product.ci.engine.proto.UnitStep;
 import org.apache.commons.codec.binary.Base64;
 
@@ -14,17 +13,15 @@ public class SaveCacheStepProtobufSerializer implements ProtobufSerializer<SaveC
     return Base64.encodeBase64String(convertSaveCacheStepInfo(object).toByteArray());
   }
 
-  public Step convertSaveCacheStepInfo(SaveCacheStepInfo saveCacheStepInfo) {
+  public UnitStep convertSaveCacheStepInfo(SaveCacheStepInfo saveCacheStepInfo) {
     SaveCacheStep.Builder saveCacheBuilder = SaveCacheStep.newBuilder();
     saveCacheBuilder.addAllPaths(saveCacheStepInfo.getPaths());
     saveCacheBuilder.setKey(saveCacheStepInfo.getKey());
 
-    return Step.newBuilder()
-        .setUnit(UnitStep.newBuilder()
-                     .setId(saveCacheStepInfo.getIdentifier())
-                     .setDisplayName(Optional.ofNullable(saveCacheStepInfo.getDisplayName()).orElse(""))
-                     .setSaveCache(saveCacheBuilder.build())
-                     .build())
+    return UnitStep.newBuilder()
+        .setId(saveCacheStepInfo.getIdentifier())
+        .setDisplayName(Optional.ofNullable(saveCacheStepInfo.getDisplayName()).orElse(""))
+        .setSaveCache(saveCacheBuilder.build())
         .build();
   }
 }

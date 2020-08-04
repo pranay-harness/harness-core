@@ -25,14 +25,14 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 
-public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
+public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
-  private StageExecutionModifier stageExecutionModifier;
+  @Inject private CILiteEngineIntegrationStageModifier stageExecutionModifier;
 
   @Before
   public void setUp() {
-    stageExecutionModifier =
-        CILiteEngineStepExecutionModifier.builder().podName(ciExecutionPlanTestHelper.getPodName()).build();
+    //    stageExecutionModifier =
+    //        CILiteEngineIntegrationStageModifier.builder().podName(ciExecutionPlanTestHelper.getPodName()).build();
   }
 
   @Test
@@ -49,13 +49,21 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
     assertThat(liteEngineTask).isInstanceOf(LiteEngineTaskStepInfo.class);
     assertThat(liteEngineTask.getBranchName()).isEqualTo("master");
     assertThat(liteEngineTask.getGitConnectorIdentifier()).isEqualTo("testGitConnector");
-    assertThat(liteEngineTask.getSteps()).isEqualTo(ciExecutionPlanTestHelper.getExecutionElement());
+    assertThat(liteEngineTask.getSteps()).isEqualTo(ciExecutionPlanTestHelper.getExpectedExecutionElement());
     K8BuildJobEnvInfo envInfo = (K8BuildJobEnvInfo) liteEngineTask.getBuildJobEnvInfo();
     assertThat(envInfo.getType()).isEqualTo(K8);
     assertThat(envInfo.getWorkDir()).isEqualTo(stage.getWorkingDirectory());
     assertThat(envInfo.getPublishStepConnectorIdentifier())
         .isEqualTo(ciExecutionPlanTestHelper.getPublishArtifactConnectorIds());
-    assertThat(envInfo.getPodsSetupInfo()).isEqualTo(ciExecutionPlanTestHelper.getCIPodsSetupInfo());
+    assertThat(envInfo.getPodsSetupInfo().getPodSetupInfoList().get(0).getPodSetupParams())
+        .isEqualTo(
+            ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0).getPodSetupParams());
+    assertThat(envInfo.getPodsSetupInfo().getPodSetupInfoList().get(0).getPvcParams().getVolumeName())
+        .isEqualTo(ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod()
+                       .getPodSetupInfoList()
+                       .get(0)
+                       .getPvcParams()
+                       .getVolumeName());
   }
 
   @Test
@@ -94,10 +102,8 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testStageExecutionModifierBuilder() {
-    IntegrationStageExecutionModifier modifier =
-        IntegrationStageExecutionModifier.builder().podName(ciExecutionPlanTestHelper.getPodName()).build();
+    IntegrationStageExecutionModifier modifier = IntegrationStageExecutionModifier.builder().build();
     assertThat(modifier).isNotNull();
-    assertThat(modifier.getPodName()).isEqualTo(ciExecutionPlanTestHelper.getPodName());
     assertThat(modifier.hashCode()).isNotZero();
     assertThat(modifier.toString()).isNotEmpty();
   }

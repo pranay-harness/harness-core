@@ -1,8 +1,7 @@
-package io.harness.beans.seriazlier;
+package io.harness.beans.serializer;
 
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.product.ci.engine.proto.RunStep;
-import io.harness.product.ci.engine.proto.Step;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
 import org.apache.commons.codec.binary.Base64;
@@ -15,7 +14,7 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
     return Base64.encodeBase64String(convertRunStepInfo(object).toByteArray());
   }
 
-  public Step convertRunStepInfo(RunStepInfo runStepInfo) {
+  public UnitStep convertRunStepInfo(RunStepInfo runStepInfo) {
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
     runStepBuilder.addAllCommands(runStepInfo.getCommand());
     if (runStepInfo.getOutput() != null) {
@@ -26,12 +25,10 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
                                   .setExecutionTimeoutSecs(runStepInfo.getTimeout())
                                   .build());
 
-    return Step.newBuilder()
-        .setUnit(UnitStep.newBuilder()
-                     .setId(runStepInfo.getIdentifier())
-                     .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
-                     .setRun(runStepBuilder.build())
-                     .build())
+    return UnitStep.newBuilder()
+        .setId(runStepInfo.getIdentifier())
+        .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
+        .setRun(runStepBuilder.build())
         .build();
   }
 }

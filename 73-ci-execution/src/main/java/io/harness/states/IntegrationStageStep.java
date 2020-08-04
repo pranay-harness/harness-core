@@ -39,7 +39,6 @@ public class IntegrationStageStep implements Step, ChildExecutable<IntegrationSt
       K8PodDetails k8PodDetails = K8PodDetails.builder()
                                       .clusterName(k8sDirectInfraYaml.getSpec().getKubernetesCluster())
                                       .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
-                                      .podName(integrationStageStepParameters.getPodName())
                                       .build();
       executionSweepingOutputResolver.consume(ambiance, ContextElement.podDetails, k8PodDetails, null);
     }

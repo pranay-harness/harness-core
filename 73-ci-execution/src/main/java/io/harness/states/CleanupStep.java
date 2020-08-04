@@ -45,9 +45,8 @@ public class CleanupStep implements Step, SyncExecutable {
 
       final String namespace = k8PodDetails.getNamespace();
       final String clusterName = k8PodDetails.getClusterName();
-      final String podName = k8PodDetails.getPodName();
-      // TODO Use k8 connector from element input, handle response
-      SafeHttpCall.execute(managerCIResource.podCleanupTask(clusterName, namespace, podName));
+      // TODO Pod cleanup is not require anymore after change in architecture, clean pvc and secrets instead of pod
+      SafeHttpCall.execute(managerCIResource.podCleanupTask(clusterName, namespace, null));
 
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } catch (Exception e) {

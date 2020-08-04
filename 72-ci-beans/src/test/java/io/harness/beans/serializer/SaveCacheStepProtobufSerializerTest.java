@@ -1,4 +1,4 @@
-package io.harness.beans.seriazlier;
+package io.harness.beans.serializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +9,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.product.ci.engine.proto.Step;
+import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
@@ -35,12 +35,12 @@ public class SaveCacheStepProtobufSerializerTest extends CIBeansTest {
                                               .paths(Arrays.asList(PATH_1, PATH_2))
                                               .build();
     String serialize = protobufSerializer.serialize(saveCacheStepInfo);
-    Step saveCacheStep = Step.parseFrom(Base64.decodeBase64(serialize));
+    UnitStep saveCacheStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
 
-    assertThat(saveCacheStep.getUnit().getDisplayName()).isEqualTo(SAVE_CACHE);
-    assertThat(saveCacheStep.getUnit().getId()).isEqualTo(SAVE_CACHE_ID);
-    assertThat(saveCacheStep.getUnit().getSaveCache().getKey()).isEqualTo(SAVE_CACHE_KEY);
-    assertThat(saveCacheStep.getUnit().getSaveCache().getPaths(0)).isEqualTo(PATH_1);
-    assertThat(saveCacheStep.getUnit().getSaveCache().getPaths(1)).isEqualTo(PATH_2);
+    assertThat(saveCacheStep.getDisplayName()).isEqualTo(SAVE_CACHE);
+    assertThat(saveCacheStep.getId()).isEqualTo(SAVE_CACHE_ID);
+    assertThat(saveCacheStep.getSaveCache().getKey()).isEqualTo(SAVE_CACHE_KEY);
+    assertThat(saveCacheStep.getSaveCache().getPaths(0)).isEqualTo(PATH_1);
+    assertThat(saveCacheStep.getSaveCache().getPaths(1)).isEqualTo(PATH_2);
   }
 }
