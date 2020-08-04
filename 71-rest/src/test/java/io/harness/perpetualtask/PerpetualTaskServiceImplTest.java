@@ -90,7 +90,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskRecord.setAccountId(accountId);
     perpetualTaskRecord.setDelegateId(delegateId);
     perpetualTaskRecord.setUuid(taskId);
-    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED.name());
+    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
     perpetualTaskRecordDao.save(perpetualTaskRecord);
 
     boolean resetTask = perpetualTaskService.resetTask(accountId, taskId, null);
@@ -98,7 +98,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
 
     assertThat(record).isNotNull();
-    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
     assertThat(resetTask).isTrue();
     assertThat(record.getClientContext().getClientParams()).isEqualTo(clientContext.getClientParams());
   }
@@ -117,7 +117,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskRecord.setAccountId(accountId);
     perpetualTaskRecord.setDelegateId(delegateId);
     perpetualTaskRecord.setUuid(taskId);
-    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED.name());
+    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
     perpetualTaskRecordDao.save(perpetualTaskRecord);
 
     PerpetualTaskExecutionBundle taskExecutionBundle =
@@ -130,7 +130,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
 
     assertThat(record).isNotNull();
-    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
     assertThat(resetTask).isTrue();
     assertThat(record.getClientContext().getExecutionBundle()).isEqualTo(taskExecutionBundle.toByteArray());
   }
@@ -147,7 +147,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskRecord.setAccountId(accountId);
     perpetualTaskRecord.setDelegateId(delegateId);
     perpetualTaskRecord.setUuid(taskId);
-    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED.name());
+    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED);
     perpetualTaskRecordDao.save(perpetualTaskRecord);
 
     boolean resetTask = perpetualTaskService.resetTask(accountId, taskId, null);
@@ -155,7 +155,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
 
     assertThat(record).isNotNull();
-    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
     assertThat(resetTask).isTrue();
     assertThat(record.getClientContext()).isNotNull();
   }
@@ -188,9 +188,9 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     String taskId = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
 
-    perpetualTaskService.setTaskState(ACCOUNT_ID, taskId);
+    perpetualTaskService.setTaskState(taskId, PerpetualTaskState.TASK_ASSIGNED);
 
-    assertThat(taskId).isNotNull();
+    // TODO: this test seems unfinished
   }
 
   @Test

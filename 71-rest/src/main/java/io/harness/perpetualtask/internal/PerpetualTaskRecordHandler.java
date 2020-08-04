@@ -111,7 +111,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
 
         } else if ((response instanceof RemoteMethodReturnValueData)
             && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
-          perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name());
+          perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES);
 
           raiseAlert(
               taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
@@ -123,11 +123,9 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
         }
       } catch (NoAvaliableDelegatesException exception) {
         ignoredOnPurpose(exception);
-        perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE.name());
-
+        perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE);
         raiseAlert(
             taskRecord, format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
-
       } catch (WingsException exception) {
         raiseAlert(taskRecord,
             format(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE, taskRecord.getPerpetualTaskType()));

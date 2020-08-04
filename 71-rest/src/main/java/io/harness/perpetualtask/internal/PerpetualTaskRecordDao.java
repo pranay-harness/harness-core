@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -29,17 +30,18 @@ public class PerpetualTaskRecordDao {
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, delegateId)
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_ASSIGNED)
             .unset(PerpetualTaskRecordKeys.assignerIterations)
             .set(PerpetualTaskRecordKeys.client_context_last_updated, lastContextUpdated);
     persistence.update(query, updateOperations);
   }
 
-  public void setTaskState(String taskId, String state) {
+  public void setTaskState(String taskId, PerpetualTaskState state) {
     persistence.updateField(PerpetualTaskRecord.class, taskId, PerpetualTaskRecordKeys.state, state);
   }
 
   public boolean resetDelegateIdForTask(
-      String accountId, String taskId, String state, PerpetualTaskExecutionBundle taskExecutionBundle) {
+      String accountId, String taskId, PerpetualTaskExecutionBundle taskExecutionBundle) {
     Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
                                            .filter(PerpetualTaskRecordKeys.accountId, accountId)
                                            .filter(PerpetualTaskRecordKeys.uuid, taskId);
@@ -47,7 +49,7 @@ public class PerpetualTaskRecordDao {
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, "")
-            .set(PerpetualTaskRecordKeys.state, state)
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
             .unset(PerpetualTaskRecordKeys.assignerIterations);
 
     if (taskExecutionBundle != null) {

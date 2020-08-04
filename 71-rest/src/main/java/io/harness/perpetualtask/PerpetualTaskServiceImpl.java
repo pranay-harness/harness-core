@@ -94,7 +94,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                        .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
                                        .intervalSeconds(schedule.getInterval().getSeconds())
                                        .delegateId("")
-                                       .state(PerpetualTaskState.TASK_UNASSIGNED.name())
+                                       .state(PerpetualTaskState.TASK_UNASSIGNED)
                                        .taskDescription(taskDescription)
                                        .build();
 
@@ -109,9 +109,11 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
 
   @Override
   public boolean resetTask(String accountId, String taskId, PerpetualTaskExecutionBundle taskExecutionBundle) {
-    logger.info("Resetting the perpetual task with id={}.", taskId);
-    return perpetualTaskRecordDao.resetDelegateIdForTask(
-        accountId, taskId, PerpetualTaskState.TASK_UNASSIGNED.name(), taskExecutionBundle);
+    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
+      logger.info("Resetting the perpetual task");
+      return perpetualTaskRecordDao.resetDelegateIdForTask(accountId, taskId, taskExecutionBundle);
+    }
   }
 
   @Override
@@ -120,7 +122,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
          AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
       boolean hasDeleted = perpetualTaskRecordDao.remove(accountId, taskId);
       if (hasDeleted) {
-        logger.info("Deleted the perpetual task with id={}.", taskId);
+        logger.info("Deleted the perpetual task");
       }
       return hasDeleted;
     }
@@ -201,13 +203,13 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
       return false;
     }
     boolean heartbeatUpdated = perpetualTaskRecordDao.saveHeartbeat(taskRecord, heartbeatMillis);
-    perpetualTaskRecordDao.setTaskState(taskId, perpetualTaskResponse.getPerpetualTaskState().name());
+    perpetualTaskRecordDao.setTaskState(taskId, perpetualTaskResponse.getPerpetualTaskState());
     stateChangeCallback(taskId, perpetualTaskResponse);
     return heartbeatUpdated;
   }
 
   @Override
-  public void setTaskState(String taskId, String state) {
+  public void setTaskState(String taskId, PerpetualTaskState state) {
     perpetualTaskRecordDao.setTaskState(taskId, state);
   }
 

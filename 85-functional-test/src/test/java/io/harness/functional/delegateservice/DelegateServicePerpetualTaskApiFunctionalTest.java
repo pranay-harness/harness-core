@@ -65,15 +65,15 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
 
     PerpetualTaskRecord perpetualTaskRecord = wingsPersistence.get(PerpetualTaskRecord.class, perpetualTaskId.getId());
     assertThat(perpetualTaskRecord).isNotNull();
-    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
 
     Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
       PerpetualTaskRecord pTaskRecord = wingsPersistence.get(PerpetualTaskRecord.class, perpetualTaskId.getId());
-      return PerpetualTaskState.TASK_RUN_SUCCEEDED.name().equals(pTaskRecord.getState());
+      return PerpetualTaskState.TASK_RUN_SUCCEEDED == pTaskRecord.getState();
     });
 
     perpetualTaskRecord = wingsPersistence.get(PerpetualTaskRecord.class, perpetualTaskId.getId());
-    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED.name());
+    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
   }
 
   @Test
@@ -105,14 +105,14 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
 
     PerpetualTaskRecord perpetualTaskRecord = wingsPersistence.get(PerpetualTaskRecord.class, perpetualTaskId.getId());
     assertThat(perpetualTaskRecord).isNotNull();
-    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
 
     Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
       PerpetualTaskRecord pTaskRecord = wingsPersistence.get(PerpetualTaskRecord.class, perpetualTaskId.getId());
-      return PerpetualTaskState.TASK_RUN_SUCCEEDED.name().equals(pTaskRecord.getState());
+      return PerpetualTaskState.TASK_RUN_SUCCEEDED == pTaskRecord.getState();
     });
 
     perpetualTaskRecord = wingsPersistence.get(PerpetualTaskRecord.class, perpetualTaskId.getId());
-    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED.name());
+    assertThat(perpetualTaskRecord.getState()).isEqualTo(PerpetualTaskState.TASK_RUN_SUCCEEDED);
   }
 }
