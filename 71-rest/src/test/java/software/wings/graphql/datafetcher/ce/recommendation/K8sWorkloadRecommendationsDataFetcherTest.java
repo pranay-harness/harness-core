@@ -189,7 +189,6 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
     K8sWorkloadRecommendation recommendation = getK8sWorkloadRecommendationBuilder()
                                                    .containerRecommendation("nginx",
                                                        ContainerRecommendation.builder()
-                                                           .containerName("nginx")
                                                            .current(ResourceRequirement.builder()
                                                                         .request("cpu", "1")
                                                                         .request("memory", "1Gi")
@@ -232,7 +231,6 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
         .lastDayCostAvailable(true)
         .containerRecommendation("nginx",
             ContainerRecommendation.builder()
-                .containerName("nginx")
                 .current(ResourceRequirement.builder()
                              .request("cpu", "1")
                              .request("memory", "1Gi")
