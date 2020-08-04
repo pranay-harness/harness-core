@@ -11,6 +11,7 @@ public class InfraMappingElement {
   private Helm helm;
   private String name;
   private String infraId;
+  private CloudProvider cloudProvider;
 
   @Data
   @Builder
