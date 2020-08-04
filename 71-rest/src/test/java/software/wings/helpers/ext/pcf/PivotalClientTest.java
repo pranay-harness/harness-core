@@ -16,6 +16,7 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -58,11 +59,13 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.cloudfoundry.operations.applications.LogsRequest;
 import org.cloudfoundry.operations.domains.Domain;
+import org.cloudfoundry.operations.domains.Domains;
 import org.cloudfoundry.operations.domains.Status;
 import org.cloudfoundry.operations.organizations.OrganizationDetail;
 import org.cloudfoundry.operations.organizations.OrganizationQuota;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.organizations.Organizations;
+import org.cloudfoundry.operations.routes.CreateRouteRequest;
 import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.operations.routes.Routes;
 import org.cloudfoundry.reactor.ConnectionContext;
@@ -116,6 +119,7 @@ public class PivotalClientTest extends WingsBaseTest {
   @Mock Organizations organizations;
   @Mock Applications applications;
   @Mock Routes routes;
+  @Mock Domains domains;
   @Spy PcfClientImpl client;
   @Spy PcfClientImpl mockedClient;
   public static String APP_NAME = "APP_NAME";
@@ -1422,5 +1426,190 @@ public class PivotalClientTest extends WingsBaseTest {
     serverSetting.setValue(nexusConfig);
     environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
     assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testgetAllDomainsForSpace() throws Exception {
+    when(client.getCloudFoundryOperationsWrapper(getPcfRequestConfig()).getCloudFoundryOperations().domains())
+        .thenReturn(domains);
+
+    Domain domain1 = Domain.builder().id("id1").name("cfapps.io").status(Status.SHARED).build();
+    Domain domain2 = Domain.builder().id("id2").name("harness.io").status(Status.SHARED).build();
+
+    Flux<Domain> result = Flux.create(sink -> {
+      sink.next(domain1);
+      sink.next(domain2);
+      sink.complete();
+    });
+
+    when(domains.list()).thenReturn(result);
+    List<String> domainList = client.getAllDomainsForSpace(getPcfRequestConfig())
+                                  .stream()
+                                  .map(domainElement -> domainElement.getName())
+                                  .collect(toList());
+
+    assertThat(domainList).isNotNull();
+    assertThat(domainList).containsExactly("cfapps.io", "harness.io");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testunmapRoutesForApplicationException() throws PivotalClientApiException, InterruptedException {
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    pcfRequestConfig.setUserName("username");
+    pcfRequestConfig.setPassword("password");
+    pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
+    String space = "space1";
+
+    Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
+    List<String> routes = new ArrayList<>();
+    String path1 = "stage.harness.io";
+    doReturn(asList(route)).when(mockedClient).getRouteMapsByNames(anyList(), any());
+
+    try {
+      mockedClient.unmapRoutesForApplication(pcfRequestConfig, routes);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while unmapping routeMap for Application: app, Error: No space targeted");
+    }
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testcheckIfAppHasAutoscalarWithExpectedState() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    doAnswer((Answer<Boolean>) invocation -> { return true; }).when(pcfClient).doLogin(any(), any(), anyString());
+
+    ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+    ProcessResult processResult = mock(ProcessResult.class);
+
+    doReturn(processResult).when(processExecutor).execute();
+    doReturn(" true ")
+        .doReturn(" string not containing trueValue")
+        .doReturn(null)
+        .doReturn(EMPTY)
+        .doReturn(" string containing true for expectedEnable false ")
+        .when(processResult)
+        .outputUTF8();
+    doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
+
+    PcfAppAutoscalarRequestData autoscalarRequestDataWithExpectedEnabletrue =
+        PcfAppAutoscalarRequestData.builder()
+            .applicationName(APP_NAME)
+            .applicationGuid(APP_NAME)
+            .expectedEnabled(true)
+            .timeoutInMins(1)
+            .pcfRequestConfig(PcfRequestConfig.builder().build())
+            .build();
+    PcfAppAutoscalarRequestData autoscalarRequestDataWithExpectedEnableFalse =
+        PcfAppAutoscalarRequestData.builder()
+            .applicationName(APP_NAME)
+            .applicationGuid(APP_NAME)
+            .expectedEnabled(false)
+            .timeoutInMins(1)
+            .pcfRequestConfig(PcfRequestConfig.builder().build())
+            .build();
+
+    assertThat(
+        pcfClient.checkIfAppHasAutoscalarWithExpectedState(autoscalarRequestDataWithExpectedEnabletrue, logCallback))
+        .isTrue();
+
+    assertThat(
+        pcfClient.checkIfAppHasAutoscalarWithExpectedState(autoscalarRequestDataWithExpectedEnabletrue, logCallback))
+        .isFalse();
+    assertThat(
+        pcfClient.checkIfAppHasAutoscalarWithExpectedState(autoscalarRequestDataWithExpectedEnabletrue, logCallback))
+        .isFalse();
+
+    assertThat(
+        pcfClient.checkIfAppHasAutoscalarWithExpectedState(autoscalarRequestDataWithExpectedEnableFalse, logCallback))
+        .isFalse();
+
+    try {
+      pcfClient.checkIfAppHasAutoscalarWithExpectedState(PcfAppAutoscalarRequestData.builder().build(), logCallback);
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+    }
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testperformCfPushUsingCli() throws Exception {
+    PcfClientImpl client = spy(PcfClientImpl.class);
+    PcfCreateApplicationRequestData requestData = mock(PcfCreateApplicationRequestData.class);
+
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
+                                            .applicationName("app")
+                                            .userName("username")
+                                            .password("password")
+                                            .loggedin(true)
+                                            .useCFCLI(true)
+                                            .build();
+
+    doReturn(pcfRequestConfig).when(requestData).getPcfRequestConfig();
+    doReturn("path").when(requestData).getManifestFilePath();
+    doReturn(true).when(client).doLogin(any(), any(), anyString());
+
+    PcfCommandSetupRequest setupRequest = mock(PcfCommandSetupRequest.class);
+    doReturn(setupRequest).when(requestData).getSetupRequest();
+
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().build();
+    doReturn(artifactStreamAttributes).when(setupRequest).getArtifactStreamAttributes();
+
+    try {
+      client.performCfPushUsingCli(requestData, logCallback);
+    } catch (Exception e) {
+      ArgumentCaptor<PcfCreateApplicationRequestData> requestDataArgumentCaptorCaptor =
+          ArgumentCaptor.forClass(PcfCreateApplicationRequestData.class);
+
+      verify(client).getEnvironmentMapForPcfPush(requestDataArgumentCaptorCaptor.capture());
+      assertThat(requestDataArgumentCaptorCaptor.getValue()).isEqualTo(requestData);
+
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+      assertThat(e.getMessage())
+          .isEqualTo("Exception occurred while creating Application: app, Error: App creation process Failed :  ");
+    }
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testcreateRouteMap() throws PivotalClientApiException, InterruptedException {
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
+                                            .applicationName("app")
+                                            .userName("username")
+                                            .password("password")
+                                            .spaceName("space")
+                                            .orgName("org")
+                                            .spaceName("space")
+                                            .build();
+
+    CreateRouteRequest createRouteRequest = CreateRouteRequest.builder()
+                                                .host("host")
+                                                .domain("domain")
+                                                .path("path")
+                                                .randomPort(null)
+                                                .port(null)
+                                                .space(pcfRequestConfig.getSpaceName())
+                                                .build();
+    try {
+      client.createRouteMap(pcfRequestConfig, "host", "domain", "path", false, false, null);
+    } catch (Exception e) {
+      ArgumentCaptor<CreateRouteRequest> createRouteRequestArgumentCaptor =
+          ArgumentCaptor.forClass(CreateRouteRequest.class);
+      verify(wrapper.getCloudFoundryOperations().routes()).create(createRouteRequestArgumentCaptor.capture());
+      assertThat(createRouteRequestArgumentCaptor.getValue()).isEqualTo(createRouteRequest);
+    }
   }
 }
