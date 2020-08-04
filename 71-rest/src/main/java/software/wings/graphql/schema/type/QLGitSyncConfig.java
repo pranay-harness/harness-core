@@ -12,6 +12,7 @@ import software.wings.security.annotations.Scope;
 @Scope(ResourceType.APPLICATION)
 public class QLGitSyncConfig implements QLObject {
   String gitConnectorId;
+  private String repositoryName;
   String branch;
   Boolean syncEnabled;
 }

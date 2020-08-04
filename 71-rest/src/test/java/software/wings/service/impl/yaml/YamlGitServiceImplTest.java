@@ -4,6 +4,7 @@ import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.IGOR;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +29,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
@@ -235,5 +237,42 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
     assertThat(yamlGitService.shouldPushOnlyIfHeadSeen(yamlChangeSet, "random")).isFalse();
     assertThat(yamlGitService.shouldPushOnlyIfHeadSeen(YamlChangeSet.builder().build(), "random")).isTrue();
     assertThat(yamlGitService.shouldPushOnlyIfHeadSeen(YamlChangeSet.builder().build(), "")).isFalse();
+  }
+
+  @Test(expected = GeneralException.class)
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void testSaveForRepoNameValidationOnAccountLevelConnector() {
+    String gitConfig = wingsPersistence.save(aSettingAttribute()
+                                                 .withAccountId(ACCOUNT_ID)
+                                                 .withUuid(SETTING_ID)
+                                                 .withName("gitconnectorid")
+                                                 .withValue(GitConfig.builder()
+                                                                .urlType(GitConfig.UrlType.ACCOUNT)
+                                                                .accountId(ACCOUNT_ID)
+                                                                .webhookToken(WEBHOOK_TOKEN)
+                                                                .build())
+                                                 .build());
+
+    yamlGitService.save(YamlGitConfig.builder().gitConnectorId(gitConfig).build(), false);
+  }
+
+  @Test(expected = GeneralException.class)
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void testSaveForRepoNameValidationOnRepoLevelConnector() {
+    String gitConfig = wingsPersistence.save(aSettingAttribute()
+                                                 .withAccountId(ACCOUNT_ID)
+                                                 .withUuid(SETTING_ID)
+                                                 .withName("gitconnectorid")
+                                                 .withValue(GitConfig.builder()
+                                                                .urlType(GitConfig.UrlType.REPO)
+                                                                .accountId(ACCOUNT_ID)
+                                                                .webhookToken(WEBHOOK_TOKEN)
+                                                                .build())
+                                                 .build());
+
+    yamlGitService.save(
+        YamlGitConfig.builder().gitConnectorId(gitConfig).repositoryName("should-not-have-repo-name").build(), false);
   }
 }
