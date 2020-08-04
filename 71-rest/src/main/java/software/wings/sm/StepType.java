@@ -117,6 +117,8 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.impl.yaml.handler.workflow.GcbStepCompletionYamlValidator;
+import software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidator;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
@@ -578,7 +580,8 @@ public enum StepType {
   JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   GCB(GcbState.class, WorkflowServiceHelper.GCB, singletonList(CI_SYSTEM), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
+      GcbStepCompletionYamlValidator.class),
   BAMBOO(BambooState.class, WorkflowServiceHelper.BAMBOO, asList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
@@ -607,6 +610,7 @@ public enum StepType {
   private List<OrchestrationWorkflowType> orchestrationWorkflowTypes = emptyList();
   private List<WorkflowStepType> workflowStepTypes = emptyList();
   private List<PhaseType> phaseTypes = emptyList();
+  private Class<? extends StepCompletionYamlValidator> yamlValidatorClass;
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
       List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes) {
@@ -616,6 +620,18 @@ public enum StepType {
     this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
     this.workflowStepTypes = workflowStepTypes;
     this.phaseTypes = phaseTypes;
+  }
+
+  StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
+      List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes,
+      Class<? extends StepCompletionYamlValidator> yamlValidatorClass) {
+    this.stateClass = stateClass;
+    this.displayName = displayName;
+    this.deploymentTypes = deploymentTypes;
+    this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
+    this.workflowStepTypes = workflowStepTypes;
+    this.phaseTypes = phaseTypes;
+    this.yamlValidatorClass = yamlValidatorClass;
   }
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
@@ -649,6 +665,10 @@ public enum StepType {
 
   public List<PhaseType> getPhaseTypes() {
     return phaseTypes;
+  }
+
+  public Class<? extends StepCompletionYamlValidator> getYamlValidatorClass() {
+    return yamlValidatorClass;
   }
 
   public boolean matchesDeploymentType(DeploymentType deploymentType) {
