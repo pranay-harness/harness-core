@@ -13,5 +13,6 @@ public class QLUpdateApplicationGitSyncConfigInput implements QLMutationInput {
   private String applicationId;
   private String gitConnectorId;
   private String branch;
+  private String repositoryName;
   private Boolean syncEnabled;
 }

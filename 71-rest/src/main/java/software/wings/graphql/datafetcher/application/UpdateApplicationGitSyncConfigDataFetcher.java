@@ -96,6 +96,7 @@ public class UpdateApplicationGitSyncConfigDataFetcher
   private YamlGitConfig updateYamlGitConfig(
       QLUpdateApplicationGitSyncConfigInput input, YamlGitConfig savedYamlGitConfig) {
     savedYamlGitConfig.setGitConnectorId(input.getGitConnectorId());
+    savedYamlGitConfig.setRepositoryName(input.getRepositoryName());
     savedYamlGitConfig.setBranchName(input.getBranch());
     savedYamlGitConfig.setEnabled(input.getSyncEnabled());
     return yamlGitService.update(savedYamlGitConfig);
@@ -121,6 +122,7 @@ public class UpdateApplicationGitSyncConfigDataFetcher
     final YamlGitConfigBuilder configBuilder = YamlGitConfig.builder();
     final YamlGitConfig yamlGitConfig = configBuilder.accountId(application.getAccountId())
                                             .gitConnectorId(strip(input.getGitConnectorId()))
+                                            .repositoryName(strip(input.getRepositoryName()))
                                             .branchName(strip(input.getBranch()))
                                             .enabled(input.getSyncEnabled())
                                             .syncMode(YamlGitConfig.SyncMode.BOTH)

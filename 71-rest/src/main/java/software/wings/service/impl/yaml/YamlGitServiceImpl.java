@@ -84,6 +84,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.UrlType;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -210,6 +211,16 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public YamlGitConfig save(YamlGitConfig ygs, boolean performFullSync) {
     notNullCheck("application id cannot be empty", ygs.getAppId());
+
+    GitConfig gitConfig = getGitConfig(ygs);
+    notNullCheck("Git config does not exist", gitConfig);
+
+    if (UrlType.ACCOUNT == gitConfig.getUrlType() && StringUtils.isBlank(ygs.getRepositoryName())) {
+      throw new GeneralException("Account level git connector must have repository name set");
+    }
+    if (UrlType.ACCOUNT != gitConfig.getUrlType() && StringUtils.isNotBlank(ygs.getRepositoryName())) {
+      throw new GeneralException("Repository level git connector must not have repository name set");
+    }
 
     ygs.setSyncMode(SyncMode.BOTH);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);

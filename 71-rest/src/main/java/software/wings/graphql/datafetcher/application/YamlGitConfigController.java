@@ -10,6 +10,7 @@ public class YamlGitConfigController {
       YamlGitConfig yamlGitConfig, QLGitSyncConfigBuilder builder) {
     return builder.gitConnectorId(yamlGitConfig.getGitConnectorId())
         .branch(yamlGitConfig.getBranchName())
+        .repositoryName(yamlGitConfig.getRepositoryName())
         .syncEnabled(yamlGitConfig.isEnabled());
   }
 }

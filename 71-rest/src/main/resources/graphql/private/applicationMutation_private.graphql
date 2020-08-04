@@ -1,0 +1,7 @@
+extend input UpdateApplicationGitSyncConfigInput {
+  repositoryName: String
+}
+
+extend type GitSyncConfig {
+  repositoryName: String
+}
