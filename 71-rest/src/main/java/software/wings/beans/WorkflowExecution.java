@@ -138,6 +138,13 @@ import javax.validation.constraints.NotNull;
       , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
     })
+@CdIndex(name = "appid_workflowid_infraMappingIds_status_createdat",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.appId)
+      , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.infraMappingIds),
+          @Field(WorkflowExecutionKeys.status), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
+    })
 @CdIndex(name = "accountId_pipExecutionId_keywords_createdAt",
     fields =
     {
