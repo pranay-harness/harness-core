@@ -823,6 +823,9 @@ import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 import software.wings.sm.states.ParameterEntry;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.ShellScriptState;
+import software.wings.sm.states.azure.AzureVMSSSetupContextElement;
+import software.wings.sm.states.azure.AzureVMSSSetupExecutionSummary;
+import software.wings.sm.states.azure.AzureVMSSSetupStateExecutionData;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
@@ -1766,5 +1769,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GcbArtifactObjects.class, 7464);
     kryo.register(CeLicenseInfo.class, 7465);
     kryo.register(CeLicenseType.class, 7466);
+    kryo.register(AzureVMSSSetupContextElement.class, 7467);
+    kryo.register(AzureVMSSSetupStateExecutionData.class, 7468);
+    kryo.register(AzureVMSSSetupExecutionSummary.class, 7469);
   }
 }
