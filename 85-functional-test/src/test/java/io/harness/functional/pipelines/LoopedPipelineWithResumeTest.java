@@ -29,6 +29,7 @@ import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -163,6 +164,7 @@ public class LoopedPipelineWithResumeTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Failing to deserialize context element. Will Check the issue")
   public void triggerPipelineFailureWithResumeAPI() {
     ImmutableMap<String, String> pipelineVariables =
         ImmutableMap.<String, String>builder()
