@@ -1,0 +1,16 @@
+# Filename: Dockerfile
+FROM python:3.6.11-slim
+CMD ["/bin/bash"]
+
+#Update BaseOS packages
+RUN apt-get update && apt-get -y upgrade
+
+#Install basic utilities
+RUN apt-get install -y make wget protobuf-compiler build-essential ntp libssl-dev strace procps
+
+#Update pip packages
+RUN pip list --outdated
+RUN pip install pip-upgrade-outdated
+RUN pip_upgrade_outdated -3 -v -x distlib -x rsa -x docutils
+RUN pip list --outdated
+RUN pip uninstall -y pip-upgrade-outdated
