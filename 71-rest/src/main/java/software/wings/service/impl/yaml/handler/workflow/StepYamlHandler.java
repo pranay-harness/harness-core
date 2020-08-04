@@ -9,6 +9,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
+import static software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidatorFactory.getValidatorForStepType;
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 
 import com.google.common.collect.Lists;
@@ -51,6 +52,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
+import software.wings.sm.StepType;
 import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.yaml.workflow.StepYaml;
@@ -94,6 +96,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+
+    StepCompletionYamlValidator stepCompletionYamlValidator =
+        getValidatorForStepType(StepType.valueOf(stepYaml.getType()));
+    if (stepCompletionYamlValidator != null) {
+      stepCompletionYamlValidator.validate(stepYaml);
+    }
 
     // template expressions
     List<TemplateExpression> templateExpressions = Lists.newArrayList();
