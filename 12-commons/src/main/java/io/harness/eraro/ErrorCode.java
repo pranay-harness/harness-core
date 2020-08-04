@@ -442,7 +442,9 @@ public enum ErrorCode {
 
   TEMPLATE_NOT_FOUND,
 
-  GIT_UNSEEN_REMOTE_HEAD_COMMIT;
+  GIT_UNSEEN_REMOTE_HEAD_COMMIT,
+
+  TIMEOUT_ENGINE_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

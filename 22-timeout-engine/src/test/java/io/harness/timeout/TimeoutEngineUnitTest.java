@@ -1,0 +1,41 @@
+package io.harness.timeout;
+
+import static io.harness.rule.OwnerRule.GARVIT;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.inject.Inject;
+
+import io.harness.TimeoutEngineTest;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+import io.harness.testlib.RealMongo;
+import io.harness.timeout.trackers.AbsoluteTimeoutTracker;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+public class TimeoutEngineUnitTest extends TimeoutEngineTest {
+  @Inject private TimeoutEngine timeoutEngine;
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testRegisterTimeout() {
+    TestTimeoutCallback callback = new TestTimeoutCallback();
+    TimeoutInstance instance = timeoutEngine.registerTimeout(new AbsoluteTimeoutTracker(1000), callback);
+    timeoutEngine.handle(instance);
+    assertThat(callback.getTimeoutInstance()).isNotNull();
+  }
+
+  public static class TestTimeoutCallback implements TimeoutCallback {
+    private TimeoutInstance timeoutInstance;
+    public TimeoutInstance getTimeoutInstance() {
+      return timeoutInstance;
+    }
+
+    @Override
+    public void onTimeout(TimeoutInstance timeoutInstance) {
+      this.timeoutInstance = timeoutInstance;
+    }
+  }
+}
