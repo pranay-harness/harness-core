@@ -5,12 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
@@ -24,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 import java.time.Instant;
@@ -50,7 +53,8 @@ public class CloudOverviewDataFetcherTest extends AbstractDataFetcherTest {
   @Before
   public void setup() {
     cloudBillingAggregates.add(getBillingAggregate(COST));
-    filters.addAll(Arrays.asList(getStartTimeBillingFilter(0L), getEndTimeBillingFilter(Instant.now().toEpochMilli())));
+    filters.addAll(Arrays.asList(getStartTimeBillingFilter(0L), getEndTimeBillingFilter(Instant.now().toEpochMilli()),
+        getCloudProviderFilter(new String[] {"AWS"})));
     groupBy.addAll(Arrays.asList(getCloudProviderGroupBy()));
     PreAggregateCloudOverviewDataPoint preAggregateCloudOverviewDataPoint =
         PreAggregateCloudOverviewDataPoint.builder().name(NAME).cost(TOTAL_COST).trend(TREND).build();
@@ -64,6 +68,7 @@ public class CloudOverviewDataFetcherTest extends AbstractDataFetcherTest {
              anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
         .thenReturn(QLData);
     when(cloudBillingHelper.getCloudProviderTableName(anyString())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(filters);
   }
 
   @Test
@@ -92,6 +97,13 @@ public class CloudOverviewDataFetcherTest extends AbstractDataFetcherTest {
   public void getEntityType() {
     String entityType = cloudOverviewDataFetcher.getEntityType();
     assertThat(entityType).isNull();
+  }
+
+  private CloudBillingFilter getCloudProviderFilter(String[] cloudProvider) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setCloudProvider(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
+    return cloudBillingFilter;
   }
 
   private CloudBillingAggregate getBillingAggregate(String columnName) {

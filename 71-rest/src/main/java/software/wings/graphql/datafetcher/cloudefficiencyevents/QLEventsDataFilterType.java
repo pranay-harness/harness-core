@@ -13,7 +13,8 @@ public enum QLEventsDataFilterType {
   TaskId(CEEventsMetaDataFields.TASKID),
   WorkloadName(CEEventsMetaDataFields.WORKLOADNAME),
   WorkloadType(CEEventsMetaDataFields.WORKLOADTYPE),
-  Namespace(CEEventsMetaDataFields.NAMESPACE);
+  Namespace(CEEventsMetaDataFields.NAMESPACE),
+  BillingAmount(CEEventsMetaDataFields.BILLINGAMOUNT);
 
   private CEEventsMetaDataFields metaDataFields;
   QLEventsDataFilterType() {}

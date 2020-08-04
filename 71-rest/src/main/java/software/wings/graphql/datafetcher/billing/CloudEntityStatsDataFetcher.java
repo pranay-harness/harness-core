@@ -61,6 +61,10 @@ public class CloudEntityStatsDataFetcher
                               .operationType(QLCCMAggregateOperation.MAX)
                               .columnName(startTimeColumnNameConst)
                               .build());
+    if (isAWSCloudProvider) {
+      cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
+    }
+
     return preAggregateBillingService.getPreAggregateBillingEntityStats(accountId,
         Optional.ofNullable(aggregateFunction)
             .map(Collection::stream)

@@ -28,6 +28,11 @@ public class CloudOverviewDataFetcher extends AbstractStatsDataFetcherWithAggreg
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort) {
     String queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
+    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
+    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
+    if (isAWSCloudProvider) {
+      cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
+    }
     return preAggregateBillingService.getPreAggregateBillingOverview(Optional.ofNullable(aggregateFunction)
                                                                          .map(Collection::stream)
                                                                          .orElseGet(Stream::empty)

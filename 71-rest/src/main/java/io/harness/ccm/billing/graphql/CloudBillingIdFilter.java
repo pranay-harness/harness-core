@@ -204,7 +204,7 @@ public class CloudBillingIdFilter implements Filter {
         }
         return new InCondition(dbColumn, getValues());
       case NOT_IN:
-        condition = BinaryCondition.notEqualTo(dbColumn, values);
+        condition = new InCondition(dbColumn, getValues()).setNegate(true);
         break;
       case NOT_NULL:
         condition = UnaryCondition.isNotNull(dbColumn);

@@ -41,6 +41,7 @@ input EventsFilter {
   environment: IdFilter
   cluster: IdFilter
   cloudServiceName: IdFilter
+  billingAmount: IdFilter
   taskId: IdFilter
   namespace: IdFilter
   workloadName: IdFilter

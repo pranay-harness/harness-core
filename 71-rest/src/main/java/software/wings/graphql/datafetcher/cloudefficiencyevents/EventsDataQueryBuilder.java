@@ -205,6 +205,8 @@ public class EventsDataQueryBuilder {
         return schema.getWorkloadType();
       case Namespace:
         return schema.getNamespace();
+      case BillingAmount:
+        return schema.getBillingAmount();
       default:
         throw new InvalidRequestException("Filter type not supported " + type);
     }
