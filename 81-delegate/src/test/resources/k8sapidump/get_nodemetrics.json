@@ -1,0 +1,61 @@
+{
+  "kind": "NodeMetricsList",
+  "apiVersion": "metrics.k8s.io/v1beta1",
+  "metadata": {
+    "selfLink": "/apis/metrics.k8s.io/v1beta1/nodes"
+  },
+  "items": [
+    {
+      "metadata": {
+        "name": "gke-ce-dev-general-preemptible-c36f2dab-6ssh",
+        "selfLink": "/apis/metrics.k8s.io/v1beta1/nodes/gke-ce-dev-general-preemptible-c36f2dab-6ssh",
+        "creationTimestamp": "2020-07-21T19:20:32Z"
+      },
+      "timestamp": "2020-07-21T19:20:19Z",
+      "window": "30s",
+      "usage": {
+        "cpu": "488797896n",
+        "memory": "5496484Ki"
+      }
+    },
+    {
+      "metadata": {
+        "name": "gke-ce-dev-pool-1-f8955f75-wpsn",
+        "selfLink": "/apis/metrics.k8s.io/v1beta1/nodes/gke-ce-dev-pool-1-f8955f75-wpsn",
+        "creationTimestamp": "2020-07-21T19:20:32Z"
+      },
+      "timestamp": "2020-07-21T19:20:13Z",
+      "window": "30s",
+      "usage": {
+        "cpu": "422917046n",
+        "memory": "3725524Ki"
+      }
+    },
+    {
+      "metadata": {
+        "name": "gke-ce-dev-general-preemptible-c36f2dab-08nn",
+        "selfLink": "/apis/metrics.k8s.io/v1beta1/nodes/gke-ce-dev-general-preemptible-c36f2dab-08nn",
+        "creationTimestamp": "2020-07-21T19:20:32Z"
+      },
+      "timestamp": "2020-07-21T19:20:12Z",
+      "window": "30s",
+      "usage": {
+        "cpu": "269510067n",
+        "memory": "9491588Ki"
+      }
+    },
+    {
+      "metadata": {
+        "name": "gke-ce-dev-delegate-pool-0177e032-32zr",
+        "selfLink": "/apis/metrics.k8s.io/v1beta1/nodes/gke-ce-dev-delegate-pool-0177e032-32zr",
+        "creationTimestamp": "2020-07-21T19:20:32Z"
+      },
+      "timestamp": "2020-07-21T19:20:21Z",
+      "window": "30s",
+      "usage": {
+        "cpu": "162097114n",
+        "memory": "3501112Ki"
+      }
+    }
+  ]
+}

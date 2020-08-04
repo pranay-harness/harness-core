@@ -1,5 +1,9 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -9,11 +13,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Durations;
 
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.health.HealthStatusService;
@@ -23,14 +28,14 @@ import io.harness.event.payloads.NodeMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
-import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
-import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsExtensionAdapter;
+import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetricsList;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 import io.harness.rule.Owner;
+import io.kubernetes.client.util.ClientBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,72 +58,74 @@ public class K8sMetricCollectorTest extends CategoryTest {
                                                             .cloudProviderId("4412d653-3c5d-46bc-ba37-d926f99c7a4a")
                                                             .kubeSystemUid("aa4062a7-d214-4642-8bb5-dfc32e750ed0")
                                                             .build();
-  @Rule public final KubernetesServer server = new KubernetesServer();
+  @Rule public WireMockRule wireMockRule = new WireMockRule(65219);
+
   private K8sMetricCollector k8sMetricCollector;
 
   @Mock private EventPublisher eventPublisher;
   @Captor private ArgumentCaptor<Message> messageArgumentCaptor;
-  private K8sMetricsClient k8sMetricsClient;
+  private DefaultK8sMetricsClient k8sMetricsClient;
 
   @Before
   public void setUp() throws Exception {
     eventPublisher = mock(EventPublisher.class);
-    k8sMetricsClient = new K8sMetricsExtensionAdapter().adapt(server.getClient());
+    k8sMetricsClient =
+        new DefaultK8sMetricsClient(new ClientBuilder().setBasePath("http://localhost:" + wireMockRule.port()).build());
   }
 
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void shouldNotPublishMetricsIfNotAggregationWindowPassed() throws Exception {
+  public void shouldNotPublishMetricsIfNotAggregationWindowPassed() {
     Instant now = Instant.now();
-    server.expect()
-        .withPath("/apis/metrics.k8s.io/v1beta1/nodes")
-        .andReturn(200,
-            NodeMetricsList.builder()
-                .items(ImmutableList.of(NodeMetrics.builder()
-                                            .name("node1-name")
-                                            .timestamp("2019-11-26T07:00:32Z")
-                                            .window("30s")
-                                            .usage(Usage.builder().cpu("746640510n").memory("6825124Ki").build())
-                                            .build(),
-                    NodeMetrics.builder()
-                        .name("node2-name")
-                        .timestamp("2019-11-26T07:00:28Z")
-                        .window("30s")
-                        .usage(Usage.builder().cpu("2938773795n").memory("18281752Ki").build())
-                        .build()))
-                .build())
-        .once();
-    server.expect()
-        .withPath("/apis/metrics.k8s.io/v1beta1/pods")
-        .andReturn(200,
-            PodMetricsList.builder()
-                .item(PodMetrics.builder()
-                          .name("pod1")
-                          .namespace("ns1")
-                          .timestamp("2019-11-26T07:00:32Z")
-                          .window("30s")
-                          .container(PodMetrics.Container.builder()
-                                         .name("p1-ctr1")
-                                         .usage(Usage.builder().cpu("41181421n").memory("139304Ki").build())
-                                         .build())
-                          .build())
-                .item(PodMetrics.builder()
-                          .name("pod2")
-                          .namespace("ns1")
-                          .timestamp("2019-11-26T07:00:32Z")
-                          .window("30s")
-                          .container(PodMetrics.Container.builder()
-                                         .name("p2-ctr1")
-                                         .usage(Usage.builder().cpu("185503n").memory("7460Ki").build())
-                                         .build())
-                          .container(PodMetrics.Container.builder()
-                                         .name("p2-ctr2")
-                                         .usage(Usage.builder().cpu("735522992n").memory("225144Ki").build())
-                                         .build())
-                          .build())
-                .build())
-        .once();
+
+    stubFor(
+        get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/nodes"))
+            .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
+                NodeMetricsList.builder()
+                    .items(ImmutableList.of(NodeMetrics.builder()
+                                                .name("node1-name")
+                                                .timestamp("2019-11-26T07:00:32Z")
+                                                .window("30s")
+                                                .usage(Usage.builder().cpu("746640510n").memory("6825124Ki").build())
+                                                .build(),
+                        NodeMetrics.builder()
+                            .name("node2-name")
+                            .timestamp("2019-11-26T07:00:28Z")
+                            .window("30s")
+                            .usage(Usage.builder().cpu("2938773795n").memory("18281752Ki").build())
+                            .build()))
+                    .build()))));
+
+    stubFor(get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/pods"))
+                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
+                    PodMetricsList.builder()
+                        .item(PodMetrics.builder()
+                                  .name("pod1")
+                                  .namespace("ns1")
+                                  .timestamp("2019-11-26T07:00:32Z")
+                                  .window("30s")
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p1-ctr1")
+                                                 .usage(Usage.builder().cpu("41181421n").memory("139304Ki").build())
+                                                 .build())
+                                  .build())
+                        .item(PodMetrics.builder()
+                                  .name("pod2")
+                                  .namespace("ns1")
+                                  .timestamp("2019-11-26T07:00:32Z")
+                                  .window("30s")
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p2-ctr1")
+                                                 .usage(Usage.builder().cpu("185503n").memory("7460Ki").build())
+                                                 .build())
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p2-ctr2")
+                                                 .usage(Usage.builder().cpu("735522992n").memory("225144Ki").build())
+                                                 .build())
+                                  .build())
+
+                        .build()))));
     k8sMetricCollector =
         new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now.minus(10, ChronoUnit.MINUTES));
     doNothing()
@@ -132,104 +139,109 @@ public class K8sMetricCollectorTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void shouldPublishMetrics() throws Exception {
+  public void shouldPublishMetrics() {
     Instant now = Instant.now();
-    server.expect()
-        .withPath("/apis/metrics.k8s.io/v1beta1/nodes")
-        .andReturn(200,
-            NodeMetricsList.builder()
-                .items(ImmutableList.of(NodeMetrics.builder()
-                                            .name("node1-name")
-                                            .timestamp("2019-11-26T07:00:32Z")
-                                            .window("30s")
-                                            .usage(Usage.builder().cpu("746640510n").memory("6825124Ki").build())
-                                            .build(),
-                    NodeMetrics.builder()
-                        .name("node2-name")
-                        .timestamp("2019-11-26T07:00:28Z")
-                        .window("30s")
-                        .usage(Usage.builder().cpu("2938773795n").memory("18281752Ki").build())
-                        .build()))
-                .build())
-        .once();
-    server.expect()
-        .withPath("/apis/metrics.k8s.io/v1beta1/nodes")
-        .andReturn(200,
-            NodeMetricsList.builder()
-                .items(ImmutableList.of(NodeMetrics.builder()
-                                            .name("node1-name")
-                                            .timestamp("2019-11-26T07:01:02Z")
-                                            .window("30s")
-                                            .usage(Usage.builder().cpu("826640233n").memory("7443423Ki").build())
-                                            .build(),
-                    NodeMetrics.builder()
-                        .name("node2-name")
-                        .timestamp("2019-11-26T07:00:58Z")
-                        .window("30s")
-                        .usage(Usage.builder().cpu("3425434234n").memory("25316652Ki").build())
-                        .build()))
-                .build())
-        .once();
-    server.expect()
-        .withPath("/apis/metrics.k8s.io/v1beta1/pods")
-        .andReturn(200,
-            PodMetricsList.builder()
-                .item(PodMetrics.builder()
-                          .name("pod1")
-                          .namespace("ns1")
-                          .timestamp("2019-11-26T07:00:32Z")
-                          .window("30s")
-                          .container(PodMetrics.Container.builder()
-                                         .name("p1-ctr1")
-                                         .usage(Usage.builder().cpu("41181421n").memory("139304Ki").build())
-                                         .build())
-                          .build())
-                .item(PodMetrics.builder()
-                          .name("pod2")
-                          .namespace("ns1")
-                          .timestamp("2019-11-26T07:00:32Z")
-                          .window("30s")
-                          .container(PodMetrics.Container.builder()
-                                         .name("p2-ctr1")
-                                         .usage(Usage.builder().cpu("185503n").memory("7460Ki").build())
-                                         .build())
-                          .container(PodMetrics.Container.builder()
-                                         .name("p2-ctr2")
-                                         .usage(Usage.builder().cpu("735522992n").memory("225144Ki").build())
-                                         .build())
-                          .build())
-                .build())
-        .once();
-    server.expect()
-        .withPath("/apis/metrics.k8s.io/v1beta1/pods")
-        .andReturn(200,
-            PodMetricsList.builder()
-                .item(PodMetrics.builder()
-                          .name("pod1")
-                          .namespace("ns1")
-                          .timestamp("2019-11-26T07:01:02Z")
-                          .window("30s")
-                          .container(PodMetrics.Container.builder()
-                                         .name("p1-ctr1")
-                                         .usage(Usage.builder().cpu("45299563n").memory("122865Ki").build())
-                                         .build())
-                          .build())
-                .item(PodMetrics.builder()
-                          .name("pod2")
-                          .namespace("ns1")
-                          .timestamp("2019-11-26T07:01:02Z")
-                          .window("30s")
-                          .container(PodMetrics.Container.builder()
-                                         .name("p2-ctr1")
-                                         .usage(Usage.builder().cpu("209618n").memory("9101Ki").build())
-                                         .build())
-                          .container(PodMetrics.Container.builder()
-                                         .name("p2-ctr2")
-                                         .usage(Usage.builder().cpu("647260232n").memory("240904Ki").build())
-                                         .build())
-                          .build())
-                .build())
-        .always();
+
+    stubFor(
+        get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/nodes"))
+            .inScenario("nodes")
+            .willSetStateTo("2nd")
+            .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
+                NodeMetricsList.builder()
+                    .items(ImmutableList.of(NodeMetrics.builder()
+                                                .name("node1-name")
+                                                .timestamp("2019-11-26T07:00:32Z")
+                                                .window("30s")
+                                                .usage(Usage.builder().cpu("746640510n").memory("6825124Ki").build())
+                                                .build(),
+                        NodeMetrics.builder()
+                            .name("node2-name")
+                            .timestamp("2019-11-26T07:00:28Z")
+                            .window("30s")
+                            .usage(Usage.builder().cpu("2938773795n").memory("18281752Ki").build())
+                            .build()))
+                    .build()))));
+
+    stubFor(
+        get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/nodes"))
+            .inScenario("nodes")
+            .whenScenarioStateIs("2nd")
+            .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
+                NodeMetricsList.builder()
+                    .items(ImmutableList.of(NodeMetrics.builder()
+                                                .name("node1-name")
+                                                .timestamp("2019-11-26T07:01:02Z")
+                                                .window("30s")
+                                                .usage(Usage.builder().cpu("826640233n").memory("7443423Ki").build())
+                                                .build(),
+                        NodeMetrics.builder()
+                            .name("node2-name")
+                            .timestamp("2019-11-26T07:00:58Z")
+                            .window("30s")
+                            .usage(Usage.builder().cpu("3425434234n").memory("25316652Ki").build())
+                            .build()))
+                    .build()))));
+
+    stubFor(get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/pods"))
+                .inScenario("pods")
+                .willSetStateTo("2nd")
+                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
+                    PodMetricsList.builder()
+                        .item(PodMetrics.builder()
+                                  .name("pod1")
+                                  .namespace("ns1")
+                                  .timestamp("2019-11-26T07:00:32Z")
+                                  .window("30s")
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p1-ctr1")
+                                                 .usage(Usage.builder().cpu("41181421n").memory("139304Ki").build())
+                                                 .build())
+                                  .build())
+                        .item(PodMetrics.builder()
+                                  .name("pod2")
+                                  .namespace("ns1")
+                                  .timestamp("2019-11-26T07:00:32Z")
+                                  .window("30s")
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p2-ctr1")
+                                                 .usage(Usage.builder().cpu("185503n").memory("7460Ki").build())
+                                                 .build())
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p2-ctr2")
+                                                 .usage(Usage.builder().cpu("735522992n").memory("225144Ki").build())
+                                                 .build())
+                                  .build())
+                        .build()))));
+    stubFor(get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/pods"))
+                .inScenario("pods")
+                .whenScenarioStateIs("2nd")
+                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
+                    PodMetricsList.builder()
+                        .item(PodMetrics.builder()
+                                  .name("pod1")
+                                  .namespace("ns1")
+                                  .timestamp("2019-11-26T07:01:02Z")
+                                  .window("30s")
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p1-ctr1")
+                                                 .usage(Usage.builder().cpu("45299563n").memory("122865Ki").build())
+                                                 .build())
+                                  .build())
+                        .item(PodMetrics.builder()
+                                  .name("pod2")
+                                  .namespace("ns1")
+                                  .timestamp("2019-11-26T07:01:02Z")
+                                  .window("30s")
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p2-ctr1")
+                                                 .usage(Usage.builder().cpu("209618n").memory("9101Ki").build())
+                                                 .build())
+                                  .container(PodMetrics.Container.builder()
+                                                 .name("p2-ctr2")
+                                                 .usage(Usage.builder().cpu("647260232n").memory("240904Ki").build())
+                                                 .build())
+                                  .build())
+                        .build())))); // always
 
     k8sMetricCollector = new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now);
     doNothing()

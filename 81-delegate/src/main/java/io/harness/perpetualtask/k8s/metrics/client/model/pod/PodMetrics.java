@@ -3,8 +3,10 @@ package io.harness.perpetualtask.k8s.metrics.client.model.pod;
 import static io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient.METRICS_API_GROUP;
 import static io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient.METRICS_API_VERSION;
 
-import io.fabric8.kubernetes.client.CustomResource;
+import com.google.gson.annotations.SerializedName;
+
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
+import io.harness.perpetualtask.k8s.metrics.client.model.common.CustomResource;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,16 +25,15 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class PodMetrics extends CustomResource {
-  private String timestamp;
-  private String window;
-  private List<Container> containers;
+  @SerializedName("timestamp") private String timestamp;
+  @SerializedName("window") private String window;
+  @SerializedName("containers") private List<Container> containers;
 
   @Builder
   public PodMetrics(
       String name, String namespace, String timestamp, String window, @Singular List<Container> containers) {
     this.getMetadata().setName(name);
     this.getMetadata().setNamespace(namespace);
-    this.setKind("PodMetrics");
     this.setApiVersion(METRICS_API_GROUP + "/" + METRICS_API_VERSION);
     this.timestamp = timestamp;
     this.window = window;
@@ -44,8 +45,9 @@ public class PodMetrics extends CustomResource {
   @NoArgsConstructor
   @AllArgsConstructor
   @FieldDefaults(level = AccessLevel.PRIVATE)
+  @EqualsAndHashCode
   public static class Container implements Serializable {
-    String name;
-    Usage usage;
+    @SerializedName("name") String name;
+    @SerializedName("usage") Usage usage;
   }
 }

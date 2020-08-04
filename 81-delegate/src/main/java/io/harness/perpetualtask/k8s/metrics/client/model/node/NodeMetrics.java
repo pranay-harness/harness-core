@@ -1,7 +1,9 @@
 package io.harness.perpetualtask.k8s.metrics.client.model.node;
 
-import io.fabric8.kubernetes.client.CustomResource;
+import com.google.gson.annotations.SerializedName;
+
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
+import io.harness.perpetualtask.k8s.metrics.client.model.common.CustomResource;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,9 +15,9 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class NodeMetrics extends CustomResource {
-  private String timestamp;
-  private String window;
-  private Usage usage;
+  @SerializedName("timestamp") private String timestamp;
+  @SerializedName("window") private String window;
+  @SerializedName("usage") private Usage usage;
 
   @Builder
   public NodeMetrics(String name, String timestamp, String window, Usage usage) {

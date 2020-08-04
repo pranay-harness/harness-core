@@ -13,6 +13,7 @@ import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
+import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import io.harness.serializer.KryoSerializer;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.informer.cache.Store;
@@ -99,7 +100,10 @@ public class K8sWatchServiceDelegate {
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) kryoSerializer.asObject(params.getK8SClusterConfig().toByteArray());
       KubernetesClient client = kubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
-      String kubeSystemUid = getKubeSystemUid(client);
+      KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+      DefaultK8sMetricsClient k8sMetricsClient =
+          new DefaultK8sMetricsClient(apiClientFactory.getClient(kubernetesConfig));
+      String kubeSystemUid = getKubeSystemUid(k8sMetricsClient);
       ClusterDetails clusterDetails = ClusterDetails.builder()
                                           .cloudProviderId(params.getCloudProviderId())
                                           .clusterId(params.getClusterId())
@@ -107,7 +111,6 @@ public class K8sWatchServiceDelegate {
                                           .kubeSystemUid(kubeSystemUid)
                                           .build();
 
-      KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
       ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
       SharedInformerFactory sharedInformerFactory =
           sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails);
@@ -130,9 +133,9 @@ public class K8sWatchServiceDelegate {
     return watchId;
   }
 
-  public static String getKubeSystemUid(KubernetesClient client) {
+  public static String getKubeSystemUid(DefaultK8sMetricsClient client) {
     try {
-      return client.namespaces().withName("kube-system").get().getMetadata().getUid();
+      return client.readNamespace("kube-system", null, null, null).getMetadata().getUid();
     } catch (Exception e) {
       logger.warn("Error getting kube-system namespace uid", e);
       return "kube-system";
