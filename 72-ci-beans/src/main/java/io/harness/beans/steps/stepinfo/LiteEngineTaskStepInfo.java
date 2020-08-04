@@ -44,13 +44,15 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @NotNull BuildJobEnvInfo buildJobEnvInfo;
   @NotNull String gitConnectorIdentifier;
   @NotNull String branchName;
+  @NotNull boolean usePVC;
   @NotNull ExecutionElement steps;
 
   @Builder
-  @ConstructorProperties(
-      {"identifier", "name", "retry", "timeout", "buildJobEnvInfo", "gitConnectorIdentifier", "branchName", "steps"})
+  @ConstructorProperties({"identifier", "name", "retry", "timeout", "buildJobEnvInfo", "gitConnectorIdentifier",
+      "branchName", "steps", "usePVC"})
   public LiteEngineTaskStepInfo(String identifier, String name, Integer retry, Integer timeout,
-      BuildJobEnvInfo buildJobEnvInfo, String gitConnectorIdentifier, String branchName, ExecutionElement steps) {
+      BuildJobEnvInfo buildJobEnvInfo, String gitConnectorIdentifier, String branchName, ExecutionElement steps,
+      boolean usePVC) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -58,6 +60,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
     this.buildJobEnvInfo = buildJobEnvInfo;
     this.gitConnectorIdentifier = gitConnectorIdentifier;
     this.branchName = branchName;
+    this.usePVC = usePVC;
     this.steps = steps;
   }
 

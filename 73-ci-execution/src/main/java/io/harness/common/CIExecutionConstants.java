@@ -12,17 +12,21 @@ public class CIExecutionConstants {
   public static final String LITE_ENGINE_COMMAND = "/step-exec/.harness/bin/ci-lite-engine";
   public static final String STAGE_ARG_COMMAND = "stage";
   public static final String INPUT_ARG_PREFIX = "--input";
+  public static final String PORTS_PREFIX = "--ports";
+  public static final String PORT_PREFIX = "--port";
+  public static final String SERVER_PREFIX = "server";
   public static final String LOG_PATH_ARG_PREFIX = "--logpath";
   public static final String LOG_PATH = "/step-exec/.harness/logs/";
   public static final String TMP_PATH_ARG_PREFIX = "--tmppath";
   public static final String TMP_PATH = "/step-exec/.harness/tmp/";
+  public static final String DEBUG_PREFIX = "--debug";
 
   public static final String LITE_ENGINE_STEP_COMMAND_FORMAT =
       "/step-exec/.harness/bin/ci-lite-engine step --input %s --logpath %s --tmppath %s";
 
   // Image details
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
-  public static final String ADDON_IMAGE_TAG = "valpha-0.4";
+  public static final String ADDON_IMAGE_TAG = "v0.6-alpha";
   public static final String ADDON_CONTAINER_NAME = "addon";
   public static final String ADDON_ARGS =
       "mkdir -p /addon/bin; cp /usr/local/bin/jfrog /addon/bin/jfrog; cp /usr/local/bin/ci-addon /addon/bin/ci-addon; chmod +x /addon/bin/ci-addon; /addon/bin/ci-addon";
@@ -41,7 +45,7 @@ public class CIExecutionConstants {
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
 
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
-  public static final String LITE_ENGINE_IMAGE_TAG = "valpha-0.4";
+  public static final String LITE_ENGINE_IMAGE_TAG = "v0.6.1-alpha";
   public static final String LITE_ENGINE_CONTAINER_NAME = "setup-lite-engine";
   public static final String LITE_ENGINE_ARGS =
       "mkdir -p /step-exec/workspace; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-lite-engine-linux-amd64 /step-exec/.harness/bin/ci-lite-engine; chmod +x /step-exec/.harness/bin/ci-lite-engine;";
@@ -56,4 +60,8 @@ public class CIExecutionConstants {
   public static final Integer ADDON_CONTAINER_REQ_MEM = 1024;
   public static final Integer ADDON_CONTAINER_LIMIT_CPU = 400;
   public static final Integer ADDON_CONTAINER_REQ_CPU = 400;
+
+  public static final Integer PVC_DEFAULT_STORAGE_SIZE = 25 * 1024;
+  public static final String PVC_DEFAULT_STORAGE_CLASS = "faster";
+  public static final Integer PORT_STARTING_RANGE = 9000;
 }

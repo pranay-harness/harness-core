@@ -54,14 +54,12 @@ public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
           ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
       final String namespace = k8PodDetails.getNamespace();
       final String clusterName = k8PodDetails.getClusterName();
-      final String podName = k8PodDetails.getPodName();
 
       List<String> commandList =
           buildStepInfo.getScriptInfos().stream().map(ScriptInfo::getScriptString).collect(toList());
 
       // TODO only k8 cluster is supported
       K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()
-                                                    .podName(podName)
                                                     .containerName(CONTAINER_NAME)
                                                     .mountPath(MOUNT_PATH)
                                                     .relStdoutFilePath(REL_STDOUT_FILE_PATH)

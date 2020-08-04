@@ -19,8 +19,7 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.integrationstage.CILiteEngineStepExecutionModifier;
-import io.harness.integrationstage.StageExecutionModifier;
+import io.harness.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.plan.PlanNode;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.ExecutionElement;
@@ -31,15 +30,15 @@ import java.util.List;
 
 public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCreator<IntegrationStage> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
+  @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
   private static final SecureRandom random = new SecureRandom();
   @Override
   public CreateExecutionPlanResponse createPlan(IntegrationStage integrationStage, CreateExecutionPlanContext context) {
     final String podName = generatePodName(integrationStage);
-    StageExecutionModifier stageExecutionModifier =
-        CILiteEngineStepExecutionModifier.builder().podName(podName).build();
 
     ExecutionElement execution = integrationStage.getExecution();
-    ExecutionElement modifiedExecutionPlan = stageExecutionModifier.modifyExecutionPlan(execution, integrationStage);
+    ExecutionElement modifiedExecutionPlan =
+        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage);
 
     final CreateExecutionPlanResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 

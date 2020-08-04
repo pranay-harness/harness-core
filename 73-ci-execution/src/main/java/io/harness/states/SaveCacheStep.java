@@ -6,7 +6,7 @@ import static io.harness.common.CIExecutionConstants.TMP_PATH;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.seriazlier.ProtobufSerializer;
+import io.harness.beans.serializer.ProtobufSerializer;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.state.StepType;

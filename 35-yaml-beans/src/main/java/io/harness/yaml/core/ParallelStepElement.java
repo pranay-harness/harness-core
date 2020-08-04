@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -13,8 +14,9 @@ import javax.validation.constraints.NotNull;
 /**
  * Parallel structure is special list of steps that can be executed in parallel.
  */
-@Value
+@Data
 @Builder
+@NoArgsConstructor
 @JsonTypeName("parallel")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ParallelStepElement implements ExecutionWrapper {

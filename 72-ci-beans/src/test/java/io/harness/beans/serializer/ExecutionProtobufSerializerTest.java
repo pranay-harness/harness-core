@@ -1,4 +1,4 @@
-package io.harness.beans.seriazlier;
+package io.harness.beans.serializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
