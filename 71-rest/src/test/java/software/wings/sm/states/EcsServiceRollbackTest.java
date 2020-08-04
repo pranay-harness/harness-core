@@ -43,6 +43,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Service;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.states.utils.StateTimeoutUtils;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StateTimeoutUtils.class})

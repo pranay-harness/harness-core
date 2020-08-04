@@ -13,6 +13,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.api.EcsSetupElement;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.states.utils.StateTimeoutUtils;
 
 public class StateTimeoutUtilsTest extends WingsBaseTest {
   @Test

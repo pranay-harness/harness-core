@@ -146,6 +146,7 @@ import software.wings.sm.StateExecutionContext.StateExecutionContextBuilder;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
+import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
 
@@ -231,7 +232,7 @@ public class HelmDeployState extends State {
 
   @Override
   public Integer getTimeoutMillis() {
-    return K8sStateHelper.getTimeoutMillisFromMinutes(steadyStateTimeout);
+    return StateTimeoutUtils.getTimeoutMillisFromMinutes(steadyStateTimeout);
   }
 
   @Override

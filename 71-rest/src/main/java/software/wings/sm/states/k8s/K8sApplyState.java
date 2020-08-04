@@ -32,6 +32,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
 
@@ -67,7 +68,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
   public Integer getTimeoutMillis() {
     try {
       Integer timeoutMinutes = Integer.valueOf(stateTimeoutInMinutes);
-      return K8sStateHelper.getTimeoutMillisFromMinutes(timeoutMinutes);
+      return StateTimeoutUtils.getTimeoutMillisFromMinutes(timeoutMinutes);
     } catch (IllegalArgumentException ex) {
       logger.error(format("Could not convert stateTimeout %s to Integer", stateTimeoutInMinutes), ex);
       return null;
