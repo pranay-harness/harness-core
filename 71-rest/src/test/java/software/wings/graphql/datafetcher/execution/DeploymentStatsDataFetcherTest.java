@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.Arrays.asList;
@@ -876,5 +877,191 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
     } catch (Exception e) {
       fail(e.getMessage());
     }
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testQueriesWithoutTimeFilters() {
+    QLDeploymentFilter arrayIdFilter =
+        QLDeploymentFilter.builder()
+            .service(QLIdFilter.builder()
+                         .operator(QLIdOperator.IN)
+                         .values(new String[] {
+                             DeploymentStatsDataFetcherTestKeys.SERVICE1, DeploymentStatsDataFetcherTestKeys.SERVICE2})
+                         .build())
+            .build();
+
+    QLDeploymentFilter arrayStringFilter = QLDeploymentFilter.builder()
+                                               .status(QLStringFilter.builder()
+                                                           .operator(QLStringOperator.IN)
+                                                           .values(new String[] {"SUCCESS", "FAILURE"})
+                                                           .build())
+                                               .build();
+
+    QLDeploymentFilter arrayEnvTypeFilter =
+        QLDeploymentFilter.builder()
+            .environmentType(QLEnvironmentTypeFilter.builder()
+                                 .operator(QLEnumOperator.IN)
+                                 .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
+                                 .build())
+            .build();
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(arrayIdFilter, arrayStringFilter, arrayEnvTypeFilter),
+            asList(QLDeploymentEntityAggregation.Application), null, null);
+
+    assertThat(queryMetaData.getQuery()).contains("t0.ENDTIME >=");
+    assertThat(queryMetaData.getQuery()).contains("t0.ENDTIME <=");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME >=");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME <=");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testQueriesWithOneStartTimeFilters() {
+    QLDeploymentFilter arrayIdFilter =
+        QLDeploymentFilter.builder()
+            .service(QLIdFilter.builder()
+                         .operator(QLIdOperator.IN)
+                         .values(new String[] {
+                             DeploymentStatsDataFetcherTestKeys.SERVICE1, DeploymentStatsDataFetcherTestKeys.SERVICE2})
+                         .build())
+            .build();
+
+    QLDeploymentFilter beforeStartTimeFilter =
+        QLDeploymentFilter.builder()
+            .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter arrayStringFilter = QLDeploymentFilter.builder()
+                                               .status(QLStringFilter.builder()
+                                                           .operator(QLStringOperator.IN)
+                                                           .values(new String[] {"RUNNING", "PAUSED"})
+                                                           .build())
+                                               .build();
+
+    QLDeploymentFilter arrayEnvTypeFilter =
+        QLDeploymentFilter.builder()
+            .environmentType(QLEnvironmentTypeFilter.builder()
+                                 .operator(QLEnumOperator.IN)
+                                 .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
+                                 .build())
+            .build();
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(arrayIdFilter, beforeStartTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
+            asList(QLDeploymentEntityAggregation.Application), null, null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.STARTTIME <= '2019-08-07T22:36:04Z') AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.STARTTIME >= '2019-07-31T22:36:04Z') AND (t0.STATUS IN ('RUNNING','PAUSED') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY t0.APPID");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.ENDTIME >=");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.ENDTIME <=");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testQueriesWithOneEndTimeFilters() {
+    QLDeploymentFilter arrayIdFilter =
+        QLDeploymentFilter.builder()
+            .service(QLIdFilter.builder()
+                         .operator(QLIdOperator.IN)
+                         .values(new String[] {
+                             DeploymentStatsDataFetcherTestKeys.SERVICE1, DeploymentStatsDataFetcherTestKeys.SERVICE2})
+                         .build())
+            .build();
+
+    QLDeploymentFilter afterEndTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    QLDeploymentFilter arrayStringFilter =
+        QLDeploymentFilter.builder()
+            .status(QLStringFilter.builder()
+                        .operator(QLStringOperator.IN)
+                        .values(new String[] {"ABORTED", "ERROR", "EXPIRED", "REJECTED"})
+                        .build())
+            .build();
+
+    QLDeploymentFilter arrayEnvTypeFilter =
+        QLDeploymentFilter.builder()
+            .environmentType(QLEnvironmentTypeFilter.builder()
+                                 .operator(QLEnumOperator.IN)
+                                 .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
+                                 .build())
+            .build();
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(arrayIdFilter, afterEndTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
+            asList(QLDeploymentEntityAggregation.Application), null, null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-24T22:41:09Z') AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('ABORTED','ERROR','EXPIRED','REJECTED') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY t0.APPID");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME >=");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME <=");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testQueriesWithOneStartAndEndTimeFilters() {
+    QLDeploymentFilter arrayIdFilter =
+        QLDeploymentFilter.builder()
+            .service(QLIdFilter.builder()
+                         .operator(QLIdOperator.IN)
+                         .values(new String[] {
+                             DeploymentStatsDataFetcherTestKeys.SERVICE1, DeploymentStatsDataFetcherTestKeys.SERVICE2})
+                         .build())
+            .build();
+
+    QLDeploymentFilter afterStartTimeFilter =
+        QLDeploymentFilter.builder()
+            .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter beforeEndTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    QLDeploymentFilter arrayStringFilter = QLDeploymentFilter.builder()
+                                               .status(QLStringFilter.builder()
+                                                           .operator(QLStringOperator.IN)
+                                                           .values(new String[] {"SUCCESS", "FAILURE"})
+                                                           .build())
+                                               .build();
+
+    QLDeploymentFilter arrayEnvTypeFilter =
+        QLDeploymentFilter.builder()
+            .environmentType(QLEnvironmentTypeFilter.builder()
+                                 .operator(QLEnumOperator.IN)
+                                 .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
+                                 .build())
+            .build();
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(arrayIdFilter, afterStartTimeFilter, beforeEndTimeFilter, arrayStringFilter, arrayEnvTypeFilter),
+            asList(QLDeploymentEntityAggregation.Application), null, null);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.STARTTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY t0.APPID");
+    assertThat(queryMetaData.getQuery()).contains("t0.STARTTIME >=");
+    assertThat(queryMetaData.getQuery()).contains("t0.ENDTIME <=");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME <=");
+    assertThat(queryMetaData.getQuery()).doesNotContain("t0.ENDTIME >=");
+    assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
   }
 }

@@ -123,6 +123,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   public static final class Keys {
     private static final String SUCCESS = "Deployment Succeeded";
     private static final String REJECTED = "Deployment Rejected";
+    private static final String RUNNING = "Deployment Running";
+    private static final String PAUSED = "Deployment Paused";
     private static final String EXPIRED = "Deployment Expired";
     private static final String ABORTED = "Deployment Aborted";
     private static final String FAILED = "Deployment Failed";
@@ -293,6 +295,15 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
   }
 
+  public void publish(WorkflowExecution workflowExecution) {
+    final Application applicationDataForReporting = usageMetricsHelper.getApplication(workflowExecution.getAppId());
+    String accountID = applicationDataForReporting.getAccountId();
+
+    updateDeploymentInformation(workflowExecution);
+    usageMetricsEventPublisher.publishDeploymentTimeSeriesEvent(accountID, workflowExecution);
+    reportDeploymentEventToSegment(workflowExecution);
+  }
+
   @VisibleForTesting
   public List<NameValuePair> resolveDeploymentTags(ExecutionContext context, String workflowId) {
     String accountId = appService.getAccountIdByAppId(appId);
@@ -425,6 +436,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
 
     switch (workflowExecution.getStatus()) {
+      case RUNNING:
+        return Keys.RUNNING;
+      case PAUSED:
+        return Keys.PAUSED;
       case REJECTED:
         return Keys.REJECTED;
       case FAILED:

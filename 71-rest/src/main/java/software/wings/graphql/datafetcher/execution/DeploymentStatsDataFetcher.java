@@ -119,6 +119,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   @Inject TagHelper tagHelper;
   private DeploymentTableSchema schema = new DeploymentTableSchema();
   private static final long weekOffset = 7 * 24 * 60 * 60 * 1000;
+  private static final String startTimeDBFieldName = "starttime";
+  private static final String endTimeDBFieldName = "endtime";
 
   @Override
   protected QLData fetch(String accountId, QLDeploymentAggregationFunction aggregateFunction,
@@ -573,10 +575,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       decorateQueryWithFilters(selectQuery, filters);
     }
 
-    validateTimeFilters(filters, selectQuery);
-
     if (isValidGroupByTime(groupByTime)) {
-      decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime);
+      decorateQueryWithGroupByTime(fieldNames, selectQuery, filters, groupByTime);
     }
 
     if (isValidGroupBy(groupBy)) {
@@ -676,8 +676,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       decorateQueryWithFilters(selectTags, filters);
     }
 
-    validateTimeFilters(filters, selectTags);
-
     addAccountFilter(selectTags, accountId);
     addParentIdFilter(selectTags);
 
@@ -757,7 +755,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   private void addGroupByTimeToExistsQuery(
       QLTimeSeriesAggregation groupByTime, boolean isValidGroupByTime, SelectQuery existsQuery) {
     if (isValidGroupByTime) {
-      String timeBucket = getGroupByTimeQuery(groupByTime, "endtime");
+      String timeBucket = getGroupByTimeQuery(groupByTime, endTimeDBFieldName);
       existsQuery.addCustomColumns(
           Converter.toCustomColumnSqlObject(new CustomExpression(timeBucket).setDisableParens(true),
               DeploymentMetaDataFields.TIME_SERIES.getFieldName()));
@@ -972,6 +970,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   }
 
   private void decorateQueryWithFilters(SelectQuery selectQuery, List<QLDeploymentFilter> filters) {
+    validateTimeFilters(filters, selectQuery);
     for (QLDeploymentFilter filter : filters) {
       Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
       for (QLDeploymentFilterType type : filterTypes) {
@@ -1492,15 +1491,43 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 2;
   }
 
-  private void decorateQueryWithGroupByTime(
-      List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery, QLTimeSeriesAggregation groupByTime) {
-    String timeBucket = getGroupByTimeQuery(groupByTime, "endtime");
+  private void decorateQueryWithGroupByTime(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,
+      List<QLDeploymentFilter> filters, QLTimeSeriesAggregation groupByTime) {
+    String dbFieldName = getDBFieldName(filters);
+    String timeBucket = getGroupByTimeQuery(groupByTime, dbFieldName);
 
     selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
         new CustomExpression(timeBucket).setDisableParens(true), DeploymentMetaDataFields.TIME_SERIES.getFieldName()));
     selectQuery.addCustomGroupings(DeploymentMetaDataFields.TIME_SERIES.getFieldName());
     selectQuery.addCustomOrdering(DeploymentMetaDataFields.TIME_SERIES.getFieldName(), Dir.ASCENDING);
     fieldNames.add(DeploymentMetaDataFields.TIME_SERIES);
+  }
+
+  private String getDBFieldName(List<QLDeploymentFilter> filters) {
+    TimeFiltersPresence timeFiltersPresence = new TimeFiltersPresence();
+
+    filters.forEach(filter -> {
+      if (filter.getStartTime() != null) {
+        timeFiltersPresence.setStartTimePresent(true);
+      }
+      if (filter.getEndTime() != null) {
+        timeFiltersPresence.setEndTimePresent(true);
+      }
+    });
+
+    if (timeFiltersPresence.isEndTimePresent()) {
+      return endTimeDBFieldName;
+    } else if (timeFiltersPresence.isStartTimePresent()) {
+      return startTimeDBFieldName;
+    } else {
+      return endTimeDBFieldName;
+    }
+  }
+
+  @Data
+  class TimeFiltersPresence {
+    boolean startTimePresent;
+    boolean endTimePresent;
   }
 
   private boolean isValidGroupByTime(QLTimeSeriesAggregation groupByTime) {

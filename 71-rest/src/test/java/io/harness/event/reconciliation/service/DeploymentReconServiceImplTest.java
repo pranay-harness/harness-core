@@ -5,12 +5,16 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -36,7 +40,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
@@ -45,6 +48,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.dl.WingsPersistence;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -55,10 +59,16 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks DeploymentReconServiceImpl deploymentReconService;
   final Connection mockConnection = mock(Connection.class);
   final Statement mockStatement = mock(Statement.class);
-  final ResultSet preparedStatementResultSet = mock(ResultSet.class);
+  final ResultSet resultSet1 = mock(ResultSet.class);
+  final ResultSet resultSet2 = mock(ResultSet.class);
+  final ResultSet resultSet3 = mock(ResultSet.class);
+  final ResultSet resultSet4 = mock(ResultSet.class);
   final ResultSet statementResultSet = mock(ResultSet.class);
+  final DeploymentReconServiceImpl deploymentReconServiceImpl = mock(DeploymentReconServiceImpl.class);
   final PreparedStatement preparedStatement = mock(PreparedStatement.class);
-  int[] count = {0};
+  final Array array = mock(Array.class);
+  int[] duplicatesCount = {0};
+  int[] statusMismatchCount = {0};
 
   @Before
   public void setUp() throws Exception {
@@ -66,22 +76,48 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockConnection.prepareStatement(anyString())).thenReturn(preparedStatement);
-    when(preparedStatement.executeQuery()).thenReturn(preparedStatementResultSet);
+    when(mockConnection.createArrayOf(any(), any())).thenReturn(array);
+    when(preparedStatement.executeQuery()).thenReturn(resultSet1, resultSet2, resultSet3, resultSet4);
     when(mockStatement.executeQuery(anyString())).thenReturn(statementResultSet);
     when(timeScaleDBService.isValid()).thenReturn(true);
   }
 
-  public void activateDuplicatesFound() throws Exception {
-    when(preparedStatementResultSet.next()).thenAnswer(new Answer<Boolean>() {
-      @Override
-      public Boolean answer(InvocationOnMock invocation) throws Throwable {
-        while (count[0] < 2) {
-          count[0]++;
-          return true;
-        }
-        return false;
-      }
-    });
+  public void activateDuplicatesFound(ResultSet resultSet) throws Exception {
+    doAnswer((Answer<Boolean>) invocation -> getAnswerDuplicates()).when(resultSet).next();
+  }
+
+  public void deactivateDuplicatesFound(ResultSet resultSet) throws Exception {
+    doAnswer((Answer<Boolean>) invocation -> false).when(resultSet).next();
+  }
+
+  private boolean getAnswerDuplicates() {
+    while (duplicatesCount[0] < 2) {
+      duplicatesCount[0]++;
+      return true;
+    }
+    return false;
+  }
+
+  private boolean getAnswerStatusMismatch() {
+    while (statusMismatchCount[0] < 2) {
+      statusMismatchCount[0]++;
+      return true;
+    }
+    return false;
+  }
+
+  private void activateStatusMismatch(ResultSet resultSet, long timeStamp) throws Exception {
+    doAnswer((Answer<Boolean>) invocation -> getAnswerStatusMismatch()).when(resultSet).next();
+
+    final WorkflowExecutionBuilder workflowExecutionBuilder = WorkflowExecution.builder()
+                                                                  .accountId(ACCOUNT_ID)
+                                                                  .appId(APP_ID)
+                                                                  .envId(ENV_ID)
+                                                                  .startTs(2L)
+                                                                  .endTs(timeStamp)
+                                                                  .createdAt(timeStamp);
+
+    wingsPersistence.save(workflowExecutionBuilder.uuid("DATA0").status(SUCCESS).build());
   }
 
   private void activateMissingRecords(long timeStamp) {
@@ -110,6 +146,30 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(PAUSED).build());
     wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(WAITING).build());
+  }
+
+  public void deactivateMissingRecords(ResultSet resultSet) throws Exception {
+    doAnswer((Answer<Boolean>) invocation -> true).when(resultSet).next();
+    doReturn(1L).when(resultSet).getLong(anyInt());
+  }
+
+  @Test
+  @Owner(developers = RUSHABH)
+  @Category(UnitTests.class)
+  public void testInvalidTSDB() {
+    try {
+      final long durationStartTs = System.currentTimeMillis() - 2000000;
+      final long durationEndTs = System.currentTimeMillis();
+
+      when(timeScaleDBService.isValid()).thenReturn(false);
+
+      ReconciliationStatus status =
+          deploymentReconService.performReconciliation(ACCOUNT_ID, durationStartTs, durationEndTs);
+      assertThat(status).isEqualTo(ReconciliationStatus.SUCCESS);
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
   }
 
   @Test
@@ -158,7 +218,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testMissingRecordsDuplicatesFound() throws Exception {
-    activateDuplicatesFound();
+    activateDuplicatesFound(resultSet1);
     final long durationStartTs = System.currentTimeMillis() - 2000000;
     final long durationEndTs = System.currentTimeMillis();
     activateMissingRecords(durationEndTs - 1300);
@@ -179,8 +239,8 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testDuplicatesDetected() {
     try {
-      activateDuplicatesFound();
-      when(preparedStatementResultSet.getString(anyInt())).thenReturn("DATA" + count[0]);
+      activateDuplicatesFound(resultSet1);
+      when(resultSet1.getString(anyInt())).thenReturn("DATA" + duplicatesCount[0]);
 
       final long durationStartTs = System.currentTimeMillis() - 2000000;
       final long durationEndTs = System.currentTimeMillis();
@@ -241,5 +301,119 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
                       .build();
     assertThat(deploymentReconService.shouldPerformReconciliation(reconRecord, System.currentTimeMillis() - 1000))
         .isFalse();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testStatusMismatchDetected() {
+    try {
+      final long durationStartTs = System.currentTimeMillis() - 2000000;
+      final long durationEndTs = System.currentTimeMillis();
+
+      deactivateDuplicatesFound(resultSet1);
+      deactivateMissingRecords(resultSet2);
+      activateStatusMismatch(resultSet3, durationEndTs - 1300);
+      doReturn("DATA" + statusMismatchCount[0]).when(resultSet3).getString(any());
+
+      deploymentReconService.performReconciliation(ACCOUNT_ID, durationStartTs, durationEndTs);
+      DeploymentReconRecord latestRecord = deploymentReconService.getLatestDeploymentReconRecord(ACCOUNT_ID);
+      assertThat(latestRecord.getAccountId()).isEqualTo(ACCOUNT_ID);
+      assertThat(latestRecord.getDurationStartTs()).isEqualTo(durationStartTs);
+      assertThat(latestRecord.getDurationEndTs()).isEqualTo(durationEndTs);
+      assertThat(latestRecord.getDetectionStatus()).isEqualTo(DetectionStatus.STATUS_MISMATCH_DETECTED);
+      assertThat(latestRecord.getReconcilationAction()).isEqualTo(ReconcilationAction.STATUS_RECONCILIATION);
+      assertThat(latestRecord.getReconciliationStatus()).isEqualTo(ReconciliationStatus.SUCCESS);
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testMissingRecordsStatusMismatchDetected() {
+    try {
+      final long durationStartTs = System.currentTimeMillis() - 2000000;
+      final long durationEndTs = System.currentTimeMillis();
+
+      deactivateDuplicatesFound(resultSet1);
+      activateStatusMismatch(resultSet4, durationEndTs - 1300);
+      doReturn("DATA" + statusMismatchCount[0]).when(resultSet4).getString(any());
+
+      deploymentReconService.performReconciliation(ACCOUNT_ID, durationStartTs, durationEndTs);
+      DeploymentReconRecord latestRecord = deploymentReconService.getLatestDeploymentReconRecord(ACCOUNT_ID);
+      assertThat(latestRecord.getAccountId()).isEqualTo(ACCOUNT_ID);
+      assertThat(latestRecord.getDurationStartTs()).isEqualTo(durationStartTs);
+      assertThat(latestRecord.getDurationEndTs()).isEqualTo(durationEndTs);
+      assertThat(latestRecord.getDetectionStatus())
+          .isEqualTo(DetectionStatus.MISSING_RECORDS_DETECTED_STATUS_MISMATCH_DETECTED);
+      assertThat(latestRecord.getReconcilationAction())
+          .isEqualTo(ReconcilationAction.ADD_MISSING_RECORDS_STATUS_RECONCILIATION);
+      assertThat(latestRecord.getReconciliationStatus()).isEqualTo(ReconciliationStatus.SUCCESS);
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testDuplicatesStatusMismatchDetected() {
+    try {
+      final long durationStartTs = System.currentTimeMillis() - 2000000;
+      final long durationEndTs = System.currentTimeMillis();
+
+      activateDuplicatesFound(resultSet1);
+      deactivateMissingRecords(resultSet2);
+      activateStatusMismatch(resultSet3, durationEndTs - 1300);
+      doReturn("DATA" + duplicatesCount[0]).when(resultSet1).getString(any());
+      doReturn("DATA" + statusMismatchCount[0]).when(resultSet3).getString(any());
+
+      deploymentReconService.performReconciliation(ACCOUNT_ID, durationStartTs, durationEndTs);
+      DeploymentReconRecord latestRecord = deploymentReconService.getLatestDeploymentReconRecord(ACCOUNT_ID);
+      assertThat(latestRecord.getAccountId()).isEqualTo(ACCOUNT_ID);
+      assertThat(latestRecord.getDurationStartTs()).isEqualTo(durationStartTs);
+      assertThat(latestRecord.getDurationEndTs()).isEqualTo(durationEndTs);
+      assertThat(latestRecord.getDetectionStatus())
+          .isEqualTo(DetectionStatus.DUPLICATE_DETECTED_STATUS_MISMATCH_DETECTED);
+      assertThat(latestRecord.getReconcilationAction())
+          .isEqualTo(ReconcilationAction.DUPLICATE_REMOVAL_STATUS_RECONCILIATION);
+      assertThat(latestRecord.getReconciliationStatus()).isEqualTo(ReconciliationStatus.SUCCESS);
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAllDetected() {
+    try {
+      final long durationStartTs = System.currentTimeMillis() - 2000000;
+      final long durationEndTs = System.currentTimeMillis();
+
+      activateDuplicatesFound(resultSet1);
+      activateStatusMismatch(resultSet4, durationEndTs - 1300);
+      doReturn("DATA" + duplicatesCount[0]).when(resultSet1).getString(any());
+      doReturn("DATA" + statusMismatchCount[0]).when(resultSet4).getString(any());
+
+      deploymentReconService.performReconciliation(ACCOUNT_ID, durationStartTs, durationEndTs);
+      DeploymentReconRecord latestRecord = deploymentReconService.getLatestDeploymentReconRecord(ACCOUNT_ID);
+      assertThat(latestRecord.getAccountId()).isEqualTo(ACCOUNT_ID);
+      assertThat(latestRecord.getDurationStartTs()).isEqualTo(durationStartTs);
+      assertThat(latestRecord.getDurationEndTs()).isEqualTo(durationEndTs);
+      assertThat(latestRecord.getDetectionStatus())
+          .isEqualTo(DetectionStatus.DUPLICATE_DETECTED_MISSING_RECORDS_DETECTED_STATUS_MISMATCH_DETECTED);
+      assertThat(latestRecord.getReconcilationAction())
+          .isEqualTo(ReconcilationAction.DUPLICATE_REMOVAL_ADD_MISSING_RECORDS_STATUS_RECONCILIATION);
+      assertThat(latestRecord.getReconciliationStatus()).isEqualTo(ReconciliationStatus.SUCCESS);
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
   }
 }

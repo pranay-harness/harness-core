@@ -229,6 +229,8 @@ public interface WingsTestConstants {
 
   String ACCOUNT_ID = "ACCOUNT_ID";
 
+  String ACCOUNT_SERVICE = "ACCOUNT_SERVICE";
+
   String ACCOUNT_KEY = "ACCOUNT_KEY_ACCOUNT_KEY_ACCOUNT_"; // Account key must be 32 characters
 
   String KMS_ID = "KMS_ID";

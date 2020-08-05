@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.utils.Lists;
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
@@ -12,6 +13,7 @@ import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -21,27 +23,30 @@ import java.util.List;
 @Slf4j
 public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventInfo> {
   /**
-   *  EXECUTIONID TEXT NOT NULL,
-   * 	STARTTIME TIMESTAMP NOT NULL,
-   * 	ENDTIME TIMESTAMP NOT NULL,
-   * 	ACCOUNTID TEXT NOT NULL,
-   * 	APPID TEXT NOT NULL,
-   * 	TRIGGERED_BY TEXT,
-   * 	TRIGGER_ID TEXT,
-   * 	STATUS VARCHAR(20),
-   * 	SERVICES TEXT[],
-   * 	WORKFLOWS TEXT[],
-   * 	CLOUDPROVIDERS TEXT[],
-   * 	ENVIRONMENTS TEXT[],
-   * 	PIPELINE TEXT,
-   * 	DURATION BIGINT NOT NULL,
-   * 	ARTIFACTS TEXT[]
-   * 	ENVTYPES TEXT[]
-   * 	PARENT_EXECUTION TEXT
-   * 	STAGENAME TEXT
-   * 	ROLLBACK_DURATION BIGINT
+   *    EXECUTIONID TEXT NOT NULL,
+   *    STARTTIME TIMESTAMP NOT NULL,
+   *    ENDTIME TIMESTAMP NOT NULL,
+   *    ACCOUNTID TEXT NOT NULL,
+   *    APPID TEXT NOT NULL,
+   *    TRIGGERED_BY TEXT,
+   *    TRIGGER_ID TEXT,
+   *    STATUS VARCHAR(20),
+   *    SERVICES TEXT[],
+   *    WORKFLOWS TEXT[],
+   *    CLOUDPROVIDERS TEXT[],
+   *    ENVIRONMENTS TEXT[],
+   *    PIPELINE TEXT,
+   *    DURATION BIGINT NOT NULL,
+   *    ARTIFACTS TEXT[]
+   *    ENVTYPES TEXT[]
+   *    PARENT_EXECUTION TEXT
+   *    STAGENAME TEXT
+   *    ROLLBACK_DURATION BIGINT
    */
-  String insert_prepared_statement_sql =
+  private static final Long sqlMinTimestamp = 0L;
+  private static final String query_statement = "SELECT * FROM DEPLOYMENT WHERE EXECUTIONID=?";
+  private static final String delete_statement = "DELETE FROM DEPLOYMENT WHERE EXECUTIONID=?";
+  private static final String insert_statement =
       "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION, INSTANCES_DEPLOYED, TAGS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
@@ -51,102 +56,128 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
   public void processEvent(TimeSeriesEventInfo eventInfo) {
     if (timeScaleDBService.isValid()) {
       long startTime = System.currentTimeMillis();
-      boolean successfulInsert = false;
+      boolean successful = false;
       int retryCount = 0;
-      while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
-        try (Connection dbConnection = timeScaleDBService.getDBConnection();
-             PreparedStatement insertPreparedStatement = dbConnection.prepareStatement(insert_prepared_statement_sql)) {
-          /**
-           *  EXECUTIONID TEXT NOT NULL,
-           * 	STARTTIME TIMESTAMP NOT NULL,
-           * 	ENDTIME TIMESTAMP NOT NULL,
-           * 	ACCOUNTID TEXT NOT NULL,
-           * 	APPID TEXT NOT NULL,
-           * 	TRIGGERED_BY TEXT,
-           * 	TRIGGER_ID TEXT,
-           * 	STATUS VARCHAR(20),
-           * 	SERVICES TEXT[],
-           * 	WORKFLOWS TEXT[],
-           * 	CLOUDPROVIDERS TEXT[],
-           * 	ENVIRONMENTS TEXT[],
-           * 	PIPELINE TEXT,
-           * 	DURATION BIGINT NOT NULL,
-           * 	ARTIFACTS TEXT[]
-           * 	ENVTYPES TEXT[]
-           * 	PARENT_EXECUTION TEXT
-           * 	STAGENAME TEXT
-           * 	ROLLBACK_DURATION BIGINT
-           **/
-          insertPreparedStatement.setString(1, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
-          insertPreparedStatement.setTimestamp(
-              2, new Timestamp(eventInfo.getLongData().get(EventProcessor.STARTTIME)), utils.getDefaultCalendar());
-          insertPreparedStatement.setTimestamp(
-              3, new Timestamp(eventInfo.getLongData().get(EventProcessor.ENDTIME)), utils.getDefaultCalendar());
-          insertPreparedStatement.setString(4, eventInfo.getAccountId());
-          insertPreparedStatement.setString(5, eventInfo.getStringData().get(EventProcessor.APPID));
-          insertPreparedStatement.setString(6, eventInfo.getStringData().get(EventProcessor.TRIGGERED_BY));
-          insertPreparedStatement.setString(7, eventInfo.getStringData().get(EventProcessor.TRIGGER_ID));
-          insertPreparedStatement.setString(8, eventInfo.getStringData().get(EventProcessor.STATUS));
+      while (!successful && retryCount < MAX_RETRY_COUNT) {
+        ResultSet queryResult = null;
+        try (Connection connection = timeScaleDBService.getDBConnection();
+             PreparedStatement queryStatement = connection.prepareStatement(query_statement);
+             PreparedStatement deleteStatement = connection.prepareStatement(delete_statement);
+             PreparedStatement insertStatement = connection.prepareStatement(insert_statement)) {
+          queryResult = queryDataInTimescaleDB(eventInfo, queryStatement);
 
-          if (eventInfo.getListData() == null) {
-            logger.warn("TimeSeriesEventInfo has listData=null:[{}]", eventInfo);
-          }
-
-          insertArrayData(
-              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.SERVICE_LIST), 9);
-
-          insertArrayData(
-              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.WORKFLOW_LIST), 10);
-
-          insertArrayData(
-              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.CLOUD_PROVIDER_LIST), 11);
-
-          insertArrayData(dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.ENV_LIST), 12);
-
-          insertPreparedStatement.setString(13, eventInfo.getStringData().get(EventProcessor.PIPELINE));
-
-          insertPreparedStatement.setLong(14, eventInfo.getLongData().get(EventProcessor.DURATION));
-
-          insertArrayData(
-              dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.ARTIFACT_LIST), 15);
-
-          insertArrayData(dbConnection, insertPreparedStatement, getListData(eventInfo, EventProcessor.ENVTYPES), 16);
-
-          insertPreparedStatement.setString(17, eventInfo.getStringData().get(EventProcessor.PARENT_EXECUTION));
-
-          insertPreparedStatement.setString(18, eventInfo.getStringData().get(EventProcessor.STAGENAME));
-
-          Long rollbackDuration = eventInfo.getLongData().get(EventProcessor.ROLLBACK_DURATION);
-          if (rollbackDuration == null) {
-            rollbackDuration = 0L;
-          }
-
-          insertPreparedStatement.setLong(19, rollbackDuration);
-
-          Integer instancesDeployed = eventInfo.getIntegerData().get(EventProcessor.INSTANCES_DEPLOYED);
-          if (instancesDeployed == null) {
-            instancesDeployed = 0;
-          }
-          insertPreparedStatement.setInt(20, instancesDeployed);
-
-          insertPreparedStatement.setObject(21, eventInfo.getData().get(EventProcessor.TAGS));
-
-          insertPreparedStatement.execute();
-          successfulInsert = true;
-        } catch (SQLException e) {
-          if (retryCount >= MAX_RETRY_COUNT) {
-            logger.error("Failed to save deployment data,[{}]", eventInfo, e);
+          if (queryResult != null && queryResult.next()) {
+            logger.info(
+                "WorkflowExecution found:[{}],updating it", eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
+            deleteDataInTimescaleDB(eventInfo, deleteStatement);
+            insertDataInTimescaleDB(eventInfo, connection, insertStatement);
           } else {
-            logger.info("Failed to save deployment data,[{}],retryCount=[{}]", eventInfo, retryCount);
+            logger.info("WorkflowExecution not found:[{}],inserting it",
+                eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
+            insertDataInTimescaleDB(eventInfo, connection, insertStatement);
           }
-          retryCount++;
+          successful = true;
+        } catch (SQLException e) {
+          logger.error("Failed to save deployment data,[{}],retryCount=[{}] ", eventInfo, retryCount++, e);
+        } catch (Exception e) {
+          logger.error("Failed to save deployment data,[{}]", eventInfo, e);
+          retryCount = MAX_RETRY_COUNT + 1;
         } finally {
+          DBUtils.close(queryResult);
           logger.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }
       }
     } else {
       logger.trace("Not processing deployment time series data:[{}]", eventInfo);
     }
+  }
+
+  private ResultSet queryDataInTimescaleDB(TimeSeriesEventInfo eventInfo, PreparedStatement queryStatement)
+      throws SQLException {
+    queryStatement.setString(1, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
+    return queryStatement.executeQuery();
+  }
+
+  private void deleteDataInTimescaleDB(TimeSeriesEventInfo eventInfo, PreparedStatement deleteStatement)
+      throws SQLException {
+    deleteStatement.setString(1, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
+    deleteStatement.execute();
+  }
+
+  private void insertDataInTimescaleDB(
+      TimeSeriesEventInfo eventInfo, Connection dbConnection, PreparedStatement insertStatement) throws SQLException {
+    int index = 0;
+
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.EXECUTIONID));
+    insertStatement.setTimestamp(
+        ++index, new Timestamp(eventInfo.getLongData().get(EventProcessor.STARTTIME)), utils.getDefaultCalendar());
+
+    Long endtime = eventInfo.getLongData().get(EventProcessor.ENDTIME);
+    if (endtime != null) {
+      insertStatement.setTimestamp(
+          ++index, new Timestamp(eventInfo.getLongData().get(EventProcessor.ENDTIME)), utils.getDefaultCalendar());
+    } else {
+      insertStatement.setTimestamp(++index, new Timestamp(sqlMinTimestamp), utils.getDefaultCalendar());
+    }
+
+    insertStatement.setString(++index, eventInfo.getAccountId());
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.APPID));
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.TRIGGERED_BY));
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.TRIGGER_ID));
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.STATUS));
+
+    if (eventInfo.getListData() == null) {
+      logger.warn("TimeSeriesEventInfo has listData=null:[{}]", eventInfo);
+    }
+
+    insertArrayData(dbConnection, insertStatement, getListData(eventInfo, EventProcessor.SERVICE_LIST), ++index);
+    insertArrayData(dbConnection, insertStatement, getListData(eventInfo, EventProcessor.WORKFLOW_LIST), ++index);
+    insertArrayData(dbConnection, insertStatement, getListData(eventInfo, EventProcessor.CLOUD_PROVIDER_LIST), ++index);
+    insertArrayData(dbConnection, insertStatement, getListData(eventInfo, EventProcessor.ENV_LIST), ++index);
+
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.PIPELINE));
+
+    Long duration = getDuration(eventInfo);
+    insertStatement.setLong(++index, duration);
+
+    insertArrayData(dbConnection, insertStatement, getListData(eventInfo, EventProcessor.ARTIFACT_LIST), ++index);
+    insertArrayData(dbConnection, insertStatement, getListData(eventInfo, EventProcessor.ENVTYPES), ++index);
+
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.PARENT_EXECUTION));
+    insertStatement.setString(++index, eventInfo.getStringData().get(EventProcessor.STAGENAME));
+
+    Long rollbackDuration = getRollbackDuration(eventInfo);
+    insertStatement.setLong(++index, rollbackDuration);
+
+    Integer instancesDeployed = getInstancesDeployed(eventInfo);
+    insertStatement.setInt(++index, instancesDeployed);
+    insertStatement.setObject(++index, eventInfo.getData().get(EventProcessor.TAGS));
+
+    insertStatement.execute();
+  }
+
+  private Long getDuration(TimeSeriesEventInfo eventInfo) {
+    Long duration = eventInfo.getLongData().get(EventProcessor.DURATION);
+    if (duration == null) {
+      duration = 0L;
+    }
+    return duration;
+  }
+
+  private Long getRollbackDuration(TimeSeriesEventInfo eventInfo) {
+    Long rollbackDuration = eventInfo.getLongData().get(EventProcessor.ROLLBACK_DURATION);
+    if (rollbackDuration == null) {
+      rollbackDuration = 0L;
+    }
+    return rollbackDuration;
+  }
+
+  private Integer getInstancesDeployed(TimeSeriesEventInfo eventInfo) {
+    Integer instancesDeployed = eventInfo.getIntegerData().get(EventProcessor.INSTANCES_DEPLOYED);
+    if (instancesDeployed == null) {
+      instancesDeployed = 0;
+    }
+    return instancesDeployed;
   }
 
   private List<String> getListData(TimeSeriesEventInfo eventInfo, String key) {

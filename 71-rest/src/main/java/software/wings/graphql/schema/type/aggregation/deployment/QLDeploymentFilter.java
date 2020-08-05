@@ -61,7 +61,6 @@ public class QLDeploymentFilter implements EntityFilter {
     if (filter.getEnvironmentType() != null) {
       filterTypes.add(QLDeploymentFilterType.EnvironmentType);
     }
-
     if (filter.getPipeline() != null) {
       filterTypes.add(QLDeploymentFilterType.Pipeline);
     }
@@ -89,23 +88,18 @@ public class QLDeploymentFilter implements EntityFilter {
     if (filter.getCloudProvider() != null) {
       filterTypes.add(QLDeploymentFilterType.CloudProvider);
     }
-
     if (filter.getService() != null) {
       filterTypes.add(QLDeploymentFilterType.Service);
     }
-
     if (filter.getApplication() != null) {
       filterTypes.add(QLDeploymentFilterType.Application);
     }
-
     if (filter.getRollbackDuration() != null) {
       filterTypes.add(QLDeploymentFilterType.RollbackDuration);
     }
-
     if (filter.getTag() != null) {
       filterTypes.add(QLDeploymentFilterType.Tag);
     }
-
     if (filter.getTags() != null) {
       filterTypes.add(QLDeploymentFilterType.Tags);
     }

@@ -8,12 +8,14 @@ import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WorkflowExecution;
+import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.sm.status.WorkflowStatusPropagator;
 
 @Slf4j
 public class WorkflowResumePropagator implements WorkflowStatusPropagator {
   @Inject private WorkflowStatusPropagatorHelper propagatorHelper;
+  @Inject private WorkflowExecutionUpdate workflowExecutionUpdate;
 
   @Override
   public void handleStatusUpdate(StateStatusUpdateInfo updateInfo) {
@@ -21,6 +23,8 @@ public class WorkflowResumePropagator implements WorkflowStatusPropagator {
         updateInfo.getAppId(), updateInfo.getWorkflowExecutionId(), singletonList(PAUSED), RUNNING);
     if (updatedExecution == null) {
       logger.info("Updating status to paused failed for execution id: {}", updateInfo.getWorkflowExecutionId());
+    } else {
+      workflowExecutionUpdate.publish(updatedExecution);
     }
 
     WorkflowExecution execution =

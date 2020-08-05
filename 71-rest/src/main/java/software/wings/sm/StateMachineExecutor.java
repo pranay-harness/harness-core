@@ -1269,6 +1269,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
         StateStatusUpdateInfo.buildFromStateExecutionInstance(
             stateExecutionInstance, reason != null && RESUME_ALL == reason.getExecutionInterruptType()));
+
     return true;
   }
 

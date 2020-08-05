@@ -47,6 +47,8 @@ public enum ExecutionStatus {
   private static Set<ExecutionStatus> discontinueStatuses = EnumSet.<ExecutionStatus>of(ABORTED, REJECTED, EXPIRED);
   private static Set<ExecutionStatus> flowingStatuses =
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, WAITING, PREPARING);
+  private static Set<ExecutionStatus> combinedStatuses =
+      EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS, REJECTED, EXPIRED, SKIPPED, RUNNING, PAUSED);
 
   ExecutionStatus() {}
 
@@ -59,6 +61,10 @@ public enum ExecutionStatus {
   }
   public static Set<ExecutionStatus> finalStatuses() {
     return finalStatuses;
+  }
+
+  public static Set<ExecutionStatus> combinedStatuses() {
+    return combinedStatuses;
   }
 
   public static boolean isFinalStatus(ExecutionStatus status) {

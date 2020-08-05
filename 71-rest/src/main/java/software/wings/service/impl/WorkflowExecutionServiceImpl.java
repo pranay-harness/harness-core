@@ -383,6 +383,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
   @Inject @AccountExpiryCheck private PreDeploymentChecker accountExpirationChecker;
   @Inject private WorkflowStatusPropagatorFactory workflowStatusPropagatorFactory;
+  @Inject private WorkflowExecutionUpdate executionUpdate;
 
   @Override
   public HIterator<WorkflowExecution> executions(
@@ -1524,6 +1525,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING, false);
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+      executionUpdate.publish(savedWorkflowExecution);
       if (workflowExecution.getWorkflowType() == PIPELINE) {
         savePipelineSweepingOutPut(workflowExecution, pipeline, savedWorkflowExecution);
       }

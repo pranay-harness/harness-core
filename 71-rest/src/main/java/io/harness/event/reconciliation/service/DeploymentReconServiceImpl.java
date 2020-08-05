@@ -22,6 +22,9 @@ import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.DeploymentTimeSeriesEvent;
@@ -29,6 +32,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,7 +40,10 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.management.openmbean.InvalidKeyException;
 import javax.validation.constraints.NotNull;
 
 @Singleton
@@ -51,15 +58,18 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   protected static final long COOL_DOWN_INTERVAL = 15 * 60 * 1000; /* 15 MINS COOL DOWN INTERVAL */
 
   private static final String CHECK_MISSING_DATA_QUERY =
-      "SELECT COUNT(DISTINCT(EXECUTIONID)) FROM DEPLOYMENT WHERE ACCOUNTID=? AND ENDTIME>=? AND ENDTIME<=? AND PARENT_EXECUTION IS NULL;";
+      "SELECT COUNT(DISTINCT(EXECUTIONID)) FROM DEPLOYMENT WHERE ACCOUNTID=? AND ((STARTTIME>=? AND STARTTIME<=?) OR (ENDTIME>=? AND ENDTIME<=?)) AND PARENT_EXECUTION IS NULL;";
 
   private static final String CHECK_DUPLICATE_DATA_QUERY =
-      "SELECT DISTINCT(D.EXECUTIONID) FROM DEPLOYMENT D,(SELECT COUNT(EXECUTIONID), EXECUTIONID FROM DEPLOYMENT A WHERE ACCOUNTID = ? AND ENDTIME>=? AND ENDTIME<=? GROUP BY EXECUTIONID HAVING COUNT(EXECUTIONID) > 1) AS B WHERE D.EXECUTIONID = B.EXECUTIONID;";
+      "SELECT DISTINCT(D.EXECUTIONID) FROM DEPLOYMENT D,(SELECT COUNT(EXECUTIONID), EXECUTIONID FROM DEPLOYMENT A WHERE ACCOUNTID = ? AND ((STARTTIME>=? AND STARTTIME<=?) OR (ENDTIME>=? AND ENDTIME<=?)) GROUP BY EXECUTIONID HAVING COUNT(EXECUTIONID) > 1) AS B WHERE D.EXECUTIONID = B.EXECUTIONID;";
 
-  private static final String DELETE_DUPLICATE = "DELETE FROM DEPLOYMENT WHERE EXECUTIONID IN (?);";
+  private static final String DELETE_DUPLICATE = "DELETE FROM DEPLOYMENT WHERE EXECUTIONID = ANY (?);";
 
   private static final String FIND_DEPLOYMENT_IN_TSDB =
-      "SELECT EXECUTIONID,ENDTIME FROM DEPLOYMENT WHERE EXECUTIONID=?";
+      "SELECT EXECUTIONID,STARTTIME FROM DEPLOYMENT WHERE EXECUTIONID=?";
+
+  private static final String RUNNING_DEPLOYMENTS =
+      "SELECT EXECUTIONID,STATUS FROM DEPLOYMENT WHERE STATUS IN ('RUNNING','PAUSED')";
 
   @Override
   public ReconciliationStatus performReconciliation(String accountId, long durationStartTs, long durationEndTs) {
@@ -100,6 +110,8 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
         boolean duplicatesDetected = false;
         boolean missingRecordsDetected = false;
+        boolean statusMismatchDetected;
+
         List<String> executionIDs = checkForDuplicates(accountId, durationStartTs, durationEndTs);
         if (isNotEmpty(executionIDs)) {
           duplicatesDetected = true;
@@ -121,20 +133,40 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
               new Date(durationStartTs), new Date(durationEndTs));
         }
 
+        Map<String, String> tsdbRunningWFs = getRunningWFsFromTSDB(accountId, durationStartTs, durationEndTs);
+        statusMismatchDetected = isStatusMismatchedAndUpdated(accountId, tsdbRunningWFs);
+
         DetectionStatus detectionStatus;
         ReconcilationAction action;
-        if (!missingRecordsDetected && !duplicatesDetected) {
-          detectionStatus = DetectionStatus.SUCCESS;
-          action = ReconcilationAction.NONE;
-        } else if (!missingRecordsDetected && duplicatesDetected) {
-          detectionStatus = DetectionStatus.DUPLICATE_DETECTED;
-          action = ReconcilationAction.DUPLICATE_REMOVAL;
-        } else if (missingRecordsDetected && !duplicatesDetected) {
-          detectionStatus = DetectionStatus.MISSING_RECORDS_DETECTED;
-          action = ReconcilationAction.ADD_MISSING_RECORDS;
+
+        if (!statusMismatchDetected) {
+          if (missingRecordsDetected && duplicatesDetected) {
+            detectionStatus = DetectionStatus.DUPLICATE_DETECTED_MISSING_RECORDS_DETECTED;
+            action = ReconcilationAction.DUPLICATE_REMOVAL_ADD_MISSING_RECORDS;
+          } else if (duplicatesDetected) {
+            detectionStatus = DetectionStatus.DUPLICATE_DETECTED;
+            action = ReconcilationAction.DUPLICATE_REMOVAL;
+          } else if (missingRecordsDetected) {
+            detectionStatus = DetectionStatus.MISSING_RECORDS_DETECTED;
+            action = ReconcilationAction.ADD_MISSING_RECORDS;
+          } else {
+            detectionStatus = DetectionStatus.SUCCESS;
+            action = ReconcilationAction.NONE;
+          }
         } else {
-          detectionStatus = DetectionStatus.DUPLICATE_DETECTED_MISSING_RECORDS_DETECTED;
-          action = ReconcilationAction.DUPLICATE_REMOVAL_ADD_MISSING_RECORDS;
+          if (missingRecordsDetected && duplicatesDetected) {
+            detectionStatus = DetectionStatus.DUPLICATE_DETECTED_MISSING_RECORDS_DETECTED_STATUS_MISMATCH_DETECTED;
+            action = ReconcilationAction.DUPLICATE_REMOVAL_ADD_MISSING_RECORDS_STATUS_RECONCILIATION;
+          } else if (duplicatesDetected) {
+            detectionStatus = DetectionStatus.DUPLICATE_DETECTED_STATUS_MISMATCH_DETECTED;
+            action = ReconcilationAction.DUPLICATE_REMOVAL_STATUS_RECONCILIATION;
+          } else if (missingRecordsDetected) {
+            detectionStatus = DetectionStatus.MISSING_RECORDS_DETECTED_STATUS_MISMATCH_DETECTED;
+            action = ReconcilationAction.ADD_MISSING_RECORDS_STATUS_RECONCILIATION;
+          } else {
+            detectionStatus = DetectionStatus.STATUS_MISMATCH_DETECTED;
+            action = ReconcilationAction.STATUS_RECONCILIATION;
+          }
         }
 
         UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(DeploymentReconRecord.class);
@@ -163,20 +195,16 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   private void insertMissingRecords(String accountId, long durationStartTs, long durationEndTs) {
-    try (HIterator<WorkflowExecution> iterator =
-             new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
-                                 .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-                                 .filter(WorkflowExecutionKeys.accountId, accountId)
-                                 .field(WorkflowExecutionKeys.startTs)
-                                 .exists()
-                                 .field(WorkflowExecutionKeys.endTs)
-                                 .exists()
-                                 .field(WorkflowExecutionKeys.endTs)
-                                 .greaterThanOrEq(durationStartTs)
-                                 .field(WorkflowExecutionKeys.endTs)
-                                 .lessThanOrEq(durationEndTs)
-                                 .project(WorkflowExecutionKeys.serviceExecutionSummaries, false)
-                                 .fetch())) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+                                         .order(Sort.descending(WorkflowExecutionKeys.createdAt))
+                                         .filter(WorkflowExecutionKeys.accountId, accountId)
+                                         .field(WorkflowExecutionKeys.startTs)
+                                         .exists()
+                                         .project(WorkflowExecutionKeys.serviceExecutionSummaries, false);
+
+    addTimeQuery(query, durationStartTs, durationEndTs);
+
+    try (HIterator<WorkflowExecution> iterator = new HIterator<>(query.fetch())) {
       for (WorkflowExecution workflowExecution : iterator) {
         checkAndAddIfRequired(workflowExecution);
       }
@@ -223,6 +251,8 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         statement.setString(1, accountId);
         statement.setTimestamp(2, new Timestamp(durationStartTs), utils.getDefaultCalendar());
         statement.setTimestamp(3, new Timestamp(durationEndTs), utils.getDefaultCalendar());
+        statement.setTimestamp(4, new Timestamp(durationStartTs), utils.getDefaultCalendar());
+        statement.setTimestamp(5, new Timestamp(durationEndTs), utils.getDefaultCalendar());
         resultSet = statement.executeQuery();
         if (resultSet.next()) {
           return resultSet.getLong(1);
@@ -232,7 +262,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
       } catch (SQLException ex) {
         totalTries++;
         logger.warn(
-            "Failed to execute executionCount from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
+            "Failed to retrieve execution count from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
       } finally {
         DBUtils.close(resultSet);
@@ -243,11 +273,13 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
   private void deleteDuplicates(String accountId, long durationStartTs, long durationEndTs, List<String> executionIDs) {
     int totalTries = 0;
+    String[] executionIdsArray = executionIDs.toArray(new String[executionIDs.size()]);
     while (totalTries <= 3) {
       try (Connection connection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = connection.prepareStatement(DELETE_DUPLICATE)) {
-        statement.setString(1, getExecutionListAsString(executionIDs));
-        statement.executeQuery();
+        Array array = connection.createArrayOf("text", executionIdsArray);
+        statement.setArray(1, array);
+        statement.executeUpdate();
         return;
       } catch (SQLException ex) {
         totalTries++;
@@ -256,15 +288,6 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
             accountId, new Date(durationStartTs), new Date(durationEndTs), executionIDs, totalTries, ex);
       }
     }
-  }
-
-  public String getExecutionListAsString(@NotNull List<String> executionIds) {
-    StringBuilder builder = new StringBuilder();
-    for (String s : executionIds) {
-      builder = builder.length() > 0 ? builder.append(",").append("'").append(s).append("'")
-                                     : builder.append("'").append(s).append("'");
-    }
-    return builder.toString();
   }
 
   private List<String> checkForDuplicates(String accountId, long durationStartTs, long durationEndTs) {
@@ -277,6 +300,8 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         statement.setString(1, accountId);
         statement.setTimestamp(2, new Timestamp(durationStartTs), utils.getDefaultCalendar());
         statement.setTimestamp(3, new Timestamp(durationEndTs), utils.getDefaultCalendar());
+        statement.setTimestamp(4, new Timestamp(durationStartTs), utils.getDefaultCalendar());
+        statement.setTimestamp(5, new Timestamp(durationEndTs), utils.getDefaultCalendar());
         resultSet = statement.executeQuery();
         while (resultSet.next()) {
           duplicates.add(resultSet.getString(1));
@@ -286,7 +311,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
       } catch (SQLException ex) {
         totalTries++;
         logger.warn(
-            "Failed to execute executionCount from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
+            "Failed to check for duplicates from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
             accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
       } finally {
         DBUtils.close(resultSet);
@@ -314,22 +339,110 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   protected long getWFExecCountFromMongoDB(String accountId, long durationStartTs, long durationEndTs) {
-    return wingsPersistence.createQuery(WorkflowExecution.class)
-        .field(WorkflowExecutionKeys.accountId)
-        .equal(accountId)
-        .field(WorkflowExecutionKeys.startTs)
-        .exists()
-        .field(WorkflowExecutionKeys.endTs)
-        .exists()
-        .field(WorkflowExecutionKeys.endTs)
-        .greaterThanOrEq(durationStartTs)
-        .field(WorkflowExecutionKeys.endTs)
-        .lessThanOrEq(durationEndTs)
-        .field(WorkflowExecutionKeys.pipelineExecutionId)
-        .doesNotExist()
-        .field(WorkflowExecutionKeys.status)
-        .in(ExecutionStatus.finalStatuses())
-        .count();
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .field(WorkflowExecutionKeys.accountId)
+                                         .equal(accountId)
+                                         .field(WorkflowExecutionKeys.startTs)
+                                         .exists()
+                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
+                                         .doesNotExist()
+                                         .field(WorkflowExecutionKeys.status)
+                                         .in(ExecutionStatus.combinedStatuses());
+
+    addTimeQuery(query, durationStartTs, durationEndTs);
+    return query.count();
+  }
+
+  protected Map<String, String> getRunningWFsFromTSDB(String accountId, long durationStartTs, long durationEndTs) {
+    int totalTries = 0;
+    Map<String, String> runningWFs = new HashMap<>();
+    while (totalTries <= 3) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(RUNNING_DEPLOYMENTS)) {
+        resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+          runningWFs.put(resultSet.getString("executionId"), resultSet.getString("status"));
+        }
+        return runningWFs;
+
+      } catch (SQLException ex) {
+        totalTries++;
+        logger.warn(
+            "Failed to retrieve running executions from TimeScaleDB for accountID:[{}] in duration:[{}-{}], totalTries:[{}]",
+            accountId, new Date(durationStartTs), new Date(durationEndTs), totalTries, ex);
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return runningWFs;
+  }
+
+  protected boolean isStatusMismatchedAndUpdated(String accountId, Map<String, String> tsdbRunningWFs) {
+    boolean statusMismatch = false;
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+                                         .order(Sort.descending(WorkflowExecutionKeys.createdAt))
+                                         .filter(WorkflowExecutionKeys.accountId, accountId)
+                                         .field(WorkflowExecutionKeys.startTs)
+                                         .exists()
+                                         .field(WorkflowExecutionKeys.uuid)
+                                         .hasAnyOf(tsdbRunningWFs.keySet())
+                                         .project(WorkflowExecutionKeys.serviceExecutionSummaries, false);
+
+    try (HIterator<WorkflowExecution> iterator = new HIterator<>(query.fetch())) {
+      for (WorkflowExecution workflowExecution : iterator) {
+        if (isStatusMismatchedInMongoAndTSDB(tsdbRunningWFs, workflowExecution)) {
+          logger.info("Status mismatch in MongoDB and TSDB for WorkflowExecution: [{}]", workflowExecution.getUuid());
+          updateRunningWFsFromTSDB(workflowExecution);
+          statusMismatch = true;
+        }
+      }
+    }
+    return statusMismatch;
+  }
+
+  private boolean isStatusMismatchedInMongoAndTSDB(
+      Map<String, String> tsdbRunningWFs, WorkflowExecution workflowExecution) {
+    return tsdbRunningWFs.entrySet().stream().anyMatch(entry
+        -> entry.getKey().equals(workflowExecution.getUuid())
+            && !entry.getValue().equals(workflowExecution.getStatus().toString()));
+  }
+
+  protected void updateRunningWFsFromTSDB(WorkflowExecution workflowExecution) {
+    DeploymentTimeSeriesEvent deploymentTimeSeriesEvent = usageMetricsEventPublisher.constructDeploymentTimeSeriesEvent(
+        workflowExecution.getAccountId(), workflowExecution);
+    logger.info("UPDATING RECORD for accountID:[{}], [{}]", workflowExecution.getAccountId(),
+        deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
+    deploymentEventProcessor.processEvent(deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
+  }
+
+  private void addTimeQuery(Query query, long durationStartTs, long durationEndTs) {
+    CriteriaContainer orQuery = query.or();
+    CriteriaContainer startTimeQuery = query.and();
+    CriteriaContainer endTimeQuery = query.and();
+
+    startTimeQuery.and(getCriteria(WorkflowExecutionKeys.startTs, durationStartTs, durationEndTs, startTimeQuery));
+    endTimeQuery.and(getCriteria(WorkflowExecutionKeys.endTs, durationStartTs, durationEndTs, endTimeQuery));
+
+    orQuery.add(startTimeQuery, endTimeQuery);
+    query.and(orQuery);
+  }
+
+  private Criteria getCriteria(String key, long durationStartTs, long durationEndTs, CriteriaContainer query) {
+    Criteria startTimeCriteria;
+    Criteria endTimeCriteria;
+
+    if (key.equals(WorkflowExecutionKeys.startTs)) {
+      startTimeCriteria = query.criteria(key).lessThanOrEq(durationEndTs);
+      startTimeCriteria.attach(query.criteria(key).greaterThanOrEq(durationStartTs));
+      return startTimeCriteria;
+    } else if (key.equals(WorkflowExecutionKeys.endTs)) {
+      endTimeCriteria = query.criteria(key).lessThanOrEq(durationEndTs);
+      endTimeCriteria.attach(query.criteria(key).greaterThanOrEq(durationStartTs));
+      return endTimeCriteria;
+    } else {
+      throw new InvalidKeyException("Unknown Time key " + key);
+    }
   }
 
   protected boolean shouldPerformReconciliation(@NotNull DeploymentReconRecord record, Long durationEndTs) {
