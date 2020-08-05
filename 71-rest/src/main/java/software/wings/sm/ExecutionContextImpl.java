@@ -239,6 +239,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
+  public String renderExpressionSecured(String expression) {
+    Map<String, Object> context = prepareContext(null);
+    return renderExpressionSecured(expression, context);
+  }
+
+  @Override
   public String renderExpression(String expression, StateExecutionContext stateExecutionContext) {
     return renderExpression(expression, prepareContext(stateExecutionContext));
   }
@@ -617,6 +623,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   public String renderExpression(String expression, Map<String, Object> context) {
     return evaluator.substitute(
+        expression, context, variableResolverTracker, normalizeStateName(stateExecutionInstance.getDisplayName()));
+  }
+
+  public String renderExpressionSecured(String expression, Map<String, Object> context) {
+    return evaluator.substituteSecured(
         expression, context, variableResolverTracker, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 

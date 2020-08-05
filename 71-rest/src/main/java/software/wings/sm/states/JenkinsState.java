@@ -278,7 +278,9 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     Map<String, String> evaluatedParameters = Maps.newHashMap(jobParameterMap);
     evaluatedParameters.forEach(
         (String key, String value) -> evaluatedParameters.put(key, context.renderExpression(value)));
-
+    Map<String, String> displayedParams = new HashMap<>(jobParameterMap);
+    displayedParams.forEach(
+        (String key, String value) -> displayedParams.put(key, context.renderExpressionSecured(value)));
     Map<String, String> evaluatedFilePathsForAssertion = new HashMap<>();
     if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry
@@ -314,8 +316,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     JenkinsExecutionData jenkinsExecutionData = JenkinsExecutionData.builder()
-                                                    .jobName(evaluatedJobName)
-                                                    .jobParameters(evaluatedParameters)
+                                                    .jobName(context.renderExpressionSecured(jobName))
+                                                    .jobParameters(displayedParams)
                                                     .activityId(activityId)
                                                     .build();
     return ExecutionResponse.builder()

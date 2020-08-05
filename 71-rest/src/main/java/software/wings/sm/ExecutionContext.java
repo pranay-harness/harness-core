@@ -48,6 +48,14 @@ public interface ExecutionContext {
 
   String renderExpression(String expression);
 
+  /**
+   * Renders provided expression and masks result if result is a secret
+   *
+   * @param expression the expression to be resolved and masked if value is a secret
+   * @return resolved expression for non-secret values or mask for secrets
+   */
+  String renderExpressionSecured(String expression);
+
   String renderExpression(String expression, StateExecutionContext stateExecutionContext);
 
   List<String> renderExpressionList(List<String> expressions);
