@@ -157,6 +157,19 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void shouldReturnActiveInstanceData() {
+    instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
+    List<InstanceData> instanceDataLists =
+        instanceDataDao.getInstanceDataLists(ACCOUNT_ID, 1, START_INSTANT.plus(2, ChronoUnit.DAYS),
+            START_INSTANT.plus(3, ChronoUnit.DAYS), Instant.ofEpochMilli(1514764800000l));
+
+    assertThat(instanceDataLists.size()).isEqualTo(1);
+    assertThat(instanceDataLists.get(0).getInstanceId()).isEqualTo(RUNNING_INSTANCE_ID);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void shouldUpdateInstanceState() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
     InstanceData instanceData = instanceDataDao.fetchInstanceData(ACCOUNT_ID, RUNNING_INSTANCE_ID);

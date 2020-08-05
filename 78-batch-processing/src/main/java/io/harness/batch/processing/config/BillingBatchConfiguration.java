@@ -1,21 +1,15 @@
 package io.harness.batch.processing.config;
 
-import io.harness.batch.processing.billing.reader.InstanceDataEventReader;
-import io.harness.batch.processing.billing.reader.InstanceDataMongoEventReader;
-import io.harness.batch.processing.billing.writer.InstanceBillingDataWriter;
+import io.harness.batch.processing.billing.writer.InstanceBillingDataTasklet;
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.entities.InstanceData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,25 +17,8 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class BillingBatchConfiguration {
   @Bean
-  public ItemWriter<InstanceData> instanceBillingDataWriter() {
-    return new InstanceBillingDataWriter();
-  }
-
-  @Bean
-  public InstanceDataEventReader instanceDataMongoEventReader() {
-    return new InstanceDataMongoEventReader();
-  }
-
-  @Bean
-  @StepScope
-  public ItemReader<InstanceData> instanceInfoMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
-      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    try {
-      return instanceDataMongoEventReader().getEventReader(accountId, startDate, endDate);
-    } catch (Exception ex) {
-      logger.error("Exception instanceInfoMessageReader ", ex);
-      return null;
-    }
+  public Tasklet instanceBillingDataTasklet() {
+    return new InstanceBillingDataTasklet();
   }
 
   @Bean
@@ -63,13 +40,7 @@ public class BillingBatchConfiguration {
   }
 
   @Bean
-  public Step instanceBillingStep(StepBuilderFactory stepBuilderFactory,
-      ItemReader<InstanceData> instanceInfoMessageReader, ItemWriter<InstanceData> instanceBillingDataWriter,
-      BatchMainConfig batchMainConfig) {
-    return stepBuilderFactory.get("instanceBillingStep")
-        .<InstanceData, InstanceData>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
-        .reader(instanceInfoMessageReader)
-        .writer(instanceBillingDataWriter)
-        .build();
+  public Step instanceBillingStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("instanceBillingStep").tasklet(instanceBillingDataTasklet()).build();
   }
 }

@@ -1,8 +1,11 @@
 package io.harness.batch.processing.billing.writer;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +26,8 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
@@ -42,8 +47,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.test.context.ActiveProfiles;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.security.authentication.BatchQueryConfig;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -55,7 +65,7 @@ import java.util.Map;
 
 @ActiveProfiles("test")
 @RunWith(MockitoJUnitRunner.class)
-public class InstanceBillingDataWriterTest extends CategoryTest {
+public class InstanceBillingDataTaskletTest extends CategoryTest {
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
   private static final String ACCOUNT_ID = "account_id";
   private static final String INSTANCE_ID = "instance_id";
@@ -84,21 +94,24 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private final long END_TIME_MILLIS = NOW.toEpochMilli();
 
-  @InjectMocks private InstanceBillingDataWriter instanceBillingDataWriter;
+  @InjectMocks private InstanceBillingDataTasklet instanceBillingDataTasklet;
   @Mock private BillingDataServiceImpl billingDataService;
   @Mock private JobParameters parameters;
   @Mock private BillingCalculationService billingCalculationService;
   @Mock private UtilizationDataServiceImpl utilizationDataService;
   @Mock private BillingDataGenerationValidator billingDataGenerationValidator;
   @Mock private InstanceDataService instanceDataService;
+  @Mock private InstanceDataDao instanceDataDao;
   @Mock private AwsCustomBillingService awsCustomBillingService;
   @Mock private CustomBillingMetaDataService customBillingMetaDataService;
+  @Mock private BatchMainConfig config;
 
   @Captor private ArgumentCaptor<List<InstanceBillingData>> instanceBillingDataArgumentCaptor;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().instanceDataBatchSize(50).build());
   }
 
   @Test
@@ -108,7 +121,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, PARENT_RESOURCE_ID);
     InstanceData instanceData = InstanceData.builder().metaData(metaData).build();
-    String parentInstanceId = instanceBillingDataWriter.getValueForKeyFromInstanceMetaData(
+    String parentInstanceId = instanceBillingDataTasklet.getValueForKeyFromInstanceMetaData(
         InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
     assertThat(parentInstanceId).isEqualTo(PARENT_RESOURCE_ID);
   }
@@ -118,7 +131,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetNullValueForKeyFromInstanceMetaData() {
     InstanceData instanceData = InstanceData.builder().build();
-    String parentInstanceId = instanceBillingDataWriter.getValueForKeyFromInstanceMetaData(
+    String parentInstanceId = instanceBillingDataTasklet.getValueForKeyFromInstanceMetaData(
         InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
     assertThat(parentInstanceId).isNull();
   }
@@ -128,7 +141,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetEmptyHarnessServiceInfo() {
     InstanceData instanceData = InstanceData.builder().build();
-    HarnessServiceInfo harnessServiceInfo = instanceBillingDataWriter.getHarnessServiceInfo(instanceData);
+    HarnessServiceInfo harnessServiceInfo = instanceBillingDataTasklet.getHarnessServiceInfo(instanceData);
     assertThat(harnessServiceInfo).isNotNull();
     assertThat(harnessServiceInfo.getAppId()).isNull();
   }
@@ -140,7 +153,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, ACTUAL_PARENT_RESOURCE_ID);
     InstanceData instanceData = InstanceData.builder().metaData(metaData).build();
-    String parentInstanceId = instanceBillingDataWriter.getParentInstanceId(instanceData);
+    String parentInstanceId = instanceBillingDataTasklet.getParentInstanceId(instanceData);
     assertThat(parentInstanceId).isEqualTo(ACTUAL_PARENT_RESOURCE_ID);
   }
 
@@ -158,7 +171,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
                                     .instanceType(InstanceType.K8S_POD)
                                     .metaData(metaData)
                                     .build();
-    String parentInstanceId = instanceBillingDataWriter.getParentInstanceId(instanceData);
+    String parentInstanceId = instanceBillingDataTasklet.getParentInstanceId(instanceData);
     assertThat(parentInstanceId).isEqualTo(NODE_INSTANCE_ID);
   }
 
@@ -175,7 +188,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
                                     .instanceType(InstanceType.K8S_POD)
                                     .metaData(metaData)
                                     .build();
-    String parentInstanceId = instanceBillingDataWriter.getParentInstanceId(instanceData);
+    String parentInstanceId = instanceBillingDataTasklet.getParentInstanceId(instanceData);
     assertThat(parentInstanceId).isEqualTo(PARENT_RESOURCE_ID);
   }
 
@@ -184,7 +197,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetHarnessServiceInfo() {
     InstanceData instanceData = InstanceData.builder().harnessServiceInfo(getHarnessServiceInfo()).build();
-    HarnessServiceInfo harnessServiceInfo = instanceBillingDataWriter.getHarnessServiceInfo(instanceData);
+    HarnessServiceInfo harnessServiceInfo = instanceBillingDataTasklet.getHarnessServiceInfo(instanceData);
     assertThat(harnessServiceInfo).isNotNull();
     assertThat(harnessServiceInfo.getAppId()).isEqualTo(APP_ID);
   }
@@ -197,7 +210,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     metaDataMap.put(InstanceMetaDataConstants.LAUNCH_TYPE, LaunchType.EC2.name());
     InstanceData instanceData =
         InstanceData.builder().instanceType(InstanceType.ECS_TASK_EC2).metaData(metaDataMap).build();
-    String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
+    String cloudServiceName = instanceBillingDataTasklet.getCloudServiceName(instanceData);
     assertThat(cloudServiceName).isEqualTo("none");
   }
 
@@ -209,7 +222,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     metaDataMap.put(InstanceMetaDataConstants.LAUNCH_TYPE, LaunchType.FARGATE.name());
     InstanceData instanceData =
         InstanceData.builder().instanceType(InstanceType.ECS_TASK_FARGATE).metaData(metaDataMap).build();
-    String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
+    String cloudServiceName = instanceBillingDataTasklet.getCloudServiceName(instanceData);
     assertThat(cloudServiceName).isEqualTo("none");
   }
 
@@ -219,8 +232,46 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   public void testGetCloudServiceNameWhenNotPresent() {
     Map<String, String> metaDataMap = new HashMap<>();
     InstanceData instanceData = InstanceData.builder().build();
-    String cloudServiceName = instanceBillingDataWriter.getCloudServiceName(instanceData);
+    String cloudServiceName = instanceBillingDataTasklet.getCloudServiceName(instanceData);
     assertThat(cloudServiceName).isNull();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testExecute() {
+    ChunkContext chunkContext = mock(ChunkContext.class);
+    StepContext stepContext = mock(StepContext.class);
+    StepExecution stepExecution = mock(StepExecution.class);
+    JobParameters parameters = mock(JobParameters.class);
+
+    when(chunkContext.getStepContext()).thenReturn(stepContext);
+    when(stepContext.getStepExecution()).thenReturn(stepExecution);
+    when(stepExecution.getJobParameters()).thenReturn(parameters);
+
+    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
+    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE)).thenReturn(BatchJobType.INSTANCE_BILLING.name());
+
+    InstanceData instanceData =
+        InstanceData.builder()
+            .instanceType(InstanceType.EC2_INSTANCE)
+            .accountId(ACCOUNT_ID)
+            .instanceId(INSTANCE_ID)
+            .clusterId(CLUSTER_ID)
+            .clusterName(CLUSTER_NAME)
+            .usageStartTime(Instant.ofEpochMilli(START_TIME_MILLIS - ChronoUnit.DAYS.getDuration().toMillis()))
+            .totalResource(Resource.builder().cpuUnits(CPU_UNIT_REQUEST).memoryMb(MEMORY_MB_REQUEST).build())
+            .limitResource(Resource.builder().cpuUnits(CPU_UNIT_LIMIT).memoryMb(MEMORY_MB_LIMIT).build())
+            .harnessServiceInfo(getHarnessServiceInfo())
+            .build();
+
+    when(instanceDataDao.getInstanceDataLists(any(), anyInt(), any(), any(), any()))
+        .thenReturn(Arrays.asList(instanceData));
+
+    RepeatStatus repeatStatus = instanceBillingDataTasklet.execute(null, chunkContext);
+    assertThat(repeatStatus).isNull();
   }
 
   @Test
@@ -249,10 +300,6 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
             .limitResource(Resource.builder().cpuUnits(CPU_UNIT_LIMIT).memoryMb(MEMORY_MB_LIMIT).build())
             .harnessServiceInfo(getHarnessServiceInfo())
             .build();
-    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
-    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(String.valueOf(ACCOUNT_ID));
-    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-    when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE)).thenReturn(BatchJobType.INSTANCE_BILLING.name());
     when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn("AWS_DATA_SETID");
     when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any(), any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
@@ -264,11 +311,13 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     when(billingDataGenerationValidator.shouldGenerateBillingData(
              ACCOUNT_ID, CLUSTER_ID, Instant.ofEpochMilli(START_TIME_MILLIS)))
         .thenReturn(true);
-    instanceBillingDataWriter.write(Arrays.asList(instanceData));
+
+    instanceBillingDataTasklet.createBillingData(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+        Instant.ofEpochMilli(END_TIME_MILLIS), BatchJobType.INSTANCE_BILLING, Arrays.asList(instanceData));
     ArgumentCaptor<BatchJobType> batchJobTypeArgumentCaptor = ArgumentCaptor.forClass(BatchJobType.class);
     verify(billingDataService)
         .create(instanceBillingDataArgumentCaptor.capture(), batchJobTypeArgumentCaptor.capture());
-    InstanceBillingData instanceBillingData = (InstanceBillingData) instanceBillingDataArgumentCaptor.getValue().get(0);
+    InstanceBillingData instanceBillingData = instanceBillingDataArgumentCaptor.getValue().get(0);
     assertThat(instanceBillingData.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(instanceBillingData.getClusterId()).isEqualTo(null);
     assertThat(instanceBillingData.getClusterName()).isEqualTo(CLUSTER_NAME);

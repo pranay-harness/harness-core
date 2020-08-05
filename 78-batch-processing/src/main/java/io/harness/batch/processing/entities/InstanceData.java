@@ -47,10 +47,12 @@ import java.util.Map;
       , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
           @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
     })
-@CdIndex(name = "accountId_usageStartTime",
+@CdIndex(name = "accountId_usageStartTime_usageStopTime",
     fields =
-    { @Field(InstanceDataKeys.accountId)
-      , @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC) })
+    {
+      @Field(InstanceDataKeys.accountId)
+      , @Field(value = InstanceDataKeys.usageStartTime), @Field(value = InstanceDataKeys.usageStopTime)
+    })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn(EVENTS_DB)

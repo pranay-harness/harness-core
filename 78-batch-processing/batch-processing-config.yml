@@ -23,6 +23,7 @@ timescaledb:
 
 batchQueryConfig:
   queryBatchSize: 2000
+  instanceDataBatchSize: 5000
 
 podInfo:
   name: batch-processing-0
