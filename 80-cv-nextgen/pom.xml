@@ -59,6 +59,17 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.harness.cv</groupId>
+            <artifactId>data-collection-dsl</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.specto</groupId>
+            <artifactId>hoverfly-java</artifactId>
+            <version>0.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.test-framework</groupId>
             <artifactId>jersey-test-framework-core</artifactId>
             <scope>test</scope>

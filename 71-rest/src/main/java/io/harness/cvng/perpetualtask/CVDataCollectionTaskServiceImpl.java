@@ -18,7 +18,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(params).build();
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(1))
-                                         .setTimeout(Durations.fromDays(1))
+                                         .setTimeout(Durations.fromHours(3))
                                          .build();
     return perpetualTaskService.createTask(
         PerpetualTaskType.DATA_COLLECTION_TASK, accountId, clientContext, schedule, false, "");
