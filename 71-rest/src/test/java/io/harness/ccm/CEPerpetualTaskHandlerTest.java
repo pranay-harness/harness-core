@@ -2,6 +2,8 @@ package io.harness.ccm;
 
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -9,6 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+
+import com.google.inject.name.Named;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -18,6 +22,7 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.config.CCMSettingService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,6 +33,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.Account;
+import software.wings.features.CeClusterFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.Arrays;
@@ -53,6 +60,7 @@ public class CEPerpetualTaskHandlerTest extends CategoryTest {
   @Mock private CEPerpetualTaskManager cePerpetualTaskManager;
   @Mock ClusterRecordService clusterRecordService;
   @Mock FeatureFlagService featureFlagService;
+  @Mock @Named(CeClusterFeature.FEATURE_NAME) private UsageLimitedFeature ceClusterFeature;
   @InjectMocks CEPerpetualTaskHandler handler;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -78,6 +86,8 @@ public class CEPerpetualTaskHandlerTest extends CategoryTest {
     when(cePerpetualTaskManager.createPerpetualTasks(isA(ClusterRecord.class))).thenReturn(true);
     when(cePerpetualTaskManager.createPerpetualTasks(isA(Account.class), anyString())).thenReturn(true);
     when(clusterRecordService.list(eq(accountId), eq(DIRECT_KUBERNETES))).thenReturn(Arrays.asList(k8sClusterRecord));
+    when(ceClusterFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(2);
+    when(ceClusterFeature.getUsage(accountId)).thenReturn(1);
   }
 
   @Test
@@ -149,6 +159,15 @@ public class CEPerpetualTaskHandlerTest extends CategoryTest {
     ecsClusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).build();
     handler.onUpserted(ecsClusterRecord);
     verify(cePerpetualTaskManager, times(0)).createPerpetualTasks(eq(ecsClusterRecord));
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testOnUpsertedClusterLimit() {
+    when(ceClusterFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(2);
+    when(ceClusterFeature.getUsage(accountId)).thenReturn(3);
+    assertThatThrownBy(() -> handler.onUpserted(ecsClusterRecord)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

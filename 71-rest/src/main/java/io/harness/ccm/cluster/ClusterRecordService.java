@@ -23,4 +23,5 @@ public interface ClusterRecordService {
   ClusterRecord from(SettingAttribute cloudProvider);
   ClusterRecord from(InfrastructureDefinition infrastructureDefinition);
   ClusterRecord from(InfrastructureMapping infrastructureMapping);
+  List<ClusterRecord> listCeEnabledClusters(String accountId);
 }

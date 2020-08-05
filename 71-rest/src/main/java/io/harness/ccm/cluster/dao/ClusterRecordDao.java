@@ -59,6 +59,15 @@ public class ClusterRecordDao {
     return query.asList(new FindOptions().skip(startIndex).limit(count));
   }
 
+  public List<ClusterRecord> listCeEnabledClusters(String accountId) {
+    Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class, excludeValidate)
+                                     .field(ClusterRecordKeys.accountId)
+                                     .equal(accountId)
+                                     .field(ClusterRecordKeys.perpetualTaskIds)
+                                     .exists();
+    return query.asList(new FindOptions());
+  }
+
   public ClusterRecord upsertCluster(ClusterRecord clusterRecord) {
     Query<ClusterRecord> query = getQuery(clusterRecord);
     UpdateOperations<ClusterRecord> updateOperations =

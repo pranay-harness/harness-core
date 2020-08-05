@@ -143,3 +143,19 @@
       available: false
     ESSENTIALS:
       available: false
+
+  CE_BUDGETS:
+    FULL_TRIAL:
+      maxBudgetsAllowed: 2
+    LIMITED_TRIAL:
+      maxBudgetsAllowed: 2
+
+  CE_CLUSTERS:
+    LIMITED_TRIAL:
+      maxClustersAllowed: 2
+
+  CE_CLOUD_ACCOUNTS:
+    FULL_TRIAL:
+      maxCloudAccountsAllowed: 1
+    LIMITED_TRIAL:
+      maxCloudAccountsAllowed: 1

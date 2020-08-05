@@ -119,6 +119,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.features.CeCloudAccountFeature;
 import software.wings.features.GitOpsFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.prune.PruneEvent;
@@ -214,6 +215,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ApmVerificationService apmVerificationService;
   @Inject private AWSCEConfigValidationService awsCeConfigService;
+  @Inject @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
   @Inject @Getter private Subject<SettingAttributeObserver> artifactStreamSubject = new Subject<>();
@@ -708,6 +710,16 @@ public class SettingsServiceImpl implements SettingsService {
   @VisibleForTesting
   void validateAndUpdateCEDetails(SettingAttribute settingAttribute) {
     if (CE_CONNECTOR == settingAttribute.getCategory()) {
+      int maxCloudAccountsAllowed = ceCloudAccountFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
+      int currentCloudAccountsCount = ccmSettingService.listCeCloudAccounts(settingAttribute.getAccountId()).size();
+
+      if (currentCloudAccountsCount >= maxCloudAccountsAllowed) {
+        logger.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
+            settingAttribute.getValue().getType(), settingAttribute.getAccountId());
+        throw new InvalidRequestException(String.format(
+            "Cannot enable continuous efficiency for more than %d cloud accounts", maxCloudAccountsAllowed));
+      }
+
       if (settingAttribute.getValue() instanceof CEAwsConfig) {
         // Extract AWS Master AccountId
         CEAwsConfig awsConfig = (CEAwsConfig) settingAttribute.getValue();

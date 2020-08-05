@@ -11,6 +11,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.name.Named;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.entities.AlertThreshold;
@@ -33,6 +35,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
+import software.wings.features.CeBudgetFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
@@ -50,6 +54,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collections;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
@@ -59,6 +64,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Mock private QLBillingStatsHelper statsHelper;
   @Mock private BillingDataHelper billingDataHelper;
   @Mock private BudgetUtils budgetUtils;
+  @Mock @Named(CeBudgetFeature.FEATURE_NAME) private UsageLimitedFeature ceBudgetFeature;
   @InjectMocks BudgetServiceImpl budgetService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -113,6 +119,8 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
+    when(ceBudgetFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(100);
+    when(budgetDao.list(accountId)).thenReturn(Collections.singletonList(budget));
     resetValues();
     mockResultSet();
   }

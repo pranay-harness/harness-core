@@ -2,6 +2,7 @@ package io.harness.ccm.budget;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -16,6 +17,8 @@ import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import software.wings.features.CeBudgetFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
@@ -54,6 +57,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject private BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
+  @Inject @Named(CeBudgetFeature.FEATURE_NAME) private UsageLimitedFeature ceBudgetFeature;
   @Inject BudgetUtils budgetUtils;
   private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
   private String DATE_TEMPLATE = "MM-dd-yyyy";
@@ -80,6 +84,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public String clone(String budgetId, String cloneBudgetName) {
     Budget budget = budgetDao.get(budgetId);
+    validateBudget(budget);
     Budget cloneBudget = Budget.builder()
                              .accountId(budget.getAccountId())
                              .name(cloneBudgetName)
@@ -129,6 +134,11 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public List<Budget> list(String accountId, Integer count, Integer startIndex) {
     return budgetDao.list(accountId, count, startIndex);
+  }
+
+  @Override
+  public int getBudgetCount(String accountId) {
+    return list(accountId).size();
   }
 
   @Override
@@ -345,6 +355,15 @@ public class BudgetServiceImpl implements BudgetService {
     }
     if (budget.getBudgetAmount() < 0 || budget.getBudgetAmount() > BUDGET_AMOUNT_UPPER_LIMIT) {
       throw new InvalidRequestException(BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION);
+    }
+    int maxBudgetsAllowed = ceBudgetFeature.getMaxUsageAllowedForAccount(budget.getAccountId());
+    int currentBudgetCount = getBudgetCount(budget.getAccountId());
+    logger.info("Max budgets allowed : {} Current Count : {}", maxBudgetsAllowed, currentBudgetCount);
+    if (currentBudgetCount >= maxBudgetsAllowed) {
+      logger.info("Did not save Budget: '{}' for account ID {} because usage limit exceeded", budget.getName(),
+          budget.getAccountId());
+      throw new InvalidRequestException(
+          String.format("Cannot create budget. Max budgets allowed for trial: %d", maxBudgetsAllowed));
     }
   }
 

@@ -17,9 +17,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
+import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -41,6 +43,9 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
+import software.wings.features.CeCloudAccountFeature;
+import software.wings.features.GitOpsFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
@@ -59,6 +64,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   private static final String S3_BUCKET_NAME = "ceBucket";
   private static final String S3_BUCKET_PREFIX = "prefix";
   private static final String ROLE_ARN = "arn:aws:iam::830767422336:role/harnessCERole";
+  private static final String ACCOUNT_ID = "ACCOUNT_ID";
 
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private EnvironmentService environmentService;
@@ -68,6 +74,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private UsageRestrictionsService usageRestrictionsService;
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private AWSCEConfigValidationService awsCeConfigService;
+  @Mock private CCMSettingService ccmSettingService;
+  @Mock @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
+  @Mock @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
   @Spy @InjectMocks private SettingsServiceImpl settingsService;
 
@@ -86,6 +95,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     doReturn(AwsS3BucketDetails.builder().s3Prefix(S3_BUCKET_PREFIX).region(S3_REGION).build())
         .when(awsCeConfigService)
         .validateCURReportAccessAndReturnS3Config(ceAwsConfig);
+    attribute.setAccountId(ACCOUNT_ID);
+    when(ceCloudAccountFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(2);
+    when(ccmSettingService.listCeCloudAccounts(ACCOUNT_ID)).thenReturn(Collections.emptyList());
     settingsService.validateAndUpdateCEDetails(attribute);
     CEAwsConfig modifiedConfig = (CEAwsConfig) attribute.getValue();
     assertThat(modifiedConfig.getAwsAccountId()).isEqualTo("830767422336");

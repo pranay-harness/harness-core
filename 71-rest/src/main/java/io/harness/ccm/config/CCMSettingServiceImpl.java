@@ -1,29 +1,39 @@
 package io.harness.ccm.config;
 
 import static java.util.Objects.isNull;
+import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Singleton
 public class CCMSettingServiceImpl implements CCMSettingService {
   private AccountService accountService;
   private SettingsService settingsService;
+  private WingsPersistence wingsPersistence;
 
   @Inject
-  public CCMSettingServiceImpl(AccountService accountService, SettingsService settingsService) {
+  public CCMSettingServiceImpl(
+      AccountService accountService, SettingsService settingsService, WingsPersistence wingsPersistence) {
     this.accountService = accountService;
     this.settingsService = settingsService;
+    this.wingsPersistence = wingsPersistence;
   }
 
   @Override
@@ -101,5 +111,19 @@ public class CCMSettingServiceImpl implements CCMSettingService {
       value.setCcmConfig(null);
       settingAttribute.setValue((SettingValue) value);
     }
+  }
+
+  @Override
+  public List<SettingAttribute> listCeCloudAccounts(String accountId) {
+    List<SettingAttribute> settingAttributes = new ArrayList<>();
+    try (HIterator<SettingAttribute> iterator = new HIterator(wingsPersistence.createQuery(SettingAttribute.class)
+                                                                  .filter(SettingAttributeKeys.accountId, accountId)
+                                                                  .filter(SettingAttributeKeys.category, CE_CONNECTOR)
+                                                                  .fetch())) {
+      while (iterator.hasNext()) {
+        settingAttributes.add(iterator.next());
+      }
+    }
+    return settingAttributes;
   }
 }
