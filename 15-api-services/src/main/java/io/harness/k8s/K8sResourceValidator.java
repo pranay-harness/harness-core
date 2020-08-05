@@ -1,12 +1,14 @@
 package io.harness.k8s;
 
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
 
 import java.util.List;
 
-public interface K8sResourcePermission {
+public interface K8sResourceValidator {
   String DENIED_RESPOSE_FORMAT = "%s not granted on %s.%s, ";
   String FAILED_RESPOSE_FORMAT = "Failed to validate %s on %s.%s, ";
 
@@ -16,4 +18,6 @@ public interface K8sResourcePermission {
 
   List<V1SubjectAccessReviewStatus> validate(
       AuthorizationV1Api apiClient, List<V1ResourceAttributes> v1ResourceAttributesList, int timeoutsec);
+
+  boolean validateMetricsServer(ApiClient apiClient) throws ApiException;
 }

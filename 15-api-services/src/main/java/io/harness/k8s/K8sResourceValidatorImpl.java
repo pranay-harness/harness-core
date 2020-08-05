@@ -1,10 +1,13 @@
 package io.harness.k8s;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.ApisApi;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1ResourceAttributesBuilder;
@@ -22,8 +25,14 @@ import java.util.stream.IntStream;
 
 @Singleton
 @Slf4j
-public class K8sResourcePermissionImpl implements K8sResourcePermission {
+public class K8sResourceValidatorImpl implements K8sResourceValidator {
   @Inject @Named("asyncExecutor") ExecutorService executorService;
+
+  @Override
+  public boolean validateMetricsServer(ApiClient apiClient) throws ApiException {
+    ApisApi apisApi = new ApisApi(apiClient);
+    return apisApi.getAPIVersions().getGroups().stream().anyMatch(x -> "metrics.k8s.io".equals(x.getName()));
+  }
 
   @Override
   public V1SubjectAccessReviewStatus validate(
@@ -99,5 +108,27 @@ public class K8sResourcePermissionImpl implements K8sResourcePermission {
       }
     }
     return list;
+  }
+
+  public String validateCEPermissions(ApiClient apiClient) {
+    AuthorizationV1Api authorizationV1Api = new AuthorizationV1Api(apiClient);
+    List<V1ResourceAttributes> cePermissions = new ArrayList<>();
+
+    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(new String[] {""},
+        new String[] {"pods", "nodes", "events", "namespaces"}, new String[] {"get", "list", "watch"})));
+
+    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(new String[] {"apps", "extensions"},
+        new String[] {"statefulsets", "deployments", "daemonsets", "replicasets"},
+        new String[] {"get", "list", "watch"})));
+
+    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(
+        new String[] {"batch"}, new String[] {"jobs", "cronjobs"}, new String[] {"get", "list", "watch"})));
+
+    cePermissions.addAll(ImmutableList.copyOf(this.v1ResourceAttributesListBuilder(
+        new String[] {"metrics.k8s.io"}, new String[] {"pods", "nodes"}, new String[] {"get", "list"})));
+
+    List<V1SubjectAccessReviewStatus> response = this.validate(authorizationV1Api, cePermissions, 10);
+
+    return this.buildResponse(cePermissions, response);
   }
 }
