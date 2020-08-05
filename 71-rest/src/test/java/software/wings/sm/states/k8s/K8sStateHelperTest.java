@@ -158,6 +158,7 @@ import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -219,6 +220,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private OpenShiftManagerService openShiftManagerService;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Mock private InstanceService instanceService;
+  @Mock private GitClientHelper gitClientHelper;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
@@ -357,6 +359,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(delegateManifestConfig.getGitFileConfig().getFilePath()).isEqualTo("def/");
     assertThat(delegateManifestConfig.getGitFileConfig().getConnectorId()).isEqualTo("d1");
     assertThat(delegateManifestConfig.getGitFileConfig().getBranch()).isEqualTo("2");
+    verify(gitClientHelper, times(2))
+        .updateRepoUrl(delegateManifestConfig.getGitConfig(), delegateManifestConfig.getGitFileConfig().getRepoName());
   }
 
   @Test

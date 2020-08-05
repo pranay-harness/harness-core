@@ -36,6 +36,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -55,6 +56,7 @@ public class GitConfigHelperService {
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SecretManager secretManager;
   @Inject private SettingValidationService settingValidationService;
+  @Inject private GitClientHelper gitClientHelper;
 
   public void validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (gitConfig.isKeyAuth()) {
@@ -86,6 +88,7 @@ public class GitConfigHelperService {
     if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && isEmpty(gitConfig.getRepoName())) {
       return;
     }
+    gitClientHelper.updateRepoUrl(gitConfig, gitConfig.getRepoName());
 
     try {
       ResponseData notifyResponseData = delegateService.executeTask(

@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.yaml.GitFetchFilesResult;
 
 import java.util.List;
@@ -20,6 +21,5 @@ public interface GitService {
 
   void resetWorkingDir(GitConfig gitConfig, String gitConnectorId);
 
-  void downloadFiles(GitConfig gitConfig, String connectorId, String commitId, String branch, List<String> filePaths,
-      boolean useBranch, String destinationDirectory);
+  void downloadFiles(GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory);
 }

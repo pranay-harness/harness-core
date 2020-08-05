@@ -72,6 +72,7 @@ import software.wings.helpers.ext.helm.response.RepoListInfo;
 import software.wings.helpers.ext.helm.response.SearchInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -108,6 +109,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private HelmHelper helmHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private GitClientHelper gitClientHelper;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   protected static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
@@ -361,9 +363,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest), gitFileConfig.getFilePath()).toString();
 
     encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails());
-    gitService.downloadFiles(gitConfig, gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(),
-        gitFileConfig.getBranch(), Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch(),
-        workingDirectory);
+    gitService.downloadFiles(gitConfig, gitFileConfig, workingDirectory);
 
     commandRequest.setWorkingDir(workingDirectory);
     commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
@@ -721,25 +721,26 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private void fetchValuesYamlFromGitRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback) {
-    if (commandRequest.getGitConfig() == null) {
+    GitConfig gitConfig = commandRequest.getGitConfig();
+    if (gitConfig == null) {
       return;
     }
 
     try {
-      encryptionService.decrypt(commandRequest.getGitConfig(), commandRequest.getEncryptedDataDetails());
-
+      encryptionService.decrypt(gitConfig, commandRequest.getEncryptedDataDetails());
       GitFileConfig gitFileConfig = commandRequest.getGitFileConfig();
+      String repoUrl = gitConfig.getRepoUrl();
 
       String msg = "Fetching values yaml files from git:\n"
-          + "Git repo: " + commandRequest.getGitConfig().getRepoUrl() + "\n"
+          + "Git repo: " + repoUrl + "\n"
           + (isNotBlank(gitFileConfig.getBranch()) ? ("Branch: " + gitFileConfig.getBranch() + "\n") : "")
           + (isNotBlank(gitFileConfig.getCommitId()) ? ("Commit Id: " + gitFileConfig.getCommitId() + "\n") : "")
           + "File path: " + gitFileConfig.getFilePath() + "\n";
       executionLogCallback.saveExecutionLog(msg);
       logger.info(msg);
 
-      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(commandRequest.getGitConfig(),
-          gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
+      GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
+          gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
           Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
 
       if (isNotEmpty(gitFetchFilesResult.getFiles())) {
@@ -882,7 +883,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         switch (repoConfig.getManifestStoreTypes()) {
           case HelmSourceRepo:
             helmChartInfo = helmTaskHelper.getHelmChartInfoFromChartsYamlFile(request);
-            helmChartInfo.setRepoUrl(request.getRepoConfig().getGitConfig().getRepoUrl());
+            helmChartInfo.setRepoUrl(repoConfig.getGitConfig().getRepoUrl());
             break;
 
           case HelmChartRepo:

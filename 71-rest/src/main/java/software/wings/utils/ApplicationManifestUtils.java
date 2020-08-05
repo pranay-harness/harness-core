@@ -51,6 +51,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitFileConfigHelperService;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -90,6 +91,7 @@ public class ApplicationManifestUtils {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private GitClientHelper gitClientHelper;
 
   public Map<K8sValuesLocation, ApplicationManifest> getOverrideApplicationManifests(
       ExecutionContext context, AppManifestKind appManifestKind) {
@@ -175,6 +177,7 @@ public class ApplicationManifestUtils {
             gitFileConfigHelperService.renderGitFileConfig(context, applicationManifest.getGitFileConfig());
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
         notNullCheck("Git config not found", gitConfig);
+        gitClientHelper.updateRepoUrl(gitConfig, gitFileConfig.getRepoName());
         List<EncryptedDataDetail> encryptionDetails =
             secretManager.getEncryptionDetails(gitConfig, app.getUuid(), context.getWorkflowExecutionId());
 

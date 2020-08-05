@@ -151,7 +151,7 @@ public class GitClientImpl implements GitClient {
 
     logger.info(GIT_YAML_LOG_PREFIX + "cloning repo, Git repo directory :{}", gitRepoDirectory);
 
-    CloneCommand cloneCommand = (CloneCommand) getAuthConfiguredCommand(Git.cloneRepository(), gitConfig, null);
+    CloneCommand cloneCommand = (CloneCommand) getAuthConfiguredCommand(Git.cloneRepository(), gitConfig);
     try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
                        .setDirectory(new File(gitRepoDirectory))
                        .setBranch(isEmpty(branch) ? null : branch)
@@ -171,10 +171,11 @@ public class GitClientImpl implements GitClient {
     try (Git git = Git.open(gitRepoDirectory)) {
       StoredConfig config = git.getRepository().getConfig();
       // Update local remote url if its changed
-      if (!config.getString("remote", "origin", "url").equals(gitConfig.getRepoUrl())) {
-        config.setString("remote", "origin", "url", gitConfig.getRepoUrl());
+      String url = gitConfig.getRepoUrl();
+      if (!config.getString("remote", "origin", "url").equals(url)) {
+        config.setString("remote", "origin", "url", url);
         config.save();
-        logger.info(GIT_YAML_LOG_PREFIX + "Local repo remote origin is updated to : ", gitConfig.getRepoUrl());
+        logger.info(GIT_YAML_LOG_PREFIX + "Local repo remote origin is updated to : ", url);
       }
     } catch (IOException ioex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Failed to update repo url in git config", ioex);
@@ -198,7 +199,7 @@ public class GitClientImpl implements GitClient {
                                    .build();
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       git.checkout().setName(gitConfig.getBranch()).call();
-      ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig, null))).call();
+      ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
       Repository repository = git.getRepository();
 
       ObjectId endCommitId = requireNonNull(repository.resolve(endCommitIdStr));
@@ -639,7 +640,7 @@ public class GitClientImpl implements GitClient {
     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Performing git PUSH, forcePush is: " + forcePush);
 
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
-      Iterable<PushResult> pushResults = ((PushCommand) (getAuthConfiguredCommand(git.push(), gitConfig, null)))
+      Iterable<PushResult> pushResults = ((PushCommand) (getAuthConfiguredCommand(git.push(), gitConfig)))
                                              .setRemote("origin")
                                              .setForce(forcePush)
                                              .setRefSpecs(new RefSpec(gitConfig.getBranch()))
@@ -822,7 +823,7 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory) {
-    validateRequiredArgs(gitRequest);
+    validateRequiredArgs(gitRequest, gitConfig);
     String gitConnectorId = gitRequest.getGitConnectorId();
 
     synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
@@ -865,7 +866,7 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
-    validateRequiredArgs(gitRequest);
+    validateRequiredArgs(gitRequest, gitConfig);
 
     String gitConnectorId = gitRequest.getGitConnectorId();
     /*
@@ -941,7 +942,7 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
-    validateRequiredArgs(gitRequest);
+    validateRequiredArgs(gitRequest, gitConfig);
     checkoutFiles(gitConfig, gitRequest);
   }
 
@@ -960,7 +961,7 @@ public class GitClientImpl implements GitClient {
     };
   }
 
-  private void validateRequiredArgs(GitFetchFilesRequest gitRequest) {
+  private void validateRequiredArgs(GitFetchFilesRequest gitRequest, GitConfig gitConfig) {
     // FilePath cant empty as well as (Branch and commitId both cant be empty)
     if (isEmpty(gitRequest.getFilePaths())) {
       throw new InvalidRequestException("FilePaths  can not be empty", USER);
@@ -972,6 +973,10 @@ public class GitClientImpl implements GitClient {
 
     if (!gitRequest.isUseBranch() && isEmpty(gitRequest.getCommitId())) {
       throw new InvalidRequestException("useBranch was false but CommitId was not provided", USER);
+    }
+
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType() && isBlank(gitConfig.getRepoName())) {
+      throw new InvalidRequestException("Repository name not provided for Account level git connector.", USER);
     }
   }
 
@@ -1048,12 +1053,12 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public String validate(GitConfig gitConfig, String repoName) {
-    String repoUrl = gitClientHelper.fetchCompleteUrl(gitConfig, repoName);
+  public String validate(GitConfig gitConfig) {
+    String repoUrl = gitConfig.getRepoUrl();
     try {
       // Init Git repo
       LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
-      lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, gitConfig, repoName);
+      lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, gitConfig);
       Collection<Ref> refs = lsRemoteCommand.setRemote(repoUrl).setHeads(true).setTags(true).call();
       logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches [{}]", refs);
     } catch (Exception e) {
@@ -1084,7 +1089,6 @@ public class GitClientImpl implements GitClient {
    *
    * @param gitConfig the git config
    */
-
   public synchronized void cloneRepoForFilePathCheckout(GitConfig gitConfig, String branch, String connectorId) {
     logger.info(new StringBuilder(64)
                     .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
@@ -1101,7 +1105,7 @@ public class GitClientImpl implements GitClient {
 
       try (Git git = Git.open(repoDir)) {
         // update ref with latest commits on remote
-        FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig, null)))
+        FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig)))
                                       .setRemoveDeletedRefs(true)
                                       .setTagOpt(TagOpt.FETCH_TAGS)
                                       .call(); // fetch all remote references
@@ -1148,7 +1152,7 @@ public class GitClientImpl implements GitClient {
       try (Git git = Git.open(repoDir)) {
         logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
 
-        FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig, null)))
+        FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig)))
                                       .setTagOpt(TagOpt.FETCH_TAGS)
                                       .call(); // fetch all remote references
         checkout(gitOperationContext);
@@ -1217,9 +1221,9 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig, String repoName) {
-    if (gitClientHelper.fetchCompleteUrl(gitConfig, repoName).toLowerCase().startsWith("http")) {
-      configureHttpCredentialProvider(gitCommand, gitConfig, repoName);
+  private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith("http")) {
+      configureHttpCredentialProvider(gitCommand, gitConfig);
     } else {
       gitCommand.setTransportConfigCallback(transport -> {
         SshTransport sshTransport = (SshTransport) transport;
@@ -1229,11 +1233,11 @@ public class GitClientImpl implements GitClient {
     return gitCommand;
   }
 
-  private void configureHttpCredentialProvider(TransportCommand gitCommand, GitConfig gitConfig, String repoName) {
+  private void configureHttpCredentialProvider(TransportCommand gitCommand, GitConfig gitConfig) {
     String username = gitConfig.getUsername();
     char[] password = gitConfig.getPassword();
     if (KERBEROS == gitConfig.getAuthenticationScheme()) {
-      addApacheConnectionFactoryAndGenerateTGT(gitConfig, repoName);
+      addApacheConnectionFactoryAndGenerateTGT(gitConfig);
       username = ((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue())
                      .getKerberosConfig()
                      .getPrincipal(); // set principal as username
@@ -1241,15 +1245,15 @@ public class GitClientImpl implements GitClient {
     gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(username, password));
   }
 
-  private void addApacheConnectionFactoryAndGenerateTGT(GitConfig gitConfig, String repoName) {
+  private void addApacheConnectionFactoryAndGenerateTGT(GitConfig gitConfig) {
     try {
       HttpTransport.setConnectionFactory(new ApacheHttpConnectionFactory());
-      URL url = new URL(gitClientHelper.fetchCompleteUrl(gitConfig, repoName));
+      URL url = new URL(gitConfig.getRepoUrl());
       SshSessionConfig sshSessionConfig = createSshSessionConfig(gitConfig.getSshSettingAttribute(), url.getHost());
       software.wings.core.ssh.executors.SshSessionFactory.generateTGT(sshSessionConfig, new NoopExecutionCallback());
     } catch (Exception e) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
-          gitClientHelper.fetchCompleteUrl(gitConfig, repoName), getMessage(e));
+          gitConfig.getRepoUrl(), getMessage(e));
       throw new InvalidRequestException("Failed to do Kerberos authentication");
     }
   }

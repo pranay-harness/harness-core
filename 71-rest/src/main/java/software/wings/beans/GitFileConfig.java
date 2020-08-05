@@ -11,6 +11,7 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
+import javax.annotation.Nullable;
 
 @Data
 @Builder
@@ -22,6 +23,7 @@ public class GitFileConfig {
   @Trimmed private String commitId;
   @Trimmed private String branch;
   @Trimmed private String filePath;
+  @Trimmed @Nullable private String repoName;
   private List<String> filePathList;
   private boolean useBranch;
   @Transient @JsonInclude(Include.NON_EMPTY) private String connectorName;

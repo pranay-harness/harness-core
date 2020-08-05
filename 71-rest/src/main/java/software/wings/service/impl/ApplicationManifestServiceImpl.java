@@ -45,12 +45,14 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Event.Type;
+import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitFileConfig.GitFileConfigKeys;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigKeys;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -69,6 +71,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
@@ -101,6 +104,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private DelegateService delegateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private SettingsService settingsService;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -693,6 +697,16 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     if (!gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getCommitId())) {
       throw new InvalidRequestException("CommitId cannot be empty if useBranch is not selected.", USER);
+    }
+
+    SettingAttribute settingAttribute = settingsService.get(gitFileConfig.getConnectorId());
+    if (null == settingAttribute) {
+      throw new InvalidRequestException("Invalid git connector provided.", USER);
+    }
+
+    GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType() && isBlank(gitFileConfig.getRepoName())) {
+      throw new InvalidRequestException("Repository name not provided for Account level git connector.", USER);
     }
   }
 

@@ -963,15 +963,13 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         .isTrue();
 
     verify(mockGitService, times(1))
-        .downloadFiles(eq(GitConfig.builder().repoUrl("helm-url").build()), eq("git-connector"), eq(null), eq("master"),
-            eq(asList("dir/file")), eq(false), eq("./dir"));
+        .downloadFiles(eq(GitConfig.builder().repoUrl("helm-url").build()), any(GitFileConfig.class), eq("./dir"));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList());
 
     // handle exception
     doThrow(new RuntimeException())
         .when(mockGitService)
-        .downloadFiles(
-            any(GitConfig.class), anyString(), anyString(), anyString(), anyList(), anyBoolean(), anyString());
+        .downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString());
     assertThat(
         spyHelper.fetchManifestFilesAndWriteToDirectory(
             K8sDelegateManifestConfig.builder()

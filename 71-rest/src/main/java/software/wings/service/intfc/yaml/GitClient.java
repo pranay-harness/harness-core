@@ -40,7 +40,7 @@ public interface GitClient {
 
   GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext);
 
-  String validate(GitConfig gitConfig, String repoName);
+  String validate(GitConfig gitConfig);
 
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
 

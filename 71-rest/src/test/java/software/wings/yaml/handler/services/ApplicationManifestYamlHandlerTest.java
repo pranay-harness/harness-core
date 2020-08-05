@@ -30,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -155,8 +156,11 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME))
         .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).build());
 
-    SettingAttribute settingAttribute =
-        Builder.aSettingAttribute().withName(CONNECTOR_NAME).withUuid(CONNECTOR_ID).build();
+    SettingAttribute settingAttribute = Builder.aSettingAttribute()
+                                            .withName(CONNECTOR_NAME)
+                                            .withUuid(CONNECTOR_ID)
+                                            .withValue(GitConfig.builder().build())
+                                            .build();
     when(settingsService.get(CONNECTOR_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, CONNECTOR_NAME)).thenReturn(settingAttribute);
   }

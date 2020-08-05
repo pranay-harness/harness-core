@@ -28,7 +28,6 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -1220,9 +1219,7 @@ public class K8sTaskHelper {
 
       encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails());
 
-      gitService.downloadFiles(delegateManifestConfig.getGitConfig(), gitFileConfig.getConnectorId(),
-          gitFileConfig.getCommitId(), gitFileConfig.getBranch(), asList(gitFileConfig.getFilePath()),
-          gitFileConfig.isUseBranch(), manifestFilesDirectory);
+      gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));

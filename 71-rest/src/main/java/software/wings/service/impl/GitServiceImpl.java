@@ -5,12 +5,14 @@ import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.yaml.GitClient;
 
+import java.util.Collections;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -35,15 +37,14 @@ public class GitServiceImpl implements GitService {
   }
 
   @Override
-  public void downloadFiles(GitConfig gitConfig, String connectorId, String commitId, String branch,
-      List<String> filePaths, boolean useBranch, String destinationDirectory) {
+  public void downloadFiles(GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory) {
     gitClient.downloadFiles(gitConfig,
         GitFetchFilesRequest.builder()
-            .commitId(commitId)
-            .branch(branch)
-            .filePaths(filePaths)
-            .gitConnectorId(connectorId)
-            .useBranch(useBranch)
+            .commitId(gitFileConfig.getCommitId())
+            .branch(gitFileConfig.getBranch())
+            .filePaths(Collections.singletonList(gitFileConfig.getFilePath()))
+            .gitConnectorId(gitFileConfig.getConnectorId())
+            .useBranch(gitFileConfig.isUseBranch())
             .recursive(true)
             .build(),
         destinationDirectory);
