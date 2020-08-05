@@ -3,13 +3,13 @@ package io.harness.cdng.connector.tasks;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.exception.UnexpectedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
@@ -19,8 +19,8 @@ import java.util.function.Consumer;
 
 public class KubernetesConnectionDelegateValidation extends AbstractDelegateValidateTask {
   public KubernetesConnectionDelegateValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

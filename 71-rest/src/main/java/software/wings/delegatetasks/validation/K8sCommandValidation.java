@@ -5,8 +5,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.ManifestAwareTaskParams;
@@ -18,9 +18,9 @@ import java.util.function.Consumer;
 public class K8sCommandValidation extends AbstractDelegateValidateTask {
   @Inject @Transient private transient K8sValidationHelper k8sValidationHelper;
 
-  public K8sCommandValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public K8sCommandValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

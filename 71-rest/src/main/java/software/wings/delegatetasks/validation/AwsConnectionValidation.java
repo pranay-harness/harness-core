@@ -2,7 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -10,8 +10,8 @@ import java.util.function.Consumer;
 public class AwsConnectionValidation extends AbstractDelegateValidateTask {
   private static final String AWS_URL = "https://aws.amazon.com/";
   public AwsConnectionValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

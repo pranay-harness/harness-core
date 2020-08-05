@@ -3,9 +3,9 @@ package software.wings.delegatetasks.validation;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.SlackMessage;
 
 import java.net.MalformedURLException;
@@ -15,9 +15,9 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class SlackValidation extends AbstractDelegateValidateTask {
-  public SlackValidation(final String delegateId, final DelegateTask delegateTask,
+  public SlackValidation(final String delegateId, final DelegateTaskPackage delegateTaskPackage,
       final Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

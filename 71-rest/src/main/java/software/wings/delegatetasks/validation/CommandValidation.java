@@ -11,7 +11,6 @@ import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -20,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
@@ -49,9 +49,9 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient AzureHelperService azureHelperService;
 
-  public CommandValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public CommandValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

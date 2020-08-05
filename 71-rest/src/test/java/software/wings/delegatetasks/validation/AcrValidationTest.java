@@ -20,35 +20,38 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.List;
 
 public class AcrValidationTest extends WingsBaseTest {
-  @InjectMocks private AcrValidation acrValidation = new AcrValidation(DELEGATE_ID, delegateTask, null);
+  @InjectMocks private AcrValidation acrValidation = new AcrValidation(DELEGATE_ID, delegateTaskPackage, null);
 
   private static final String repositoryName = "my-repository";
   private static final String registryName = "my-registry";
 
   private static final String ACR_URL = "https://azure.microsoft.com/";
 
-  static DelegateTask delegateTask =
-      DelegateTask.builder()
-          .uuid("id")
-          .accountId(ACCOUNT_ID)
-          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-          .waitId("")
-          .data(TaskData.builder()
-                    .async(true)
-                    .taskType(TaskType.ACR_GET_BUILDS.name())
-                    .parameters(new Object[] {ArtifactStreamAttributes.builder()
-                                                  .registryName(registryName)
-                                                  .repositoryName(repositoryName)
-                                                  .build(),
-                        asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
-                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                    .build())
+  static DelegateTaskPackage delegateTaskPackage =
+      DelegateTaskPackage.builder()
+          .delegateTask(DelegateTask.builder()
+                            .uuid("id")
+                            .accountId(ACCOUNT_ID)
+                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                            .waitId("")
+                            .data(TaskData.builder()
+                                      .async(true)
+                                      .taskType(TaskType.ACR_GET_BUILDS.name())
+                                      .parameters(new Object[] {ArtifactStreamAttributes.builder()
+                                                                    .registryName(registryName)
+                                                                    .repositoryName(repositoryName)
+                                                                    .build(),
+                                          asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
+                                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                      .build())
+                            .build())
           .build();
 
   @Before

@@ -4,8 +4,8 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.container.KubernetesSteadyStateCheckParams;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -15,9 +15,9 @@ import java.util.function.Consumer;
 public class KubernetesSteadyStateCheckValidation extends AbstractDelegateValidateTask {
   @Inject @Transient private transient ContainerValidationHelper containerValidationHelper;
 
-  public KubernetesSteadyStateCheckValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public KubernetesSteadyStateCheckValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

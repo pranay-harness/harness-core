@@ -2,7 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.PrometheusConfig;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 
@@ -14,9 +14,9 @@ import java.util.function.Consumer;
  * Created by brett on 11/2/17
  */
 public class PrometheusValidation extends AbstractDelegateValidateTask {
-  public PrometheusValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public PrometheusValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

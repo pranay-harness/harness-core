@@ -2,9 +2,9 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 
 import java.util.Arrays;
@@ -15,9 +15,9 @@ import java.util.function.Consumer;
  * Created by brett on 11/2/17
  */
 public class AppdynamicsValidation extends AbstractSecretManagerValidation {
-  public AppdynamicsValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public AppdynamicsValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

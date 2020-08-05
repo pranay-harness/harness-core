@@ -7,7 +7,7 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.SftpConfig;
 import software.wings.service.impl.SftpHelperService;
 
@@ -18,9 +18,9 @@ import java.util.function.Consumer;
 @OwnedBy(CDC)
 public class SftpValidation extends AbstractDelegateValidateTask {
   @Inject SftpHelperService sftpHelperService;
-  public SftpValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public SftpValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

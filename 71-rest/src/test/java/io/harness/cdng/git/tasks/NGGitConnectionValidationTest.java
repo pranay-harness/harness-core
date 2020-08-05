@@ -25,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -49,15 +50,18 @@ public class NGGitConnectionValidationTest extends WingsBaseTest {
 
   @InjectMocks
   private NGGitConnectionValidation gitConnectionValidation = new NGGitConnectionValidation(generateUuid(),
-      DelegateTask.builder()
-          .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                    .parameters(new Object[] {GitCommandParams.builder()
-                                                  .gitCommandType(GitCommandType.VALIDATE)
-                                                  .encryptionDetails(Collections.emptyList())
-                                                  .gitConfig(gitConfig)
-                                                  .build()})
-                    .build())
+      DelegateTaskPackage.builder()
+          .delegateTask(DelegateTask.builder()
+                            .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                      .parameters(new Object[] {GitCommandParams.builder()
+                                                                    .gitCommandType(GitCommandType.VALIDATE)
+                                                                    .encryptionDetails(Collections.emptyList())
+                                                                    .gitConfig(gitConfig)
+                                                                    .build()})
+                                      .build())
+                            .build())
           .build(),
+
       null);
 
   @Before

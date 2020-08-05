@@ -5,11 +5,11 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.TaskLogContext;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -29,14 +29,14 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
   private List<ExecutionCapability> executionCapabilities;
 
   public AbstractDelegateValidateTask(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    this.accountId = delegateTask.getAccountId();
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    this.accountId = delegateTaskPackage.getAccountId();
     this.delegateId = delegateId;
-    this.delegateTaskId = delegateTask.getUuid();
-    this.taskType = delegateTask.getData().getTaskType();
+    this.delegateTaskId = delegateTaskPackage.getDelegateTaskId();
+    this.taskType = delegateTaskPackage.getDelegateTask().getData().getTaskType();
     this.consumer = consumer;
-    this.taskData = delegateTask.getData();
-    this.executionCapabilities = delegateTask.getExecutionCapabilities();
+    this.taskData = delegateTaskPackage.getDelegateTask().getData();
+    this.executionCapabilities = delegateTaskPackage.getExecutionCapabilities();
   }
 
   @Override

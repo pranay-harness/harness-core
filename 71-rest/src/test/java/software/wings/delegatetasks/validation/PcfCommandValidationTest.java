@@ -11,6 +11,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -27,8 +28,11 @@ public class PcfCommandValidationTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidationWithNullEncryptionType() {
     Consumer consumer = mock(Consumer.class);
-    PCFCommandValidation pcfCommandValidation =
-        new PCFCommandValidation("", DelegateTask.builder().data(TaskData.builder().build()).build(), consumer);
+    PCFCommandValidation pcfCommandValidation = new PCFCommandValidation("",
+        DelegateTaskPackage.builder()
+            .delegateTask(DelegateTask.builder().data(TaskData.builder().build()).build())
+            .build(),
+        consumer);
 
     PcfCommandRequest request = PcfCommandSetupRequest.builder().useAppAutoscalar(true).build();
     assertThat(pcfCommandValidation.needToCheckAppAutoscalarPluginInstall(request)).isTrue();
@@ -59,8 +63,11 @@ public class PcfCommandValidationTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testNeedToCheckAppAutoscalarPluginInstall() {
     Consumer consumer = mock(Consumer.class);
-    PCFCommandValidation pcfCommandValidation =
-        new PCFCommandValidation("", DelegateTask.builder().data(TaskData.builder().build()).build(), consumer);
+    PCFCommandValidation pcfCommandValidation = new PCFCommandValidation("",
+        DelegateTaskPackage.builder()
+            .delegateTask(DelegateTask.builder().data(TaskData.builder().build()).build())
+            .build(),
+        consumer);
 
     PcfConfig pcfConfig = PcfConfig.builder().endpointUrl("url").username("user").build();
     PcfCommandRequest request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).build();
@@ -85,8 +92,11 @@ public class PcfCommandValidationTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testPcfCliValidationRequired() {
     Consumer consumer = mock(Consumer.class);
-    PCFCommandValidation pcfCommandValidation =
-        new PCFCommandValidation("", DelegateTask.builder().data(TaskData.builder().build()).build(), consumer);
+    PCFCommandValidation pcfCommandValidation = new PCFCommandValidation("",
+        DelegateTaskPackage.builder()
+            .delegateTask(DelegateTask.builder().data(TaskData.builder().build()).build())
+            .build(),
+        consumer);
 
     PcfConfig pcfConfig = PcfConfig.builder().endpointUrl("url").username("user").build();
     PcfCommandSetupRequest request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).build();

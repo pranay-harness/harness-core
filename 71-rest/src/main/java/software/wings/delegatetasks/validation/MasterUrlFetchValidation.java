@@ -4,10 +4,10 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
@@ -19,8 +19,8 @@ import java.util.function.Consumer;
 public class MasterUrlFetchValidation extends AbstractDelegateValidateTask {
   private static final String LOCAL_ENCRYPTION_CONFIG = "LOCAL_ENCRYPTION_CONFIG";
   public MasterUrlFetchValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

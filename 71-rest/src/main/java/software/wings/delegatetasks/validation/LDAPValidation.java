@@ -4,9 +4,9 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
@@ -25,9 +25,9 @@ import java.util.function.Consumer;
 public class LDAPValidation extends AbstractSecretManagerValidation {
   @Inject private EncryptionService encryptionService;
 
-  public LDAPValidation(final String delegateId, final DelegateTask delegateTask,
+  public LDAPValidation(final String delegateId, final DelegateTaskPackage delegateTaskPackage,
       final Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   private <T> T extractFirstParamenter(Object[] configList, Class<T> type) {

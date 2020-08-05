@@ -7,8 +7,8 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
-import io.harness.beans.DelegateTask;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -28,8 +28,8 @@ public class BuildSourceTaskValidation extends AbstractDelegateValidateTask {
   private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
 
   public BuildSourceTaskValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

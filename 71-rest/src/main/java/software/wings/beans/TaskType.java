@@ -453,19 +453,18 @@ public enum TaskType {
 
   public DelegateValidateTask getDelegateValidateTask(String delegateId, DelegateTaskPackage delegateTaskPackage,
       Consumer<List<DelegateConnectionResult>> postExecute) {
-    return on(delegateValidateTaskClass).create(delegateId, delegateTaskPackage.getDelegateTask(), postExecute).get();
+    return on(delegateValidateTaskClass).create(delegateId, delegateTaskPackage, postExecute).get();
   }
 
   // TODO: This should become default 1, once all tasks are migrated and feature flag is removed.
   public DelegateValidateTask getDelegateValidateTaskVersionForCapabilityFramework(String delegateId,
       DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> postExecute) {
-    return on(CapabilityCheckController.class)
-        .create(delegateId, delegateTaskPackage.getDelegateTask(), postExecute)
-        .get();
+    return on(CapabilityCheckController.class).create(delegateId, delegateTaskPackage, postExecute).get();
   }
 
-  public List<String> getCriteria(DelegateTask delegateTask, Injector injector) {
-    DelegateValidateTask delegateValidateTask = on(delegateValidateTaskClass).create(null, delegateTask, null).get();
+  public List<String> getCriteria(DelegateTaskPackage delegateTaskPackage, Injector injector) {
+    DelegateValidateTask delegateValidateTask =
+        on(delegateValidateTaskClass).create(null, delegateTaskPackage, null).get();
     injector.injectMembers(delegateValidateTask);
     return delegateValidateTask.getCriteria();
   }

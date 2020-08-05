@@ -16,13 +16,13 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
-import lombok.Data;
 import net.openhft.chronicle.core.util.Time;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 
@@ -37,13 +37,21 @@ import java.util.function.Consumer;
 public class SecretManagerValidationTest extends CategoryTest {
   @Mock CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
 
-  @Data
   public static class TestSecretManagerValidation extends AbstractSecretManagerValidation {
     Object[] parameters;
 
-    TestSecretManagerValidation(
-        String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-      super(delegateId, delegateTask, postExecute);
+    @Override
+    public Object[] getParameters() {
+      return parameters;
+    }
+
+    public void setParameters(Object[] parameters) {
+      this.parameters = parameters;
+    }
+
+    TestSecretManagerValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+        Consumer<List<DelegateConnectionResult>> postExecute) {
+      super(delegateId, delegateTaskPackage, postExecute);
     }
   }
 
@@ -53,8 +61,10 @@ public class SecretManagerValidationTest extends CategoryTest {
   public void setUp() {
     TaskData taskData = mock(TaskData.class);
     DelegateTask delegateTask = mock(DelegateTask.class);
+    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder().delegateTask(delegateTask).build();
+
     when(delegateTask.getData()).thenReturn(taskData);
-    validation = new TestSecretManagerValidation(UUIDGenerator.generateUuid(), delegateTask, null);
+    validation = new TestSecretManagerValidation(UUIDGenerator.generateUuid(), delegateTaskPackage, null);
     initMocks(this);
   }
 

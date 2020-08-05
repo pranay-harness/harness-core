@@ -19,6 +19,7 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
@@ -51,14 +52,14 @@ public class K8sCommandValidationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void validateWithNonManifestParameters() {
     K8sScaleTaskParameters taskParameters = K8sScaleTaskParameters.builder().build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
     K8sCommandValidation validationTask = prepareValidationTask(task);
     List<DelegateConnectionResult> validate = validationTask.validate();
     verify(k8sValidationHelper, times(1)).getCriteria(any(K8sClusterConfig.class));
     assertThat(validate.get(0).getCriteria()).isEqualTo(k8s_criteria);
   }
 
-  private K8sCommandValidation prepareValidationTask(DelegateTask task) {
+  private K8sCommandValidation prepareValidationTask(DelegateTaskPackage task) {
     K8sCommandValidation commandValidationSpy = Mockito.spy(new K8sCommandValidation("delegate-id", task, null));
     Reflect.on(commandValidationSpy).set("k8sValidationHelper", k8sValidationHelper);
     return commandValidationSpy;
@@ -69,7 +70,7 @@ public class K8sCommandValidationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void validateWithOnlyClusterConfig() {
     K8sApplyTaskParameters taskParameters = K8sApplyTaskParameters.builder().build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
     K8sCommandValidation validationTask = prepareValidationTask(task);
     List<DelegateConnectionResult> validate = validationTask.validate();
     verify(k8sValidationHelper, times(1)).getCriteria(any(K8sClusterConfig.class));
@@ -85,7 +86,7 @@ public class K8sCommandValidationTest extends WingsBaseTest {
             .k8sDelegateManifestConfig(
                 K8sDelegateManifestConfig.builder().kustomizeConfig(new KustomizeConfig()).build())
             .build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
 
     when(k8sValidationHelper.kustomizeValidationNeeded(taskParameters)).thenReturn(true);
 
@@ -107,7 +108,7 @@ public class K8sCommandValidationTest extends WingsBaseTest {
                                            .kustomizeConfig(KustomizeConfig.builder().pluginRootDir("abc").build())
                                            .build())
             .build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
     K8sCommandValidation validationTask = prepareValidationTask(task);
 
     when(k8sValidationHelper.kustomizeValidationNeeded(taskParameters)).thenReturn(true);
@@ -132,7 +133,7 @@ public class K8sCommandValidationTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidationIfClusterNotReachable() {
     K8sTaskParameters taskParameters = K8sDeleteTaskParameters.builder().build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
     K8sCommandValidation validationTask = prepareValidationTask(task);
 
     List<DelegateConnectionResult> validationResult = validationTask.validate();
@@ -150,7 +151,7 @@ public class K8sCommandValidationTest extends WingsBaseTest {
                                            .kustomizeConfig(KustomizeConfig.builder().pluginRootDir("abc").build())
                                            .build())
             .build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
     K8sCommandValidation validationTask = prepareValidationTask(task);
 
     when(k8sValidationHelper.validateContainerServiceParams(any(K8sClusterConfig.class))).thenReturn(true);
@@ -164,7 +165,7 @@ public class K8sCommandValidationTest extends WingsBaseTest {
 
   private void testK8sCriteria() {
     K8sTaskParameters taskParameters = K8sDeleteTaskParameters.builder().build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
     K8sCommandValidation validationTask = prepareValidationTask(task);
     assertThat(validationTask.getCriteria().get(0)).isEqualTo(k8s_criteria);
   }
@@ -177,24 +178,26 @@ public class K8sCommandValidationTest extends WingsBaseTest {
                                            .kustomizeConfig(KustomizeConfig.builder().pluginRootDir("abc").build())
                                            .build())
             .build();
-    DelegateTask task = prepareK8sDelegateTask(taskParameters);
+    DelegateTaskPackage task = prepareK8sDelegateTask(taskParameters);
     K8sCommandValidation validationTask = prepareValidationTask(task);
     assertThat(validationTask.getCriteria().get(0)).contains(k8s_criteria);
     assertThat(validationTask.getCriteria().get(0)).contains(kustomize_criteria);
   }
 
-  private DelegateTask prepareK8sDelegateTask(K8sTaskParameters taskParameters) {
+  private DelegateTaskPackage prepareK8sDelegateTask(K8sTaskParameters taskParameters) {
     taskParameters.setK8sClusterConfig(
         K8sClusterConfig.builder()
             .gcpKubernetesCluster(GcpKubernetesCluster.builder().clusterName("default").build())
             .namespace("default")
             .build());
-    return DelegateTask.builder()
-        .data(TaskData.builder()
-                  .async(true)
-                  .taskType(TaskType.K8S_COMMAND_TASK.name())
-                  .parameters(new Object[] {taskParameters})
-                  .build())
+    return DelegateTaskPackage.builder()
+        .delegateTask(DelegateTask.builder()
+                          .data(TaskData.builder()
+                                    .async(true)
+                                    .taskType(TaskType.K8S_COMMAND_TASK.name())
+                                    .parameters(new Object[] {taskParameters})
+                                    .build())
+                          .build())
         .build();
   }
 }

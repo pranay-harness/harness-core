@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -14,9 +14,9 @@ import java.util.function.Consumer;
 public class CustomArtifactSourceValidation extends AbstractDelegateValidateTask {
   private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
 
-  public CustomArtifactSourceValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public CustomArtifactSourceValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
   @Override
   public List<String> getCriteria() {

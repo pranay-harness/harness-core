@@ -29,6 +29,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -99,20 +100,23 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
 
   private void validate(boolean shouldBeValidated) {
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
-        DelegateTask.builder()
-            .data(TaskData.builder()
-                      .async(true)
-                      .parameters(new Object[] {NewRelicConfig.builder()
-                                                    .newRelicUrl(newRelicUrl)
-                                                    .accountId(generateUuid())
-                                                    .apiKey(generateUuid().toCharArray())
-                                                    .build(),
-                          NewRelicDataCollectionInfo.builder()
-                              .encryptedDataDetails(Lists.newArrayList(
-                                  EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
-                              .build()})
-                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                      .build())
+        DelegateTaskPackage.builder()
+            .delegateTask(
+                DelegateTask.builder()
+                    .data(TaskData.builder()
+                              .async(true)
+                              .parameters(new Object[] {NewRelicConfig.builder()
+                                                            .newRelicUrl(newRelicUrl)
+                                                            .accountId(generateUuid())
+                                                            .apiKey(generateUuid().toCharArray())
+                                                            .build(),
+                                  NewRelicDataCollectionInfo.builder()
+                                      .encryptedDataDetails(Lists.newArrayList(
+                                          EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
+                                      .build()})
+                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                              .build())
+                    .build())
             .build(),
         null);
     List<DelegateConnectionResult> validate = newRelicValidation.validate();
