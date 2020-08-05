@@ -110,6 +110,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("ocVersion") private String ocVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
+  @JsonProperty("ngManagerAvailable") private boolean ngManagerAvailable;
   @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")
   private boolean trialRegistrationAllowedForBugathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;

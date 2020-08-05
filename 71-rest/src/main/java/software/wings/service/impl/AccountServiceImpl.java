@@ -384,7 +384,9 @@ public class AccountServiceImpl implements AccountService {
 
     enableFeatureFlags(account);
     sampleDataProviderService.createK8sV2SampleApp(account);
-    createDefaultOrganization(account.getUuid());
+    if (mainConfiguration.isNgManagerAvailable()) {
+      createDefaultOrganization(account.getUuid());
+    }
   }
 
   private void createDefaultOrganization(String accountId) {
