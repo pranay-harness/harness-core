@@ -16,22 +16,27 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +46,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
-public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
+public class InstanceBillingDataTasklet implements Tasklet {
   @Autowired private BillingCalculationService billingCalculationService;
   @Autowired private BillingDataServiceImpl billingDataService;
   @Autowired private UtilizationDataServiceImpl utilizationDataService;
@@ -49,24 +54,47 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private AwsCustomBillingService awsCustomBillingService;
   @Autowired private CustomBillingMetaDataService customBillingMetaDataService;
+  @Autowired private InstanceDataDao instanceDataDao;
+  @Autowired private HPersistence persistence;
+  @Autowired private BatchMainConfig config;
 
   private JobParameters parameters;
 
-  @BeforeStep
-  public void beforeStep(final StepExecution stepExecution) {
-    parameters = stepExecution.getJobExecution().getJobParameters();
-  }
-
   @Override
-  public void write(List<? extends InstanceData> instanceDataLists) throws Exception {
+  public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
+    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
+    int batchSize = config.getBatchQueryConfig().getInstanceDataBatchSize();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
     BatchJobType batchJobType =
         CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
+
+    // Instant of 1-1-2018
+    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
+    List<InstanceData> instanceDataLists;
+
+    do {
+      instanceDataLists = instanceDataDao.getInstanceDataLists(accountId, batchSize, startTime, endTime, seekingDate);
+      if (!instanceDataLists.isEmpty()) {
+        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
+        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
+        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
+          logger.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
+              parameters.toString());
+          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
+        }
+      }
+      createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists);
+    } while (instanceDataLists.size() == batchSize);
+    return null;
+  }
+
+  void createBillingData(String accountId, Instant startTime, Instant endTime, BatchJobType batchJobType,
+      List<InstanceData> instanceDataLists) {
     logger.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
-    Map<String, ? extends List<? extends InstanceData>> instanceDataGroupedCluster =
+    Map<String, List<InstanceData>> instanceDataGroupedCluster =
         instanceDataLists.stream().collect(Collectors.groupingBy(InstanceData::getClusterId));
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(accountId);
     if (awsDataSetId != null) {

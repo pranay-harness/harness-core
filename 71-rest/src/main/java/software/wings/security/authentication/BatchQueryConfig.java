@@ -10,4 +10,5 @@ import lombok.Data;
 @Singleton
 public class BatchQueryConfig {
   private int queryBatchSize;
+  private int instanceDataBatchSize;
 }

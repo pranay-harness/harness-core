@@ -19,6 +19,7 @@ import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -278,5 +279,19 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
                                     .field(InstanceDataKeys.metaData + "." + InstanceMetaDataConstants.NAMESPACE)
                                     .equal(namespace);
     return query.get();
+  }
+
+  @Override
+  public List<InstanceData> getInstanceDataLists(
+      String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate) {
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+                                    .filter(InstanceDataKeys.accountId, accountId)
+                                    .order(InstanceDataKeys.usageStartTime);
+
+    query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(seekingDate),
+        query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(endTime),
+        query.or(query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime),
+            query.criteria(InstanceDataKeys.usageStopTime).doesNotExist()));
+    return query.asList(new FindOptions().limit(batchSize));
   }
 }

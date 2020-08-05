@@ -103,7 +103,7 @@ public class UtilizationDataServiceImpl {
             String.join("','", serviceArnToInstanceIds.keySet()), startTime, endTime);
         return getUtilizationDataFromTimescaleDB(query, serviceArnToInstanceIds);
       } else {
-        throw new InvalidRequestException("Cannot process request in InstanceBillingDataWriter");
+        throw new InvalidRequestException("Cannot process request in InstanceBillingDataTasklet");
       }
     } catch (Exception e) {
       throw new InvalidRequestException("Error while fetching utilization data {}", e);
