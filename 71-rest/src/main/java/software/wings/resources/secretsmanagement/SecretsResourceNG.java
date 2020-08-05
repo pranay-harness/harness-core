@@ -1,8 +1,12 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.ORG_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PROJECT_IDENTIFIER_KEY;
 
 import com.google.inject.Inject;
 
@@ -46,16 +50,24 @@ import javax.ws.rs.QueryParam;
 public class SecretsResourceNG {
   private final NgManagerServiceDriver ngManagerServiceDriver;
   private final NGSecretService ngSecretService;
-  public static final String ACCOUNT_IDENTIFIER = "accountIdentifier";
-  public static final String ORG_IDENTIFIER = "orgIdentifier";
-  public static final String PROJECT_IDENTIFIER = "projectIdentifier";
-  public static final String LIMIT = "limit";
-  public static final String OFFSET = "offset";
+  public static final String LIMIT_KEY = "limit";
+  public static final String OFFSET_KEY = "offset";
 
   @Inject
   public SecretsResourceNG(NgManagerServiceDriver ngManagerServiceDriver, NGSecretService ngSecretService) {
     this.ngManagerServiceDriver = ngManagerServiceDriver;
     this.ngSecretService = ngSecretService;
+  }
+
+  private PageResponse<EncryptedDataDTO> getPageResponse(PageResponse<EncryptedData> encryptedDataPageResponse) {
+    List<EncryptedDataDTO> dtoList =
+        encryptedDataPageResponse.getResponse().stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList());
+    PageResponse<EncryptedDataDTO> dtoPageResponse = new PageResponse<>();
+    dtoPageResponse.setResponse(dtoList);
+    dtoPageResponse.setTotal(encryptedDataPageResponse.getTotal());
+    dtoPageResponse.setLimit(encryptedDataPageResponse.getLimit());
+    dtoPageResponse.setOffset(encryptedDataPageResponse.getOffset());
+    return dtoPageResponse;
   }
 
   @POST
@@ -67,45 +79,47 @@ public class SecretsResourceNG {
 
   @GET
   public RestResponse<PageResponse<EncryptedDataDTO>> listSecrets(
-      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier,
-      @QueryParam(LIMIT) @DefaultValue("100") final String limit,
-      @QueryParam(OFFSET) @DefaultValue("0") final String offset, @QueryParam("type") final SettingVariableTypes type) {
-    PageResponse<EncryptedData> encryptedDataPageResponse =
+      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier,
+      @QueryParam(LIMIT_KEY) @DefaultValue("100") final String limit,
+      @QueryParam(OFFSET_KEY) @DefaultValue("0") final String offset, @QueryParam("searchTerm") final String searchTerm,
+      @QueryParam("type") final SettingVariableTypes type) {
+    PageResponse<EncryptedData> encryptedDataPageResponse;
+    if (!StringUtils.isEmpty(searchTerm)) {
+      List<EncryptedData> encryptedDataList =
+          ngSecretService.searchSecrets(accountIdentifier, orgIdentifier, projectIdentifier, type, searchTerm);
+      encryptedDataPageResponse =
+          aPageResponse().withResponse(encryptedDataList).withTotal(encryptedDataList.size()).build();
+      return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
+    }
+    encryptedDataPageResponse =
         ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, type, limit, offset);
-    List<EncryptedDataDTO> dtoList =
-        encryptedDataPageResponse.getResponse().stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList());
-    PageResponse<EncryptedDataDTO> dtoPageResponse = new PageResponse<>();
-    dtoPageResponse.setResponse(dtoList);
-    dtoPageResponse.setTotal(encryptedDataPageResponse.getTotal());
-    dtoPageResponse.setLimit(encryptedDataPageResponse.getLimit());
-    dtoPageResponse.setOffset(encryptedDataPageResponse.getOffset());
-    return new RestResponse<>(dtoPageResponse);
+    return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
   }
 
   @GET
   @Path("{identifier}")
   public RestResponse<EncryptedDataDTO> get(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier) {
+      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier) {
     Optional<EncryptedData> encryptedDataOptional =
-        ngSecretService.getSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return new RestResponse<>(encryptedDataOptional.map(EncryptedDataMapper::toDTO).orElse(null));
   }
 
   @PUT
   @Path("{identifier}")
   public RestResponse<Boolean> updateSecret(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier, SecretTextUpdateDTO dto) {
+      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier, SecretTextUpdateDTO dto) {
     if (!StringUtils.isEmpty(dto.getPath()) && !StringUtils.isEmpty(dto.getValue())) {
       throw new InvalidRequestException("Cannot update both path and value", INVALID_REQUEST, USER);
     }
     Optional<EncryptedData> encryptedDataOptional =
-        ngSecretService.getSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (encryptedDataOptional.isPresent()) {
       EncryptedData appliedUpdate = EncryptedDataMapper.applyUpdate(dto, encryptedDataOptional.get());
       boolean success = ngSecretService.updateSecretText(appliedUpdate, dto.getValue());
@@ -117,9 +131,9 @@ public class SecretsResourceNG {
   @DELETE
   @Path("{identifier}")
   public RestResponse<Boolean> deleteSecret(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier) {
+      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier) {
     return new RestResponse<>(
         ngSecretService.deleteSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }

@@ -77,7 +77,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   public List<SecretManagerConfig> listSecretManagers(
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Query<SecretManagerConfig> secretManagerConfigQuery;
-    secretManagerConfigQuery = getQuery(accountIdentifier, null, null);
+    secretManagerConfigQuery = getQuery(accountIdentifier, orgIdentifier, projectIdentifier);
     return secretManagerConfigQuery.asList();
   }
 

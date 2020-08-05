@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdSparseIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
@@ -65,6 +66,14 @@ import javax.validation.constraints.NotNull;
                                                 , @Field("name") })
 @CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
                                          , @Field("kmsId") })
+@CdSparseIndex(name = "accountIdentifierEntityIdentifierIdx",
+    fields = { @Field("ngMetadata.accountIdentifier")
+               , @Field("ngMetadata.identifier") })
+@CdSparseIndex(name = "accountOrgProjectIdx",
+    fields =
+    {
+      @Field("ngMetadata.accountIdentifier"), @Field("ngMetadata.orgIdentifier"), @Field("ngMetadata.projectIdentifier")
+    })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData extends Base
     implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity, NGAccess {

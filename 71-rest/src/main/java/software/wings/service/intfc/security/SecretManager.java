@@ -47,6 +47,12 @@ public interface SecretManager extends OwnedByAccount {
   String IS_DEFAULT_KEY = "isDefault";
   String CREATED_AT_KEY = "createdAt";
   String ENCRYPTION_TYPE_KEY = "encryptionType";
+  String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;.]";
+
+  static boolean containsIllegalCharacters(String name) {
+    String[] parts = name.split(ILLEGAL_CHARACTERS, 2);
+    return parts.length > 1;
+  }
 
   List<SecretManagerConfig> listSecretManagers(String accountId);
 

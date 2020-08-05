@@ -198,6 +198,8 @@ emailQueue2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 
 emailQueue2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 emailVerificationTokens {"name": "appId_1", "background": true} {"appId": 1}
 emailVerificationTokens {"name": "createdAt_1", "background": true} {"createdAt": 1}
+encryptedRecords {"name": "accountIdentifierEntityIdentifierIdx", "background": true, "sparse": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.identifier": 1}
+encryptedRecords {"name": "accountOrgProjectIdx", "background": true, "sparse": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1}
 encryptedRecords {"name": "acctKmsIdx", "background": true} {"accountId": 1, "kmsId": 1}
 encryptedRecords {"name": "acctNameIdx", "unique": true} {"accountId": 1, "name": 1}
 encryptedRecords {"name": "appId_1", "background": true} {"appId": 1}

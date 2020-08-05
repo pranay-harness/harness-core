@@ -44,7 +44,7 @@ public class SecretsResourceNGTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGet() {
     EncryptedData encryptedData = EncryptedData.builder().name(SECRET_NAME).build();
-    when(ngSecretService.getSecretText(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER))
+    when(ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER))
         .thenReturn(Optional.of(encryptedData));
     RestResponse<EncryptedDataDTO> encryptedDataRestResponse =
         secretsResourceNG.get(SECRET_IDENTIFIER, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
