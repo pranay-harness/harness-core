@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
@@ -32,53 +33,59 @@ public class AzureArtifactsValidationTest extends WingsBaseTest {
   private static final String AZURE_DEVOPS_URL1 = "https://dev.azure.com/ORG1";
   private static final String AZURE_DEVOPS_URL2 = "https://dev.azure.com/ORG2";
 
-  private static DelegateTask collectionDelegateTask =
-      DelegateTask.builder()
-          .accountId(ACCOUNT_ID)
-          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-          .waitId("waitId")
-          .data(TaskData.builder()
-                    .async(true)
-                    .taskType(TaskType.AZURE_ARTIFACTS_COLLECTION.name())
-                    .parameters(new Object[] {
-                        AzureArtifactsCollectionTaskParameters.builder()
-                            .accountId(ACCOUNT_ID)
-                            .azureArtifactsConfig(
-                                AzureArtifactsPATConfig.builder().azureDevopsUrl(AZURE_DEVOPS_URL1).build())
-                            .encryptedDataDetails(null)
-                            .artifactStreamAttributes(ArtifactStreamAttributes.builder()
-                                                          .protocolType(ProtocolType.maven.name())
-                                                          .project("PROJECT")
-                                                          .feed("FEED")
-                                                          .packageId("PACKAGE_ID")
-                                                          .packageName("GROUP_ID:ARTIFACT_ID")
-                                                          .build())
-                            .artifactMetadata(ImmutableMap.of("buildNo", "1.0", "version", "1.0", "versionId", "VID"))
-                            .build()})
-                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                    .build())
+  private static DelegateTaskPackage collectionDelegateTask =
+      DelegateTaskPackage.builder()
+          .delegateTask(
+              DelegateTask.builder()
+                  .accountId(ACCOUNT_ID)
+                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                  .waitId("waitId")
+                  .data(TaskData.builder()
+                            .async(true)
+                            .taskType(TaskType.AZURE_ARTIFACTS_COLLECTION.name())
+                            .parameters(new Object[] {
+                                AzureArtifactsCollectionTaskParameters.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .azureArtifactsConfig(
+                                        AzureArtifactsPATConfig.builder().azureDevopsUrl(AZURE_DEVOPS_URL1).build())
+                                    .encryptedDataDetails(null)
+                                    .artifactStreamAttributes(ArtifactStreamAttributes.builder()
+                                                                  .protocolType(ProtocolType.maven.name())
+                                                                  .project("PROJECT")
+                                                                  .feed("FEED")
+                                                                  .packageId("PACKAGE_ID")
+                                                                  .packageName("GROUP_ID:ARTIFACT_ID")
+                                                                  .build())
+                                    .artifactMetadata(
+                                        ImmutableMap.of("buildNo", "1.0", "version", "1.0", "versionId", "VID"))
+                                    .build()})
+                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                            .build())
+                  .build())
           .build();
 
-  private static DelegateTask getBuildsDelegateTask =
-      DelegateTask.builder()
-          .uuid("uuid")
-          .accountId(ACCOUNT_ID)
-          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-          .waitId("waitId")
-          .data(TaskData.builder()
-                    .async(true)
-                    .taskType(TaskType.AZURE_ARTIFACTS_GET_BUILDS.name())
-                    .parameters(new Object[] {ArtifactStreamAttributes.builder()
-                                                  .protocolType(ProtocolType.maven.name())
-                                                  .project("PROJECT")
-                                                  .feed("FEED")
-                                                  .packageId("PACKAGE_ID")
-                                                  .packageName("GROUP_ID:ARTIFACT_ID")
-                                                  .build(),
-                        singletonList(EncryptedDataDetail.builder().build()),
-                        AzureArtifactsPATConfig.builder().azureDevopsUrl(AZURE_DEVOPS_URL2).build()})
-                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                    .build())
+  private static DelegateTaskPackage getBuildsDelegateTaskPackage =
+      DelegateTaskPackage.builder()
+          .delegateTask(DelegateTask.builder()
+                            .uuid("uuid")
+                            .accountId(ACCOUNT_ID)
+                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                            .waitId("waitId")
+                            .data(TaskData.builder()
+                                      .async(true)
+                                      .taskType(TaskType.AZURE_ARTIFACTS_GET_BUILDS.name())
+                                      .parameters(new Object[] {ArtifactStreamAttributes.builder()
+                                                                    .protocolType(ProtocolType.maven.name())
+                                                                    .project("PROJECT")
+                                                                    .feed("FEED")
+                                                                    .packageId("PACKAGE_ID")
+                                                                    .packageName("GROUP_ID:ARTIFACT_ID")
+                                                                    .build(),
+                                          singletonList(EncryptedDataDetail.builder().build()),
+                                          AzureArtifactsPATConfig.builder().azureDevopsUrl(AZURE_DEVOPS_URL2).build()})
+                                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                      .build())
+                            .build())
           .build();
 
   @InjectMocks
@@ -87,7 +94,7 @@ public class AzureArtifactsValidationTest extends WingsBaseTest {
 
   @InjectMocks
   private AzureArtifactsValidation azureArtifactsGetBuildsValidation =
-      new AzureArtifactsValidation(DELEGATE_ID, getBuildsDelegateTask, null);
+      new AzureArtifactsValidation(DELEGATE_ID, getBuildsDelegateTaskPackage, null);
 
   @Test
   @Owner(developers = GARVIT)

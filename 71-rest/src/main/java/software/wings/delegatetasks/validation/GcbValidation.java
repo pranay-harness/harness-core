@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.connectableHttpUrl;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.gcb.GcbServiceImpl;
 
 import java.util.Arrays;
@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 public class GcbValidation extends AbstractDelegateValidateTask {
-  public GcbValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public GcbValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

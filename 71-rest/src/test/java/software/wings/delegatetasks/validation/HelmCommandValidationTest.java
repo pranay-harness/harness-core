@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.utils.WingsTestConstants;
 
@@ -24,7 +25,10 @@ public class HelmCommandValidationTest extends WingsBaseTest {
   @Mock ContainerValidationHelper containerValidationHelper;
 
   private HelmCommandValidation helmCommandValidation = spy(new HelmCommandValidation(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.builder().data(TaskData.builder().parameters(new Object[] {}).build()).build(), null));
+      DelegateTaskPackage.builder()
+          .delegateTask(DelegateTask.builder().data(TaskData.builder().parameters(new Object[] {}).build()).build())
+          .build(),
+      null));
 
   @Before
   public void setUp() throws Exception {

@@ -6,9 +6,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
@@ -29,9 +29,9 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
 
   private static final String SLACK_API_CRITERIA = "https://slack.com/api/api.test";
 
-  public ConnectivityBasicValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public ConnectivityBasicValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

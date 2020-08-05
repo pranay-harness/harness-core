@@ -5,9 +5,9 @@ import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
@@ -24,9 +24,9 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
   @Inject private transient ContainerValidationHelper containerValidationHelper;
   @Inject private transient ShellScriptValidationHandler shellScriptValidationHandler;
 
-  public ShellScriptValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public ShellScriptValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

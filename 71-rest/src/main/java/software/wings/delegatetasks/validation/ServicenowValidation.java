@@ -2,7 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 
@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 
 public class ServicenowValidation extends AbstractDelegateValidateTask {
   public ServicenowValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

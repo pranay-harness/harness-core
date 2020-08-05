@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,9 +16,9 @@ import java.util.function.Consumer;
  */
 @OwnedBy(CDC)
 public class BambooValidation extends AbstractDelegateValidateTask {
-  public BambooValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public BambooValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

@@ -2,8 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptionConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.config.LogzConfig;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 
@@ -15,9 +15,9 @@ import java.util.function.Consumer;
  * Created by brett on 11/2/17
  */
 public class LogzValidation extends AbstractSecretManagerValidation {
-  public LogzValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public LogzValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

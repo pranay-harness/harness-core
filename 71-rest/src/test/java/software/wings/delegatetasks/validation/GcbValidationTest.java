@@ -12,13 +12,16 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.Arrays;
 
 public class GcbValidationTest extends CategoryTest {
-  GcbValidation gcbValidation =
-      new GcbValidation("id", DelegateTask.builder().data(TaskData.builder().taskType("type").build()).build(),
-          delegateConnectionResults -> {});
+  GcbValidation gcbValidation = new GcbValidation("id",
+      DelegateTaskPackage.builder()
+          .delegateTask(DelegateTask.builder().data(TaskData.builder().taskType("type").build()).build())
+          .build(),
+      delegateConnectionResults -> {});
 
   @Test
   @Owner(developers = AGORODETKI)

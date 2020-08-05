@@ -2,7 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -13,9 +13,9 @@ import java.util.function.Consumer;
 public class AlwaysTrueValidation extends AbstractDelegateValidateTask {
   private static final String ALWAYS_TRUE_CRITERIA = "ALWAYS_TRUE_CRITERIA";
 
-  public AlwaysTrueValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public AlwaysTrueValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

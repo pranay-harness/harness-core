@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -125,18 +126,20 @@ public class HostValidationValidationTest extends CategoryTest {
   private HostValidationValidation getHostValidationValidation(
       List<String> hostNames, SettingAttribute connectionSetting) throws IllegalAccessException {
     HostValidationValidation hostValidationValidation = new HostValidationValidation(generateUuid(),
-        DelegateTask.builder()
-            .data(TaskData.builder()
-                      .async(true)
-                      .parameters(new Object[] {
-                          HostValidationTaskParameters.builder()
-                              .hostNames(hostNames)
-                              .encryptionDetails(Lists.newArrayList(EncryptedDataDetail.builder().build()))
-                              .connectionSetting(connectionSetting)
-                              .build(),
-                          null, hostNames})
-                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                      .build())
+        DelegateTaskPackage.builder()
+            .delegateTask(DelegateTask.builder()
+                              .data(TaskData.builder()
+                                        .async(true)
+                                        .parameters(new Object[] {HostValidationTaskParameters.builder()
+                                                                      .hostNames(hostNames)
+                                                                      .encryptionDetails(Lists.newArrayList(
+                                                                          EncryptedDataDetail.builder().build()))
+                                                                      .connectionSetting(connectionSetting)
+                                                                      .build(),
+                                            null, hostNames})
+                                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                        .build())
+                              .build())
             .build(),
         null);
 

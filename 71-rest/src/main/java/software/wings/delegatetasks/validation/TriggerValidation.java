@@ -6,9 +6,9 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitConfig;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
@@ -25,8 +25,8 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
   @Inject private EncryptionService encryptionService;
 
   public TriggerValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

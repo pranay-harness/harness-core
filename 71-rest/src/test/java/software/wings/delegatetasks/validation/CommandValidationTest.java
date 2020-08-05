@@ -11,6 +11,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.command.CommandExecutionContext;
 
 import java.util.List;
@@ -24,8 +25,10 @@ public class CommandValidationTest extends WingsBaseTest {
     commandExecutionContext.setDeploymentType("ECS");
 
     CommandValidation commandValidation = new CommandValidation("1",
-        DelegateTask.builder()
-            .data(TaskData.builder().parameters(new Object[] {"", commandExecutionContext}).build())
+        DelegateTaskPackage.builder()
+            .delegateTask(DelegateTask.builder()
+                              .data(TaskData.builder().parameters(new Object[] {"", commandExecutionContext}).build())
+                              .build())
             .build(),
         null);
 

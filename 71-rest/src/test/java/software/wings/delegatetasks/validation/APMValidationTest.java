@@ -21,6 +21,7 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
@@ -35,7 +36,7 @@ public class APMValidationTest extends WingsBaseTest {
   private APMValidation spyValidation;
   private DelegateConnectionResult connectionResult;
   private String delegateId;
-  private DelegateTask delegateTask;
+  private DelegateTaskPackage delegateTaskPackage;
   private Consumer delegateConnectionConsumer;
   private String baseUrl;
   private String validationUrl;
@@ -47,16 +48,20 @@ public class APMValidationTest extends WingsBaseTest {
   public void setUp() {
     initMocks(this);
     delegateId = generateUuid();
-    delegateTask = DelegateTask.builder()
-                       .uuid(generateUuid())
-                       .data(TaskData.builder().taskType(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name()).build())
-                       .build();
+    delegateTaskPackage =
+        DelegateTaskPackage.builder()
+            .delegateTask(
+                DelegateTask.builder()
+                    .uuid(generateUuid())
+                    .data(TaskData.builder().taskType(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name()).build())
+                    .build())
+            .build();
     delegateConnectionConsumer = Mockito.spy(Consumer.class);
 
     baseUrl = generateUuid();
     validationUrl = generateUuid();
 
-    spyValidation = Mockito.spy(new APMValidation(delegateId, delegateTask, delegateConnectionConsumer));
+    spyValidation = Mockito.spy(new APMValidation(delegateId, delegateTaskPackage, delegateConnectionConsumer));
     connectionResult = DelegateConnectionResult.builder().validated(true).build();
 
     criteria = Collections.singletonList(baseUrl);

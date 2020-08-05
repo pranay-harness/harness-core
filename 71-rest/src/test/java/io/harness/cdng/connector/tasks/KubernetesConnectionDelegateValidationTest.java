@@ -25,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
@@ -44,17 +45,21 @@ public class KubernetesConnectionDelegateValidationTest {
   @InjectMocks
   private KubernetesConnectionDelegateValidation kubernetesConnectionDelegateValidationTask =
       new KubernetesConnectionDelegateValidation(generateUuid(),
-          DelegateTask.builder()
-              .data(
-                  (TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                      .parameters(new Object[] {
-                          KubernetesConnectionTaskParams.builder()
-                              .kubernetesClusterConfig(
-                                  KubernetesClusterConfigDTO.builder()
-                                      .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                      .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
-                                      .build())
-                              .build()})
+          DelegateTaskPackage.builder()
+              .delegateTask(
+                  DelegateTask.builder()
+                      .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                .parameters(new Object[] {
+                                    KubernetesConnectionTaskParams.builder()
+                                        .kubernetesClusterConfig(KubernetesClusterConfigDTO.builder()
+                                                                     .kubernetesCredentialType(
+                                                                         KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                                                     .config(KubernetesDelegateDetailsDTO.builder()
+                                                                                 .delegateName(delegateName)
+                                                                                 .build())
+                                                                     .build())
+                                        .build()})
+                                .build())
                       .build())
               .build(),
           null);
@@ -62,17 +67,21 @@ public class KubernetesConnectionDelegateValidationTest {
   @InjectMocks
   private KubernetesConnectionDelegateValidation kubernetesConnectionDelegateValidationTaskManualCreds =
       new KubernetesConnectionDelegateValidation(generateUuid(),
-          DelegateTask.builder()
-              .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                        .parameters(new Object[] {
-                            KubernetesConnectionTaskParams.builder()
-                                .kubernetesClusterConfig(
-                                    KubernetesClusterConfigDTO.builder()
-                                        .kubernetesCredentialType(KubernetesCredentialType.MANUAL_CREDENTIALS)
-                                        .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).build())
-                                        .build())
-                                .build()})
-                        .build())
+          DelegateTaskPackage.builder()
+              .delegateTask(
+                  DelegateTask.builder()
+                      .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                .parameters(new Object[] {
+                                    KubernetesConnectionTaskParams.builder()
+                                        .kubernetesClusterConfig(
+                                            KubernetesClusterConfigDTO.builder()
+                                                .kubernetesCredentialType(KubernetesCredentialType.MANUAL_CREDENTIALS)
+                                                .config(
+                                                    KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).build())
+                                                .build())
+                                        .build()})
+                                .build())
+                      .build())
               .build(),
           null);
 

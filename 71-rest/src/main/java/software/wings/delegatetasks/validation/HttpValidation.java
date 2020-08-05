@@ -2,8 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -12,9 +12,9 @@ import java.util.function.Consumer;
  * Created by brett on 11/2/17
  */
 public class HttpValidation extends AbstractDelegateValidateTask {
-  public HttpValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public HttpValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

@@ -31,6 +31,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateScope;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
@@ -44,6 +45,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.utils.DelegateTaskUtils;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -325,8 +327,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   private List<String> fetchCriteria(DelegateTask task) {
+    DelegateTaskPackage delegateTaskPackage = DelegateTaskUtils.getDelegateTaskPackage(task);
     // TODO: For now always use the original criteria
-    return TaskType.valueOf(task.getData().getTaskType()).getCriteria(task, injector);
+    return TaskType.valueOf(task.getData().getTaskType()).getCriteria(delegateTaskPackage, injector);
   }
 
   @Override

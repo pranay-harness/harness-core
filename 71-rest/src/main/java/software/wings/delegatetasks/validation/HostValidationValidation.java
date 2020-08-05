@@ -11,11 +11,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
@@ -43,9 +43,9 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
   @Inject private transient TimeLimiter timeLimiter;
   @Inject private transient Clock clock;
 
-  public HostValidationValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public HostValidationValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

@@ -2,8 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.beans.DelegateTask;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTaskParameters;
 
@@ -13,9 +13,9 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class AzureArtifactsValidation extends AbstractDelegateValidateTask {
-  public AzureArtifactsValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public AzureArtifactsValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

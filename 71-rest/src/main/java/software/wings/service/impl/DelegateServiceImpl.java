@@ -208,6 +208,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.DelegateTaskUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -2152,8 +2153,9 @@ public class DelegateServiceImpl implements DelegateService {
         capabilities += ", and " + (executionCapabilities.size() - 4) + " more...";
       }
     } else {
+      DelegateTaskPackage delegateTaskPackage = DelegateTaskUtils.getDelegateTaskPackage(delegateTask);
       capabilities =
-          join(", ", TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTask, injector));
+          join(", ", TaskType.valueOf(delegateTask.getData().getTaskType()).getCriteria(delegateTaskPackage, injector));
     }
 
     String delegates = null, timedoutDelegates = null;

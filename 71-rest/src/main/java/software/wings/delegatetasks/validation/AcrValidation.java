@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -15,9 +15,9 @@ import java.util.function.Consumer;
 public class AcrValidation extends AbstractDelegateValidateTask {
   private static final String ACR_URL = "https://azure.microsoft.com/";
 
-  public AcrValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public AcrValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

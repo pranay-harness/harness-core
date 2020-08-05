@@ -8,10 +8,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.monitoring.v3.MonitoringScopes;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
@@ -33,9 +33,9 @@ import java.util.function.Consumer;
 public class StackDriverValidation extends AbstractSecretManagerValidation {
   @Inject private transient EncryptionService encryptionService;
 
-  public StackDriverValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public StackDriverValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

@@ -4,8 +4,8 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.service.impl.ContainerServiceParams;
@@ -25,8 +25,8 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
   @Inject private GitFetchFilesValidationHelper gitFetchFilesValidationHelper;
 
   public GitFetchFilesValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

@@ -5,7 +5,6 @@ import static java.util.Collections.singletonList;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import io.harness.beans.DelegateTask;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +17,7 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
@@ -32,9 +32,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class APMValidation extends AbstractSecretManagerValidation {
-  public APMValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {
-    super(delegateId, delegateTask, postExecute);
+  public APMValidation(String delegateId, DelegateTaskPackage delegateTaskPackage,
+      Consumer<List<DelegateConnectionResult>> postExecute) {
+    super(delegateId, delegateTaskPackage, postExecute);
   }
 
   @Override

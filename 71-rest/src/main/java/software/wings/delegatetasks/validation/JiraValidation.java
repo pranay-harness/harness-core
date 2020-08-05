@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import io.harness.beans.DelegateTask;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.jira.JiraTaskParameters;
 
 import java.util.ArrayList;
@@ -9,8 +9,8 @@ import java.util.function.Consumer;
 
 public class JiraValidation extends AbstractDelegateValidateTask {
   public JiraValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override

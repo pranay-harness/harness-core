@@ -7,13 +7,13 @@ import static java.util.Collections.singletonList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
@@ -37,8 +37,8 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
   @Inject private transient EncryptionService encryptionService;
 
   public PCFCommandValidation(
-      String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
-    super(delegateId, delegateTask, consumer);
+      String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
+    super(delegateId, delegateTaskPackage, consumer);
   }
 
   @Override
