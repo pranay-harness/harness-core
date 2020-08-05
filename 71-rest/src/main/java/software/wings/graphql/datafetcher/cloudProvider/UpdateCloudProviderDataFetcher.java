@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.checkIfInputIsNotPresent;
-import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 
 import com.google.inject.Inject;
 
@@ -34,12 +34,13 @@ public class UpdateCloudProviderDataFetcher
   @Inject private AzureDataFetcherHelper azureDataFetcherHelper;
   @Inject private AwsDataFetcherHelper awsDataFetcherHelper;
 
+  @Inject
   public UpdateCloudProviderDataFetcher() {
     super(QLUpdateCloudProviderInput.class, QLUpdateCloudProviderPayload.class);
   }
 
   @Override
-  @AuthRule(permissionType = LOGGED_IN)
+  @AuthRule(permissionType = MANAGE_CLOUD_PROVIDERS)
   protected QLUpdateCloudProviderPayload mutateAndFetch(
       QLUpdateCloudProviderInput input, MutationContext mutationContext) {
     String cloudProviderId = input.getCloudProviderId();
@@ -104,7 +105,6 @@ public class UpdateCloudProviderDataFetcher
       default:
         throw new InvalidRequestException("Invalid cloud provider type");
     }
-
     settingAttribute =
         settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);

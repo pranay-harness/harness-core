@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.cloudProvider;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.populateCloudProvider;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -13,7 +14,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLCloudProviderQueryParameters;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProvider;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
 
@@ -23,7 +23,7 @@ public class CloudProviderDataFetcher
   @Inject private SettingsService settingsService;
 
   @Override
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLCloudProvider fetch(QLCloudProviderQueryParameters qlQuery, String accountId) {
     SettingAttribute settingAttribute = null;
 

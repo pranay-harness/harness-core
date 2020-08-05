@@ -9,6 +9,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import com.google.inject.Inject;
+
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -70,7 +72,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Mock private AzureDataFetcherHelper azureDataFetcherHelper;
   @Mock private AwsDataFetcherHelper awsDataFetcherHelper;
 
-  @InjectMocks private UpdateCloudProviderDataFetcher dataFetcher = new UpdateCloudProviderDataFetcher();
+  @InjectMocks @Inject private UpdateCloudProviderDataFetcher dataFetcher;
 
   @Before
   public void setup() throws SQLException {

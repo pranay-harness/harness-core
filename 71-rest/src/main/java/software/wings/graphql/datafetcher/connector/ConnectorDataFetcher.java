@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.connector;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -9,14 +11,13 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLConnectorQueryParameters;
 import software.wings.graphql.schema.type.connector.QLConnector;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 public class ConnectorDataFetcher extends AbstractObjectDataFetcher<QLConnector, QLConnectorQueryParameters> {
   @Inject HPersistence persistence;
 
   @Override
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLConnector fetch(QLConnectorQueryParameters qlQuery, String accountId) {
     SettingAttribute settingAttribute = persistence.get(SettingAttribute.class, qlQuery.getConnectorId());
     if (settingAttribute == null) {

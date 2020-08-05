@@ -359,6 +359,7 @@ public class MigrationList {
         .add(Pair.of(322, UpdateCVTaskIterationMigration.class))
         .add(Pair.of(323, VaultAppRoleRenewalMigration.class))
         .add(Pair.of(324, ServerlessInstanceChangeCollectionNameMigration.class))
+        .add(Pair.of(325, ManageCloudProvidersAndConnectorsPermissionMigration.class))
         .build();
   }
 }

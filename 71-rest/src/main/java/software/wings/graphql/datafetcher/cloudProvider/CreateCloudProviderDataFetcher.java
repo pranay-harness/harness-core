@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.checkIfInputIsNotPresent;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 
 import com.google.inject.Inject;
 
@@ -13,7 +14,6 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderPayload.QLCreateCloudProviderPayloadBuilder;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
@@ -32,13 +32,14 @@ public class CreateCloudProviderDataFetcher
   @Inject private AzureDataFetcherHelper azureDataFetcherHelper;
   @Inject private AwsDataFetcherHelper awsDataFetcherHelper;
 
+  @Inject
   public CreateCloudProviderDataFetcher() {
     super(QLCreateCloudProviderInput.class, QLCreateCloudProviderPayload.class);
   }
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
-  protected QLCreateCloudProviderPayload mutateAndFetch(
+  @AuthRule(permissionType = MANAGE_CLOUD_PROVIDERS)
+  public QLCreateCloudProviderPayload mutateAndFetch(
       QLCreateCloudProviderInput input, MutationContext mutationContext) {
     QLCreateCloudProviderPayloadBuilder builder =
         QLCreateCloudProviderPayload.builder().clientMutationId(input.getClientMutationId());
