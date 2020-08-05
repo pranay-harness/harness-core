@@ -55,7 +55,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     assertThat(perpetualTaskClientContext.getClientParams()).isEqualTo(clientParamMap);
     assertThat(perpetualTaskService.getPerpetualTaskType(taskId)).isEqualTo(DATA_COLLECTION_TASK);
     assertThat(perpetualTaskRecord.getIntervalSeconds()).isEqualTo(60);
-    assertThat(perpetualTaskRecord.getTimeoutMillis()).isEqualTo(Duration.ofDays(1).toMillis());
+    assertThat(perpetualTaskRecord.getTimeoutMillis()).isEqualTo(Duration.ofHours(3).toMillis());
   }
 
   @Test
