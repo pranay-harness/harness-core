@@ -146,6 +146,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EncryptedDataParams.class, 1413);
     kryo.register(SubscriptionData.class, 1414);
     kryo.register(VirtualMachineScaleSetData.class, 1415);
+    kryo.register(InstanceDetails.AZURE_VMSS.class, 1416);
 
     kryo.register(SettingVariableTypes.class, 5131);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);

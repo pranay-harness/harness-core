@@ -23,9 +23,10 @@ public class InstanceDetails {
   private AWS aws;
   private PHYSICAL_HOST physicalHost;
   private K8s k8s;
+  private AZURE_VMSS azureVmss;
   private InstanceType instanceType;
 
-  public enum InstanceType { PCF, AWS, K8s, PHYSICAL_HOST }
+  public enum InstanceType { PCF, AWS, K8s, PHYSICAL_HOST, AZURE_VMSS }
 
   @Value
   @Builder
@@ -65,5 +66,13 @@ public class InstanceDetails {
   public static class PHYSICAL_HOST {
     private String publicDns;
     private String instanceId;
+  }
+
+  @Value
+  @Builder
+  public static class AZURE_VMSS {
+    private String ip;
+    private String instanceId;
+    private String publicDns;
   }
 }

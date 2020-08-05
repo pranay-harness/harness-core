@@ -20,6 +20,7 @@ import java.util.Map;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class AzureVMSSSetupStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
+  private String activityId;
   private String newVirtualMachineScaleSetName;
   private String oldVirtualMachineScaleSetName;
   private Integer newVersion;
@@ -27,7 +28,6 @@ public class AzureVMSSSetupStateExecutionData extends StateExecutionData impleme
   private Integer maxInstances;
   private Integer desiredInstances;
   private ResizeStrategy resizeStrategy;
-  private String activityId;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
