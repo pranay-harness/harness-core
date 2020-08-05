@@ -281,22 +281,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     if (isNotEmpty(updateMap)) {
-      wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), updateMap);
-      entityVersionService.newEntityVersion(serviceVariable.getAppId(), EntityType.CONFIG, serviceVariable.getUuid(),
-          serviceVariable.getEntityId(), serviceVariable.getName(), ChangeType.UPDATED, null);
-      ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
-      if (updatedServiceVariable == null) {
-        return null;
-      }
-
-      yamlPushService.pushYamlChangeSet(updatedServiceVariable.getAccountId(), serviceVariable, updatedServiceVariable,
-          Event.Type.UPDATE, syncFromGit, false);
-      // variables with type ARTIFACT have null value
-      if (isNotEmpty(serviceVariable.getValue())) {
-        serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
-      }
-      executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
-      return updatedServiceVariable;
+      updateFields(serviceVariable, savedServiceVariable, updateMap, syncFromGit);
     }
     return serviceVariable;
   }
@@ -619,5 +604,29 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public void pushServiceVariablesToGit(ServiceVariable serviceVariable) {
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, false, false);
+  }
+
+  private ServiceVariable updateFields(ServiceVariable serviceVariable, ServiceVariable savedServiceVariable,
+      Map<String, Object> updateMap, boolean syncFromGit) {
+    Set<String> fieldsToRemove = new HashSet<>();
+    if (serviceVariable.getType() == TEXT && savedServiceVariable.getEncryptedValue() != null) {
+      fieldsToRemove.add("encryptedValue");
+    }
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), updateMap, fieldsToRemove);
+    entityVersionService.newEntityVersion(serviceVariable.getAppId(), EntityType.CONFIG, serviceVariable.getUuid(),
+        serviceVariable.getEntityId(), serviceVariable.getName(), ChangeType.UPDATED, null);
+    ServiceVariable updatedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
+    if (updatedServiceVariable == null) {
+      return null;
+    }
+
+    yamlPushService.pushYamlChangeSet(updatedServiceVariable.getAccountId(), serviceVariable, updatedServiceVariable,
+        Event.Type.UPDATE, syncFromGit, false);
+    // variables with type ARTIFACT have null value
+    if (isNotEmpty(serviceVariable.getValue())) {
+      serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
+    }
+    executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
+    return updatedServiceVariable;
   }
 }

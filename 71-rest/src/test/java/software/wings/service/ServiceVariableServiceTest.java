@@ -72,6 +72,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -446,7 +447,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariableService.update(variable);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
-            ImmutableMap.of("type", TEXT, "value", SERVICE_VARIABLE.getValue(), "allowedList", new ArrayList<>()));
+            ImmutableMap.of("type", TEXT, "value", SERVICE_VARIABLE.getValue(), "allowedList", new ArrayList<>()),
+            Collections.emptySet());
   }
 
   @Test
@@ -468,8 +470,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(variable);
     verify(wingsPersistence)
-        .updateFields(
-            ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("type", ARTIFACT, "allowedList", allowedList));
+        .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
+            ImmutableMap.of("type", ARTIFACT, "allowedList", allowedList), Collections.emptySet());
   }
 
   /**
