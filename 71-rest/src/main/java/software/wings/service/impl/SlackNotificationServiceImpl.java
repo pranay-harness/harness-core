@@ -39,6 +39,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SlackMessageSender slackMessageSender;
   @Inject private FeatureFlagService featureFlagService;
+  private OkHttpClient client = new OkHttpClient();
 
   public static final String SLACK_WEBHOOK_URL_PREFIX = "https://hooks.slack.com/services/";
   public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
@@ -82,7 +83,6 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
   public void sendJSONMessage(String message, List<String> slackWebhooks) {
     for (String slackWebHook : slackWebhooks) {
       try {
-        OkHttpClient client = new OkHttpClient();
         RequestBody body = RequestBody.create(APPLICATION_JSON, message);
         Request request = new Request.Builder()
                               .url(slackWebHook)
@@ -96,11 +96,13 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
                               .addHeader("Connection", "keep-alive")
                               .addHeader("cache-control", "no-cache")
                               .build();
-        Response response = client.newCall(request).execute();
-        if (!response.isSuccessful()) {
-          String bodyString = (null != response.body()) ? response.body().string() : "null";
 
-          logger.error("Response not Successful. Response body: {}", bodyString);
+        try (Response response = client.newCall(request).execute()) {
+          if (!response.isSuccessful()) {
+            String bodyString = (null != response.body()) ? response.body().string() : "null";
+
+            logger.error("Response not Successful. Response body: {}", bodyString);
+          }
         }
       } catch (Exception e) {
         logger.error("Error sending post data", e);

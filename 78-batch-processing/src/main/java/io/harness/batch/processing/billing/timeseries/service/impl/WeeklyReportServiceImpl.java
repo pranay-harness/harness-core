@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.apache.commons.text.StrSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -464,7 +465,11 @@ public class WeeklyReportServiceImpl {
                            .addHeader("cache-control", "no-cache")
                            .build();
 
-    client.newCall(request1).execute();
+    try (Response response = client.newCall(request1).execute()) {
+      if (!response.isSuccessful()) {
+        logger.error("Slack post request failed. Response code: {}", response.code());
+      }
+    }
     return new RestResponse<>();
   }
 }
