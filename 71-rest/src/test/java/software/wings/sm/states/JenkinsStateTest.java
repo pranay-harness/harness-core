@@ -144,6 +144,8 @@ public class JenkinsStateTest extends CategoryTest {
         .thenReturn(jenkinsExp);
     when(templateExpressionProcessor.resolveTemplateExpression(executionContext, jenkinsExp)).thenReturn(SETTING_NAME);
     when(settingsService.getSettingAttributeByName(ACCOUNT_ID, SETTING_NAME)).thenReturn(settingAttribute);
+    when(settingsService.getFilteredSettingAttributes(any(), any(), any()))
+        .thenReturn(Collections.singletonList(new SettingAttribute()));
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     ExecutionResponse response = jenkinsState.execute(executionContext);
     assertThat(response).isNotNull();
