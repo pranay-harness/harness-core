@@ -39,7 +39,6 @@ import org.mockito.Mock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class ResourceRestraintServiceImplTest extends OrchestrationStepsTest {
   private static final String PLAN = "PLAN";
@@ -133,7 +132,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTest {
     assertThat(savedInstance).isNotNull();
 
     ResourceRestraintInstance updatedInstance =
-        resourceRestraintService.finishActiveInstance(savedInstance.getUuid(), savedInstance.getResourceUnit());
+        resourceRestraintService.finishInstance(savedInstance.getUuid(), savedInstance.getResourceUnit());
     assertThat(updatedInstance).isNotNull();
     assertThat(updatedInstance.getState()).isEqualTo(FINISHED);
   }
@@ -155,29 +154,9 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTest {
     ResourceRestraintInstance savedInstance = resourceRestraintService.save(instance);
     assertThat(savedInstance).isNotNull();
 
-    assertThatThrownBy(
-        () -> resourceRestraintService.finishActiveInstance(generateUuid(), savedInstance.getResourceUnit()))
+    assertThatThrownBy(() -> resourceRestraintService.finishInstance(generateUuid(), savedInstance.getResourceUnit()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith("Cannot find ResourceRestraintInstance with id");
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  @RealMongo
-  public void shouldUpdateRunningConstraints() {
-    ResourceRestraintInstance instance = saveInstance(ACTIVE, PLAN);
-
-    when(planExecutionService.get(any())).thenReturn(PlanExecution.builder().status(Status.SUCCEEDED).build());
-
-    Set<String> constraintsIds = resourceRestraintService.updateRunningConstraints(
-        instance.getReleaseEntityType(), instance.getReleaseEntityId());
-
-    assertThat(constraintsIds).isNotEmpty();
-
-    Optional<ResourceRestraintInstance> updatedInstance = restraintInstanceRepository.findById(instance.getUuid());
-    assertThat(updatedInstance.isPresent()).isTrue();
-    assertThat(updatedInstance.get().getState()).isEqualTo(FINISHED);
   }
 
   @Test

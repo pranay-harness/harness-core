@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
@@ -38,6 +39,7 @@ public class ResourceRestraintFacilitator implements Facilitator {
   @Inject private ResourceRestraintService resourceRestraintService;
   @Inject private RestraintService<? extends ResourceRestraint> restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
+  @Inject private EngineExpressionService engineExpressionService;
 
   @Override
   public FacilitatorResponse facilitate(Ambiance ambiance, StepParameters stepParameters,
@@ -56,8 +58,8 @@ public class ResourceRestraintFacilitator implements Facilitator {
           stepParams.getHoldingScope().getScope(), getReleaseEntityId(stepParams, ambiance.getPlanExecutionId()));
     }
 
-    // TODO render restraint unit
-    ConstraintUnit renderedResourceUnit = new ConstraintUnit(stepParams.getResourceUnit());
+    ConstraintUnit renderedResourceUnit =
+        new ConstraintUnit(engineExpressionService.renderExpression(ambiance, stepParams.getResourceUnit()));
 
     if (permits <= 0) {
       return responseBuilder.executionMode(ExecutionMode.SYNC).build();

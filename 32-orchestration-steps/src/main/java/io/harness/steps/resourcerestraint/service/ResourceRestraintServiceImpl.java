@@ -76,7 +76,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
   }
 
   @Override
-  public ResourceRestraintInstance finishActiveInstance(String uuid, String resourceUnit) {
+  public ResourceRestraintInstance finishInstance(String uuid, String resourceUnit) {
     ResourceRestraintInstance instance =
         restraintInstanceRepository
             .findByUuidAndResourceUnitAndStateIn(uuid, resourceUnit, Lists.newArrayList(ACTIVE, BLOCKED))
@@ -85,27 +85,6 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
 
     instance.setState(FINISHED);
     return save(instance);
-  }
-
-  @Override
-  public Set<String> updateRunningConstraints(String releaseEntityType, String releaseEntityId) {
-    Query query = query(where(ResourceRestraintInstanceKeys.state).in(ACTIVE, BLOCKED));
-
-    if (releaseEntityType != null && releaseEntityId != null) {
-      query.addCriteria(
-          new Criteria().andOperator(where(ResourceRestraintInstanceKeys.releaseEntityType).is(releaseEntityType),
-              where(ResourceRestraintInstanceKeys.releaseEntityId).is(releaseEntityId)));
-    }
-
-    Set<String> constraintIds = new HashSet<>();
-    List<ResourceRestraintInstance> instances = mongoTemplate.find(query, ResourceRestraintInstance.class);
-    for (ResourceRestraintInstance instance : instances) {
-      if (updateActiveConstraintsForInstance(instance)) {
-        constraintIds.add(instance.getResourceRestraintId());
-      }
-    }
-
-    return constraintIds;
   }
 
   @Override
@@ -125,8 +104,8 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
     } else {
       try {
         NodeExecution nodeExecution = nodeExecutionService.getByPlanNodeUuid(
-            ResourceRestraintService.planNodeIdFromReleaseEntityId(releaseEntityId),
-            ResourceRestraintService.planExecutionIdFromReleaseEntityId(releaseEntityId));
+            ResourceRestraintService.getSetupNodeIdFromReleaseEntityId(releaseEntityId),
+            ResourceRestraintService.getPlanExecutionIdFromReleaseEntityId(releaseEntityId));
         finished = nodeExecution != null
             && (Status.finalStatuses().contains(nodeExecution.getStatus())
                    || DISCONTINUING == nodeExecution.getStatus());

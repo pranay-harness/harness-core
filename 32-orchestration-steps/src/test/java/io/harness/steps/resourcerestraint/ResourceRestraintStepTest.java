@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.Consumer;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.rule.Owner;
@@ -44,10 +46,12 @@ import java.util.Collections;
 public class ResourceRestraintStepTest extends OrchestrationStepsTest {
   private static final String CLAIMANT_ID = generateUuid();
   private static final String RESOURCE_RESTRAINT_ID = generateUuid();
+  private static final String RESOURCE_UNIT = generateUuid();
   private static final HoldingScope HOLDING_SCOPE = HoldingScopeBuilder.aPlan().build();
 
   @Mock private ResourceRestraintService resourceRestraintService;
   @Mock private RestraintService<? extends ResourceRestraint> restraintService;
+  @Mock private EngineExpressionService engineExpressionService;
   @Inject @InjectMocks private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject @InjectMocks private ResourceRestraintStep resourceRestraintStep;
 
@@ -62,6 +66,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
         .when(resourceRestraintService)
         .createAbstraction(any());
     doReturn(ResourceRestraintInstance.builder().build()).when(resourceRestraintService).save(any());
+    when(engineExpressionService.renderExpression(any(), any())).thenReturn(RESOURCE_UNIT);
   }
 
   @Test
@@ -70,7 +75,6 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
   public void shouldTestExecuteAsync() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    String resourceUnit = generateUuid();
     HoldingScope holdingScope = HoldingScopeBuilder.aPlan().build();
     Ambiance ambiance =
         Ambiance.builder()
@@ -80,7 +84,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
-                                                         .resourceUnit(resourceUnit)
+                                                         .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(holdingScope)
                                                          .permits(1)
@@ -107,7 +111,6 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
   public void shouldTestExecuteAsync_InvalidRequestException() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    String resourceUnit = generateUuid();
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
@@ -116,7 +119,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
-                                                         .resourceUnit(resourceUnit)
+                                                         .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
@@ -138,7 +141,6 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
   public void shouldTestExecuteSync() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    String resourceUnit = generateUuid();
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
@@ -147,7 +149,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
-                                                         .resourceUnit(resourceUnit)
+                                                         .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
@@ -170,7 +172,6 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
   public void shouldTestExecuteSync_InvalidRequestException() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    String resourceUnit = generateUuid();
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
@@ -179,7 +180,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
-                                                         .resourceUnit(resourceUnit)
+                                                         .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
@@ -206,7 +207,6 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
   public void shouldTestHandleAsyncResponse() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    String resourceUnit = generateUuid();
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
@@ -214,7 +214,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
-                                                         .resourceUnit(resourceUnit)
+                                                         .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
@@ -238,7 +238,6 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
   public void shouldHandleAbort() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    String resourceUnit = generateUuid();
     Ambiance ambiance =
         Ambiance.builder()
             .planExecutionId(generateUuid())
@@ -246,20 +245,49 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTest {
             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
-                                                         .resourceUnit(resourceUnit)
+                                                         .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
                                                          .claimantId(CLAIMANT_ID)
                                                          .build();
 
-    when(resourceRestraintService.updateRunningConstraints(any(), any())).thenReturn(Collections.emptySet());
-    doNothing().when(resourceRestraintService).updateBlockedConstraints(any());
+    when(resourceRestraintService.finishInstance(any(), any())).thenReturn(ResourceRestraintInstance.builder().build());
 
-    resourceRestraintStep.handleAbort(ambiance, stepParameters, null);
+    resourceRestraintStep.handleAbort(
+        ambiance, stepParameters, AsyncExecutableResponse.builder().callbackId(generateUuid()).build());
 
-    verify(resourceRestraintService).updateRunningConstraints(any(), any());
-    verify(resourceRestraintService).updateBlockedConstraints(any());
+    verify(resourceRestraintService).finishInstance(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldHandleAbort_ThrowException() {
+    String uuid = generateUuid();
+    String planNodeId = generateUuid();
+    Ambiance ambiance =
+        Ambiance.builder()
+            .planExecutionId(generateUuid())
+            .levels(Collections.singletonList(Level.builder().runtimeId(uuid).setupId(planNodeId).build()))
+            .build();
+    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
+                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+                                                         .resourceUnit(RESOURCE_UNIT)
+                                                         .acquireMode(AcquireMode.ACCUMULATE)
+                                                         .holdingScope(HOLDING_SCOPE)
+                                                         .permits(1)
+                                                         .claimantId(CLAIMANT_ID)
+                                                         .build();
+
+    assertThatThrownBy(()
+                           -> resourceRestraintStep.handleAbort(
+                               ambiance, stepParameters, AsyncExecutableResponse.builder().callbackId(null).build()))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessageStartingWith("CallbackId should not be null in handleAbort() for nodeExecution with id");
+
+    verify(resourceRestraintService, never()).finishInstance(any(), any());
+    verify(resourceRestraintService, never()).finishInstance(any(), any());
   }
 
   private <T extends ResourceRestraint> T getMockedResourceRestraint() {

@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.plan.Plan;
 import io.harness.presentation.Graph;
 
 import java.io.IOException;
@@ -45,6 +47,8 @@ public interface CustomExecutionService {
   PlanExecution executeMultipleBarriersPlan();
 
   PlanExecution executeResourceRestraintPlan();
+
+  PlanExecution executeResourceRestraintPlanForFunctionalTest(Plan plan, EmbeddedUser embeddedUser);
 
   PlanExecution executeResourceRestraintWithWaitPlan();
 
