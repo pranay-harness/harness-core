@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
+import software.wings.security.encryption.EncryptedData;
 
 import java.io.IOException;
 
@@ -58,8 +59,8 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.getSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    EncryptedDataDTO returnedEncryptedData =
-        ngSecretService.getSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
+    EncryptedData returnedEncryptedData =
+        ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
     assertThat(returnedEncryptedData).isNotNull();
     assertThat(returnedEncryptedData.getName()).isEqualTo(SECRET_NAME);
   }
@@ -92,7 +93,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.getSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
+      ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
     } catch (SecretManagementClientException sme) {
       exceptionThrown = true;
       assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -110,7 +111,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.getSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
+      ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
     } catch (SecretManagementClientException sme) {
       exceptionThrown = true;
       assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -131,9 +132,9 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.createSecret(any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    EncryptedDataDTO responseDTO = ngSecretService.createSecret(randomSecretText);
-    assertThat(responseDTO).isNotNull();
-    assertThat(responseDTO).isEqualTo(dto);
+    EncryptedData savedData = ngSecretService.create(randomSecretText);
+    assertThat(savedData).isNotNull();
+    assertThat(savedData.getName()).isEqualTo(dto.getName());
   }
 
   @Test
@@ -164,7 +165,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.createSecret(randomSecretText);
+      ngSecretService.create(randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -184,7 +185,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.createSecret(randomSecretText);
+      ngSecretService.create(randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -204,8 +205,8 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    Boolean returnedResult = ngSecretService.updateSecret(
-        ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
+    Boolean returnedResult =
+        ngSecretService.update(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
     assertThat(returnedResult).isNotNull();
     assertThat(returnedResult).isEqualTo(true);
   }
@@ -238,8 +239,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.updateSecret(
-          ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
+      ngSecretService.update(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -259,8 +259,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.updateSecret(
-          ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
+      ngSecretService.update(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -279,8 +278,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.deleteSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    Boolean returnedResult =
-        ngSecretService.deleteSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
+    Boolean returnedResult = ngSecretService.delete(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
     assertThat(returnedResult).isNotNull();
     assertThat(returnedResult).isEqualTo(true);
   }
@@ -312,7 +310,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.deleteSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
+      ngSecretService.delete(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -331,7 +329,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.deleteSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
+      ngSecretService.delete(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);

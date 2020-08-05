@@ -1,5 +1,15 @@
 package io.harness.secretmanagerclient.remote;
 
+import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.DESCRIPTION_KEY;
+import static io.harness.secretmanagerclient.NGConstants.FILE_KEY;
+import static io.harness.secretmanagerclient.NGConstants.IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.NAME_KEY;
+import static io.harness.secretmanagerclient.NGConstants.ORG_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PROJECT_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.SECRET_MANAGER_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.TAGS_KEY;
+
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
@@ -12,28 +22,44 @@ import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.kryo.KryoRequest;
 import io.harness.serializer.kryo.KryoResponse;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 import java.util.List;
 
 public interface SecretManagerClient {
-  String ACCOUNT_ID_KEY = "accountId";
-  String ACCOUNT_IDENTIFIER_KEY = "accountIdentifier";
-  String ORG_IDENTIFIER_KEY = "orgIdentifier";
-  String PROJECT_IDENTIFIER_KEY = "projectIdentifier";
-
   String SECRETS_API = "/api/ng/secrets";
+  String SECRET_FILES_API = "/api/ng/secret-files";
   String SECRET_MANAGERS_API = "/api/ng/secret-managers";
 
   // create secret
   @POST(SECRETS_API) Call<RestResponse<EncryptedDataDTO>> createSecret(@Body SecretTextCreateDTO secretText);
+
+  // create secret file
+  @Multipart
+  @POST(SECRET_FILES_API)
+  Call<RestResponse<EncryptedDataDTO>> createSecretFile(@Part(NAME_KEY) RequestBody name,
+      @Part(TAGS_KEY) RequestBody tags, @Part(DESCRIPTION_KEY) RequestBody description,
+      @Part(ACCOUNT_IDENTIFIER_KEY) RequestBody accountIdentifier, @Part(ORG_IDENTIFIER_KEY) RequestBody orgIdentifier,
+      @Part(PROJECT_IDENTIFIER_KEY) RequestBody projectIdentifier, @Part(IDENTIFIER_KEY) RequestBody identifier,
+      @Part(SECRET_MANAGER_IDENTIFIER_KEY) RequestBody secretManagerIdentifier, @Part(FILE_KEY) RequestBody file);
+
+  // update secret file
+  @Multipart
+  @PUT(SECRET_FILES_API + "/{identifier}")
+  Call<RestResponse<Boolean>> updateSecretFile(@Path(IDENTIFIER_KEY) String identifier,
+      @Part(TAGS_KEY) RequestBody tags, @Part(DESCRIPTION_KEY) RequestBody description,
+      @Part(ACCOUNT_IDENTIFIER_KEY) RequestBody accountIdentifier, @Part(ORG_IDENTIFIER_KEY) RequestBody orgIdentifier,
+      @Part(PROJECT_IDENTIFIER_KEY) RequestBody projectIdentifier, @Part(FILE_KEY) RequestBody file);
 
   // get secret
   @GET(SECRETS_API + "/{identifier}")
@@ -45,10 +71,10 @@ public interface SecretManagerClient {
   @GET(SECRETS_API)
   Call<RestResponse<PageResponse<EncryptedDataDTO>>> listSecrets(
       @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
-      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier, @Query("type") SecretType secretType);
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier, @Query("type") SecretType secretType,
+      @Query("searchTerm") String searchTerm);
 
   // update secret
-  // TODO{phoenikx} take updatesecrettextdto
   @PUT(SECRETS_API + "/{identifier}")
   Call<RestResponse<Boolean>> updateSecret(@Path("identifier") String identifier,
       @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,

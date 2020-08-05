@@ -17,7 +17,7 @@ public interface NGSecretService {
   PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       SettingVariableTypes settingVariableTypes, String limit, String offset);
 
-  Optional<EncryptedData> getSecretText(
+  Optional<EncryptedData> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   boolean updateSecretText(EncryptedData encryptedData, String secretValue);
@@ -26,4 +26,7 @@ public interface NGSecretService {
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier);
 
   List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity object);
+
+  List<EncryptedData> searchSecrets(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      SettingVariableTypes type, String searchTerm);
 }

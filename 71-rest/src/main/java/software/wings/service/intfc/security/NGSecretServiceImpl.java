@@ -21,6 +21,7 @@ import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
@@ -42,6 +43,7 @@ public class NGSecretServiceImpl implements NGSecretService {
   private static final String ORG_IDENTIFIER_KEY =
       EncryptedDataKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.orgIdentifier;
   private static final String IDENTIFIER_KEY = EncryptedDataKeys.ngMetadata + "." + NGMetadataKeys.identifier;
+  private static final String TAGS_KEY = EncryptedDataKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.tags;
   private static final String PROJECT_IDENTIFIER_KEY =
       EncryptedDataKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.projectIdentifier;
 
@@ -66,7 +68,7 @@ public class NGSecretServiceImpl implements NGSecretService {
   public EncryptedData createSecretText(@NotNull EncryptedData data, String secretValue) {
     NGEncryptedDataMetadata metadata = data.getNgMetadata();
     if (Optional.ofNullable(metadata).isPresent()) {
-      boolean duplicate = getSecretText(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
+      boolean duplicate = get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
           metadata.getProjectIdentifier(), metadata.getIdentifier())
                               .isPresent();
       if (duplicate) {
@@ -108,7 +110,7 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   @Override
-  public Optional<EncryptedData> getSecretText(
+  public Optional<EncryptedData> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     return Optional.ofNullable(wingsPersistence.createQuery(EncryptedData.class)
                                    .field(ACCOUNT_IDENTIFIER_KEY)
@@ -146,7 +148,7 @@ public class NGSecretServiceImpl implements NGSecretService {
   public boolean deleteSecretText(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Optional<EncryptedData> encryptedDataOptional =
-        getSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return encryptedDataOptional
         .filter(encryptedData -> wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid()))
         .isPresent();
@@ -184,7 +186,7 @@ public class NGSecretServiceImpl implements NGSecretService {
           String orgIdentifier = getOrgIdentifier(ngAccess.getOrgIdentifier(), secretScope);
           String projectIdentifier = getProjectIdentifier(ngAccess.getProjectIdentifier(), secretScope);
           Optional<EncryptedData> encryptedDataOptional =
-              getSecretText(accountIdentifier, orgIdentifier, projectIdentifier, secretIdentifier);
+              get(accountIdentifier, orgIdentifier, projectIdentifier, secretIdentifier);
           if (encryptedDataOptional.isPresent()
               && Optional.ofNullable(encryptedDataOptional.get().getNgMetadata()).isPresent()) {
             EncryptedData encryptedData = encryptedDataOptional.get();
@@ -210,5 +212,30 @@ public class NGSecretServiceImpl implements NGSecretService {
       }
     }
     return encryptedDataDetails;
+  }
+
+  private Query<EncryptedData> getSearchQuery(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      SettingVariableTypes type, String searchTerm) {
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                     .field(ACCOUNT_IDENTIFIER_KEY)
+                                     .equal(accountIdentifier)
+                                     .field(ORG_IDENTIFIER_KEY)
+                                     .equal(orgIdentifier)
+                                     .field(PROJECT_IDENTIFIER_KEY)
+                                     .equal(projectIdentifier);
+    if (type != null) {
+      query = query.field(EncryptedDataKeys.type).equal(type);
+    }
+    query.or(query.criteria(EncryptedDataKeys.name).containsIgnoreCase(searchTerm),
+        query.criteria(IDENTIFIER_KEY).containsIgnoreCase(searchTerm),
+        query.criteria(TAGS_KEY).containsIgnoreCase(searchTerm));
+    return query;
+  }
+
+  @Override
+  public List<EncryptedData> searchSecrets(@NotNull String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, SettingVariableTypes type, String searchTerm) {
+    Query<EncryptedData> query = getSearchQuery(accountIdentifier, orgIdentifier, projectIdentifier, type, searchTerm);
+    return query.asList();
   }
 }

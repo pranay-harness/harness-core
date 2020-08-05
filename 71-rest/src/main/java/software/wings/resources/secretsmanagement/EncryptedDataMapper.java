@@ -67,6 +67,30 @@ public class EncryptedDataMapper {
     return encryptedData;
   }
 
+  public static EncryptedData fromDTO(EncryptedDataDTO dto) {
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .name(dto.getName())
+                                      .path(dto.getPath())
+                                      .accountId(dto.getAccountIdentifier())
+                                      .type(dto.getType())
+                                      .enabled(true)
+                                      .build();
+    NGEncryptedDataMetadata metadata = NGEncryptedDataMetadata.builder()
+                                           .identifier(dto.getIdentifier())
+                                           .accountIdentifier(dto.getAccountIdentifier())
+                                           .orgIdentifier(dto.getOrgIdentifier())
+                                           .projectIdentifier(dto.getProjectIdentifier())
+                                           .secretManagerIdentifier(dto.getSecretManagerIdentifier())
+                                           .secretManagerName(dto.getSecretManagerName())
+                                           .description(dto.getDescription())
+                                           .tags(dto.getTags())
+                                           .build();
+    encryptedData.setNgMetadata(metadata);
+    encryptedData.setFileSize(dto.getFileSize());
+    encryptedData.setLastUpdatedAt(dto.getLastUpdatedAt());
+    return encryptedData;
+  }
+
   public static EncryptedData applyUpdate(SecretTextUpdateDTO dto, EncryptedData encryptedData) {
     if (dto == null || encryptedData == null) {
       return null;

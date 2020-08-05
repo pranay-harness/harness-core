@@ -1,5 +1,10 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.ORG_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PROJECT_IDENTIFIER_KEY;
+import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
+
 import com.google.inject.Inject;
 
 import io.harness.ng.core.dto.ErrorDTO;
@@ -17,8 +22,11 @@ import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
+import software.wings.resources.secretsmanagement.EncryptedDataMapper;
+import software.wings.security.encryption.EncryptedData;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -42,56 +50,55 @@ import javax.ws.rs.QueryParam;
     })
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NGSecretResource {
-  private static final String ACCOUNT_IDENTIFIER = "accountIdentifier";
-  private static final String ORG_IDENTIFIER = "orgIdentifier";
-  private static final String PROJECT_IDENTIFIER = "projectIdentifier";
   private final NGSecretService ngSecretService;
 
   @POST
   @ApiOperation(value = "Create a secret text", nickname = "createSecretText")
   public ResponseDTO<EncryptedDataDTO> create(SecretTextCreateDTO secretText) {
-    return ResponseDTO.newResponse(ngSecretService.createSecret(secretText));
+    return ResponseDTO.newResponse(toDTO(ngSecretService.create(secretText)));
   }
 
   @GET
   @ApiOperation(value = "Get secrets for an account", nickname = "listSecrets")
-  public ResponseDTO<List<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier,
-      @QueryParam("type") SecretType secretType) {
-    List<EncryptedDataDTO> secrets =
-        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, secretType);
-    return ResponseDTO.newResponse(secrets);
+  public ResponseDTO<List<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier, @QueryParam("type") SecretType secretType,
+      @QueryParam("searchTerm") String searchTerm) {
+    List<EncryptedData> secrets =
+        ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm);
+    return ResponseDTO.newResponse(secrets.stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList()));
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets secret", nickname = "getSecretText")
   public ResponseDTO<EncryptedDataDTO> get(@PathParam("identifier") @NotEmpty String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
-    EncryptedDataDTO encryptedData =
-        ngSecretService.getSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return ResponseDTO.newResponse(encryptedData);
+      @QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier) {
+    EncryptedData encryptedData = ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return ResponseDTO.newResponse(toDTO(encryptedData));
   }
 
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update a secret text", nickname = "updateSecretText")
   public ResponseDTO<Boolean> updateSecret(@PathParam("identifier") @NotEmpty String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier,
-      @Body @Valid SecretTextUpdateDTO dto) {
+      @QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier, @Body @Valid SecretTextUpdateDTO dto) {
     return ResponseDTO.newResponse(
-        ngSecretService.updateSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto));
+        ngSecretService.update(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a secret text", nickname = "deleteSecretText")
   public ResponseDTO<Boolean> deleteSecret(@PathParam("identifier") @NotEmpty String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
+      @QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
-        ngSecretService.deleteSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+        ngSecretService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 }
