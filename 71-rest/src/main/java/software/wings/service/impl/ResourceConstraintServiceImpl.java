@@ -43,6 +43,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IteratorUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -282,6 +283,17 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       }
     }
     return units.stream().map(ConstraintUnit::new).collect(toList());
+  }
+
+  @Override
+  public List<ResourceConstraint> getConstraintsIn(Set<String> constraintIds) {
+    try (HIterator<ResourceConstraint> iterator =
+             new HIterator<>(wingsPersistence.createQuery(ResourceConstraint.class, excludeAuthority)
+                                 .field(ResourceConstraintKeys.uuid)
+                                 .in(constraintIds)
+                                 .fetch())) {
+      return IteratorUtils.toList(iterator.iterator());
+    }
   }
 
   @Override

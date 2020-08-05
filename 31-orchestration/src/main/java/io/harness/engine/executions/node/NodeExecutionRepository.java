@@ -11,6 +11,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 @OwnedBy(CDC)
 @HarnessRepo
@@ -28,6 +29,8 @@ public interface NodeExecutionRepository extends CrudRepository<NodeExecution, S
 
   List<NodeExecution> findByAmbiancePlanExecutionIdAndParentIdInAndStatusIn(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
+
+  Optional<NodeExecution> findByNodeUuidAndAmbiancePlanExecutionId(String uuid, String planExecutionId);
 
   List<NodeExecution> findByAmbiancePlanExecutionIdAndNodeStepTypeAndNodeIdentifier(
       String planExecutionId, StepType stepType, String identifier);

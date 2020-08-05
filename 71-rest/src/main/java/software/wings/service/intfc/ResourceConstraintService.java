@@ -7,7 +7,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintRegistry;
-import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
+import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.validation.Update;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResourceConstraint;
@@ -21,7 +21,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
-public interface ResourceConstraintService extends OwnedByAccount, ResourceRestraintService<ResourceConstraint> {
+public interface ResourceConstraintService extends OwnedByAccount, RestraintService<ResourceConstraint> {
   PageResponse<ResourceConstraint> list(PageRequest<ResourceConstraint> pageRequest);
 
   @ValidationGroups(Update.class) void update(@Valid ResourceConstraint resourceConstraint);

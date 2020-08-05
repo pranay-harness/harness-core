@@ -44,6 +44,10 @@ public interface CustomExecutionService {
 
   PlanExecution executeMultipleBarriersPlan();
 
+  PlanExecution executeResourceRestraintPlan();
+
+  PlanExecution executeResourceRestraintWithWaitPlan();
+
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);

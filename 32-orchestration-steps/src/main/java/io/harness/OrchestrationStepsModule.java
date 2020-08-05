@@ -11,6 +11,10 @@ import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.steps.barriers.service.BarrierService;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistryImpl;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintServiceImpl;
 
 public class OrchestrationStepsModule extends AbstractModule {
   private static OrchestrationStepsModule instance;
@@ -25,6 +29,8 @@ public class OrchestrationStepsModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(BarrierService.class).to(BarrierServiceImpl.class);
+    bind(ResourceRestraintService.class).to(ResourceRestraintServiceImpl.class);
+    bind(ResourceRestraintRegistry.class).to(ResourceRestraintRegistryImpl.class);
 
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);

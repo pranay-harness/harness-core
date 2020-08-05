@@ -16,6 +16,8 @@ import java.util.function.Consumer;
 public interface NodeExecutionService {
   NodeExecution get(String nodeExecutionId);
 
+  NodeExecution getByPlanNodeUuid(String planNodeUuid, String planExecutionId);
+
   List<NodeExecution> fetchNodeExecutions(String planExecutionId);
 
   List<NodeExecution> fetchNodeExecutionsWithoutOldRetries(String planExecutionId);

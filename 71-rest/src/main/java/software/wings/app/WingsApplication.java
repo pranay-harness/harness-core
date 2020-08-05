@@ -121,6 +121,7 @@ import io.harness.service.DelegateServiceModule;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.stream.GuiceObjectFactory;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
@@ -828,6 +829,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
     injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
+    injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {
