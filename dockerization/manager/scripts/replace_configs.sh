@@ -347,6 +347,10 @@ if [[ "" != "$ALLOW_TRIAL_REGISTRATION" ]]; then
   yq write -i $CONFIG_FILE trialRegistrationAllowed "$ALLOW_TRIAL_REGISTRATION"
 fi
 
+if [[ "" != "$NG_MANAGER_AVAILABLE" ]]; then
+  yq write -i $CONFIG_FILE ngManagerAvailable "$NG_MANAGER_AVAILABLE"
+fi
+
 if [[ "" != "$ALLOW_TRIAL_REGISTRATION_FOR_BUGATHON" ]]; then
   yq write -i $CONFIG_FILE trialRegistrationAllowedForBugathon "$ALLOW_TRIAL_REGISTRATION_FOR_BUGATHON"
 fi
