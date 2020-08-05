@@ -63,6 +63,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -102,6 +103,11 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   @Attributes(title = "Wait interval before execution (s)")
   public Integer getWaitInterval() {
     return super.getWaitInterval();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   @Attributes(title = "Execute with previous steps")
@@ -244,10 +250,12 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
     handleSweepingOutput(sweepingOutputService, context, gcbExecutionData.withDelegateResponse(delegateResponse));
 
-    return ExecutionResponse.builder()
-        .executionStatus(delegateResponse.getStatus())
-        .stateExecutionData(gcbExecutionData)
-        .build();
+    ExecutionResponseBuilder responseBuilder =
+        ExecutionResponse.builder().executionStatus(delegateResponse.getStatus()).stateExecutionData(gcbExecutionData);
+    if (delegateResponse.getErrorMsg() != null) {
+      responseBuilder.errorMessage(delegateResponse.errorMsg);
+    }
+    return responseBuilder.build();
   }
 
   protected ExecutionResponse startPollTask(ExecutionContext context, GcbDelegateResponse delegateResponse) {
@@ -268,22 +276,33 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    GcbTaskParams params =
-        GcbTaskParams.builder()
-            .type(CANCEL)
-            .gcpConfig(
-                (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
-                    .getValue())
-            .accountId(context.getAccountId())
-            .buildId(String.valueOf(context.getStateExecutionData().getExecutionDetails().get("buildNo").getValue()))
-            .encryptedDataDetails(secretManager.getEncryptionDetails(
-                (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
-                    .getValue(),
-                context.getAppId(), context.getWorkflowExecutionId()))
-            .build();
-    delegateService.queueTask(
-        delegateTaskOf(((GcbExecutionData) context.getStateExecutionData()).getActivityId(), context, params));
-    ((GcbExecutionData) context.getStateExecutionData()).setBuildStatus(CANCELLED);
+    if (!(context.getStateExecutionData() instanceof GcbExecutionData)) {
+      context.getStateExecutionData().setErrorMsg(
+          "Google Cloud Build step has been aborted while waiting before execution");
+    } else if (((GcbExecutionData) context.getStateExecutionData()).getBuildStatus() == null) {
+      context.getStateExecutionData().setErrorMsg("Google Cloud Build step has been aborted before build started");
+    } else {
+      GcbTaskParams params =
+          GcbTaskParams.builder()
+              .type(CANCEL)
+              .gcpConfig(
+                  (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
+                      .getValue())
+              .accountId(context.getAccountId())
+              .buildId(String.valueOf(context.getStateExecutionData().getExecutionDetails().get("buildNo").getValue()))
+              .encryptedDataDetails(secretManager.getEncryptionDetails(
+                  (GcpConfig) settingsService.get(((GcbExecutionData) context.getStateExecutionData()).getGcpConfigId())
+                      .getValue(),
+                  context.getAppId(), context.getWorkflowExecutionId()))
+              .build();
+      delegateService.queueTask(
+          delegateTaskOf(((GcbExecutionData) context.getStateExecutionData()).getActivityId(), context, params));
+      ((GcbExecutionData) context.getStateExecutionData()).setBuildStatus(CANCELLED);
+      ((GcbExecutionData) context.getStateExecutionData())
+          .setErrorMsg("Build with number: "
+              + (context.getStateExecutionData().getExecutionDetails().get("buildNo").getValue()
+                    + " has been successfully cancelled"));
+    }
   }
 
   @NotNull
@@ -317,18 +336,23 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   @EqualsAndHashCode(callSuper = false)
   public static final class GcbDelegateResponse implements DelegateTaskNotifyResponseData {
     @NotNull private final ExecutionStatus status;
-    @NotNull private final GcbBuildDetails build;
+    @Nullable private final GcbBuildDetails build;
     @NotNull private final GcbTaskParams params;
     @Nullable private DelegateMetaInfo delegateMetaInfo;
+    @Nullable private final String errorMsg;
 
     @NotNull
     public static GcbDelegateResponse gcbDelegateResponseOf(
         @NotNull final GcbTaskParams params, @NotNull final GcbBuildDetails build) {
-      return new GcbDelegateResponse(build.getStatus().getExecutionStatus(), build, params);
+      return new GcbDelegateResponse(build.getStatus().getExecutionStatus(), build, params, null);
+    }
+
+    public static GcbDelegateResponse failedGcbTaskResponse(@NotNull final GcbTaskParams params, String errorMsg) {
+      return new GcbDelegateResponse(FAILED, null, params, errorMsg);
     }
 
     public boolean isWorking() {
-      return build.isWorking();
+      return build != null && build.isWorking();
     }
   }
 

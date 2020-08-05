@@ -56,22 +56,24 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
     name = params.getBuildName();
     buildNo = params.getBuildId();
     buildUrl = GCB_URL + buildNo;
-    GcbBuildDetails buildDetails = delegateResponse.getBuild();
-    tags = buildDetails.getTags();
-    buildStatus = buildDetails.getStatus();
-    createTime = buildDetails.getCreateTime();
-    substitutions = buildDetails.getSubstitutions();
-    logUrl = buildDetails.getLogUrl();
     if (delegateResponse.getParams().getGcbOptions() != null) {
       gcpConfigId = delegateResponse.getParams().getGcbOptions().getGcpConfigId();
     }
-    final GcbArtifacts gcbArtifacts = buildDetails.getArtifacts();
-    if (gcbArtifacts != null) {
-      images = gcbArtifacts.getImages();
-      final GcbArtifactObjects artifactObjects = gcbArtifacts.getObjects();
-      if (artifactObjects != null) {
-        artifactLocation = artifactObjects.getLocation();
-        this.artifacts = artifactObjects.getPaths();
+    GcbBuildDetails buildDetails = delegateResponse.getBuild();
+    if (buildDetails != null) {
+      tags = buildDetails.getTags();
+      buildStatus = buildDetails.getStatus();
+      createTime = buildDetails.getCreateTime();
+      substitutions = buildDetails.getSubstitutions();
+      logUrl = buildDetails.getLogUrl();
+      final GcbArtifacts gcbArtifacts = buildDetails.getArtifacts();
+      if (gcbArtifacts != null) {
+        images = gcbArtifacts.getImages();
+        final GcbArtifactObjects artifactObjects = gcbArtifacts.getObjects();
+        if (artifactObjects != null) {
+          artifactLocation = artifactObjects.getLocation();
+          this.artifacts = artifactObjects.getPaths();
+        }
       }
     }
     return this;

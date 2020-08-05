@@ -7,6 +7,7 @@ import software.wings.exception.IncompleteStateException;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.yaml.workflow.StepYaml;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,10 +27,12 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
   }
 
   private void validateGcbOptions(StepYaml stepYaml, GcbOptions gcbOptions) {
-    List<String> templatizedFields = ((List<Map<String, Object>>) stepYaml.getProperties().get("templateExpressions"))
-                                         .stream()
-                                         .map(map -> (String) map.get("fieldName"))
-                                         .collect(Collectors.toList());
+    List<String> templatizedFields = stepYaml.getProperties().get("templateExpressions") == null
+        ? Collections.emptyList()
+        : ((List<Map<String, Object>>) stepYaml.getProperties().get("templateExpressions"))
+              .stream()
+              .map(map -> (String) map.get("fieldName"))
+              .collect(Collectors.toList());
     if (isBlank(gcbOptions.getGcpConfigId()) && !templatizedFields.contains("gcpConfigId")) {
       throw new IncompleteStateException(
           "\"gcpConfigName\" could not be empty or null. Please, provide gcpConfigName or add templateExpression");
