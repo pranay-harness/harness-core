@@ -127,7 +127,6 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
@@ -1725,8 +1724,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAllDelegateSelectors() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
-
     DelegateProfile delegateProfile =
         DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
 
@@ -1767,8 +1764,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldGetAllDelegateSelectorsEmptySelectors() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
-
     DelegateProfile delegateProfile =
         DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
 
@@ -1829,7 +1824,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .build();
     wingsPersistence.save(delegate);
 
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
 
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
@@ -1844,7 +1838,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .ip("127.0.0.1")
-                            .hostName("a.b.c")
                             .version(VERSION)
                             .status(Status.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
@@ -1869,7 +1862,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .build();
     wingsPersistence.save(delegate);
 
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
     assertThat(tags.size()).isEqualTo(1);
   }
@@ -1892,7 +1884,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .build();
     wingsPersistence.save(delegate);
 
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
     assertThat(tags.size()).isEqualTo(3);

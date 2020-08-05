@@ -52,7 +52,6 @@ import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSeque
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE;
-import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
@@ -414,22 +413,21 @@ public class DelegateServiceImpl implements DelegateService {
   private Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate) {
     SortedMap<String, SelectorType> selectorTypeMap = new TreeMap<>();
 
-    if (featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, delegate.getAccountId())) {
-      DelegateProfile delegateProfile =
-          delegateProfileService.get(delegate.getAccountId(), delegate.getDelegateProfileId());
+    DelegateProfile delegateProfile =
+        delegateProfileService.get(delegate.getAccountId(), delegate.getDelegateProfileId());
 
-      if (isNotBlank(delegate.getHostName())) {
-        selectorTypeMap.put(delegate.getHostName().toLowerCase(), SelectorType.HOST_NAME);
-      }
-
-      if (isNotBlank(delegate.getDelegateName())) {
-        selectorTypeMap.put(delegate.getDelegateName().toLowerCase(), SelectorType.DELEGATE_NAME);
-      }
-
-      if (delegateProfile != null && isNotBlank(delegateProfile.getName())) {
-        selectorTypeMap.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
-      }
+    if (isNotBlank(delegate.getHostName())) {
+      selectorTypeMap.put(delegate.getHostName().toLowerCase(), SelectorType.HOST_NAME);
     }
+
+    if (isNotBlank(delegate.getDelegateName())) {
+      selectorTypeMap.put(delegate.getDelegateName().toLowerCase(), SelectorType.DELEGATE_NAME);
+    }
+
+    if (delegateProfile != null && isNotBlank(delegateProfile.getName())) {
+      selectorTypeMap.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
+    }
+
     return selectorTypeMap;
   }
 
