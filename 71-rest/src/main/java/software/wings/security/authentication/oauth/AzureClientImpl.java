@@ -104,6 +104,8 @@ public class AzureClientImpl extends BaseOauthClient implements OauthClient {
     } catch (JSONException je) {
       logger.info("Unable to parse json in azure oauth", je);
       return OauthUserInfo.builder().email(email).name(name).build();
+    } finally {
+      userResource.close();
     }
   }
 

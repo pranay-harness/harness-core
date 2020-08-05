@@ -23,12 +23,13 @@ public class MicrosoftTeamsNotificationServiceImpl implements MicrosoftTeamsNoti
       RequestBody body = RequestBody.create(APPLICATION_JSON, message);
       Request request =
           new Request.Builder().url(webhookUrl).post(body).addHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE).build();
-      Response response = okHttpClient.newCall(request).execute();
-      if (!response.isSuccessful()) {
-        String bodyString = (null != response.body()) ? response.body().string() : "null";
-        logger.error("Response not Successful. Response body: {}", bodyString);
+      try (Response response = okHttpClient.newCall(request).execute()) {
+        if (!response.isSuccessful()) {
+          String bodyString = (null != response.body()) ? response.body().string() : "null";
+          logger.error("Response not Successful. Response body: {}", bodyString);
+        }
+        return response.code();
       }
-      return response.code();
     } catch (Exception e) {
       logger.error("Exception occurred at sendMessage(). Returning 400", e);
       return 400;

@@ -99,6 +99,7 @@ public class AzureMarketplaceIntegrationService {
 
       okhttp3.Response response = client.newCall(request).execute();
       return new JSONObject(response.body().string());
+
     } catch (IOException e) {
       logger.error("Failed to process Azure marketplace signup", e);
       throw new SignupException("Failed to process azure signup token");
@@ -113,8 +114,7 @@ public class AzureMarketplaceIntegrationService {
                           .post(authenticationPayload)
                           .addHeader(CONTENT_TYPE, APPLICATION_FORM_URLENCODED)
                           .build();
-    try {
-      okhttp3.Response response = client.newCall(request).execute();
+    try (okhttp3.Response response = client.newCall(request).execute()) {
       JSONObject jsonObject = new JSONObject(response.body().string());
       return getAuthToken(jsonObject);
     } catch (Exception ex) {
@@ -133,8 +133,7 @@ public class AzureMarketplaceIntegrationService {
                           .addHeader(CONTENT_TYPE, APPLICATION_JSON)
                           .addHeader(AUTHORIZATION, "Bearer " + authToken)
                           .build();
-    try {
-      okhttp3.Response response = client.newCall(request).execute();
+    try (okhttp3.Response response = client.newCall(request).execute()) {
       if (response.code() != HttpStatus.SC_OK) {
         logger.info("Failed to activate azure subscription: {}", response.toString());
         throw new SignupException("Azure activate API failed");
