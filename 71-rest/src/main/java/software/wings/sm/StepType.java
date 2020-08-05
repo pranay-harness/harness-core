@@ -117,6 +117,7 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.GcbStepCompletionYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidator;
 import software.wings.sm.states.APMVerificationState;
@@ -574,7 +575,8 @@ public enum StepType {
       asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   APPROVAL(ApprovalState.class, APPROVAL_NAME, asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
+      ApprovalStepCompletionYamlValidator.class),
 
   // CI System
   JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), asList(PhaseStepType.values()),
