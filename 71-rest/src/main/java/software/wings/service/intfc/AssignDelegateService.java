@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.TaskGroup;
 import software.wings.beans.BatchDelegateSelectionLog;
-import software.wings.beans.TaskGroup;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;

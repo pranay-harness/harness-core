@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.TaskGroup;
 import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.rule.Owner;
@@ -42,7 +43,6 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -56,7 +56,6 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
@@ -64,7 +63,6 @@ import java.util.concurrent.ExecutorService;
 
 public class AlertServiceTest extends WingsBaseTest {
   @Mock private ExecutorService executorService;
-  @Mock private AssignDelegateService assignDelegateService;
   @Mock private AppService appService;
   @Mock private SettingsService settingsService;
   @Mock private ArtifactStreamService artifactStreamService;

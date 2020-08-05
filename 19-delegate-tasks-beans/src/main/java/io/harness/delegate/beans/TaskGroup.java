@@ -1,8 +1,4 @@
-package software.wings.beans;
-
-/**
- * Created by brett on 8/31/17
- */
+package io.harness.delegate.beans;
 
 public enum TaskGroup {
   // *** NOTE: If you add an item to this list then also add an entry in catalogs.yml in the TASK_TYPES section. ***
