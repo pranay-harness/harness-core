@@ -154,6 +154,9 @@ import software.wings.dl.exportimport.WingsMongoExportImport;
 import software.wings.features.ApiKeysFeature;
 import software.wings.features.ApprovalFlowFeature;
 import software.wings.features.AuditTrailFeature;
+import software.wings.features.CeBudgetFeature;
+import software.wings.features.CeCloudAccountFeature;
+import software.wings.features.CeClusterFeature;
 import software.wings.features.CustomDashboardFeature;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.DeploymentHistoryFeature;
@@ -1273,6 +1276,18 @@ public class WingsModule extends DependencyModule implements ServersModule {
         .bind(PremiumFeature.class)
         .annotatedWith(Names.named(CustomDashboardFeature.FEATURE_NAME))
         .to(CustomDashboardFeature.class);
+    binder()
+        .bind(UsageLimitedFeature.class)
+        .annotatedWith(Names.named(CeBudgetFeature.FEATURE_NAME))
+        .to(CeBudgetFeature.class);
+    binder()
+        .bind(UsageLimitedFeature.class)
+        .annotatedWith(Names.named(CeCloudAccountFeature.FEATURE_NAME))
+        .to(CeCloudAccountFeature.class);
+    binder()
+        .bind(UsageLimitedFeature.class)
+        .annotatedWith(Names.named(CeClusterFeature.FEATURE_NAME))
+        .to(CeClusterFeature.class);
 
     bind(SecretSetupUsageService.class).to(SecretSetupUsageServiceImpl.class);
 

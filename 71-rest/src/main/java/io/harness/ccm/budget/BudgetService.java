@@ -18,6 +18,7 @@ public interface BudgetService {
 
   List<Budget> list(String accountId);
   List<Budget> list(String accountId, Integer count, Integer startIndex);
+  int getBudgetCount(String accountId);
 
   boolean delete(String budgetId);
 

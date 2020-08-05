@@ -169,4 +169,6 @@ public interface AccountService {
   void validateAccount(Account account);
 
   boolean updatePovFlag(String accountId, boolean isPov);
+
+  Optional<String> getCeAccountType(String accountId);
 }

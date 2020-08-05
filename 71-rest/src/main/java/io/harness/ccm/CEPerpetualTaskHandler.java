@@ -7,15 +7,19 @@ import static software.wings.beans.FeatureName.SIDE_NAVIGATION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.ccm.cluster.ClusterRecordObserver;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.config.CCMSettingService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
+import software.wings.features.CeClusterFeature;
+import software.wings.features.api.UsageLimitedFeature;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
@@ -28,6 +32,7 @@ public class CEPerpetualTaskHandler implements AccountCrudObserver, ClusterRecor
   private CEPerpetualTaskManager cePerpetualTaskManager;
   private ClusterRecordService clusterRecordService;
   private FeatureFlagService featureFlagService;
+  @Inject @Named(CeClusterFeature.FEATURE_NAME) private UsageLimitedFeature ceClusterFeature;
 
   @Inject
   public CEPerpetualTaskHandler(CCMSettingService ccmSettingService, CEPerpetualTaskManager cePerpetualTaskManager,
@@ -74,6 +79,16 @@ public class CEPerpetualTaskHandler implements AccountCrudObserver, ClusterRecor
     if (isEmpty(clusterRecord.getPerpetualTaskIds())) {
       if (!clusterRecord.getCluster().getClusterType().equals(DIRECT_KUBERNETES)
           && ccmSettingService.isCloudCostEnabled(clusterRecord)) {
+        String accountId = clusterRecord.getAccountId();
+        int maxClustersAllowed = ceClusterFeature.getMaxUsageAllowedForAccount(accountId);
+        int currentClusterCount = ceClusterFeature.getUsage(accountId);
+
+        if (currentClusterCount >= maxClustersAllowed) {
+          logger.info("Did not add perpetual task to cluster: '{}' for account ID {} because usage limit exceeded",
+              clusterRecord.getCluster().getClusterName(), accountId);
+          throw new InvalidRequestException(String.format(
+              "Cannot add perpetual task to cluster. Max Clusters allowed for trial: %d", maxClustersAllowed));
+        }
         cePerpetualTaskManager.createPerpetualTasks(clusterRecord);
       }
     }

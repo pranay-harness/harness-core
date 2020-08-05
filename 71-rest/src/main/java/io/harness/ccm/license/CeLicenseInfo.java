@@ -17,4 +17,16 @@ public class CeLicenseInfo {
   public long getExpiryTimeWithGracePeriod() {
     return expiryTime + Duration.ofDays(CE_TRIAL_GRACE_PERIOD_DAYS).toMillis();
   }
+
+  @JsonIgnore
+  public boolean isValidLicenceType() {
+    switch (licenseType) {
+      case LIMITED_TRIAL:
+      case FULL_TRIAL:
+      case PAID:
+        return true;
+      default:
+        return false;
+    }
+  }
 }

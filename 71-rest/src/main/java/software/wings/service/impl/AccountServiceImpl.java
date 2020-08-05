@@ -45,6 +45,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.cache.HarnessCacheManager;
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -1619,5 +1620,28 @@ public class AccountServiceImpl implements AccountService {
     // Update Account with the given subdomainUrl
     setSubdomainUrl(get(accountId), subDomainUrl);
     return Boolean.TRUE;
+  }
+
+  @Override
+  public Optional<String> getCeAccountType(String accountId) {
+    Account account = getFromCache(accountId);
+    if (account == null) {
+      logger.warn("accountId={} doesn't exist", accountId);
+      return Optional.empty();
+    }
+
+    CeLicenseInfo licenseInfo = account.getCeLicenseInfo();
+    if (null == licenseInfo) {
+      logger.warn("License info not present for account. accountId={}", accountId);
+      return Optional.empty();
+    }
+
+    String accountType = licenseInfo.getLicenseType().toString();
+    if (!licenseInfo.isValidLicenceType()) {
+      logger.warn("Invalid account type. accountType={}, accountId={}", accountType, accountId);
+      return Optional.empty();
+    }
+
+    return Optional.of(accountType);
   }
 }
