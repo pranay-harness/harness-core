@@ -119,6 +119,18 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeResourceRestraintPlan() {
+    return orchestrationService.startExecution(
+        CustomExecutionUtils.provideResourceRestraintPlan(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
+  public PlanExecution executeResourceRestraintWithWaitPlan() {
+    return orchestrationService.startExecution(
+        CustomExecutionUtils.provideResourceRestraintWithWaitPlan(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
   public Interrupt registerInterrupt(String planExecutionId) {
     return interruptManager.register(InterruptPackage.builder()
                                          .planExecutionId(planExecutionId)

@@ -101,6 +101,23 @@ public class Constraint {
     }
   }
 
+  public State calculateConsumerState(List<Consumer> consumers, int permits, int usedPermits) {
+    State state = null;
+    final Strategy strategy = getSpec().getStrategy();
+    switch (strategy) {
+      case FIFO:
+        state = nonBlocked(consumers) && enoughPermits(permits, usedPermits) ? ACTIVE : BLOCKED;
+        break;
+      case ASAP:
+        state = enoughPermits(permits, usedPermits) ? ACTIVE : BLOCKED;
+        break;
+      default:
+        unhandled(strategy);
+    }
+
+    return state;
+  }
+
   public State registerConsumer(
       ConstraintUnit unit, ConsumerId consumerId, int permits, Map<String, Object> context, ConstraintRegistry registry)
       throws InvalidPermitsException, UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
@@ -115,20 +132,7 @@ public class Constraint {
     do {
       List<Consumer> consumers = registry.loadConsumers(id, unit);
       final int usedPermits = getUsedPermits(consumers);
-
-      State state = null;
-
-      final Strategy strategy = getSpec().getStrategy();
-      switch (strategy) {
-        case FIFO:
-          state = nonBlocked(consumers) && enoughPermits(permits, usedPermits) ? ACTIVE : BLOCKED;
-          break;
-        case ASAP:
-          state = enoughPermits(permits, usedPermits) ? ACTIVE : BLOCKED;
-          break;
-        default:
-          unhandled(strategy);
-      }
+      State state = calculateConsumerState(consumers, permits, usedPermits);
 
       final Consumer consumer =
           Consumer.builder().id(consumerId).permits(permits).state(state).context(context).build();

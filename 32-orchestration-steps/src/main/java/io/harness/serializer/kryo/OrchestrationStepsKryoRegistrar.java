@@ -10,7 +10,11 @@ import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
+import io.harness.steps.resourcerestraint.beans.AcquireMode;
+import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraintResponseData;
 
 @OwnedBy(CDC)
 public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
@@ -22,5 +26,9 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(BarrierStepParameters.class, 3204);
     kryo.register(ResourceRestraintInstance.class, 3205);
     kryo.register(ResourceRestraintStepParameters.class, 3206);
+    kryo.register(ResourceRestraintOutcome.class, 3207);
+    kryo.register(AcquireMode.class, 3208);
+    kryo.register(ResourceRestraintResponseData.class, 3209);
+    kryo.register(HoldingScope.class, 3210);
   }
 }

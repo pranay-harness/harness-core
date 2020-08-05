@@ -6,18 +6,22 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.NonFinal;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @OwnedBy(CDC)
-@Value
+@Data
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "ResourceRestraintInstanceKeys")
@@ -34,12 +38,17 @@ public class ResourceRestraintInstance implements PersistentEntity, UuidAccess, 
   Consumer.State state;
   int permits;
 
-  String releaseEntityType;
+  String releaseEntityType; // scope
   String releaseEntityId;
 
   long acquireAt;
 
-  @NonFinal Long nextIteration;
+  Long nextIteration;
+
+  // audit fields
+  @Wither @FdIndex @CreatedDate Long createdAt;
+  @Wither @LastModifiedDate Long lastUpdatedAt;
+  @Version Long version;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {

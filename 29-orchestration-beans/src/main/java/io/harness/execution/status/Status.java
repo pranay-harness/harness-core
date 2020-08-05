@@ -44,6 +44,9 @@ public enum Status {
   private static final EnumSet<Status> FLOWING_STATUSES =
       EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
+  private static final EnumSet<Status> FINAL_STATUSES =
+      EnumSet.of(QUEUED, SKIPPED, PAUSED, ABORTED, ERRORED, FAILED, EXPIRED, SUCCEEDED);
+
   private static final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED);
 
   public static EnumSet<Status> finalizableStatuses() {
@@ -68,6 +71,10 @@ public enum Status {
 
   public static EnumSet<Status> retryableStatuses() {
     return RETRYABLE_STATUSES;
+  }
+
+  public static EnumSet<Status> finalStatuses() {
+    return FINAL_STATUSES;
   }
 
   public static EnumSet<Status> obtainAllowedStartSet(Status status) {

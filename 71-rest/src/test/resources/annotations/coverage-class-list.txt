@@ -200,10 +200,17 @@
 32-orchestration-steps/src/main/java/io/harness/steps/barriers/beans/BarrierOutcome.java
 32-orchestration-steps/src/main/java/io/harness/steps/barriers/beans/BarrierResponseData.java
 32-orchestration-steps/src/main/java/io/harness/steps/barriers/service/BarrierServiceImpl.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/ResourceRestraintFacilitator.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/ResourceRestraintStep.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/ResourceRestraintStepParameters.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/AcquireMode.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/HoldingScope.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/ResourceRestraintInstance.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/ResourceRestraintOutcome.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/ResourceRestraintResponseData.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/service/ResourceRestraintPersistenceMonitor.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/service/ResourceRestraintRegistryImpl.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/service/ResourceRestraintServiceImpl.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskClientParams.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskServiceClient.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionResponseHandler.java

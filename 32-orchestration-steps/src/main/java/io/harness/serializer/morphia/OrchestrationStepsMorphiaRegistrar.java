@@ -11,6 +11,7 @@ import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 
 import java.util.Set;
 
@@ -28,5 +29,6 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.barriers.BarrierStepParameters", BarrierStepParameters.class);
     h.put("steps.barriers.beans.BarrierOutcome", BarrierOutcome.class);
     h.put("steps.resourcerestraint.ResourceRestraintStepParameters", ResourceRestraintStepParameters.class);
+    h.put("steps.resourcerestraint.beans.ResourceRestraintOutcome", ResourceRestraintOutcome.class);
   }
 }

@@ -1,11 +1,15 @@
 package io.harness.steps.resourcerestraint.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
+import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+import io.fabric8.utils.Lists;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -14,13 +18,14 @@ import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.ConsumerId;
 import io.harness.distribution.constraint.UnableToLoadConstraintException;
-import io.harness.distribution.constraint.UnableToRegisterConsumerException;
 import io.harness.distribution.constraint.UnableToSaveConstraintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceBuilder;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraintResponseData;
+import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 
@@ -29,10 +34,14 @@ import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
+@Singleton
 @Slf4j
-public class ResourceRestraintRegistryImpl implements ConstraintRegistry {
+public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry {
+  private static final String PLAN = "PLAN";
+
+  @Inject private RestraintService<? extends ResourceRestraint> restraintService;
   @Inject private ResourceRestraintService resourceRestraintService;
-  @Inject private ResourceRestraintInstanceRepository resourceRestraintInstanceRepository;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public ConstraintRegistry getRegistry() {
     return this;
@@ -45,16 +54,16 @@ public class ResourceRestraintRegistryImpl implements ConstraintRegistry {
 
   @Override
   public Constraint load(ConstraintId id) throws UnableToLoadConstraintException {
-    final ResourceRestraint resourceRestraint = resourceRestraintService.get(null, id.getValue());
-    return createAbstraction(resourceRestraint);
+    final ResourceRestraint resourceRestraint = restraintService.get(null, id.getValue());
+    return resourceRestraintService.createAbstraction(resourceRestraint);
   }
 
   @Override
   public List<Consumer> loadConsumers(ConstraintId id, ConstraintUnit unit) {
     List<Consumer> consumers = new ArrayList<>();
 
-    List<ResourceRestraintInstance> instances =
-        resourceRestraintInstanceRepository.findByResourceUnitOrderByOrderAsc(unit.getValue());
+    List<ResourceRestraintInstance> instances = resourceRestraintService.getAllByRestraintIdAndResourceUnitAndStates(
+        id.getValue(), unit.getValue(), Lists.newArrayList(ACTIVE, BLOCKED));
 
     instances.forEach(instance
         -> consumers.add(Consumer.builder()
@@ -69,9 +78,8 @@ public class ResourceRestraintRegistryImpl implements ConstraintRegistry {
   }
 
   @Override
-  public boolean registerConsumer(ConstraintId id, ConstraintUnit unit, Consumer consumer, int currentlyRunning)
-      throws UnableToRegisterConsumerException {
-    ResourceRestraint resourceRestraint = resourceRestraintService.get(null, id.getValue());
+  public boolean registerConsumer(ConstraintId id, ConstraintUnit unit, Consumer consumer, int currentlyRunning) {
+    ResourceRestraint resourceRestraint = restraintService.get(null, id.getValue());
     if (resourceRestraint == null) {
       throw new InvalidRequestException(format("There is no resource constraint with id: %s", id.getValue()));
     }
@@ -87,12 +95,12 @@ public class ResourceRestraintRegistryImpl implements ConstraintRegistry {
             .state(consumer.getState())
             .order((int) consumer.getContext().get(ResourceRestraintInstanceKeys.order));
 
-    if (Consumer.State.ACTIVE == consumer.getState()) {
+    if (ACTIVE == consumer.getState()) {
       builder.acquireAt(System.currentTimeMillis());
     }
 
     try {
-      resourceRestraintInstanceRepository.save(builder.build());
+      resourceRestraintService.save(builder.build());
     } catch (DuplicateKeyException e) {
       logger.info("Failed to add ResourceRestraintInstance", e);
       return false;
@@ -103,37 +111,50 @@ public class ResourceRestraintRegistryImpl implements ConstraintRegistry {
 
   @Override
   public boolean adjustRegisterConsumerContext(ConstraintId id, Map<String, Object> context) {
-    // to be implemented
-    return false;
+    final int order = resourceRestraintService.getMaxOrder(id.getValue()) + 1;
+    if (order == (int) context.get(ResourceRestraintInstanceKeys.order)) {
+      return false;
+    }
+    context.put(ResourceRestraintInstanceKeys.order, order);
+    return true;
   }
 
   @Override
   public boolean consumerUnblocked(
       ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    // to be implemented
-    return false;
+    resourceRestraintService.activateBlockedInstance(consumerId.getValue(), unit.getValue());
+    waitNotifyEngine.doneWith(consumerId.getValue(), ResourceRestraintResponseData.builder().build());
+    return true;
   }
 
   @Override
   public boolean consumerFinished(
       ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    // to be implemented
-    return false;
+    try {
+      resourceRestraintService.finishActiveInstance(consumerId.getValue(), unit.getValue());
+    } catch (InvalidRequestException e) {
+      logger.error(
+          "The attempt to finish Constraint with id {} failed for resource unit {} with Resource restraint id {}",
+          id.getValue(), unit.getValue(), consumerId.getValue(), e);
+      return false;
+    }
+    return true;
   }
 
   @Override
   public boolean overlappingScope(Consumer consumer, Consumer blockedConsumer) {
-    // to be implemented
-    return false;
-  }
+    String releaseScope = (String) consumer.getContext().get(ResourceRestraintInstanceKeys.releaseEntityType);
+    String blockedReleaseScope =
+        (String) blockedConsumer.getContext().get(ResourceRestraintInstanceKeys.releaseEntityType);
 
-  private Constraint createAbstraction(ResourceRestraint resourceRestraint) {
-    return Constraint.builder()
-        .id(new ConstraintId(resourceRestraint.getUuid()))
-        .spec(Constraint.Spec.builder()
-                  .limits(resourceRestraint.getCapacity())
-                  .strategy(resourceRestraint.getStrategy())
-                  .build())
-        .build();
+    if (!PLAN.equals(releaseScope) || !PLAN.equals(blockedReleaseScope)) {
+      return false;
+    }
+
+    String planExecutionId = (String) consumer.getContext().get(ResourceRestraintInstanceKeys.releaseEntityId);
+    String blockedPlanExecutionId =
+        (String) blockedConsumer.getContext().get(ResourceRestraintInstanceKeys.releaseEntityId);
+
+    return planExecutionId.equals(blockedPlanExecutionId);
   }
 }

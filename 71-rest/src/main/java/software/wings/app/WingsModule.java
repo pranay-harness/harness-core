@@ -103,7 +103,8 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
+import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
@@ -1138,7 +1139,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
-    bind(ResourceRestraintService.class).to(ResourceConstraintServiceImpl.class);
+    bind(new TypeLiteral<RestraintService<? extends ResourceRestraint>>() {}).to(ResourceConstraintServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(DelegateTaskExecutor.class);

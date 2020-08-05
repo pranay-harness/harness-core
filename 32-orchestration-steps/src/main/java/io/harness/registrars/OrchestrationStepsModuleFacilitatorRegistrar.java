@@ -7,6 +7,7 @@ import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.steps.barriers.BarrierFacilitator;
+import io.harness.steps.resourcerestraint.ResourceRestraintFacilitator;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;
@@ -16,5 +17,6 @@ public class OrchestrationStepsModuleFacilitatorRegistrar implements Facilitator
   @Override
   public void register(Set<Pair<FacilitatorType, Class<? extends Facilitator>>> facilitatorClasses) {
     facilitatorClasses.add(Pair.of(BarrierFacilitator.FACILITATOR_TYPE, BarrierFacilitator.class));
+    facilitatorClasses.add(Pair.of(ResourceRestraintFacilitator.FACILITATOR_TYPE, ResourceRestraintFacilitator.class));
   }
 }

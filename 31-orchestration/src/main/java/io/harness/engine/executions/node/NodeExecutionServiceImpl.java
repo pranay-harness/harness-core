@@ -35,6 +35,12 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public NodeExecution getByPlanNodeUuid(String planNodeUuid, String planExecutionId) {
+    return nodeExecutionRepository.findByNodeUuidAndAmbiancePlanExecutionId(planNodeUuid, planExecutionId)
+        .orElseThrow(() -> new InvalidRequestException("Node Execution is null for planNodeUuid: " + planNodeUuid));
+  }
+
+  @Override
   public List<NodeExecution> fetchNodeExecutions(String planExecutionId) {
     return nodeExecutionRepository.findByAmbiancePlanExecutionId(planExecutionId);
   }

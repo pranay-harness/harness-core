@@ -119,4 +119,16 @@ public class CustomExecutionResource {
   public RestResponse<PlanExecution> executeMultipleBarriersPlan() {
     return new RestResponse<>(customExecutionService.executeMultipleBarriersPlan());
   }
+
+  @GET
+  @Path("/resource-restraint")
+  public RestResponse<PlanExecution> executeResourceRestraintPlan() {
+    return new RestResponse<>(customExecutionService.executeResourceRestraintPlan());
+  }
+
+  @GET
+  @Path("/resource-restraint-with-wait")
+  public RestResponse<PlanExecution> executeResourceRestraintWithWaitPlan() {
+    return new RestResponse<>(customExecutionService.executeResourceRestraintWithWaitPlan());
+  }
 }

@@ -47,6 +47,10 @@ import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.io.StepParameters;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.BarrierStepParameters;
+import io.harness.steps.resourcerestraint.ResourceRestraintStep;
+import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
+import io.harness.steps.resourcerestraint.beans.AcquireMode;
+import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.states.ShellScriptState;
 
@@ -60,6 +64,7 @@ public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_500 = "http://httpstat.us/500";
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
   private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
+  private static final String RESOURCE_UNIT = generateUuid();
 
   public static Plan provideHttpSwitchPlan() {
     String httpNodeId = generateUuid();
@@ -1293,6 +1298,144 @@ public class CustomExecutionUtils {
                   .name("Dummy Node 4")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy4")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
+  public Plan provideResourceRestraintPlan() {
+    String dummyNode1Id = generateUuid();
+    String dummyNode2Id = generateUuid();
+    String resourceRestraintInstanceId = generateUuid();
+    String complaintId = "kmpySmUISimoRrJL6NL73w";
+    String resourceUnit = RESOURCE_UNIT; // TODO should be an expression
+    String resourceRestraintId = "nXjQ9CeXTfKO7LA3wRB6Hg";
+    return Plan.builder()
+        .startingNodeId(dummyNode1Id)
+        .node(PlanNode.builder()
+                  .uuid(dummyNode1Id)
+                  .name("Dummy Node 1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy1")
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(
+                              OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(resourceRestraintInstanceId)
+                  .identifier("resourceRestraint1")
+                  .name("resourceRestraint1")
+                  .stepType(ResourceRestraintStep.STEP_TYPE)
+                  .stepParameters(
+                      ResourceRestraintStepParameters.builder()
+                          .claimantId(complaintId)
+                          .permits(1)
+                          .resourceUnit(resourceUnit)
+                          .resourceRestraintId(resourceRestraintId)
+                          .acquireMode(AcquireMode.ACCUMULATE)
+                          .holdingScope(
+                              HoldingScope.builder().scope(DUMMY_STEP_TYPE.getType()).nodeSetupId(dummyNode1Id).build())
+                          .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())
+                          .build())
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.builder()
+                          .type(FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode2Id)
+                  .name("Dummy Node 2")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy2")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
+  public Plan provideResourceRestraintWithWaitPlan() {
+    String dummyNode1Id = generateUuid();
+    String dummyNode2Id = generateUuid();
+    String resourceRestraintInstanceId = generateUuid();
+    String waitNodeId = generateUuid();
+    String complaintId = "kmpySmUISimoRrJL6NL73w";
+    String resourceUnit = RESOURCE_UNIT; // TODO should be an expression
+    String resourceRestraintId = "nXjQ9CeXTfKO7LA3wRB6Hg";
+    return Plan.builder()
+        .startingNodeId(dummyNode1Id)
+        .node(PlanNode.builder()
+                  .uuid(dummyNode1Id)
+                  .name("Dummy Node 1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy1")
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(
+                              OnSuccessAdviserParameters.builder().nextNodeId(resourceRestraintInstanceId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(
+            PlanNode.builder()
+                .uuid(resourceRestraintInstanceId)
+                .identifier("resourceRestraint2")
+                .name("resourceRestraint2")
+                .stepType(ResourceRestraintStep.STEP_TYPE)
+                .stepParameters(
+                    ResourceRestraintStepParameters.builder()
+                        .claimantId(complaintId)
+                        .permits(1)
+                        .resourceUnit(resourceUnit)
+                        .resourceRestraintId(resourceRestraintId)
+                        .acquireMode(AcquireMode.ACCUMULATE)
+                        .holdingScope(
+                            HoldingScope.builder().scope(DUMMY_STEP_TYPE.getType()).nodeSetupId(dummyNode1Id).build())
+                        .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())
+                                       .build())
+                .facilitatorObtainment(
+                    FacilitatorObtainment.builder()
+                        .type(FacilitatorType.builder().type(FacilitatorType.RESOURCE_RESTRAINT).build())
+                        .build())
+                .build())
+        .node(PlanNode.builder()
+                  .uuid(waitNodeId)
+                  .name("Wait Node")
+                  .identifier("wait")
+                  .stepType(StepType.builder().type("WAIT_STATE").build())
+                  .stepParameters(WaitStepParameters.builder().waitDurationSeconds(50).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode2Id)
+                  .name("Dummy Node 2")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy2")
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
