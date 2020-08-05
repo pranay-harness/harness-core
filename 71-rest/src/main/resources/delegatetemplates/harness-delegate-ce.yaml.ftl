@@ -141,8 +141,8 @@ spec:
         name: harness-delegate-instance
         resources:
           limits:
-            cpu: "1"
-            memory: "8Gi"
+            cpu: "500m"
+            memory: "1Gi"
         readinessProbe:
           exec:
             command:
