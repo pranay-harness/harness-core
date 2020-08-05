@@ -11,4 +11,5 @@ import lombok.Data;
 public class PodInfoConfig {
   private String name;
   private int replica;
+  private int isolatedReplica;
 }

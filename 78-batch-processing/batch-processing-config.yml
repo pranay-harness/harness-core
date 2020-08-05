@@ -28,6 +28,7 @@ batchQueryConfig:
 podInfo:
   name: batch-processing-0
   replica: 1
+  isolatedReplica: 0
 
 awsS3SyncConfig:
   awsS3BucketName: awsS3BucketNamePlaceHolder

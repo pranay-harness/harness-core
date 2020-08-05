@@ -102,3 +102,7 @@ fi
 if [[ "" != "$REPLICA" ]]; then
   yq write -i $CONFIG_FILE podInfo.replica "$REPLICA"
 fi
+
+if [[ "" != "$ISOLATED_REPLICA" ]]; then
+  yq write -i $CONFIG_FILE podInfo.isolatedReplica "$ISOLATED_REPLICA"
+fi
