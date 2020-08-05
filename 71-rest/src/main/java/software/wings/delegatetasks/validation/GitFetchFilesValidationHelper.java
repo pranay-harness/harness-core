@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,9 +27,6 @@ public class GitFetchFilesValidationHelper {
       return false;
     }
 
-    if (isNotEmpty(gitClient.validate(gitConfig, null))) {
-      return false;
-    }
-    return true;
+    return isEmpty(gitClient.validate(gitConfig));
   }
 }

@@ -143,6 +143,7 @@ import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -235,6 +236,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private FeatureService featureService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private GitClientHelper gitClientHelper;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
@@ -37,23 +39,26 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Event;
+import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
+  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Spy @InjectMocks ApplicationManifestServiceImpl applicationManifestServiceImpl;
   @Mock private AppService appService;
   @Mock private YamlPushService yamlPushService;
+  @Mock private SettingsService settingsService;
   @Inject private WingsPersistence wingsPersistence;
-  @Spy @InjectMocks ApplicationManifestServiceImpl applicationManifestServiceImpl;
-
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setup() {
@@ -220,6 +225,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testValidateKustomizeApplicationManifest() {
+    doReturn(aSettingAttribute().withValue(GitConfig.builder().build()).build()).when(settingsService).get(anyString());
     applicationManifestServiceImpl.validateApplicationManifest(buildKustomizeAppManifest());
     testEmptyConnectorInRemoteAppManifest(buildKustomizeAppManifest());
     testEmptyCommitInRemoteAppManifest(buildKustomizeAppManifest());
@@ -372,6 +378,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     // success validation
     GitFileConfig gitFileConfig =
         GitFileConfig.builder().branch("master").useBranch(true).connectorId("id").filePath("filepath").build();
+    GitConfig gitConfig = GitConfig.builder().build();
+    doReturn(aSettingAttribute().withValue(gitConfig).build()).when(settingsService).get(anyString());
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(OC_TEMPLATES).gitFileConfig(gitFileConfig).build();
 
@@ -395,5 +403,42 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Template File Path can't be empty");
     gitFileConfig.setFilePath("filepath");
+
+    gitConfig.setUrlType(GitConfig.UrlType.ACCOUNT);
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateOpenShiftSourceRepoAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Repository name not provided for Account level git connector.");
+
+    gitConfig.setUrlType(GitConfig.UrlType.REPO);
+    applicationManifestServiceImpl.validateOpenShiftSourceRepoAppManifest(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testValidateApplicationManifestGitAccount() {
+    GitFileConfig gitFileConfig =
+        GitFileConfig.builder().connectorId("connector-id").useBranch(true).branch("master").build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .serviceId("s1")
+                                                  .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+                                                  .envId("ENVID")
+                                                  .storeType(HelmSourceRepo)
+                                                  .gitFileConfig(gitFileConfig)
+                                                  .build();
+
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).build());
+
+    doReturn(attribute).when(settingsService).get("connector-id");
+
+    try {
+      applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
+    } catch (Exception e) {
+      assertThat(e instanceof InvalidRequestException).isTrue();
+    }
+
+    gitFileConfig.setRepoName("repo-name");
+    applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
   }
 }

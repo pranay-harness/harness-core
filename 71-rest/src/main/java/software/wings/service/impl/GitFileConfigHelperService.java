@@ -65,6 +65,7 @@ public class GitFileConfigHelperService {
         .commitId(gitFileConfig.getCommitId())
         .useBranch(gitFileConfig.isUseBranch())
         .connectorName(gitFileConfig.getConnectorName())
+        .repoName(gitFileConfig.getRepoName())
         .build();
   }
 
@@ -83,6 +84,10 @@ public class GitFileConfigHelperService {
 
     if (gitFileConfig.getFilePath() != null) {
       gitFileConfig.setFilePath(context.renderExpression(gitFileConfig.getFilePath()).trim());
+    }
+
+    if (gitFileConfig.getRepoName() != null) {
+      gitFileConfig.setRepoName(context.renderExpression(gitFileConfig.getRepoName()).trim());
     }
 
     if (gitFileConfig.getFilePathList() != null) {

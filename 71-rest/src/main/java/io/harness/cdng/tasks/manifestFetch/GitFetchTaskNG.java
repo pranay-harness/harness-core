@@ -120,6 +120,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
     GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitStore.getConnectorIdentifier(),
         gitStore.getBranch(), gitStore.getBranch(), filePathsToFetch, FetchType.BRANCH == gitStore.getGitFetchType());
+
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
 
     return gitFetchFilesResult;

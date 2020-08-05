@@ -1748,6 +1748,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptedVariableWithType.class, 7454);
     kryo.register(EncryptedVariableWithType.Type.class, 7455);
     kryo.register(ContainerSecrets.class, 7456);
+
     kryo.register(StoreConfig.class, 8022);
     kryo.register(GitStore.class, 8023);
     kryo.register(GitFetchRequest.class, 8025);

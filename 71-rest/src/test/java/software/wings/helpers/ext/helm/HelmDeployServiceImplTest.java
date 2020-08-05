@@ -80,6 +80,7 @@ import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HelmTestConstants;
@@ -103,6 +104,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @Mock private K8sTaskHelper k8sTaskHelper;
+  @Mock private GitClientHelper gitClientHelper;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
@@ -736,9 +738,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmDeployService.fetchSourceRepo(request);
 
     verify(encryptionService, times(1)).decrypt(argumentCaptor.capture(), anyList());
-    verify(gitService, times(1))
-        .downloadFiles(
-            any(GitConfig.class), anyString(), anyString(), anyString(), anyList(), anyBoolean(), anyString());
+    verify(gitService, times(1)).downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString());
 
     GitConfig gitConfig = argumentCaptor.getValue();
     assertThat(gitConfig.getBranch()).isNotEmpty();

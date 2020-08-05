@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -24,6 +26,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 
@@ -33,6 +36,7 @@ import java.util.List;
 public class GitConfigHelperServiceTest extends WingsBaseTest {
   @Mock ExecutionContext context;
   @Mock DelegateService delegateService;
+  @Mock GitClientHelper gitClientHelper;
 
   @Inject @InjectMocks private GitConfigHelperService gitConfigHelperService;
 
@@ -83,6 +87,8 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
     gitConfigHelperService.validateGitConfig(gitConfig, encryptionDetails);
     verify(delegateService, times(1)).executeTask(captor.capture());
 
+    verify(gitClientHelper).updateRepoUrl(eq(gitConfig), anyString());
+
     DelegateTask task = captor.getAllValues().get(0);
     Object[] parameters = task.getData().getParameters();
     assertThat(parameters.length).isEqualTo(3);
@@ -107,6 +113,7 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
 
     gitConfigHelperService.validateGitConfig(gitConfig, encryptionDetails);
     verify(delegateService, times(1)).executeTask(captor.capture());
+    verify(gitClientHelper).updateRepoUrl(eq(gitConfig), anyString());
     DelegateTask task = captor.getAllValues().get(0);
     Object[] parameters = task.getData().getParameters();
     assertThat(parameters.length).isEqualTo(3);
