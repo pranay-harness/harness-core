@@ -32,7 +32,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
@@ -642,7 +641,6 @@ public class K8sStateHelperTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask.getTags()).isEmpty();
 
-    when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
     k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).executeTask(captor.capture());
@@ -803,7 +801,6 @@ public class K8sStateHelperTest extends WingsBaseTest {
     delegateTask = captor.getValue();
     assertThat(delegateTask.getTags()).isEmpty();
 
-    when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
     doReturn(K8sClusterConfig.builder()
                  .cloudProvider(
                      KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build())
@@ -835,7 +832,6 @@ public class K8sStateHelperTest extends WingsBaseTest {
     tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
     assertThat(tags).isEmpty();
 
-    when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
     tags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
     assertThat(tags).isEmpty();
 

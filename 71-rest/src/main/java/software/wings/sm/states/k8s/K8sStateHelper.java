@@ -19,7 +19,6 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -1047,10 +1046,6 @@ public class K8sStateHelper {
   }
 
   public List<String> getDelegateNameAsTagFromK8sCloudProvider(String accountId, SettingValue settingValue) {
-    if (!featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, accountId)) {
-      return emptyList();
-    }
-
     if (!(settingValue instanceof KubernetesClusterConfig)) {
       return emptyList();
     }
