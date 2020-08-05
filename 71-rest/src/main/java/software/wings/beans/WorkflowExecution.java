@@ -7,6 +7,7 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.WorkflowExecutionServiceHelper.calculateCdPageCandidate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -37,6 +38,7 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
@@ -248,6 +250,10 @@ public class WorkflowExecution
   // the latest execution.
   private boolean latestPipelineResume;
 
+  // If a workflow execution is eligible to be displayed on CD page. (Indirect workflow executions and resumed pipelines
+  // are not displayed on CD page)
+  private boolean cdPageCandidate;
+
   private Long nextIteration;
   private List<NameValuePair> tags;
   private String message;
@@ -292,5 +298,11 @@ public class WorkflowExecution
     public static final String executionArgs_pipelinePhaseElementId =
         executionArgs + "." + ExecutionArgsKeys.pipelinePhaseElementId;
     public static final String executionArgs_artifacts = executionArgs + "." + ExecutionArgsKeys.artifacts;
+  }
+
+  @PrePersist
+  public void onSave() {
+    this.cdPageCandidate =
+        calculateCdPageCandidate(this.pipelineExecutionId, this.pipelineResumeId, this.latestPipelineResume);
   }
 }
