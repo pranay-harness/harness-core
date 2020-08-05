@@ -18,6 +18,7 @@ public class IndexCreator {
   private DBCollection collection;
   private BasicDBObject keys;
   private BasicDBObject options;
+  private String originalName;
 
   public String name() {
     return (String) options.get("name");

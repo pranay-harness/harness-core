@@ -323,7 +323,10 @@ public class IndexManagerSession {
 
   public void create(IndexCreator indexCreator) {
     if (migrators != null) {
-      Migrator migrator = migrators.get(indexCreator.getCollection().getName() + "." + indexCreator.name());
+      String migratorKey = indexCreator.getCollection().getName() + "."
+          + (indexCreator.getOriginalName() == null ? indexCreator.name() : indexCreator.getOriginalName());
+
+      Migrator migrator = migrators.get(migratorKey);
       if (migrator != null) {
         logger.info("Execute migration {} for index {}", migrator.getClass().getName(), indexCreator.name());
         migrator.execute(datastore);
@@ -401,8 +404,12 @@ public class IndexManagerSession {
     BasicDBObject tempOptions = (BasicDBObject) indexCreator.getOptions().copy();
     tempOptions.put(NAME, "TRI_" + currentTimeMillis());
 
-    IndexCreator tempCreator =
-        IndexCreator.builder().collection(indexCreator.getCollection()).keys(tempKeys).options(tempOptions).build();
+    IndexCreator tempCreator = IndexCreator.builder()
+                                   .originalName(indexCreator.name())
+                                   .collection(indexCreator.getCollection())
+                                   .keys(tempKeys)
+                                   .options(tempOptions)
+                                   .build();
 
     // Lets see if we already have this one created from before
     DBObject triIndex = collectionSession.findIndexByFieldsAndDirection(tempCreator);
