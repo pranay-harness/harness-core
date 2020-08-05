@@ -82,7 +82,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void runOnceWithK8sCallSuccess() throws Exception {
-    doReturn(KubernetesConfig.builder().accountId("accountId").build())
+    doReturn(KubernetesConfig.builder().accountId(null).build())
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
 
@@ -130,7 +130,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void runOnceWithK8sCallFailure() throws Exception {
-    doReturn(KubernetesConfig.builder().accountId("accountId").build())
+    doReturn(KubernetesConfig.builder().accountId(null).build())
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
 

@@ -122,7 +122,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
 
     K8sTaskExecutionResponse responseData =
         getK8sTaskResponse(k8sContainerInstanceSyncPerpetualTaskParams, kubernetesConfig);
-    publishInstanceSyncResult(taskId, kubernetesConfig.getAccountId(),
+    publishInstanceSyncResult(taskId, k8sContainerInstanceSyncPerpetualTaskParams.getAccountId(),
         k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(), responseData);
 
     boolean isFailureResponse = FAILURE == responseData.getCommandExecutionStatus();
