@@ -109,6 +109,16 @@ public class ExpressionEvaluator {
     return ExpressionEvaluatorUtils.substitute(this, expression, jc, tracker);
   }
 
+  public String substituteSecured(
+      String expression, Map<String, Object> context, VariableResolverTracker tracker, String defaultObjectPrefix) {
+    if (expression == null) {
+      return null;
+    }
+
+    JexlContext jc = prepareContext(context, defaultObjectPrefix);
+    return ExpressionEvaluatorUtils.substituteSecured(this, expression, jc, tracker);
+  }
+
   public static void isValidVariableName(String name) {
     // Verify variable name should not contain any special character
     if (isEmpty(name)) {

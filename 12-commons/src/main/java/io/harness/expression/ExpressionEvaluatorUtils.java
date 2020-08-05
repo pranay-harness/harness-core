@@ -37,6 +37,7 @@ public class ExpressionEvaluatorUtils {
   public final int DEPTH_LIMIT = 10;
 
   private final JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
+  private static final String REGEX = "[0-9]+";
 
   public String substitute(EngineExpressionEvaluator expressionEvaluator, String expression, EngineJexlContext ctx) {
     if (expression == null) {
@@ -45,7 +46,7 @@ public class ExpressionEvaluatorUtils {
 
     String prefix = IdentifierName.random();
     String suffix = IdentifierName.random();
-    Pattern pattern = Pattern.compile(prefix + "[0-9]+" + suffix);
+    Pattern pattern = Pattern.compile(prefix + REGEX + suffix);
     EngineVariableResolver variableResolver = EngineVariableResolver.builder()
                                                   .expressionEvaluator(expressionEvaluator)
                                                   .ctx(ctx)
@@ -63,7 +64,7 @@ public class ExpressionEvaluatorUtils {
 
     String prefix = IdentifierName.random();
     String suffix = IdentifierName.random();
-    Pattern pattern = Pattern.compile(prefix + "[0-9]+" + suffix);
+    Pattern pattern = Pattern.compile(prefix + REGEX + suffix);
     EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
                                                     .expressionEvaluator(expressionEvaluator)
                                                     .context(ctx)
@@ -72,6 +73,25 @@ public class ExpressionEvaluatorUtils {
                                                     .suffix(suffix)
                                                     .build();
     return substitute(expression, ctx, variableResolver, pattern);
+  }
+
+  public String substituteSecured(
+      ExpressionEvaluator expressionEvaluator, String expression, JexlContext ctx, VariableResolverTracker tracker) {
+    if (expression == null) {
+      return null;
+    }
+
+    String prefix = IdentifierName.random();
+    String suffix = IdentifierName.random();
+    Pattern pattern = Pattern.compile(prefix + REGEX + suffix);
+    EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
+                                                    .expressionEvaluator(expressionEvaluator)
+                                                    .context(ctx)
+                                                    .variableResolverTracker(tracker)
+                                                    .prefix(prefix)
+                                                    .suffix(suffix)
+                                                    .build();
+    return substituteSecretsSecured(expression, ctx, variableResolver, pattern);
   }
 
   public String substitute(
@@ -277,5 +297,53 @@ public class ExpressionEvaluatorUtils {
     }
 
     return false;
+  }
+
+  private StrSubstitutor getSubstitutor(StrLookup<Object> variableResolver) {
+    StrSubstitutor substitutor = new StrSubstitutor();
+    substitutor.setEnableSubstitutionInVariables(true);
+    substitutor.setVariableResolver(variableResolver);
+    return substitutor;
+  }
+
+  private String resolveSecured(Matcher matcher, JexlContext ctx) {
+    StringBuffer sb = new StringBuffer();
+    do {
+      String name = matcher.group(0);
+      String value = ctx.get(name) instanceof SecretString ? SecretString.SECRET_MASK : String.valueOf(ctx.get(name));
+      matcher.appendReplacement(sb, value.replace("\\", "\\\\").replace("$", "\\$"));
+    } while (matcher.find());
+    matcher.appendTail(sb);
+    return sb.toString();
+  }
+
+  private String substituteSecretsSecured(
+      @NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver, Pattern pattern) {
+    StrSubstitutor substitutor = getSubstitutor(variableResolver);
+
+    String result = expression;
+    int limit = Math.max(EXPANSION_LIMIT, EXPANSION_MULTIPLIER_LIMIT * expression.length());
+    for (int i = 0; i < DEPTH_LIMIT; i++) {
+      String original = result;
+      result = substitutor.replace(new StringBuffer(original));
+
+      for (;;) {
+        final Matcher matcher = pattern.matcher(result);
+        if (!matcher.find()) {
+          break;
+        }
+
+        result = resolveSecured(matcher, ctx);
+      }
+      if (result.equals(original)) {
+        return result;
+      }
+      if (result.length() > limit) {
+        throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
+      }
+    }
+
+    throw new CriticalExpressionEvaluationException(
+        "Infinite loop or too deep indirection in property interpretation", expression);
   }
 }
