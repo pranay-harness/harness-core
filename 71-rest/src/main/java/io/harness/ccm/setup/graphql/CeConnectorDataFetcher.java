@@ -1,5 +1,7 @@
 package io.harness.ccm.setup.graphql;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
@@ -17,7 +19,6 @@ import software.wings.beans.ce.CEGcpConfig;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class CeConnectorDataFetcher
   private static final String ERROR_FETCHING_HEALTH_STATUS = "Error Fetching Health Status";
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLCEConnectorData fetchConnection(
       List<QLCESetupFilter> filters, QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<SettingAttribute> query = populateFilters(wingsPersistence, filters, SettingAttribute.class, true)

@@ -48,6 +48,7 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.SettingServiceHelper;
+import software.wings.service.impl.security.auth.SettingAuthHandler;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AwsHelperResourceService;
@@ -106,6 +107,7 @@ public class SettingResource {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
   @Inject private SettingServiceHelper settingServiceHelper;
+  @Inject private SettingAuthHandler settingAuthHandler;
 
   /**
    * List.
@@ -141,14 +143,12 @@ public class SettingResource {
     if (withArtifactStreamCount || artifactStreamSearchString != null || entityId != null || gitSshConfigOnly) {
       // Get artifact type from entityType and entityId.
       ArtifactType artifactType = null;
-      if (entityType != null && entityId != null) {
-        if (entityType.equals(EntityType.SERVICE.name())) {
-          Service service = serviceResourceService.get(entityId);
-          if (service == null) {
-            throw new InvalidRequestException(format("Service with id: [%s] not found", entityId), USER);
-          }
-          artifactType = service.getArtifactType();
+      if (entityType != null && entityId != null && entityType.equals(EntityType.SERVICE.name())) {
+        Service service = serviceResourceService.get(entityId);
+        if (service == null) {
+          throw new InvalidRequestException(format("Service with id: [%s] not found", entityId), USER);
         }
+        artifactType = service.getArtifactType();
       }
       result = settingsService.list(pageRequest, currentAppId, currentEnvId, accountId, gitSshConfigOnly,
           withArtifactStreamCount, artifactStreamSearchString, maxArtifactStreams, artifactType);
@@ -172,6 +172,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
+    settingAuthHandler.authorize(variable);
     SettingAttribute savedSettingAttribute = settingsService.saveWithPruning(variable, appId, accountId);
     settingServiceHelper.updateSettingAttributeBeforeResponse(savedSettingAttribute, false);
     return new RestResponse<>(savedSettingAttribute);
@@ -179,9 +180,10 @@ public class SettingResource {
 
   /**
    * Validate
-   * @param appId The appId
+   *
+   * @param appId     The appId
    * @param accountId The account Id
-   * @param variable The variable to be validated
+   * @param variable  The variable to be validated
    * @return
    */
   @POST
@@ -190,6 +192,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<ValidationResult> validate(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
+    settingAuthHandler.authorize(variable);
     return new RestResponse<>(settingsService.validateWithPruning(variable, appId, accountId));
   }
 
@@ -200,6 +203,7 @@ public class SettingResource {
   public RestResponse<ValidationResult> validateConnectivity(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       SettingAttribute variable) {
+    settingAuthHandler.authorize(variable);
     return new RestResponse<>(settingsService.validateConnectivityWithPruning(variable, appId, accountId));
   }
 
@@ -233,8 +237,7 @@ public class SettingResource {
 
       UsageRestrictions usageRestrictionsFromJson =
           usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
-
-      return new RestResponse<>(settingsService.save(
+      SettingAttribute settingAttribute =
           aSettingAttribute()
               .withAccountId(accountId)
               .withAppId(appId)
@@ -242,7 +245,9 @@ public class SettingResource {
               .withValue(value)
               .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(value.getType())))
               .withUsageRestrictions(usageRestrictionsFromJson)
-              .build()));
+              .build();
+      settingAuthHandler.authorize(settingAttribute);
+      return new RestResponse<>(settingsService.save(settingAttribute));
     }
     return new RestResponse<>();
   }
@@ -264,6 +269,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("attrId") String attrId, SettingAttribute variable) {
+    settingAuthHandler.authorize(variable);
     SettingAttribute updatedSettingAttribute = settingsService.updateWithSettingFields(variable, attrId, appId);
     settingServiceHelper.updateSettingAttributeBeforeResponse(updatedSettingAttribute, false);
     return new RestResponse<>(updatedSettingAttribute);
@@ -298,20 +304,22 @@ public class SettingResource {
     UsageRestrictions usageRestrictionsFromJson =
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
 
-    SettingAttribute.Builder settingAttribute =
+    SettingAttribute settingAttribute =
         aSettingAttribute()
             .withUuid(attrId)
             .withName(name)
             .withAccountId(accountId)
             .withAppId(appId)
             .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(type)))
-            .withUsageRestrictions(usageRestrictionsFromJson);
+            .withUsageRestrictions(usageRestrictionsFromJson)
+            .build();
     if (value != null) {
       ((EncryptableSetting) value).setAccountId(accountId);
       ((EncryptableSetting) value).setDecrypted(true);
-      settingAttribute.withValue(value);
+      settingAttribute.setValue(value);
     }
-    return new RestResponse<>(settingsService.update(settingAttribute.build()));
+    settingAuthHandler.authorize(settingAttribute);
+    return new RestResponse<>(settingsService.update(settingAttribute));
   }
 
   /**
@@ -327,14 +335,16 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse delete(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
+    settingAuthHandler.authorize(appId, attrId);
     settingsService.delete(appId, attrId);
     return new RestResponse();
   }
 
   /**
    * Delete all git connectors except the ones to retain
-   * @param appId Harness App ID
-   * @param accountId Harness Account ID
+   *
+   * @param appId                 Harness App ID
+   * @param accountId             Harness Account ID
    * @param gitConnectorsToRetain Body should be a list of git connector IDs
    * @return Rest response
    */
@@ -386,16 +396,17 @@ public class SettingResource {
       ((EncryptableSetting) value).setDecrypted(true);
     }
 
-    SettingAttribute.Builder settingAttribute =
+    SettingAttribute settingAttribute =
         aSettingAttribute()
             .withUuid(attrId)
             .withName(name)
             .withAccountId(accountId)
             .withAppId(appId)
             .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(type)))
-            .withValue(value);
-
-    return new RestResponse<>(settingsService.validateConnectivity(settingAttribute.build()));
+            .withValue(value)
+            .build();
+    settingAuthHandler.authorize(settingAttribute);
+    return new RestResponse<>(settingsService.validateConnectivity(settingAttribute));
   }
 
   /**
@@ -508,7 +519,6 @@ public class SettingResource {
    * @param artifactStreamId the artifact source id
    * @param settingId        the setting id
    * @return the builds
-   * @return the builds
    */
   @GET
   @Path("build-sources/builds")
@@ -566,7 +576,7 @@ public class SettingResource {
   /**
    * List.
    *
-   * @param accountId                the account id
+   * @param accountId the account id
    * @return the rest response
    */
   @GET
@@ -576,6 +586,7 @@ public class SettingResource {
   public RestResponse<List<NameValuePair>> listAwsRegions(@QueryParam("accountId") String accountId) {
     return new RestResponse(awsHelperResourceService.getAwsRegions());
   }
+
   /**
    * Get GCS projects
    *
@@ -665,14 +676,12 @@ public class SettingResource {
 
     // Get artifact type from entityType and entityId.
     ArtifactType artifactType = null;
-    if (entityType != null && entityId != null) {
-      if (entityType.equals(EntityType.SERVICE.name())) {
-        Service service = serviceResourceService.get(entityId);
-        if (service == null) {
-          throw new InvalidRequestException(format("Service with id: [%s] not found", entityId), USER);
-        }
-        artifactType = service.getArtifactType();
+    if (entityType != null && entityId != null && entityType.equals(EntityType.SERVICE.name())) {
+      Service service = serviceResourceService.get(entityId);
+      if (service == null) {
+        throw new InvalidRequestException(format("Service with id: [%s] not found", entityId), USER);
       }
+      artifactType = service.getArtifactType();
     }
 
     PageResponse<ArtifactStream> artifactStreams = artifactStreamService.list(

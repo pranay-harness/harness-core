@@ -2169,12 +2169,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private boolean userHasTemplateLibraryPermissions(String accountId, User user) {
-    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
-    Set<PermissionType> accountPermissions = userPermissionInfo.getAccountPermissionSummary().getPermissions();
-    return accountPermissions.contains(PermissionType.TEMPLATE_MANAGEMENT);
-  }
-
   @Override
   public FolderNode doTemplateLibrary(
       String accountId, DirectoryPath directoryPath, String appId, String templateLibraryFolderName, Type type) {

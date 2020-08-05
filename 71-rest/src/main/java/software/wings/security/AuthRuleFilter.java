@@ -326,7 +326,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         || PermissionType.ACCOUNT_MANAGEMENT == permissionType || PermissionType.TEMPLATE_MANAGEMENT == permissionType
         || PermissionType.USER_PERMISSION_READ == permissionType || PermissionType.AUDIT_VIEWER == permissionType
         || PermissionType.TAG_MANAGEMENT == permissionType || PermissionType.CE_ADMIN == permissionType
-        || PermissionType.CE_VIEWER == permissionType;
+        || PermissionType.CE_VIEWER == permissionType || PermissionType.MANAGE_CONNECTORS == permissionType
+        || PermissionType.MANAGE_CLOUD_PROVIDERS == permissionType;
   }
 
   private String getEntityIdFromRequest(List<PermissionAttribute> permissionAttributes,

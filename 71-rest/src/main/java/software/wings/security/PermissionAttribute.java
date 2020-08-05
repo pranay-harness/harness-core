@@ -40,6 +40,10 @@ public class PermissionAttribute {
     this.permissionType = resourceType.getActionPermissionScopeMap().get(action);
   }
 
+  public PermissionAttribute(PermissionType permissionType) {
+    this.permissionType = permissionType;
+  }
+
   /**
    * This constructor is used by old rbac code
    * @param resourceType

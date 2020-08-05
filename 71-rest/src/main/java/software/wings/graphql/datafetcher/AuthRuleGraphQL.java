@@ -169,7 +169,6 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
       user = userService.get(triggeredById);
     }
 
-    //    String actionStr = actionArgument.getValue() != null ? String.valueOf(actionArgument.getValue()) : null;
     boolean isAccountLevelPermissions = authRuleFilter.isAccountLevelPermissions(permissionAttributes);
     boolean emptyAppIdsInReq = isEmpty(appId);
     List<String> appIdsFromRequest = emptyAppIdsInReq ? null : asList(appId);
@@ -207,19 +206,17 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
         authService.authorize(accountId, appIdsFromRequest, entityId, user, permissionAttributes);
       } else if (httpMethod.equals(HttpMethod.GET.name())) {
         // In case of list api, the entityId would be null, we enforce restrictions in WingsMongoPersistence
-        if (entityId != null) {
-          if (emptyAppIdsInReq && isScopedToApp) {
-            appId = getApplicationId(permissionAttribute, entityId);
-            if (isNotEmpty(appId)) {
-              appIdsFromRequest = asList(appId);
-            } else {
-              String msg = "Could not retrieve appId for entityId: " + entityId;
-              logger.error(msg);
-              throw new WingsException(msg);
-            }
-            // get api
-            authService.authorize(accountId, appIdsFromRequest, entityId, user, permissionAttributes);
+        if (entityId != null && emptyAppIdsInReq && isScopedToApp) {
+          appId = getApplicationId(permissionAttribute, entityId);
+          if (isNotEmpty(appId)) {
+            appIdsFromRequest = asList(appId);
+          } else {
+            String msg = "Could not retrieve appId for entityId: " + entityId;
+            logger.error(msg);
+            throw new WingsException(msg);
           }
+          // get api
+          authService.authorize(accountId, appIdsFromRequest, entityId, user, permissionAttributes);
         }
       }
     }
@@ -313,7 +310,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     return HttpMethod.GET.name();
   }
 
-  public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
+  private UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
       UserRestrictionInfo userRestrictionInfo, List<PermissionAttribute> requiredPermissionAttributes, String accountId,
       boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
       boolean accountLevelPermissions, boolean isScopeToApp) {
