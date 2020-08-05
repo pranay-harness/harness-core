@@ -1,7 +1,7 @@
 package io.harness.k8s;
 
+import static io.harness.k8s.KubernetesContainerServiceImpl.METRICS_SERVER_ABSENT;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,9 +18,12 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
-import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
 import org.junit.Before;
@@ -44,70 +47,76 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   @Mock private TimeLimiter timeLimiter;
   @Mock private Clock clock;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
-  @Mock private AuthorizationV1Api apiClient;
-  @Mock private K8sResourcePermissionImpl k8sResourcePermission;
+  @Mock private K8sResourceValidatorImpl k8sResourceValidator;
 
   @InjectMocks @Spy private KubernetesContainerServiceImpl kubernetesContainerService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public KubernetesServer server = new KubernetesServer(true, true);
 
   private KubernetesClient client;
+  private ApiClient apiClient;
+
   List<V1ResourceAttributes> resourceList;
   List<V1SubjectAccessReviewStatus> response;
 
-  final String REASON = "REASON_HERE";
+  private final String RESULT = "watch not granted on pods.apps, ";
 
   @Before
   public void setUp() {
     client = server.getClient();
     when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG)).thenReturn(client);
+    apiClient = ApiClientFactoryImpl.fromKubernetesConfig(KUBERNETES_CONFIG);
 
     resourceList = Arrays.asList(new V1ResourceAttributes().verb("verb").resource("resource").group("group"));
     response = Arrays.asList(new V1SubjectAccessReviewStatus());
-    doReturn(resourceList).when(k8sResourcePermission).v1ResourceAttributesListBuilder(any(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = HANTANG)
-  @Category(UnitTests.class)
-  public void shouldValidateWithAndWithoutCE() {
-    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG)).doesNotThrowAnyException();
-
-    doNothing().when(kubernetesContainerService).validateCEPermissions(any());
-    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG)).doesNotThrowAnyException();
+    doReturn(resourceList).when(k8sResourceValidator).v1ResourceAttributesListBuilder(any(), any(), any());
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void shouldValidateWithCEAllPermissionGranted() {
-    response.get(0).allowed(true).reason(null);
+  public void shouldValidateWithCEMetricsServerAbsent() throws ApiException {
+    doReturn(false).when(k8sResourceValidator).validateMetricsServer(any(ApiClient.class));
 
-    doReturn(response)
-        .when(k8sResourcePermission)
-        .validate(any(AuthorizationV1Api.class), any(List.class), any(int.class));
-    doReturn("").when(k8sResourcePermission).buildResponse(any(), any());
+    assertThatThrownBy(() -> kubernetesContainerService.validateCEPermissions(KUBERNETES_CONFIG))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessage(METRICS_SERVER_ABSENT);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldValidateWithCEMetricsServerPresent() throws ApiException {
+    doReturn(true).when(k8sResourceValidator).validateMetricsServer(any(ApiClient.class));
+    doNothing().when(kubernetesContainerService).validateCEResourcePermission(any());
 
     assertThatCode(() -> kubernetesContainerService.validateCEPermissions(KUBERNETES_CONFIG))
         .doesNotThrowAnyException();
-    verify(k8sResourcePermission, times(0)).validate(any(AuthorizationV1Api.class), any(V1ResourceAttributes.class));
-    verify(k8sResourcePermission, times(0))
-        .validate(any(AuthorizationV1Api.class), any(String.class), any(String.class), any(String.class));
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void shouldValidateWithCEOnePermissionNotGranted() {
-    response.get(0).allowed(false).reason(REASON);
+  public void shouldValidateWithCEAllPermissionGranted() throws ApiException {
+    doReturn(true).when(k8sResourceValidator).validateMetricsServer(any(ApiClient.class));
+    doReturn("").when(k8sResourceValidator).validateCEPermissions(any(ApiClient.class));
 
-    doReturn(response)
-        .when(k8sResourcePermission)
-        .validate(any(AuthorizationV1Api.class), any(List.class), any(int.class));
-    doReturn(REASON).when(k8sResourcePermission).buildResponse(any(), any());
+    assertThatCode(() -> kubernetesContainerService.validateCEResourcePermission(apiClient)).doesNotThrowAnyException();
 
-    assertThatThrownBy(() -> kubernetesContainerService.validateCEPermissions(KUBERNETES_CONFIG))
-        .hasMessageContaining(REASON);
+    verify(k8sResourceValidator, times(1)).validateCEPermissions(any(ApiClient.class));
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldValidateWithCEOnePermissionNotGranted() throws ApiException {
+    doReturn(true).when(k8sResourceValidator).validateMetricsServer(any(ApiClient.class));
+    doReturn(RESULT).when(k8sResourceValidator).validateCEPermissions(any(ApiClient.class));
+
+    assertThatThrownBy(() -> kubernetesContainerService.validateCEResourcePermission(any(ApiClient.class)))
+        .hasMessageContaining(RESULT);
+
+    verify(k8sResourceValidator, times(1)).validateCEPermissions(any(ApiClient.class));
   }
 
   @Test

@@ -28,7 +28,6 @@ import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -95,9 +94,8 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
-import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
-import io.kubernetes.client.openapi.models.V1ResourceAttributes;
-import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
@@ -136,11 +134,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
+  public static final String METRICS_SERVER_ABSENT = "CE.MetricsServerCheck: Please install metrics server.";
+  public static final String RESOURCE_PERMISSION_REQUIRED =
+      "CE: The provided serviceaccount is missing the following permissions: %n %s. Please grant these to the service account.";
 
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
-  @Inject private K8sResourcePermissionImpl k8sResourcePermission;
+  @Inject private K8sResourceValidatorImpl k8sResourceValidator;
 
   @Override
   public HasMetadata createOrReplaceController(KubernetesConfig kubernetesConfig, HasMetadata definition) {
@@ -362,17 +363,28 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void validateCEPermissions(KubernetesConfig kubernetesConfig) {
-    AuthorizationV1Api apiClient = ApiClientFactoryImpl.getAuthorizationClient(kubernetesConfig);
+    ApiClient apiClient = ApiClientFactoryImpl.fromKubernetesConfig(kubernetesConfig);
+    validateCEMetricsServer(apiClient);
+    validateCEResourcePermission(apiClient);
+  }
 
-    List<V1ResourceAttributes> cePermissions =
-        ImmutableList.copyOf(k8sResourcePermission.v1ResourceAttributesListBuilder(
-            new String[] {""}, new String[] {"nodes", "pods", "events"}, new String[] {"watch"}));
+  public void validateCEMetricsServer(ApiClient apiClient) {
+    try {
+      if (!k8sResourceValidator.validateMetricsServer(apiClient)) {
+        throw new InvalidRequestException(METRICS_SERVER_ABSENT);
+      }
+    } catch (ApiException e) {
+      logger.error("Error validating Metrics Server", e);
+      throw new InvalidRequestException(
+          format("CE.MetricsServerCheck: code=%s message=%s. Try again, if it persists contact Harness Support.",
+              e.getCode(), e.getResponseBody()));
+    }
+  }
 
-    List<V1SubjectAccessReviewStatus> response = k8sResourcePermission.validate(apiClient, cePermissions, 12);
-    String result = k8sResourcePermission.buildResponse(cePermissions, response);
+  public void validateCEResourcePermission(ApiClient apiClient) {
+    String result = k8sResourceValidator.validateCEPermissions(apiClient);
     if (!result.isEmpty()) {
-      throw new InvalidRequestException("CE: The provided serviceaccount is missing the following permissions.\n"
-          + result + "Please grant these required permissions to the service account.");
+      throw new InvalidRequestException(format(RESOURCE_PERMISSION_REQUIRED, result));
     }
   }
 
