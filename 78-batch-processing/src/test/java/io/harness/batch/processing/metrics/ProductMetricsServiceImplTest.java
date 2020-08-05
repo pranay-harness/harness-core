@@ -5,23 +5,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountDao;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ProductMetricsServiceImplTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String gcpOrganizationUuid = "1";
 
-  @Mock BatchMainConfig batchMainConfig;
-  @InjectMocks @Inject ProductMetricsServiceImpl productMetricsService;
+  @Inject ProductMetricsServiceImpl productMetricsService;
   @Inject GcpBillingAccountDao gcpBillingAccountDao;
 
   @Test

@@ -16,7 +16,7 @@ public interface BillingDataPipelineRecordDao {
   List<BillingDataPipelineRecord> listByGcpBillingAccountDataset(
       String accountId, String gcpBqProjectId, String gcpBqDatasetId);
 
-  List<BillingDataPipelineRecord> getAllBillingDataPipelineRecords();
+  List<BillingDataPipelineRecord> listAllBillingDataPipelineRecords();
 
   BillingDataPipelineRecord upsert(BillingDataPipelineRecord billingDataPipelineRecord);
 }

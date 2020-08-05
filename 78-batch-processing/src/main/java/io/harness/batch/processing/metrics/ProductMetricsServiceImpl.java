@@ -8,6 +8,7 @@ import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.CE_AWS;
+import static software.wings.settings.SettingVariableTypes.KUBERNETES_CLUSTER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,6 +19,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 
@@ -37,7 +39,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
   private static final String TOTAL_UNALLOCATED_COST_QUERY =
       "SELECT SUM(unallocatedcost) AS UNALLOCATEDCOST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
   private static final String TOTAL_IDLE_COST_QUERY =
-      "SELECT SUM(idlecost) AS IDLECOST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
+      "SELECT SUM(actualIdleCost) AS IDLECOST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
   private static final String TOTAL_K8S_SPEND_IN_CE_QUERY =
       "SELECT SUM(billingamount) AS COST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND (t0.instancetype IN ('K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
   private static final String TOTAL_ECS_SPEND_IN_CE_QUERY =
@@ -45,14 +47,19 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
   private static final String TOTAL_K8S_NAMESPACES_QUERY =
       "SELECT COUNT(DISTINCT \"namespace\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
   private static final String TOTAL_K8S_WORKFLOWS_QUERY =
-      "SELECT COUNT(DISTINCT \"workloadtype\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+      "SELECT COUNT(DISTINCT \"workloadname\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+  private static final String TOTAL_K8S_NODES_QUERY =
+      "SELECT COUNT(DISTINCT \"instanceid\") AS NUM FROM billing_data t0 WHERE instancetype='K8S_NODE' AND (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+  private static final String TOTAL_K8S_PODS_QUERY =
+      "SELECT COUNT(DISTINCT \"instanceid\") AS NUM FROM billing_data t0 WHERE instancetype='K8S_POD' AND (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+
   private static final String TOTAL_ECS_CLUSTERS_QUERY =
       "SELECT COUNT(DISTINCT \"clusterid\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND starttime BETWEEN '%s' and '%s'";
   private static final String TOTAL_ECS_TASKS_QUERY =
       "SELECT COUNT(DISTINCT \"taskid\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND starttime BETWEEN '2020-05-28' and '2020-06-01'";
 
-  @Inject private HPersistence persistence;
-  @Inject private TimeScaleDBService timeScaleDBService;
+  @Autowired @Inject private HPersistence persistence;
+  @Autowired @Inject private TimeScaleDBService timeScaleDBService;
 
   @Override
   public int countGcpBillingAccounts(String accountId) {
@@ -93,6 +100,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
   public int countK8sClusterInCd(String accountId) {
     return toIntExact(persistence.createQuery(SettingAttribute.class, excludeAuthority)
                           .filter(SettingAttributeKeys.accountId, accountId)
+                          .filter(SettingAttributeKeys.valueType, KUBERNETES_CLUSTER)
                           .filter(SettingAttributeKeys.category, CLOUD_PROVIDER)
                           .count());
   }
@@ -102,6 +110,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     return toIntExact(persistence.createQuery(SettingAttribute.class, excludeValidate)
                           .filter(SettingAttributeKeys.accountId, accountId)
                           .filter(SettingAttributeKeys.category, CLOUD_PROVIDER)
+                          .filter(SettingAttributeKeys.valueType, KUBERNETES_CLUSTER)
                           .filter(SettingAttributeKeys.isCEEnabled, Boolean.TRUE)
                           .count());
   }
@@ -251,6 +260,44 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       String query = format(TOTAL_K8S_WORKFLOWS_QUERY, accountId, start, end);
+      resultSet = statement.executeQuery(query);
+      while (resultSet.next()) {
+        totalK8sWorkflows = resultSet.getDouble("NUM");
+      }
+    } catch (SQLException e) {
+      logger.error("Error while fetching Common Fields : exception", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
+    return totalK8sWorkflows;
+  }
+
+  @Override
+  public double countTotalK8sNodes(String accountId, Instant start, Instant end) {
+    double totalK8sWorkflows = 0;
+    ResultSet resultSet = null;
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      String query = format(TOTAL_K8S_NODES_QUERY, accountId, start, end);
+      resultSet = statement.executeQuery(query);
+      while (resultSet.next()) {
+        totalK8sWorkflows = resultSet.getDouble("NUM");
+      }
+    } catch (SQLException e) {
+      logger.error("Error while fetching Common Fields : exception", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
+    return totalK8sWorkflows;
+  }
+
+  @Override
+  public double countTotalK8sPods(String accountId, Instant start, Instant end) {
+    double totalK8sWorkflows = 0;
+    ResultSet resultSet = null;
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      String query = format(TOTAL_K8S_PODS_QUERY, accountId, start, end);
       resultSet = statement.executeQuery(query);
       while (resultSet.next()) {
         totalK8sWorkflows = resultSet.getDouble("NUM");

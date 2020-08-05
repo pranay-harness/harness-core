@@ -88,7 +88,7 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
 
   void updateBillingPipelineRecordsStatus(Map<String, TransferState> transferToStatusMap) {
     List<BillingDataPipelineRecord> billingDataPipelineRecords =
-        billingDataPipelineRecordDao.getAllBillingDataPipelineRecords();
+        billingDataPipelineRecordDao.listAllBillingDataPipelineRecords();
     for (BillingDataPipelineRecord record : billingDataPipelineRecords) {
       BillingDataPipelineRecordBuilder billingDataPipelineRecordBuilder = BillingDataPipelineRecord.builder();
       billingDataPipelineRecordBuilder.accountId(record.getAccountId());
