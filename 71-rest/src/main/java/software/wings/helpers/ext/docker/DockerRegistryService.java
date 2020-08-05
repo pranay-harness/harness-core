@@ -3,7 +3,6 @@ package software.wings.helpers.ext.docker;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -25,8 +24,7 @@ public interface DockerRegistryService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets labels.
@@ -36,8 +34,7 @@ public interface DockerRegistryService {
    * @param tags         the image tags to find labels of
    * @return the builds
    */
-  List<Map<String, String>> getLabels(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, List<String> tags);
+  List<Map<String, String>> getLabels(DockerConfig dockerConfig, String imageName, List<String> tags);
 
   /**
    * Gets last successful build.
@@ -46,16 +43,14 @@ public interface DockerRegistryService {
    * @param imageName    the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
+  BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName);
 
   /**
    * Validates the Image
-   *
-   * @param dockerConfig
+   *  @param dockerConfig
    * @param imageName
    */
-  boolean verifyImageName(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
+  boolean verifyImageName(DockerConfig dockerConfig, String imageName);
 
   /**
    * Validate the credentials
@@ -63,5 +58,5 @@ public interface DockerRegistryService {
    * @param dockerConfig
    * @return
    */
-  boolean validateCredentials(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails);
+  boolean validateCredentials(DockerConfig dockerConfig);
 }

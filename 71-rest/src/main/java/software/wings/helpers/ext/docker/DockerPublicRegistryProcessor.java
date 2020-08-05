@@ -11,15 +11,15 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.network.Http;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -46,28 +46,26 @@ public class DockerPublicRegistryProcessor {
 
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
-  public boolean verifyImageName(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
+  public boolean verifyImageName(DockerConfig dockerConfig, String imageName) {
     try {
-      DockerRegistryRestClient registryRestClient =
-          dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+      DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
       Response<DockerPublicImageTagResponse> response =
           registryRestClient.listPublicImageTags(imageName, null, 1).execute();
       if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Image name [" + imageName + "] does not exist in Docker registry.");
+        throw new InvalidArgumentsException(
+            ImmutablePair.of("args", "Image name [" + imageName + "] does not exist in Docker registry."), null, USER);
       }
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER, e).addParam("message", e.getMessage());
+      Exception exception = new Exception(e);
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER);
     }
     return true;
   }
 
-  public List<BuildDetails> getBuilds(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails,
-      String imageName, int maxNumberOfBuilds) throws IOException {
-    DockerRegistryRestClient registryRestClient =
-        dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+  public List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds)
+      throws IOException {
+    DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     Response<DockerPublicImageTagResponse> response =
         registryRestClient.listPublicImageTags(imageName, null, maxNumberOfBuilds).execute();
 
@@ -158,10 +156,8 @@ public class DockerPublicRegistryProcessor {
     }
   }
 
-  public List<Map<String, String>> getLabels(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, List<String> buildNos) {
-    DockerRegistryRestClient registryRestClient =
-        dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+  public List<Map<String, String>> getLabels(DockerConfig dockerConfig, String imageName, List<String> buildNos) {
+    DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     Function<Headers, String> getToken = headers -> getToken(headers, registryRestClient);
     return dockerRegistryUtils.getLabels(registryRestClient, getToken, "", imageName, buildNos);
   }

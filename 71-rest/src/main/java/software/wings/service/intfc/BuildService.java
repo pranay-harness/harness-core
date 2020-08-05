@@ -304,8 +304,8 @@ public interface BuildService<T> {
   /**
    * wrapNewBuildsWithLabels removes build details already present in DB and collects labels if necessary.
    */
-  default List<BuildDetails> wrapNewBuildsWithLabels(List<BuildDetails> buildDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, T config, List<EncryptedDataDetail> encryptionDetails) {
+  default List<BuildDetails> wrapNewBuildsWithLabels(
+      List<BuildDetails> buildDetails, ArtifactStreamAttributes artifactStreamAttributes, T config) {
     // NOTE: config and encryptionDetails are used only for fetching labels.
     // Filter out new build details that are not saved already in our DB.
     buildDetails = ArtifactCollectionUtils.getNewBuildDetails(artifactStreamAttributes.getSavedBuildDetailsKeys(),
@@ -318,13 +318,13 @@ public interface BuildService<T> {
   /**
    * wrapLastSuccessfulBuildWithLabels removes build details already present in DB and collects labels if necessary.
    */
-  default BuildDetails wrapLastSuccessfulBuildWithLabels(BuildDetails buildDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, T config, List<EncryptedDataDetail> encryptionDetails) {
+  default BuildDetails wrapLastSuccessfulBuildWithLabels(
+      BuildDetails buildDetails, ArtifactStreamAttributes artifactStreamAttributes, T config) {
     if (buildDetails == null) {
       return null;
     }
-    List<BuildDetails> buildDetailsList = wrapNewBuildsWithLabels(
-        Collections.singletonList(buildDetails), artifactStreamAttributes, config, encryptionDetails);
+    List<BuildDetails> buildDetailsList =
+        wrapNewBuildsWithLabels(Collections.singletonList(buildDetails), artifactStreamAttributes, config);
     return isEmpty(buildDetailsList) ? null : buildDetailsList.get(0);
   }
 }

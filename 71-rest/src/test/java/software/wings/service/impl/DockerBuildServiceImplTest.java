@@ -45,7 +45,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsWithoutCredentials() {
     DockerConfig dockerConfig = DockerConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).build();
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
+    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
     logger.info(builds.toString());
     assertThat(builds.size()).isEqualTo(5);
   }
@@ -61,7 +61,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
             .username("anubhaw")
             .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
+    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
     logger.info(builds.toString());
     assertThat(builds.size()).isGreaterThanOrEqualTo(5);
   }
@@ -77,7 +77,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
             .username("anubhaw")
             .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
-    BuildDetails build = dockerRegistryService.getLastSuccessfulBuild(dockerConfig, null, "library/mysql");
+    BuildDetails build = dockerRegistryService.getLastSuccessfulBuild(dockerConfig, "library/mysql");
     logger.info(build.toString());
   }
 
@@ -113,7 +113,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
             .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
     try {
-      dockerRegistryService.validateCredentials(dockerConfig, null);
+      dockerRegistryService.validateCredentials(dockerConfig);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();

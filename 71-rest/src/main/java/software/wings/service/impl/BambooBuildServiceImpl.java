@@ -43,7 +43,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
     return wrapNewBuildsWithLabels(
         bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getArtifactPaths(), ARTIFACT_RETENTION_SIZE),
-        artifactStreamAttributes, bambooConfig, encryptionDetails);
+        artifactStreamAttributes, bambooConfig);
   }
 
   @Override
@@ -53,7 +53,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
     return wrapNewBuildsWithLabels(
         bambooService.getBuilds(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getArtifactPaths(), limit),
-        artifactStreamAttributes, bambooConfig, encryptionDetails);
+        artifactStreamAttributes, bambooConfig);
   }
 
   @Override
@@ -87,7 +87,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
     return wrapLastSuccessfulBuildWithLabels(
         bambooService.getLastSuccessfulBuild(bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getArtifactPaths()),
-        artifactStreamAttributes, bambooConfig, encryptionDetails);
+        artifactStreamAttributes, bambooConfig);
   }
 
   @Override

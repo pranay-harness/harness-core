@@ -44,7 +44,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
     wireMockRule.stubFor(get(urlEqualTo("/v2/"))
                              .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
                                  "Bearer realm=\"https://localhost:9883/service/token\",service=\"harbor-registry\"")));
-    dockerRegistryService.validateCredentials(dockerConfig, null);
+    dockerRegistryService.validateCredentials(dockerConfig);
   }
 
   @Test(expected = InvalidArtifactServerException.class)
@@ -57,7 +57,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
     // http://localhost:9883/service/token?service=harbor-registry&scope=somevalue
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                              .willReturn(aResponse().withBody(JsonUtils.asJson(getDockerRegistryToken()))));
-    dockerRegistryService.validateCredentials(dockerConfig, null);
+    dockerRegistryService.validateCredentials(dockerConfig);
   }
 
   @Test(expected = InvalidArtifactServerException.class)
@@ -67,7 +67,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
     wireMockRule.stubFor(get(urlEqualTo("/v2/"))
                              .willReturn(aResponse().withStatus(200).withHeader("Www-Authenticate",
                                  "Bearer realm=\"https://localhost:9883/service/token\",service=\"harbor-registry\"")));
-    dockerRegistryService.validateCredentials(dockerConfig, null);
+    dockerRegistryService.validateCredentials(dockerConfig);
   }
 
   @Test(expected = InvalidArtifactServerException.class)
@@ -83,7 +83,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
     // http://localhost:9883/service/token?service=harbor-registry&scope=somevalue
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                              .willReturn(aResponse().withBody(JsonUtils.asJson(getDockerRegistryToken()))));
-    dockerRegistryService.validateCredentials(dockerConfig, null);
+    dockerRegistryService.validateCredentials(dockerConfig);
   }
 
   @NotNull
@@ -100,7 +100,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   public void testValidateCredentialForMissingPassword() {
     try {
       dockerConfig.setPassword(null);
-      dockerRegistryService.validateCredentials(dockerConfig, null);
+      dockerRegistryService.validateCredentials(dockerConfig);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(getMessage(ex)).isEqualTo("Password is a required field along with Username");
@@ -113,7 +113,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetBuildDetails() {
     try {
-      dockerRegistryService.getBuilds(dockerConfig, null, "image", 10);
+      dockerRegistryService.getBuilds(dockerConfig, "image", 10);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(getMessage(ex)).isEqualTo("Bad Request");
@@ -137,7 +137,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testIsSuccessfulErrorCode500() {
     try {
-      dockerRegistryService.getBuilds(dockerConfig, null, "image_500", 10);
+      dockerRegistryService.getBuilds(dockerConfig, "image_500", 10);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(getMessage(ex)).isEqualTo("Internal Server Error");

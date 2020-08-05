@@ -40,7 +40,7 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ECR.name());
     return wrapNewBuildsWithLabels(
         ecrClassicService.getBuilds(ecrConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 50),
-        artifactStreamAttributes, ecrConfig, encryptionDetails);
+        artifactStreamAttributes, ecrConfig);
   }
 
   @Override

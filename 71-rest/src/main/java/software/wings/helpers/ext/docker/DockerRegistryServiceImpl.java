@@ -16,23 +16,19 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
-import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.exception.InvalidArtifactServerException;
+import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.net.URL;
@@ -52,35 +48,21 @@ import java.util.function.Function;
 @Slf4j
 public class DockerRegistryServiceImpl implements DockerRegistryService {
   public static final String BEARER = "Bearer ";
-  @Inject private EncryptionService encryptionService;
   @Inject private DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
   @Inject private DockerRegistryUtils dockerRegistryUtils;
+  @Inject private DockerRestClientFactory dockerRestClientFactory;
   private static final String AUTHENTICATE_HEADER = "Www-Authenticate";
 
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
-  private DockerRegistryRestClient getDockerRegistryRestClient(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(dockerConfig, encryptionDetails);
-    OkHttpClient okHttpClient = Http.getUnsafeOkHttpClient(dockerConfig.getDockerRegistryUrl());
-    Retrofit retrofit = new Retrofit.Builder()
-                            .client(okHttpClient)
-                            .baseUrl(dockerConfig.getDockerRegistryUrl())
-                            .addConverterFactory(JacksonConverterFactory.create())
-                            .build();
-    return retrofit.create(DockerRegistryRestClient.class);
-  }
-
   @Override
-  public List<BuildDetails> getBuilds(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetails;
     try {
       if (dockerConfig.hasCredentials()) {
-        buildDetails = getBuildDetails(dockerConfig, encryptionDetails, imageName);
+        buildDetails = getBuildDetails(dockerConfig, imageName);
       } else {
-        buildDetails =
-            dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
+        buildDetails = dockerPublicRegistryProcessor.getBuilds(dockerConfig, imageName, maxNumberOfBuilds);
       }
     } catch (Exception e) {
       throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER);
@@ -89,15 +71,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
   }
 
-  private List<BuildDetails> getBuildDetails(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) throws IOException {
-    DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+  private List<BuildDetails> getBuildDetails(DockerConfig dockerConfig, String imageName) throws IOException {
+    DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
     List<BuildDetails> buildDetails = new ArrayList<>();
     String token = null;
     Response<DockerImageTagResponse> response = registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
     if (response.code() == 401) { // unauthorized
-      token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
+      token = getToken(dockerConfig, response.headers(), registryRestClient);
       response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
       if (response.code() == 401) {
         throw new InvalidCredentialsException("Invalid Credentials while fetching build details", USER);
@@ -129,7 +110,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
           queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
       response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
       if (response.code() == 401) { // unauthorized
-        token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
+        token = getToken(dockerConfig, response.headers(), registryRestClient);
         response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
       }
       dockerImageTagResponse = response.body();
@@ -172,43 +153,38 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   @Override
-  public List<Map<String, String>> getLabels(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, List<String> buildNos) {
+  public List<Map<String, String>> getLabels(DockerConfig dockerConfig, String imageName, List<String> buildNos) {
     if (!dockerConfig.hasCredentials()) {
-      return dockerPublicRegistryProcessor.getLabels(dockerConfig, encryptionDetails, imageName, buildNos);
+      return dockerPublicRegistryProcessor.getLabels(dockerConfig, imageName, buildNos);
     }
 
-    DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+    DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     String authHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
-    Function<Headers, String> getToken =
-        headers -> getToken(dockerConfig, encryptionDetails, headers, registryRestClient);
+    Function<Headers, String> getToken = headers -> getToken(dockerConfig, headers, registryRestClient);
     return dockerRegistryUtils.getLabels(registryRestClient, getToken, authHeader, imageName, buildNos);
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
+  public BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName) {
     return null;
   }
 
   @Override
-  public boolean verifyImageName(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
+  public boolean verifyImageName(DockerConfig dockerConfig, String imageName) {
     if (dockerConfig.hasCredentials()) {
-      return checkImageName(dockerConfig, encryptionDetails, imageName);
+      return checkImageName(dockerConfig, imageName);
     }
-    return dockerPublicRegistryProcessor.verifyImageName(dockerConfig, encryptionDetails, imageName);
+    return dockerPublicRegistryProcessor.verifyImageName(dockerConfig, imageName);
   }
 
-  private boolean checkImageName(
-      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
+  private boolean checkImageName(DockerConfig dockerConfig, String imageName) {
     try {
-      DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+      DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
       String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
       Response<DockerImageTagResponse> response =
           registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
       if (response.code() == 401) { // unauthorized
-        String token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
+        String token = getToken(dockerConfig, response.headers(), registryRestClient);
         response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
       }
       if (!isSuccessful(response)) {
@@ -223,7 +199,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   @Override
-  public boolean validateCredentials(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
+  public boolean validateCredentials(DockerConfig dockerConfig) {
     if (dockerConfig.hasCredentials()) {
       if (isEmpty(dockerConfig.getPassword()) && isEmpty(dockerConfig.getEncryptedPassword())) {
         throw new InvalidArtifactServerException("Password is a required field along with Username", USER);
@@ -234,7 +210,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       Response response;
       DockerRegistryToken dockerRegistryToken;
       try {
-        registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+        registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
         basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
         response = registryRestClient.getApiVersion(basicAuthHeader).execute();
         if (response.code() == 401) { // unauthorized
@@ -270,9 +246,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return true;
   }
 
-  private String getToken(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, Headers headers,
-      DockerRegistryRestClient registryRestClient) {
-    encryptionService.decrypt(dockerConfig, encryptionDetails);
+  private String getToken(DockerConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {
     String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
     String authHeaderValue = headers.get(AUTHENTICATE_HEADER);
     if (!cachedBearerTokens.containsKey(authHeaderValue)) {

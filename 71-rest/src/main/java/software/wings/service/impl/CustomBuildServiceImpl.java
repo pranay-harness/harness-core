@@ -25,7 +25,7 @@ public class CustomBuildServiceImpl implements CustomBuildService {
   public List<BuildDetails> getBuilds(ArtifactStreamAttributes artifactStreamAttributes) {
     // NOTE: Custom artifact stream doesn't support labels so the last two arguments can be null.
     return wrapNewBuildsWithLabels(
-        customRepositoryService.getBuilds(artifactStreamAttributes), artifactStreamAttributes, null, null);
+        customRepositoryService.getBuilds(artifactStreamAttributes), artifactStreamAttributes, null);
   }
 
   @Override

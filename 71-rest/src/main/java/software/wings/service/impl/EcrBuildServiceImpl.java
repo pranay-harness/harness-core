@@ -41,7 +41,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
     return wrapNewBuildsWithLabels(
         ecrService.getBuilds(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
             artifactStreamAttributes.getImageName(), 50),
-        artifactStreamAttributes, awsConfig, encryptionDetails);
+        artifactStreamAttributes, awsConfig);
   }
 
   @Override

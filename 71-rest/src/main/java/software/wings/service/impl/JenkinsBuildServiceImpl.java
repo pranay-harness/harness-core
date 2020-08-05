@@ -66,14 +66,14 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return wrapNewBuildsWithLabels(
         getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, ARTIFACT_RETENTION_SIZE),
-        artifactStreamAttributes, config, encryptionDetails);
+        artifactStreamAttributes, config);
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails, int limit) {
     return wrapNewBuildsWithLabels(getBuildDetails(artifactStreamAttributes, appId, config, encryptionDetails, limit),
-        artifactStreamAttributes, config, encryptionDetails);
+        artifactStreamAttributes, config);
   }
 
   private List<BuildDetails> getBuildDetails(ArtifactStreamAttributes artifactStreamAttributes, String appId,
@@ -143,7 +143,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       return wrapLastSuccessfulBuildWithLabels(
           jenkins.getLastSuccessfulBuildForJob(
               artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPaths()),
-          artifactStreamAttributes, jenkinsConfig, encryptionDetails);
+          artifactStreamAttributes, jenkinsConfig);
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {
