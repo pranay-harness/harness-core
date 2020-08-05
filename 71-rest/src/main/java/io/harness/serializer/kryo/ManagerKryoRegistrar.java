@@ -68,7 +68,6 @@ import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceExecutionData;
-import software.wings.api.EcsSetupElement;
 import software.wings.api.EcsStepExecutionSummary;
 import software.wings.api.ElbStateExecutionData;
 import software.wings.api.EmailStateExecutionData;
@@ -881,7 +880,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerServiceElement.class, 5095);
     kryo.register(DeploymentType.class, 5096);
     kryo.register(EcsBGSetupData.class, 5611);
-    kryo.register(EcsSetupElement.class, 5671);
     kryo.register(EcsListenerUpdateExecutionSummary.class, 5612);
     kryo.register(EcsListenerUpdateStateExecutionData.class, 5614);
     kryo.register(EcsServiceExecutionData.class, 5097);

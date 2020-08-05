@@ -51,7 +51,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.states.utils.StateTimeoutUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject protected EcsStateHelper ecsStateHelper;
 
   public EcsBGUpdateRoute53DNSWeightState(String name) {
     super(name, ECS_ROUTE53_DNS_WEIGHT_UPDATE.name());
@@ -94,7 +93,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+    return ecsStateHelper.getEcsStateTimeoutFromContext(context, false);
   }
 
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {

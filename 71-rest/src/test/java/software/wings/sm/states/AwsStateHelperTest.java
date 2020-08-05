@@ -37,7 +37,7 @@ public class AwsStateHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
-  public void testGetTimeoutMillis() {
+  public void testGetTimeoutFromContext() {
     AwsStateHelper helper = new AwsStateHelper();
 
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

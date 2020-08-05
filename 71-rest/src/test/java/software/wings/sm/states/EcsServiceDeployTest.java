@@ -1,14 +1,18 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -29,19 +33,17 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.Activity;
@@ -59,11 +61,10 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.states.utils.StateTimeoutUtils;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({StateTimeoutUtils.class})
-@PowerMockIgnore({"javax.security.*", "javax.net.*"})
+import java.util.HashMap;
+import java.util.Map;
+
 public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private SecretManager mockSecretManager;
   @Mock private EcsStateHelper mockEcsStateHelper;
@@ -136,9 +137,87 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
+  public void testExecuteNullDataBag() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doReturn(EcsDeployDataBag.builder().build())
+        .when(mockEcsStateHelper)
+        .prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
+    ExecutionResponse response = state.execute(mockContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(SKIPPED);
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteThrowWingsException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(new WingsException("test"))
+        .when(mockEcsStateHelper)
+        .prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
+    state.execute(mockContext);
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> state.execute(mockContext));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteThrowInvalidRequestException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(new NullPointerException("test"))
+        .when(mockEcsStateHelper)
+        .prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
+    state.execute(mockContext);
+    assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> state.execute(mockContext));
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseThrowWingsException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    doThrow(new WingsException("test"))
+        .when(mockEcsStateHelper)
+        .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());
+    state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> state.execute(mockContext));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseThrowInvalidRequestException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    doThrow(new NullPointerException("test"))
+        .when(mockEcsStateHelper)
+        .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());
+    state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> state.execute(mockContext));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    PowerMockito.mockStatic(StateTimeoutUtils.class);
-    when(StateTimeoutUtils.getEcsStateTimeoutFromContext(any())).thenReturn(10);
-    assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doReturn(10).when(mockEcsStateHelper).getEcsStateTimeoutFromContext(anyObject(), anyBoolean());
+    assertThat(state.getTimeoutMillis(mockContext)).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    state.setRollback(true);
+    assertThat(state.validateFields()).isEmpty();
+
+    state.setRollback(false);
+    Map results = state.validateFields();
+    assertThat(results.get("instanceCount")).isEqualTo("Instance count must not be blank");
+
+    state.setRollback(false);
+    state.setInstanceCount("2");
+    assertThat(state.validateFields()).isEmpty();
   }
 }

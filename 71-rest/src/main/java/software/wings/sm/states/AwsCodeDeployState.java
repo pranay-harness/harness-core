@@ -13,7 +13,6 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -288,7 +287,7 @@ public class AwsCodeDeployState extends State {
     if (steadyStateTimeout == 0) {
       return null;
     }
-    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(steadyStateTimeout));
+    return awsStateHelper.getTimeout(steadyStateTimeout);
   }
 
   private int getTimeOut() {

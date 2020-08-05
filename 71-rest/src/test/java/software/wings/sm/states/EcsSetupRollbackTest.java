@@ -2,15 +2,18 @@ package software.wings.sm.states;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -35,6 +38,9 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -68,6 +74,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class EcsSetupRollbackTest extends WingsBaseTest {
   private static final String DEL_TASK_ID = "DEL_TASK_ID";
@@ -196,5 +205,55 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
     verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), any(), eq(ExecutionStatus.SUCCESS));
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteThrowWingsException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(new WingsException("test"))
+        .when(mockEcsStateHelper)
+        .prepareBagForEcsSetUp(any(), anyInt(), any(), any(), any(), any(), any());
+    state.execute(mockContext);
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> state.execute(mockContext));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteThrowInvalidRequestException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(new NullPointerException("test"))
+        .when(mockEcsStateHelper)
+        .prepareBagForEcsSetUp(any(), anyInt(), any(), any(), any(), any(), any());
+    state.execute(mockContext);
+    assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> state.execute(mockContext));
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseThrowWingsException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    EcsCommandExecutionResponse ecsCommandExecutionResponse = mock(EcsCommandExecutionResponse.class);
+    delegateResponse.put("test", ecsCommandExecutionResponse);
+    doThrow(new WingsException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();
+    state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> state.execute(mockContext));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseThrowInvalidRequestException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    EcsCommandExecutionResponse ecsCommandExecutionResponse = mock(EcsCommandExecutionResponse.class);
+    delegateResponse.put("test", ecsCommandExecutionResponse);
+    doThrow(new NullPointerException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();
+    state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> state.execute(mockContext));
   }
 }

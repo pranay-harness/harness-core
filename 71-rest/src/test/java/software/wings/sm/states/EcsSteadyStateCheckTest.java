@@ -3,13 +3,16 @@ package software.wings.sm.states;
 import static io.harness.context.ContextElementType.INSTANCE;
 import static io.harness.context.ContextElementType.STANDARD;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,7 +40,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,6 +55,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -66,6 +73,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class EcsSteadyStateCheckTest extends WingsBaseTest {
@@ -128,6 +136,22 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     assertThat(ACTIVITY_ID).isEqualTo(params.getActivityId());
   }
 
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteInvalidInfrastructureMapping() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    PhaseElement mockPhaseElement = mock(PhaseElement.class);
+    doReturn(mockPhaseElement).when(mockContext).getContextElement(any(), anyString());
+    Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
+    doReturn(app).when(mockContext).getApp();
+    doReturn(new AwsAmiInfrastructureMapping()).when(mockInfrastructureMappingService).get(anyString(), anyString());
+    check.execute(mockContext);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> check.execute(mockContext))
+        .withMessageContaining("is not Ecs inframapping");
+  }
+
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
@@ -151,5 +175,35 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     ExecutionResponse response = check.handleAsyncResponse(mockContext, delegateResponse);
     verify(mockActivityService).updateStatus(anyString(), anyString(), any());
     verify(mockData).setStatus(any());
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseThrowWingsException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    doThrow(new WingsException("test")).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    check.handleAsyncResponse(mockContext, delegateResponse);
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> check.execute(mockContext));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseThrowException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    doThrow(new NullPointerException("test")).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    check.handleAsyncResponse(mockContext, delegateResponse);
+    assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> check.execute(mockContext));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    check.setTimeoutMillis(10);
+    assertThat(check.getTimeoutMillis()).isEqualTo(10);
   }
 }

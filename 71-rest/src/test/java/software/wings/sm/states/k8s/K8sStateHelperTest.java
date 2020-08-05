@@ -179,7 +179,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.time.Instant;
@@ -1450,16 +1449,6 @@ public class K8sStateHelperTest extends WingsBaseTest {
     InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
     assertThat(instanceInfoVariables.getInstanceDetails().get(0).getHostName()).isEqualTo("hostName");
     assertThat(instanceInfoVariables.getInstanceElements().get(0).getDockerId()).isEqualTo("dockerId");
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void getTimeoutInMillis() {
-    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(null)).isNull();
-    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(0)).isNull();
-    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(10)).isEqualTo(600000);
-    assertThat(StateTimeoutUtils.getTimeoutMillisFromMinutes(Integer.MAX_VALUE)).isEqualTo(null);
   }
 
   @Test

@@ -26,6 +26,11 @@ public class EcsBGRollbackRoute53DNSWeightState extends EcsBGUpdateRoute53DNSWei
   }
 
   @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return ecsStateHelper.getEcsStateTimeoutFromContext(context, true);
+  }
+
+  @Override
   @SchemaIgnore
   public int getRecordTTL() {
     return super.getRecordTTL();
