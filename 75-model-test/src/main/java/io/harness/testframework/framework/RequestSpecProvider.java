@@ -71,4 +71,12 @@ public class RequestSpecProvider {
     RestAssured.useRelaxedHTTPSValidation();
     return requestSpecBuilder.build();
   }
+
+  public RequestSpecification useMockSpec() {
+    String host = System.getProperty("server.host", "https://localhost");
+    String basePath = System.getProperty("server.base", "");
+    String port = System.getProperty("server.port", "8988");
+    RestAssured.useRelaxedHTTPSValidation();
+    return createRequestSpec(host, port, basePath);
+  }
 }

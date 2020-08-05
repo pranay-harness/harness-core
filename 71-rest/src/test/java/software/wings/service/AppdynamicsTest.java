@@ -114,7 +114,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = RAGHU, intermittent = true)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void getTiers() throws IOException {

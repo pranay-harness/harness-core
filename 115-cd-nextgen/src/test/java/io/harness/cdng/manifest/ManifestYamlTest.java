@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.redesign.services.CustomExecutionUtils;
+import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.rule.Owner;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.apache.commons.io.FileUtils;
@@ -20,7 +20,7 @@ public class ManifestYamlTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testParseManifestsYaml() throws Exception {
-    String file = CustomExecutionUtils.class.getClassLoader().getResource("cdng/pipeline.yaml").getFile();
+    String file = CustomExecutionProvider.class.getClassLoader().getResource("cdng/pipeline.yaml").getFile();
     String fileContent = FileUtils.readFileToString(new File(file), "UTF-8");
 
     CDPipeline pipeline = YamlPipelineUtils.read(fileContent, CDPipeline.class);

@@ -23,6 +23,8 @@ import io.harness.interrupts.Interrupt;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
+import io.harness.testframework.framework.MockServerExecutor;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private MockServerExecutor mockServerExecutor;
 
   Owners owners;
   Application application;
@@ -45,6 +48,12 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     owners = ownerManager.create();
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
+    mockServerExecutor.ensureMockServer(AbstractFunctionalTest.class);
+  }
+
+  @After
+  public void shutDown() {
+    mockServerExecutor.shutdownMockServer();
   }
 
   @Test

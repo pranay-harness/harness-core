@@ -25,6 +25,7 @@ import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
 import io.harness.config.DatadogConfig;
+import io.harness.config.MockServerConfig;
 import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
@@ -152,6 +153,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(value = "bugsnagApiKey") private String bugsnagApiKey;
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
   @JsonProperty("organizationManagerClient") private OrganizationManagerClientConfig organizationManagerClientConfig;
+  @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

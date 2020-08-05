@@ -31,12 +31,14 @@ import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.section.SectionStep;
 import io.harness.state.io.StepParameters;
+import io.harness.testframework.framework.MockServerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,6 +58,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
 
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private MockServerExecutor mockServerExecutor;
 
   OwnerManager.Owners owners;
   Application application;
@@ -67,6 +70,13 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     owners = ownerManager.create();
     application = applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
+
+    mockServerExecutor.ensureMockServer(AbstractFunctionalTest.class);
+  }
+
+  @After
+  public void shutDown() {
+    mockServerExecutor.shutdownMockServer();
   }
 
   @Test
