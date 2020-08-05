@@ -321,13 +321,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean isAccountLevelPermissions(PermissionType permissionType) {
-    return PermissionType.APPLICATION_CREATE_DELETE == permissionType
-        || PermissionType.USER_PERMISSION_MANAGEMENT == permissionType
-        || PermissionType.ACCOUNT_MANAGEMENT == permissionType || PermissionType.TEMPLATE_MANAGEMENT == permissionType
-        || PermissionType.USER_PERMISSION_READ == permissionType || PermissionType.AUDIT_VIEWER == permissionType
-        || PermissionType.TAG_MANAGEMENT == permissionType || PermissionType.CE_ADMIN == permissionType
-        || PermissionType.CE_VIEWER == permissionType || PermissionType.MANAGE_CONNECTORS == permissionType
-        || PermissionType.MANAGE_CLOUD_PROVIDERS == permissionType;
+    Set<PermissionType> accountPermissions = authHandler.getAllAccountPermissions();
+    if (isNotEmpty(accountPermissions)) {
+      return accountPermissions.contains(permissionType);
+    }
+    return false;
   }
 
   private String getEntityIdFromRequest(List<PermissionAttribute> permissionAttributes,
