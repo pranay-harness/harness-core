@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.NgManagerServiceDriver;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
@@ -17,7 +18,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.NGSecretService;
@@ -128,8 +128,10 @@ public class SecretsResourceNG {
   @Path("encryption-details")
   @Consumes("application/x-kryo")
   @Produces("application/x-kryo")
-  public RestResponse<List<EncryptedDataDetail>> getEncryptionDetails(EncryptableSetting encryptableSetting) {
-    return new RestResponse<>(ngSecretService.getEncryptionDetails(encryptableSetting));
+  public RestResponse<List<EncryptedDataDetail>> getEncryptionDetails(
+      NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer) {
+    return new RestResponse<>(ngSecretService.getEncryptionDetails(
+        ngAccessWithEncryptionConsumer.getNgAccess(), ngAccessWithEncryptionConsumer.getDecryptableEntity()));
   }
 
   @GET

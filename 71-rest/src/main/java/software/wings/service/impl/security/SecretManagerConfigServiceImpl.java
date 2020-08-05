@@ -198,7 +198,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   }
 
   // This method will decrypt the secret manager's encrypted fields
-  private void decryptEncryptionConfigSecrets(
+  public void decryptEncryptionConfigSecrets(
       String accountId, SecretManagerConfig secretManagerConfig, boolean maskSecrets) {
     EncryptionType encryptionType = secretManagerConfig.getEncryptionType();
     switch (encryptionType) {

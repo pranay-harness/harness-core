@@ -1,19 +1,26 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.annotation.EncryptableSetting;
+import io.harness.security.encryption.EncryptedRecordData;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
@@ -22,6 +29,9 @@ import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.settings.SettingVariableTypes;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -142,8 +152,63 @@ public class NGSecretServiceImpl implements NGSecretService {
         .isPresent();
   }
 
+  private String getOrgIdentifier(String parentOrgIdentifier, @NotNull Scope scope) {
+    if (scope != Scope.ACCOUNT) {
+      return parentOrgIdentifier;
+    }
+    return null;
+  }
+
+  private String getProjectIdentifier(String parentProjectIdentifier, @NotNull Scope scope) {
+    if (scope == Scope.PROJECT) {
+      return parentProjectIdentifier;
+    }
+    return null;
+  }
+
   @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object) {
-    return secretManager.getEncryptionDetails(object);
+  public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity object) {
+    if (object.isDecrypted()) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    List<Field> encryptedFields = object.getSecretReferenceFields();
+    for (Field field : encryptedFields) {
+      try {
+        field.setAccessible(true);
+        SecretRefData secretRefData = (SecretRefData) field.get(object);
+        String secretIdentifier = secretRefData.getIdentifier();
+        Scope secretScope = secretRefData.getScope();
+        if (Optional.ofNullable(secretIdentifier).isPresent() && Optional.ofNullable(secretScope).isPresent()) {
+          String accountIdentifier = ngAccess.getAccountIdentifier();
+          String orgIdentifier = getOrgIdentifier(ngAccess.getOrgIdentifier(), secretScope);
+          String projectIdentifier = getProjectIdentifier(ngAccess.getProjectIdentifier(), secretScope);
+          Optional<EncryptedData> encryptedDataOptional =
+              getSecretText(accountIdentifier, orgIdentifier, projectIdentifier, secretIdentifier);
+          if (encryptedDataOptional.isPresent()
+              && Optional.ofNullable(encryptedDataOptional.get().getNgMetadata()).isPresent()) {
+            EncryptedData encryptedData = encryptedDataOptional.get();
+            Optional<SecretManagerConfig> secretManagerConfigOptional =
+                ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier,
+                    encryptedData.getNgMetadata().getSecretManagerIdentifier());
+            if (secretManagerConfigOptional.isPresent()) {
+              SecretManagerConfig encryptionConfig = secretManagerConfigOptional.get();
+              secretManagerConfigService.decryptEncryptionConfigSecrets(accountIdentifier, encryptionConfig, false);
+              EncryptedRecordData encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+              encryptedDataDetails.add(EncryptedDataDetail.builder()
+                                           .encryptedData(encryptedRecordData)
+                                           .encryptionConfig(encryptionConfig)
+                                           .fieldName(field.getName())
+                                           .build());
+            }
+          }
+        } else {
+          throw new InvalidRequestException("Secret identifier or scope not present", USER);
+        }
+      } catch (IllegalAccessException exception) {
+        throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, exception, USER);
+      }
+    }
+    return encryptedDataDetails;
   }
 }

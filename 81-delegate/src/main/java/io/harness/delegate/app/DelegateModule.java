@@ -210,6 +210,7 @@ import software.wings.service.impl.logz.LogzDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
+import software.wings.service.impl.security.SecretDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerDelegateServiceImpl;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
@@ -533,7 +534,7 @@ public class DelegateModule extends DependencyModule {
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(KmsEncryptDecryptClient.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
-    bind(SecretDecryptionService.class).to(EncryptionServiceImpl.class);
+    bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(HelmClient.class).to(HelmClientImpl.class);
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);

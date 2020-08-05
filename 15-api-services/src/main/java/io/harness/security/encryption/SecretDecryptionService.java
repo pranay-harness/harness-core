@@ -1,15 +1,12 @@
 package io.harness.security.encryption;
 
-import software.wings.annotation.EncryptableSetting;
+import io.harness.beans.DecryptableEntity;
 
 import java.io.IOException;
 import java.util.List;
 
 public interface SecretDecryptionService {
-  EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails);
-
-  List<EncryptableSettingWithEncryptionDetails> decrypt(
-      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList);
+  DecryptableEntity decrypt(DecryptableEntity object, List<EncryptedDataDetail> encryptedDataDetails);
 
   char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException;
 }

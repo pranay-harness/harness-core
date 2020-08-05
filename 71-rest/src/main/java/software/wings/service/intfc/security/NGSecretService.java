@@ -1,8 +1,9 @@
 package software.wings.service.intfc.security;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.PageResponse;
+import io.harness.ng.core.NGAccess;
 import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.settings.SettingVariableTypes;
 
@@ -24,5 +25,5 @@ public interface NGSecretService {
   boolean deleteSecretText(
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier);
 
-  List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
+  List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity object);
 }
