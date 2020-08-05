@@ -15,8 +15,7 @@ import java.util.Set;
 public interface ResourceRestraintService {
   ResourceRestraintInstance save(ResourceRestraintInstance resourceRestraintInstance);
   ResourceRestraintInstance activateBlockedInstance(String uuid, String resourceUnit);
-  ResourceRestraintInstance finishActiveInstance(String uuid, String resourceUnit);
-  Set<String> updateRunningConstraints(String releaseEntityType, String releaseEntityId);
+  ResourceRestraintInstance finishInstance(String uuid, String resourceUnit);
   boolean updateActiveConstraintsForInstance(ResourceRestraintInstance instance);
   void updateBlockedConstraints(Set<String> constraints);
   List<ResourceRestraintInstance> getAllByRestraintIdAndResourceUnitAndStates(
@@ -25,19 +24,19 @@ public interface ResourceRestraintService {
   int getMaxOrder(String resourceRestraintId);
   int getAllCurrentlyAcquiredPermits(String scope, String releaseEntityId);
 
-  static String getReleaseEntityId(String releaseTypeId) {
-    return releaseTypeId;
+  static String getReleaseEntityId(String planExecutionId) {
+    return planExecutionId;
   }
 
-  static String getReleaseEntityId(String planId, String releaseTypeId) {
-    return planId + '|' + releaseTypeId;
+  static String getReleaseEntityId(String planExecutionId, String setupNodeId) {
+    return planExecutionId + '|' + setupNodeId;
   }
 
-  static String planExecutionIdFromReleaseEntityId(String releaseEntityId) {
+  static String getPlanExecutionIdFromReleaseEntityId(String releaseEntityId) {
     return releaseEntityId.split("[|]")[0];
   }
 
-  static String planNodeIdFromReleaseEntityId(String releaseEntityId) {
+  static String getSetupNodeIdFromReleaseEntityId(String releaseEntityId) {
     return releaseEntityId.split("[|]")[1];
   }
 }

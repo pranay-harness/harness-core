@@ -131,7 +131,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
   public boolean consumerFinished(
       ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
     try {
-      resourceRestraintService.finishActiveInstance(consumerId.getValue(), unit.getValue());
+      resourceRestraintService.finishInstance(consumerId.getValue(), unit.getValue());
     } catch (InvalidRequestException e) {
       logger.error(
           "The attempt to finish Constraint with id {} failed for resource unit {} with Resource restraint id {}",

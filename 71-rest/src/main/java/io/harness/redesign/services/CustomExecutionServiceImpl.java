@@ -17,6 +17,7 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.interrupts.Interrupt;
+import io.harness.plan.Plan;
 import io.harness.presentation.Graph;
 import io.harness.presentation.visualization.GraphVisualizer;
 import software.wings.beans.User;
@@ -123,6 +124,11 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   public PlanExecution executeResourceRestraintPlan() {
     return orchestrationService.startExecution(
         customExecutionProvider.provideResourceRestraintPlan(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
+  public PlanExecution executeResourceRestraintPlanForFunctionalTest(Plan plan, EmbeddedUser embeddedUser) {
+    return orchestrationService.startExecution(plan, getAbstractions(), embeddedUser);
   }
 
   @Override

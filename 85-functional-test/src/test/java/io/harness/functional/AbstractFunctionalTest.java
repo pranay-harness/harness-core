@@ -232,7 +232,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     return response.getResource();
   }
 
-  private PlanExecution getPlanExecution(String uuid) {
+  public PlanExecution getPlanExecution(String uuid) {
     Query query = query(where(PlanExecutionKeys.uuid).is(uuid));
     query.fields().include(PlanExecutionKeys.status);
     return mongoTemplate.findOne(query, PlanExecution.class);

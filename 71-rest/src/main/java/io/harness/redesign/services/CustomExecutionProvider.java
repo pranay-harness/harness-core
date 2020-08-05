@@ -53,7 +53,7 @@ import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
-import io.harness.steps.resourcerestraint.beans.HoldingScope;
+import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
 import software.wings.app.MainConfiguration;
 import software.wings.sm.states.ShellScriptState;
 
@@ -1315,8 +1315,7 @@ public class CustomExecutionProvider {
     String dummyNode2Id = generateUuid();
     String resourceRestraintInstanceId = generateUuid();
     String complaintId = "kmpySmUISimoRrJL6NL73w";
-    String resourceUnit = RESOURCE_UNIT; // TODO should be an expression
-    String resourceRestraintId = "nXjQ9CeXTfKO7LA3wRB6Hg";
+    String resourceRestraintId = "TIIa8fwtQD2G6hbE2PzWBQ";
     return Plan.builder()
         .startingNodeId(dummyNode1Id)
         .node(PlanNode.builder()
@@ -1339,16 +1338,14 @@ public class CustomExecutionProvider {
                   .identifier("resourceRestraint1")
                   .name("resourceRestraint1")
                   .stepType(ResourceRestraintStep.STEP_TYPE)
-                  .stepParameters(
-                      ResourceRestraintStepParameters.builder()
-                          .claimantId(complaintId)
-                          .permits(1)
-                          .resourceUnit(resourceUnit)
-                          .resourceRestraintId(resourceRestraintId)
-                          .acquireMode(AcquireMode.ACCUMULATE)
-                          .holdingScope(
-                              HoldingScope.builder().scope(DUMMY_STEP_TYPE.getType()).nodeSetupId(dummyNode1Id).build())
-                          .build())
+                  .stepParameters(ResourceRestraintStepParameters.builder()
+                                      .claimantId(complaintId)
+                                      .permits(1)
+                                      .resourceUnit(RESOURCE_UNIT)
+                                      .resourceRestraintId(resourceRestraintId)
+                                      .acquireMode(AcquireMode.ACCUMULATE)
+                                      .holdingScope(HoldingScopeBuilder.aPlan().build())
+                                      .build())
                   .adviserObtainment(
                       AdviserObtainment.builder()
                           .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -1377,8 +1374,7 @@ public class CustomExecutionProvider {
     String resourceRestraintInstanceId = generateUuid();
     String waitNodeId = generateUuid();
     String complaintId = "kmpySmUISimoRrJL6NL73w";
-    String resourceUnit = RESOURCE_UNIT; // TODO should be an expression
-    String resourceRestraintId = "nXjQ9CeXTfKO7LA3wRB6Hg";
+    String resourceRestraintId = "TIIa8fwtQD2G6hbE2PzWBQ";
     return Plan.builder()
         .startingNodeId(dummyNode1Id)
         .node(PlanNode.builder()
@@ -1402,16 +1398,14 @@ public class CustomExecutionProvider {
                 .identifier("resourceRestraint2")
                 .name("resourceRestraint2")
                 .stepType(ResourceRestraintStep.STEP_TYPE)
-                .stepParameters(
-                    ResourceRestraintStepParameters.builder()
-                        .claimantId(complaintId)
-                        .permits(1)
-                        .resourceUnit(resourceUnit)
-                        .resourceRestraintId(resourceRestraintId)
-                        .acquireMode(AcquireMode.ACCUMULATE)
-                        .holdingScope(
-                            HoldingScope.builder().scope(DUMMY_STEP_TYPE.getType()).nodeSetupId(dummyNode1Id).build())
-                        .build())
+                .stepParameters(ResourceRestraintStepParameters.builder()
+                                    .claimantId(complaintId)
+                                    .permits(1)
+                                    .resourceUnit(RESOURCE_UNIT)
+                                    .resourceRestraintId(resourceRestraintId)
+                                    .acquireMode(AcquireMode.ACCUMULATE)
+                                    .holdingScope(HoldingScopeBuilder.aPlan().build())
+                                    .build())
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
                                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())

@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
@@ -18,6 +19,7 @@ import io.harness.distribution.constraint.ConsumerId;
 import io.harness.distribution.constraint.InvalidPermitsException;
 import io.harness.distribution.constraint.PermanentlyBlockedConsumerException;
 import io.harness.distribution.constraint.UnableToRegisterConsumerException;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
@@ -39,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -51,6 +52,7 @@ public class ResourceRestraintStep
   @Inject private ResourceRestraintService resourceRestraintService;
   @Inject private RestraintService<? extends ResourceRestraint> restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
+  @Inject private EngineExpressionService engineExpressionService;
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, ResourceRestraintStepParameters stepParameters,
@@ -117,9 +119,11 @@ public class ResourceRestraintStep
   @Override
   public void handleAbort(
       Ambiance ambiance, ResourceRestraintStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
-    Set<String> blockedConstraints = resourceRestraintService.updateRunningConstraints(
-        stepParameters.getHoldingScope().getScope(), getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId()));
-    resourceRestraintService.updateBlockedConstraints(blockedConstraints);
+    resourceRestraintService.finishInstance(
+        Preconditions.checkNotNull(executableResponse.getCallbackIds().get(0),
+            "CallbackId should not be null in handleAbort() for nodeExecution with id %s",
+            ambiance.obtainCurrentLevel().getRuntimeId()),
+        stepParameters.getResourceUnit());
   }
 
   private String executeInternal(ResourceRestraint resourceRestraint, ResourceRestraintStepParameters stepParameters,
@@ -128,8 +132,8 @@ public class ResourceRestraintStep
 
     int permits = calculatePermits(stepParameters, ambiance);
 
-    // TODO render restraint unit
-    ConstraintUnit renderedResourceUnit = new ConstraintUnit(stepParameters.getResourceUnit());
+    ConstraintUnit renderedResourceUnit =
+        new ConstraintUnit(engineExpressionService.renderExpression(ambiance, stepParameters.getResourceUnit()));
 
     Map<String, Object> constraintContext = populateConstraintContext(stepParameters, releaseEntityId);
 
