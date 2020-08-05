@@ -61,7 +61,7 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetBuildsWithUnAuthorisedException() throws IOException {
     try {
-      dockerPublicRegistryProcessor.getBuilds(dockerConfig, null, "image", 10);
+      dockerPublicRegistryProcessor.getBuilds(dockerConfig, "image", 10);
       fail("Should not reach here");
     } catch (InvalidArtifactServerException ex) {
       assertThat(getMessage(ex)).isEqualTo("Invalid Docker Registry credentials");
@@ -73,7 +73,7 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetBuildsWithNotFoundException() throws IOException {
     try {
-      dockerPublicRegistryProcessor.getBuilds(dockerConfig, null, "image-1", 10);
+      dockerPublicRegistryProcessor.getBuilds(dockerConfig, "image-1", 10);
       fail("Should not reach here");
     } catch (InvalidArtifactServerException ex) {
       assertThat(getMessage(ex)).isEqualTo("Not Found");
@@ -85,7 +85,7 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetBuildsPaginatedException() throws IOException {
     try {
-      dockerPublicRegistryProcessor.getBuilds(dockerConfig, null, "image-paginated", 1);
+      dockerPublicRegistryProcessor.getBuilds(dockerConfig, "image-paginated", 1);
       fail("Should not reach here");
     } catch (InvalidArtifactServerException ex) {
       assertThat(getMessage(ex)).isEqualTo("Bad Request");

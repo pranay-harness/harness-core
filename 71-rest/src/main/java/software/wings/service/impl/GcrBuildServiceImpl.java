@@ -39,7 +39,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCR.name());
     return wrapNewBuildsWithLabels(gcrService.getBuilds(gcpConfig, encryptionDetails, artifactStreamAttributes, 50),
-        artifactStreamAttributes, gcpConfig, encryptionDetails);
+        artifactStreamAttributes, gcpConfig);
   }
 
   @Override

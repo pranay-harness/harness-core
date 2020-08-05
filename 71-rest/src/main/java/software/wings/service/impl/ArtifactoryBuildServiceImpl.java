@@ -49,7 +49,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     return wrapNewBuildsWithLabels(
         getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, ARTIFACT_RETENTION_SIZE),
-        artifactStreamAttributes, artifactoryConfig, encryptionDetails);
+        artifactStreamAttributes, artifactoryConfig);
   }
 
   @Override
@@ -57,7 +57,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     return wrapNewBuildsWithLabels(
         getBuildsInternal(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, limit),
-        artifactStreamAttributes, artifactoryConfig, encryptionDetails);
+        artifactStreamAttributes, artifactoryConfig);
   }
 
   private List<BuildDetails> getBuildsInternal(String appId, ArtifactStreamAttributes artifactStreamAttributes,

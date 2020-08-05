@@ -46,7 +46,7 @@ public class AzureArtifactsBuildServiceImpl implements AzureArtifactsBuildServic
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.AZURE_ARTIFACTS.name());
     return wrapNewBuildsWithLabels(
         azureArtifactsService.getBuilds(artifactStreamAttributes, azureArtifactsConfig, encryptionDetails),
-        artifactStreamAttributes, azureArtifactsConfig, encryptionDetails);
+        artifactStreamAttributes, azureArtifactsConfig);
   }
 
   @Override

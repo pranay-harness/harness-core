@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -25,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,8 +31,6 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class DockerRegistryUtils {
-  @Inject private ExecutorService executorService;
-
   public List<Map<String, String>> getLabels(DockerRegistryRestClient registryRestClient,
       Function<Headers, String> getTokenFn, String authHeader, String imageName, List<String> tags) {
     Map<Integer, Map<String, String>> labelsMap = new ConcurrentHashMap<>();

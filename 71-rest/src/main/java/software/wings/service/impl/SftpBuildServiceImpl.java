@@ -39,7 +39,7 @@ public class SftpBuildServiceImpl implements SftpBuildService {
     String artifactName = artifactStreamAttributes.getArtifactName();
     return wrapNewBuildsWithLabels(sftpService.getBuildDetails(sftpConfig, encryptionDetails,
                                        Lists.newArrayList(artifactName), artifactName.contains("*")),
-        artifactStreamAttributes, sftpConfig, encryptionDetails);
+        artifactStreamAttributes, sftpConfig);
   }
 
   @Override

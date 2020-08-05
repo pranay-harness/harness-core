@@ -11,16 +11,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.DockerBuildService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
@@ -34,14 +35,16 @@ import java.util.Optional;
 @Singleton
 public class DockerBuildServiceImpl implements DockerBuildService {
   @Inject private DockerRegistryService dockerRegistryService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), DOCKER.name());
+    encryptionService.decrypt(dockerConfig, encryptionDetails);
     return wrapNewBuildsWithLabels(
-        dockerRegistryService.getBuilds(dockerConfig, encryptionDetails, artifactStreamAttributes.getImageName(), 250),
-        artifactStreamAttributes, dockerConfig, encryptionDetails);
+        dockerRegistryService.getBuilds(dockerConfig, artifactStreamAttributes.getImageName(), 250),
+        artifactStreamAttributes, dockerConfig);
   }
 
   @Override
@@ -81,16 +84,18 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public boolean validateArtifactServer(DockerConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());
+      throw new InvalidArtifactServerException(
+          "Could not reach Docker Registry at : " + config.getDockerRegistryUrl(), USER);
     }
-    return dockerRegistryService.validateCredentials(config, encryptedDataDetails);
+    encryptionService.decrypt(config, encryptedDataDetails);
+    return dockerRegistryService.validateCredentials(config);
   }
 
   @Override
   public boolean validateArtifactSource(DockerConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    return dockerRegistryService.verifyImageName(config, encryptionDetails, artifactStreamAttributes.getImageName());
+    encryptionService.decrypt(config, encryptionDetails);
+    return dockerRegistryService.verifyImageName(config, artifactStreamAttributes.getImageName());
   }
 
   @Override
@@ -113,6 +118,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public List<Map<String, String>> getLabels(
       String imageName, List<String> buildNos, DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return dockerRegistryService.getLabels(dockerConfig, encryptionDetails, imageName, buildNos);
+    encryptionService.decrypt(dockerConfig, encryptionDetails);
+    return dockerRegistryService.getLabels(dockerConfig, imageName, buildNos);
   }
 }

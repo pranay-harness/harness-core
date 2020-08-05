@@ -42,7 +42,7 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
     return wrapNewBuildsWithLabels(
         amazonS3Service.getArtifactsBuildDetails(awsConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
             Lists.newArrayList(artifactName), artifactName.contains("*") || artifactName.endsWith("/")),
-        artifactStreamAttributes, awsConfig, encryptionDetails);
+        artifactStreamAttributes, awsConfig);
   }
 
   @Override

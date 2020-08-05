@@ -69,7 +69,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return wrapNewBuildsWithLabels(getBuildsInternal(appId, artifactStreamAttributes, config, encryptionDetails),
-        artifactStreamAttributes, config, encryptionDetails);
+        artifactStreamAttributes, config);
   }
 
   @Override
@@ -77,7 +77,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
       List<EncryptedDataDetail> encryptionDetails, String buildNo) {
     List<BuildDetails> buildDetails =
         wrapNewBuildsWithLabels(getBuildInternal(appId, artifactStreamAttributes, config, encryptionDetails, buildNo),
-            artifactStreamAttributes, config, encryptionDetails);
+            artifactStreamAttributes, config);
     if (isNotEmpty(buildDetails)) {
       return buildDetails.get(0);
     }
@@ -189,7 +189,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     return wrapLastSuccessfulBuildWithLabels(
         nexusService.getLatestVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName()),
-        artifactStreamAttributes, config, encryptionDetails);
+        artifactStreamAttributes, config);
   }
 
   @Override

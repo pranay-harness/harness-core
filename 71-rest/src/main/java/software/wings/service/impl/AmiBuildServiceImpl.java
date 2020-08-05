@@ -38,7 +38,7 @@ public class AmiBuildServiceImpl implements AmiBuildService {
     return wrapNewBuildsWithLabels(
         amiService.getBuilds(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
             artifactStreamAttributes.getTags(), artifactStreamAttributes.getFilters(), 50),
-        artifactStreamAttributes, awsConfig, encryptionDetails);
+        artifactStreamAttributes, awsConfig);
   }
 
   @Override
