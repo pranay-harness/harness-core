@@ -687,7 +687,7 @@ public class PipelineServiceImpl implements PipelineService {
   @VisibleForTesting
   void validateMultipleValuesAllowed(Pipeline pipeline, Map<String, String> variableValues) {
     List<Variable> variables = pipeline.getPipelineVariables();
-    if (isEmpty(variables)) {
+    if (isEmpty(variables) || isEmpty(variableValues)) {
       return;
     }
     for (Variable variable : variables) {
@@ -998,8 +998,9 @@ public class PipelineServiceImpl implements PipelineService {
         handleNonEntityVariables(pipelineVariables, variable, value);
       } else {
         boolean allowMulti = false;
-        if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflow.getAccountId())
-            && infraVarsCount == 1 && INFRASTRUCTURE_DEFINITION == variable.obtainEntityType()) {
+        if ((featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflow.getAccountId())
+                && infraVarsCount == 1 && INFRASTRUCTURE_DEFINITION == variable.obtainEntityType())
+            || USER_GROUP == variable.obtainEntityType()) {
           allowMulti = true;
         }
         // Entity variables.
