@@ -25,6 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mongodb.morphia.query.CriteriaContainer;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.WorkflowExecution;
@@ -71,6 +72,9 @@ public class ExportExecutionsDataFetcherTest extends AbstractDataFetcherTest {
             .build();
 
     Query<WorkflowExecution> query = mock(Query.class);
+    CriteriaContainer continer = mock(CriteriaContainer.class);
+    when(query.or()).thenReturn(continer);
+    when(query.and()).thenReturn(continer);
     when(mockWingsPersistence.createAuthorizedQuery(WorkflowExecution.class)).thenReturn(query);
     FieldEnd fieldEnd = mock(FieldEnd.class);
     when(query.field(anyString())).thenReturn(fieldEnd);

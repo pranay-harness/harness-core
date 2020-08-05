@@ -51,6 +51,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowExecutionUpdate executionUpdate;
 
   @Inject
   public ExecutionEventListener(QueueConsumer<ExecutionEvent> queueConsumer) {
@@ -124,6 +125,9 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
 
         workflowExecutionService.updateStartStatus(
             workflowExecution.getAppId(), workflowExecution.getUuid(), status, true);
+        WorkflowExecution savedWorkflowExecution = wingsPersistence.getWithAppId(
+            WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+        executionUpdate.publish(savedWorkflowExecution);
       } catch (Exception e) {
         logger.error("Exception in generating execution log context", e);
       }

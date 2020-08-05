@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 
 import com.google.inject.Inject;
@@ -13,24 +14,42 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.Application;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.sm.status.StateStatusUpdateInfo;
+import software.wings.utils.WingsTestConstants;
 
 public class WorkflowPausePropagatorTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
+  @Inject private WorkflowPausePropagator pausePropagator;
+  @Inject private AccountService accountService;
 
   public static final String APP_ID = generateUuid();
+  public static final String APP_NAME = "App Name";
+  public static final String ACCOUNT_ID = generateUuid();
   public static final String WORKFLOW_EXECUTION_ID = generateUuid();
   public static final String PIPELINE_EXECUTION_ID = generateUuid();
   public static final String STATE_EXECUTION_ID = generateUuid();
 
-  @Inject private WorkflowPausePropagator pausePropagator;
+  @Before
+  public void setupMocks() {
+    Account account = anAccount()
+                          .withUuid(ACCOUNT_ID)
+                          .withAccountName(WingsTestConstants.ACCOUNT_NAME)
+                          .withCompanyName(WingsTestConstants.COMPANY_NAME)
+                          .withLicenseInfo(getLicenseInfo())
+                          .build();
+    accountService.save(account, false);
+  }
 
   @Test
   @RealMongo
@@ -66,6 +85,8 @@ public class WorkflowPausePropagatorTest extends WingsBaseTest {
         WorkflowExecution.builder()
             .uuid(PIPELINE_EXECUTION_ID)
             .appId(APP_ID)
+            .appName(APP_NAME)
+            .accountId(ACCOUNT_ID)
             .workflowId(generateUuid())
             .workflowType(WorkflowType.PIPELINE)
             .status(ExecutionStatus.RUNNING)
@@ -77,10 +98,15 @@ public class WorkflowPausePropagatorTest extends WingsBaseTest {
     wingsPersistence.save(WorkflowExecution.builder()
                               .uuid(WORKFLOW_EXECUTION_ID)
                               .appId(APP_ID)
+                              .appName(APP_NAME)
+                              .accountId(ACCOUNT_ID)
                               .workflowId(generateUuid())
                               .workflowType(WorkflowType.ORCHESTRATION)
                               .pipelineExecutionId(PIPELINE_EXECUTION_ID)
                               .status(ExecutionStatus.RUNNING)
                               .build());
+
+    wingsPersistence.save(
+        Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build());
   }
 }

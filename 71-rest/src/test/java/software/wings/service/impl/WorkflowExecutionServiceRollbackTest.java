@@ -56,6 +56,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
+import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder;
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
@@ -69,7 +70,6 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -96,9 +96,9 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Mock private RollbackStateMachineGenerator rollbackStateMachineGenerator;
   @Mock private StateMachineExecutor stateMachineExecutor;
   @Mock private ArtifactService artifactService;
-  @InjectMocks @Inject private EntityVersionService entityVersionService;
 
   private Workflow workflow;
+  private Application app;
   @Before
   public void setup() {
     workflow = aWorkflow()
@@ -111,6 +111,10 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
                            .withRequiredEntityTypes(Sets.newHashSet(EntityType.SSH_USER, EntityType.SSH_PASSWORD))
                            .build())
                    .build();
+
+    app = anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build();
+    wingsPersistence.save(app);
+
     InfrastructureDefinition pcfInfraDef = InfrastructureDefinition.builder()
                                                .uuid(INFRA_DEFINITION_ID)
                                                .appId(APP_ID)
