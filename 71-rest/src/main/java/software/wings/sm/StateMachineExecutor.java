@@ -39,6 +39,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
@@ -1090,8 +1091,12 @@ public class StateMachineExecutor implements StateInspectionListener {
       currentState.handleAbortEvent(context);
       stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
 
-      updated = updateStateExecutionData(stateExecutionInstance, null, finalStatus, errorMsgBuilder.toString(),
-          singletonList(DISCONTINUING), null, null, null);
+      String errorMessage =
+          (context.getStateExecutionData().getErrorMsg() != null && isBlank(errorMsgBuilder.toString()))
+          ? context.getStateExecutionData().getErrorMsg()
+          : errorMsgBuilder.toString();
+      updated = updateStateExecutionData(
+          stateExecutionInstance, null, finalStatus, errorMessage, singletonList(DISCONTINUING), null, null, null);
 
       invokeAdvisors(ExecutionEvent.builder()
                          .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED))

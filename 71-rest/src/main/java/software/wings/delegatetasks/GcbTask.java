@@ -8,6 +8,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.sm.states.GcbState.GcbDelegateResponse.failedGcbTaskResponse;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.gcbDelegateResponseOf;
 import static software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec.RemoteFileSource.BRANCH;
 
@@ -35,7 +36,6 @@ import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.helpers.ext.gcb.models.RepoSource.RepoSourceBuilder;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
-import software.wings.sm.states.GcbState;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
@@ -70,20 +70,25 @@ public class GcbTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public GcbState.GcbDelegateResponse run(Object[] parameters) {
+  public GcbDelegateResponse run(Object[] parameters) {
     return run((GcbTaskParams) parameters[0]);
   }
 
   public GcbDelegateResponse run(GcbTaskParams params) {
-    switch (params.getType()) {
-      case START:
-        return startGcbBuild(params);
-      case POLL:
-        return pollGcbBuild(params);
-      case CANCEL:
-        return cancelBuild(params);
-      default:
-        throw new UnsupportedOperationException(format("Unsupported TaskType: %s", params.getType()));
+    try {
+      switch (params.getType()) {
+        case START:
+          return startGcbBuild(params);
+        case POLL:
+          return pollGcbBuild(params);
+        case CANCEL:
+          return cancelBuild(params);
+        default:
+          throw new UnsupportedOperationException(format("Unsupported TaskType: %s", params.getType()));
+      }
+    } catch (Exception e) {
+      logger.warn("GCB task failed due to: ", e);
+      return failedGcbTaskResponse(params, e.getMessage());
     }
   }
 

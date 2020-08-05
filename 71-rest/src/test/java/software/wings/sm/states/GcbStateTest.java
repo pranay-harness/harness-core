@@ -36,6 +36,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -62,6 +63,7 @@ import software.wings.beans.template.TemplateUtils;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
+import software.wings.service.impl.StateExecutionServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -93,6 +95,7 @@ public class GcbStateTest extends CategoryTest {
   @Mock private TemplateUtils templateUtils;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private SettingsService settingService;
+  @Mock private StateExecutionServiceImpl stateExecutionService;
 
   @InjectMocks private GcbState state = spy(new GcbState("gcb"));
 
@@ -192,6 +195,7 @@ public class GcbStateTest extends CategoryTest {
     when(gcbExecutionData.getExecutionDetails())
         .thenReturn(singletonMap("buildNo", ExecutionDataValue.builder().value("123").build()));
     when(gcbExecutionData.getActivityId()).thenReturn(ACTIVITY_ID);
+    when(gcbExecutionData.getBuildStatus()).thenReturn(GcbBuildStatus.QUEUED);
     state.handleAbortEvent(context);
     verify(gcbExecutionData).setBuildStatus(GcbBuildStatus.CANCELLED);
   }
@@ -238,7 +242,8 @@ public class GcbStateTest extends CategoryTest {
 
     doReturn(gcbExecutionData).when(context).getStateExecutionData();
     when(context.fetchInfraMappingId()).thenReturn("infrastructureId");
-
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
+    when(context.getStateExecutionInstanceId()).thenReturn("id");
     ExecutionResponse actual = state.startPollTask(context, delegateResponse);
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskCaptor.capture());
