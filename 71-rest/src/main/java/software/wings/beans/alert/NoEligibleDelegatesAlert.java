@@ -8,6 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.delegate.beans.TaskGroup;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +17,6 @@ import software.wings.beans.Application;
 import software.wings.beans.CatalogItem;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CatalogService;
