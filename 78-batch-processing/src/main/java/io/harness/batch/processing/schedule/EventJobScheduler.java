@@ -49,6 +49,7 @@ public class EventJobScheduler {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
   }
 
+  // this job runs every 1 hours "0 0 * ? * *". For debugging, run every minute "* * * ? * *"
   @Scheduled(cron = "0 0 * ? * *")
   public void runCloudEfficiencyOutOfClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER);
@@ -66,7 +67,7 @@ public class EventJobScheduler {
                .forEach(job -> runJob(account.getUuid(), job)));
   }
 
-  // this job runs every 4 hours. For debugging, run every minute "* * * ? * *"
+  // this job runs every 4 hours "0 0 */4 ? * *". For debugging, run every minute "* * * ? * *"
   @Scheduled(cron = "0 0 */4 ? * *")
   public void sendSegmentEvents() {
     runCloudEfficiencyEventJobs(BatchJobBucket.OTHERS);

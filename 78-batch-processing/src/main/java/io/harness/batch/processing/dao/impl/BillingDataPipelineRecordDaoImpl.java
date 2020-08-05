@@ -28,7 +28,7 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
   }
 
   @Override
-  public List<BillingDataPipelineRecord> getAllBillingDataPipelineRecords() {
+  public List<BillingDataPipelineRecord> listAllBillingDataPipelineRecords() {
     return hPersistence.createQuery(BillingDataPipelineRecord.class).asList();
   }
 

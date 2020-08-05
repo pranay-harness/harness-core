@@ -18,6 +18,8 @@ public interface ProductMetricsService {
   double getTotalEcsSpendInCe(String accountId, Instant start, Instant end);
   double countTotalK8sNamespaces(String accountId, Instant start, Instant end);
   double countTotalK8sWorkloads(String accountId, Instant start, Instant end);
+  double countTotalK8sNodes(String accountId, Instant start, Instant end);
+  double countTotalK8sPods(String accountId, Instant start, Instant end);
   double countTotalEcsClusters(String accountId, Instant start, Instant end);
   double countTotalEcsTasks(String accountId, Instant start, Instant end);
 }

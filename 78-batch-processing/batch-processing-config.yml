@@ -37,8 +37,7 @@ awsS3SyncConfig:
   region: awsS3SyncRegionPlaceHolder
 
 billingDataPipelineConfig:
-  gcpServiceAccount: gcpServiceAccountPlaceHolder
-  gcpProjectId : gcpProjectIdPlaceHolder
+  gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
 
 smtp:
