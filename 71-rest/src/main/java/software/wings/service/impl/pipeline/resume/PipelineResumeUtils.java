@@ -264,22 +264,26 @@ public class PipelineResumeUtils {
     UpdateOperations<WorkflowExecution> currOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
     currOps.set(WorkflowExecutionKeys.pipelineResumeId, pipelineResumeId);
     currOps.set(WorkflowExecutionKeys.latestPipelineResume, Boolean.TRUE);
+    currOps.set(WorkflowExecutionKeys.cdPageCandidate, Boolean.TRUE);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .filter(WorkflowExecutionKeys.appId, currWorkflowExecution.getAppId())
                                 .filter(WorkflowExecutionKeys.uuid, currWorkflowExecution.getUuid()),
         currOps);
     currWorkflowExecution.setPipelineResumeId(pipelineResumeId);
     currWorkflowExecution.setLatestPipelineResume(true);
+    currWorkflowExecution.setCdPageCandidate(true);
 
     UpdateOperations<WorkflowExecution> prevOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
     prevOps.set(WorkflowExecutionKeys.pipelineResumeId, pipelineResumeId);
     prevOps.set(WorkflowExecutionKeys.latestPipelineResume, Boolean.FALSE);
+    prevOps.set(WorkflowExecutionKeys.cdPageCandidate, Boolean.FALSE);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .filter(WorkflowExecutionKeys.appId, prevWorkflowExecution.getAppId())
                                 .filter(WorkflowExecutionKeys.uuid, prevWorkflowExecution.getUuid()),
         prevOps);
     prevWorkflowExecution.setPipelineResumeId(pipelineResumeId);
     prevWorkflowExecution.setLatestPipelineResume(false);
+    prevWorkflowExecution.setCdPageCandidate(false);
   }
 
   public List<PipelineStageGroupedInfo> getResumeStages(String appId, WorkflowExecution prevWorkflowExecution) {

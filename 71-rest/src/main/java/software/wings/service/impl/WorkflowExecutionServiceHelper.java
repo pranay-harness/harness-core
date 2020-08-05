@@ -302,4 +302,20 @@ public class WorkflowExecutionServiceHelper {
       }
     }
   }
+
+  public static boolean calculateCdPageCandidate(
+      String pipelineExecutionId, String pipelineResumeId, boolean latestPipelineResume) {
+    boolean cdPageCandidate;
+    if (isNotEmpty(pipelineResumeId)) {
+      cdPageCandidate = latestPipelineResume;
+    } else {
+      // For a pipeline which is not resumed at all LatestPipelineResume is false and pipelineResumeId is null.
+      cdPageCandidate = true;
+    }
+
+    if (!isEmpty(pipelineExecutionId)) {
+      cdPageCandidate = false;
+    }
+    return cdPageCandidate;
+  }
 }

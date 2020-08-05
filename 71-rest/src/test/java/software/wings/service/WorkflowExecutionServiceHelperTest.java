@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.POOJA;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.service.impl.WorkflowExecutionServiceHelper.calculateCdPageCandidate;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
@@ -322,6 +324,16 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     assertThat(newWorkflowVariables.get(2).getName()).isEqualTo("var3");
     assertThat(newWorkflowVariables.get(3).getName()).isEqualTo("var4");
     assertThat(newWorkflowVariables.get(3).getValue()).isEqualTo("val4");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void calculateCdPageCandidateTest() {
+    assertThat(calculateCdPageCandidate("Pipeline_execution_Id", null, false)).isFalse();
+    assertThat(calculateCdPageCandidate(null, null, false)).isTrue();
+    assertThat(calculateCdPageCandidate(null, "pipelineResumeId", false)).isFalse();
+    assertThat(calculateCdPageCandidate(null, "pipelineResumeId", true)).isTrue();
   }
 
   private void validateUnsetWorkflowVariables(List<Variable> workflowVariables) {
