@@ -1,29 +1,48 @@
 package software.wings.sm.states.azure;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.azure.model.AzureConstants.DELETE_NEW_VMSS;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.encoding.EncodingUtils;
+import io.harness.delegate.task.azure.response.AzureVMInstanceData;
+import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
@@ -31,19 +50,25 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.ServiceVersionConvention;
@@ -57,8 +82,11 @@ import java.util.concurrent.TimeUnit;
 public class AzureVMSSStateHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ActivityService activityService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private AzureStateHelper azureStateHelper;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private SettingsService settingsService;
+  @Inject private SweepingOutputService sweepingOutputService;
   @Inject private SecretManager secretManager;
   @Inject private LogService logService;
 
@@ -112,37 +140,44 @@ public class AzureVMSSStateHelper {
                     USER));
   }
 
-  public Activity buildActivity(
-      ExecutionContext context, Application app, Environment env, Service service, String commandName) {
+  public Activity createAndSaveActivity(ExecutionContext context, Artifact artifact, String commandName,
+      String commandType, CommandUnitDetails.CommandUnitType commandUnitType, List<CommandUnit> commandUnits) {
     WorkflowStandardParams workflowStandardParams = getWorkflowStandardParams(context);
+    Application app = getApplication(context);
+    Environment env = getEnvironment(context);
+    Service service = getServiceByAppId(context, app.getUuid());
 
-    Command command = getCommand(app.getUuid(), service.getUuid(), env.getUuid(), commandName);
-    List<CommandUnit> commandUnitList =
-        getCommandUnitList(app.getUuid(), service.getUuid(), env.getUuid(), commandName);
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .applicationName(app.getName())
+                                          .appId(app.getAppId())
+                                          .environmentId(env.getUuid())
+                                          .environmentName(env.getName())
+                                          .environmentType(env.getEnvironmentType())
+                                          .serviceId(service.getUuid())
+                                          .serviceName(service.getName())
+                                          .commandName(commandName)
+                                          .commandType(commandType)
+                                          .type(Activity.Type.Command)
+                                          .workflowExecutionId(context.getWorkflowExecutionId())
+                                          .workflowId(context.getWorkflowId())
+                                          .workflowType(context.getWorkflowType())
+                                          .workflowExecutionName(context.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                          .commandUnitType(commandUnitType)
+                                          .commandUnits(commandUnits)
+                                          .status(ExecutionStatus.RUNNING)
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
 
-    return Activity.builder()
-        .applicationName(app.getName())
-        .environmentId(env.getUuid())
-        .environmentName(env.getName())
-        .environmentType(env.getEnvironmentType())
-        .serviceId(service.getUuid())
-        .serviceName(service.getName())
-        .commandName(command.getName())
-        .commandType(command.getCommandUnitType().name())
-        .type(Activity.Type.Command)
-        .workflowExecutionId(context.getWorkflowExecutionId())
-        .workflowId(context.getWorkflowId())
-        .workflowType(context.getWorkflowType())
-        .workflowExecutionName(context.getWorkflowExecutionName())
-        .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-        .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-        .commandUnits(commandUnitList)
-        .status(ExecutionStatus.RUNNING)
-        .triggeredBy(TriggeredBy.builder()
-                         .email(workflowStandardParams.getCurrentUser().getEmail())
-                         .name(workflowStandardParams.getCurrentUser().getName())
-                         .build())
-        .build();
+    if (artifact != null) {
+      activityBuilder.artifactName(artifact.getDisplayName()).artifactId(artifact.getUuid());
+      activityBuilder.artifactStreamName(artifact.getDisplayName()).artifactStreamId(artifact.getUuid());
+    }
+
+    return activityService.save(activityBuilder.build());
   }
 
   public Command getCommand(String appId, String serviceId, String envId, String commandName) {
@@ -155,11 +190,6 @@ public class AzureVMSSStateHelper {
 
   public void updateActivityStatus(String appId, String activityId, ExecutionStatus executionStatus) {
     activityService.updateStatus(activityId, appId, executionStatus);
-  }
-
-  public Activity saveActivity(Activity activity, final String appId) {
-    activity.setAppId(appId);
-    return activityService.save(activity);
   }
 
   public int renderTimeoutExpressionOrGetDefault(String timeout, ExecutionContext context, int defaultValue) {
@@ -227,5 +257,75 @@ public class AzureVMSSStateHelper {
         .map(autoScalingSteadyStateVMSSTimeout
             -> Ints.checkedCast(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateVMSSTimeout.longValue())))
         .orElse(null);
+  }
+
+  public void setNewInstance(List<InstanceElement> newInstanceElements, boolean newInstance) {
+    newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(newInstance));
+  }
+
+  @NotNull
+  public List<InstanceStatusSummary> getInstanceStatusSummaries(
+      ExecutionStatus executionStatus, List<InstanceElement> newInstanceElements) {
+    return newInstanceElements.stream()
+        .map(instanceElement
+            -> anInstanceStatusSummary().withInstanceElement(instanceElement).withStatus(executionStatus).build())
+        .collect(toList());
+  }
+
+  public List<InstanceElement> generateInstanceElements(ExecutionContext context,
+      AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping, List<AzureVMInstanceData> vmInstances) {
+    return azureStateHelper.generateInstanceElements(context, azureVMSSInfrastructureMapping, vmInstances);
+  }
+
+  public void saveInstanceInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements) {
+    if (isNotEmpty(instanceElements)) {
+      // This sweeping element will be used by verification or other consumers.
+      sweepingOutputService.save(
+          context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+              .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+              .value(InstanceInfoVariables.builder()
+                         .instanceElements(instanceElements)
+                         .instanceDetails(azureStateHelper.generateAzureVMSSInstanceDetails(instanceElements))
+                         .build())
+              .build());
+    }
+  }
+
+  public ExecutionStatus getExecutionStatus(AzureVMSSTaskExecutionResponse executionResponse) {
+    return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS ? ExecutionStatus.SUCCESS
+                                                                                           : ExecutionStatus.FAILED;
+  }
+
+  public List<CommandUnit> generateDeployCommandUnits(
+      ExecutionContext context, ResizeStrategy resizeStrategy, boolean isRollback) {
+    List<CommandUnit> commandUnitList = null;
+    if (OrchestrationWorkflowType.BLUE_GREEN == context.getOrchestrationWorkflowType()) {
+      commandUnitList = ImmutableList.of(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT),
+          new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+          new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
+    } else {
+      commandUnitList = newArrayList();
+      if (isRollback || ResizeStrategy.RESIZE_NEW_FIRST == resizeStrategy) {
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+      } else {
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_COMMAND_UNIT));
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
+      }
+      if (isRollback) {
+        commandUnitList.add(new AzureVMSSDummyCommandUnit(DELETE_NEW_VMSS));
+      }
+      commandUnitList.add(new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
+    }
+    return commandUnitList;
+  }
+
+  public List<CommandUnit> generateSetupCommandUnits() {
+    return ImmutableList.of(
+        new AzureVMSSDummyCommandUnit(SETUP_COMMAND_UNIT), new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
   }
 }

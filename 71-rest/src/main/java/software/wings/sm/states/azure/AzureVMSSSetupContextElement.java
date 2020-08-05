@@ -30,10 +30,12 @@ public class AzureVMSSSetupContextElement implements ContextElement {
   private String oldVirtualMachineScaleSetName;
   private Integer autoScalingSteadyStateVMSSTimeout;
   private Integer maxInstances;
+  private int oldDesiredCount;
   private int desiredInstances;
   private int minInstances;
   private List<String> oldVMSSNames;
-  private boolean blueGreen;
+  private boolean isBlueGreen;
+  private String infraMappingId;
   private ResizeStrategy resizeStrategy;
   private List<String> baseVMSSScalingPolicyJSONs;
 

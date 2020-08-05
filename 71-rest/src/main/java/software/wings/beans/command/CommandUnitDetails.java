@@ -15,6 +15,8 @@ import static software.wings.sm.states.HelmDeployState.HELM_COMMAND_NAME;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 import static software.wings.sm.states.KubernetesSteadyStateCheck.KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME;
 import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME;
+import static software.wings.sm.states.azure.AzureVMSSDeployState.AZURE_VMSS_DEPLOY_COMMAND_NAME;
+import static software.wings.sm.states.azure.AzureVMSSSetupState.AZURE_VMSS_SETUP_COMMAND_NAME;
 import static software.wings.sm.states.pcf.MapRouteState.PCF_MAP_ROUTE_COMMAND;
 import static software.wings.sm.states.pcf.PcfDeployState.PCF_RESIZE_COMMAND;
 import static software.wings.sm.states.pcf.PcfPluginState.PCF_PLUGIN_COMMAND;
@@ -72,7 +74,9 @@ public class CommandUnitDetails {
     AWS_ECS_SERVICE_SETUP_ELB(ECS_SERVICE_SETUP_COMMAND_ELB),
     AWS_ECS_SERVICE_SETUP_DAEMON(ECS_DAEMON_SERVICE_SETUP_COMMAND),
     AWS_ECS_SERVICE_ROLLBACK_DAEMON(ECS_DAEMON_SERVICE_ROLLBACK_COMMAND),
-    AWS_ECS_SERVICE_DEPLOY(ECS_SERVICE_DEPLOY);
+    AWS_ECS_SERVICE_DEPLOY(ECS_SERVICE_DEPLOY),
+    AZURE_VMSS_SETUP(AZURE_VMSS_SETUP_COMMAND_NAME),
+    AZURE_VMSS_DEPLOY(AZURE_VMSS_DEPLOY_COMMAND_NAME);
 
     private String name;
 

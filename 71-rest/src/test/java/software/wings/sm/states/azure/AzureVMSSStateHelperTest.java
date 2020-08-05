@@ -3,6 +3,7 @@ package software.wings.sm.states.azure;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -39,6 +40,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -452,33 +454,35 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     String userName = "userName";
     String userEmail = "test@email.com";
     String envId = "envId";
+    String commandType = "commandType";
+    String activityId = "activityId";
+    CommandUnitDetails.CommandUnitType commandUnitType = CommandUnitDetails.CommandUnitType.AZURE_VMSS_SETUP;
     Application app = Application.Builder.anApplication().uuid(appId).name(appName).build();
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
+    Activity activity = Activity.builder().uuid(activityId).build();
+    EmbeddedUser embeddedUser = EmbeddedUser.builder().email(userEmail).name(userName).build();
     Command command = Command.Builder.aCommand().withName(commandName).build();
-    ServiceCommand serviceCommand = ServiceCommand.Builder.aServiceCommand().withCommand(command).build();
     List<CommandUnit> commandUnitList = new ArrayList<>();
     commandUnitList.add(command);
+
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    PhaseElement phaseElement = Mockito.mock(PhaseElement.class);
     WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
+    doReturn(workflowStandardParams).when(context).getContextElement(ContextElementType.STANDARD);
+    doReturn(app).when(workflowStandardParams).getApp();
+    doReturn(env).when(workflowStandardParams).getEnv();
+    when(phaseElement.getServiceElement()).thenReturn(ServiceElement.builder().uuid(serviceId).build());
+    doReturn(phaseElement).when(context).getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    doReturn(service).when(serviceResourceService).getWithDetails(appId, serviceId);
+    doReturn(activity).when(activityService).save(any());
+    doReturn(embeddedUser).when(workflowStandardParams).getCurrentUser();
 
-    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-    when(serviceResourceService.getFlattenCommandUnitList(appId, serviceId, envId, commandName))
-        .thenReturn(commandUnitList);
-    when(serviceResourceService.getCommandByName(appId, serviceId, envId, commandName)).thenReturn(serviceCommand);
-    when(workflowStandardParams.getCurrentUser())
-        .thenReturn(EmbeddedUser.builder().email(userEmail).name(userName).build());
-
-    Activity result = azureVMSSStateHelper.buildActivity(context, app, env, service, commandName);
+    Activity result = azureVMSSStateHelper.createAndSaveActivity(
+        context, null, commandName, commandType, commandUnitType, commandUnitList);
 
     assertThat(result).isNotNull();
-    assertThat(result.getCommandName()).isEqualTo(commandName);
-    assertThat(result.getCommandUnits().size()).isEqualTo(1);
-    assertThat(result.getEnvironmentId()).isEqualTo(envId);
-    assertThat(result.getApplicationName()).isEqualTo(appName);
-    assertThat(result.getServiceId()).isEqualTo(serviceId);
+    assertThat(result.getUuid()).isEqualTo(activityId);
     assertThat(result.getStatus()).isEqualTo(ExecutionStatus.RUNNING);
-    assertThat(result.getTriggeredBy().getEmail()).isEqualTo(userEmail);
-    assertThat(result.getTriggeredBy().getName()).isEqualTo(userName);
   }
 }
