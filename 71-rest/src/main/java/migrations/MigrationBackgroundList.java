@@ -13,6 +13,7 @@ import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
 import migrations.all.AddAccountIdToNewRelicMetricAnalysisRecords;
 import migrations.all.AddAccountIdToServiceCommands;
+import migrations.all.AddAccountIdToServiceInstance;
 import migrations.all.AddAccountIdToServiceVariables;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
@@ -250,6 +251,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(146, AddAccountIdToServiceCommands.class))
         .add(Pair.of(147, AddAccountIdToServiceVariables.class))
         .add(Pair.of(148, AddCeFullTrialLicenseToCurrentAccounts.class))
+        .add(Pair.of(149, AddAccountIdToServiceInstance.class))
         .build();
   }
 }

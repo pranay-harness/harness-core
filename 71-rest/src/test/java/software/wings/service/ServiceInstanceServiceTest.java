@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.INDER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +20,7 @@ import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysic
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -59,6 +61,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
@@ -75,6 +78,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Mock private FieldEnd end;
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;
   @Spy @InjectMocks private ServiceInstanceService spyInstanceService = new ServiceInstanceServiceImpl();
+  @Mock private AppService appService;
   private ServiceInstance.Builder builder =
       aServiceInstance()
           .withAppId(APP_ID)
@@ -99,6 +103,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     when(end.hasAnyOf(anyCollection())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(ServiceInstance.class)).thenReturn(updateOperations);
     when(updateOperations.set(anyString(), anyObject())).thenReturn(updateOperations);
+    when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);
   }
 
   /**
@@ -273,5 +278,18 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
                 .withServiceTemplate(serviceTemplate)
                 .withHost(newHostList.get(0))
                 .build());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSaveServiceInstanceWithAccountId() {
+    ServiceInstance serviceInstance = builder.build();
+    when(wingsPersistence.saveAndGet(eq(ServiceInstance.class), any(ServiceInstance.class))).thenAnswer(invocation -> {
+      ServiceInstance serviceInstance1 = invocation.getArgumentAt(1, ServiceInstance.class);
+      return serviceInstance1;
+    });
+    ServiceInstance savedServiceInstance = serviceInstanceService.save(serviceInstance);
+    assertThat(savedServiceInstance.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 }

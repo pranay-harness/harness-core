@@ -547,6 +547,7 @@ serviceCommands {"name": "appId_1", "background": true} {"appId": 1}
 serviceCommands {"name": "createdAt_1", "background": true} {"createdAt": 1}
 serviceCommands {"name": "serviceId_1", "background": true} {"serviceId": 1}
 serviceCommands {"name": "templateUuid_1", "background": true} {"templateUuid": 1}
+serviceInstance {"name": "accountId_1", "background": true} {"accountId": 1}
 serviceInstance {"name": "appId_1", "background": true} {"appId": 1}
 serviceInstance {"name": "createdAt_1", "background": true} {"createdAt": 1}
 serviceInstance {"name": "hostId_1", "background": true} {"hostId": 1}

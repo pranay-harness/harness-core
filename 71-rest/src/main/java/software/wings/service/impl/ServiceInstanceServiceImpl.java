@@ -20,6 +20,7 @@ import software.wings.beans.ServiceInstance.ServiceInstanceKeys;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
@@ -33,6 +34,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AppService appService;
 
   @Override
   public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
@@ -44,6 +46,10 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    */
   @Override
   public ServiceInstance save(ServiceInstance serviceInstance) {
+    if (serviceInstance.getAccountId() == null) {
+      String accountId = appService.getAccountIdByAppId(serviceInstance.getAppId());
+      serviceInstance.setAccountId(accountId);
+    }
     return wingsPersistence.saveAndGet(ServiceInstance.class, serviceInstance);
   }
 
@@ -76,15 +82,14 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                                 .filter(ServiceInstanceKeys.publicDns, host.getPublicDns())
                                                 .get();
           return serviceInstance != null ? serviceInstance
-                                         : wingsPersistence.saveAndGet(ServiceInstance.class,
-                                               aServiceInstance()
-                                                   .withAppId(template.getAppId())
-                                                   .withEnvId(template.getEnvId())
-                                                   .withServiceTemplate(template)
-                                                   .withHost(host)
-                                                   .withInfraMappingId(infraMapping.getUuid())
-                                                   .withInfraMappingType(infraMapping.getComputeProviderType())
-                                                   .build());
+                                         : save(aServiceInstance()
+                                                    .withAppId(template.getAppId())
+                                                    .withEnvId(template.getEnvId())
+                                                    .withServiceTemplate(template)
+                                                    .withHost(host)
+                                                    .withInfraMappingId(infraMapping.getUuid())
+                                                    .withInfraMappingType(infraMapping.getComputeProviderType())
+                                                    .build());
         })
         .collect(toList());
   }

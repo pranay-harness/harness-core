@@ -7,6 +7,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.mongo.index.FdIndex;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
@@ -52,6 +54,8 @@ public class ServiceInstance extends Base {
   private String commandName;
   private String commandType;
   private long lastDeployedOn;
+
+  @FdIndex @Getter @Setter private String accountId;
 
   @UtilityClass
   public static final class ServiceInstanceKeys {
@@ -571,6 +575,7 @@ public class ServiceInstance extends Base {
     private String commandName;
     private String commandType;
     private long lastDeployedOn;
+    private String accountId;
 
     private Builder() {}
 
@@ -931,6 +936,17 @@ public class ServiceInstance extends Base {
     }
 
     /**
+     * With last deployed on builder.
+     *
+     * @param accountId the last deployed on
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -965,7 +981,8 @@ public class ServiceInstance extends Base {
           .withCommandName(commandName)
           .withCommandType(commandType)
           .withLastDeployedOn(lastDeployedOn)
-          .withPublicDns(publicDns);
+          .withPublicDns(publicDns)
+          .withAccountId(accountId);
     }
 
     /**
@@ -1004,6 +1021,7 @@ public class ServiceInstance extends Base {
       serviceInstance.setCommandName(commandName);
       serviceInstance.setCommandType(commandType);
       serviceInstance.setLastDeployedOn(lastDeployedOn);
+      serviceInstance.setAccountId(accountId);
       return serviceInstance;
     }
   }
