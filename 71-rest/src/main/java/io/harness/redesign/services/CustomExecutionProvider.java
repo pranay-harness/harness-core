@@ -5,6 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
@@ -16,6 +18,7 @@ import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.config.MockServerConfig;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -51,22 +54,24 @@ import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
-import lombok.experimental.UtilityClass;
+import software.wings.app.MainConfiguration;
 import software.wings.sm.states.ShellScriptState;
 
 @OwnedBy(CDC)
 @Redesign
-@UtilityClass
+@Singleton
 @ExcludeRedesign
-public class CustomExecutionUtils {
-  private static final String BASIC_HTTP_STATE_URL_404 = "http://httpstat.us/404";
-  private static final String BASIC_HTTP_STATE_URL_200 = "http://httpstat.us/200";
-  private static final String BASIC_HTTP_STATE_URL_500 = "http://httpstat.us/500";
+public class CustomExecutionProvider {
+  @Inject private MainConfiguration configuration;
+
+  private static final String BASIC_HTTP_STATE_URL_404 = "404";
+  private static final String BASIC_HTTP_STATE_URL_200 = "200";
+  private static final String BASIC_HTTP_STATE_URL_500 = "500";
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
   private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
   private static final String RESOURCE_UNIT = generateUuid();
 
-  public static Plan provideHttpSwitchPlan() {
+  public Plan provideHttpSwitchPlan() {
     String httpNodeId = generateUuid();
     String dummyNode1Id = generateUuid();
     String dummyNode2Id = generateUuid();
@@ -74,7 +79,7 @@ public class CustomExecutionUtils {
     String waitNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
         .node(PlanNode.builder()
                   .uuid(httpNodeId)
@@ -151,11 +156,11 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideHttpSwitchPlanV2() {
+  public Plan provideHttpSwitchPlanV2() {
     String httpNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
         .node(PlanNode.builder()
                   .uuid(httpNodeId)
@@ -171,7 +176,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideHttpForkPlan() {
+  public Plan provideHttpForkPlan() {
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();
     String forkNodeId = generateUuid();
@@ -179,10 +184,10 @@ public class CustomExecutionUtils {
     String emailNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(PlanNode.builder()
                   .uuid(httpNodeId1)
@@ -252,7 +257,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideHttpSectionPlan() {
+  public Plan provideHttpSectionPlan() {
     String sectionNodeId = generateUuid();
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();
@@ -260,10 +265,10 @@ public class CustomExecutionUtils {
     String dummyNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
             PlanNode.builder()
@@ -333,11 +338,11 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideHttpRetryIgnorePlan() {
+  public Plan provideHttpRetryIgnorePlan() {
     String httpNodeId = generateUuid();
     String dummyNodeId = generateUuid();
     BasicHttpStepParameters basicHttpStateParameters =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_500).method("GET").build();
     return Plan.builder()
         .startingNodeId(httpNodeId)
         .node(PlanNode.builder()
@@ -371,11 +376,11 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideHttpRetryAbortPlan() {
+  public Plan provideHttpRetryAbortPlan() {
     String httpNodeId = generateUuid();
     String dummyNodeId = generateUuid();
     BasicHttpStepParameters basicHttpStateParameters =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_500).method("GET").build();
     return Plan.builder()
         .startingNodeId(httpNodeId)
         .node(PlanNode.builder()
@@ -409,7 +414,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideHttpRollbackPlan() {
+  public Plan provideHttpRollbackPlan() {
     String sectionNodeId = generateUuid();
     String rollbackSectionNodeId = generateUuid();
     String rollbackHttpNodeId1 = generateUuid();
@@ -418,10 +423,10 @@ public class CustomExecutionUtils {
     String dummyNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
             PlanNode.builder()
@@ -513,7 +518,7 @@ public class CustomExecutionUtils {
    *     - shell
    *     - dummy
    */
-  public static Plan provideSimpleShellScriptPlan() {
+  public Plan provideSimpleShellScriptPlan() {
     String section1NodeId = generateUuid();
     String section11NodeId = generateUuid();
     String section2NodeId = generateUuid();
@@ -748,16 +753,16 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideTaskChainPlan() {
+  public Plan provideTaskChainPlan() {
     String sectionNodeId = generateUuid();
     String httpChainId = generateUuid();
     String dummyNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
             PlanNode.builder()
@@ -800,7 +805,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideSectionChainPlan() {
+  public Plan provideSectionChainPlan() {
     String sectionChainNodeId = generateUuid();
     String httpNode1Id = generateUuid();
     String httpNode2Id = generateUuid();
@@ -808,10 +813,10 @@ public class CustomExecutionUtils {
     String dummyNode2Id = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(PlanNode.builder()
                   .uuid(sectionChainNodeId)
@@ -876,7 +881,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideSectionChainRollbackPlan() {
+  public Plan provideSectionChainRollbackPlan() {
     String sectionChainNodeId = generateUuid();
     String httpNode1Id = generateUuid();
     String httpNode2Id = generateUuid();
@@ -885,13 +890,13 @@ public class CustomExecutionUtils {
     String dummyNode2Id = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_500).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters3 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(PlanNode.builder()
                   .uuid(sectionChainNodeId)
@@ -989,7 +994,7 @@ public class CustomExecutionUtils {
     String dummyNode1Id = generateUuid();
     String dummyNode2Id = generateUuid();
     StepParameters basicHttpStepParameters1 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
         .startingNodeId(dummyStartNode)
         .node(PlanNode.builder()
@@ -1441,5 +1446,10 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .build();
+  }
+
+  private String getMockServerUrl() {
+    MockServerConfig mockServerConfig = configuration.getMockServerConfig();
+    return mockServerConfig.getBaseUrl() + ":" + mockServerConfig.getPort() + '/';
   }
 }

@@ -35,6 +35,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private GraphVisualizer graphVisualizer;
+  @Inject private CustomExecutionProvider customExecutionProvider;
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String APP_ID = "d9cTupsyQjWqbhUmZ8XPdQ";
@@ -42,92 +43,92 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Override
   public PlanExecution executeHttpSwitch() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideHttpSwitchPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideHttpSwitchPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeHttpFork() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideHttpForkPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideHttpForkPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSectionPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideHttpSectionPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideHttpSectionPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRetryIgnorePlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideHttpRetryIgnorePlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideHttpRetryIgnorePlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRetryAbortPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideHttpRetryAbortPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideHttpRetryAbortPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRollbackPlan() {
     User user = UserThreadLocal.get();
-    return orchestrationService.startExecution(CustomExecutionUtils.provideHttpRollbackPlan(), getAbstractions(),
+    return orchestrationService.startExecution(customExecutionProvider.provideHttpRollbackPlan(), getAbstractions(),
         EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
   }
 
   @Override
   public PlanExecution executeSimpleShellScriptPlan(String accountId, String appId) {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getEmbeddedUser());
+        customExecutionProvider.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeTaskChainPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideTaskChainPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideTaskChainPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSectionChainPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideSectionChainPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideSectionChainPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSectionChainRollbackPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideSectionChainRollbackPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideSectionChainRollbackPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testGraphPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideGraphTestPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideGraphTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSingleBarrierPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.providePlanWithSingleBarrier(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.providePlanWithSingleBarrier(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeMultipleBarriersPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.providePlanWithMultipleBarriers(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.providePlanWithMultipleBarriers(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeResourceRestraintPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideResourceRestraintPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideResourceRestraintPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeResourceRestraintWithWaitPlan() {
     return orchestrationService.startExecution(
-        CustomExecutionUtils.provideResourceRestraintWithWaitPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideResourceRestraintWithWaitPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override

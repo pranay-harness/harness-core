@@ -8,8 +8,8 @@ import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.presentation.Graph;
+import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
-import io.harness.redesign.services.CustomExecutionUtils;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,6 +31,7 @@ import javax.ws.rs.core.StreamingOutput;
 public class NgOrchestrationResource {
   @Inject private OrchestrationService orchestrationService;
   @Inject private CustomExecutionService customExecutionService;
+  @Inject private CustomExecutionProvider customExecutionProvider;
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
 
   private static final EmbeddedUser EMBEDDED_USER =
@@ -42,7 +43,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        CustomExecutionUtils.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), EMBEDDED_USER);
+        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), EMBEDDED_USER);
     return new RestResponse<>(execution);
   }
 

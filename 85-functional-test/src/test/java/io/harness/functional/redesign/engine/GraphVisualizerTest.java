@@ -25,12 +25,14 @@ import io.harness.presentation.Graph;
 import io.harness.presentation.visualization.GraphVisualizer;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.testframework.framework.MockServerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,6 +48,7 @@ import javax.ws.rs.core.GenericType;
 public class GraphVisualizerTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private MockServerExecutor mockServerExecutor;
 
   @Inject private GraphVisualizer graphVisualizer;
 
@@ -59,6 +62,12 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
     owners = ownerManager.create();
     application = applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
+    mockServerExecutor.ensureMockServer(AbstractFunctionalTest.class);
+  }
+
+  @After
+  public void shutDown() {
+    mockServerExecutor.shutdownMockServer();
   }
 
   @Test

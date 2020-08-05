@@ -38,6 +38,10 @@ public class Setup {
     return given().spec(rqProvider.useMailinatorSpec(secret));
   }
 
+  public static RequestSpecification mock() {
+    return given().spec(rqProvider.useMockSpec());
+  }
+
   public static User loginUser(String email, String password) {
     String basicAuthValue =
         "Basic " + encodeBase64String(String.format("%s:%s", email, password).getBytes(StandardCharsets.UTF_8));
