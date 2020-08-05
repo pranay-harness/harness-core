@@ -1,6 +1,7 @@
 package io.harness.secretmanagerclient.remote;
 
 import io.harness.beans.PageResponse;
+import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -19,7 +20,6 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-import software.wings.annotation.EncryptableSetting;
 
 import java.util.List;
 
@@ -64,7 +64,8 @@ public interface SecretManagerClient {
   @POST(SecretManagerClient.SECRETS_API + "/encryption-details")
   @KryoRequest
   @KryoResponse
-  Call<RestResponse<List<EncryptedDataDetail>>> getEncryptionDetails(@Body EncryptableSetting encryptableSetting);
+  Call<RestResponse<List<EncryptedDataDetail>>> getEncryptionDetails(
+      @Body NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer);
 
   // create secret manager
   @POST(SECRET_MANAGERS_API)
