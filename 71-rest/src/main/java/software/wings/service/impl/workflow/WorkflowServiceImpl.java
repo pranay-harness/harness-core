@@ -2644,7 +2644,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (infraRefactor) {
           List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
           for (String infraDefinitionId : infraDefinitionIds) {
-            if (k8sStateHelper.doManifestsUseArtifact(appId, serviceId, infraDefinitionId)) {
+            if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)
+                && k8sStateHelper.doManifestsUseArtifact(appId, serviceId, infraDefinitionId)) {
               artifactNeeded = true;
               break;
             }
