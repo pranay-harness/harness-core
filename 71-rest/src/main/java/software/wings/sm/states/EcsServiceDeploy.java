@@ -35,7 +35,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.states.utils.StateTimeoutUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,7 +77,7 @@ public class EcsServiceDeploy extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+    return ecsStateHelper.getEcsStateTimeoutFromContext(context, false);
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {

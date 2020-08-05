@@ -9,7 +9,6 @@ import static java.util.Collections.singletonList;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
 
-import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -27,7 +26,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
-import software.wings.api.EcsSetupElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.DeploymentExecutionContext;
@@ -54,7 +52,6 @@ import software.wings.sm.State;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
@@ -182,7 +179,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
     if (serviceSteadyStateTimeout == 0) {
       return null;
     }
-    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(serviceSteadyStateTimeout));
+    return ecsStateHelper.getTimeout(serviceSteadyStateTimeout);
   }
 
   private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
@@ -218,13 +215,9 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .build());
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    EcsSetupElement ecsSetupElement =
-        EcsSetupElement.builder().serviceSteadyStateTimeout(serviceSteadyStateTimeout).build();
     return ExecutionResponse.builder()
         .stateExecutionData(context.getStateExecutionData())
         .executionStatus(executionStatus)
-        .contextElement(ecsSetupElement)
-        .notifyElement(ecsSetupElement)
         .build();
   }
 

@@ -39,7 +39,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.utils.StateTimeoutUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -82,7 +81,8 @@ public class EcsBGUpdateListnerState extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+    return ecsStateHelper.getEcsStateTimeoutFromContext(
+        context, StateType.ECS_LISTENER_UPDATE_ROLLBACK.name().equals(this.getStateType()));
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {

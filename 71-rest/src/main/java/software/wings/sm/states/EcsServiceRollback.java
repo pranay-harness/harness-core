@@ -34,7 +34,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.states.utils.StateTimeoutUtils;
 
 import java.util.Map;
 
@@ -69,7 +68,7 @@ public class EcsServiceRollback extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+    return ecsStateHelper.getEcsStateTimeoutFromContext(context, true);
   }
 
   @Override

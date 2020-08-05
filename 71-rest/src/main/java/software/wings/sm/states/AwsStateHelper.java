@@ -18,6 +18,7 @@ import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -127,11 +128,15 @@ public class AwsStateHelper {
         || Integer.valueOf(0).equals(serviceSetupElement.getAutoScalingSteadyStateTimeout())) {
       return null;
     }
+    return getTimeout(serviceSetupElement.getAutoScalingSteadyStateTimeout());
+  }
+
+  @Nullable
+  public Integer getTimeout(Integer timeoutInMinutes) {
     try {
-      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()));
+      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutInMinutes));
     } catch (Exception e) {
-      logger.warn("Could not convert {} minutes to millis, falling back to default timeout",
-          serviceSetupElement.getAutoScalingSteadyStateTimeout());
+      logger.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
       return null;
     }
   }

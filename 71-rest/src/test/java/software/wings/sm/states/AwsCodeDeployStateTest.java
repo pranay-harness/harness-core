@@ -4,17 +4,20 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 
 import java.util.Map;
 
 public class AwsCodeDeployStateTest extends WingsBaseTest {
+  @Mock private AwsStateHelper awsStateHelper;
   @InjectMocks AwsCodeDeployState awsCodeDeployState = new AwsCodeDeployState("awsCodeDeployState");
 
   @Test
@@ -44,7 +47,13 @@ public class AwsCodeDeployStateTest extends WingsBaseTest {
   public void testGetTimeoutMillis() {
     awsCodeDeployState.setSteadyStateTimeout(0);
     assertThat(awsCodeDeployState.getTimeoutMillis()).isNull();
+
+    doReturn(600000).when(awsStateHelper).getTimeout(10);
     awsCodeDeployState.setSteadyStateTimeout(10);
     assertThat(awsCodeDeployState.getTimeoutMillis()).isEqualTo(10 * 60 * 1000);
+
+    doReturn(null).when(awsStateHelper).getTimeout(35792);
+    awsCodeDeployState.setSteadyStateTimeout(35792);
+    assertThat(awsCodeDeployState.getTimeoutMillis()).isNull();
   }
 }

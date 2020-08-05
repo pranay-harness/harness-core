@@ -39,7 +39,6 @@ import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ClusterElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
-import software.wings.api.EcsSetupElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
@@ -307,33 +306,11 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     assertThat(executionResponse.getContextElements()).isNotEmpty();
     assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(AwsLambdaContextElement.class);
     assertThat(executionResponse.getNotifyElements()).isEmpty();
-
-    response.put("", getElementNotifyResponseData(EcsSetupElement.builder().build()));
-    phaseElement.setDeploymentType(DeploymentType.ECS.name());
-    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", CONTAINER_SETUP);
-    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
-    assertThat(executionResponse.getContextElements()).isNotEmpty();
-    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(EcsSetupElement.class);
-    assertThat(executionResponse.getNotifyElements().get(0)).isInstanceOf(EcsSetupElement.class);
-
-    response.put("", getElementFailedNotifyResponseData(EcsSetupElement.builder().build()));
-    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", CONTAINER_SETUP);
-    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
-    assertThat(executionResponse.getContextElements()).isNotEmpty();
-    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(EcsSetupElement.class);
-    assertThat(executionResponse.getNotifyElements().get(0)).isInstanceOf(EcsSetupElement.class);
   }
 
   private ElementNotifyResponseData getElementNotifyResponseData(ContextElement contextElement) {
     return ElementNotifyResponseData.builder()
         .executionStatus(ExecutionStatus.SUCCESS)
-        .contextElements(asList(contextElement))
-        .build();
-  }
-
-  private ElementNotifyResponseData getElementFailedNotifyResponseData(ContextElement contextElement) {
-    return ElementNotifyResponseData.builder()
-        .executionStatus(ExecutionStatus.FAILED)
         .contextElements(asList(contextElement))
         .build();
   }

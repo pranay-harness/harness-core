@@ -4,12 +4,15 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Maps.newHashMap;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -673,5 +676,36 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(retVal.get(0).getName()).isEqualTo("foo");
     assertThat(retVal.get(0).getPreviousCount()).isEqualTo(1);
     assertThat(retVal.get(0).getDesiredCount()).isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutFromContext() {
+    EcsStateHelper helper = spy(new EcsStateHelper());
+
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doReturn(ContainerServiceElement.builder().serviceSteadyStateTimeout(10).build())
+        .when(helper)
+        .getSetupElementFromSweepingOutput(anyObject(), anyBoolean());
+    assertThat(helper.getEcsStateTimeoutFromContext(mockContext, true)).isEqualTo(600000);
+
+    doReturn(ContainerServiceElement.builder().serviceSteadyStateTimeout(0).build())
+        .when(helper)
+        .getSetupElementFromSweepingOutput(anyObject(), anyBoolean());
+    assertThat(helper.getEcsStateTimeoutFromContext(mockContext, true)).isEqualTo(null);
+
+    doReturn(ContainerServiceElement.builder().build())
+        .when(helper)
+        .getSetupElementFromSweepingOutput(anyObject(), anyBoolean());
+    assertThat(helper.getEcsStateTimeoutFromContext(mockContext, true)).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    assertThat(helper.getTimeout(10)).isEqualTo(600000);
+    assertThat(helper.getTimeout(35792)).isNull();
   }
 }

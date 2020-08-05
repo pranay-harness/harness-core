@@ -9,7 +9,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEP
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 
-import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -29,7 +28,6 @@ import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
-import software.wings.api.EcsSetupElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.DeploymentExecutionContext;
@@ -54,7 +52,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsDaemonServiceSetup extends State {
@@ -103,7 +100,7 @@ public class EcsDaemonServiceSetup extends State {
     if (serviceSteadyStateTimeout == 0) {
       return null;
     }
-    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(serviceSteadyStateTimeout));
+    return ecsStateHelper.getTimeout(serviceSteadyStateTimeout);
   }
 
   @Override
@@ -238,13 +235,6 @@ public class EcsDaemonServiceSetup extends State {
             .build());
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    EcsSetupElement ecsSetupElement =
-        EcsSetupElement.builder().serviceSteadyStateTimeout(serviceSteadyStateTimeout).build();
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(executionStatus)
-        .contextElement(ecsSetupElement)
-        .notifyElement(ecsSetupElement)
-        .build();
+    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
   }
 }

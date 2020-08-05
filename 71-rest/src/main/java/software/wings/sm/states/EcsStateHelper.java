@@ -25,6 +25,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SET
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -46,10 +47,12 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -120,6 +123,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Singleton
 public class EcsStateHelper {
   @Inject private FeatureFlagService featureFlagService;
@@ -852,5 +856,23 @@ public class EcsStateHelper {
       }
     }
     return prefix + suffix;
+  }
+
+  public Integer getEcsStateTimeoutFromContext(ExecutionContext context, boolean isRollback) {
+    ContainerServiceElement containerElement = getSetupElementFromSweepingOutput(context, isRollback);
+    if (containerElement == null || containerElement.getServiceSteadyStateTimeout() == 0) {
+      return null;
+    }
+    return getTimeout(containerElement.getServiceSteadyStateTimeout());
+  }
+
+  @Nullable
+  public Integer getTimeout(Integer timeoutInMinutes) {
+    try {
+      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutInMinutes));
+    } catch (Exception e) {
+      logger.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
+      return null;
+    }
   }
 }

@@ -41,7 +41,6 @@ import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
-import software.wings.api.EcsSetupElement;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmSetupExecutionSummary;
 import software.wings.api.InstanceElementListParam;
@@ -89,7 +88,6 @@ import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -544,7 +542,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
     if (ExecutionStatus.isNegativeStatus(elementNotifyResponseData.getExecutionStatus())) {
-      handleContainerSetupNegativeStatus(executionResponseBuilder, elementNotifyResponseData);
       return;
     }
 
@@ -583,15 +580,13 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
        * Ecs setup has been migrated to Sweeping outputs to use
        * post prod rollback
        */
-      ContextElement contextElement;
       if (!DeploymentType.ECS.name().equals(deploymentType)) {
-        contextElement = fetchNotifiedContextElement(elementNotifyResponseData, ContainerServiceElement.class);
-      } else {
-        contextElement = fetchNotifiedContextElement(elementNotifyResponseData, EcsSetupElement.class);
-      }
-      if (contextElement != null) {
-        contextElements.add(contextElement);
-        addNotifyElement = true;
+        ContextElement contextElement =
+            fetchNotifiedContextElement(elementNotifyResponseData, ContainerServiceElement.class);
+        if (contextElement != null) {
+          contextElements.add(contextElement);
+          addNotifyElement = true;
+        }
       }
     } else if (phaseStepType == PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP) {
       ContextElement contextElement = getAwsAmiNotifiedContextElement(elementNotifyResponseData);
@@ -622,16 +617,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
 
     addContextElementsIfPresent(executionResponseBuilder, addNotifyElement, contextElements);
-  }
-
-  private void handleContainerSetupNegativeStatus(
-      ExecutionResponseBuilder executionResponseBuilder, ElementNotifyResponseData elementNotifyResponseData) {
-    if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      ContextElement contextElement = fetchNotifiedContextElement(elementNotifyResponseData, EcsSetupElement.class);
-      if (contextElement != null) {
-        addContextElementsIfPresent(executionResponseBuilder, true, Collections.singletonList(contextElement));
-      }
-    }
   }
 
   private void addContextElementsIfPresent(ExecutionResponseBuilder executionResponseBuilder, boolean addNotifyElement,
