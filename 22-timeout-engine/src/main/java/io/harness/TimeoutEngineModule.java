@@ -1,10 +1,12 @@
 package io.harness;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
-import lombok.extern.slf4j.Slf4j;
+import io.harness.registrars.TimeoutEngineTimeoutRegistrar;
+import io.harness.registries.TimeoutEngineRegistryModule;
+import io.harness.registries.registrar.TimeoutRegistrar;
 
-@Slf4j
 public class TimeoutEngineModule extends AbstractModule {
   private static TimeoutEngineModule instance;
 
@@ -17,6 +19,11 @@ public class TimeoutEngineModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // Nothing to configure.
+    install(TimeoutEngineRegistryModule.getInstance());
+
+    MapBinder<String, TimeoutRegistrar> timeoutRegistrarMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TimeoutRegistrar.class);
+    timeoutRegistrarMapBinder.addBinding(TimeoutEngineTimeoutRegistrar.class.getName())
+        .to(TimeoutEngineTimeoutRegistrar.class);
   }
 }

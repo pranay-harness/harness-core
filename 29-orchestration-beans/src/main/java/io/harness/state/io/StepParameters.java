@@ -10,6 +10,7 @@ import java.time.Duration;
 @OwnedBy(CDC)
 @Redesign
 public interface StepParameters {
+  // TODO: Update the interface to return list of TimeoutObtainment
   default Duration timeout() {
     return Duration.ofDays(10);
   }

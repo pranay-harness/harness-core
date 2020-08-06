@@ -1,8 +1,8 @@
 package io.harness.serializer.spring;
 
 import io.harness.spring.AliasRegistrar;
-import io.harness.timeout.trackers.AbsoluteTimeoutTracker;
-import io.harness.timeout.trackers.ActiveTimeoutTracker;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTracker;
+import io.harness.timeout.trackers.active.ActiveTimeoutTracker;
 
 import java.util.Map;
 
