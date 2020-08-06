@@ -4,32 +4,18 @@ import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.YOGESH;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableMap;
 
 import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.OidcGrantType;
@@ -53,7 +39,6 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
@@ -61,6 +46,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
   @Mock LogCallback logCallback;
   @Mock private EncryptionService encryptionService;
   @Spy @InjectMocks private OidcTokenRetriever oidcTokenRetriever;
+  @Spy @InjectMocks ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Spy @InjectMocks ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   @Before
@@ -122,83 +108,8 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
 
     // Test generating KubernetesConfig from KubernetesClusterConfig
     KubernetesConfig kubeConfig = clusterConfig.createKubernetesConfig("namespace");
-    String configFileContent = containerDeploymentDelegateHelper.getConfigFileContent(kubeConfig);
+    String configFileContent = containerDeploymentDelegateBaseHelper.getConfigFileContent(kubeConfig);
     assertThat(expected).isEqualTo(configFileContent);
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGetContainerInfosWhenReadyByLabel() {
-    ContainerServiceParams containerServiceParams = mock(ContainerServiceParams.class);
-    KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
-    List<Pod> existingPods = asList(new Pod());
-
-    when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyMap())).thenReturn(existingPods);
-    doReturn(null)
-        .when(containerDeploymentDelegateHelper)
-        .getContainerInfosWhenReadyByLabels(any(KubernetesConfig.class), any(LogCallback.class), anyMap(), anyList());
-
-    containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
-        "name", "value", kubernetesConfig, logCallback, existingPods);
-
-    verify(containerDeploymentDelegateHelper, times(1))
-        .getContainerInfosWhenReadyByLabels(
-            kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGetContainerInfosWhenReadyByLabels() {
-    ContainerServiceParams containerServiceParams =
-        ContainerServiceParams.builder().encryptionDetails(Collections.emptyList()).build();
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
-    List<Pod> existingPods = asList(new Pod());
-    List<? extends HasMetadata> controllers = getMockedControllers();
-
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
-
-    containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabels(
-        kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
-
-    verify(kubernetesContainerService, times(1))
-        .getContainerInfosWhenReady(
-            kubernetesConfig, "deployment-name", 0, -1, 30, existingPods, false, logCallback, true, 0, "default");
-    verify(kubernetesContainerService, times(1))
-        .getContainerInfosWhenReady(
-            kubernetesConfig, "daemonSet-name", 0, -1, 30, existingPods, true, logCallback, true, 0, "default");
-  }
-
-  private List<? extends HasMetadata> getMockedControllers() {
-    HasMetadata controller_1 = mock(Deployment.class);
-    HasMetadata controller_2 = mock(DaemonSet.class);
-    ObjectMeta metaData_1 = mock(ObjectMeta.class);
-    ObjectMeta metaData_2 = mock(ObjectMeta.class);
-    when(controller_1.getKind()).thenReturn("Deployment");
-    when(controller_2.getKind()).thenReturn("DaemonSet");
-    when(controller_1.getMetadata()).thenReturn(metaData_1);
-    when(controller_2.getMetadata()).thenReturn(metaData_2);
-    when(metaData_1.getName()).thenReturn("deployment-name");
-    when(metaData_2.getName()).thenReturn("daemonSet-name");
-    return asList(controller_1, controller_2);
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void getExistingPodsByLabels() {
-    ContainerServiceParams containerServiceParams =
-        ContainerServiceParams.builder().encryptionDetails(Collections.emptyList()).build();
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
-    Map<String, String> labels = new HashMap<>();
-
-    when(kubernetesContainerService.getPods(kubernetesConfig, labels)).thenReturn(asList(new Pod()));
-
-    final List<Pod> pods =
-        containerDeploymentDelegateHelper.getExistingPodsByLabels(containerServiceParams, kubernetesConfig, labels);
-    assertThat(pods).hasSize(1);
-    verify(kubernetesContainerService, times(1)).getPods(kubernetesConfig, labels);
   }
 
   @Test
@@ -288,18 +199,6 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         false, ContainerServiceParams.builder().build(), new ExecutionLogCallback());
     assertThat(result).isFalse();
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testGetControllerCountByLabels() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
-    Map<String, String> labels = new HashMap<>();
-
-    List<? extends HasMetadata> controllers = getMockedControllers();
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
-    assertThat(containerDeploymentDelegateHelper.getControllerCountByLabels(kubernetesConfig, labels)).isEqualTo(2);
   }
 
   @Test

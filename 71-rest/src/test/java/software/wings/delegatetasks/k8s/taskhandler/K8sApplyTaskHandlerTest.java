@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.kubectl.Kubectl;
@@ -58,6 +59,7 @@ import java.util.List;
 public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sTaskHelper k8sTaskHelper;
+  @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @InjectMocks private K8sApplyTaskHandler k8sApplyTaskHandler;
 
   @Before
@@ -78,7 +80,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
         .thenReturn(KubernetesConfig.builder().build());
     when(k8sTaskHelper.renderTemplateForGivenFiles(any(), any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(asList(ManifestFile.builder().build()));
-    doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
+    doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
 
     k8sApplyTaskHandler.init(k8sApplyTaskParameters, delegateTaskParams, executionLogCallback);
@@ -101,7 +103,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
         .thenReturn(KubernetesConfig.builder().build());
     when(k8sTaskHelper.renderTemplateForGivenFiles(any(), any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(asList(ManifestFile.builder().build()));
-    doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
+    doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
 
     k8sApplyTaskHandler.init(k8sApplyTaskParameters, delegateTaskParams, executionLogCallback);

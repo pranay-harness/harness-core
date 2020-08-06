@@ -4,11 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.helm.HelmConstants.HELM_DOCKER_IMAGE_NAME_PLACEHOLDER;
+import static io.harness.helm.HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER;
+import static io.harness.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.helpers.ext.helm.HelmConstants.HELM_DOCKER_IMAGE_NAME_PLACEHOLDER;
-import static software.wings.helpers.ext.helm.HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER;
-import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

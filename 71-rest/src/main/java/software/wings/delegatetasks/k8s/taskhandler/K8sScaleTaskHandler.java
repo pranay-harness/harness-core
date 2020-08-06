@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromNamespaceKindName;
@@ -17,11 +18,11 @@ import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Scale;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
-import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
@@ -54,6 +55,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   private Kubectl client;
   private KubernetesResourceId resourceIdToScale;
@@ -87,7 +89,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     }
 
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sScaleTaskParameters.getTimeoutIntervalInMin());
-    List<K8sPod> beforePodList = k8sTaskHelper.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
+    List<K8sPod> beforePodList = k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
         k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     success = k8sTaskHelper.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
@@ -108,7 +110,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
       }
     }
 
-    List<K8sPod> afterPodList = k8sTaskHelper.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
+    List<K8sPod> afterPodList = k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
         k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     k8sScaleResponse.setK8sPodList(tagNewPods(beforePodList, afterPodList));

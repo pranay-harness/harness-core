@@ -49,4 +49,27 @@ public interface K8sConstants {
       + "      " + OIDC_AUTH_NAME + "\n";
 
   String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
+  String KUBE_CONFIG_TEMPLATE = "apiVersion: v1\n"
+      + "clusters:\n"
+      + "- cluster:\n"
+      + "    xxxxxxxx ${MASTER_URL}\n"
+      + "    insecure-skip-tls-verify: true\n"
+      + "  name: CLUSTER_NAME\n"
+      + "contexts:\n"
+      + "- context:\n"
+      + "    cluster: CLUSTER_NAME\n"
+      + "    user: HARNESS_USER\n"
+      + "    ${NAMESPACE}\n"
+      + "  name: CURRENT_CONTEXT\n"
+      + "current-context: CURRENT_CONTEXT\n"
+      + "kind: Config\n"
+      + "preferences: {}\n"
+      + "users:\n"
+      + "- name: HARNESS_USER\n"
+      + "  user:\n"
+      + "    ${CLIENT_CERT_DATA}\n"
+      + "    ${CLIENT_KEY_DATA}\n"
+      + "    ${PASSWORD}\n"
+      + "    ${USER_NAME}\n"
+      + "    ${SERVICE_ACCOUNT_TOKEN_DATA}";
 }

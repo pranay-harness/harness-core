@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
@@ -22,13 +23,13 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
-import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
@@ -75,6 +76,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
@@ -167,8 +169,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
             .k8sPodList(tagNewPods(getPods(steadyStateTimeoutInMillis), existingPodList))
-            .loadBalancer(
-                k8sTaskHelper.getLoadBalancerEndpoint(kubernetesConfig, resources, steadyStateTimeoutInMillis))
+            .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))
             .helmChartInfo(helmChartInfo)
             .build();
 
@@ -186,7 +187,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
 
     for (KubernetesResource kubernetesResource : managedWorkloads) {
-      List<K8sPod> podDetails = k8sTaskHelper.getPodDetails(
+      List<K8sPod> podDetails = k8sTaskHelperBase.getPodDetails(
           kubernetesConfig, kubernetesResource.getResourceId().getNamespace(), releaseName, timeoutInMillis);
 
       if (isNotEmpty(podDetails)) {
@@ -239,7 +240,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       resources = k8sTaskHelper.readManifestAndOverrideLocalSecrets(
           manifestFiles, executionLogCallback, request.isLocalOverrideFeatureFlag());
-      k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
+      k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       if (request.isInCanaryWorkflow()) {
         updateDestinationRuleManifestFilesWithSubsets(executionLogCallback);
@@ -320,13 +321,13 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
   private void updateVirtualServiceManifestFilesWithRoutes(ExecutionLogCallback executionLogCallback)
       throws IOException {
-    k8sTaskHelper.updateVirtualServiceManifestFilesWithRoutesForCanary(
+    k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
         resources, kubernetesConfig, executionLogCallback);
   }
 
   private void updateDestinationRuleManifestFilesWithSubsets(ExecutionLogCallback executionLogCallback)
       throws IOException {
-    k8sTaskHelper.updateDestinationRuleManifestFilesWithSubsets(resources,
+    k8sTaskHelperBase.updateDestinationRuleManifestFilesWithSubsets(resources,
         asList(HarnessLabelValues.trackCanary, HarnessLabelValues.trackStable), kubernetesConfig, executionLogCallback);
   }
 

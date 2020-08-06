@@ -1,4 +1,4 @@
-package software.wings.beans.k8s.istio;
+package io.harness.k8s.model;
 
 import io.harness.data.validator.Trimmed;
 import lombok.AllArgsConstructor;

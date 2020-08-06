@@ -1,9 +1,9 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.executeCommand;
-import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 
 import com.google.inject.Inject;
 
