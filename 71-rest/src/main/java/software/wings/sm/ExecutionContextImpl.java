@@ -1,10 +1,14 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.beans.TriggeredBy.triggeredBy;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
@@ -13,6 +17,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.join;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -30,6 +36,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -67,6 +74,8 @@ import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -125,6 +134,7 @@ import software.wings.sm.LateBindingServiceVariables.LateBindingServiceVariables
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -139,6 +149,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -229,6 +240,52 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       if (isNotEmpty(artifactFileName)) {
         map.put(ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
       }
+    }
+  }
+
+  @NotNull
+  public static void populateActivity(ActivityBuilder builder, final @NotNull ExecutionContext executionContext) {
+    final Application app = executionContext.fetchRequiredApp();
+    final Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    final WorkflowStandardParams workflowStandardParams =
+        executionContext.getContextElement(ContextElementType.STANDARD);
+    final EmbeddedUser currentUser = workflowStandardParams.getCurrentUser();
+    final InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
+    notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", currentUser, USER);
+
+    builder.appId(app.getUuid());
+    builder.applicationName(app.getName());
+    builder.type(Activity.Type.Verification);
+    builder.workflowType(executionContext.getWorkflowType());
+    builder.workflowExecutionName(executionContext.getWorkflowExecutionName());
+    builder.stateExecutionInstanceId(executionContext.getStateExecutionInstanceId());
+    builder.stateExecutionInstanceName(executionContext.getStateExecutionInstanceName());
+    builder.workflowId(executionContext.getWorkflowId());
+    builder.workflowExecutionId(executionContext.getWorkflowExecutionId());
+    builder.commandUnits(Collections.emptyList());
+    builder.status(RUNNING);
+    builder.triggeredBy(triggeredBy(currentUser.getName(), currentUser.getEmail()));
+    builder.accountId(app.getAccountId());
+
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
+      builder.environmentId(GLOBAL_ENV_ID);
+      builder.environmentName(GLOBAL_ENV_ID);
+      builder.environmentType(ALL);
+    } else if (env != null) {
+      builder.environmentId(env.getUuid());
+      builder.environmentName(env.getName());
+      builder.environmentType(env.getEnvironmentType());
+    }
+    if (instanceElement != null) {
+      final ServiceTemplateElement serviceTemplateElement = instanceElement.getServiceTemplateElement();
+      builder.serviceTemplateId(serviceTemplateElement.getUuid());
+      builder.serviceTemplateName(serviceTemplateElement.getName());
+      builder.serviceId(serviceTemplateElement.getServiceElement().getUuid());
+      builder.serviceName(serviceTemplateElement.getServiceElement().getName());
+      builder.serviceInstanceId(instanceElement.getUuid());
+      builder.hostName(instanceElement.getHost().getHostName());
     }
   }
 

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Type.Verification;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.COMMAND;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EmbeddedUser;
@@ -23,6 +22,7 @@ import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
@@ -102,7 +102,9 @@ public class ActivityTest extends CategoryTest {
     activity.setServiceInstanceId(instanceElement.getUuid());
     activity.setHostName(instanceElement.getHost().getHostName());
 
-    assertThat(new Activity().with(executionContext)).isEqualToIgnoringGivenFields(activity, "validUntil");
+    ActivityBuilder builder = Activity.builder();
+    ExecutionContextImpl.populateActivity(builder, executionContext);
+    assertThat(builder.build()).isEqualToIgnoringGivenFields(activity, "validUntil");
   }
 
   @Test
@@ -115,15 +117,9 @@ public class ActivityTest extends CategoryTest {
     final Activity activity = new Activity();
     activity.setCommandName(state.getName());
     activity.setCommandType(state.getStateType());
-    assertThat(new Activity().with(state)).isEqualToIgnoringGivenFields(activity, "validUntil");
-  }
 
-  @Test
-  @Owner(developers = VGLIJIN)
-  @Category(UnitTests.class)
-  public void withCommandUnitTypeTest() {
-    final Activity activity = new Activity();
-    activity.setCommandUnitType(COMMAND);
-    assertThat(new Activity().with(COMMAND)).isEqualToIgnoringGivenFields(activity, "validUntil");
+    ActivityBuilder builder = Activity.builder();
+    State.populateActivity(builder, state);
+    assertThat(builder.build()).isEqualToIgnoringGivenFields(activity, "validUntil");
   }
 }
