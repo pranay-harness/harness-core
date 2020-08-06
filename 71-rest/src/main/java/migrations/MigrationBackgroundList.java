@@ -90,7 +90,6 @@ import migrations.all.UpdateStaleDefaultAccountIds;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
 import migrations.all.WFEAddDeploymentMetaData;
-import migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -253,7 +252,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(147, AddAccountIdToServiceVariables.class))
         .add(Pair.of(148, AddCeFullTrialLicenseToCurrentAccounts.class))
         .add(Pair.of(149, AddAccountIdToServiceInstance.class))
-        .add(Pair.of(150, WorkflowExecutionAddCDPageCandidateMigration.class))
+        .add(Pair.of(150, BaseMigration.class))
         .build();
   }
 }
