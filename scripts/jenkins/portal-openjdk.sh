@@ -193,3 +193,24 @@ then
 fi
 
 cd ../..
+
+
+mkdir -p dist/ci-manager
+cd dist/ci-manager
+cp ../../74-ci-manager/target/ci-manager-capsule.jar .
+cp ../../74-ci-manager/ci-manager-config.yml .
+cp ../../keystore.jks .
+cp ../../74-ci-manager/key.pem .
+cp ../../74-ci-manager/cert.pem .
+
+cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/ci-manager/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..

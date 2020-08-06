@@ -1,0 +1,17 @@
+# to be used when building in Jenkins
+FROM us.gcr.io/platform-205701/alpine:safe
+
+# Add the capsule JAR and ci-manager-config.yml
+COPY ci-manager-capsule.jar keystore.jks ci-manager-config.yml /opt/harness/
+
+RUN wget $(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest | grep browser_download_url | grep linux_amd64 | cut -d '"' -f 4) -O /usr/bin/yq
+RUN chmod +x /usr/bin/yq
+
+COPY scripts /opt/harness
+
+RUN chmod +x /opt/harness/*.sh
+RUN mkdir /opt/harness/plugins
+
+WORKDIR /opt/harness
+
+CMD [ "./run.sh" ]
