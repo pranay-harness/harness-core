@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.apis.dto.appdynamicsconnector.AppDynamicsConnectorSummaryDTO;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
-import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConnectorSummaryMapper;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,8 +15,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class AppDynamicsEntityToDTOTest extends CategoryTest {
-  @InjectMocks AppDynamicsEntityToDTO appDynamicsEntityToDTO;
+public class AppDynamicsConnectorSummaryMapperTest extends CategoryTest {
+  @InjectMocks AppDynamicsConnectorSummaryMapper appDynamicsConnectorSummaryMapper;
 
   @Before
   public void setUp() throws Exception {
@@ -26,7 +26,7 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
-  public void testCreateAppDynamicsConnectorDTO() {
+  public void testCreateAppDynamicsConnectorSummaryDTO() {
     String username = "username";
     String encryptedPassword = "encryptedPassword";
     String accountname = "accountname";
@@ -41,12 +41,12 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .accountId(accountId)
                                                     .build();
 
-    AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
-    assertThat(appDynamicsConnectorDTO).isNotNull();
-    assertThat(appDynamicsConnectorDTO.getUsername()).isEqualTo(appDynamicsConnector.getUsername());
-    assertThat(appDynamicsConnectorDTO.getPasswordReference()).isEqualTo(appDynamicsConnector.getPasswordReference());
-    assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
-    assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl());
-    assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(appDynamicsConnector.getAccountId());
+    AppDynamicsConnectorSummaryDTO appDynamicsConnectorSummaryDTO =
+        appDynamicsConnectorSummaryMapper.toConnectorConfigSummaryDTO(appDynamicsConnector);
+
+    assertThat(appDynamicsConnectorSummaryDTO).isNotNull();
+    assertThat(appDynamicsConnectorSummaryDTO.getUsername()).isEqualTo(appDynamicsConnector.getUsername());
+    assertThat(appDynamicsConnectorSummaryDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
+    assertThat(appDynamicsConnectorSummaryDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl());
   }
 }

@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName("AppDynamics")
-public class AppDynamicsConfigDTO extends ConnectorConfigDTO implements EncryptableSetting {
+public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements EncryptableSetting {
   @NotNull String username;
   @NotNull String accountname;
   @Encrypted(fieldName = "password", isReference = true) char[] password;

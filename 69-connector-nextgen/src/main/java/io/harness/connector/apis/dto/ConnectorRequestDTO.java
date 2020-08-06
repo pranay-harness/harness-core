@@ -6,9 +6,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConfigDTO;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -52,7 +53,8 @@ public class ConnectorRequestDTO {
   @JsonSubTypes({
     @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
     , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git"),
-        @JsonSubTypes.Type(value = AppDynamicsConfigDTO.class, name = "AppDynamics")
+        @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
+        @JsonSubTypes.Type(value = SplunkConnectorDTO.class, name = "Splunk")
   })
   @Valid
   ConnectorConfigDTO connectorConfig;
