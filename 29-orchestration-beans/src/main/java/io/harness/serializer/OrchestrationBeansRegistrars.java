@@ -13,6 +13,7 @@ public class OrchestrationBeansRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(TimeoutEngineRegistrars.kryoRegistrars)
           .add(OrchestrationBeansKryoRegistrar.class)
           .build();
 
@@ -20,6 +21,7 @@ public class OrchestrationBeansRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(TimeoutEngineRegistrars.morphiaRegistrars)
           .add(OrchestrationBeansMorphiaRegistrar.class)
           .build();
 }

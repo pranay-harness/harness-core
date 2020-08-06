@@ -16,6 +16,10 @@ public abstract class PausableTimeoutTracker implements TimeoutTracker {
     this.stopWatch = new StopWatch(running);
   }
 
+  protected boolean isTicking() {
+    return stopWatch.isTicking();
+  }
+
   protected void pause() {
     stopWatch.pause();
   }

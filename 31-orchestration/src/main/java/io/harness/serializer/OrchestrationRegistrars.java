@@ -14,7 +14,6 @@ public class OrchestrationRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .addAll(WaitEngineRegistrars.kryoRegistrars)
-          .addAll(TimeoutEngineRegistrars.kryoRegistrars)
           .add(OrchestrationKryoRegister.class)
           .build();
 
@@ -22,7 +21,6 @@ public class OrchestrationRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
-          .addAll(TimeoutEngineRegistrars.morphiaRegistrars)
           .add(OrchestrationMorphiaRegistrar.class)
           .build();
 }

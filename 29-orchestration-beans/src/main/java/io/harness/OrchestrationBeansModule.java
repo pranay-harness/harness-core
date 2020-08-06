@@ -4,12 +4,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.govern.DependencyModule;
+import io.harness.registrars.OrchestrationBeansTimeoutRegistrar;
 import io.harness.registries.OrchestrationRegistryModule;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
+import io.harness.registries.registrar.TimeoutRegistrar;
 import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +30,7 @@ public class OrchestrationBeansModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    install(TimeoutEngineModule.getInstance());
     install(OrchestrationRegistryModule.getInstance());
 
     MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
@@ -39,6 +42,10 @@ public class OrchestrationBeansModule extends DependencyModule {
         MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
     testExecutionMapBinder.addBinding("Orchestration Alias Registrar Tests")
         .toInstance(OrchestrationAliasUtils::validateModule);
+    MapBinder<String, TimeoutRegistrar> timeoutRegistrarMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TimeoutRegistrar.class);
+    timeoutRegistrarMapBinder.addBinding(OrchestrationBeansTimeoutRegistrar.class.getName())
+        .to(OrchestrationBeansTimeoutRegistrar.class);
   }
 
   @Override

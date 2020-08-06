@@ -70,7 +70,6 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
   @Override
   protected void configure() {
     install(WaiterModule.getInstance());
-    install(TimeoutEngineModule.getInstance());
 
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
