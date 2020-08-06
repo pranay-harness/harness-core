@@ -90,19 +90,19 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
     when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
-    doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
+    doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
-    verify(k8sTaskHelper, times(0)).dryRunManifests(any(), any(), any(), any());
+    verify(k8sTaskHelperBase, times(0)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateVirtualServiceManifestFilesWithRoutesForCanary(any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
+    verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
@@ -120,18 +120,18 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .thenReturn(KubernetesConfig.builder().build());
     when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
+    doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
-    verify(k8sTaskHelper, times(1)).dryRunManifests(any(), any(), any(), any());
+    verify(k8sTaskHelperBase, times(1)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateVirtualServiceManifestFilesWithRoutesForCanary(any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelper, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
-    verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
+    verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
@@ -146,7 +146,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     Release release = Release.builder().managedWorkloads(asList(resourceIdMock)).build();
 
     on(k8sRollingDeployTaskHandler).set("release", release);
-    when(k8sTaskHelper.getLatestRevision(any(), any(), any())).thenReturn("2");
+    when(k8sTaskHelperBase.getLatestRevision(any(), any(), any())).thenReturn("2");
     when(resourceIdMock.getWorkload())
         .thenReturn(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build());
 
@@ -218,7 +218,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .fetchManifestFilesAndWriteToDirectory(
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
     doReturn(helmChartInfo)
@@ -272,11 +272,11 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .dryRunManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .applyManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     handler.executeTaskInternal(
@@ -288,10 +288,10 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .dryRunManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .applyManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
   }
@@ -324,11 +324,11 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .dryRunManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .applyManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     handler.executeTaskInternal(
@@ -340,10 +340,10 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .dryRunManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .applyManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
   }
@@ -353,7 +353,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testInitException() throws Exception {
     doThrow(new KubernetesYamlException("reason"))
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .deleteSkippedManifestFiles(anyString(), any(ExecutionLogCallback.class));
     final boolean success = k8sRollingDeployTaskHandler.init(K8sRollingDeployTaskParameters.builder().build(),
         K8sDelegateTaskParams.builder().build(), Mockito.mock(ExecutionLogCallback.class));
@@ -388,7 +388,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .dryRunManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
 
@@ -396,7 +396,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
         K8sDelegateTaskParams.builder().build());
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .applyManifests(
             any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     List<KubernetesResource> kubernetesResourceList = captor.getValue();
@@ -408,7 +408,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
         K8sDelegateTaskParams.builder().build());
     captor = ArgumentCaptor.forClass(List.class);
-    verify(k8sTaskHelper, times(2))
+    verify(k8sTaskHelperBase, times(2))
         .applyManifests(
             any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     kubernetesResourceList = captor.getValue();
@@ -420,7 +420,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
         K8sDelegateTaskParams.builder().build());
     captor = ArgumentCaptor.forClass(List.class);
-    verify(k8sTaskHelper, times(3))
+    verify(k8sTaskHelperBase, times(3))
         .applyManifests(
             any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     kubernetesResourceList = captor.getValue();

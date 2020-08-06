@@ -14,6 +14,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.manifest.ManifestHelper;
@@ -49,13 +50,13 @@ import java.util.List;
  */
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Utils.class, K8sTaskHelper.class})
+@PrepareForTest({Utils.class, K8sTaskHelperBase.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class K8sTaskHelperSecondaryTest extends WingsBaseTest {
   @Mock private Process process;
   @Mock private StartedProcess startedProcess;
   @Mock private ExecutionLogCallback executionLogCallback;
-  @Inject @InjectMocks private K8sTaskHelper helper;
+  @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
   @Test
   @Owner(developers = YOGESH)
@@ -66,23 +67,28 @@ public class K8sTaskHelperSecondaryTest extends WingsBaseTest {
     MockPath basePath = new MockPath("foo");
     String loggedFiles;
 
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(0, "file").stream());
+    loggedFiles =
+        k8sTaskHelperBase.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(0, "file").stream());
     assertThat(loggedFiles).isEmpty();
     assertThat(loggedFiles).doesNotContain("..more");
 
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(1, "file").stream());
+    loggedFiles =
+        k8sTaskHelperBase.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(1, "file").stream());
     assertThat(loggedFiles).isNotEmpty();
     assertThat(loggedFiles).doesNotContain("..more");
 
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(100, "file").stream());
+    loggedFiles =
+        k8sTaskHelperBase.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(100, "file").stream());
     assertThat(loggedFiles).isNotEmpty();
     assertThat(loggedFiles).doesNotContain("..more");
 
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(101, "file").stream());
+    loggedFiles =
+        k8sTaskHelperBase.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(101, "file").stream());
     assertThat(loggedFiles).isNotEmpty();
     assertThat(loggedFiles).contains("..1 more");
 
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(199, "file").stream());
+    loggedFiles =
+        k8sTaskHelperBase.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(199, "file").stream());
     assertThat(loggedFiles).isNotEmpty();
     assertThat(loggedFiles).contains("..99 more");
   }
@@ -161,10 +167,10 @@ public class K8sTaskHelperSecondaryTest extends WingsBaseTest {
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
     if (allResources) {
-      helper.doStatusCheckForAllResources(client, Arrays.asList(resource.getResourceId()), k8sDelegateTaskParams,
-          "default", executionLogCallback, true);
+      k8sTaskHelperBase.doStatusCheckForAllResources(client, Arrays.asList(resource.getResourceId()),
+          k8sDelegateTaskParams, "default", executionLogCallback, true);
     } else {
-      helper.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
+      k8sTaskHelperBase.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
     }
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);

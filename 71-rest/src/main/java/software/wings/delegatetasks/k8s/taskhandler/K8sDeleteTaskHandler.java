@@ -23,6 +23,7 @@ import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
@@ -55,6 +56,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class K8sDeleteTaskHandler extends K8sTaskHandler {
   @Inject private K8sTaskHelper k8sTaskHelper;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   private Kubectl client;
@@ -105,7 +107,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       return k8sTaskHelper.getK8sTaskExecutionResponse(
           K8sDeleteResponse.builder().build(), CommandExecutionStatus.FAILURE);
     }
-    k8sTaskHelper.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+    k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
     return k8sTaskHelper.getK8sTaskExecutionResponse(
         K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
   }
@@ -123,7 +125,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       return k8sTaskHelper.getK8sTaskExecutionResponse(
           K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
     }
-    k8sTaskHelper.delete(client, k8sDelegateTaskParams, resourceIdsToDelete, executionLogCallback);
+    k8sTaskHelperBase.delete(client, k8sDelegateTaskParams, resourceIdsToDelete, executionLogCallback);
     return k8sTaskHelper.getK8sTaskExecutionResponse(
         K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
   }

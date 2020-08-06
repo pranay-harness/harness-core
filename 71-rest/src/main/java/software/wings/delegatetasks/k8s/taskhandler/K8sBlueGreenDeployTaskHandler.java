@@ -132,7 +132,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     currentRelease.setManagedWorkload(managedWorkload.getResourceId().cloneInternal());
 
-    success = k8sTaskHelper.applyManifests(client, resources, k8sDelegateTaskParams,
+    success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Apply));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
@@ -145,9 +145,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     currentRelease.setManagedWorkloadRevision(
-        k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+        k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
 
-    success = k8sTaskHelper.doStatusCheck(client, managedWorkload.getResourceId(), k8sDelegateTaskParams,
+    success = k8sTaskHelperBase.doStatusCheck(client, managedWorkload.getResourceId(), k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WaitForSteadyState));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
@@ -164,7 +164,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     final List<K8sPod> podList = getAllPods(timeoutInMillis);
 
     currentRelease.setManagedWorkloadRevision(
-        k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+        k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
     releaseHistory.setReleaseStatus(Status.Succeeded);
     kubernetesContainerService.saveReleaseHistory(
         kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
@@ -209,7 +209,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      k8sTaskHelper.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
+      k8sTaskHelperBase.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
@@ -235,7 +235,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       return true;
     }
 
-    return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+    return k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
 
   @VisibleForTesting
@@ -244,8 +244,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     try {
       markVersionedResources(resources);
 
-      executionLogCallback.saveExecutionLog(
-          "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
+      executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
+          + k8sTaskHelperBase.getResourcesInTableFormat(resources));
 
       List<KubernetesResource> workloads = getWorkloadsForCanaryAndBG(resources);
 
@@ -380,7 +380,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
           KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
           if (resourceId.isVersioned()) {
-            k8sTaskHelper.delete(client, k8sDelegateTaskParams, asList(resourceId), executionLogCallback);
+            k8sTaskHelperBase.delete(client, k8sDelegateTaskParams, asList(resourceId), executionLogCallback);
           }
         }
       }
@@ -394,7 +394,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       throws Exception {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
-    k8sTaskHelper.describe(client, k8sDelegateTaskParams, executionLogCallback);
+    k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }

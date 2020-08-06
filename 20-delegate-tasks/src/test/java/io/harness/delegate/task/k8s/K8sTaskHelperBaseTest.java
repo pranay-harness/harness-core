@@ -1,8 +1,13 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.k8s.model.Kind.ConfigMap;
+import static io.harness.k8s.model.Kind.Deployment;
+import static io.harness.k8s.model.Kind.Namespace;
+import static io.harness.k8s.model.Kind.Service;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -30,6 +35,7 @@ import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.rule.Owner;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import org.junit.Rule;
@@ -157,5 +163,32 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetEmptyLogOutputStream() throws Exception {
     assertThat(K8sTaskHelperBase.getEmptyLogOutputStream()).isInstanceOf(LogOutputStream.class);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testArrangeResourceIdsInDeletionOrder() {
+    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList();
+    kubernetesResourceIdList = k8sTaskHelperBase.arrangeResourceIdsInDeletionOrder(kubernetesResourceIdList);
+
+    assertThat(kubernetesResourceIdList.size()).isEqualTo(4);
+    assertThat(kubernetesResourceIdList.get(0).getKind()).isEqualTo(Deployment.name());
+    assertThat(kubernetesResourceIdList.get(1).getKind()).isEqualTo(Service.name());
+    assertThat(kubernetesResourceIdList.get(2).getKind()).isEqualTo(ConfigMap.name());
+    assertThat(kubernetesResourceIdList.get(3).getKind()).isEqualTo(Namespace.name());
+  }
+
+  private List<KubernetesResourceId> getKubernetesResourceIdList() {
+    List<KubernetesResourceId> kubernetesResourceIds = new ArrayList<>();
+    kubernetesResourceIds.add(
+        KubernetesResourceId.builder().kind(Namespace.name()).name("n1").namespace("default").build());
+    kubernetesResourceIds.add(
+        KubernetesResourceId.builder().kind(Deployment.name()).name("d1").namespace("default").build());
+    kubernetesResourceIds.add(
+        KubernetesResourceId.builder().kind(ConfigMap.name()).name("c1").namespace("default").build());
+    kubernetesResourceIds.add(
+        KubernetesResourceId.builder().kind(Service.name()).name("s1").namespace("default").build());
+    return kubernetesResourceIds;
   }
 }

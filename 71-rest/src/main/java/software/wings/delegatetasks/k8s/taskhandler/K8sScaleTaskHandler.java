@@ -92,7 +92,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     List<K8sPod> beforePodList = k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
         k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
-    success = k8sTaskHelper.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
+    success = k8sTaskHelperBase.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
             k8sScaleTaskParameters.getAppId(), k8sScaleTaskParameters.getActivityId(), Scale));
 
@@ -101,7 +101,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     }
 
     if (!k8sScaleTaskParameters.isSkipSteadyStateCheck()) {
-      success = k8sTaskHelper.doStatusCheck(client, resourceIdToScale, k8sDelegateTaskParams,
+      success = k8sTaskHelperBase.doStatusCheck(client, resourceIdToScale, k8sDelegateTaskParams,
           new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
               k8sTaskParameters.getActivityId(), WaitForSteadyState));
 
@@ -154,7 +154,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
       }
 
       executionLogCallback.saveExecutionLog("\nQuerying current replicas");
-      Integer currentReplicas = k8sTaskHelper.getCurrentReplicas(client, resourceIdToScale, k8sDelegateTaskParams);
+      Integer currentReplicas = k8sTaskHelperBase.getCurrentReplicas(client, resourceIdToScale, k8sDelegateTaskParams);
       executionLogCallback.saveExecutionLog("Current replica count is " + currentReplicas);
 
       switch (k8sScaleTaskParameters.getInstanceUnitType()) {

@@ -123,17 +123,17 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(spyHandler).set("primaryService", primaryService());
     on(spyHandler).set("stageService", stageService());
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .applyManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
     on(k8sBlueGreenDeployTaskHandler)
         .set("resources", new ArrayList<>(asList(primaryService(), deployment(), stageService(), configMap())));
     doReturn("latest-rev")
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .getLatestRevision(any(Kubectl.class), eq(deployment().getResourceId()), any(K8sDelegateTaskParams.class));
 
     spyHandler.executeTaskInternal(
@@ -158,7 +158,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     K8sDelegateTaskParams taskParams = K8sDelegateTaskParams.builder().build();
 
     doReturn(false)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
     K8sTaskExecutionResponse response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
@@ -168,7 +168,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     deployTaskParams.setReleaseName("releaseName-apply");
     doReturn(false)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .applyManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
@@ -190,18 +190,18 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
+    doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
     when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(emptyList());
 
     k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
-    verify(k8sTaskHelper, times(0)).dryRunManifests(any(), any(), any(), any());
+    verify(k8sTaskHelperBase, times(0)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).readManifests(any(), any());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
+    verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
@@ -217,18 +217,18 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
+    doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
     when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(emptyList());
 
     k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
-    verify(k8sTaskHelper, times(1)).dryRunManifests(any(), any(), any(), any());
+    verify(k8sTaskHelperBase, times(1)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).readManifests(any(), any());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
+    verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
@@ -307,7 +307,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     release.setManagedWorkloadRevision("2");
     release.setManagedWorkloads(null);
     k8sBlueGreenDeployTaskHandler.cleanupForBlueGreen(delegateTaskParams, releaseHistory, executionLogCallback);
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .delete(client, delegateTaskParams, asList(kubernetesResource.getResourceId()), executionLogCallback);
   }
 
@@ -571,11 +571,11 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true).when(handler).prepareForBlueGreen(
         any(K8sBlueGreenDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
     doReturn(true)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
     doReturn(helmChartInfo)
