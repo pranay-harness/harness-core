@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -20,6 +21,7 @@ import io.harness.timeout.TimeoutInstance.TimeoutInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
@@ -37,18 +39,30 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
 
   public TimeoutInstance registerTimeout(
       @NotNull TimeoutTracker timeoutTracker, @NotNull TimeoutCallback timeoutCallback) {
-    Long expiryTime = timeoutTracker.getExpiryTime();
-    TimeoutInstance timeoutInstance = TimeoutInstance.builder()
-                                          .uuid(generateUuid())
-                                          .tracker(timeoutTracker)
-                                          .callback(timeoutCallback)
-                                          .nextIteration(expiryTime == null ? Long.MAX_VALUE : expiryTime)
-                                          .build();
+    TimeoutInstance timeoutInstance =
+        TimeoutInstance.builder().uuid(generateUuid()).tracker(timeoutTracker).callback(timeoutCallback).build();
+    timeoutInstance.resetNextIteration();
     TimeoutInstance savedTimeoutInstance = timeoutInstanceRepository.save(timeoutInstance);
     if (iterator != null) {
       iterator.wakeup();
     }
     return savedTimeoutInstance;
+  }
+
+  public void onEvent(List<String> timeoutInstanceIds, TimeoutEvent event) {
+    if (EmptyPredicate.isEmpty(timeoutInstanceIds)) {
+      return;
+    }
+
+    for (TimeoutInstance timeoutInstance : timeoutInstanceRepository.findAllById(timeoutInstanceIds)) {
+      if (timeoutInstance.tracker.onEvent(event)) {
+        timeoutInstance.resetNextIteration();
+        timeoutInstanceRepository.save(timeoutInstance);
+        if (iterator != null) {
+          iterator.wakeup();
+        }
+      }
+    }
   }
 
   public void registerIterators() {
@@ -61,6 +75,8 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
         MongoPersistenceIterator.<TimeoutInstance, SpringFilterExpander>builder()
             .clazz(TimeoutInstance.class)
             .fieldName(TimeoutInstanceKeys.nextIteration)
+            // targetInterval is just to add retry mechanism. The document should ideally be deleted after callback is
+            // executed.
             .targetInterval(Duration.ofMinutes(2))
             .acceptableNoAlertDelay(Duration.ofSeconds(45))
             .acceptableExecutionTime(Duration.ofSeconds(30))

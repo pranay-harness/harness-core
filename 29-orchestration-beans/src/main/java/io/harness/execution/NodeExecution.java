@@ -68,15 +68,19 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Wither @LastModifiedDate Long lastUpdatedAt;
   Status status;
   private Long expiryTs;
+  @Version Long version;
 
   @Singular List<ExecutableResponse> executableResponses;
   @Singular private List<InterruptEffect> interruptHistories;
   @Singular List<StepTransput> additionalInputs;
   FailureInfo failureInfo;
 
+  // Retries
   @Singular List<String> retryIds;
   boolean oldRetry;
-  @Version Long version;
+
+  // Timeout
+  List<String> timeoutInstanceIds;
 
   public boolean isRetry() {
     return !isEmpty(retryIds);

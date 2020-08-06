@@ -10,7 +10,14 @@ public interface TimeoutTracker {
   Long getExpiryTime();
   TimeoutTrackerState getState();
 
-  default void onEvent(TimeoutEvent event) {
+  /**
+   * onEvent callback is invoked whenever an event occurs. Example: node execution status update.
+   *
+   * @param event the event that occurred
+   * @return true if any field of the tracker changed and DB needs to be updated, false otherwise
+   */
+  default boolean onEvent(TimeoutEvent event) {
     // Ignore all events by default.
+    return false;
   }
 }

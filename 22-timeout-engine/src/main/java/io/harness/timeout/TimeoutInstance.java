@@ -47,6 +47,11 @@ public class TimeoutInstance implements PersistentRegularIterable, UuidAccess {
   // iterator.
   @FdIndex long nextIteration;
 
+  public void resetNextIteration() {
+    Long expiryTime = tracker.getExpiryTime();
+    nextIteration = expiryTime == null ? Long.MAX_VALUE : expiryTime;
+  }
+
   @Override
   public Long obtainNextIteration(String fieldName) {
     return nextIteration;

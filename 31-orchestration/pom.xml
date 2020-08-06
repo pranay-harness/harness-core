@@ -85,11 +85,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-timeout-engine</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>22-wait-engine</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
