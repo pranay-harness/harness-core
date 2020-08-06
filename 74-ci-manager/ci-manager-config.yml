@@ -2,7 +2,7 @@ managerUrl: https://localhost:9090/api/
 xxxxxxxx
   applicationConnectors:
     - type: h2
-      port: 7070
+      port: 7171
       keyStorePath: keystore.jks
       keyStorePassword: password
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
