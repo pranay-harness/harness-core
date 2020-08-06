@@ -1,0 +1,10 @@
+#For updating image weekly. Use jenkins-slave-portal-open-8u242:jdk242_with_bazel as base_jdk
+
+FROM base_jdk
+RUN cd /opt/harness/portal \
+    && git pull origin master \
+    && source /etc/profile.d/maven.sh \
+    && mvn -Dmaven.repo.local=/opt/harness/.m2/repository -s /opt/harness/.m2/settings.xml clean install -DskipTests \
+    && rm -rf `find . -type d -name target`
+
+ENTRYPOINT  ["jenkins-slave"]
