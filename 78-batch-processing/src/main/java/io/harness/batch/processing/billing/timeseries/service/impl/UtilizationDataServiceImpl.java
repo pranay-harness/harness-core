@@ -37,6 +37,7 @@ public class UtilizationDataServiceImpl {
   @Autowired private DataFetcherUtils utils;
 
   private static final int MAX_RETRY_COUNT = 2;
+  private static final int SELECT_MAX_RETRY_COUNT = 5;
   private static final int BATCH_SIZE = 500;
 
   static final String INSERT_STATEMENT =
@@ -101,6 +102,7 @@ public class UtilizationDataServiceImpl {
         Map<String, List<String>> serviceArnToInstanceIds = getServiceArnToInstanceIdMapping(instanceDataList);
         String query = String.format(UTILIZATION_DATA_QUERY, accountId, settingId, clusterId,
             String.join("','", serviceArnToInstanceIds.keySet()), startTime, endTime);
+
         return getUtilizationDataFromTimescaleDB(query, serviceArnToInstanceIds);
       } else {
         throw new InvalidRequestException("Cannot process request in InstanceBillingDataTasklet");
@@ -115,42 +117,45 @@ public class UtilizationDataServiceImpl {
     ResultSet resultSet = null;
     Map<String, UtilizationData> utilizationDataForInstances = new HashMap<>();
     populateDefaultUtilizationData(utilizationDataForInstances, serviceArnToInstanceIds);
+    int retryCount = 0;
     logger.debug("Utilization data query : {}", query);
-
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(query);
-      while (resultSet.next()) {
-        String instanceId = resultSet.getString("INSTANCEID");
-        double maxCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
-        double maxMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
-        double avgCpuUtilization = resultSet.getDouble("AVGCPUUTILIZATION");
-        double avgMemoryUtilization = resultSet.getDouble("AVGMEMORYUTILIZATION");
-        double maxCpuValue = resultSet.getDouble("MAXCPUVALUE");
-        double maxMemoryValue = resultSet.getDouble("MAXMEMORYVALUE");
-        double avgCpuValue = resultSet.getDouble("AVGCPUVALUE");
-        double avgMemoryValue = resultSet.getDouble("AVGMEMORYVALUE");
-        if (serviceArnToInstanceIds.get(instanceId) != null) {
-          serviceArnToInstanceIds.get(instanceId)
-              .forEach(instance
-                  -> utilizationDataForInstances.put(instance,
-                      UtilizationData.builder()
-                          .maxCpuUtilization(maxCpuUtilization)
-                          .maxMemoryUtilization(maxMemoryUtilization)
-                          .avgCpuUtilization(avgCpuUtilization)
-                          .avgMemoryUtilization(avgMemoryUtilization)
-                          .maxCpuUtilizationValue(maxCpuValue)
-                          .avgCpuUtilizationValue(avgCpuValue)
-                          .maxMemoryUtilizationValue(maxMemoryValue)
-                          .avgMemoryUtilizationValue(avgMemoryValue)
-                          .build()));
+    while (retryCount < SELECT_MAX_RETRY_COUNT) {
+      retryCount++;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        while (resultSet.next()) {
+          String instanceId = resultSet.getString("INSTANCEID");
+          double maxCpuUtilization = resultSet.getDouble("MAXCPUUTILIZATION");
+          double maxMemoryUtilization = resultSet.getDouble("MAXMEMORYUTILIZATION");
+          double avgCpuUtilization = resultSet.getDouble("AVGCPUUTILIZATION");
+          double avgMemoryUtilization = resultSet.getDouble("AVGMEMORYUTILIZATION");
+          double maxCpuValue = resultSet.getDouble("MAXCPUVALUE");
+          double maxMemoryValue = resultSet.getDouble("MAXMEMORYVALUE");
+          double avgCpuValue = resultSet.getDouble("AVGCPUVALUE");
+          double avgMemoryValue = resultSet.getDouble("AVGMEMORYVALUE");
+          if (serviceArnToInstanceIds.get(instanceId) != null) {
+            serviceArnToInstanceIds.get(instanceId)
+                .forEach(instance
+                    -> utilizationDataForInstances.put(instance,
+                        UtilizationData.builder()
+                            .maxCpuUtilization(maxCpuUtilization)
+                            .maxMemoryUtilization(maxMemoryUtilization)
+                            .avgCpuUtilization(avgCpuUtilization)
+                            .avgMemoryUtilization(avgMemoryUtilization)
+                            .maxCpuUtilizationValue(maxCpuValue)
+                            .avgCpuUtilizationValue(avgCpuValue)
+                            .maxMemoryUtilizationValue(maxMemoryValue)
+                            .avgMemoryUtilizationValue(avgMemoryValue)
+                            .build()));
+          }
         }
+        return utilizationDataForInstances;
+      } catch (SQLException e) {
+        logger.error("Error while fetching utilization data : exception", e);
+      } finally {
+        DBUtils.close(resultSet);
       }
-      return utilizationDataForInstances;
-    } catch (SQLException e) {
-      logger.error("Error while fetching utilization data : exception {}", e);
-    } finally {
-      DBUtils.close(resultSet);
     }
     return null;
   }
