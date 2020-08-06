@@ -3,6 +3,8 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getExecutionLogOutputStream;
+import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getOcCommandPrefix;
+import static io.harness.k8s.K8sConstants.ocRolloutUndoCommand;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
@@ -13,8 +15,6 @@ import static software.wings.beans.LogWeight.Bold;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Rollback;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
-import static software.wings.delegatetasks.k8s.K8sTaskHelper.getOcCommandPrefix;
-import static software.wings.delegatetasks.k8s.K8sTaskHelper.ocRolloutUndoCommand;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -60,6 +60,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
+  @Inject private transient K8sTaskHelperBase k8sTaskHelperBase;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
@@ -102,7 +103,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     } else {
       List<KubernetesResourceId> kubernetesResourceIds =
           previousManagedWorkloads.stream().map(KubernetesResourceIdRevision::getWorkload).collect(Collectors.toList());
-      k8sTaskHelper.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
+      k8sTaskHelperBase.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
           kubernetesConfig.getNamespace(), k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState), true);
 
       release.setStatus(Status.Failed);
@@ -312,7 +313,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     if (isNotEmpty(kubernetesResources)) {
       executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)
-          + k8sTaskHelper.getResourcesInTableFormat(kubernetesResources));
+          + k8sTaskHelperBase.getResourcesInTableFormat(kubernetesResources));
     }
   }
 
@@ -320,13 +321,13 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     if (isNotEmpty(previousRollbackEligibleRelease.getManagedWorkloads())) {
       for (KubernetesResourceIdRevision kubernetesResourceIdRevision :
           previousRollbackEligibleRelease.getManagedWorkloads()) {
-        String latestRevision =
-            k8sTaskHelper.getLatestRevision(client, kubernetesResourceIdRevision.getWorkload(), k8sDelegateTaskParams);
+        String latestRevision = k8sTaskHelperBase.getLatestRevision(
+            client, kubernetesResourceIdRevision.getWorkload(), k8sDelegateTaskParams);
 
         kubernetesResourceIdRevision.setRevision(latestRevision);
       }
     } else if (previousRollbackEligibleRelease.getManagedWorkload() != null) {
-      previousRollbackEligibleRelease.setManagedWorkloadRevision(k8sTaskHelper.getLatestRevision(
+      previousRollbackEligibleRelease.setManagedWorkloadRevision(k8sTaskHelperBase.getLatestRevision(
           client, previousRollbackEligibleRelease.getManagedWorkload(), k8sDelegateTaskParams));
     }
   }

@@ -49,7 +49,6 @@ public class K8sApplyState extends State implements K8sStateExecutor {
   @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   public static final String K8S_APPLY_STATE = "Apply";
-  public static final String SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT = "harness.io/skip-file-for-deploy";
 
   public K8sApplyState(String name) {
     super(name, K8S_APPLY.name());

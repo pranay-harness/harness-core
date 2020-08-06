@@ -72,4 +72,13 @@ public interface K8sConstants {
       + "    ${PASSWORD}\n"
       + "    ${USER_NAME}\n"
       + "    ${SERVICE_ACCOUNT_TOKEN_DATA}";
+  String eventOutputFormat =
+      "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
+  int FETCH_FILES_DISPLAY_LIMIT = 100;
+  String eventWithNamespaceOutputFormat =
+      "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,NAMESPACE:.involvedObject.namespace,MESSAGE:.message,REASON:.reason";
+  String ocRolloutStatusCommand = "{OC_COMMAND_PREFIX} rollout status {RESOURCE_ID} {NAMESPACE}--watch=true";
+  String ocRolloutHistoryCommand = "{OC_COMMAND_PREFIX} rollout history {RESOURCE_ID} {NAMESPACE}";
+  String ocRolloutUndoCommand = "{OC_COMMAND_PREFIX} rollout undo {RESOURCE_ID} {NAMESPACE}{REVISION}";
+  String SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT = "harness.io/skip-file-for-deploy";
 }

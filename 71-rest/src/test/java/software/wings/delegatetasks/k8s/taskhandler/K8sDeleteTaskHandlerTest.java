@@ -19,6 +19,7 @@ import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
 
 public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper k8sTaskHelper;
+  @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @Mock private ContainerDeploymentDelegateHelper deploymentDelegateHelper;
   @InjectMocks private K8sDeleteTaskHandler handler;
 
@@ -81,7 +83,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
 
     verify(k8sTaskHelper, times(1)).getK8sTaskExecutionResponse(K8sDeleteResponse.builder().build(), SUCCESS);
-    verify(k8sTaskHelper, never()).delete(any(Kubectl.class), any(), any(), any(ExecutionLogCallback.class));
+    verify(k8sTaskHelperBase, never()).delete(any(Kubectl.class), any(), any(), any(ExecutionLogCallback.class));
   }
 
   @Test
@@ -91,7 +93,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder().resources("random").build();
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
 
-    verify(k8sTaskHelper, never()).delete(any(Kubectl.class), any(), any(), any(ExecutionLogCallback.class));
+    verify(k8sTaskHelperBase, never()).delete(any(Kubectl.class), any(), any(), any(ExecutionLogCallback.class));
   }
 
   @Test
@@ -101,7 +103,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteTaskParameters, taskParams);
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .delete(any(Kubectl.class), eq(taskParams), captor.capture(), any(ExecutionLogCallback.class));
 
     @SuppressWarnings("unchecked") List<KubernetesResourceId> deletedResources = captor.getValue();
@@ -119,7 +121,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .delete(any(Kubectl.class), eq(taskParams), captor.capture(), any(ExecutionLogCallback.class));
 
     @SuppressWarnings("unchecked") List<KubernetesResourceId> deletedResources = captor.getValue();
@@ -200,7 +202,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(k8sTaskHelper, times(1))
+    verify(k8sTaskHelperBase, times(1))
         .delete(any(Kubectl.class), eq(taskParams), captor.capture(), any(ExecutionLogCallback.class));
 
     @SuppressWarnings("unchecked") List<KubernetesResourceId> deletedResources = captor.getValue();

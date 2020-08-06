@@ -28,6 +28,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
@@ -70,6 +71,7 @@ import java.net.URL;
 public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Mock private ReleaseHistory releaseHistory;
   @Mock private K8sTaskHelper taskHelper;
+  @Mock private K8sTaskHelperBase taskHelperBase;
   @Mock private ExecutionLogCallback logCallback;
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -100,7 +102,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
 
     assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("release")).isNull();
     assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("releaseHistory")).isNull();
-    verify(taskHelper, never()).doStatusCheck(any(), any(), any(), any());
+    verify(taskHelperBase, never()).doStatusCheck(any(), any(), any(), any());
     verify(kubernetesContainerService, never()).saveReleaseHistory(any(), any(), any());
     final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, times(1)).saveExecutionLog(captor.capture(), eq(INFO), eq(CommandExecutionStatus.SUCCESS));

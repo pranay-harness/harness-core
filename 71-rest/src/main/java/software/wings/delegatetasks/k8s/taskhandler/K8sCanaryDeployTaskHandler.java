@@ -116,7 +116,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    success = k8sTaskHelper.applyManifests(
+    success = k8sTaskHelperBase.applyManifests(
         client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Apply));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
@@ -125,7 +125,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    success = k8sTaskHelper.doStatusCheck(client, canaryWorkload.getResourceId(), k8sDelegateTaskParams,
+    success = k8sTaskHelperBase.doStatusCheck(client, canaryWorkload.getResourceId(), k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sCanaryDeployTaskParameters, WaitForSteadyState));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
@@ -206,7 +206,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      k8sTaskHelper.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
+      k8sTaskHelperBase.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
       List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
@@ -236,7 +236,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return true;
     }
 
-    return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+    return k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
 
   @VisibleForTesting
@@ -245,8 +245,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     try {
       markVersionedResources(resources);
 
-      executionLogCallback.saveExecutionLog(
-          "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
+      executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
+          + k8sTaskHelperBase.getResourcesInTableFormat(resources));
 
       List<KubernetesResource> workloads = getWorkloadsForCanaryAndBG(resources);
 
@@ -274,10 +274,10 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       addRevisionNumber(resources, currentRelease.getNumber());
       canaryWorkload = workloads.get(0);
 
-      k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
+      k8sTaskHelperBase.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
       Integer currentInstances =
-          k8sTaskHelper.getCurrentReplicas(client, canaryWorkload.getResourceId(), k8sDelegateTaskParams);
+          k8sTaskHelperBase.getCurrentReplicas(client, canaryWorkload.getResourceId(), k8sDelegateTaskParams);
       if (currentInstances != null) {
         executionLogCallback.saveExecutionLog("\nCurrent replica count is " + currentInstances);
       }
@@ -337,7 +337,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       throws Exception {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
-    k8sTaskHelper.describe(client, k8sDelegateTaskParams, executionLogCallback);
+    k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }

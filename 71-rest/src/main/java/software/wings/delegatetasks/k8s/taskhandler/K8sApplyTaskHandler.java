@@ -24,6 +24,7 @@ import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
@@ -54,6 +55,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class K8sApplyTaskHandler extends K8sTaskHandler {
   @Inject private K8sTaskHelper k8sTaskHelper;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   private Kubectl client;
@@ -95,7 +97,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    success = k8sTaskHelper.applyManifests(
+    success = k8sTaskHelperBase.applyManifests(
         client, resources, k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Apply));
     if (!success) {
       return getFailureResponse();
@@ -109,7 +111,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
         List<KubernetesResourceId> kubernetesResourceIds =
             workloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
 
-        success = k8sTaskHelper.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
+        success = k8sTaskHelperBase.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
             k8sTaskParameters.getK8sClusterConfig().getNamespace(),
             new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
                 k8sTaskParameters.getActivityId(), WaitForSteadyState),
@@ -170,7 +172,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
         return true;
       }
 
-      return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+      return k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
     } catch (Exception e) {
       logger.error("Exception:", e);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
@@ -182,15 +184,15 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
   @VisibleForTesting
   boolean prepare(ExecutionLogCallback executionLogCallback) {
     try {
-      executionLogCallback.saveExecutionLog(
-          "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
+      executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
+          + k8sTaskHelperBase.getResourcesInTableFormat(resources));
 
       workloads = getEligibleWorkloads(resources);
       if (isEmpty(workloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Workload found.", Yellow, Bold));
       } else {
         executionLogCallback.saveExecutionLog(
-            "Found following Workloads\n" + k8sTaskHelper.getResourcesInTableFormat(workloads));
+            "Found following Workloads\n" + k8sTaskHelperBase.getResourcesInTableFormat(workloads));
       }
     } catch (Exception e) {
       logger.error("Exception:", e);
@@ -205,7 +207,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       throws Exception {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
-    k8sTaskHelper.describe(client, k8sDelegateTaskParams, executionLogCallback);
+    k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
