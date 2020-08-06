@@ -23,17 +23,18 @@ public class WorkflowExecutionAddCDPageCandidateMigration implements Migration {
   @Override
   public void migrate() {
     int count = 0;
+    logger.info(DEBUG_LINE + "Starting migration");
     try (HIterator<WorkflowExecution> iterator =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+                                 .field(WorkflowExecutionKeys.cdPageCandidate)
+                                 .doesNotExist()
                                  .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                  .fetch())) {
       for (WorkflowExecution workflowExecution : iterator) {
         migrate(workflowExecution);
         count++;
       }
-      if (count % 1000 == 0) {
-        logger.info(DEBUG_LINE + "Completed migrating {} records", count);
-      }
+      logger.info(DEBUG_LINE + "Completed migrating {} records", count);
     } catch (Exception e) {
       logger.error(DEBUG_LINE + "Failed to complete migration", e);
     }
