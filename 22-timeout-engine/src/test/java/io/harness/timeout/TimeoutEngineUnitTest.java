@@ -9,7 +9,7 @@ import io.harness.TimeoutEngineTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
-import io.harness.timeout.trackers.AbsoluteTimeoutTracker;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTracker;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

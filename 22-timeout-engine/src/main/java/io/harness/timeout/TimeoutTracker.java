@@ -6,11 +6,11 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDC)
 public interface TimeoutTracker {
-  String dimension();
+  Dimension getDimension();
   Long getExpiryTime();
   TimeoutTrackerState getState();
 
-  default void onEvent(String eventType, TimeoutEventParameters eventParameters) {
+  default void onEvent(TimeoutEvent event) {
     // Ignore all events by default.
   }
 }
