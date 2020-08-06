@@ -44,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.GcbExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
@@ -62,6 +63,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
@@ -307,7 +309,10 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
   @NotNull
   protected String createActivity(ExecutionContext executionContext) {
-    return activityService.save(new Activity().with(this).with(executionContext).with(CommandUnitType.GCB)).getUuid();
+    ActivityBuilder builder = Activity.builder().commandUnitType(CommandUnitType.GCB);
+    State.populateActivity(builder, this);
+    ExecutionContextImpl.populateActivity(builder, executionContext);
+    return activityService.save(builder.build()).getUuid();
   }
 
   @VisibleForTesting

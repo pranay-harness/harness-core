@@ -17,6 +17,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.serializer.MapperUtils;
 import lombok.experimental.FieldNameConstants;
+import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
@@ -25,15 +26,20 @@ import software.wings.service.intfc.StateExecutionService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 /**
  * Represents a state object.
- *
- * @author Rishi
  */
 @OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "StateKeys")
 public abstract class State {
+  @NotNull
+  public static void populateActivity(ActivityBuilder builder, @NotNull final State state) {
+    builder.commandName(state.getName());
+    builder.commandType(state.getStateType());
+  }
+
   protected static final Integer INFINITE_TIMEOUT = -1;
 
   @Inject private StateExecutionService stateExecutionService;
