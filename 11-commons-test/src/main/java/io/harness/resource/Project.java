@@ -17,11 +17,16 @@ public class Project {
                           .toFile();
 
       while (!someFile.getParentFile().getName().endsWith("classes")
-          && !someFile.getParentFile().getParentFile().getName().equals("target")) {
+          && !someFile.getParentFile().getParentFile().getName().equals("target")
+          && !someFile.getParentFile().getParentFile().getParentFile().getName().equals("bin")) {
         someFile = someFile.getParentFile();
       }
-
-      return someFile.getParentFile().getParentFile().getParentFile().getAbsolutePath();
+      // condition is applied so that ScmSecretTest works in both maven and bazel environment
+      if (someFile.getParentFile().getParentFile().getParentFile().getName().equals("bin")) {
+        return someFile.getParentFile().getParentFile().getAbsolutePath();
+      } else {
+        return someFile.getParentFile().getParentFile().getParentFile().getAbsolutePath();
+      }
     } catch (URISyntaxException e) {
       logger.error("This should never happen", e);
     }
