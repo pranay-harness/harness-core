@@ -29,11 +29,12 @@ public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<Cloud
   protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
       List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort) {
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
-    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
-    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
+    boolean isAWSCloudProvider = false;
     SqlObject leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
+      String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
+      isAWSCloudProvider = cloudProvider.equals("AWS");
       String tableName = cloudBillingHelper.getTableName(cloudProvider);
       leftJoin = cloudBillingHelper.getLeftJoin(cloudProvider);
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
@@ -43,9 +44,7 @@ public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<Cloud
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
     }
 
-    if (isAWSCloudProvider) {
-      cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
-    }
+    cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
 
     return preAggregateBillingService.getPreAggregateFilterValueStats(accountId,
         Optional.ofNullable(groupByList)
