@@ -1,10 +1,10 @@
 package software.wings.delegatetasks;
 
 import static java.lang.String.format;
-import static software.wings.beans.Log.LogColor.Gray;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.Gray;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 
 import com.google.inject.Singleton;
 

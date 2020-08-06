@@ -30,11 +30,11 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static software.wings.beans.Log.LogColor.Green;
-import static software.wings.beans.Log.LogColor.Red;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.Green;
+import static software.wings.beans.LogColor.Red;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;

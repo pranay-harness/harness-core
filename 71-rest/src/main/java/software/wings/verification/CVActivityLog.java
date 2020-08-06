@@ -1,10 +1,10 @@
 package software.wings.verification;
 
-import static software.wings.beans.Log.LogColor.Red;
-import static software.wings.beans.Log.LogColor.Yellow;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
-import static software.wings.beans.Log.doneColoring;
+import static software.wings.beans.LogColor.Red;
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogHelper.doneColoring;
+import static software.wings.beans.LogWeight.Bold;
 import static software.wings.common.VerificationConstants.ACTIVITY_LOG_TTL_WEEKS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
