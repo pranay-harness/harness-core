@@ -9,6 +9,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.eks.model.InvalidRequestException;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.EntityScope.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.beans.YamlGitConfig;
@@ -23,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,6 +41,7 @@ import java.util.stream.Collectors;
 public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final YamlGitConfigRepository yamlGitConfigRepository;
   private final YamlGitFolderConfigRepository yamlGitConfigFolderRepository;
+  private final ConnectorService connectorService;
 
   @Override
   public List<YamlGitConfigDTO> get(String projectIdentifier, String orgIdentifier, String accountId) {
@@ -52,7 +59,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeOrderByCreatedAtAsc(
             accountId, orgIdentifier, projectIdentifier, scope);
     List<YamlGitConfigDTO> yamlGitConfigDTO = getYamlGitConfigDTOsFromYamlGitFolderConfig(yamlGitFolderConfigs);
-    List<YamlGitConfig> yamlGitConfig = yamlGitConfigRepository.getByAccountIdAndOrganizationIdAndProjectIdAndScope(
+    List<YamlGitConfig> yamlGitConfig = yamlGitConfigRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScope(
         accountId, orgIdentifier, projectIdentifier, scope);
     return orderYamlGitConfigByCreatedAt(yamlGitConfigDTO, yamlGitConfig);
   }
@@ -77,13 +84,17 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     return toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(yamlGitConfigs);
   }
 
-  private YamlGitFolderConfig findDefaultIfPresent(String projectIdentifier, String orgIdentifier, String accountId) {
-    Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
-    YamlGitFolderConfig defaultConfig =
-        yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
-            accountId, orgIdentifier, projectIdentifier, scope, true);
-    // assuming uuid = identifier
-    return defaultConfig;
+  @Override
+  public YamlGitConfigDTO getByFolderIdentifierAndIsEnabled(
+      String projectIdentifier, String orgIdentifier, String accountId, String folderId) {
+    // assuming identifier = uuid.
+    Optional<YamlGitFolderConfig> yamlGitConfig =
+        yamlGitConfigFolderRepository.findByUuidAndAccountIdAndEnabled(folderId, accountId, true);
+    return yamlGitConfig
+        .map(yamlGitFolderConfig
+            -> toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(
+                Collections.singletonList(yamlGitFolderConfig)))
+        .orElse(null);
   }
 
   private String findDefaultIfPresent(YamlGitConfigDTO yamlGitConfigDTO) {
@@ -93,11 +104,21 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     return null;
   }
 
+  private Optional<YamlGitFolderConfig> findDefaultIfPresent(
+      String projectIdentifier, String orgIdentifier, String accountId) {
+    Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
+    Optional<YamlGitFolderConfig> defaultConfig =
+        yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
+            accountId, orgIdentifier, projectIdentifier, scope, true);
+    // assuming uuid = identifier
+    return defaultConfig;
+  }
+
   @Override
   public List<YamlGitConfigDTO> updateDefault(
       String projectIdentifier, String orgIdentifier, String accountId, String identifier, String folderIdentifier) {
     Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
-    YamlGitFolderConfig oldDefault =
+    Optional<YamlGitFolderConfig> oldDefault =
         yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
             accountId, orgIdentifier, projectIdentifier, scope, true);
 
@@ -106,13 +127,28 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     if (defaultToBe.isPresent()) {
       defaultToBe.get().setDefault(true);
       yamlGitConfigFolderRepository.save(defaultToBe.get());
-      if (oldDefault != null) {
-        oldDefault.setDefault(false);
-        yamlGitConfigFolderRepository.save(oldDefault);
+      if (oldDefault.isPresent()) {
+        oldDefault.get().setDefault(false);
+        yamlGitConfigFolderRepository.save(oldDefault.get());
       }
     }
 
     return get(projectIdentifier, orgIdentifier, accountId);
+  }
+
+  @Override
+  public Optional<YamlGitConfigDTO.RootFolder> getDefault(
+      String projectIdentifier, String orgIdentifier, String accountId) {
+    Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
+    Optional<YamlGitFolderConfig> yamlGitFolderConfig =
+        yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
+            accountId, orgIdentifier, projectIdentifier, scope, true);
+    return yamlGitFolderConfig.map(gitFolderConfig
+        -> YamlGitConfigDTO.RootFolder.builder()
+               .enabled(gitFolderConfig.isEnabled())
+               .identifier(gitFolderConfig.getUuid())
+               .rootFolder(gitFolderConfig.getRootFolder())
+               .build());
   }
 
   @NotNull
@@ -143,6 +179,20 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
+  public Optional<GitConfigDTO> getGitConfig(
+      YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName) {
+    // TODO(abhinav): git connector refactor
+    Optional<ConnectorDTO> connectorDTO =
+        connectorService.get(ygs.getAccountId(), ygs.getOrganizationId(), ygs.getProjectId(), gitConnectorId);
+    Optional<ConnectorConfigDTO> configDTO = connectorDTO.map(connector -> {
+      if (connector.getConnectorConfig() instanceof GitConfigDTO) {
+        return connector.getConnectorConfig();
+      }
+      throw new InvalidRequestException("Git connector not found with identifier " + gitConnectorId);
+    });
+    return configDTO.map(config -> (GitConfigDTO) config);
+  }
+
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, boolean performFullSync) {
     YamlGitConfigDTO yamlGitConfigDTO = saveInternal(ygs);
     // TODO(abhinav): add full sync logic.
@@ -152,7 +202,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private YamlGitConfigDTO saveInternal(YamlGitConfigDTO ygs) {
     List<YamlGitFolderConfig> yamlGitFolderConfigs = new ArrayList<>();
     String defaultGitConfig = findDefaultIfPresent(ygs);
-    YamlGitFolderConfig oldDefaultConfig =
+    Optional<YamlGitFolderConfig> oldDefaultConfig =
         findDefaultIfPresent(ygs.getProjectId(), ygs.getOrganizationId(), ygs.getAccountId());
 
     YamlGitConfig yamlGitConfig = yamlGitConfigRepository.save(toYamlGitConfig(ygs));
@@ -161,9 +211,10 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         .iterator()
         .forEachRemaining(yamlGitFolderConfigs::add);
 
-    if (defaultGitConfig != null && oldDefaultConfig != null && !oldDefaultConfig.getUuid().equals(defaultGitConfig)) {
-      oldDefaultConfig.setDefault(false);
-      yamlGitConfigFolderRepository.save(oldDefaultConfig);
+    if (defaultGitConfig != null && oldDefaultConfig.isPresent()
+        && !oldDefaultConfig.get().getUuid().equals(defaultGitConfig)) {
+      oldDefaultConfig.get().setDefault(false);
+      yamlGitConfigFolderRepository.save(oldDefaultConfig.get());
     }
 
     return toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(yamlGitFolderConfigs);

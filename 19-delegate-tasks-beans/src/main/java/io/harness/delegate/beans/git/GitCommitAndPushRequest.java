@@ -13,14 +13,14 @@ public class GitCommitAndPushRequest extends GitCommandRequest {
   private List<GitFileChange> gitFileChanges;
   private boolean forcePush;
   private String yamlChangeSetId;
-  private List<YamlGitConfigDTO> yamlGitConfigs;
+  private YamlGitConfigDTO yamlGitConfigs;
 
   public GitCommitAndPushRequest() {
     super(GitCommandType.COMMIT_AND_PUSH);
   }
 
-  public GitCommitAndPushRequest(List<GitFileChange> gitFileChanges, boolean forcePush, String yamlChangeSetId,
-      List<YamlGitConfigDTO> yamlGitConfigs) {
+  public GitCommitAndPushRequest(
+      List<GitFileChange> gitFileChanges, boolean forcePush, String yamlChangeSetId, YamlGitConfigDTO yamlGitConfigs) {
     super(GitCommandType.COMMIT_AND_PUSH);
     this.gitFileChanges = gitFileChanges;
     this.forcePush = forcePush;

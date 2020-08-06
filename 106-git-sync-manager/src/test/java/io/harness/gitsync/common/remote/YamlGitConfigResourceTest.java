@@ -10,8 +10,10 @@ import io.harness.gitsync.GitSyncBaseTest;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +35,11 @@ public class YamlGitConfigResourceTest extends GitSyncBaseTest {
   private final String ROOT_FOLDER_ID = "ROOT_FOLDER_ID";
   private final String ROOT_FOLDER_1 = "ROOT_FOLDER_1";
   private final String ROOT_FOLDER_ID_1 = "ROOT_FOLDER_ID_1";
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = ABHINAV)

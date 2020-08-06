@@ -8,6 +8,7 @@ import io.harness.gitsync.common.beans.YamlGitFolderConfig;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
@@ -18,6 +19,8 @@ public interface YamlGitFolderConfigRepository extends PagingAndSortingRepositor
   List<YamlGitFolderConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndYamlGitConfigIdOrderByCreatedAtAsc(
       String accountId, String organizationId, String projectId, Scope scope, String identifier);
 
-  YamlGitFolderConfig findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
+  Optional<YamlGitFolderConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
       String accountId, String organizationId, String projectId, Scope scope, boolean isDefault);
+
+  Optional<YamlGitFolderConfig> findByUuidAndAccountIdAndEnabled(String identifier, String accountId, boolean enabled);
 }

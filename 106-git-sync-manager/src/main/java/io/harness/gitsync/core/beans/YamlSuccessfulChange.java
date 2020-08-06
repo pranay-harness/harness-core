@@ -15,6 +15,10 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -36,10 +40,10 @@ public class YamlSuccessfulChange implements PersistentEntity, UuidAware, Create
   private Long changeProcessedTS;
   private ChangeSource changeSource;
   private SuccessfulChangeDetail changeDetail;
-  private EmbeddedUser createdBy;
-  private long createdAt;
-  private EmbeddedUser lastUpdatedBy;
-  private long lastUpdatedAt;
+  @CreatedBy private EmbeddedUser createdBy;
+  @CreatedDate private long createdAt;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
+  @LastModifiedDate private long lastUpdatedAt;
 
   @FdTtlIndex(24 * 60 * 60) @Default private Date validUntil = new Date();
 

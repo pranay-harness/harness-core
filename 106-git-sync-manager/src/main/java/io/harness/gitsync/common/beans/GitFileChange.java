@@ -3,6 +3,7 @@ package io.harness.gitsync.common.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.ng.core.gitsync.ChangeType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -34,6 +35,4 @@ public class GitFileChange {
   private String commitMessage;
   private String processingCommitMessage;
   private transient YamlGitConfigDTO yamlGitConfig;
-
-  public enum ChangeType { ADD, MODIFY, DELETE }
 }

@@ -48,7 +48,7 @@ public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, C
   private GitCommandResult gitCommandResult;
   @FdIndex private Status status;
   private FailureReason failureReason;
-  private List<String> yamlChangeSetsProcessed;
+  private String yamlChangeSetsProcessed;
   private GitFileProcessingSummary fileProcessingSummary;
   private String commitMessage;
   private String gitConnectorId;
