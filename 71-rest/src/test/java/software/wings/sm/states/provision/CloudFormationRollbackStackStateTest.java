@@ -1,6 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,9 +11,11 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import static software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType.CREATE_STACK;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -21,6 +24,8 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.TAG_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -31,6 +36,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -46,7 +52,9 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
@@ -63,6 +71,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
@@ -74,8 +83,38 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
   @Mock private LogService mockLogService;
   @Mock private WingsPersistence mockWingsPersistence;
+  @Mock private ExecutionContextImpl mockContext;
 
   @InjectMocks private CloudFormationRollbackStackState state = new CloudFormationRollbackStackState("stateName");
+
+  @Before
+  public void setUp() {
+    Query mockQuery = mock(Query.class);
+    doReturn(mockQuery).when(mockWingsPersistence).createQuery(any());
+    MorphiaIterator<CloudFormationRollbackConfig, CloudFormationRollbackConfig> morphiaIterator =
+        mock(MorphiaIterator.class);
+    when(morphiaIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+    CloudFormationRollbackConfig cloudFormationRollbackConfig =
+        CloudFormationRollbackConfig.builder()
+            .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+            .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL)
+            .variables(Arrays.asList(NameValuePair.builder().build()))
+            .build();
+    when(morphiaIterator.next()).thenReturn(cloudFormationRollbackConfig);
+    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+    when(mockQuery.filter(anyString(), any(Object.class))).thenReturn(mockQuery);
+    when(mockQuery.order(any(Sort.class))).thenReturn(mockQuery);
+
+    Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
+    when(mockContext.getAccountId()).thenReturn(ACCOUNT_ID);
+    WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
+    doReturn(mockParams).when(mockContext).getContextElement(ContextElementType.STANDARD);
+    doReturn(mockParams).when(mockContext).fetchWorkflowStandardParamsFromContext();
+    doReturn(env).when(mockParams).fetchRequiredEnv();
+
+    SettingAttribute awsConfig = aSettingAttribute().withValue(AwsConfig.builder().tag(TAG_NAME).build()).build();
+    doReturn(awsConfig).when(mockSettingsService).get(anyString());
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -134,6 +173,68 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     assertThat(stackParam).isNotNull();
     assertThat(1).isEqualTo(stackParam.size());
     assertThat("oldVal").isEqualTo(stackParam.get("oldKey"));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testExecuteInternalWithSavedElement() {
+    ExecutionResponse response = state.executeInternal(mockContext, ACTIVITY_ID);
+    ScriptStateExecutionData stateExecutionData = (ScriptStateExecutionData) response.getStateExecutionData();
+    assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
+    verifyDelegate();
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testExecuteInternal() {
+    Application application = new Application();
+    application.setAccountId(ACCOUNT_ID);
+    when(mockContext.getApp()).thenReturn(application);
+
+    when(mockContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+
+    CloudFormationRollbackInfoElement stackElement = CloudFormationRollbackInfoElement.builder()
+                                                         .stackExisted(false)
+                                                         .provisionerId(PROVISIONER_ID)
+                                                         .awsConfigId("awsConfigId")
+                                                         .build();
+    doReturn(singletonList(stackElement)).when(mockContext).getContextElementList(any());
+
+    state.provisionerId = PROVISIONER_ID;
+    ExecutionResponse response = state.executeInternal(mockContext, ACTIVITY_ID);
+    ScriptStateExecutionData stateExecutionData = (ScriptStateExecutionData) response.getStateExecutionData();
+    assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
+    verifyDelegate();
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseNoRollbackElements() {
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+        CloudFormationCommandExecutionResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .commandResponse(CloudFormationCreateStackResponse.builder().commandExecutionStatus(SUCCESS).build())
+            .build());
+    ExecutionResponse response = state.handleAsyncResponse(mockContext, delegateResponse);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getContextElements()).isEmpty();
+    assertThat(response.getNotifyElements()).isEmpty();
+  }
+
+  private void verifyDelegate() {
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockDelegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask).isNotNull();
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
+    assertThat(delegateTask.getData().getTaskType()).isEqualTo(CLOUD_FORMATION_TASK.name());
+    assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
+    assertThat(delegateTask.getTags()).isNotEmpty();
+    assertThat(delegateTask.getTags().get(0)).isEqualTo(TAG_NAME);
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 
   @Test
