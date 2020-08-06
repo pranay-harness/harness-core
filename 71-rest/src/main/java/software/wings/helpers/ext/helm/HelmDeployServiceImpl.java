@@ -3,15 +3,16 @@ package software.wings.helpers.ext.helm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.k8s.manifest.ManifestHelper.getEligibleWorkloads;
 import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
-import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -19,6 +20,8 @@ import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -98,8 +101,10 @@ import java.util.stream.Collectors;
 public class HelmDeployServiceImpl implements HelmDeployService {
   public static final String MANIFEST_FILE_NAME = "manifest.yaml";
   @Inject private transient K8sTaskHelper k8sTaskHelper;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private HelmClient helmClient;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Inject private TimeLimiter timeLimiter;
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
@@ -235,7 +240,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     List<KubernetesResource> resources =
         k8sTaskHelper.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
-    k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(
+    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
         resources, commandRequest.getContainerServiceParams().getNamespace());
 
     List<KubernetesResource> workloads = getEligibleWorkloads(resources);
@@ -254,7 +259,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
                    (ExecutionLogCallback) executionLogCallback);
         executionLogCallback.saveExecutionLog(
             format("Status check done with success [%s] for resources in namespace: [%s]", success, namespace));
-        containerInfoList.addAll(k8sTaskHelper.getContainerInfos(
+        containerInfoList.addAll(k8sTaskHelperBase.getContainerInfos(
             containerDeploymentDelegateHelper.getKubernetesConfig(commandRequest.getContainerServiceParams()),
             commandRequest.getReleaseName(), namespace, timeoutInMillis));
       }
@@ -417,7 +422,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     helmHelper.replaceManifestPlaceholdersWithLocalConfig(manifestFile);
 
     List<KubernetesResource> resources = ManifestHelper.processYaml(manifestFile.getFileContent());
-    k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, namespace);
+    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, namespace);
 
     return resources;
   }
@@ -436,8 +441,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
 
-    return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
-        "release", commandRequest.getReleaseName(), kubernetesConfig, executionLogCallback, existingPods);
+    return containerDeploymentDelegateBaseHelper.getContainerInfosWhenReadyByLabels(kubernetesConfig,
+        executionLogCallback, ImmutableMap.of("release", commandRequest.getReleaseName()), existingPods);
   }
 
   @Override

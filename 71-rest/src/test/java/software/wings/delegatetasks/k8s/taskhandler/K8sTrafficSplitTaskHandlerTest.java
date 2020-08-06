@@ -18,9 +18,11 @@ import com.google.common.collect.ImmutableList;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.HarnessAnnotations;
+import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sExpressions;
 import io.harness.k8s.model.KubernetesConfig;
@@ -39,7 +41,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.k8s.istio.IstioDestinationWeight;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -56,6 +57,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
   @Mock private ExecutionLogCallback executionLogCallback;
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @InjectMocks private K8sTrafficSplitTaskHandler k8sTrafficSplitTaskHandler;
 
   private static final String RELEASE_NAME = "releaseName";

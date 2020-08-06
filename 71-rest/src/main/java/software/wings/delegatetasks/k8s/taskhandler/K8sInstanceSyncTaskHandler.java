@@ -1,11 +1,12 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
@@ -27,6 +28,7 @@ import java.util.List;
 public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -45,7 +47,7 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
         getTimeoutMillisFromMinutes(k8sInstanceSyncTaskParameters.getTimeoutIntervalInMin());
 
     List<K8sPod> k8sPodList =
-        k8sTaskHelper.getPodDetails(kubernetesConfig, k8sInstanceSyncTaskParameters.getNamespace(),
+        k8sTaskHelperBase.getPodDetails(kubernetesConfig, k8sInstanceSyncTaskParameters.getNamespace(),
             k8sInstanceSyncTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     K8sInstanceSyncResponse k8sInstanceSyncResponse =

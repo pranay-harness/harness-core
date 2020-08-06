@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getExecutionLogOutputStream;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
@@ -12,13 +13,13 @@ import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Rollback;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
-import static software.wings.delegatetasks.k8s.K8sTaskHelper.getExecutionLogOutputStream;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.getOcCommandPrefix;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.ocRolloutUndoCommand;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
@@ -272,7 +273,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   @VisibleForTesting
   ProcessResult runK8sExecutable(K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback,
       RolloutUndoCommand rolloutUndoCommand) throws Exception {
-    return K8sTaskHelper.executeCommand(
+    return K8sTaskHelperBase.executeCommand(
         rolloutUndoCommand, k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
   }
 

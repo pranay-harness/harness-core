@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.helm;
+package io.harness.helm;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -14,30 +14,6 @@ public final class HelmConstants {
   public static final String HELM_NAMESPACE_PLACEHOLDER = "${NAMESPACE}";
   public static final String HELM_DOCKER_IMAGE_NAME_PLACEHOLDER = "${DOCKER_IMAGE_NAME}";
   public static final String HELM_DOCKER_IMAGE_TAG_PLACEHOLDER = "${DOCKER_IMAGE_TAG}";
-
-  public static final String KUBE_CONFIG_TEMPLATE = "apiVersion: v1\n"
-      + "clusters:\n"
-      + "- cluster:\n"
-      + "    xxxxxxxx ${MASTER_URL}\n"
-      + "    insecure-skip-tls-verify: true\n"
-      + "  name: CLUSTER_NAME\n"
-      + "contexts:\n"
-      + "- context:\n"
-      + "    cluster: CLUSTER_NAME\n"
-      + "    user: HARNESS_USER\n"
-      + "    ${NAMESPACE}\n"
-      + "  name: CURRENT_CONTEXT\n"
-      + "current-context: CURRENT_CONTEXT\n"
-      + "kind: Config\n"
-      + "preferences: {}\n"
-      + "users:\n"
-      + "- name: HARNESS_USER\n"
-      + "  user:\n"
-      + "    ${CLIENT_CERT_DATA}\n"
-      + "    ${CLIENT_KEY_DATA}\n"
-      + "    ${PASSWORD}\n"
-      + "    ${USER_NAME}\n"
-      + "    ${SERVICE_ACCOUNT_TOKEN_DATA}";
 
   public static final class V2Commands {
     // The reason we are using ^ and $ before and after ${RELEASE_NAME} is because helm list doesn't take releaseName as

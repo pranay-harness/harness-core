@@ -38,6 +38,8 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -104,7 +106,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @Mock private K8sTaskHelper k8sTaskHelper;
+  @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @Mock private GitClientHelper gitClientHelper;
+  @Mock private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
@@ -181,7 +185,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
+    when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              anyString(), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(true);
@@ -230,7 +234,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
+    when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              eq("default"), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(true);
@@ -801,11 +805,10 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         .thenReturn(KubernetesConfig.builder().build());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
-             anyString(), anyString(), any(), any(), eq(Collections.emptyList())))
+    when(containerDeploymentDelegateBaseHelper.getContainerInfosWhenReadyByLabels(
+             any(), any(), any(), eq(Collections.emptyList())))
         .thenReturn(asList(new ContainerInfo()));
-    when(containerDeploymentDelegateHelper.getExistingPodsByLabels(
-             any(ContainerServiceParams.class), any(KubernetesConfig.class), any(Map.class)))
+    when(containerDeploymentDelegateBaseHelper.getExistingPodsByLabels(any(KubernetesConfig.class), any(Map.class)))
         .thenReturn(Collections.emptyList());
 
     HelmInstallCommandResponse response = (HelmInstallCommandResponse) helmDeployService.rollback(request);
@@ -842,7 +845,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .build());
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
+    when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              eq("default"), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(true);

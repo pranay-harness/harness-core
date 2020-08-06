@@ -8,6 +8,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
@@ -31,6 +32,7 @@ import java.util.function.Consumer;
 public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Inject private TimeLimiter timeLimiter;
 
   public KubernetesSteadyStateCheckTask(
@@ -52,7 +54,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
         kubernetesSteadyStateCheckParams.getAccountId(), kubernetesSteadyStateCheckParams.getAppId(),
         kubernetesSteadyStateCheckParams.getActivityId(), kubernetesSteadyStateCheckParams.getCommandName());
 
-    if (containerDeploymentDelegateHelper.getControllerCountByLabels(
+    if (containerDeploymentDelegateBaseHelper.getControllerCountByLabels(
             containerDeploymentDelegateHelper.getKubernetesConfig(
                 kubernetesSteadyStateCheckParams.getContainerServiceParams()),
             kubernetesSteadyStateCheckParams.getLabels())
@@ -99,7 +101,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
         kubernetesSteadyStateCheckParams.getContainerServiceParams());
 
-    return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabels(
+    return containerDeploymentDelegateBaseHelper.getContainerInfosWhenReadyByLabels(
         kubernetesConfig, executionLogCallback, kubernetesSteadyStateCheckParams.getLabels(), Collections.emptyList());
   }
 }

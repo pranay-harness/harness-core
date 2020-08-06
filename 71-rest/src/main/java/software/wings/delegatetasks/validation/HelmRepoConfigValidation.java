@@ -2,13 +2,13 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 
 import com.google.inject.Inject;
 

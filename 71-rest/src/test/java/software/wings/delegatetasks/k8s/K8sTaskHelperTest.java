@@ -14,24 +14,19 @@ import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
-import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -55,18 +50,13 @@ import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.KubernetesContainerService;
@@ -80,11 +70,8 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.ScaleCommand;
 import io.harness.k8s.kubectl.Utils;
-import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HelmVersion;
-import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sDelegateTaskParams;
-import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
@@ -94,7 +81,6 @@ import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -141,12 +127,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /*
  * Do not use powermock because jacoco does not support coverage using it. If you are sure that jacoco supports it now,
@@ -172,6 +154,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   private String deploymentConfigYaml = "deployment-config.yaml";
   private String configMapYaml = "configMap.yaml";
 
+  @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject @InjectMocks private K8sTaskHelper helper;
   @Inject private K8sTaskHelper spyHelper;
 
@@ -186,8 +169,8 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void testGetTargetInstancesForCanary() {
     ExecutionLogCallback mockLogCallback = logCallback;
     doNothing().when(mockLogCallback).saveExecutionLog(anyString());
-    assertThat(helper.getTargetInstancesForCanary(50, 4, mockLogCallback)).isEqualTo(2);
-    assertThat(helper.getTargetInstancesForCanary(5, 2, mockLogCallback)).isEqualTo(1);
+    assertThat(k8sTaskHelperBase.getTargetInstancesForCanary(50, 4, mockLogCallback)).isEqualTo(2);
+    assertThat(k8sTaskHelperBase.getTargetInstancesForCanary(5, 2, mockLogCallback)).isEqualTo(1);
   }
 
   @Test
@@ -333,7 +316,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     kubernetesResourceIdList.add(
         KubernetesResourceId.builder().kind(ReplicaSet.name()).name("rs1").namespace("default").build());
 
-    kubernetesResourceIdList = helper.arrangeResourceIdsInDeletionOrder(kubernetesResourceIdList);
+    kubernetesResourceIdList = k8sTaskHelperBase.arrangeResourceIdsInDeletionOrder(kubernetesResourceIdList);
     assertThat(kubernetesResourceIdList.get(0).getKind()).isEqualTo(Deployment.name());
     assertThat(kubernetesResourceIdList.get(1).getKind()).isEqualTo(ReplicaSet.name());
     assertThat(kubernetesResourceIdList.get(2).getKind()).isEqualTo(Service.name());
@@ -883,13 +866,13 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void setNameSpaceToKubernetesResources() throws IOException {
-    helper.setNamespaceToKubernetesResourcesIfRequired(null, "default");
-    helper.setNamespaceToKubernetesResourcesIfRequired(emptyList(), "default");
+    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(null, "default");
+    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(emptyList(), "default");
     KubernetesResource deployment = K8sTestHelper.deployment();
     deployment.getResourceId().setNamespace(null);
     KubernetesResource configMap = configMap();
     configMap.getResourceId().setNamespace("default");
-    helper.setNamespaceToKubernetesResourcesIfRequired(asList(deployment, configMap), "harness");
+    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(asList(deployment, configMap), "harness");
     assertThat(deployment.getResourceId().getNamespace()).isEqualTo("harness");
     assertThat(configMap.getResourceId().getNamespace()).isEqualTo("default");
   }
@@ -898,7 +881,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getResourcesInStringFormat() throws IOException {
-    final String resourcesInStringFormat = K8sTaskHelper.getResourcesInStringFormat(
+    final String resourcesInStringFormat = K8sTaskHelperBase.getResourcesInStringFormat(
         asList(K8sTestHelper.deployment().getResourceId(), configMap().getResourceId()));
     assertThat(resourcesInStringFormat)
         .isEqualTo("\n"
@@ -931,21 +914,6 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     fetchManifestFilesAndWriteToDirectory_gitRepo(Remote);
     fetchManifestFilesAndWriteToDirectory_gitRepo(OC_TEMPLATES);
     fetchManifestFilesAndWriteToDirectory_gitRepo(KustomizeSourceRepo);
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testGenerateSubsetsForDestinationRule() {
-    List<String> subsetNames = new ArrayList<>();
-    subsetNames.add(HarnessLabelValues.trackCanary);
-    subsetNames.add(HarnessLabelValues.trackStable);
-    subsetNames.add(HarnessLabelValues.colorBlue);
-    subsetNames.add(HarnessLabelValues.colorGreen);
-
-    final List<Subset> result = spyHelper.generateSubsetsForDestinationRule(subsetNames);
-
-    assertThat(result.size()).isEqualTo(4);
   }
 
   private void fetchManifestFilesAndWriteToDirectory_gitRepo(StoreType storeType) throws IOException {
@@ -1445,16 +1413,9 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetExecutionLogOutputStream() throws Exception {
-    LogOutputStream logOutputStream = spyHelper.getExecutionLogOutputStream(executionLogCallback, INFO);
+    LogOutputStream logOutputStream = K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, INFO);
 
     assertThat(logOutputStream).isInstanceOf(LogOutputStream.class);
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testGetEmptyLogOutputStream() throws Exception {
-    assertThat(spyHelper.getEmptyLogOutputStream()).isInstanceOf(LogOutputStream.class);
   }
 
   @Test
@@ -1576,81 +1537,5 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   private void assertHelmChartInfo(HelmChartInfo helmChartInfo) {
     assertThat(helmChartInfo.getName()).isEqualTo("chart");
     assertThat(helmChartInfo.getVersion()).isEqualTo("1.0.0");
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testGetPodDetailsWithLabels() throws Exception {
-    KubernetesConfig config = KubernetesConfig.builder().build();
-    Map<String, String> labelsQuery = ImmutableMap.of("release-name", "releaseName");
-    List<Pod> existingPods =
-        asList(k8sApiMockPodWith("uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container")),
-            k8sApiMockPodWith("uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList()),
-            k8sApiMockPodWith("uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3")));
-
-    doReturn(existingPods)
-        .when(mockKubernetesContainerService)
-        .getRunningPodsWithLabels(config, "default", labelsQuery);
-    doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
-    List<K8sPod> pods =
-        helper.getPodDetailsWithLabels(config, "default", "releaseName", labelsQuery, LONG_TIMEOUT_INTERVAL);
-
-    assertThat(pods).isNotEmpty();
-    assertThat(pods).hasSize(3);
-    assertThat(pods.get(0).getUid()).isEqualTo("uid-1");
-    assertThatK8sPodHas(pods.get(0), "uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container"));
-    assertThatK8sPodHas(pods.get(1), "uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList());
-    assertThatK8sPodHas(pods.get(2), "uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3"));
-  }
-
-  @Test
-  @Owner(developers = ARVIND)
-  @Category(UnitTests.class)
-  public void testGetTimeoutMillisFromMinutes() throws Exception {
-    int randomPositiveInt = new Random().nextInt(1000) + 1;
-    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(-randomPositiveInt))
-        .isEqualTo(DEFAULT_STEADY_STATE_TIMEOUT * 60 * 1000L);
-    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(null)).isEqualTo(DEFAULT_STEADY_STATE_TIMEOUT * 60 * 1000L);
-    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(0)).isEqualTo(DEFAULT_STEADY_STATE_TIMEOUT * 60 * 1000L);
-    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(1)).isEqualTo(60 * 1000L);
-    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(randomPositiveInt)).isEqualTo(randomPositiveInt * 60 * 1000L);
-  }
-
-  private void assertThatK8sPodHas(K8sPod pod, String uid, Map<String, String> labels, List<String> containerIds) {
-    assertThat(pod.getUid()).isEqualTo(uid);
-    assertThat(pod.getName()).isEqualTo(uid + "-name");
-    assertThat(pod.getLabels()).isEqualTo(labels);
-    assertThat(pod.getContainerList()).hasSize(containerIds.size());
-    IntStream.range(0, containerIds.size()).forEach(idx -> {
-      K8sContainer container = pod.getContainerList().get(idx);
-      String expectedContainerId = containerIds.get(idx);
-      assertThat(container.getContainerId()).isEqualTo(expectedContainerId);
-      assertThat(container.getName()).isEqualTo(expectedContainerId + "-name");
-      assertThat(container.getImage()).isEqualTo("example:0.0.1");
-    });
-  }
-
-  private Pod k8sApiMockPodWith(String uid, Map<String, String> labels, List<String> containerIds) {
-    return new PodBuilder()
-        .withMetadata(new ObjectMetaBuilder()
-                          .withUid(uid)
-                          .withName(uid + "-name")
-                          .withNamespace("default")
-                          .withLabels(labels)
-                          .build())
-        .withStatus(new PodStatusBuilder()
-                        .withContainerStatuses(containerIds.stream()
-                                                   .map(id
-                                                       -> new ContainerStatusBuilder()
-                                                              .withContainerID(id)
-                                                              .withName(id + "-name")
-                                                              .withImage("example:0.0.1")
-                                                              .build())
-                                                   .collect(Collectors.toList()))
-                        .build())
-        .build();
   }
 }

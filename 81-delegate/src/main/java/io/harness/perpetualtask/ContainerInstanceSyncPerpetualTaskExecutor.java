@@ -11,6 +11,7 @@ import static software.wings.service.impl.ContainerMetadataType.K8S;
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
@@ -43,6 +44,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient ContainerService containerService;
   @Inject private transient KryoSerializer kryoSerializer;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -137,9 +139,9 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       K8sContainerInstanceSyncPerpetualTaskParams k8sContainerInstanceSyncPerpetualTaskParams,
       KubernetesConfig kubernetesConfig) {
     try {
-      long timeoutMillis = K8sTaskHelper.getTimeoutMillisFromMinutes(DEFAULT_STEADY_STATE_TIMEOUT);
+      long timeoutMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(DEFAULT_STEADY_STATE_TIMEOUT);
       List<K8sPod> k8sPodList =
-          k8sTaskHelper.getPodDetails(kubernetesConfig, k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(),
+          k8sTaskHelperBase.getPodDetails(kubernetesConfig, k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(),
               k8sContainerInstanceSyncPerpetualTaskParams.getReleaseName(), timeoutMillis);
 
       return K8sTaskExecutionResponse.builder()

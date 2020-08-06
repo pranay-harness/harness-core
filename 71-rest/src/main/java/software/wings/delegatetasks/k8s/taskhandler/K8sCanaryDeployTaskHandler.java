@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanaryAndBG;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
@@ -19,12 +20,12 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
-import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
@@ -69,6 +70,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
@@ -157,9 +159,9 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
   @VisibleForTesting
   List<K8sPod> getAllPods(long timeoutInMillis) throws Exception {
-    List<K8sPod> allPods = k8sTaskHelper.getPodDetails(
+    List<K8sPod> allPods = k8sTaskHelperBase.getPodDetails(
         kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, timeoutInMillis);
-    List<K8sPod> canaryPods = k8sTaskHelper.getPodDetailsWithTrack(
+    List<K8sPod> canaryPods = k8sTaskHelperBase.getPodDetailsWithTrack(
         kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary", timeoutInMillis);
     Set<String> canaryPodNames = canaryPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
     allPods.forEach(pod -> {
@@ -212,7 +214,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
           executionLogCallback, k8sCanaryDeployTaskParameters);
 
       resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
-      k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
+      k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       updateDestinationRuleManifestFilesWithSubsets(executionLogCallback);
       updateVirtualServiceManifestFilesWithRoutes(executionLogCallback);
@@ -302,7 +304,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
           } else {
             maxInstances = currentInstances;
           }
-          targetInstances = k8sTaskHelper.getTargetInstancesForCanary(
+          targetInstances = k8sTaskHelperBase.getTargetInstancesForCanary(
               k8sCanaryDeployTaskParameters.getInstances(), maxInstances, executionLogCallback);
           break;
 
@@ -342,13 +344,13 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
   private void updateDestinationRuleManifestFilesWithSubsets(ExecutionLogCallback executionLogCallback)
       throws IOException {
-    k8sTaskHelper.updateDestinationRuleManifestFilesWithSubsets(resources,
+    k8sTaskHelperBase.updateDestinationRuleManifestFilesWithSubsets(resources,
         asList(HarnessLabelValues.trackCanary, HarnessLabelValues.trackStable), kubernetesConfig, executionLogCallback);
   }
 
   private void updateVirtualServiceManifestFilesWithRoutes(ExecutionLogCallback executionLogCallback)
       throws IOException {
-    k8sTaskHelper.updateVirtualServiceManifestFilesWithRoutesForCanary(
+    k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
         resources, kubernetesConfig, executionLogCallback);
   }
 }

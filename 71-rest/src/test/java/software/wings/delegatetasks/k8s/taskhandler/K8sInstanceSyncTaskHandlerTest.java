@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
@@ -33,6 +34,7 @@ import java.util.List;
 public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sTaskHelper k8sTaskHelper;
+  @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @InjectMocks private K8sInstanceSyncTaskHandler k8sInstanceSyncTaskHandler;
 
   @Test
@@ -54,15 +56,15 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
 
     List<K8sPod> podsList = Arrays.asList(K8sPod.builder().build());
     doReturn(podsList)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
 
     k8sInstanceSyncTaskHandler.executeTaskInternal(
         K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
-    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
-    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
   }
 
   @Test
@@ -75,9 +77,9 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
 
     k8sInstanceSyncTaskHandler.executeTaskInternal(
         K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
-    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
-    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
   }
 }

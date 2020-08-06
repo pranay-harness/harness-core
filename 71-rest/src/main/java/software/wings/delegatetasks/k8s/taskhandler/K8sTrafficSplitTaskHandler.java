@@ -18,9 +18,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.HarnessAnnotations;
+import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
@@ -34,7 +36,6 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.k8s.istio.IstioDestinationWeight;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -53,9 +54,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private K8sTaskHelper k8sTaskHelper;
-
-  public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
-      + "subset: $ISTIO_DESTINATION_SUBSET_NAME";
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   private ReleaseHistory releaseHistory;
   private Release release;
@@ -219,7 +218,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
       ExecutionLogCallback executionLogCallback) throws IOException {
     List<IstioDestinationWeight> istioDestinationWeights = k8sTrafficSplitTaskParameters.getIstioDestinationWeights();
 
-    k8sTaskHelper.updateVirtualServiceWithDestinationWeights(
+    k8sTaskHelperBase.updateVirtualServiceWithDestinationWeights(
         istioDestinationWeights, virtualService, executionLogCallback);
   }
 

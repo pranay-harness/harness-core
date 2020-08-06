@@ -2,19 +2,20 @@ package software.wings.helpers.ext.helm;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
+import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
 import static software.wings.helpers.ext.helm.HelmCommandTemplateFactory.HelmCliCommandType;
-import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
-import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.helm.HelmConstants;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.CommandExecutionStatus;
@@ -29,7 +30,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.container.HelmChartSpecification;
-import software.wings.helpers.ext.helm.HelmConstants.V2Commands;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -240,11 +240,11 @@ public class HelmClientImpl implements HelmClient {
       List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
     String keyValueOverrides = constructValueOverrideFile(valuesOverrides);
 
-    String templateCommand =
-        V2Commands.HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE.replace("${CHART_LOCATION}", chartLocation)
-            .replace("${OVERRIDE_VALUES}", keyValueOverrides)
-            .replace("${RELEASE_NAME}", releaseName)
-            .replace("${NAMESPACE}", getNamespaceFlag(namespace));
+    String templateCommand = HelmConstants.V2Commands.HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE
+                                 .replace("${CHART_LOCATION}", chartLocation)
+                                 .replace("${OVERRIDE_VALUES}", keyValueOverrides)
+                                 .replace("${RELEASE_NAME}", releaseName)
+                                 .replace("${NAMESPACE}", getNamespaceFlag(namespace));
 
     return executeHelmCLICommand(templateCommand);
   }

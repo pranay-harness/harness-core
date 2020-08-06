@@ -18,6 +18,7 @@ import com.google.protobuf.ByteString;
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
@@ -60,6 +61,7 @@ import java.util.Arrays;
 public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private transient K8sTaskHelper k8sTaskHelper;
+  @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @Mock private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private transient ContainerService containerService;
   @Mock private Call<RestResponse<Boolean>> call;
@@ -88,7 +90,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     final K8sPod pod = K8sPod.builder().namespace("namespace").releaseName("release").build();
     doReturn(Arrays.asList(pod))
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)
@@ -135,7 +137,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
         .getKubernetesConfig(any(K8sClusterConfig.class));
 
     doThrow(new RuntimeException("Failed to retrieve pod list"))
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)

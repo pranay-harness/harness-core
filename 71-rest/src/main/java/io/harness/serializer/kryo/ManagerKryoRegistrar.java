@@ -359,7 +359,6 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
-import software.wings.beans.k8s.istio.IstioDestinationWeight;
 import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
@@ -1482,7 +1481,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(LocalEncryptionConfig.class, 7180);
     kryo.register(K8sTrafficSplitTaskParameters.class, 7181);
     kryo.register(K8sTrafficSplitResponse.class, 7182);
-    kryo.register(IstioDestinationWeight.class, 7183);
     kryo.register(AWSSecretsManagerException.class, 7184);
     kryo.register(Tag.class, 7185);
     kryo.register(K8sApplyTaskParameters.class, 7186);
