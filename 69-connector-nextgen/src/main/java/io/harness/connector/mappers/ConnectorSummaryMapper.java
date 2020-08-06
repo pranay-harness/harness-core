@@ -11,7 +11,7 @@ import io.harness.connector.apis.dto.ConnectorConfigSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO.ConnectorSummaryDTOBuilder;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConfigSummaryMapper;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConnectorSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import lombok.AccessLevel;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class ConnectorSummaryMapper {
   private KubernetesConfigSummaryMapper kubernetesConfigSummaryMapper;
   private GitConfigSummaryMapper gitConfigSummaryMapper;
-  private AppDynamicsConfigSummaryMapper appDynamicsConfigSummaryMapper;
+  private AppDynamicsConnectorSummaryMapper appDynamicsConnectorSummaryMapper;
   private static final String EMPTY_STRING = "";
   @Inject private Map<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapperMap;
 

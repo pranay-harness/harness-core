@@ -7,7 +7,7 @@ import io.harness.connector.impl.ConnectorServiceImpl;
 import io.harness.connector.mappers.ConnectorConfigSummaryDTOMapper;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConfigSummaryMapper;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConnectorSummaryMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
@@ -16,6 +16,9 @@ import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
+import io.harness.connector.mappers.splunkconnectormapper.SplunkConnectorSummaryMapper;
+import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
+import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.GitConnectorValidator;
@@ -42,6 +45,7 @@ public class ConnectorModule extends AbstractModule {
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.GIT.getDisplayName()).to(GitDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
         .to(AppDynamicsDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.SPLUNK.getDisplayName()).to(SplunkDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -49,6 +53,7 @@ public class ConnectorModule extends AbstractModule {
         .to(KubernetesEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName()).to(AppDynamicsEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.SPLUNK.getDisplayName()).to(SplunkEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);
@@ -56,7 +61,9 @@ public class ConnectorModule extends AbstractModule {
         .to(KubernetesConfigSummaryMapper.class);
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitConfigSummaryMapper.class);
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
-        .to(AppDynamicsConfigSummaryMapper.class);
+        .to(AppDynamicsConnectorSummaryMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.SPLUNK.getDisplayName())
+        .to(SplunkConnectorSummaryMapper.class);
   }
 
   private void registerRequiredBindings() {

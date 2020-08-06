@@ -1,6 +1,5 @@
 package io.harness.connector.impl;
 
-import static io.harness.delegate.beans.connector.ConnectorType.APP_DYNAMICS;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -22,15 +21,14 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
+import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -75,14 +73,12 @@ public class ConnectorServiceImplTest extends CategoryTest {
   String masterUrl = "https://abc.com";
   String identifier = "identifier";
   String name = "name";
-  String controllerUrl = "https://xwz.com";
-  String accountName = "accountName";
   ConnectorRequestDTO connectorRequestDTO;
-  ConnectorRequestDTO appDynamicsConnectorRequestDTO;
+  ConnectorRequestDTO splunkConnectorRequestDTO;
   ConnectorDTO connectorDTO;
-  ConnectorDTO appDynamicsConnectorDTO;
+  ConnectorDTO splunkConnectorDTO;
   KubernetesClusterConfig connector;
-  AppDynamicsConfig appDynamicsConnector;
+  SplunkConnector splunkConnector;
   String accountIdentifier = "accountIdentifier";
   @Rule public ExpectedException expectedEx = ExpectedException.none();
 
@@ -135,53 +131,20 @@ public class ConnectorServiceImplTest extends CategoryTest {
     when(connectorRepository.save(any())).thenReturn(connector);
     when(connectorMapper.writeDTO(any())).thenReturn(connectorDTO);
 
-    appDynamicsConnector = AppDynamicsConfig.builder()
-                               .username(userName)
-                               .accountId(accountIdentifier)
-                               .accountname(accountName)
-                               .controllerUrl(controllerUrl)
-                               .passwordReference(password)
-                               .build();
-    appDynamicsConnector.setType(APP_DYNAMICS);
-    appDynamicsConnector.setIdentifier(identifier);
-    appDynamicsConnector.setName(name);
-
-    AppDynamicsConfigDTO appDynamicsConfigDTO = AppDynamicsConfigDTO.builder()
-                                                    .username(userName)
-                                                    .accountId(accountIdentifier)
-                                                    .accountname(accountName)
-                                                    .controllerUrl(controllerUrl)
-                                                    .passwordReference(password)
-                                                    .build();
-
-    appDynamicsConnectorRequestDTO = ConnectorRequestDTO.builder()
-                                         .name(name)
-                                         .identifier(identifier)
-                                         .connectorType(APP_DYNAMICS)
-                                         .connectorConfig(appDynamicsConfigDTO)
-                                         .build();
-
-    appDynamicsConnectorDTO = ConnectorDTO.builder()
-                                  .name(name)
-                                  .identifier(identifier)
-                                  .connectorType(APP_DYNAMICS)
-                                  .connectorConfig(appDynamicsConfigDTO)
-                                  .build();
-
     when(connectorMapper.toConnector(any(), any())).thenReturn(KubernetesClusterConfig.builder().build());
     doCallRealMethod().when(connectorFilterHelper).createCriteriaFromConnectorFilter(anyObject(), anyString());
 
-    when(connectorRepository.save(appDynamicsConnector)).thenReturn(appDynamicsConnector);
-    when(connectorMapper.writeDTO(appDynamicsConnector)).thenReturn(appDynamicsConnectorDTO);
-    when(connectorMapper.toConnector(appDynamicsConnectorRequestDTO, accountIdentifier))
-        .thenReturn(appDynamicsConnector);
+    when(connectorRepository.save(splunkConnector)).thenReturn(splunkConnector);
+    when(connectorMapper.writeDTO(splunkConnector)).thenReturn(splunkConnectorDTO);
+    when(connectorMapper.toConnector(splunkConnectorRequestDTO, accountIdentifier)).thenReturn(splunkConnector);
   }
 
   private ConnectorDTO createConnector() {
     return connectorService.create(connectorRequestDTO, accountIdentifier);
   }
-  private ConnectorDTO createAppDynamicsConnector() {
-    return connectorService.create(appDynamicsConnectorRequestDTO, accountIdentifier);
+
+  private ConnectorDTO createSplunkConnector() {
+    return connectorService.create(splunkConnectorRequestDTO, accountIdentifier);
   }
 
   @Test
@@ -190,14 +153,6 @@ public class ConnectorServiceImplTest extends CategoryTest {
   public void testCreate() {
     ConnectorDTO connectorDTOOutput = createConnector();
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTOOutput);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.NEMANJA)
-  @Category(UnitTests.class)
-  public void testCreateAppDynamicsConnector() {
-    ConnectorDTO connectorDTOOutput = createAppDynamicsConnector();
-    ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTOOutput);
   }
 
   @Test
@@ -292,16 +247,6 @@ public class ConnectorServiceImplTest extends CategoryTest {
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTO);
   }
 
-  @Test
-  @Owner(developers = OwnerRule.NEMANJA)
-  @Category(UnitTests.class)
-  public void testGetAppDynamicsConnector() {
-    createAppDynamicsConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(appDynamicsConnector));
-    ConnectorDTO connectorDTO = connectorService.get(null, null, null, identifier).get();
-    ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTO);
-  }
-
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testGetWhenConnectorDoesntExists() throws Exception {
@@ -332,20 +277,6 @@ public class ConnectorServiceImplTest extends CategoryTest {
     assertThat(kubernetesUserNamePasswordDTO.getUsername()).isEqualTo(userName);
     assertThat(kubernetesUserNamePasswordDTO.getEncryptedPassword()).isEqualTo(password);
     assertThat(kubernetesUserNamePasswordDTO.getCacert()).isEqualTo(cacert);
-  }
-
-  private void ensureAppDynamicsConnectorFieldsAreCorrect(ConnectorDTO connectorDTOOutput) {
-    assertThat(connectorDTOOutput).isNotNull();
-    assertThat(connectorDTOOutput.getName()).isEqualTo(name);
-    assertThat(connectorDTOOutput.getIdentifier()).isEqualTo(identifier);
-    assertThat(connectorDTOOutput.getConnectorType()).isEqualTo(APP_DYNAMICS);
-    AppDynamicsConfigDTO appDynamicsConfigDTO = (AppDynamicsConfigDTO) connectorDTOOutput.getConnectorConfig();
-    assertThat(appDynamicsConfigDTO).isNotNull();
-    assertThat(appDynamicsConfigDTO.getUsername()).isEqualTo(userName);
-    assertThat(appDynamicsConfigDTO.getPasswordReference()).isEqualTo(password);
-    assertThat(appDynamicsConfigDTO.getAccountname()).isEqualTo(accountName);
-    assertThat(appDynamicsConfigDTO.getControllerUrl()).isEqualTo(controllerUrl);
-    assertThat(appDynamicsConfigDTO.getAccountId()).isEqualTo(accountIdentifier);
   }
 
   @Test

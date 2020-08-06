@@ -6,7 +6,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class AppDynamicsConfigSummaryDTO implements ConnectorConfigSummaryDTO {
+public class AppDynamicsConnectorSummaryDTO implements ConnectorConfigSummaryDTO {
   private String username;
   private String accountname;
   private String controllerUrl;

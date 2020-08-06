@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum ConnectorType {
   KUBERNETES_CLUSTER("K8sCluster"),
   GIT("Git"),
+  SPLUNK("Splunk"),
   APP_DYNAMICS("AppDynamics");
 
   private final String displayName;
