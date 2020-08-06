@@ -34,13 +34,14 @@ public class CloudEntityStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
-    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
-    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
+    boolean isAWSCloudProvider = false;
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
     boolean isDiscountsAggregationPresent = cloudBillingHelper.fetchIfDiscountsAggregationPresent(aggregateFunction);
     List<SqlObject> leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
+      String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
+      isAWSCloudProvider = cloudProvider.equals("AWS");
       String tableName = cloudBillingHelper.getTableName(cloudBillingHelper.getCloudProvider(filters));
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
       filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
@@ -61,9 +62,7 @@ public class CloudEntityStatsDataFetcher
                               .operationType(QLCCMAggregateOperation.MAX)
                               .columnName(startTimeColumnNameConst)
                               .build());
-    if (isAWSCloudProvider) {
-      cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
-    }
+    cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
 
     return preAggregateBillingService.getPreAggregateBillingEntityStats(accountId,
         Optional.ofNullable(aggregateFunction)
