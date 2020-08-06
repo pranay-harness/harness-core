@@ -1,3 +1,5 @@
+#used to create image jenkins-slave-portal-open-8u242:jdk242_with_bazel
+
 FROM base_jdk
 
 USER root
@@ -46,5 +48,44 @@ RUN curl -O https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_l
 
 RUN wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo \
     && yum install -y cf-cli
+
+RUN curl -o /etc/yum.repos.d/bazel.repo https://copr.fedorainfracloud.org/coprs/vbatts/bazel/repo/epel-7/vbatts-bazel-epel-7.repo
+RUN yum -y install bazel3
+
+ARG KUBECTL_VERSION=v1.13.2
+ARG PLATFORM=linux
+RUN curl  -s -L -o kubectl https://app.harness.io/storage/harness-download/kubernetes-release/release/${KUBECTL_VERSION}/bin/${PLATFORM}/amd64/kubectl \
+    && chmod +x kubectl && mv kubectl /usr/bin
+
+ENV JAVA_HOME /etc/alternatives/java_sdk_1.8.0_openjdk
+
+RUN yum group install -y "Development Tools" \
+    && yum install -y centos-release-scl \
+    && yum install -y devtoolset-7-gcc* \
+    && scl enable devtoolset-7 bash
+
+ENV CC /usr/bin/gcc
+ENV CXX /usr/bin/g++
+
+RUN wget https://archive.apache.org/dist/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz \
+    && tar -xf apache-maven-3.6.1-bin.tar.gz && mv apache-maven-3.6.1/ /usr/local/src/apache-maven \
+    && echo "export M2_HOME=/usr/local/src/apache-maven && export PATH=\${M2_HOME}/bin:\${PATH}" > /etc/profile.d/maven.sh \
+    && chmod +x /etc/profile.d/maven.sh \
+    && source /etc/profile.d/maven.sh \
+    && rm apache-maven-3.6.1-bin.tar.gz
+
+COPY settings.xml /opt/harness/.m2/settings.xml
+RUN chown -R jenkins:jenkins /opt/harness
+USER ${user}
+
+ARG GITHUB_USERNAME=?
+ARG GITHUB_PASSWORD=?
+
+RUN cd /opt/harness \
+    && git clone https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/wings-software/portal.git \
+    && cd portal \
+    && source /etc/profile.d/maven.sh \
+    && mvn -Dmaven.repo.local=/opt/harness/.m2/repository -s /opt/harness/.m2/settings.xml clean install -DskipTests \
+    && rm -rf `find . -type d -name target`
 
 ENTRYPOINT ["jenkins-slave"]
