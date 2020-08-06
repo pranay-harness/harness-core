@@ -48,7 +48,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   public static final String MAX_QUEUE_DURATION_EXCEEDED_CODE = "MAX_QUEUE_DURATION_EXCEEDED";
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @Trimmed @NotEmpty private String accountId;
-  @Trimmed @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
+  @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
   @FdIndex @NotNull private Status status;
   private boolean gitToHarness;
   private boolean forcePush;

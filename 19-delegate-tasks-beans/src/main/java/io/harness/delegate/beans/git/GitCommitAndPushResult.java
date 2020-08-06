@@ -12,7 +12,7 @@ import java.util.List;
 public class GitCommitAndPushResult extends GitCommandResult {
   private GitCommitResult gitCommitResult;
   private GitPushResult gitPushResult;
-  private List<YamlGitConfigDTO> yamlGitConfigs;
+  private YamlGitConfigDTO yamlGitConfig;
   private List<GitFileChange> filesCommitedToGit;
 
   /**
@@ -29,11 +29,11 @@ public class GitCommitAndPushResult extends GitCommandResult {
    * @param gitPushResult   the git push result
    */
   public GitCommitAndPushResult(GitCommitResult gitCommitResult, GitPushResult gitPushResult,
-      List<YamlGitConfigDTO> yamlGitConfigs, List<GitFileChange> filesCommitedToGit) {
+      YamlGitConfigDTO yamlGitConfig, List<GitFileChange> filesCommitedToGit) {
     super(GitCommandType.COMMIT_AND_PUSH);
     this.gitCommitResult = gitCommitResult;
     this.gitPushResult = gitPushResult;
-    this.yamlGitConfigs = yamlGitConfigs;
+    this.yamlGitConfig = yamlGitConfig;
     this.filesCommitedToGit = filesCommitedToGit;
   }
 }

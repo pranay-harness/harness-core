@@ -83,7 +83,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
     logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
     GitCommitAndPushResult gitCommitAndPushResult =
         gitClient.commitAndPush(gitConfig, gitCommitRequest, getAccountId(), null);
-    gitCommitAndPushResult.setYamlGitConfigs(gitCommitRequest.getYamlGitConfigs());
+    gitCommitAndPushResult.setYamlGitConfig(gitCommitRequest.getYamlGitConfigs());
 
     return GitCommandExecutionResponse.builder()
         .gitCommandRequest(gitCommitRequest)

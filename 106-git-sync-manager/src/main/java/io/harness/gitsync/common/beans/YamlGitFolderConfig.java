@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("io.harness.gitsync.common.beans.yamlGitFolderConfigs")
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "yamlGitFolderConfig", noClassnameStored = true)
+@Entity(value = "yamlGitFolderConfigs", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "YamlGitFolderConfigKeys")
 public class YamlGitFolderConfig implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                             UpdatedByAware, AccountAccess, ProjectAccess {
