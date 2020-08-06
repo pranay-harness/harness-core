@@ -21,6 +21,7 @@ import com.google.api.services.logging.v2.model.ListLogEntriesResponse;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -100,7 +101,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       setupTestNodeData.getMetricDefinitions().forEach(metricDefinition -> {
         ListTimeSeriesResponse response = getTimeSeriesResponse(
             monitoring, projectResource, gcpConfig, metricDefinition, startTime, endTime, apiCallLog.copy(), hostName);
-        if (isNotEmpty(response)) {
+        if (isNotEmpty(response) && isNotEmpty(response.getTimeSeries())) {
           responses.add(response);
           Preconditions.checkState(response.getTimeSeries().size() == 1,
               "Multiple time series values are returned for metric name " + metricDefinition.getMetricName()
@@ -180,7 +181,8 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return filter;
   }
 
-  private ListTimeSeriesResponse getTimeSeriesResponse(Monitoring monitoring, String projectResource, GcpConfig config,
+  @VisibleForTesting
+  ListTimeSeriesResponse getTimeSeriesResponse(Monitoring monitoring, String projectResource, GcpConfig config,
       StackDriverMetricDefinition metricDefinition, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,
       String hostName) {
     String filter = metricDefinition.getFilter();
