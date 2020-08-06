@@ -11,8 +11,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 import static software.wings.service.impl.aws.model.AwsConstants.LAMBDA_SLEEP_SECS;
 

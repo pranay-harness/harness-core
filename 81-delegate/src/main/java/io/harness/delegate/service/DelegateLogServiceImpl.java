@@ -12,11 +12,11 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.Log.LogColor.Red;
-import static software.wings.beans.Log.LogColor.Yellow;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
-import static software.wings.beans.Log.doneColoring;
+import static software.wings.beans.LogColor.Red;
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogHelper.doneColoring;
+import static software.wings.beans.LogWeight.Bold;
 
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

@@ -4,9 +4,9 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.pcf.model.PcfConstants.PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

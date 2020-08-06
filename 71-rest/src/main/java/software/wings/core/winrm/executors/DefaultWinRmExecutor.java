@@ -9,10 +9,10 @@ import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogColor.Gray;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.Gray;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import com.google.common.annotations.VisibleForTesting;

@@ -11,9 +11,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static software.wings.beans.Log.LogColor.Yellow;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
 
 import com.google.common.annotations.VisibleForTesting;

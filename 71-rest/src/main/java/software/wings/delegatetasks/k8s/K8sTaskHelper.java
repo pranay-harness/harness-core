@@ -28,12 +28,12 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.Log.LogColor.Gray;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogColor.Yellow;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.LogWeight.Normal;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.Gray;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
+import static software.wings.beans.LogWeight.Normal;
 import static software.wings.delegatetasks.k8s.K8sTask.KUBECONFIG_FILENAME;
 import static software.wings.sm.states.k8s.K8sApplyState.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
 

@@ -2,17 +2,17 @@ package software.wings.beans;
 
 import static io.harness.rule.OwnerRule.BRETT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Log.END_MARK;
-import static software.wings.beans.Log.LogColor.Blue;
-import static software.wings.beans.Log.LogColor.Red;
-import static software.wings.beans.Log.LogColor.RedDark;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogColor.Yellow;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.LogWeight.Normal;
-import static software.wings.beans.Log.NO_FORMATTING;
-import static software.wings.beans.Log.color;
-import static software.wings.beans.Log.doneColoring;
+import static software.wings.beans.LogColor.Blue;
+import static software.wings.beans.LogColor.Red;
+import static software.wings.beans.LogColor.RedDark;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.END_MARK;
+import static software.wings.beans.LogHelper.NO_FORMATTING;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogHelper.doneColoring;
+import static software.wings.beans.LogWeight.Bold;
+import static software.wings.beans.LogWeight.Normal;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;

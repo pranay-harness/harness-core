@@ -1,9 +1,9 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;

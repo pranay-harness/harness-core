@@ -6,9 +6,9 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 import static java.lang.String.format;
-import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogWeight.Bold;
-import static software.wings.beans.Log.color;
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
