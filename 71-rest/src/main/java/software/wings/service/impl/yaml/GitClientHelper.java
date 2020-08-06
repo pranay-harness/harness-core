@@ -102,8 +102,10 @@ public class GitClientHelper {
   }
 
   @NotNull
-  private String buildGitRepoBaseDir(String accountId, String connectorId, String repoName, String repoUrlHash) {
+  private String buildGitRepoBaseDir(
+      String accountId, String connectorId, String repoName, String repoUrlHash, GitRepositoryType repoType) {
     return GIT_REPO_BASE_DIR.replace("${ACCOUNT_ID}", accountId)
+        .replace("${REPO_TYPE}", repoType.name().toLowerCase())
         .replace("${CONNECTOR_ID}", connectorId)
         .replace("${REPO_NAME}", repoName)
         .replace("${REPO_URL_HASH}", repoUrlHash);
@@ -237,7 +239,8 @@ public class GitClientHelper {
       logger.error("gitRepoType can not be null. defaulting it to YAML");
       gitConfig.setGitRepoType(GitRepositoryType.YAML);
     }
-    return buildGitRepoBaseDir(gitConfig.getAccountId(), gitConnectorId, repoName, repoUrlHash);
+    return buildGitRepoBaseDir(
+        gitConfig.getAccountId(), gitConnectorId, repoName, repoUrlHash, gitConfig.getGitRepoType());
   }
 
   private String calculateHash(String input) {
