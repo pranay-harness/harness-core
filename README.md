@@ -49,6 +49,26 @@ To check if your protobuf files are according to the coding standards execute in
     buf check lint
 ```
 
+8. Bazel install
+```
+    curl -LO https://github.com/bazelbuild/bazel/releases/download/3.3.1/bazel-3.3.1-installer-darwin-x86_64.sh
+    chmod +x bazel-3.3.1-installer-darwin-x86_64.sh
+    ./bazel-3.3.1-installer-darwin-x86_64.sh --user
+
+```
+Open .bash_profile
+```
+    open .bash_profile
+```
+Paste the following line in .bash_profile
+```
+    export PATH="$PATH:$HOME/bin"
+```
+
+Close the terminal and verify it.
+```
+   bazel --version   
+```
 ### Github setup
 
 1. Create harness dedicated github account. Use your harness email.
