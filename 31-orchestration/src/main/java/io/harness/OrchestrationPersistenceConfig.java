@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import java.lang.reflect.Constructor;
@@ -57,27 +58,22 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
   @Bean(name = "orchestrationMongoTemplate")
   @Primary
   public MongoTemplate orchestrationMongoTemplate() throws Exception {
-    return new OrchestrationMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
+    TypeInformationMapper typeMapper = OrchestrationTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
+    MongoTypeMapper mongoTypeMapper =
+        new DefaultMongoTypeMapper(ORCHESTRATION_TYPE_KEY, Collections.singletonList(typeMapper));
+    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
+    converter.setTypeMapper(mongoTypeMapper);
+    converter.setCustomConversions(customConversions());
+    converter.setCodecRegistryProvider(mongoDbFactory());
+    converter.afterPropertiesSet();
+    return new OrchestrationMongoTemplate(mongoDbFactory(), converter);
   }
 
   // Node Execution Listener Beans
   @Bean
   public NodeExecutionAfterSaveListener nodeExecutionAfterSaveListener() {
     return new NodeExecutionAfterSaveListener();
-  }
-
-  @Override
-  public MappingMongoConverter mappingMongoConverter() throws Exception {
-    DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
-    TypeInformationMapper informationMapper =
-        OrchestrationTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
-    MongoTypeMapper typeMapper =
-        new DefaultMongoTypeMapper(ORCHESTRATION_TYPE_KEY, Collections.singletonList(informationMapper));
-    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
-    converter.setCustomConversions(customConversions());
-    converter.setCodecRegistryProvider(mongoDbFactory());
-    converter.setTypeMapper(typeMapper);
-    return converter;
   }
 
   private Map<String, Class<?>> collectAliasMap() {
