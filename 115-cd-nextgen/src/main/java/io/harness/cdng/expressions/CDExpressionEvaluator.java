@@ -8,12 +8,11 @@ import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.services.api.ProjectService;
-import software.wings.service.intfc.AccountService;
 
 import java.util.Set;
 
 public class CDExpressionEvaluator extends AmbianceExpressionEvaluator {
-  @Inject private AccountService accountService;
+  //  @Inject private AccountService accountService;
   @Inject private OrganizationService organizationService;
   @Inject private ProjectService projectService;
 
@@ -25,7 +24,7 @@ public class CDExpressionEvaluator extends AmbianceExpressionEvaluator {
   @Override
   protected void initialize() {
     super.initialize();
-    addToContext("account", new AccountFunctor(accountService, ambiance));
+    //    addToContext("account", new AccountFunctor(accountService, ambiance));
     addToContext("org", new OrgFunctor(organizationService, ambiance));
     addToContext("project", new ProjectFunctor(projectService, ambiance));
   }

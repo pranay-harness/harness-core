@@ -39,7 +39,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @EnableMongoRepositories(basePackages = {"io.harness.engine"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "orchestrationMongoTemplate")
 public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
-  private Injector injector;
+  private static final String ORCHESTRATION_TYPE_KEY = "_orchestrationClass";
+  private final Injector injector;
 
   @Inject
   public OrchestrationPersistenceConfig(Injector injector) {
@@ -65,14 +66,13 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
     return new NodeExecutionAfterSaveListener();
   }
 
-  @Bean
   @Override
   public MappingMongoConverter mappingMongoConverter() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
     TypeInformationMapper informationMapper =
         OrchestrationTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
-    MongoTypeMapper typeMapper = new DefaultMongoTypeMapper(
-        DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Collections.singletonList(informationMapper));
+    MongoTypeMapper typeMapper =
+        new DefaultMongoTypeMapper(ORCHESTRATION_TYPE_KEY, Collections.singletonList(informationMapper));
     MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
     converter.setCustomConversions(customConversions());
     converter.setCodecRegistryProvider(mongoDbFactory());
