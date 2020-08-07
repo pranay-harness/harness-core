@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -130,10 +131,12 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final long appId = dataCollectionInfo.getAppId();
       final long tierId = dataCollectionInfo.getTierId();
-      final AppdynamicsTier tier = appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, appId, tierId,
-          encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-      final List<AppdynamicsMetric> tierMetrics = appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId,
-          tierId, encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+      final AppdynamicsTier tier =
+          appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, appId, tierId, encryptionDetails,
+              ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+      final List<AppdynamicsMetric> tierMetrics =
+          appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId, encryptionDetails,
+              ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
 
       final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
       List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
@@ -148,7 +151,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                                     tier.getName(), appdynamicsMetric.getName(), hostName,
                                     endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
                                     endTimeForCollection, encryptionDetails,
-                                    createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+                                    ThirdPartyApiCallLog.fromDetails(
+                                        createApiCallLog(dataCollectionInfo.getStateExecutionId()))));
             }
             break;
           case PREDICTIVE:
@@ -156,10 +160,12 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
               long startTime = dataCollectionInfo.getStartTime();
               long endTime =
                   dataCollectionInfo.getStartTime() + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime());
-              callables.add(()
-                                -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId,
-                                    tier.getName(), appdynamicsMetric.getName(), null, startTime, endTime,
-                                    encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+              callables.add(
+                  ()
+                      -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tier.getName(),
+                          appdynamicsMetric.getName(), null, startTime, endTime, encryptionDetails,
+                          ThirdPartyApiCallLog.fromDetails(
+                              createApiCallLog(dataCollectionInfo.getStateExecutionId()))));
             } else {
               callables.add(
                   ()
@@ -168,7 +174,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                           endTimeForCollection
                               - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES),
                           endTimeForCollection, encryptionDetails,
-                          createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+                          ThirdPartyApiCallLog.fromDetails(
+                              createApiCallLog(dataCollectionInfo.getStateExecutionId()))));
             }
             break;
 
@@ -313,9 +320,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         try {
           logger.debug(
               "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
-          AppdynamicsTier appdynamicsTier = appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig,
-              dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(),
-              dataCollectionInfo.getEncryptedDataDetails(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          AppdynamicsTier appdynamicsTier =
+              appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
+                  dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails(),
+                  ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
           Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
           setHostIdsIfNecessary();
           List<AppdynamicsMetricData> metricsData = getMetricsData();
@@ -396,7 +404,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       if (!dataCollectionInfo.isNodeIdsMapped() && isNotEmpty(dataCollectionInfo.getHosts())) {
         final Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig,
             dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails(),
-            createApiCallLog(dataCollectionInfo.getStateExecutionId()),
+            ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())),
             new ArrayList<String>(dataCollectionInfo.getHosts().keySet()));
         Map<String, String> hosts = new HashMap<>();
         dataCollectionInfo.getHosts().forEach((hostName, groupName) -> nodes.forEach(appdynamicsNode -> {

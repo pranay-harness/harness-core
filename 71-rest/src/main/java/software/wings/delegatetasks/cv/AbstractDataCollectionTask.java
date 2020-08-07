@@ -194,7 +194,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   private ThirdPartyApiCallLog createApiCallLog() {
     // TODO: need to fix this for 24  * 7. For 24 * 7 task stateExecutionId is set to CV_24x7_STATE_EXECUTION + "-" +
     // cvConfigId
-    return createApiCallLog(dataCollectionInfo.getStateExecutionId());
+    return ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId()));
   }
 
   protected DataCollector<T> getDataCollector() {
