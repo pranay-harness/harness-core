@@ -23,6 +23,7 @@ import migrations.timescaledb.AlterCEUtilizationDataTables;
 import migrations.timescaledb.ChangeToTimeStampTZ;
 import migrations.timescaledb.CreateBillingData;
 import migrations.timescaledb.CreateBillingDataHourly;
+import migrations.timescaledb.CreateBudgetAlerts;
 import migrations.timescaledb.CreateKubernetesUtilizationData;
 import migrations.timescaledb.CreateNewInstanceV2Migration;
 import migrations.timescaledb.CreateUtilizationData;
@@ -69,6 +70,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(27, AddPercentagesToCostEvents.class))
         .add(Pair.of(28, AddIndicesForCostEvents.class))
         .add(Pair.of(29, AddNonComputeCostColumnToBillingData.class))
+        .add(Pair.of(30, CreateBudgetAlerts.class))
         .build();
   }
 }
