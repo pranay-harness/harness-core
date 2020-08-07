@@ -144,7 +144,7 @@ public class BudgetTimescaleQueryHelperTest extends AbstractDataFetcherTest {
     when(resultSet.getDouble("BUDGETEDCOST")).thenAnswer((Answer<Double>) invocation -> BUDGETED_COST);
     when(resultSet.getString("BUDGETID")).thenAnswer((Answer<String>) invocation -> BUDGET_ID);
     when(resultSet.getString("ACCOUNTID")).thenAnswer((Answer<String>) invocation -> ACCOUNT1_ID);
-    when(resultSet.getTimestamp("time", utils.getDefaultCalendar()))
+    when(resultSet.getTimestamp("alerttime", utils.getDefaultCalendar()))
         .thenAnswer((Answer<Timestamp>) invocation -> new Timestamp(TIME));
     when(resultSet.getTimestamp(BillingDataQueryMetadata.BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
              utils.getDefaultCalendar()))

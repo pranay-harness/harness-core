@@ -19,7 +19,7 @@ public class BudgetAlertsQueryMetadata {
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE }
 
   public enum BudgetAlertsMetaDataFields {
-    TIME("TIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
+    ALERTTIME("ALERTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     BUDGETID("BUDGETID", DataType.STRING, QLFilterKind.SIMPLE),
     ACCOUNTID("ACCOUNTID", DataType.STRING, QLFilterKind.SIMPLE),
     ACTUALCOST("ACTUALCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),

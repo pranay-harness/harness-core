@@ -25,7 +25,7 @@ public class BudgetAlertsTableSchema {
   DbSpec dbSpec;
   DbSchema dbSchema;
   DbTable budgetAlertsTable;
-  DbColumn time;
+  DbColumn alertTime;
   DbColumn budgetId;
   DbColumn accountId;
   DbColumn alertThreshold;
@@ -38,7 +38,7 @@ public class BudgetAlertsTableSchema {
     dbSpec = new DbSpec();
     dbSchema = dbSpec.addDefaultSchema();
     budgetAlertsTable = dbSchema.addTable("budget_alerts");
-    time = budgetAlertsTable.addColumn("time", "timestamp", null);
+    alertTime = budgetAlertsTable.addColumn("alerttime", "timestamp", null);
     budgetId = budgetAlertsTable.addColumn("budgetid", "text", null);
     accountId = budgetAlertsTable.addColumn("accountid", "text", null);
     alertThreshold = budgetAlertsTable.addColumn("alertthreshold", doubleType, null);
