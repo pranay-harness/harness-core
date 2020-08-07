@@ -1,6 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyList;
@@ -38,6 +39,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
@@ -60,6 +62,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -86,10 +89,12 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ActivityService activityService;
+  @Spy private GitClientHelper gitClientHelper;
 
   @InjectMocks private CloudFormationCreateStackState state = new CloudFormationCreateStackState("stateName");
 
   private AwsConfig awsConfig = AwsConfig.builder().tag(TAG_NAME).build();
+  private static final String repoUrl = "http://xyz.com/z.git";
 
   @Before
   public void setUp() {
@@ -147,7 +152,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void buildDelegateTaskProvisionByGit() {
+  public void buildDelegateTaskProvisionByGitRepo() {
     CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
                                                               .sourceType(GIT.name())
                                                               .gitFileConfig(GitFileConfig.builder()
@@ -157,7 +162,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
                                                                                  .build())
                                                               .build();
 
-    GitConfig gitConfig = GitConfig.builder().build();
+    GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl(repoUrl).build();
     when(gitUtilsManager.getGitConfig("sourceRepoSettingId")).thenReturn(gitConfig);
 
     DelegateTask delegateTask = state.buildDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
@@ -167,6 +172,37 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     assertThat(request.getGitConfig()).isEqualTo(gitConfig);
     assertThat(request.getGitConfig().getBranch()).isEqualTo("gitBranch");
     assertThat(request.getGitConfig().getReference()).isEqualTo("commitId");
+    assertThat(request.getGitConfig().getRepoName()).isNull();
+    assertThat(request.getGitConfig().getRepoUrl()).isEqualTo(repoUrl);
+    assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void buildDelegateTaskProvisionByGitAccount() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(GIT.name())
+                                                              .gitFileConfig(GitFileConfig.builder()
+                                                                                 .connectorId("sourceRepoSettingId")
+                                                                                 .branch("gitBranch")
+                                                                                 .commitId("commitId")
+                                                                                 .repoName("z.git")
+                                                                                 .build())
+                                                              .build();
+
+    GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).repoUrl("http://xyz.com").build();
+    when(gitUtilsManager.getGitConfig("sourceRepoSettingId")).thenReturn(gitConfig);
+
+    DelegateTask delegateTask = state.buildDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    verifyDelegateTask(delegateTask);
+    CloudFormationCreateStackRequest request =
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.getGitConfig()).isEqualTo(gitConfig);
+    assertThat(request.getGitConfig().getBranch()).isEqualTo("gitBranch");
+    assertThat(request.getGitConfig().getReference()).isEqualTo("commitId");
+    assertThat(request.getGitConfig().getRepoName()).isEqualTo("z.git");
+    assertThat(request.getGitConfig().getRepoUrl()).isEqualTo(repoUrl);
     assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT);
   }
 

@@ -45,14 +45,12 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Event.Type;
-import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitFileConfig.GitFileConfigKeys;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigKeys;
 import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -71,7 +69,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
@@ -104,7 +101,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private DelegateService delegateService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
-  @Inject private SettingsService settingsService;
+  @Inject private GitFileConfigHelperService gitFileConfigHelperService;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -671,7 +668,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
-    validateGitFileConfigForRemoteManifest(applicationManifest.getGitFileConfig());
+    gitFileConfigHelperService.validate(applicationManifest.getGitFileConfig());
   }
 
   private void validateKustomizeAppManifest(ApplicationManifest applicationManifest) {
@@ -679,34 +676,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("KustomizeConfig must be present for Kustomize Manifests", USER);
     }
     GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
-    validateGitFileConfigForRemoteManifest(gitFileConfig);
+    gitFileConfigHelperService.validate(gitFileConfig);
     if (isNotEmpty(gitFileConfig.getFilePath())) {
       throw new InvalidRequestException("File Path has to be empty for Git Config for Kustomize Manifests", USER);
-    }
-  }
-
-  private void validateGitFileConfigForRemoteManifest(GitFileConfig gitFileConfig) {
-    notNullCheck("gitFileConfig has to be specified for Remote", gitFileConfig, USER);
-    if (isBlank(gitFileConfig.getConnectorId())) {
-      throw new InvalidRequestException("Connector id cannot be empty. ", USER);
-    }
-
-    if (gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getBranch())) {
-      throw new InvalidRequestException("Branch cannot be empty if useBranch is selected.", USER);
-    }
-
-    if (!gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getCommitId())) {
-      throw new InvalidRequestException("CommitId cannot be empty if useBranch is not selected.", USER);
-    }
-
-    SettingAttribute settingAttribute = settingsService.get(gitFileConfig.getConnectorId());
-    if (null == settingAttribute) {
-      throw new InvalidRequestException("Invalid git connector provided.", USER);
-    }
-
-    GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
-    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType() && isBlank(gitFileConfig.getRepoName())) {
-      throw new InvalidRequestException("Repository name not provided for Account level git connector.", USER);
     }
   }
 
@@ -752,7 +724,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (applicationManifest.getGitFileConfig() == null) {
       throw new InvalidRequestException("Git File Config is mandatory for OpenShift Source Repository Type", USER);
     }
-    validateGitFileConfigForRemoteManifest(applicationManifest.getGitFileConfig());
+    gitFileConfigHelperService.validate(applicationManifest.getGitFileConfig());
 
     if (isEmpty(applicationManifest.getGitFileConfig().getFilePath())) {
       throw new InvalidRequestException("Template File Path can't be empty", USER);

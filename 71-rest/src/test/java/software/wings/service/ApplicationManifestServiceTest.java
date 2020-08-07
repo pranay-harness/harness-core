@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
@@ -43,6 +42,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
@@ -54,7 +54,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.List;
@@ -69,7 +68,6 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private YamlPushService yamlPushService;
-  @Mock private SettingsService settingsService;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EnvironmentService environmentService;
@@ -219,6 +217,10 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     applicationManifest.setAppId(APP_ID);
     wingsPersistence.save(applicationManifest);
 
+    SettingAttribute setting =
+        aSettingAttribute().withUuid(GIT_CONNECTOR_ID).withValue(GitConfig.builder().build()).build();
+    wingsPersistence.save(setting);
+
     GitFileConfig gitFileConfig = GitFileConfig.builder()
                                       .connectorId(GIT_CONNECTOR_ID)
                                       .useBranch(true)
@@ -227,11 +229,6 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
                                       .build();
     applicationManifest.setStoreType(Remote);
     applicationManifest.setGitFileConfig(gitFileConfig);
-
-    doReturn(aSettingAttribute().withValue(GitConfig.builder().build()).build())
-        .when(settingsService)
-        .get(GIT_CONNECTOR_ID);
-
     ApplicationManifest savedApplicationManifest = applicationManifestService.update(applicationManifest);
     assertThat(savedApplicationManifest.getUuid()).isNotNull();
     assertThat(savedApplicationManifest.getEnvId()).isNull();

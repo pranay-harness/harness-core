@@ -154,6 +154,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private GitFileConfigHelperService gitFileConfigHelperService;
 
   static final String DUPLICATE_VAR_MSG_PREFIX = "variable names should be unique, duplicate variable(s) found: ";
 
@@ -229,6 +230,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     if (provisioner instanceof TerraformInfrastructureProvisioner) {
       validateTerraformProvisioner((TerraformInfrastructureProvisioner) provisioner);
+    } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
+      CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner =
+          (CloudFormationInfrastructureProvisioner) provisioner;
+      if (cloudFormationInfrastructureProvisioner.provisionByGit()) {
+        gitFileConfigHelperService.validate(cloudFormationInfrastructureProvisioner.getGitFileConfig());
+      }
     }
   }
 

@@ -170,7 +170,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
             .timeoutInMs(10 * 60 * 1000)
             .gitConfig(GitConfig.builder().repoUrl("").branch("").build())
-            .gitFileConfig(GitFileConfig.builder().filePath("").commitId("").build())
+            .gitFileConfig(GitFileConfig.builder().filePath("").commitId("").repoName("repo-name").build())
             .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT)
             .stackNameSuffix(stackNameSuffix)
             .build();

@@ -1,11 +1,17 @@
 package software.wings.service.impl;
 
+import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
@@ -99,5 +105,30 @@ public class GitFileConfigHelperService {
     }
 
     return gitFileConfig;
+  }
+
+  public void validate(GitFileConfig gitFileConfig) {
+    notNullCheck("gitFileConfig has to be specified", gitFileConfig, USER);
+    if (isBlank(gitFileConfig.getConnectorId())) {
+      throw new InvalidRequestException("Connector id cannot be empty.", USER);
+    }
+
+    if (gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getBranch())) {
+      throw new InvalidRequestException("Branch cannot be empty if useBranch is selected.", USER);
+    }
+
+    if (!gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getCommitId())) {
+      throw new InvalidRequestException("CommitId cannot be empty if useBranch is not selected.", USER);
+    }
+
+    SettingAttribute settingAttribute = settingsService.get(gitFileConfig.getConnectorId());
+    if (null == settingAttribute) {
+      throw new InvalidRequestException("Invalid git connector provided.", USER);
+    }
+
+    GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType() && isBlank(gitFileConfig.getRepoName())) {
+      throw new InvalidRequestException("Repository name not provided for Account level git connector.", USER);
+    }
   }
 }
