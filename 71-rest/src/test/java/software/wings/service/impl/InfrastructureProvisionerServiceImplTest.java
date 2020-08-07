@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -61,6 +62,7 @@ import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
@@ -115,6 +117,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock SettingsService settingService;
   @Mock ResourceLookupService resourceLookupService;
   @Mock AppService appService;
+  @Mock GitFileConfigHelperService gitFileConfigHelperService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
   @Inject private WingsPersistence wingsPersistence;
@@ -265,6 +268,35 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     shouldBackendConfigValidation(terraformProvisioner, provisionerService);
     provisionerService.validateProvisioner(terraformProvisioner);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void shouldValidateCloudFormationInfrastructureProvisioner() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder().build();
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .appId(APP_ID)
+                                                              .uuid(ID_KEY)
+                                                              .sourceType("GIT")
+                                                              .gitFileConfig(gitFileConfig)
+                                                              .build();
+    infrastructureProvisionerServiceImpl.validateProvisioner(provisioner);
+    verify(gitFileConfigHelperService).validate(gitFileConfig);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void shouldntValidateCloudFormationInfrastructureProvisioner() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder().build();
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .appId(APP_ID)
+                                                              .uuid(ID_KEY)
+                                                              .gitFileConfig(gitFileConfig)
+                                                              .build();
+    infrastructureProvisionerServiceImpl.validateProvisioner(provisioner);
+    verify(gitFileConfigHelperService, times(0)).validate(gitFileConfig);
   }
 
   private void shouldBackendConfigValidation(TerraformInfrastructureProvisioner terraformProvisioner,

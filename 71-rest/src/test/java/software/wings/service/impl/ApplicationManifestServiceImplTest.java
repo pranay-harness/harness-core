@@ -54,6 +54,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
+  @Spy @InjectMocks private GitFileConfigHelperService gitFileConfigHelperService;
   @Spy @InjectMocks ApplicationManifestServiceImpl applicationManifestServiceImpl;
   @Mock private AppService appService;
   @Mock private YamlPushService yamlPushService;
