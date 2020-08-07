@@ -10,6 +10,7 @@ import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.k8s.model.Kind.ReplicaSet;
 import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.Kind.Service;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -57,7 +58,9 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.exception.HelmClientException;
 import io.harness.exception.KubernetesYamlException;
+import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -1527,5 +1530,29 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   private void assertHelmChartInfo(HelmChartInfo helmChartInfo) {
     assertThat(helmChartInfo.getName()).isEqualTo("chart");
     assertThat(helmChartInfo.getVersion()).isEqualTo("1.0.0");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectory_properErrorOnHelmClientException() throws Exception {
+    K8sDelegateManifestConfig manifestConfig = K8sDelegateManifestConfig.builder()
+                                                   .helmChartConfigParams(HelmChartConfigParams.builder().build())
+                                                   .manifestStoreTypes(HelmChartRepo)
+                                                   .build();
+    String manifestDirectory = "directory";
+    String exceptionMessage = "Helm client exception message";
+
+    doThrow(new HelmClientException(exceptionMessage, WingsException.USER))
+        .when(mockHelmTaskHelper)
+        .downloadChartFiles(manifestConfig.getHelmChartConfigParams(), manifestDirectory, LONG_TIMEOUT_INTERVAL);
+    helper.fetchManifestFilesAndWriteToDirectory(
+        manifestConfig, manifestDirectory, executionLogCallback, LONG_TIMEOUT_INTERVAL);
+
+    ArgumentCaptor<String> logMessageCaptor = ArgumentCaptor.forClass(String.class);
+    verify(executionLogCallback)
+        .saveExecutionLog(logMessageCaptor.capture(), eq(ERROR), eq(CommandExecutionStatus.FAILURE));
+    String logMessage = logMessageCaptor.getValue();
+    assertThat(logMessage).contains(exceptionMessage);
   }
 }
