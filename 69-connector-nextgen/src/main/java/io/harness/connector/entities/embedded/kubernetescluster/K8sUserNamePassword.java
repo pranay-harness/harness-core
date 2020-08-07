@@ -9,6 +9,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword")
 public class K8sUserNamePassword implements KubernetesAuth {
   String userName;
-  String password;
-  String cacert;
+  String passwordRef;
+  String caCertRef;
 }

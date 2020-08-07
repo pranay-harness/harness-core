@@ -93,12 +93,15 @@ public class K8sStepHelper {
         KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
         KubernetesClusterDetailsDTO config = (KubernetesClusterDetailsDTO) connectorConfig.getConfig();
         KubernetesUserNamePasswordDTO auth = (KubernetesUserNamePasswordDTO) config.getAuth().getCredentials();
-        KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
-                                                              .authType(KubernetesClusterAuthType.USER_PASSWORD)
-                                                              .masterUrl(config.getMasterUrl())
-                                                              .username(auth.getUsername())
-                                                              .password(auth.getPassword())
-                                                              .build();
+        // todo @Vaibhav/@Deepak: Now the k8 uses the new secret and this secret requires identifier and previous
+        // required uuid, this has to be changed according to the framework
+        KubernetesClusterConfig kubernetesClusterConfig =
+            KubernetesClusterConfig.builder()
+                .authType(KubernetesClusterAuthType.USER_PASSWORD)
+                .masterUrl(config.getMasterUrl())
+                .username(auth.getUsername())
+                //                                                              .password(auth.getPassword())
+                .build();
         builder.withValue(kubernetesClusterConfig);
         break;
       case GIT:

@@ -6,9 +6,8 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredenti
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
 import io.fabric8.kubernetes.client.Config;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
@@ -17,14 +16,22 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import software.wings.WingsBaseTest;
+import org.mockito.MockitoAnnotations;
 
-public class KubernetesConnectionDelegateValidationHelperTest extends WingsBaseTest {
-  @Inject @InjectMocks KubernetesValidationHelper kubernetesValidationHelper;
+public class KubernetesConnectionDelegateValidationHelperTest extends CategoryTest {
+  @InjectMocks KubernetesValidationHelper kubernetesValidationHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = DEEPAK)
@@ -32,14 +39,23 @@ public class KubernetesConnectionDelegateValidationHelperTest extends WingsBaseT
   public void getConfigForUserNamePassword() {
     String userName = "userName";
     String password = "password";
-    String cacert = "cacert";
     String masterUrl = "https://abc.com/";
+    String passwordIdentifier = "passwordIdentifer";
+    String passwordRef = "acc:" + passwordIdentifier;
+    String cacert = "caCertRef";
+    SecretRefData passwordSecretRefData =
+        SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).decryptedValue(password.toCharArray()).build();
+    SecretRefData secretRefDataCACert = SecretRefData.builder()
+                                            .identifier(passwordIdentifier)
+                                            .scope(Scope.ACCOUNT)
+                                            .decryptedValue(cacert.toCharArray())
+                                            .build();
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(KubernetesAuthType.USER_PASSWORD)
                                               .credentials(KubernetesUserNamePasswordDTO.builder()
                                                                .username(userName)
-                                                               .password(password.toCharArray())
-                                                               .cacert(cacert)
+                                                               .passwordRef(passwordSecretRefData)
+                                                               .caCertRef(secretRefDataCACert)
                                                                .build())
                                               .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
@@ -59,17 +75,35 @@ public class KubernetesConnectionDelegateValidationHelperTest extends WingsBaseT
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void getConfigForClientKeyCert() {
-    String clientKey = "encryptedClientKey";
-    String clientCert = "encryptedClientCert";
+    String clientKey = "clientKey";
+    String clientKeyIdentifier = "clientKeyRef";
+    String clientCert = "clientCert";
+    String clientCertIdentifier = "clientCertRef";
     String clientKeyPhrase = "clientKeyPhrase";
+    String clientKeyPhraseIdentifier = "clientKeyPhraseIdentifier";
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com/";
+    SecretRefData clientKeySecret = SecretRefData.builder()
+                                        .identifier(clientKeyIdentifier)
+                                        .scope(Scope.ACCOUNT)
+                                        .decryptedValue(clientKey.toCharArray())
+                                        .build();
+    SecretRefData clientCertSecret = SecretRefData.builder()
+                                         .identifier(clientCertIdentifier)
+                                         .scope(Scope.ACCOUNT)
+                                         .decryptedValue(clientCert.toCharArray())
+                                         .build();
+    SecretRefData clientKeyPassPhraseSecret = SecretRefData.builder()
+                                                  .identifier(clientKeyPhraseIdentifier)
+                                                  .scope(Scope.ACCOUNT)
+                                                  .decryptedValue(clientKeyPhrase.toCharArray())
+                                                  .build();
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(CLIENT_KEY_CERT)
                                               .credentials(KubernetesClientKeyCertDTO.builder()
-                                                               .clientKey(clientKey.toCharArray())
-                                                               .clientCert(clientCert.toCharArray())
-                                                               .clientKeyPassphrase(clientKeyPhrase.toCharArray())
+                                                               .clientKeyRef(clientKeySecret)
+                                                               .clientCertRef(clientCertSecret)
+                                                               .clientKeyPassphraseRef(clientKeyPassPhraseSecret)
                                                                .clientKeyAlgo(clientKeyAlgo)
                                                                .build())
                                               .build();
@@ -93,11 +127,16 @@ public class KubernetesConnectionDelegateValidationHelperTest extends WingsBaseT
   public void getConfigForServiceAccountToken() {
     String serviceAccountKey = "serviceAccountKey";
     String masterUrl = "https://abc.com/";
+    String serviceAccountRef = "serviceAccountRef";
+    SecretRefData passwordSecretRef = SecretRefData.builder()
+                                          .identifier(serviceAccountRef)
+                                          .scope(Scope.ACCOUNT)
+                                          .decryptedValue(serviceAccountKey.toCharArray())
+                                          .build();
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(SERVICE_ACCOUNT)
-            .credentials(
-                KubernetesServiceAccountDTO.builder().serviceAccountToken(serviceAccountKey.toCharArray()).build())
+            .credentials(KubernetesServiceAccountDTO.builder().serviceAccountTokenRef(passwordSecretRef).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithServiceAccountCreds =
         KubernetesClusterConfigDTO.builder()

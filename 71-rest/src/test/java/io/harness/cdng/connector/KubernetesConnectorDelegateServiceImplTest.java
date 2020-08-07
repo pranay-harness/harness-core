@@ -15,6 +15,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,16 +34,21 @@ public class KubernetesConnectorDelegateServiceImplTest extends WingsBaseTest {
   public void validate() {
     String userName = "userName";
     String password = "password";
-    String cacert = "cacert";
     String masterUrl = "https://abc.com";
     String identifier = "identifier";
     String name = "name";
+    String passwordIdentifier = "passwordIdentifer";
+    String passwordRef = "acc:" + passwordIdentifier;
+    String cacert = "caCertRef";
+    SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
+    SecretRefData passwordSecretRefData =
+        SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(KubernetesAuthType.USER_PASSWORD)
                                               .credentials(KubernetesUserNamePasswordDTO.builder()
                                                                .username(userName)
-                                                               .encryptedPassword(password)
-                                                               .cacert(cacert)
+                                                               .passwordRef(passwordSecretRefData)
+                                                               .caCertRef(secretRefDataCACert)
                                                                .build())
                                               .build();
     KubernetesClusterConfigDTO connectorDTOWithUsernameCreds =

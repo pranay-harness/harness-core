@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.kubernetesMapper;
 
+import static io.harness.encryption.SecretRefData.SECRET_DELIMINITER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -44,13 +45,14 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void castManualCredentialToKubernetesDelegateCredentialTest() {
-    String delegateName = "testDeleagete";
     String masterURL = "masterURL";
     String userName = "userName";
-    String password = "password";
-    String cacert = "cacert";
+    String cacertIdentifier = "cacertIdentifier";
+    String passwordIdentifier = "passwordIdentifier";
+    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
+    String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -66,10 +68,13 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
   public void castToManualKubernetesCredentialsTest() {
     String masterURL = "masterURL";
     String userName = "userName";
-    String password = "password";
-    String cacert = "cacert";
+    String cacert = "caCertRef";
+    String cacertIdentifier = "cacertIdentifier";
+    String passwordIdentifier = "passwordIdentifier";
+    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
+    String passwordRef = "acc" + SECRET_DELIMINITER + passwordIdentifier;
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)

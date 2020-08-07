@@ -27,6 +27,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -91,15 +93,18 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToKubernetesClusterConfigForUserNamePasswordCredential() {
     String userName = "userName";
-    String password = "password";
-    String cacert = "cacert";
+    String passwordIdentifier = "passwordIdentifer";
+    String cacert = "caCertRef";
+    SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
+    SecretRefData passwordSecretRefData =
+        SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
     String masterUrl = "https://abc.com";
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(KubernetesAuthType.USER_PASSWORD)
                                               .credentials(KubernetesUserNamePasswordDTO.builder()
                                                                .username(userName)
-                                                               .encryptedPassword(password)
-                                                               .cacert(cacert)
+                                                               .passwordRef(passwordSecretRefData)
+                                                               .caCertRef(secretRefDataCACert)
                                                                .build())
                                               .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
@@ -116,25 +121,31 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     assertThat(kubernetesClusterDetails.getAuthType()).isEqualTo(USER_PASSWORD);
     K8sUserNamePassword kubernetesCredential = (K8sUserNamePassword) kubernetesClusterDetails.getAuth();
     assertThat(kubernetesCredential.getUserName()).isEqualTo(userName);
-    assertThat(kubernetesCredential.getPassword()).isEqualTo(password);
-    assertThat(kubernetesCredential.getCacert()).isEqualTo(cacert);
+    assertThat(kubernetesCredential.getPasswordRef()).isEqualTo(passwordSecretRefData.toSecretRefStringValue());
+    assertThat(kubernetesCredential.getCaCertRef()).isEqualTo(secretRefDataCACert.toSecretRefStringValue());
   }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToKubernetesClusterConfigForClientKeyCert() {
-    String clientKey = "encryptedClientKey";
-    String clientCert = "encryptedClientCert";
-    String clientKeyPhrase = "clientKeyPhrase";
+    String clientKeyIdentifier = "clientKeyRef";
+    String clientCertIdentifier = "clientCertRef";
+    String clientKeyPhraseIdentifier = "clientKeyPhrase";
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com";
+    SecretRefData clientKeySecret =
+        SecretRefData.builder().identifier(clientKeyIdentifier).scope(Scope.ACCOUNT).build();
+    SecretRefData clientCertSecret =
+        SecretRefData.builder().identifier(clientCertIdentifier).scope(Scope.ACCOUNT).build();
+    SecretRefData clientKeyPassPhraseSecret =
+        SecretRefData.builder().identifier(clientKeyPhraseIdentifier).scope(Scope.ACCOUNT).build();
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(CLIENT_KEY_CERT)
                                               .credentials(KubernetesClientKeyCertDTO.builder()
-                                                               .encryptedClientKey(clientKey)
-                                                               .encryptedClientCert(clientCert)
-                                                               .encryptedClientKeyPassphrase(clientKeyPhrase)
+                                                               .clientKeyRef(clientKeySecret)
+                                                               .clientCertRef(clientCertSecret)
+                                                               .clientKeyPassphraseRef(clientKeyPassPhraseSecret)
                                                                .clientKeyAlgo(clientKeyAlgo)
                                                                .build())
                                               .build();
@@ -151,9 +162,10 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     assertThat(kubernetesClusterDetails.getMasterUrl()).isEqualTo(masterUrl);
     assertThat(kubernetesClusterDetails.getAuthType()).isEqualTo(CLIENT_KEY_CERT);
     K8sClientKeyCert kubernetesCredential = (K8sClientKeyCert) kubernetesClusterDetails.getAuth();
-    assertThat(kubernetesCredential.getClientKey()).isEqualTo(clientKey);
-    assertThat(kubernetesCredential.getClientCert()).isEqualTo(clientCert);
-    assertThat(kubernetesCredential.getClientKeyPassphrase()).isEqualTo(clientKeyPhrase);
+    assertThat(kubernetesCredential.getClientKeyRef()).isEqualTo(clientKeySecret.toSecretRefStringValue());
+    assertThat(kubernetesCredential.getClientCertRef()).isEqualTo(clientCertSecret.toSecretRefStringValue());
+    assertThat(kubernetesCredential.getClientKeyPassphraseRef())
+        .isEqualTo(clientKeyPassPhraseSecret.toSecretRefStringValue());
     assertThat(kubernetesCredential.getClientKeyAlgo()).isEqualTo(clientKeyAlgo);
   }
 
@@ -161,21 +173,25 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToKubernetesClusterConfigForOIDCConnect() {
-    String oidClientId = "encryptedOidcClientId";
+    String oidClientIdIdentifier = "oidcClientIdRef";
     String oidcIssuerUrl = "oidcIssuerUrl";
-    String oidcPassword = "encryptedOidcPassword";
+    String oidcPasswordIdentifier = "oidcPasswordRef";
     String oidcScopes = "oidcScopes";
-    String oidcSecret = "encryptedOidcSecret";
+    String oidcSecretIdentifier = "oidcSecretRef";
     String oidcUsername = "oidcUsername";
     String masterUrl = "https://abc.com";
+    SecretRefData oidcCleintId = SecretRefData.builder().identifier(oidClientIdIdentifier).scope(Scope.ACCOUNT).build();
+    SecretRefData oidcPassword =
+        SecretRefData.builder().identifier(oidcPasswordIdentifier).scope(Scope.ACCOUNT).build();
+    SecretRefData oidcSecret = SecretRefData.builder().identifier(oidcSecretIdentifier).scope(Scope.ACCOUNT).build();
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(OPEN_ID_CONNECT)
                                               .credentials(KubernetesOpenIdConnectDTO.builder()
-                                                               .encryptedOidcClientId(oidClientId)
+                                                               .oidcClientIdRef(oidcCleintId)
                                                                .oidcIssuerUrl(oidcIssuerUrl)
-                                                               .encryptedOidcPassword(oidcPassword)
+                                                               .oidcPasswordRef(oidcPassword)
                                                                .oidcScopes(oidcScopes)
-                                                               .encryptedOidcSecret(oidcSecret)
+                                                               .oidcSecretRef(oidcSecret)
                                                                .oidcUsername(oidcUsername)
                                                                .build())
                                               .build();
@@ -192,11 +208,11 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     assertThat(kubernetesClusterDetails.getMasterUrl()).isEqualTo(masterUrl);
     assertThat(kubernetesClusterDetails.getAuthType()).isEqualTo(OPEN_ID_CONNECT);
     K8sOpenIdConnect kubernetesCredential = (K8sOpenIdConnect) kubernetesClusterDetails.getAuth();
-    assertThat(kubernetesCredential.getOidcClientId()).isEqualTo(oidClientId);
+    assertThat(kubernetesCredential.getOidcClientIdRef()).isEqualTo(oidcCleintId.toSecretRefStringValue());
     assertThat(kubernetesCredential.getOidcIssuerUrl()).isEqualTo(oidcIssuerUrl);
-    assertThat(kubernetesCredential.getOidcPassword()).isEqualTo(oidcPassword);
+    assertThat(kubernetesCredential.getOidcPasswordRef()).isEqualTo(oidcPassword.toSecretRefStringValue());
     assertThat(kubernetesCredential.getOidcScopes()).isEqualTo(oidcScopes);
-    assertThat(kubernetesCredential.getOidcSecret()).isEqualTo(oidcSecret);
+    assertThat(kubernetesCredential.getOidcSecretRef()).isEqualTo(oidcSecret.toSecretRefStringValue());
     assertThat(kubernetesCredential.getOidcUsername()).isEqualTo(oidcUsername);
   }
 
@@ -206,10 +222,12 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   public void testToKubernetesClusterConfigForServiceAccount() {
     String serviceAccountKey = "serviceAccountKey";
     String masterUrl = "https://abc.com";
+    SecretRefData serviceAccountTokenRef =
+        SecretRefData.builder().identifier(serviceAccountKey).scope(Scope.ACCOUNT).build();
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(SERVICE_ACCOUNT)
-            .credentials(KubernetesServiceAccountDTO.builder().encryptedServiceAccountToken(serviceAccountKey).build())
+            .credentials(KubernetesServiceAccountDTO.builder().serviceAccountTokenRef(serviceAccountTokenRef).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithServiceAccountCreds =
         KubernetesClusterConfigDTO.builder()
@@ -224,7 +242,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     assertThat(kubernetesClusterDetails.getMasterUrl()).isEqualTo(masterUrl);
     assertThat(kubernetesClusterDetails.getAuthType()).isEqualTo(SERVICE_ACCOUNT);
     K8sServiceAccount kubernetesCredential = (K8sServiceAccount) kubernetesClusterDetails.getAuth();
-    assertThat(kubernetesCredential.getServiceAcccountToken()).isEqualTo(serviceAccountKey);
+    assertThat(kubernetesCredential.getServiceAcccountTokenRef())
+        .isEqualTo(serviceAccountTokenRef.toSecretRefStringValue());
   }
 
   @Test(expected = UnexpectedException.class)

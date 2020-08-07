@@ -35,9 +35,11 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
   private ManagerDelegateServiceDriver managerDelegateServiceDriver;
   private SecretManagerClientService ngSecretService;
 
-  public ConnectorValidationResult validate(GitConfigDTO gitConfig, String accountId) {
+  public ConnectorValidationResult validate(
+      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifie) {
     validateFieldsPresent(gitConfig);
-    GitCommandExecutionResponse gitCommandExecutionResponse = createValidationDelegateTask(gitConfig, accountId);
+    GitCommandExecutionResponse gitCommandExecutionResponse =
+        createValidationDelegateTask(gitConfig, accountIdentifier);
     return buildConnectorValidationResult(gitCommandExecutionResponse);
   }
 

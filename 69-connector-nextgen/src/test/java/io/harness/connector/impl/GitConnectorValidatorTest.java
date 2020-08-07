@@ -54,7 +54,8 @@ public class GitConnectorValidatorTest extends CategoryTest {
                                  .gitAuthType(GitAuthType.HTTP)
                                  .build();
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
-    ConnectorValidationResult connectorValidationResult = gitConnectorValidator.validate(gitConfig, ACCOUNT_ID);
+    ConnectorValidationResult connectorValidationResult =
+        gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null);
     verify(managerDelegateServiceDriver, times(1)).sendTask(any(), any(), any());
     assertThat(connectorValidationResult.isValid()).isFalse();
     assertThat(connectorValidationResult.getErrorMessage()).isNotBlank();
@@ -79,7 +80,8 @@ public class GitConnectorValidatorTest extends CategoryTest {
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     doReturn(gitResponse).when(managerDelegateServiceDriver).sendTask(any(), any(), any());
-    ConnectorValidationResult connectorValidationResult = gitConnectorValidator.validate(gitConfig, ACCOUNT_ID);
+    ConnectorValidationResult connectorValidationResult =
+        gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null);
     verify(managerDelegateServiceDriver, times(1)).sendTask(any(), any(), any());
     assertThat(connectorValidationResult.isValid()).isTrue();
   }

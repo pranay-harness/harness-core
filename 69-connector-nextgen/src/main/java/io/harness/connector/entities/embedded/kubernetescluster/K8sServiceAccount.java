@@ -8,5 +8,5 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.K8sServiceAccount")
 public class K8sServiceAccount implements KubernetesAuth {
-  String serviceAcccountToken;
+  String serviceAcccountTokenRef;
 }

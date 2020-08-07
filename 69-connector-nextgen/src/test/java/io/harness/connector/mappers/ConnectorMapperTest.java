@@ -5,6 +5,7 @@ import static io.harness.connector.entities.Connector.Scope.ORGANIZATION;
 import static io.harness.connector.entities.Connector.Scope.PROJECT;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
+import static io.harness.encryption.SecretRefData.SECRET_DELIMINITER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -25,6 +26,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -45,14 +48,18 @@ public class ConnectorMapperTest extends CategoryTest {
   @Mock private Map<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapperMap;
   String masterURL = "masterURL";
   String userName = "userName";
-  String password = "password";
-  String cacert = "cacert";
   String identifier = "identifier";
   String name = "name";
   private String accountIdentifier = "accountIdentifier";
+  String passwordIdentifier = "passwordIdentifier";
+  SecretRefData secretRefDataCACert;
 
   @Before
   public void setUp() throws Exception {
+    String cacert = "caCertRef";
+    secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
+    SecretRefData passwordSecretRefData =
+        SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
     MockitoAnnotations.initMocks(this);
     when(kubernetesConfigCastHelper.castToKubernetesDelegateCredential(any())).thenCallRealMethod();
     when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
@@ -62,8 +69,8 @@ public class ConnectorMapperTest extends CategoryTest {
                                               .authType(KubernetesAuthType.USER_PASSWORD)
                                               .credentials(KubernetesUserNamePasswordDTO.builder()
                                                                .username(userName)
-                                                               .encryptedPassword(password)
-                                                               .cacert(cacert)
+                                                               .passwordRef(passwordSecretRefData)
+                                                               .caCertRef(secretRefDataCACert)
                                                                .build())
                                               .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
@@ -77,15 +84,17 @@ public class ConnectorMapperTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void testToConnectorTest() {
-    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
-                                              .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(KubernetesUserNamePasswordDTO.builder()
-                                                               .username(userName)
-                                                               .encryptedPassword(password)
-                                                               .cacert(cacert)
-                                                               .build())
-                                              .build();
+  public void testToConnector() {
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(
+                KubernetesUserNamePasswordDTO.builder()
+                    .username(userName)
+                    .passwordRef(SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build())
+                    .caCertRef(secretRefDataCACert)
+                    .build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -111,8 +120,15 @@ public class ConnectorMapperTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testWriteDTOTest() {
+    String passwordIdentifier = "passwordRef";
+    String cacertIdentifier = "cacertIdentifier";
+    String passwordRef = "acc" + SECRET_DELIMINITER + this.passwordIdentifier;
+    String caCertRef = "acc" + SECRET_DELIMINITER + cacertIdentifier;
+    SecretRefData passcordSecretRef = SecretRefData.builder().identifier(passwordRef).scope(Scope.ACCOUNT).build();
+    SecretRefData secretRefDataCACert =
+        SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     K8sUserNamePassword k8sUserNamePassword =
-        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
+        K8sUserNamePassword.builder().userName(userName).passwordRef(passwordRef).caCertRef(caCertRef).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -145,7 +161,7 @@ public class ConnectorMapperTest extends CategoryTest {
     Connector.Scope orgScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
     assertThat(orgScope).isEqualTo(ORGANIZATION);
 
-    connectorDTO.setProjectIdentifer("projectIdentifier");
+    connectorDTO.setProjectIdentifier("projectIdentifier");
     Connector.Scope projectScope = connectorMapper.getScopeFromConnectorDTO(connectorDTO);
     assertThat(projectScope).isEqualTo(PROJECT);
   }
