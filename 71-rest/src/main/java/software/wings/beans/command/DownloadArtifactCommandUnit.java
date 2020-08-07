@@ -259,13 +259,13 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
     delegateLogService.save(context.getAccountId(),
         aLog()
-            .withAppId(context.getAppId())
-            .withActivityId(context.getActivityId())
-            .withHostName(context.getHost() == null ? null : context.getHost().getPublicDns())
-            .withLogLevel(logLevel)
-            .withCommandUnitName(getName())
-            .withLogLine(line)
-            .withExecutionResult(RUNNING)
+            .appId(context.getAppId())
+            .activityId(context.getActivityId())
+            .hostName(context.getHost() == null ? null : context.getHost().getPublicDns())
+            .logLevel(logLevel)
+            .commandUnitName(getName())
+            .logLine(line)
+            .executionResult(RUNNING)
             .build());
   }
 

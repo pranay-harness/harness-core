@@ -45,8 +45,7 @@ public class ManagerExecutionLogCallback implements LogCallback {
   @Override
   public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {
     if (logService != null) {
-      Log log =
-          logBuilder.but().withLogLevel(logLevel).withExecutionResult(commandExecutionStatus).withLogLine(line).build();
+      Log log = logBuilder.but().logLevel(logLevel).executionResult(commandExecutionStatus).logLine(line).build();
       logService.batchedSaveCommandUnitLogs(activityId, log.getCommandUnitName(), log);
     } else {
       logger.warn("No logService injected. Couldn't save log [{}]", line);

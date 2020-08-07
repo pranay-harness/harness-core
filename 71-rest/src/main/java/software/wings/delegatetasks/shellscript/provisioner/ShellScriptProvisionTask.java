@@ -156,12 +156,12 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
       ShellScriptProvisionParameters parameters, String line, CommandExecutionStatus commandExecutionStatus) {
     logService.save(parameters.getAccountId(),
         aLog()
-            .withAppId(parameters.getAppId())
-            .withActivityId(parameters.getActivityId())
-            .withLogLevel(INFO)
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
-            .withCommandUnitName(parameters.getCommandUnit())
+            .appId(parameters.getAppId())
+            .activityId(parameters.getActivityId())
+            .logLevel(INFO)
+            .logLine(line)
+            .executionResult(commandExecutionStatus)
+            .commandUnitName(parameters.getCommandUnit())
             .build());
   }
 }

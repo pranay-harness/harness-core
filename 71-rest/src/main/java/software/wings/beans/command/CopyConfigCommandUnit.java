@@ -65,14 +65,14 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
               context.getHost() == null ? null : context.getHost().getUuid(), context.getAccountId());
     } catch (IOException e) {
       Log.Builder logBuilder = aLog()
-                                   .withAppId(context.getAppId())
-                                   .withActivityId(context.getActivityId())
-                                   .withLogLevel(ERROR)
-                                   .withCommandUnitName(getName())
-                                   .withLogLine("Unable to fetch config file information")
-                                   .withExecutionResult(FAILURE);
+                                   .appId(context.getAppId())
+                                   .activityId(context.getActivityId())
+                                   .logLevel(ERROR)
+                                   .commandUnitName(getName())
+                                   .logLine("Unable to fetch config file information")
+                                   .executionResult(FAILURE);
       if (hostName != null) {
-        logBuilder.withHostName(hostName);
+        logBuilder.hostName(hostName);
       }
       delegateLogService.save(context.getAccountId(), logBuilder.build());
       logger.error("Unable to fetch log file information", e);
@@ -92,14 +92,14 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
               + ", version: " + configFile.getVersionForEnv(context.getEnvId());
           logger.error(message, e);
           Log.Builder logBuilder = aLog()
-                                       .withAppId(context.getAppId())
-                                       .withActivityId(context.getActivityId())
-                                       .withLogLevel(ERROR)
-                                       .withCommandUnitName(getName())
-                                       .withLogLine(message)
-                                       .withExecutionResult(FAILURE);
+                                       .appId(context.getAppId())
+                                       .activityId(context.getActivityId())
+                                       .logLevel(ERROR)
+                                       .commandUnitName(getName())
+                                       .logLine(message)
+                                       .executionResult(FAILURE);
           if (hostName != null) {
-            logBuilder.withHostName(hostName);
+            logBuilder.hostName(hostName);
           }
           delegateLogService.save(context.getAccountId(), logBuilder.build());
           result = FAILURE;

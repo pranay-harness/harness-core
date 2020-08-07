@@ -54,13 +54,13 @@ public class ExecutionLogWriterTest extends CategoryTest {
     Mockito.verify(logService)
         .save(ACCOUNT_ID,
             aLog()
-                .withAppId(APP_ID)
-                .withActivityId(WORKFLOW_EXECUTION_ID)
-                .withLogLevel(INFO)
-                .withCommandUnitName(COMMAND_UNIT_NAME)
-                .withHostName("localhost")
-                .withLogLine(logLineFirstSegment + logLineSecondSegment)
-                .withExecutionResult(RUNNING)
+                .appId(APP_ID)
+                .activityId(WORKFLOW_EXECUTION_ID)
+                .logLevel(INFO)
+                .commandUnitName(COMMAND_UNIT_NAME)
+                .hostName("localhost")
+                .logLine(logLineFirstSegment + logLineSecondSegment)
+                .executionResult(RUNNING)
                 .build());
   }
 }

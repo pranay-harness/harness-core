@@ -238,24 +238,24 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
     verify(delegateLogService)
         .save(ACCOUNT_ID,
             aLog()
-                .withAppId(APP_ID)
-                .withHostName(PUBLIC_DNS)
-                .withActivityId(ACTIVITY_ID)
-                .withLogLevel(INFO)
-                .withCommandUnitName(commandUnit.getName())
-                .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
-                .withExecutionResult(RUNNING)
+                .appId(APP_ID)
+                .hostName(PUBLIC_DNS)
+                .activityId(ACTIVITY_ID)
+                .logLevel(INFO)
+                .commandUnitName(commandUnit.getName())
+                .logLine(format("Begin execution of command: %s", commandUnit.getName()))
+                .executionResult(RUNNING)
                 .build());
     verify(delegateLogService)
         .save(ACCOUNT_ID,
             aLog()
-                .withAppId(APP_ID)
-                .withActivityId(ACTIVITY_ID)
-                .withHostName(PUBLIC_DNS)
-                .withLogLevel(ERROR)
-                .withLogLine("Command execution failed")
-                .withCommandUnitName(commandUnit.getName())
-                .withExecutionResult(FAILURE)
+                .appId(APP_ID)
+                .activityId(ACTIVITY_ID)
+                .hostName(PUBLIC_DNS)
+                .logLevel(ERROR)
+                .logLine("Command execution failed")
+                .commandUnitName(commandUnit.getName())
+                .executionResult(FAILURE)
                 .build());
   }
 

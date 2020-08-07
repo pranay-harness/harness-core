@@ -998,8 +998,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public ManagerExecutionLogCallback getManagerExecutionCallback(
       String appId, String activityId, String commandUnitName) {
-    Builder logBuilder =
-        Builder.aLog().withCommandUnitName(commandUnitName).withAppId(appId).withActivityId(activityId);
+    Builder logBuilder = Builder.aLog().commandUnitName(commandUnitName).appId(appId).activityId(activityId);
     return new ManagerExecutionLogCallback(logService, logBuilder, activityId);
   }
 

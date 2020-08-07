@@ -216,11 +216,11 @@ public abstract class CloudFormationState extends State {
     CloudFormationCreateStackResponse createStackResponse = (CloudFormationCreateStackResponse) commandResponse;
     ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
     Log.Builder logBuilder = aLog()
-                                 .withAppId(context.getAppId())
-                                 .withActivityId(scriptStateExecutionData.getActivityId())
-                                 .withLogLevel(LogLevel.INFO)
-                                 .withCommandUnitName(commandUnit())
-                                 .withExecutionResult(CommandExecutionStatus.RUNNING);
+                                 .appId(context.getAppId())
+                                 .activityId(scriptStateExecutionData.getActivityId())
+                                 .logLevel(LogLevel.INFO)
+                                 .commandUnitName(commandUnit())
+                                 .executionResult(CommandExecutionStatus.RUNNING);
 
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, scriptStateExecutionData.getActivityId());

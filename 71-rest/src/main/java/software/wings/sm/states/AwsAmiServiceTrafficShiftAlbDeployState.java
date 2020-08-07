@@ -407,13 +407,13 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   private Builder getLogBuilder(Activity activity, String commandName, CommandExecutionStatus status) {
     Builder logBuilder =
         aLog()
-            .withAppId(activity.getAppId())
-            .withActivityId(activity.getUuid())
-            .withCommandUnitName(commandName != null ? commandName : activity.getCommandUnits().get(0).getName())
-            .withLogLevel(INFO);
+            .appId(activity.getAppId())
+            .activityId(activity.getUuid())
+            .commandUnitName(commandName != null ? commandName : activity.getCommandUnits().get(0).getName())
+            .logLevel(INFO);
 
     if (status != null) {
-      logBuilder.withExecutionResult(status);
+      logBuilder.executionResult(status);
     }
     return logBuilder;
   }

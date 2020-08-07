@@ -123,12 +123,12 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
       ShellScriptApprovalTaskParameters parameters, String line, CommandExecutionStatus commandExecutionStatus) {
     logService.save(parameters.getAccountId(),
         aLog()
-            .withAppId(parameters.getAppId())
-            .withActivityId(parameters.getActivityId())
-            .withLogLevel(INFO)
-            .withCommandUnitName(parameters.getCommandName())
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
+            .appId(parameters.getAppId())
+            .activityId(parameters.getActivityId())
+            .logLevel(INFO)
+            .commandUnitName(parameters.getCommandName())
+            .logLine(line)
+            .executionResult(commandExecutionStatus)
             .build());
   }
 }

@@ -94,13 +94,13 @@ public class LogServiceTest extends WingsBaseTest {
     List<Log> logs = new ArrayList<>();
     for (int i = 0; i < numOfLogLines; i++) {
       logs.add(aLog()
-                   .withAppId(appId)
-                   .withActivityId(activityId)
-                   .withHostName(HOST_NAME)
-                   .withLogLine("log-" + i)
-                   .withCommandUnitName(unitName)
-                   .withLogLevel(INFO)
-                   .withExecutionResult(CommandExecutionStatus.RUNNING)
+                   .appId(appId)
+                   .activityId(activityId)
+                   .hostName(HOST_NAME)
+                   .logLine("log-" + i)
+                   .commandUnitName(unitName)
+                   .logLevel(INFO)
+                   .executionResult(CommandExecutionStatus.RUNNING)
                    .build());
     }
     return logs;

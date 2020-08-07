@@ -45,13 +45,13 @@ public class ExecutionLogWriter extends Writer {
     if (!logLine.isEmpty()) {
       logService.save(accountId,
           aLog()
-              .withAppId(appId)
-              .withActivityId(executionId)
-              .withLogLevel(logLevel)
-              .withCommandUnitName(commandUnitName)
-              .withHostName(hostName)
-              .withLogLine(logLine.trim())
-              .withExecutionResult(RUNNING)
+              .appId(appId)
+              .activityId(executionId)
+              .logLevel(logLevel)
+              .commandUnitName(commandUnitName)
+              .hostName(hostName)
+              .logLine(logLine.trim())
+              .executionResult(RUNNING)
               .build());
       stringBuilder.setLength(0);
     }

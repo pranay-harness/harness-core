@@ -189,12 +189,12 @@ public class GcbTask extends AbstractDelegateRunnableTask {
       int offset = alreadyLogged.get();
       for (int i = offset; i < consoleLines.length; i++) {
         Log log = aLog()
-                      .withActivityId(activityId)
-                      .withCommandUnitName(stateName)
-                      .withAppId(appId)
-                      .withLogLevel(INFO)
-                      .withLogLine(consoleLines[i])
-                      .withExecutionResult(commandExecutionStatus)
+                      .activityId(activityId)
+                      .commandUnitName(stateName)
+                      .appId(appId)
+                      .logLevel(INFO)
+                      .logLine(consoleLines[i])
+                      .executionResult(commandExecutionStatus)
                       .build();
         logService.save(getAccountId(), log);
         logsCount.incrementAndGet();

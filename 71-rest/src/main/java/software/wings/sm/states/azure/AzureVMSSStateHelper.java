@@ -103,7 +103,7 @@ public class AzureVMSSStateHelper {
   public ManagerExecutionLogCallback getExecutionLogCallback(Activity activity) {
     String commandUnitName = activity.getCommandUnits().get(0).getName();
     Log.Builder logBuilder =
-        aLog().withAppId(activity.getAppId()).withActivityId(activity.getUuid()).withCommandUnitName(commandUnitName);
+        aLog().appId(activity.getAppId()).activityId(activity.getUuid()).commandUnitName(commandUnitName);
     return new ManagerExecutionLogCallback(logService, logBuilder, activity.getUuid());
   }
 

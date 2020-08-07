@@ -240,9 +240,9 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   @NotNull
   private Log.Builder getLogBuilder(Activity activity) {
     return aLog()
-        .withAppId(activity.getAppId())
-        .withActivityId(activity.getUuid())
-        .withCommandUnitName(activity.getCommandUnits().get(0).getName());
+        .appId(activity.getAppId())
+        .activityId(activity.getUuid())
+        .commandUnitName(activity.getCommandUnits().get(0).getName());
   }
 
   private ExecutionResponse taskCreationFailureResponse(
