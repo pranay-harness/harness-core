@@ -306,13 +306,13 @@ public class AwsLambdaState extends State {
     Activity activity = activityService.save(build);
 
     Builder logBuilder = aLog()
-                             .withAppId(activity.getAppId())
-                             .withActivityId(activity.getUuid())
-                             .withLogLevel(LogLevel.INFO)
-                             .withCommandUnitName(commandUnitList.get(0).getName())
-                             .withExecutionResult(CommandExecutionStatus.RUNNING);
+                             .appId(activity.getAppId())
+                             .activityId(activity.getUuid())
+                             .logLevel(LogLevel.INFO)
+                             .commandUnitName(commandUnitList.get(0).getName())
+                             .executionResult(CommandExecutionStatus.RUNNING);
 
-    logService.batchedSave(singletonList(logBuilder.but().withLogLine("Begin command execution.").build()));
+    logService.batchedSave(singletonList(logBuilder.but().logLine("Begin command execution.").build()));
 
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData()
                                                                  .withServiceId(service.getUuid())
@@ -341,7 +341,7 @@ public class AwsLambdaState extends State {
         ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
 
     if (isEmpty(specification.getFunctions())) {
-      logService.batchedSave(singletonList(logBuilder.but().withLogLine("No Lambda function to deploy.").build()));
+      logService.batchedSave(singletonList(logBuilder.but().logLine("No Lambda function to deploy.").build()));
       activityService.updateStatus(activity.getUuid(), activity.getAppId(), SUCCESS);
       List<FunctionMeta> functionArns = new ArrayList<>();
       AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.builder()

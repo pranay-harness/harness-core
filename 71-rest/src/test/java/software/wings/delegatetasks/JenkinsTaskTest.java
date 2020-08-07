@@ -348,12 +348,12 @@ public class JenkinsTaskTest extends WingsBaseTest {
   private Log constructLog(String activityId, String stateName, String appId, LogLevel logLevel, String logLine,
       CommandExecutionStatus commandExecutionStatus) {
     return aLog()
-        .withActivityId(activityId)
-        .withCommandUnitName(stateName)
-        .withAppId(appId)
-        .withLogLevel(logLevel)
-        .withLogLine(logLine)
-        .withExecutionResult(commandExecutionStatus)
+        .activityId(activityId)
+        .commandUnitName(stateName)
+        .appId(appId)
+        .logLevel(logLevel)
+        .logLine(logLine)
+        .executionResult(commandExecutionStatus)
         .build();
   }
 }

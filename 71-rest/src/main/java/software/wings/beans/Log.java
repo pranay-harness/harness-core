@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -39,6 +40,7 @@ import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -50,15 +52,11 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by peeyushaggarwal on 5/27/16.
- */
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "LogKeys")
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-
 @CdIndex(name = "appId_activityId", fields = { @Field(value = LogKeys.appId)
                                                , @Field(value = LogKeys.activityId) })
 @CdIndex(name = "activityIdCreatedAt",
@@ -66,8 +64,6 @@ import javax.validation.constraints.NotNull;
                , @Field(value = CreatedAtAware.CREATED_AT_KEY) })
 public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                             UpdatedAtAware, UpdatedByAware, ApplicationAccess {
-  public static final String ID_KEY = "_id";
-
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
@@ -97,70 +93,69 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
     try {
       com.google.cloud.datastore.Entity.Builder logEntityBuilder =
           com.google.cloud.datastore.Entity.newBuilder(taskKey)
-              .set("activityId", getActivityId())
-
-              .set("linesCount", LongValue.newBuilder(getLinesCount()).setExcludeFromIndexes(true).build())
-              .set("logLevel",
+              .set(LogKeys.activityId, getActivityId())
+              .set(LogKeys.linesCount, LongValue.newBuilder(getLinesCount()).setExcludeFromIndexes(true).build())
+              .set(LogKeys.logLevel,
                   com.google.cloud.datastore.StringValue.newBuilder(getLogLevel().toString())
                       .setExcludeFromIndexes(true)
                       .build())
-              .set("commandExecutionStatus",
+              .set(LogKeys.commandExecutionStatus,
                   com.google.cloud.datastore.StringValue.newBuilder(getCommandExecutionStatus().name())
                       .setExcludeFromIndexes(true)
                       .build())
-              .set(CREATED_AT_KEY, currentTimeMillis());
+              .set(LogKeys.createdAt, currentTimeMillis());
 
       if (getLogLine().length() <= 256) {
-        logEntityBuilder.set("logLine", StringValue.newBuilder(getLogLine()).setExcludeFromIndexes(true).build());
+        logEntityBuilder.set(LogKeys.logLine, StringValue.newBuilder(getLogLine()).setExcludeFromIndexes(true).build());
       } else {
-        logEntityBuilder.set("compressedLogLine",
+        logEntityBuilder.set(LogKeys.compressedLogLine,
             BlobValue.newBuilder(Blob.copyFrom(compressString(getLogLine()))).setExcludeFromIndexes(true).build());
       }
 
       if (isNotEmpty(getHostName())) {
-        logEntityBuilder.set("hostName", getHostName());
+        logEntityBuilder.set(LogKeys.hostName, getHostName());
       }
 
       if (isNotEmpty(getAppId())) {
-        logEntityBuilder.set("appId", getAppId());
+        logEntityBuilder.set(LogKeys.appId, getAppId());
       }
 
       if (isNotEmpty(getCommandUnitName())) {
-        logEntityBuilder.set("commandUnitName", getCommandUnitName());
+        logEntityBuilder.set(LogKeys.commandUnitName, getCommandUnitName());
       }
 
       if (validUntil != null) {
-        logEntityBuilder.set("validUntil", validUntil.getTime());
+        logEntityBuilder.set(LogKeys.validUntil, validUntil.getTime());
       }
 
       if (isNotEmpty(getAccountId())) {
-        logEntityBuilder.set("accountId", getAccountId());
+        logEntityBuilder.set(LogKeys.accountId, getAccountId());
       }
 
       return logEntityBuilder.build();
     } catch (IOException e) {
-      throw new WingsException(e);
+      throw new GeneralException("Cannot convert log object", e);
     }
   }
 
   @Override
   public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
     final Log log = aLog()
-                        .withUuid(entity.getKey().getName())
-                        .withActivityId(readString(entity, "activityId"))
-                        .withLogLevel(LogLevel.valueOf(readString(entity, "logLevel")))
-                        .withCreatedAt(readLong(entity, CREATED_AT_KEY))
-                        .withHostName(readString(entity, "hostName"))
-                        .withAppId(readString(entity, "appId"))
-                        .withCommandUnitName(readString(entity, "commandUnitName"))
-                        .withAccountId(readString(entity, "accountId"))
+                        .uuid(entity.getKey().getName())
+                        .activityId(readString(entity, LogKeys.activityId))
+                        .logLevel(LogLevel.valueOf(readString(entity, LogKeys.logLevel)))
+                        .createdAt(readLong(entity, LogKeys.createdAt))
+                        .hostName(readString(entity, LogKeys.hostName))
+                        .appId(readString(entity, LogKeys.appId))
+                        .commandUnitName(readString(entity, LogKeys.commandUnitName))
+                        .accountId(readString(entity, LogKeys.accountId))
                         .build();
     try {
-      byte[] compressedLogLine = readBlob(entity, "compressedLogLine");
+      byte[] compressedLogLine = readBlob(entity, LogKeys.compressedLogLine);
       if (isNotEmpty(compressedLogLine)) {
         log.setLogLine(deCompressString(compressedLogLine));
       } else {
-        log.setLogLine(readString(entity, "logLine"));
+        log.setLogLine(readString(entity, LogKeys.logLine));
       }
     } catch (IOException e) {
       throw new WingsException(e);
@@ -204,7 +199,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param activityId the activity id
      * @return the builder
      */
-    public Builder withActivityId(String activityId) {
+    public Builder activityId(String activityId) {
       this.activityId = activityId;
       return this;
     }
@@ -215,7 +210,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param hostName the host name
      * @return the builder
      */
-    public Builder withHostName(String hostName) {
+    public Builder hostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
@@ -226,7 +221,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param commandUnitName the command unit name
      * @return the builder
      */
-    public Builder withCommandUnitName(String commandUnitName) {
+    public Builder commandUnitName(String commandUnitName) {
       this.commandUnitName = commandUnitName;
       return this;
     }
@@ -237,7 +232,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param logLine the log line
      * @return the builder
      */
-    public Builder withLogLine(String logLine) {
+    public Builder logLine(String logLine) {
       this.logLine = logLine;
       return this;
     }
@@ -248,7 +243,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param logLevel the log level
      * @return the builder
      */
-    public Builder withLogLevel(LogLevel logLevel) {
+    public Builder logLevel(LogLevel logLevel) {
       this.logLevel = logLevel;
       return this;
     }
@@ -259,7 +254,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param commandExecutionStatus the execution result
      * @return the builder
      */
-    public Builder withExecutionResult(CommandExecutionStatus commandExecutionStatus) {
+    public Builder executionResult(CommandExecutionStatus commandExecutionStatus) {
       this.commandExecutionStatus = commandExecutionStatus;
       return this;
     }
@@ -270,7 +265,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param uuid the uuid
      * @return the builder
      */
-    public Builder withUuid(String uuid) {
+    public Builder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
@@ -281,7 +276,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param appId the app id
      * @return the builder
      */
-    public Builder withAppId(String appId) {
+    public Builder appId(String appId) {
       this.appId = appId;
       return this;
     }
@@ -292,7 +287,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -303,7 +298,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param createdAt the created at
      * @return the builder
      */
-    public Builder withCreatedAt(long createdAt) {
+    public Builder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
@@ -314,7 +309,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
@@ -325,7 +320,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param lastUpdatedAt the last updated at
      * @return the builder
      */
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
@@ -336,7 +331,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      * @param accountId accountId
      * @return the builder
      */
-    public Builder withAccountId(String accountId) {
+    public Builder accountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
@@ -348,19 +343,19 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
      */
     public Builder but() {
       return aLog()
-          .withActivityId(activityId)
-          .withHostName(hostName)
-          .withCommandUnitName(commandUnitName)
-          .withLogLine(logLine)
-          .withLogLevel(logLevel)
-          .withExecutionResult(commandExecutionStatus)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withAccountId(accountId);
+          .activityId(activityId)
+          .hostName(hostName)
+          .commandUnitName(commandUnitName)
+          .logLine(logLine)
+          .logLevel(logLevel)
+          .executionResult(commandExecutionStatus)
+          .uuid(uuid)
+          .appId(appId)
+          .createdBy(createdBy)
+          .createdAt(createdAt)
+          .lastUpdatedBy(lastUpdatedBy)
+          .lastUpdatedAt(lastUpdatedAt)
+          .accountId(accountId);
     }
 
     /**
@@ -387,11 +382,8 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
     }
   }
 
+  @UtilityClass
   public static final class LogKeys {
-    private LogKeys() {}
-    // Temporary
-    public static final String appId = "appId";
-    public static final String createdAt = "createdAt";
-    public static final String uuid = "uuid";
+    public static final String compressedLogLine = "compressedLogLine";
   }
 }

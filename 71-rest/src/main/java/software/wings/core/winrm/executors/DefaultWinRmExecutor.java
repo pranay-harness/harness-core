@@ -366,13 +366,13 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
     logService.save(config.getAccountId(),
         aLog()
-            .withAppId(config.getAppId())
-            .withActivityId(config.getExecutionId())
-            .withLogLevel(level)
-            .withCommandUnitName(config.getCommandUnitName())
-            .withHostName(config.getHostname())
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
+            .appId(config.getAppId())
+            .activityId(config.getExecutionId())
+            .logLevel(level)
+            .commandUnitName(config.getCommandUnitName())
+            .hostName(config.getHostname())
+            .logLine(line)
+            .executionResult(commandExecutionStatus)
             .build());
   }
 

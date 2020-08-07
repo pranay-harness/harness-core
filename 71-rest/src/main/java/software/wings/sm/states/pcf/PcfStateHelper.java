@@ -799,11 +799,11 @@ public class PcfStateHelper {
   @VisibleForTesting
   ExecutionResponse handleRollbackSkipped(String appId, String activityId, String commandUnitName, String logMessage) {
     Log.Builder logBuilder = Log.Builder.aLog()
-                                 .withAppId(appId)
-                                 .withActivityId(activityId)
-                                 .withCommandUnitName(commandUnitName)
-                                 .withLogLevel(INFO)
-                                 .withExecutionResult(CommandExecutionStatus.SKIPPED);
+                                 .appId(appId)
+                                 .activityId(activityId)
+                                 .commandUnitName(commandUnitName)
+                                 .logLevel(INFO)
+                                 .executionResult(CommandExecutionStatus.SKIPPED);
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, activityId);
 

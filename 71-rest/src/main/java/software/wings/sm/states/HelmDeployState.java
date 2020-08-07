@@ -930,11 +930,11 @@ public class HelmDeployState extends State {
   ExecutionResponse initialRollbackNotNeeded(
       ExecutionContext context, String activityId, HelmDeployStateExecutionData stateExecutionData) {
     Log.Builder logBuilder = aLog()
-                                 .withAppId(context.getAppId())
-                                 .withActivityId(activityId)
-                                 .withCommandUnitName(HelmDummyCommandUnit.Rollback)
-                                 .withLogLevel(LogLevel.INFO)
-                                 .withExecutionResult(CommandExecutionStatus.SUCCESS);
+                                 .appId(context.getAppId())
+                                 .activityId(activityId)
+                                 .commandUnitName(HelmDummyCommandUnit.Rollback)
+                                 .logLevel(LogLevel.INFO)
+                                 .executionResult(CommandExecutionStatus.SUCCESS);
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, activityId);
 

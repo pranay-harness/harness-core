@@ -182,10 +182,10 @@ public class ActivityResourceTest extends CategoryTest {
   public void shouldListCommandUnitLogs() {
     PageResponse<Log> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(Log.Builder.aLog()
-                                                    .withUuid(LOG_ID)
-                                                    .withAppId(APP_ID)
-                                                    .withActivityId(ACTIVITY_ID)
-                                                    .withCommandUnitName(COMMAND_UNIT_NAME)
+                                                    .uuid(LOG_ID)
+                                                    .appId(APP_ID)
+                                                    .activityId(ACTIVITY_ID)
+                                                    .commandUnitName(COMMAND_UNIT_NAME)
                                                     .build()));
     pageResponse.setTotal(1l);
     when(LOG_SERVICE.list(anyString(), any(PageRequest.class))).thenReturn(pageResponse);

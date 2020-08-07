@@ -287,39 +287,39 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
   protected void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
     logService.save(getAccountId(),
         aLog()
-            .withAppId(getAppId())
-            .withActivityId(getExecutionId())
-            .withLogLevel(INFO)
-            .withCommandUnitName(getCommandUnitName())
-            .withHostName(getHost())
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
+            .appId(getAppId())
+            .activityId(getExecutionId())
+            .logLevel(INFO)
+            .commandUnitName(getCommandUnitName())
+            .hostName(getHost())
+            .logLine(line)
+            .executionResult(commandExecutionStatus)
             .build());
   }
 
   protected void saveExecutionLogError(String line) {
     logService.save(getAccountId(),
         aLog()
-            .withAppId(getAppId())
-            .withActivityId(getExecutionId())
-            .withLogLevel(ERROR)
-            .withCommandUnitName(getCommandUnitName())
-            .withHostName(getHost())
-            .withLogLine(line)
-            .withExecutionResult(RUNNING)
+            .appId(getAppId())
+            .activityId(getExecutionId())
+            .logLevel(ERROR)
+            .commandUnitName(getCommandUnitName())
+            .hostName(getHost())
+            .logLine(line)
+            .executionResult(RUNNING)
             .build());
   }
 
   protected void saveExecutionLogWarn(String line) {
     logService.save(getAccountId(),
         aLog()
-            .withAppId(getAppId())
-            .withActivityId(getExecutionId())
-            .withLogLevel(WARN)
-            .withCommandUnitName(getCommandUnitName())
-            .withHostName(getHost())
-            .withLogLine(line)
-            .withExecutionResult(RUNNING)
+            .appId(getAppId())
+            .activityId(getExecutionId())
+            .logLevel(WARN)
+            .commandUnitName(getCommandUnitName())
+            .hostName(getHost())
+            .logLine(line)
+            .executionResult(RUNNING)
             .build());
   }
 

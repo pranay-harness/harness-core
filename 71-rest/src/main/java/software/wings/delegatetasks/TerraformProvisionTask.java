@@ -631,12 +631,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       CommandExecutionStatus commandExecutionStatus, LogLevel logLevel) {
     logService.save(parameters.getAccountId(),
         aLog()
-            .withAppId(parameters.getAppId())
-            .withActivityId(parameters.getActivityId())
-            .withLogLevel(logLevel)
-            .withCommandUnitName(parameters.getCommandUnit().name())
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
+            .appId(parameters.getAppId())
+            .activityId(parameters.getActivityId())
+            .logLevel(logLevel)
+            .commandUnitName(parameters.getCommandUnit().name())
+            .logLine(line)
+            .executionResult(commandExecutionStatus)
             .build());
   }
 

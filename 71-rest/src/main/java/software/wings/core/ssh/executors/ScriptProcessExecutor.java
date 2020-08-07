@@ -331,13 +331,13 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
     logService.save(config.getAccountId(),
         aLog()
-            .withAppId(config.getAppId())
-            .withActivityId(config.getExecutionId())
-            .withLogLevel(level)
-            .withCommandUnitName(config.getCommandUnitName())
-            .withHostName("localhost")
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
+            .appId(config.getAppId())
+            .activityId(config.getExecutionId())
+            .logLevel(level)
+            .commandUnitName(config.getCommandUnitName())
+            .hostName("localhost")
+            .logLine(line)
+            .executionResult(commandExecutionStatus)
             .build());
   }
 

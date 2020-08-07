@@ -217,11 +217,11 @@ public class ActivityLogsProcessorTest extends CategoryTest {
 
     when(logService.list(anyString(), any()))
         .thenReturn(aPageResponse()
-                        .withResponse(asList(aLog().withActivityId("aid1").withCommandUnitName("cu1").build(),
-                            aLog().withActivityId("aid2").withCommandUnitName("cu1").build(),
-                            aLog().withActivityId("aid1").withCommandUnitName("cu1").build(),
-                            aLog().withActivityId("aid1").withCommandUnitName("cu2").build(),
-                            aLog().withActivityId("aid3").withCommandUnitName("cu1").build()))
+                        .withResponse(asList(aLog().activityId("aid1").commandUnitName("cu1").build(),
+                            aLog().activityId("aid2").commandUnitName("cu1").build(),
+                            aLog().activityId("aid1").commandUnitName("cu1").build(),
+                            aLog().activityId("aid1").commandUnitName("cu2").build(),
+                            aLog().activityId("aid3").commandUnitName("cu1").build()))
                         .build())
         .thenReturn(aPageResponse().withResponse(Collections.emptyList()).build());
 
@@ -235,8 +235,8 @@ public class ActivityLogsProcessorTest extends CategoryTest {
 
     when(logService.list(anyString(), any()))
         .thenReturn(aPageResponse()
-                        .withResponse(asList(aLog().withActivityId("aid1").withCommandUnitName("cu1").build(),
-                            aLog().withActivityId("aid2").withCommandUnitName("cu1").build()))
+                        .withResponse(asList(aLog().activityId("aid1").commandUnitName("cu1").build(),
+                            aLog().activityId("aid2").commandUnitName("cu1").build()))
                         .build())
         .thenReturn(aPageResponse().withResponse(Collections.emptyList()).build());
 
@@ -263,14 +263,14 @@ public class ActivityLogsProcessorTest extends CategoryTest {
                 WorkflowExecutionMetadata.builder().appId("appId").build()));
 
     Map<String, List<Log>> map = ImmutableMap.of("aid1",
-        asList(aLog().withActivityId("aid1").withCommandUnitName("cu11").build(),
-            aLog().withActivityId("aid1").withCommandUnitName("cu12").build()),
+        asList(aLog().activityId("aid1").commandUnitName("cu11").build(),
+            aLog().activityId("aid1").commandUnitName("cu12").build()),
         "aid2",
-        asList(aLog().withActivityId("aid2").withCommandUnitName("cu21").build(),
-            aLog().withActivityId("aid2").withCommandUnitName("cu22").build()),
+        asList(aLog().activityId("aid2").commandUnitName("cu21").build(),
+            aLog().activityId("aid2").commandUnitName("cu22").build()),
         "aid3",
-        asList(aLog().withActivityId("aid3").withCommandUnitName("cu31").build(),
-            aLog().withActivityId("aid3").withCommandUnitName("cu32").build()));
+        asList(aLog().activityId("aid3").commandUnitName("cu31").build(),
+            aLog().activityId("aid3").commandUnitName("cu32").build()));
 
     when(logService.list(anyString(), any())).thenAnswer(invocation -> {
       PageRequest<Log> pageRequest = invocation.getArgumentAt(1, PageRequest.class);

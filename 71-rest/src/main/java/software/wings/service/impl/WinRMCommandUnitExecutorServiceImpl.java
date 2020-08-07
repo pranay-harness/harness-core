@@ -54,13 +54,13 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
     String publicDns = context.getHost().getPublicDns();
     logService.save(context.getAccountId(),
         aLog()
-            .withAppId(context.getAppId())
-            .withHostName(publicDns)
-            .withActivityId(activityId)
-            .withLogLevel(INFO)
-            .withCommandUnitName(commandUnit.getName())
-            .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
-            .withExecutionResult(RUNNING)
+            .appId(context.getAppId())
+            .hostName(publicDns)
+            .activityId(activityId)
+            .logLevel(INFO)
+            .commandUnitName(commandUnit.getName())
+            .logLine(format("Begin execution of command: %s", commandUnit.getName()))
+            .executionResult(RUNNING)
             .build());
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -84,13 +84,13 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
           aLog()
-              .withAppId(context.getAppId())
-              .withActivityId(activityId)
-              .withHostName(publicDns)
-              .withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
-              .withLogLine("Command execution timed out")
-              .withCommandUnitName(commandUnit.getName())
-              .withExecutionResult(commandExecutionStatus)
+              .appId(context.getAppId())
+              .activityId(activityId)
+              .hostName(publicDns)
+              .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+              .logLine("Command execution timed out")
+              .commandUnitName(commandUnit.getName())
+              .executionResult(commandExecutionStatus)
               .build());
       throw new WingsException(ErrorCode.SOCKET_CONNECTION_TIMEOUT);
     } catch (ExecutionException e) {
@@ -99,25 +99,25 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
         String errorMessage = ExceptionUtils.getMessage(ex);
         logService.save(context.getAccountId(),
             aLog()
-                .withAppId(context.getAppId())
-                .withActivityId(activityId)
-                .withHostName(publicDns)
-                .withCommandUnitName(commandUnit.getName())
-                .withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
-                .withLogLine(errorMessage)
-                .withExecutionResult(commandExecutionStatus)
+                .appId(context.getAppId())
+                .activityId(activityId)
+                .hostName(publicDns)
+                .commandUnitName(commandUnit.getName())
+                .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+                .logLine(errorMessage)
+                .executionResult(commandExecutionStatus)
                 .build());
         throw(WingsException) e.getCause();
       } else {
         logService.save(context.getAccountId(),
             aLog()
-                .withAppId(context.getAppId())
-                .withActivityId(activityId)
-                .withHostName(publicDns)
-                .withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
-                .withLogLine("Unknown Error " + e.getCause().getMessage())
-                .withCommandUnitName(commandUnit.getName())
-                .withExecutionResult(commandExecutionStatus)
+                .appId(context.getAppId())
+                .activityId(activityId)
+                .hostName(publicDns)
+                .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+                .logLine("Unknown Error " + e.getCause().getMessage())
+                .commandUnitName(commandUnit.getName())
+                .executionResult(commandExecutionStatus)
                 .build());
 
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
@@ -129,13 +129,13 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
             || messageList.get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {
           logService.save(context.getAccountId(),
               aLog()
-                  .withAppId(context.getAppId())
-                  .withActivityId(activityId)
-                  .withHostName(publicDns)
-                  .withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
-                  .withLogLine("Command execution failed: invalid key")
-                  .withCommandUnitName(commandUnit.getName())
-                  .withExecutionResult(commandExecutionStatus)
+                  .appId(context.getAppId())
+                  .activityId(activityId)
+                  .hostName(publicDns)
+                  .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+                  .logLine("Command execution failed: invalid key")
+                  .commandUnitName(commandUnit.getName())
+                  .executionResult(commandExecutionStatus)
                   .build());
           throw exception;
         }
@@ -143,39 +143,39 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
         logger.error("Error while executing command", exception);
         logService.save(context.getAccountId(),
             aLog()
-                .withAppId(context.getAppId())
-                .withActivityId(activityId)
-                .withHostName(publicDns)
-                .withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
-                .withLogLine("Command execution failed")
-                .withCommandUnitName(commandUnit.getName())
-                .withExecutionResult(commandExecutionStatus)
+                .appId(context.getAppId())
+                .activityId(activityId)
+                .hostName(publicDns)
+                .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+                .logLine("Command execution failed")
+                .commandUnitName(commandUnit.getName())
+                .executionResult(commandExecutionStatus)
                 .build());
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, exception);
       }
     } catch (Exception e) {
       logService.save(context.getAccountId(),
           aLog()
-              .withAppId(context.getAppId())
-              .withActivityId(activityId)
-              .withHostName(publicDns)
-              .withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
-              .withLogLine("Command execution failed")
-              .withCommandUnitName(commandUnit.getName())
-              .withExecutionResult(commandExecutionStatus)
+              .appId(context.getAppId())
+              .activityId(activityId)
+              .hostName(publicDns)
+              .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+              .logLine("Command execution failed")
+              .commandUnitName(commandUnit.getName())
+              .executionResult(commandExecutionStatus)
               .build());
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }
 
     logService.save(context.getAccountId(),
         aLog()
-            .withAppId(context.getAppId())
-            .withActivityId(activityId)
-            .withHostName(publicDns)
-            .withLogLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
-            .withLogLine("Command execution finished with status " + commandExecutionStatus)
-            .withCommandUnitName(commandUnit.getName())
-            .withExecutionResult(commandExecutionStatus)
+            .appId(context.getAppId())
+            .activityId(activityId)
+            .hostName(publicDns)
+            .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+            .logLine("Command execution finished with status " + commandExecutionStatus)
+            .commandUnitName(commandUnit.getName())
+            .executionResult(commandExecutionStatus)
             .build());
 
     commandUnit.setCommandExecutionStatus(commandExecutionStatus);

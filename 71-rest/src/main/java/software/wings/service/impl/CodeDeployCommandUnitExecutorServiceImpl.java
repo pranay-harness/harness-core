@@ -42,12 +42,12 @@ public class CodeDeployCommandUnitExecutorServiceImpl implements CommandUnitExec
     String activityId = context.getActivityId();
     logService.save(context.getAccountId(),
         aLog()
-            .withAppId(context.getAppId())
-            .withActivityId(activityId)
-            .withLogLevel(INFO)
-            .withCommandUnitName(commandUnit.getName())
-            .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
-            .withExecutionResult(RUNNING)
+            .appId(context.getAppId())
+            .activityId(activityId)
+            .logLevel(INFO)
+            .commandUnitName(commandUnit.getName())
+            .logLine(format("Begin execution of command: %s", commandUnit.getName()))
+            .executionResult(RUNNING)
             .build());
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -59,24 +59,24 @@ public class CodeDeployCommandUnitExecutorServiceImpl implements CommandUnitExec
       logger.error("Error while executing command", ex);
       logService.save(context.getAccountId(),
           aLog()
-              .withAppId(context.getAppId())
-              .withActivityId(activityId)
-              .withLogLevel(ERROR)
-              .withLogLine("Command execution failed")
-              .withCommandUnitName(commandUnit.getName())
-              .withExecutionResult(commandExecutionStatus)
-              .withExecutionResult(FAILURE)
+              .appId(context.getAppId())
+              .activityId(activityId)
+              .logLevel(ERROR)
+              .logLine("Command execution failed")
+              .commandUnitName(commandUnit.getName())
+              .executionResult(commandExecutionStatus)
+              .executionResult(FAILURE)
               .build());
     }
 
     logService.save(context.getAccountId(),
         aLog()
-            .withAppId(context.getAppId())
-            .withActivityId(activityId)
-            .withLogLevel(INFO)
-            .withLogLine("Command execution finished with status " + commandExecutionStatus)
-            .withCommandUnitName(commandUnit.getName())
-            .withExecutionResult(commandExecutionStatus)
+            .appId(context.getAppId())
+            .activityId(activityId)
+            .logLevel(INFO)
+            .logLine("Command execution finished with status " + commandExecutionStatus)
+            .commandUnitName(commandUnit.getName())
+            .executionResult(commandExecutionStatus)
             .build());
 
     commandUnit.setCommandExecutionStatus(commandExecutionStatus);

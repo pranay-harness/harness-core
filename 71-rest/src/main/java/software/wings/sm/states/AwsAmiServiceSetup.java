@@ -229,7 +229,7 @@ public class AwsAmiServiceSetup extends State {
     String commandUnitName = commandUnitList.get(0).getName();
 
     Builder logBuilder =
-        aLog().withAppId(activity.getAppId()).withActivityId(activity.getUuid()).withCommandUnitName(commandUnitName);
+        aLog().appId(activity.getAppId()).activityId(activity.getUuid()).commandUnitName(commandUnitName);
 
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, activity.getUuid());

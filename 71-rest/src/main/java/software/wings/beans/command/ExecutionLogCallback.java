@@ -47,12 +47,12 @@ public class ExecutionLogCallback implements LogCallback {
     if (logService != null) {
       logService.save(accountId,
           aLog()
-              .withAppId(appId)
-              .withActivityId(activityId)
-              .withLogLevel(logLevel)
-              .withCommandUnitName(commandName)
-              .withLogLine(line)
-              .withExecutionResult(commandExecutionStatus)
+              .appId(appId)
+              .activityId(activityId)
+              .logLevel(logLevel)
+              .commandUnitName(commandName)
+              .logLine(line)
+              .executionResult(commandExecutionStatus)
               .build());
     } else {
       logger.error("No logService injected. Couldn't save log [{}:{}]", logLevel, line);

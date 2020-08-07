@@ -485,11 +485,11 @@ public class AwsAmiServiceDeployState extends State {
 
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     Builder logBuilder = aLog()
-                             .withAppId(activity.getAppId())
-                             .withActivityId(activity.getUuid())
-                             .withLogLevel(LogLevel.INFO)
-                             .withCommandUnitName(getCommandName())
-                             .withExecutionResult(CommandExecutionStatus.RUNNING);
+                             .appId(activity.getAppId())
+                             .activityId(activity.getUuid())
+                             .logLevel(LogLevel.INFO)
+                             .commandUnitName(getCommandName())
+                             .executionResult(CommandExecutionStatus.RUNNING);
 
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, activity.getUuid());

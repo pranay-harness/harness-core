@@ -341,13 +341,13 @@ public class ArtifactCollectionTaskHelper {
       String appId, String activityId, String commandUnitName, String hostName) {
     logService.save(accountId,
         aLog()
-            .withAppId(appId)
-            .withActivityId(activityId)
-            .withLogLevel(LogLevel.INFO)
-            .withLogLine(line)
-            .withExecutionResult(commandExecutionStatus)
-            .withCommandUnitName(commandUnitName)
-            .withHostName(hostName)
+            .appId(appId)
+            .activityId(activityId)
+            .logLevel(LogLevel.INFO)
+            .logLine(line)
+            .executionResult(commandExecutionStatus)
+            .commandUnitName(commandUnitName)
+            .hostName(hostName)
             .build());
   }
 }

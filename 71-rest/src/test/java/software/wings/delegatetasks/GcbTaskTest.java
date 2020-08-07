@@ -162,12 +162,12 @@ public class GcbTaskTest extends CategoryTest {
     verify(logService, times(3))
         .save(task.getAccountId(),
             aLog()
-                .withActivityId("activityId")
-                .withCommandUnitName("stateName")
-                .withAppId("appId")
-                .withLogLevel(INFO)
-                .withLogLine("line1")
-                .withExecutionResult(CommandExecutionStatus.SUCCESS)
+                .activityId("activityId")
+                .commandUnitName("stateName")
+                .appId("appId")
+                .logLevel(INFO)
+                .logLine("line1")
+                .executionResult(CommandExecutionStatus.SUCCESS)
                 .build());
     assertThat(logsCount.get()).isEqualTo(3);
   }
