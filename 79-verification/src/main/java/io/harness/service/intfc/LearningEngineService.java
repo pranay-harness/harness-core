@@ -56,4 +56,5 @@ public interface LearningEngineService {
   boolean shouldUseSupervisedModel(String fieldName, String fieldValue);
   String getServiceIdFromStateExecutionId(String stateExecutionId);
   boolean isTaskRunningOrQueued(String cvConfigId, long analysisMinute);
+  boolean isTaskRunningOrQueued(String cvConfigId);
 }

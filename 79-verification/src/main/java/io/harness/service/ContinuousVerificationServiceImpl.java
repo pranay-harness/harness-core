@@ -164,6 +164,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   /**
+   * If there are any LE tasks QUEUED or RUNNING - dont collect.
    * If lastDataCollectionTime < 10mins - no backoff
    * if lastDataCollection time between 10-30mins - collect every 5mins
    * if lastDataCollection time between 30-60mins - collect every 10mins
@@ -172,6 +173,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
    * @return
    */
   private boolean shouldCollectData(CVConfiguration cvConfiguration, Optional<Long> lastDataCollectionTime) {
+    if (learningEngineService.isTaskRunningOrQueued(cvConfiguration.getUuid())) {
+      logger.info(
+          "For {}, there are learning engine tasks that are still QUEUED or RUNNING. We will skip data collection for now.",
+          cvConfiguration.getUuid());
+      return false;
+    }
     if (!lastDataCollectionTime.isPresent() || lastDataCollectionTime.get() <= 0) {
       logger.info(
           "For {}, this is the first collection, so we will go ahead and collect data.", cvConfiguration.getUuid());

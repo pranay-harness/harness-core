@@ -21,6 +21,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -683,6 +684,77 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()
                        + CV_DATA_COLLECTION_INTERVAL_IN_MINUTE + numOfMinutesSaved + 1)
             - 1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDatadogLogsCollection_learningTasksQueued() {
+    LearningEngineAnalysisTask task =
+        LearningEngineAnalysisTask.builder().cvConfigId(cvConfigId).executionStatus(ExecutionStatus.QUEUED).build();
+
+    LearningEngineAnalysisTask anotherTask = LearningEngineAnalysisTask.builder()
+                                                 .cvConfigId(datadogCvConfigId)
+                                                 .executionStatus(ExecutionStatus.QUEUED)
+                                                 .build();
+
+    wingsPersistence.save(Arrays.asList(task, anotherTask));
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertThat(delegateTasks).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDatadogLogsCollection_learningTasksRunning() {
+    LearningEngineAnalysisTask task =
+        LearningEngineAnalysisTask.builder().cvConfigId(cvConfigId).executionStatus(ExecutionStatus.RUNNING).build();
+
+    LearningEngineAnalysisTask anotherTask = LearningEngineAnalysisTask.builder()
+                                                 .cvConfigId(datadogCvConfigId)
+                                                 .executionStatus(ExecutionStatus.RUNNING)
+                                                 .build();
+
+    wingsPersistence.save(Arrays.asList(task, anotherTask));
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertThat(delegateTasks).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerAPMDataCollection_learningTasksQueued() throws Exception {
+    long currentTime = Timestamp.currentMinuteBoundary();
+    String configId = generateUuid();
+    LearningEngineAnalysisTask task =
+        LearningEngineAnalysisTask.builder().cvConfigId(configId).executionStatus(ExecutionStatus.QUEUED).build();
+
+    wingsPersistence.save(task);
+
+    DatadogCVServiceConfiguration nrConfig = getNRConfig();
+    nrConfig.setUuid(configId);
+    wingsPersistence.save(nrConfig);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(nrConfig));
+    // create metric data
+    NewRelicMetricDataRecord dataRecord =
+        NewRelicMetricDataRecord.builder()
+            .cvConfigId(nrConfig.getUuid())
+            .dataCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime) - 400)
+            .level(ClusterLevel.HF)
+            .build();
+
+    final List<TimeSeriesDataRecord> dataRecords =
+        TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(Lists.newArrayList(dataRecord));
+    dataRecords.forEach(record -> record.compress());
+    wingsPersistence.save(dataRecords);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    continuousVerificationService.triggerAPMDataCollection(accountId);
+    verify(delegateService, never()).queueTask(taskCaptor.capture());
   }
 
   @Test

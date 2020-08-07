@@ -952,6 +952,14 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIsTaskRunningOrQueued_NoTasksNoTimeParam() {
+    boolean result = learningEngineService.isTaskRunningOrQueued(cvConfigId);
+    assertThat(result).isFalse();
+  }
+
+  @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testIsTaskRunningOrQueued_WithQueuedTask() {
@@ -960,6 +968,18 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
     wingsPersistence.save(analysisTask);
 
     boolean result = learningEngineService.isTaskRunningOrQueued(cvConfigId, 1054);
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testIsTaskRunningOrQueued_NoParamWithQueuedTask() {
+    analysisTask.setCvConfigId(cvConfigId);
+    analysisTask.setAnalysis_minute(10564);
+    wingsPersistence.save(analysisTask);
+
+    boolean result = learningEngineService.isTaskRunningOrQueued(cvConfigId);
     assertThat(result).isTrue();
   }
 
