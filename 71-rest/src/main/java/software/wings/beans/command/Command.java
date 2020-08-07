@@ -15,8 +15,11 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.serializer.MapperUtils;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -85,6 +88,7 @@ public class Command extends Base implements CommandUnit {
   @JsonIgnore private transient String templateVersion;
   @JsonIgnore private transient ImportedTemplateDetails importedTemplateDetails;
   @SchemaIgnore private TemplateMetadata templateMetadata;
+  @FdIndex @Getter @Setter private String accountId;
 
   private List<Variable> variables = Lists.newArrayList();
 
@@ -486,6 +490,8 @@ public class Command extends Base implements CommandUnit {
     private TemplateMetadata templateMetadata;
     private TemplateReference templateReference;
     private String referenceUuid;
+    private String accountId;
+
     private Builder() {}
 
     /**
@@ -629,6 +635,17 @@ public class Command extends Base implements CommandUnit {
     }
 
     /**
+     * With accountId
+     *
+     * @param accountId the command type
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -647,7 +664,8 @@ public class Command extends Base implements CommandUnit {
           .withImportedTemplateVersion(importedTemplateVersion)
           .withTemplateReference(templateReference)
           .withTemplateMetadata(templateMetadata)
-          .withReferenceUuid(referenceUuid);
+          .withReferenceUuid(referenceUuid)
+          .withAccountId(accountId);
     }
 
     /**
@@ -671,6 +689,7 @@ public class Command extends Base implements CommandUnit {
       command.setTemplateVersion(templateVersion);
       command.setImportedTemplateDetails(importedTemplateVersion);
       command.setTemplateMetadata(templateMetadata);
+      command.setAccountId(accountId);
       return command;
     }
   }

@@ -45,6 +45,11 @@ public class CommandServiceImpl implements CommandService {
   @Override
   public Command save(Command command, boolean pushToYaml) {
     Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
+
+    if (savedCommand != null && savedCommand.getAccountId() == null) {
+      savedCommand.setAccountId(appService.getAccountIdByAppId(savedCommand.getAppId()));
+    }
+
     if (savedCommand != null && pushToYaml) {
       ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
       yamlPushService.pushYamlChangeSet(
