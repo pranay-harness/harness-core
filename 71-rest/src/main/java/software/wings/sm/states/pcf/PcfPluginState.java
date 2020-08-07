@@ -1,7 +1,6 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
@@ -27,6 +26,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
 import io.harness.context.ContextElementType;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.ListUtils;
 import io.harness.delegate.beans.ResponseData;
@@ -162,8 +162,9 @@ public class PcfPluginState extends State {
         templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     // render script
-    final String renderedScript = renderedScript(removeCommentedLineFromScript(scriptString), context,
-        StateExecutionContext.builder().stateExecutionData(pcfPluginStateExecutionData).build());
+    String rawScript = removeCommentedLineFromScript(scriptString);
+    final String renderedScript = renderedScript(
+        rawScript, context, StateExecutionContext.builder().stateExecutionData(pcfPluginStateExecutionData).build());
     // find out the paths from the script
     final ApplicationManifest serviceManifest = applicationManifestUtils.getApplicationManifestForService(context);
     final boolean serviceManifestRemote = isServiceManifestRemote(serviceManifest);
@@ -177,10 +178,9 @@ public class PcfPluginState extends State {
 
     if (!pathsFromScript.isEmpty() && serviceManifestRemote) {
       //  fire task to fetch remote files
-      return executeGitTask(context, serviceManifest, activity.getUuid(), pathsFromScript, renderedScript, repoRoot);
+      return executeGitTask(context, serviceManifest, activity.getUuid(), pathsFromScript, rawScript, repoRoot);
     } else {
-      return executePcfPluginTask(
-          context, activity.getUuid(), serviceManifest, pathsFromScript, renderedScript, repoRoot);
+      return executePcfPluginTask(context, activity.getUuid(), serviceManifest, pathsFromScript, rawScript, repoRoot);
     }
   }
 
@@ -249,7 +249,7 @@ public class PcfPluginState extends State {
   }
 
   private ExecutionResponse executeGitTask(ExecutionContext context, ApplicationManifest serviceManifest,
-      String activityId, List<String> pathsFromScript, String renderedScriptString, String repoRoot) {
+      String activityId, List<String> pathsFromScript, String rawScriptString, String repoRoot) {
     final Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         prepareManifestForGitFetchTask(serviceManifest, pathsFromScript);
     final DelegateTask gitFetchFileTask =
@@ -263,7 +263,7 @@ public class PcfPluginState extends State {
             .taskType(GIT_FETCH_FILES_TASK)
             .appManifestMap(appManifestMap)
             .filePathsInScript(pathsFromScript)
-            .renderedScriptString(renderedScriptString)
+            .renderedScriptString(rawScriptString)
             .timeoutIntervalInMinutes(resolveTimeoutIntervalInMinutes(null))
             .tagList(getTags())
             .repoRoot(repoRoot)
@@ -319,7 +319,7 @@ public class PcfPluginState extends State {
   }
   @VisibleForTesting
   ExecutionResponse executePcfPluginTask(ExecutionContext context, String activityId,
-      ApplicationManifest serviceManifest, List<String> pathsFromScript, String renderedScriptString, String repoRoot) {
+      ApplicationManifest serviceManifest, List<String> pathsFromScript, String rawScriptString, String repoRoot) {
     PhaseElement phaseElement = getPhaseElement(context);
     WorkflowStandardParams workflowStandardParams = getWorkflowStandardParams(context);
     Application app = requireNonNull(appService.get(context.getAppId()), "App cannot be null");
@@ -368,7 +368,7 @@ public class PcfPluginState extends State {
             .pcfCommandType(PcfCommandType.RUN_PLUGIN)
             .workflowExecutionId(context.getWorkflowExecutionId())
             .timeoutIntervalInMin(timeoutIntervalInMin)
-            .renderedScriptString(resolveRenderedScript(renderedScriptString, pcfPluginStateExecutionData))
+            .renderedScriptString(resolveRenderedScript(rawScriptString, pcfPluginStateExecutionData))
             .filePathsInScript(resolveFilePathsInScript(pathsFromScript, pcfPluginStateExecutionData))
             .fileDataList(fileDataList)
             .encryptedDataDetails(encryptedDataDetails)
@@ -377,13 +377,13 @@ public class PcfPluginState extends State {
             .build();
 
     stateExecutionData.setPcfCommandRequest(commandRequest);
-    String waitId = generateUuid();
 
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask =
         pcfStateHelper.getDelegateTask(PcfDelegateTaskCreationData.builder()
                                            .accountId(app.getAccountId())
                                            .appId(app.getUuid())
-                                           .waitId(waitId)
+                                           .waitId(activityId)
                                            .taskType(TaskType.PCF_COMMAND_TASK)
                                            .envId(env.getUuid())
                                            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
@@ -392,11 +392,18 @@ public class PcfPluginState extends State {
                                            .tagList(renderedTags)
                                            .serviceTemplateId(getServiceTemplateId(pcfInfrastructureMapping))
                                            .build());
+    delegateTask.getData().setExpressionFunctorToken(expressionFunctorToken);
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
-        .correlationIds(Collections.singletonList(waitId))
+        .correlationIds(Collections.singletonList(activityId))
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
