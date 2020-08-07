@@ -120,7 +120,11 @@ public class BudgetAlertsServiceImpl {
       }
 
       if (exceedsThreshold(currentCost, getThresholdAmount(budget, alertThresholds[i]))) {
-        sendBudgetAlertViaSlack(budget, alertThresholds[i], slackWebhook);
+        try {
+          sendBudgetAlertViaSlack(budget, alertThresholds[i], slackWebhook);
+        } catch (Exception e) {
+          logger.error("Notification via slack not send : ", e);
+        }
         sendBudgetAlertMail(budget.getAccountId(), emailAddresses, budget.getUuid(), budget.getName(),
             alertThresholds[i], currentCost, costType);
         // insert in timescale table
@@ -130,7 +134,7 @@ public class BudgetAlertsServiceImpl {
   }
 
   private void sendBudgetAlertViaSlack(Budget budget, AlertThreshold alertThreshold, CESlackWebhook slackWebhook) {
-    if (slackWebhook == null) {
+    if (slackWebhook == null || !budget.isNotifyOnSlack()) {
       return;
     }
     SlackNotificationConfiguration slackConfig =
@@ -150,13 +154,15 @@ public class BudgetAlertsServiceImpl {
     List<String> emailAddresses = new ArrayList<>();
     for (String userGroupId : userGroupIds) {
       UserGroup userGroup = cloudToHarnessMappingService.getUserGroup(accountId, userGroupId, true);
-      emailAddresses.addAll(userGroup.getMemberIds()
-                                .stream()
-                                .map(memberId -> {
-                                  User user = cloudToHarnessMappingService.getUser(memberId);
-                                  return user.getEmail();
-                                })
-                                .collect(Collectors.toList()));
+      if (userGroup != null) {
+        emailAddresses.addAll(userGroup.getMemberIds()
+                                  .stream()
+                                  .map(memberId -> {
+                                    User user = cloudToHarnessMappingService.getUser(memberId);
+                                    return user.getEmail();
+                                  })
+                                  .collect(Collectors.toList()));
+      }
     }
     return emailAddresses;
   }

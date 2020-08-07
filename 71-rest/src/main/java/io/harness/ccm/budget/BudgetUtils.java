@@ -83,6 +83,9 @@ public class BudgetUtils {
     filters.add(getEndOfMonthFilterForCurrentBillingCycle());
     QLBillingAmountData billingAmountData =
         budgetTimescaleQueryHelper.getBudgetCostData(budget.getAccountId(), makeBillingAmtAggregation(), filters);
+    if (billingAmountData == null) {
+      return 0;
+    }
     return billingAmountData.getCost().doubleValue();
   }
 
