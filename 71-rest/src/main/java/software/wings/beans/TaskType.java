@@ -10,6 +10,8 @@ import io.harness.cdng.connector.tasks.KubernetesConnectionDelegateValidation;
 import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.git.tasks.NGGitCommandTask;
 import io.harness.cdng.git.tasks.NGGitConnectionValidation;
+import io.harness.cdng.k8s.K8sCommandValidationNG;
+import io.harness.cdng.k8s.rolling.K8sTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -398,6 +400,7 @@ public enum TaskType {
   AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class),
   AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class),
   K8S_COMMAND_TASK(TaskGroup.K8S, K8sTask.class, K8sCommandValidation.class),
+  K8S_COMMAND_TASK_NG(TaskGroup.K8S_NG, K8sTaskNG.class, K8sCommandValidationNG.class),
   K8S_WATCH_TASK(TaskGroup.K8S, AssignmentTask.class, K8sCommandValidation.class),
   TRIGGER_TASK(TaskGroup.TRIGGER, TriggerTask.class, TriggerValidation.class),
   JIRA(TaskGroup.JIRA, JiraTask.class, JiraValidation.class),

@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
+import io.harness.delegate.k8s.K8sRollingBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -67,7 +68,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -77,6 +77,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
+  @Inject private K8sRollingBaseHandler k8sRollingBaseHandler;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
@@ -168,7 +169,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
-            .k8sPodList(tagNewPods(getPods(steadyStateTimeoutInMillis), existingPodList))
+            .k8sPodList(k8sRollingBaseHandler.tagNewPods(getPods(steadyStateTimeoutInMillis), existingPodList))
             .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))
             .helmChartInfo(helmChartInfo)
             .build();
@@ -196,18 +197,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
 
     return k8sPods;
-  }
-
-  @VisibleForTesting
-  List<K8sPod> tagNewPods(List<K8sPod> newPods, List<K8sPod> existingPods) {
-    Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
-    List<K8sPod> allPods = new ArrayList<>(newPods);
-    allPods.forEach(pod -> {
-      if (!existingPodNames.contains(pod.getName())) {
-        pod.setNewPod(true);
-      }
-    });
-    return allPods;
   }
 
   private K8sTaskExecutionResponse getFailureResponse() {

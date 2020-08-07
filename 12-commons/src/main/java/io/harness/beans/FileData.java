@@ -6,6 +6,8 @@ import lombok.Value;
 @Value
 @Builder
 public class FileData {
-  private String filePath;
-  private byte[] fileBytes;
+  String filePath;
+  byte[] fileBytes;
+  String fileName;
+  String fileContent;
 }

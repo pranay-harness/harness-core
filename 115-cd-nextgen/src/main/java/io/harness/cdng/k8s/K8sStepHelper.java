@@ -19,6 +19,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswor
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
@@ -28,7 +29,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig.K8sClusterConfigBuilder;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -36,6 +36,7 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class K8sStepHelper {
   @Inject private ConnectorService connectorService;
+  @Inject private SecretManagerClientService secretManagerClientService;
 
   String getReleaseName(Infrastructure infrastructure) {
     switch (infrastructure.getKind()) {
@@ -59,8 +60,7 @@ public class K8sStepHelper {
   }
 
   List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting encryptableSetting) {
-    // TODO: move to new secret manager apis when available, bypassing decryption at delegate for now
-    return Collections.emptyList();
+    return secretManagerClientService.getEncryptionDetails(encryptableSetting);
   }
 
   K8sClusterConfig getK8sClusterConfig(Infrastructure infrastructure, Ambiance ambiance) {
@@ -95,13 +95,11 @@ public class K8sStepHelper {
         KubernetesUserNamePasswordDTO auth = (KubernetesUserNamePasswordDTO) config.getAuth().getCredentials();
         // todo @Vaibhav/@Deepak: Now the k8 uses the new secret and this secret requires identifier and previous
         // required uuid, this has to be changed according to the framework
-        KubernetesClusterConfig kubernetesClusterConfig =
-            KubernetesClusterConfig.builder()
-                .authType(KubernetesClusterAuthType.USER_PASSWORD)
-                .masterUrl(config.getMasterUrl())
-                .username(auth.getUsername())
-                //                                                              .password(auth.getPassword())
-                .build();
+        KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
+                                                              .authType(KubernetesClusterAuthType.USER_PASSWORD)
+                                                              .masterUrl(config.getMasterUrl())
+                                                              .username(auth.getUsername())
+                                                              .build();
         builder.withValue(kubernetesClusterConfig);
         break;
       case GIT:
@@ -110,7 +108,7 @@ public class K8sStepHelper {
         GitConfig gitConfig = GitConfig.builder()
                                   .repoUrl(gitAuth.getUrl())
                                   .username(gitAuth.getUsername())
-                                  .password(gitAuth.getPassword())
+                                  .encryptedPassword(gitAuth.getEncryptedPassword())
                                   .branch(gitAuth.getBranchName())
                                   .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
                                   .accountId(connectorDTO.getAccountIdentifier())
