@@ -1,4 +1,4 @@
-#used to create image jenkins-slave-portal-open-8u242:jdk242_with_bazel
+#used to create image jenkins-slave-portal-open-8u242:kubectl_with_gcc
 
 FROM base_jdk
 
@@ -73,19 +73,5 @@ RUN wget https://archive.apache.org/dist/maven/maven-3/3.6.1/binaries/apache-mav
     && chmod +x /etc/profile.d/maven.sh \
     && source /etc/profile.d/maven.sh \
     && rm apache-maven-3.6.1-bin.tar.gz
-
-COPY settings.xml /opt/harness/.m2/settings.xml
-RUN chown -R jenkins:jenkins /opt/harness
-USER ${user}
-
-ARG GITHUB_USERNAME=?
-ARG GITHUB_PASSWORD=?
-
-RUN cd /opt/harness \
-    && git clone https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/wings-software/portal.git \
-    && cd portal \
-    && source /etc/profile.d/maven.sh \
-    && mvn -Dmaven.repo.local=/opt/harness/.m2/repository -s /opt/harness/.m2/settings.xml clean install -DskipTests \
-    && rm -rf `find . -type d -name target`
 
 ENTRYPOINT ["jenkins-slave"]
