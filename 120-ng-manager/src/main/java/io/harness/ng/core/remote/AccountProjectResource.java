@@ -26,7 +26,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.List;
 import java.util.Map;
@@ -65,14 +64,12 @@ public class AccountProjectResource {
                             .is(accountIdentifier)
                             .and(ProjectKeys.deleted)
                             .ne(Boolean.TRUE);
-    Page<ProjectDTO> projects;
     if (isNotBlank(search)) {
-      TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(search);
-      projects =
-          projectService.list(textCriteria, criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
-    } else {
-      projects = projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
+      criteria.orOperator(
+          Criteria.where(ProjectKeys.name).regex(search, "i"), Criteria.where(ProjectKeys.tags).regex(search, "i"));
     }
+    Page<ProjectDTO> projects =
+        projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
     List<String> orgIdentifiers =
         projects.getContent().stream().map(ProjectDTO::getOrgIdentifier).collect(Collectors.toList());
     Criteria orgCriteria = Criteria.where(OrganizationKeys.accountIdentifier)

@@ -4,7 +4,6 @@ import io.harness.ng.core.entities.Organization;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.Optional;
 
@@ -16,8 +15,6 @@ public interface OrganizationService {
   Organization update(Organization organization);
 
   Page<Organization> list(Criteria criteria, Pageable pageable);
-
-  Page<Organization> list(TextCriteria textCriteria, Criteria criteria, Pageable pageable);
 
   boolean delete(String accountIdentifier, String organizationIdentifier);
 }

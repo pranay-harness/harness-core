@@ -27,7 +27,6 @@ import org.junit.experimental.categories.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,7 +135,7 @@ public class AccountProjectResourceTest extends CategoryTest {
 
     projectList.add(createProject(orgIdentifier, accountIdentifier, ModuleType.CD));
     projectList.add(createProject(orgIdentifier, accountIdentifier, ModuleType.CD));
-    when(projectService.list(any(TextCriteria.class), any(Criteria.class), any(Pageable.class)))
+    when(projectService.list(any(Criteria.class), any(Pageable.class)))
         .thenReturn(PageTestUtils.getPage(projectList, 2));
 
     when(organizationService.list(any(), any())).thenReturn(Page.empty());

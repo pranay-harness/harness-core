@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +52,7 @@ public class AccountOrganizationResourceTest {
 
     organizationList.add(createOrganization(accountIdentifier));
     organizationList.add(createOrganization(accountIdentifier));
-    when(organizationService.list(any(TextCriteria.class), any(Criteria.class), any(Pageable.class)))
+    when(organizationService.list(any(Criteria.class), any(Pageable.class)))
         .thenReturn(PageTestUtils.getPage(organizationList, 2));
     String text = "text";
     final NGPageResponse<OrganizationDTO> organizationDTOs =
