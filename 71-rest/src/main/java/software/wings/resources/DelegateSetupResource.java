@@ -106,13 +106,29 @@ public class DelegateSetupResource {
     return new RestResponse<>(delegateService.list(pageRequest));
   }
 
+  /**
+   * @deprecated  After feature DELEGATE_SCALING_GROUP is turned on, we should use listDelegateStatusWithScalingGroup
+   *     method instead
+   */
   @GET
   @Path("status")
   @Timed
   @ExceptionMetered
+  @Deprecated
   public RestResponse<DelegateStatus> listDelegateStatus(@QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateStatus(accountId));
+    }
+  }
+
+  @GET
+  @Path("status2")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateStatus> listDelegateStatusWithScalingGroups(
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.getDelegateStatusWithScalingGroups(accountId));
     }
   }
 

@@ -41,6 +41,8 @@ public interface DelegateService extends OwnedByAccount {
 
   DelegateStatus getDelegateStatus(String accountId);
 
+  DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
+
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
   List<String> getAvailableVersions(String accountId);

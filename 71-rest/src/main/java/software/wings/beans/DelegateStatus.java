@@ -17,6 +17,7 @@ import java.util.Map;
 public class DelegateStatus {
   List<String> publishedVersions;
   List<DelegateInner> delegates;
+  List<DelegateScalingGroup> scalingGroups;
 
   @JsonInclude(Include.NON_NULL)
   @JsonIgnoreProperties(ignoreUnknown = true)

@@ -124,6 +124,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
@@ -305,14 +306,109 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateStatus delegateStatus = delegateService.getDelegateStatus(accountId);
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
-    assertThat(delegateStatus.getDelegates().get(0).getHostName()).isEqualTo("localhost");
-    assertThat(delegateStatus.getDelegates().get(0).getIp()).isEqualTo("127.0.0.1");
-    assertThat(delegateStatus.getDelegates().get(0).getDelegateName()).isEqualTo("testDelegateName");
-    assertThat(delegateStatus.getDelegates().get(0).getDelegateType()).isEqualTo("dockerType");
-    assertThat(delegateStatus.getDelegates().get(0)).hasFieldOrPropertyWithValue("uuid", delegate.getUuid());
-    assertThat(delegateStatus.getDelegates().get(0).getConnections()).hasSize(1);
-    assertThat(delegateStatus.getDelegates().get(0).getConnections().get(0))
-        .hasFieldOrPropertyWithValue("version", VERSION);
+
+    validateDelegateInnerProperties(delegate.getUuid(), delegateStatus.getDelegates().get(0));
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatus2WithoutScalingGroups() {
+    String accountId = generateUuid();
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
+
+    Delegate deletedDelegate = createDelegateBuilder().build();
+    deletedDelegate.setAccountId(accountId);
+    deletedDelegate.setStatus(Status.DELETED);
+
+    Delegate delegateWithoutScalingGroup = createDelegateBuilder().build();
+    delegateWithoutScalingGroup.setAccountId(accountId);
+
+    wingsPersistence.save(Arrays.asList(delegateWithoutScalingGroup, deletedDelegate));
+    delegateConnectionDao.registerHeartbeat(accountId, delegateWithoutScalingGroup.getUuid(),
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build());
+
+    DelegateStatus delegateStatus = delegateService.getDelegateStatusWithScalingGroups(accountId);
+
+    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
+    assertThat(delegateStatus.getDelegates()).hasSize(1);
+    validateDelegateInnerProperties(delegateWithoutScalingGroup.getUuid(), delegateStatus.getDelegates().get(0));
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatus2ScalingGroupHasCorrectItems() {
+    String accountId = generateUuid();
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
+
+    Delegate deletedDelegate = createDelegateBuilder().build();
+    deletedDelegate.setAccountId(accountId);
+    deletedDelegate.setStatus(Status.DELETED);
+
+    Delegate delegateWithScalingGroup1 = createDelegateBuilder().build();
+    delegateWithScalingGroup1.setAccountId(accountId);
+    delegateWithScalingGroup1.setDelegateGroupName("test1");
+    Delegate delegateWithScalingGroup2 = createDelegateBuilder().build();
+    delegateWithScalingGroup2.setAccountId(accountId);
+    delegateWithScalingGroup2.setDelegateGroupName("test1");
+    Delegate delegateWithScalingGroup3 = createDelegateBuilder().build();
+    delegateWithScalingGroup3.setAccountId(accountId);
+    delegateWithScalingGroup3.setDelegateGroupName("test2");
+    Delegate delegateWithScalingGroup4 = createDelegateBuilder().build();
+    delegateWithScalingGroup4.setAccountId(accountId);
+    delegateWithScalingGroup4.setDelegateGroupName("test2");
+
+    wingsPersistence.save(Arrays.asList(deletedDelegate, delegateWithScalingGroup1, delegateWithScalingGroup2,
+        delegateWithScalingGroup3, delegateWithScalingGroup4));
+    delegateConnectionDao.registerHeartbeat(accountId, delegateWithScalingGroup1.getUuid(),
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build());
+    delegateConnectionDao.registerHeartbeat(accountId, delegateWithScalingGroup2.getUuid(),
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build());
+    delegateConnectionDao.registerHeartbeat(accountId, delegateWithScalingGroup3.getUuid(),
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build());
+
+    DelegateStatus delegateStatus = delegateService.getDelegateStatusWithScalingGroups(accountId);
+
+    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
+
+    assertThat(delegateStatus.getScalingGroups()).hasSize(2);
+    assertThat(delegateStatus.getScalingGroups())
+        .extracting(DelegateScalingGroup::getGroupName)
+        .containsOnly("test1", "test2");
+
+    for (DelegateScalingGroup group : delegateStatus.getScalingGroups()) {
+      if (group.getGroupName().equals("test1")) {
+        assertThat(group.getDelegates()).hasSize(2);
+        assertThat(group.getDelegates())
+            .extracting(DelegateStatus.DelegateInner::getUuid)
+            .containsOnly(delegateWithScalingGroup1.getUuid(), delegateWithScalingGroup2.getUuid());
+      } else if (group.getGroupName().equals("test2")) {
+        assertThat(group.getDelegates()).hasSize(1);
+        assertThat(group.getDelegates().get(0).getUuid()).isEqualTo(delegateWithScalingGroup3.getUuid());
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatus2ScalingGroupEmpty() {
+    String accountId = generateUuid();
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
+
+    Delegate deletedDelegate = createDelegateBuilder().build();
+    deletedDelegate.setAccountId(accountId);
+    deletedDelegate.setStatus(Status.DELETED);
+    deletedDelegate.setDelegateGroupName("test");
+    wingsPersistence.save(deletedDelegate);
+
+    DelegateStatus status = delegateService.getDelegateStatusWithScalingGroups(accountId);
+
+    assertThat(status.getScalingGroups()).isNotNull();
   }
 
   @Test
@@ -2152,5 +2248,15 @@ public class DelegateServiceTest extends WingsBaseTest {
         .jreMacDirectory("jdk8u242-b08-jre")
         .jreTarPath("jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz")
         .build();
+  }
+
+  private void validateDelegateInnerProperties(String delegateId, DelegateStatus.DelegateInner delegateFromStatus) {
+    assertThat(delegateFromStatus.getHostName()).isEqualTo("localhost");
+    assertThat(delegateFromStatus.getIp()).isEqualTo("127.0.0.1");
+    assertThat(delegateFromStatus.getDelegateName()).isEqualTo("testDelegateName");
+    assertThat(delegateFromStatus.getDelegateType()).isEqualTo("dockerType");
+    assertThat(delegateFromStatus).hasFieldOrPropertyWithValue("uuid", delegateId);
+    assertThat(delegateFromStatus.getConnections()).hasSize(1);
+    assertThat(delegateFromStatus.getConnections().get(0)).hasFieldOrPropertyWithValue("version", VERSION);
   }
 }

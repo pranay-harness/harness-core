@@ -40,6 +40,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -148,6 +149,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.MainConfiguration;
@@ -156,6 +158,7 @@ import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
 import software.wings.beans.DelegateStatus;
@@ -452,34 +455,92 @@ public class DelegateServiceImpl implements DelegateService {
 
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
-        .delegates(
-            delegates.stream()
-                .map(delegate
-                    -> DelegateStatus.DelegateInner.builder()
-                           .uuid(delegate.getUuid())
-                           .delegateName(delegate.getDelegateName())
-                           .description(delegate.getDescription())
-                           .hostName(delegate.getHostName())
-                           .delegateGroupName(delegate.getDelegateGroupName())
-                           .ip(delegate.getIp())
-                           .status(delegate.getStatus())
-                           .lastHeartBeat(delegate.getLastHeartBeat())
-                           .delegateProfileId(delegate.getDelegateProfileId())
-                           .delegateType(delegate.getDelegateType())
-                           .polllingModeEnabled(delegate.isPolllingModeEnabled())
-                           .proxy(delegate.isProxy())
-                           .ceEnabled(delegate.isCeEnabled())
-                           .excludeScopes(delegate.getExcludeScopes())
-                           .includeScopes(delegate.getIncludeScopes())
-                           .tags(delegate.getTags())
-                           .profileExecutedAt(delegate.getProfileExecutedAt())
-                           .profileError(delegate.isProfileError())
-                           .implicitSelectors(retrieveDelegateImplicitSelectors(delegate))
-                           .sampleDelegate(delegate.isSampleDelegate())
-                           .connections(perDelegateConnections.computeIfAbsent(delegate.getUuid(), uuid -> emptyList()))
-                           .build())
-                .collect(Collectors.toList()))
+        .delegates(buildInnerDelegates(delegates, perDelegateConnections))
         .build();
+  }
+
+  @Override
+  public DelegateStatus getDelegateStatusWithScalingGroups(String accountId) {
+    DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
+
+    List<Delegate> delegatesWithoutScalingGroup = getDelegatesWithoutScalingGroup(accountId);
+
+    Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> activeDelegateConnections =
+        delegateConnectionDao.obtainActiveDelegateConnections(accountId);
+
+    List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
+
+    return DelegateStatus.builder()
+        .publishedVersions(delegateConfiguration.getDelegateVersions())
+        .scalingGroups(scalingGroups)
+        .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections))
+        .build();
+  }
+
+  @NotNull
+  private List<DelegateScalingGroup> getDelegateScalingGroups(String accountId,
+      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> activeDelegateConnections) {
+    List<Delegate> activeDelegates = wingsPersistence.createQuery(Delegate.class)
+                                         .filter(DelegateKeys.accountId, accountId)
+                                         .field(DelegateKeys.delegateGroupName)
+                                         .exists()
+                                         .field(DelegateKeys.status)
+                                         .hasAnyOf(Arrays.asList(Status.ENABLED, Status.WAITING_FOR_APPROVAL))
+                                         .field(DelegateKeys.uuid)
+                                         .hasAnyOf(activeDelegateConnections.keySet())
+                                         .asList();
+
+    return activeDelegates.stream()
+        .collect(groupingBy(Delegate::getDelegateGroupName))
+        .entrySet()
+        .stream()
+        .map(entry
+            -> DelegateScalingGroup.builder()
+                   .groupName(entry.getKey())
+                   .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections))
+                   .build())
+        .collect(toList());
+  }
+
+  private List<Delegate> getDelegatesWithoutScalingGroup(String accountId) {
+    return wingsPersistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .field(DelegateKeys.status)
+        .notEqual(Status.DELETED)
+        .field(DelegateKeys.delegateGroupName)
+        .doesNotExist()
+        .asList();
+  }
+
+  @NotNull
+  private List<DelegateStatus.DelegateInner> buildInnerDelegates(List<Delegate> delegates,
+      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> perDelegateConnections) {
+    return delegates.stream()
+        .map(delegate
+            -> DelegateStatus.DelegateInner.builder()
+                   .uuid(delegate.getUuid())
+                   .delegateName(delegate.getDelegateName())
+                   .description(delegate.getDescription())
+                   .hostName(delegate.getHostName())
+                   .delegateGroupName(delegate.getDelegateGroupName())
+                   .ip(delegate.getIp())
+                   .status(delegate.getStatus())
+                   .lastHeartBeat(delegate.getLastHeartBeat())
+                   .delegateProfileId(delegate.getDelegateProfileId())
+                   .delegateType(delegate.getDelegateType())
+                   .polllingModeEnabled(delegate.isPolllingModeEnabled())
+                   .proxy(delegate.isProxy())
+                   .ceEnabled(delegate.isCeEnabled())
+                   .excludeScopes(delegate.getExcludeScopes())
+                   .includeScopes(delegate.getIncludeScopes())
+                   .tags(delegate.getTags())
+                   .profileExecutedAt(delegate.getProfileExecutedAt())
+                   .profileError(delegate.isProfileError())
+                   .implicitSelectors(retrieveDelegateImplicitSelectors(delegate))
+                   .sampleDelegate(delegate.isSampleDelegate())
+                   .connections(perDelegateConnections.computeIfAbsent(delegate.getUuid(), uuid -> emptyList()))
+                   .build())
+        .collect(Collectors.toList());
   }
 
   @Override
