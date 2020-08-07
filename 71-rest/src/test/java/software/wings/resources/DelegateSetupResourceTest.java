@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static io.harness.rule.OwnerRule.SANJA;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -56,6 +58,7 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,6 +128,54 @@ public class DelegateSetupResourceTest {
                                                     .get(new GenericType<RestResponse<DelegateStatus>>() {});
     verify(delegateService, atLeastOnce()).getDelegateStatus(ACCOUNT_ID);
     assertThat(restResponse.getResource().getPublishedVersions().get(0)).isEqualTo("1.0.0");
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatusWithScalingGroupsVersion() {
+    when(delegateService.getDelegateStatusWithScalingGroups(any()))
+        .thenReturn(DelegateStatus.builder().publishedVersions(asList("1.0.0")).build());
+    RestResponse<DelegateStatus> restResponse = RESOURCES.client()
+                                                    .target("/setup/delegates/status2?accountId=" + ACCOUNT_ID)
+                                                    .request()
+                                                    .get(new GenericType<RestResponse<DelegateStatus>>() {});
+    verify(delegateService, atLeastOnce()).getDelegateStatusWithScalingGroups(ACCOUNT_ID);
+    assertThat(restResponse.getResource().getPublishedVersions().get(0)).isEqualTo("1.0.0");
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatusWithScalingGroupsDelegates() {
+    List<DelegateStatus.DelegateInner> delegates =
+        Arrays.asList(DelegateStatus.DelegateInner.builder().delegateName("test1").build());
+    when(delegateService.getDelegateStatusWithScalingGroups(any()))
+        .thenReturn(DelegateStatus.builder().delegates(delegates).build());
+    RestResponse<DelegateStatus> restResponse = RESOURCES.client()
+                                                    .target("/setup/delegates/status2?accountId=" + ACCOUNT_ID)
+                                                    .request()
+                                                    .get(new GenericType<RestResponse<DelegateStatus>>() {});
+    verify(delegateService, atLeastOnce()).getDelegateStatusWithScalingGroups(ACCOUNT_ID);
+    assertThat(restResponse.getResource().getDelegates()).isEqualTo(delegates);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatusWithScalingGroupsScalingGroups() {
+    List<DelegateStatus.DelegateInner> delegatesInScalingGroup = Arrays.asList(
+        DelegateStatus.DelegateInner.builder().delegateName("test2").delegateGroupName("scaling1").build());
+    List<DelegateScalingGroup> scalingGroups =
+        Arrays.asList(DelegateScalingGroup.builder().delegates(delegatesInScalingGroup).groupName("scaling1").build());
+    when(delegateService.getDelegateStatusWithScalingGroups(any()))
+        .thenReturn(DelegateStatus.builder().scalingGroups(scalingGroups).build());
+    RestResponse<DelegateStatus> restResponse = RESOURCES.client()
+                                                    .target("/setup/delegates/status2?accountId=" + ACCOUNT_ID)
+                                                    .request()
+                                                    .get(new GenericType<RestResponse<DelegateStatus>>() {});
+    verify(delegateService, atLeastOnce()).getDelegateStatusWithScalingGroups(ACCOUNT_ID);
+    assertThat(restResponse.getResource().getScalingGroups()).isEqualTo(scalingGroups);
   }
 
   @Test
