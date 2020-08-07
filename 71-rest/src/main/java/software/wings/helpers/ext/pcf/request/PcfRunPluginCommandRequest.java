@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf.request;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.Expression;
@@ -19,7 +20,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class PcfRunPluginCommandRequest
-    extends PcfCommandRequest implements TaskParameters, ExecutionCapabilityDemander {
+    extends PcfCommandRequest implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess {
   @Expression private String renderedScriptString;
   private List<String> filePathsInScript;
   private List<FileData> fileDataList;
