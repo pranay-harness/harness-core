@@ -160,7 +160,7 @@ public class CustomExecutionProvider {
     String httpNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters =
-        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url("http://httpstat.us/" + BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
         .node(PlanNode.builder()
                   .uuid(httpNodeId)

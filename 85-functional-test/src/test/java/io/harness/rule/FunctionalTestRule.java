@@ -1,15 +1,11 @@
 package io.harness.rule;
 
-import static com.google.inject.Key.get;
-import static com.google.inject.name.Names.named;
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 import static org.mockito.Mockito.mock;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
@@ -25,10 +21,13 @@ import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
 import io.dropwizard.Configuration;
 import io.harness.OrchestrationPersistenceConfig;
+import io.harness.OrchestrationStepsModule;
+import io.harness.OrchestrationStepsPersistenceConfig;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
+import io.harness.connector.ConnectorPersistenceConfig;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
@@ -67,13 +66,6 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
-import org.springframework.data.mongodb.config.EnableMongoAuditing;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.guice.annotation.GuiceModule;
 import org.springframework.guice.module.BeanFactoryProvider;
 import org.springframework.guice.module.SpringModule;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -90,6 +82,7 @@ import software.wings.app.SearchModule;
 import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
+import software.wings.app.WingsPersistenceConfig;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.search.framework.ElasticsearchConfig;
@@ -100,7 +93,6 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -197,42 +189,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
       @Override
       public void configure() {
         install(new SpringModule(
-            BeanFactoryProvider.from(FunctionalTestSpringMongoConfig.class, OrchestrationPersistenceConfig.class)));
-      }
-
-      @EnableMongoRepositories(basePackages = "io.harness")
-      @EnableMongoAuditing
-      @org.springframework.context.annotation.Configuration
-      @GuiceModule
-      class FunctionalTestSpringMongoConfig extends AbstractMongoConfiguration {
-        private final Collection<String> BASE_PACKAGES = ImmutableList.of("io.harness");
-        private final AdvancedDatastore advancedDatastore;
-
-        @Inject
-        FunctionalTestSpringMongoConfig(Injector injector) {
-          advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("primaryDatastore"))).get();
-        }
-
-        @Bean(name = "primary")
-        @Primary
-        public MongoTemplate primaryMongoTemplate() {
-          return new MongoTemplate(mongoClient(), getDatabaseName());
-        }
-
-        @Override
-        public MongoClient mongoClient() {
-          return advancedDatastore.getMongo();
-        }
-
-        @Override
-        protected String getDatabaseName() {
-          return advancedDatastore.getDB().getName();
-        }
-
-        @Override
-        protected Collection<String> getMappingBasePackages() {
-          return BASE_PACKAGES;
-        }
+            BeanFactoryProvider.from(OrchestrationPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class,
+                ConnectorPersistenceConfig.class, WingsPersistenceConfig.class)));
       }
 
       @Provides
@@ -276,6 +234,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
+    modules.add(OrchestrationStepsModule.getInstance());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

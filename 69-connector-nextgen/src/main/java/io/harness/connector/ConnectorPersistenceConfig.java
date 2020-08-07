@@ -42,7 +42,6 @@ public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
 
-  @Bean
   @Override
   public MappingMongoConverter mappingMongoConverter() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
