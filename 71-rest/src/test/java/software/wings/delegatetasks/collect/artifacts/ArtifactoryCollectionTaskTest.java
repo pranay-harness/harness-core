@@ -8,17 +8,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,25 +40,19 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
 
   private ArtifactoryConfig artifactoryConfig =
       ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
-  private DelegateTask collectionTask =
-      DelegateTask.builder()
-          .accountId(ACCOUNT_ID)
-          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-          .waitId("123456789")
-          .data(TaskData.builder()
-                    .async(true)
-                    .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
-                    .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(), artifactoryConfig.getUsername(),
-                        artifactoryConfig.getPassword(), "harness-maven", "io.harness.todolist", asList("todolist"), "",
-                        ImmutableMap.of("buildNo", "1.1")})
-                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                    .build())
-          .build();
+  private TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .taskType(TaskType.ARTIFACTORY_COLLECTION.name())
+                                  .parameters(new Object[] {artifactoryConfig.getArtifactoryUrl(),
+                                      artifactoryConfig.getUsername(), artifactoryConfig.getPassword(), "harness-maven",
+                                      "io.harness.todolist", asList("todolist"), "", ImmutableMap.of("buildNo", "1.1")})
+                                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                  .build();
 
   @InjectMocks
   private ArtifactoryCollectionTask artifactoryCollectionTask =
       (ArtifactoryCollectionTask) TaskType.ARTIFACTORY_COLLECTION.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().delegateId("delid1").delegateTask(collectionTask).build(),
+          DelegateTaskPackage.builder().delegateId("delid1").data(taskData).build(),
           notifyResponseData -> {}, () -> true);
 
   @Test
@@ -73,7 +63,7 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
     when(artifactoryService.downloadArtifacts(
              any(ArtifactoryConfig.class), any(), anyString(), anyMap(), anyString(), anyString(), anyString()))
         .thenReturn(res);
-    res = artifactoryCollectionTask.run(collectionTask.getData().getParameters());
+    res = artifactoryCollectionTask.run(taskData.getParameters());
     assertThat(res).isNotNull();
   }
 }

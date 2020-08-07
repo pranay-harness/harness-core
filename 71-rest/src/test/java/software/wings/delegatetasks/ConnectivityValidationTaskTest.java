@@ -16,7 +16,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.CONNECTIVITY_VALIDATION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -45,9 +44,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
       (ConnectivityValidationTask) CONNECTIVITY_VALIDATION.getDelegateRunnableTask(
           DelegateTaskPackage.builder()
               .delegateId("delegateid")
-              .delegateTask(DelegateTask.builder()
-                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                .build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

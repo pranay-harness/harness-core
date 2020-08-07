@@ -9,12 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -67,26 +65,18 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    String infrastructureMappingId = UUID.randomUUID().toString();
     String timeDuration = "10";
     dataCollectionInfo = buildDataCollectionInfo();
 
-    DelegateTask task = DelegateTask.builder()
-                            .accountId(accountId)
-                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-                            .waitId(waitId)
-                            .data(TaskData.builder()
-                                      .async(true)
-                                      .taskType(TaskType.ELK_COLLECT_LOG_DATA.name())
-                                      .parameters(new Object[] {dataCollectionInfo})
-                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
-                                      .build())
-                            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
-                            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType(TaskType.ELK_COLLECT_LOG_DATA.name())
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                             .build();
-    task.setUuid(delegateId);
+
     dataCollectionTask = new ElkLogzDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).delegateTask(task).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
     when(encryptionService.decrypt(any(), any())).thenReturn(null);
     setupFields();
   }

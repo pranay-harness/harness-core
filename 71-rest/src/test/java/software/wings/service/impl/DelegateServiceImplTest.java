@@ -259,7 +259,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
   private DelegateTaskPackage getDelegateTaskPackage() {
     DelegateTask delegateTask = getDelegateTask();
-    return DelegateTaskPackage.builder().delegateTaskId(delegateTask.getUuid()).delegateTask(delegateTask).build();
+    return DelegateTaskPackage.builder().delegateTaskId(delegateTask.getUuid()).data(delegateTask.getData()).build();
   }
 
   private DelegateTask getDelegateTask() {

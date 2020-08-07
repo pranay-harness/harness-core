@@ -11,7 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.BG_SERVICE_SETUP;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
@@ -36,8 +35,7 @@ import java.util.Map;
 
 public class EcsCommandTaskTest extends WingsBaseTest {
   private final EcsCommandTask task =
-      new EcsCommandTask(new DelegateTaskPackage(null, null, null,
-                             DelegateTask.builder().data(TaskData.builder().parameters(new Object[2]).build()).build(),
+      new EcsCommandTask(new DelegateTaskPackage(null, null, null, TaskData.builder().parameters(new Object[2]).build(),
                              null, null, null, false, null),
           null, null);
   @Mock private Map<String, EcsCommandTaskHandler> commandTaskTypeToTaskHandlerMap;

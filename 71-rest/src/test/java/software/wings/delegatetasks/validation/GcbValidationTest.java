@@ -6,7 +6,6 @@ import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCB_BASE_URL;
 import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCS_BASE_URL;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -17,11 +16,9 @@ import software.wings.beans.DelegateTaskPackage;
 import java.util.Arrays;
 
 public class GcbValidationTest extends CategoryTest {
-  GcbValidation gcbValidation = new GcbValidation("id",
-      DelegateTaskPackage.builder()
-          .delegateTask(DelegateTask.builder().data(TaskData.builder().taskType("type").build()).build())
-          .build(),
-      delegateConnectionResults -> {});
+  GcbValidation gcbValidation =
+      new GcbValidation("id", DelegateTaskPackage.builder().data(TaskData.builder().taskType("type").build()).build(),
+          delegateConnectionResults -> {});
 
   @Test
   @Owner(developers = AGORODETKI)

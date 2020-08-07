@@ -10,7 +10,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -43,9 +42,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   private AwsLambdaTask task = (AwsLambdaTask) TaskType.AWS_LAMBDA_TASK.getDelegateRunnableTask(
       DelegateTaskPackage.builder()
           .delegateId("delegateid")
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
       notifyResponseData -> {}, () -> true);
 

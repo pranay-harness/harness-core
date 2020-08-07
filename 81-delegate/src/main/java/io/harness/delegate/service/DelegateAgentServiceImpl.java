@@ -85,7 +85,6 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.sun.management.OperatingSystemMXBean;
-import io.harness.beans.DelegateTask;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -1641,12 +1640,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       DelegateTaskPackage delegateTaskPackage =
           delegateExecute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
-      if (delegateTaskPackage == null || delegateTaskPackage.getDelegateTask() == null) {
-        logger.info("DelegateTask not available - accountId: {}", delegateTaskEvent.getAccountId());
+      if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
+        logger.info("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
         return;
       }
 
-      DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
+      TaskData taskData = delegateTaskPackage.getData();
       if (isEmpty(delegateTaskPackage.getDelegateId())) {
         // Not whitelisted. Perform validation.
         // TODO: Remove this once TaskValidation does not use secrets
@@ -1656,7 +1655,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
-        ExecutorService executorService = selectExecutorService(delegateTask.getData());
+        ExecutorService executorService = selectExecutorService(taskData);
 
         Future<List<DelegateConnectionResult>> future =
             executorService.submit(() -> delegateValidateTask.validationResults());
@@ -1668,8 +1667,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
           alternativeExecutor.submit(() -> {
             try (TaskLogContext ignore = new TaskLogContext(delegateTaskPackage.getDelegateTaskId(),
-                     delegateTask.getData().getTaskType(), getCapabilityDetails(delegateTaskPackage), OVERRIDE_ERROR)) {
-              logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
+
+                     taskData.getTaskType(), getCapabilityDetails(delegateTaskPackage), OVERRIDE_ERROR)) {
+              logger.info("Executing comparison for task type {}", taskData.getTaskType());
               try {
                 List<DelegateConnectionResult> alternativeResults = delegateAlternativeValidateTask.validationResults();
                 if (alternativeResults == null) {
@@ -1682,7 +1682,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                 boolean original = originalResults.stream().allMatch(DelegateConnectionResult::isValidated);
                 boolean alternative = alternativeResults.stream().allMatch(DelegateConnectionResult::isValidated);
                 if (original != alternative) {
-                  logErrorDetails(delegateTask, alternativeResults, original);
+                  logErrorDetails(taskData, alternativeResults, original);
                 }
               } catch (InterruptedException exception) {
                 logger.error("Comparison failed.", exception);
@@ -1729,17 +1729,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         .collect(toList());
   }
 
-  private void logErrorDetails(
-      DelegateTask delegateTask, List<DelegateConnectionResult> alternativeResults, boolean original) {
+  private void logErrorDetails(TaskData taskData, List<DelegateConnectionResult> alternativeResults, boolean original) {
     List<String> resultDetails = alternativeResults.stream()
                                      .map(result -> result.getCriteria() + ":" + result.isValidated())
                                      .collect(Collectors.toList());
     logger.error(
         "[DelegateCapability] The original validation {} is different from the alternative for task type {}. Result Details for capability are {} ",
-        original, delegateTask.getData().getTaskType(), HarnessStringUtils.join("|", resultDetails));
-    if (delegateTask.getData().getTaskType().equals(TaskType.COMMAND.name())) {
-      CommandExecutionContext commandExecutionContext =
-          (CommandExecutionContext) delegateTask.getData().getParameters()[1];
+        original, taskData.getTaskType(), HarnessStringUtils.join("|", resultDetails));
+    if (taskData.getTaskType().equals(TaskType.COMMAND.name())) {
+      CommandExecutionContext commandExecutionContext = (CommandExecutionContext) taskData.getParameters()[1];
       logger.error("[DelegateCapability] CommandExecution context has deployment type {}",
           commandExecutionContext.getDeploymentType());
     }
@@ -1751,12 +1749,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         getPostValidationFunction(delegateTaskEvent, delegateTaskPackage.getDelegateTaskId());
 
     if (delegateTaskPackage.isCapabilityFrameworkEnabled()) {
-      return TaskType.valueOf(delegateTaskPackage.getDelegateTask().getData().getTaskType())
+      return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
           .getDelegateValidateTaskVersionForCapabilityFramework(
               delegateId, delegateTaskPackage, postValidationFunction);
 
     } else {
-      return TaskType.valueOf(delegateTaskPackage.getDelegateTask().getData().getTaskType())
+      return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
           .getDelegateValidateTask(delegateId, delegateTaskPackage, postValidationFunction);
     }
   }
@@ -1764,7 +1762,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private DelegateValidateTask getAlternativeDelegateValidateTask(DelegateTaskPackage delegateTaskPackage) {
     if (isNotEmpty(delegateTaskPackage.getExecutionCapabilities())
         && !delegateTaskPackage.isCapabilityFrameworkEnabled()) {
-      return TaskType.valueOf(delegateTaskPackage.getDelegateTask().getData().getTaskType())
+      return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
           .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTaskPackage, null);
     }
     return null;
@@ -1784,7 +1782,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           DelegateTaskPackage delegateTaskPackage = execute(managerClient.reportConnectionResults(
               delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
 
-          if (delegateTaskPackage != null && delegateTaskPackage.getDelegateTask() != null
+          if (delegateTaskPackage != null && delegateTaskPackage.getData() != null
               && delegateId.equals(delegateTaskPackage.getDelegateId())) {
             applyDelegateSecretFunctor(delegateTaskPackage);
             executeTask(delegateTaskPackage);
@@ -1813,16 +1811,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void executeTask(@NotNull DelegateTaskPackage delegateTaskPackage) {
-    DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
+    TaskData taskData = delegateTaskPackage.getData();
 
     if (currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
       logger.info("Already executing task");
       return;
     }
-    logger.info("DelegateTask acquired - accountId: {}, taskType: {}", accountId, delegateTask.getData().getTaskType());
+    logger.info("DelegateTask acquired - accountId: {}, taskType: {}", accountId, taskData.getTaskType());
     Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTaskPackage);
     DelegateRunnableTask delegateRunnableTask =
-        TaskType.valueOf(delegateTask.getData().getTaskType())
+        TaskType.valueOf(taskData.getTaskType())
             .getDelegateRunnableTask(delegateTaskPackage,
                 getPostExecutionFunction(delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null)),
                 getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null)));
@@ -1830,19 +1828,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
     }
     injector.injectMembers(delegateRunnableTask);
-    ExecutorService executorService = selectExecutorService(delegateTask.getData());
+    ExecutorService executorService = selectExecutorService(taskData);
     Future taskFuture = executorService.submit(delegateRunnableTask);
     logger.info("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
     currentlyExecutingFutures.put(delegateTaskPackage.getDelegateTaskId(), taskFuture);
     updateCounterIfLessThanCurrent(maxExecutingFuturesCount, currentlyExecutingFutures.size());
 
-    timeoutEnforcement.submit(
-        () -> enforceDelegateTaskTimeout(delegateTaskPackage.getDelegateTaskId(), delegateTask.getData()));
+    timeoutEnforcement.submit(() -> enforceDelegateTaskTimeout(delegateTaskPackage.getDelegateTaskId(), taskData));
     logger.info("Task submitted for execution");
   }
 
   private Optional<LogSanitizer> getLogSanitizer(@NotNull DelegateTaskPackage delegateTaskPackage) {
-    TaskData taskData = delegateTaskPackage.getDelegateTask().getData();
+    TaskData taskData = delegateTaskPackage.getData();
 
     String activityId = null;
     Set<String> secrets = new HashSet<>(delegateTaskPackage.getSecrets());
@@ -2237,14 +2234,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     secretDetails.forEach(
         (key, value) -> secretUuidToValues.put(key, decryptedRecords.get(value.getEncryptedRecord().getUuid())));
 
-    DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
-        secretUuidToValues, delegateTaskPackage.getDelegateTask().getData().getExpressionFunctorToken());
-    DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
-    if (delegateTask.getData().getParameters() != null && delegateTask.getData().getParameters().length == 1
-        && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
+    DelegateExpressionEvaluator delegateExpressionEvaluator =
+        new DelegateExpressionEvaluator(secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());
+    TaskData taskData = delegateTaskPackage.getData();
+    if (taskData.getParameters() != null && taskData.getParameters().length == 1
+        && taskData.getParameters()[0] instanceof TaskParameters) {
       logger.info("Applying DelegateExpression Evaluator for delegateTask");
-      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
-          value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
+      ExpressionReflectionUtils.applyExpression(
+          taskData.getParameters()[0], value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
     }
   }
 

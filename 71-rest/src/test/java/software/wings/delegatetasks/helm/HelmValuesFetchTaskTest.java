@@ -9,7 +9,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.logging.CommandExecutionStatus;
@@ -33,10 +32,7 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
 
   @InjectMocks
   HelmValuesFetchTask task = (HelmValuesFetchTask) TaskType.HELM_VALUES_FETCH.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateId")
-          .delegateTask(DelegateTask.builder().data(TaskData.builder().async(false).build()).build())
-          .build(),
+      DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(false).build()).build(),
       notifyResponseData -> {}, () -> true);
 
   @Test

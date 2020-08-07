@@ -21,7 +21,6 @@ import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -44,9 +43,7 @@ public class CommandTaskTest extends WingsBaseTest {
   DelegateTaskPackage delegateTaskPackage =
       DelegateTaskPackage.builder()
           .delegateId("delegateid")
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build();
 
   @InjectMocks CommandTask commandTask = new CommandTask(delegateTaskPackage, null, null);

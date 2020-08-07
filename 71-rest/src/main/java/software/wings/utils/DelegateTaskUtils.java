@@ -9,7 +9,7 @@ public class DelegateTaskUtils {
         .accountId(task.getAccountId())
         .delegateId(task.getDelegateId())
         .delegateTaskId(task.getUuid())
-        .delegateTask(task)
+        .data(task.getData())
         .capabilityFrameworkEnabled(task.isCapabilityFrameworkEnabled())
         .executionCapabilities(task.getExecutionCapabilities())
         .build();

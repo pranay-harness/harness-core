@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -45,9 +44,8 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
       (KubernetesSwapServiceSelectorsTask) TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.getDelegateRunnableTask(
           DelegateTaskPackage.builder()
               .delegateId("delid1")
-              .delegateTask(DelegateTask.builder()
-                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                .build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+
               .build(),
           notifyResponseData -> {}, () -> true);
 

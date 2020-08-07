@@ -106,18 +106,20 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
                             .accountId(accountId)
                             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
                             .waitId(waitId)
-                            .data(TaskData.builder()
-                                      .async(true)
-                                      .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
-                                      .parameters(new Object[] {dataCollectionInfo})
-                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
-                                      .build())
                             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
                             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
                             .build();
     task.setUuid(delegateId);
+
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                            .build();
+
     dataCollectionTask = new StackDriverDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).delegateTask(task).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
     when(encryptionService.decrypt(any(), any())).thenReturn(null);
     setupFields();
   }
@@ -230,19 +232,20 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
                             .accountId(accountId)
                             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
                             .waitId(waitId)
-                            .data(TaskData.builder()
-                                      .async(true)
-                                      .taskType(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA.name())
-                                      .parameters(new Object[] {dataCollectionInfo})
-                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt("30") + 120))
-                                      .build())
                             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
                             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, generateUuid())
                             .build();
     task.setUuid(delegateId);
 
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA.name())
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt("30") + 120))
+                            .build();
+
     dataCollectionTask = new StackDriverDataCollectionTask(
-        DelegateTaskPackage.builder().delegateTaskId(task.getUuid()).delegateId(delegateId).delegateTask(task).build(),
+        DelegateTaskPackage.builder().delegateTaskId(task.getUuid()).delegateId(delegateId).data(taskData).build(),
         null, null);
 
     // setup the executor service to run the mock calls.

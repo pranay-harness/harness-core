@@ -25,7 +25,6 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -95,9 +94,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask(
       DelegateTaskPackage.builder()
           .delegateId("delid1")
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
       notifyResponseData -> {}, () -> true);
 

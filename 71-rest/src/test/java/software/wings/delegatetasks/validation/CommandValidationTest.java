@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.delegatetasks.validation.CommandValidation.ALWAYS_TRUE_CRITERIA;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -26,9 +25,8 @@ public class CommandValidationTest extends WingsBaseTest {
 
     CommandValidation commandValidation = new CommandValidation("1",
         DelegateTaskPackage.builder()
-            .delegateTask(DelegateTask.builder()
-                              .data(TaskData.builder().parameters(new Object[] {"", commandExecutionContext}).build())
-                              .build())
+            .data(TaskData.builder().parameters(new Object[] {"", commandExecutionContext}).build())
+
             .build(),
         null);
 

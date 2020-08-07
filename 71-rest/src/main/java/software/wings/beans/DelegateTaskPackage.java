@@ -1,7 +1,7 @@
 package software.wings.beans;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.SecretDetail;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.AllArgsConstructor;
@@ -22,7 +22,8 @@ public class DelegateTaskPackage {
   private String accountId;
   private String delegateTaskId;
   private String delegateId;
-  private DelegateTask delegateTask;
+
+  private TaskData data;
 
   @Default private Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
   @Default private Map<String, SecretDetail> secretDetails = new HashMap<>();

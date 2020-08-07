@@ -14,7 +14,6 @@ import static software.wings.beans.TaskType.HOST_VALIDATION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -34,12 +33,12 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class HostValidationTaskTest extends WingsBaseTest {
-  private DelegateTask delegateTask = prepareDelegateTask();
+  private TaskData taskData = prepareTaskData();
   @Mock private HostValidationService mockHostValidationService;
 
   @InjectMocks
   private HostValidationTask hostValidationTask = (HostValidationTask) HOST_VALIDATION.getDelegateRunnableTask(
-      DelegateTaskPackage.builder().delegateId(DELEGATE_ID).delegateTask(delegateTask).build(),
+      DelegateTaskPackage.builder().delegateId(DELEGATE_ID).data(taskData).build(),
       notifyResponseData -> {}, () -> true);
 
   @Before
@@ -88,13 +87,12 @@ public class HostValidationTaskTest extends WingsBaseTest {
         .build();
   }
 
-  private DelegateTask prepareDelegateTask() {
-    return DelegateTask.builder()
-        .data(TaskData.builder()
-                  .async(true)
-                  .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                  .parameters(new Object[] {getTaskParameters()})
-                  .build())
+  private TaskData prepareTaskData() {
+    return TaskData.builder()
+        .async(true)
+        .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+        .parameters(new Object[] {getTaskParameters()})
+
         .build();
   }
 }

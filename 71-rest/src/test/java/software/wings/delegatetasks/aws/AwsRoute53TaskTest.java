@@ -10,7 +10,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -35,9 +34,7 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
   private AwsRoute53Task task = (AwsRoute53Task) TaskType.AWS_ROUTE53_TASK.getDelegateRunnableTask(
       DelegateTaskPackage.builder()
           .delegateId("delegateid")
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
       notifyResponseData -> {}, () -> true);
 

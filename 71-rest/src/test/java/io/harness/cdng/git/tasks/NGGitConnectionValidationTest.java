@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.delegate.beans.TaskData;
@@ -51,15 +50,14 @@ public class NGGitConnectionValidationTest extends WingsBaseTest {
   @InjectMocks
   private NGGitConnectionValidation gitConnectionValidation = new NGGitConnectionValidation(generateUuid(),
       DelegateTaskPackage.builder()
-          .delegateTask(DelegateTask.builder()
-                            .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                      .parameters(new Object[] {GitCommandParams.builder()
-                                                                    .gitCommandType(GitCommandType.VALIDATE)
-                                                                    .encryptionDetails(Collections.emptyList())
-                                                                    .gitConfig(gitConfig)
-                                                                    .build()})
-                                      .build())
-                            .build())
+          .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                    .parameters(new Object[] {GitCommandParams.builder()
+                                                  .gitCommandType(GitCommandType.VALIDATE)
+                                                  .encryptionDetails(Collections.emptyList())
+                                                  .gitConfig(gitConfig)
+                                                  .build()})
+                    .build())
+
           .build(),
 
       null);

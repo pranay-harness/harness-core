@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -46,20 +45,17 @@ public class KubernetesConnectionDelegateValidationTest {
   private KubernetesConnectionDelegateValidation kubernetesConnectionDelegateValidationTask =
       new KubernetesConnectionDelegateValidation(generateUuid(),
           DelegateTaskPackage.builder()
-              .delegateTask(
-                  DelegateTask.builder()
-                      .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                .parameters(new Object[] {
-                                    KubernetesConnectionTaskParams.builder()
-                                        .kubernetesClusterConfig(KubernetesClusterConfigDTO.builder()
-                                                                     .kubernetesCredentialType(
-                                                                         KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                                                     .config(KubernetesDelegateDetailsDTO.builder()
-                                                                                 .delegateName(delegateName)
-                                                                                 .build())
-                                                                     .build())
-                                        .build()})
-                                .build())
+              .data(
+                  (TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .parameters(new Object[] {
+                          KubernetesConnectionTaskParams.builder()
+                              .kubernetesClusterConfig(
+                                  KubernetesClusterConfigDTO.builder()
+                                      .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                      .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
+                                      .build())
+                              .build()})
+
                       .build())
               .build(),
           null);
@@ -68,20 +64,16 @@ public class KubernetesConnectionDelegateValidationTest {
   private KubernetesConnectionDelegateValidation kubernetesConnectionDelegateValidationTaskManualCreds =
       new KubernetesConnectionDelegateValidation(generateUuid(),
           DelegateTaskPackage.builder()
-              .delegateTask(
-                  DelegateTask.builder()
-                      .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                .parameters(new Object[] {
-                                    KubernetesConnectionTaskParams.builder()
-                                        .kubernetesClusterConfig(
-                                            KubernetesClusterConfigDTO.builder()
-                                                .kubernetesCredentialType(KubernetesCredentialType.MANUAL_CREDENTIALS)
-                                                .config(
-                                                    KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).build())
-                                                .build())
-                                        .build()})
-                                .build())
-                      .build())
+              .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                        .parameters(new Object[] {
+                            KubernetesConnectionTaskParams.builder()
+                                .kubernetesClusterConfig(
+                                    KubernetesClusterConfigDTO.builder()
+                                        .kubernetesCredentialType(KubernetesCredentialType.MANUAL_CREDENTIALS)
+                                        .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).build())
+                                        .build())
+                                .build()})
+                        .build())
               .build(),
           null);
 

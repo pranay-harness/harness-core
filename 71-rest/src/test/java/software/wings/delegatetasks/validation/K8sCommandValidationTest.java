@@ -6,7 +6,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -191,13 +190,12 @@ public class K8sCommandValidationTest extends WingsBaseTest {
             .namespace("default")
             .build());
     return DelegateTaskPackage.builder()
-        .delegateTask(DelegateTask.builder()
-                          .data(TaskData.builder()
-                                    .async(true)
-                                    .taskType(TaskType.K8S_COMMAND_TASK.name())
-                                    .parameters(new Object[] {taskParameters})
-                                    .build())
-                          .build())
+        .data(TaskData.builder()
+                  .async(true)
+                  .taskType(TaskType.K8S_COMMAND_TASK.name())
+                  .parameters(new Object[] {taskParameters})
+                  .build())
+
         .build();
   }
 }

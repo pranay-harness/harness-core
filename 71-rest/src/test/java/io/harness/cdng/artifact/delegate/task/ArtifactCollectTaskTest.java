@@ -9,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.delegate.DockerArtifactServiceImpl;
 import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
@@ -21,7 +20,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,22 +38,15 @@ public class ArtifactCollectTaskTest extends CategoryTest {
   @Mock private DockerArtifactServiceImpl dockerArtifactService;
 
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
-  private final DelegateTask collectionTask = DelegateTask.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                                  .waitId("123456789")
-                                                  .data(TaskData.builder()
-                                                            .async(true)
-                                                            .taskType(TaskType.ARTIFACT_COLLECT_TASK.name())
-                                                            .timeout(DEFAULT_TIMEOUT)
-                                                            .build())
-                                                  .build();
+
+  private final TaskData taskData =
+      TaskData.builder().async(true).taskType(TaskType.ARTIFACT_COLLECT_TASK.name()).timeout(DEFAULT_TIMEOUT).build();
 
   @InjectMocks
   @Spy
   private final ArtifactCollectTask artifactCollectTask =
       (ArtifactCollectTask) TaskType.ARTIFACT_COLLECT_TASK.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().delegateId("delid1").delegateTask(collectionTask).build(),
+          DelegateTaskPackage.builder().delegateId("delid1").data(taskData).build(),
           notifyResponseData -> {}, () -> true);
 
   @Test

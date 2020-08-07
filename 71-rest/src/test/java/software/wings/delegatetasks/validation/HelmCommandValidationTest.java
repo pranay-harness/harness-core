@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.k8s.model.HelmVersion;
@@ -25,10 +24,7 @@ public class HelmCommandValidationTest extends WingsBaseTest {
   @Mock ContainerValidationHelper containerValidationHelper;
 
   private HelmCommandValidation helmCommandValidation = spy(new HelmCommandValidation(WingsTestConstants.DELEGATE_ID,
-      DelegateTaskPackage.builder()
-          .delegateTask(DelegateTask.builder().data(TaskData.builder().parameters(new Object[] {}).build()).build())
-          .build(),
-      null));
+      DelegateTaskPackage.builder().data(TaskData.builder().parameters(new Object[] {}).build()).build(), null));
 
   @Before
   public void setUp() throws Exception {

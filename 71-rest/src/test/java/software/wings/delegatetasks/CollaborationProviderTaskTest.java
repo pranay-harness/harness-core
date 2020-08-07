@@ -7,7 +7,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -49,9 +48,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
       (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask(
           DelegateTaskPackage.builder()
               .delegateId("delid1")
-              .delegateTask(DelegateTask.builder()
-                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                .build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

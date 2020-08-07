@@ -7,7 +7,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -64,9 +63,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
           DelegateTaskPackage.builder()
               .delegateId(WingsTestConstants.DELEGATE_ID)
-              .delegateTask(DelegateTask.builder()
-                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                .build())
+              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

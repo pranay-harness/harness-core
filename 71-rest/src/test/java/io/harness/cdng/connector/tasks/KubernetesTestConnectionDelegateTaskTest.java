@@ -8,7 +8,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.delegate.beans.TaskData;
@@ -50,21 +49,16 @@ public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
       (KubernetesTestConnectionDelegateTask) TaskType.VALIDATE_KUBERNETES_CONFIG.getDelegateRunnableTask(
           DelegateTaskPackage.builder()
               .delegateId("delegateid")
-              .delegateTask(
-                  DelegateTask.builder()
-                      .data(
-                          (TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                              .parameters(new Object[] {
-                                  KubernetesConnectionTaskParams.builder()
-                                      .kubernetesClusterConfig(
-                                          KubernetesClusterConfigDTO.builder()
-                                              .config(
-                                                  KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
-                                              .build())
-                                      .encryptionDetails(Collections.emptyList())
-                                      .build()})
-                              .build())
-                      .build())
+              .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                        .parameters(new Object[] {
+                            KubernetesConnectionTaskParams.builder()
+                                .kubernetesClusterConfig(
+                                    KubernetesClusterConfigDTO.builder()
+                                        .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
+                                        .build())
+                                .encryptionDetails(Collections.emptyList())
+                                .build()})
+                        .build())
               .build(),
           notifyResponseData -> {}, () -> true);
 
