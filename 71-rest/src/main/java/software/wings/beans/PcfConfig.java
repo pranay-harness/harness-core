@@ -38,18 +38,21 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
+  private boolean skipValidation;
 
   public PcfConfig() {
     super(SettingVariableTypes.PCF.name());
   }
 
-  public PcfConfig(String endpointUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  public PcfConfig(String endpointUrl, String username, char[] password, String accountId, String encryptedPassword,
+      boolean skipValidation) {
     this();
     this.endpointUrl = endpointUrl;
     this.username = username;
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.skipValidation = skipValidation;
   }
 
   @Override
@@ -70,14 +73,16 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
     private String endpointUrl;
     private String username;
     private String password = ENCRYPTED_VALUE_STR;
+    private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String endpointUrl, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.endpointUrl = endpointUrl;
       this.username = username;
       this.password = password;
+      this.skipValidation = skipValidation;
     }
   }
 }

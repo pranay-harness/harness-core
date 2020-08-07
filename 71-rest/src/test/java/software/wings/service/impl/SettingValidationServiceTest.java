@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -12,7 +13,11 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -50,6 +55,7 @@ import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.SettingAttribute;
@@ -794,6 +800,32 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     attribute.setValue(elkConfig);
     thrown.expect(WingsException.class);
     settingValidationService.validate(attribute);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testPcfValidate() throws IllegalAccessException {
+    final String url = "https://test.com";
+    final String userName = "username";
+    final String password = "password";
+    PcfConfig pcfConfig = new PcfConfig();
+    pcfConfig.setAccountId(ACCOUNT_ID);
+    pcfConfig.setEndpointUrl(url);
+    pcfConfig.setUsername(userName);
+    pcfConfig.setPassword(password.toCharArray());
+    pcfConfig.setSkipValidation(true);
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(pcfConfig);
+    PcfHelperService pcfHelperService = mock(PcfHelperService.class);
+    FieldUtils.writeField(settingValidationService, "pcfHelperService", pcfHelperService, true);
+
+    settingValidationService.validate(attribute);
+    verify(pcfHelperService, times(0)).validate(any(), any());
+
+    pcfConfig.setSkipValidation(false);
+    settingValidationService.validate(attribute);
+    verify(pcfHelperService, times(1)).validate(any(), any());
   }
 
   @Test
