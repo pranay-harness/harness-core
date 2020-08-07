@@ -1,17 +1,20 @@
 package io.harness.delegate.beans.executioncapability;
 
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Value;
+
+import java.util.Set;
 
 @Value
 @Builder
-public class AlwaysFalseValidationCapability implements ExecutionCapability {
-  @Default private final CapabilityType capabilityType = CapabilityType.ALWAYS_FALSE;
+public class SelectorCapability implements ExecutionCapability {
+  private Set<String> selectors;
+
+  @Builder.Default private final CapabilityType capabilityType = CapabilityType.SELECTORS;
 
   @Override
   public EvaluationMode evaluationMode() {
-    return EvaluationMode.AGENT;
+    return EvaluationMode.MANAGER;
   }
 
   @Override
@@ -21,6 +24,6 @@ public class AlwaysFalseValidationCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return "ALWAYS_FALSE";
+    return String.join(", ", selectors);
   }
 }

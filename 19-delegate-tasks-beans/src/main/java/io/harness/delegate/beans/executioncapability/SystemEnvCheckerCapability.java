@@ -15,6 +15,11 @@ public class SystemEnvCheckerCapability implements ExecutionCapability {
   @Default private final CapabilityType capabilityType = CapabilityType.SYSTEM_ENV;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public CapabilityType getCapabilityType() {
     return capabilityType;
   }

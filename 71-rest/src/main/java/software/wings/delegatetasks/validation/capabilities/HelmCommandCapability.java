@@ -15,6 +15,11 @@ public class HelmCommandCapability implements ExecutionCapability {
   CapabilityType capabilityType = CapabilityType.HELM_COMMAND;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return "Helm Installed. Version : " + commandRequest.getHelmVersion().name();
   }

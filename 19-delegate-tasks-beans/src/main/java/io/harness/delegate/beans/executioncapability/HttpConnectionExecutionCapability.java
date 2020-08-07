@@ -20,6 +20,11 @@ public class HttpConnectionExecutionCapability implements ExecutionCapability {
   private String query;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     if (url != null) {
       return url;

@@ -14,6 +14,11 @@ public class HelmInstallationCapability implements ExecutionCapability {
   CapabilityType capabilityType = CapabilityType.HELM_INSTALL;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return criteria;
   }

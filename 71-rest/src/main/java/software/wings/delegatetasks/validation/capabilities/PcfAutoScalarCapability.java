@@ -11,6 +11,11 @@ public class PcfAutoScalarCapability implements ExecutionCapability {
   private final CapabilityType capabilityType = CapabilityType.PCF_AUTO_SCALAR;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return "cf_appautoscalar";
   }

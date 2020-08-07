@@ -39,6 +39,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.beans.git.EntityScope;
@@ -213,5 +214,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(YamlGitConfigDTO.RootFolder.class, 19095);
     kryo.register(EntityScope.Scope.class, 19096);
     kryo.register(GitPushResult.RefUpdate.class, 19097);
+    kryo.register(SelectorCapability.class, 19098);
   }
 }

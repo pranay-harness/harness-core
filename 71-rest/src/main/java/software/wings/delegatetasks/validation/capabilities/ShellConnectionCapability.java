@@ -15,6 +15,11 @@ public class ShellConnectionCapability implements ExecutionCapability {
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SHELL_CONNECTION;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return shellScriptParameters.getHost();
   }

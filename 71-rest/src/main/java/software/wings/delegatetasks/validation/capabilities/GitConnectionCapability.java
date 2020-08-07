@@ -20,6 +20,10 @@ import java.util.List;
 @Value
 @Builder
 public class GitConnectionCapability implements ExecutionCapability {
+  @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
   GitConfig gitConfig;
   @ToString.Exclude SettingAttribute settingAttribute;
   List<EncryptedDataDetail> encryptedDataDetails;

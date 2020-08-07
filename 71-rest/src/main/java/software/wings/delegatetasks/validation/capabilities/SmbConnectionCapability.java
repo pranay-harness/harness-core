@@ -13,6 +13,11 @@ public class SmbConnectionCapability implements ExecutionCapability {
   @Builder.Default CapabilityType capabilityType = CapabilityType.SMB;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return smbUrl;
   }

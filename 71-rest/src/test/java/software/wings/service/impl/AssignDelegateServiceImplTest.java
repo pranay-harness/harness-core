@@ -42,6 +42,9 @@ import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
@@ -79,6 +82,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by brett on 7/26/17
@@ -823,6 +828,84 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
 
     assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask2)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldExtractSelectorsFromSelectorsCapability() {
+    Set<String> selectors1 = Stream.of("a", "b").collect(Collectors.toSet());
+    Set<String> selectors2 = Stream.of("a", "c").collect(Collectors.toSet());
+
+    SelectorCapability selectorCapability1 = SelectorCapability.builder().selectors(selectors1).build();
+    SelectorCapability selectorCapability2 = SelectorCapability.builder().selectors(selectors2).build();
+
+    List<ExecutionCapability> executionCapabilityList = Arrays.asList(selectorCapability1, selectorCapability2);
+
+    DelegateTask delegateTask =
+        DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
+
+    List<String> extractSelectorsList = assignDelegateService.extractSelectors(delegateTask);
+
+    assertThat(extractSelectorsList).isNotNull();
+    assertThat(extractSelectorsList).isNotEmpty();
+    assertThat(extractSelectorsList).containsExactlyInAnyOrder("a", "b", "c");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotExtractSelectorsFromSelectorsCapability() {
+    HttpConnectionExecutionCapability httpConnectionExecutionCapability =
+        HttpConnectionExecutionCapability.builder().port(80).build();
+
+    List<ExecutionCapability> executionCapabilityList = Arrays.asList(httpConnectionExecutionCapability);
+
+    DelegateTask delegateTask =
+        DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
+
+    List<String> extractSelectorsList = assignDelegateService.extractSelectors(delegateTask);
+
+    assertThat(extractSelectorsList).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldExtractSelectorFromTaskSelectors() {
+    List<String> tagsList = Arrays.asList("a", "b", "c");
+
+    DelegateTask delegateTask = DelegateTask.builder().accountId(ACCOUNT_ID).tags(tagsList).build();
+
+    List<String> extractSelectorsList = assignDelegateService.extractSelectors(delegateTask);
+
+    assertThat(extractSelectorsList).isNotNull();
+    assertThat(extractSelectorsList).isNotEmpty();
+    assertThat(extractSelectorsList).containsExactlyInAnyOrder("a", "b", "c");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldExtractSelectorMerged() {
+    Set<String> selectors = Stream.of("a", "d").collect(Collectors.toSet());
+    List<String> tagsList = Arrays.asList("a", "b", "c");
+
+    SelectorCapability selectorCapability = SelectorCapability.builder().selectors(selectors).build();
+
+    List<ExecutionCapability> executionCapabilityList = Arrays.asList(selectorCapability);
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .tags(tagsList)
+                                    .executionCapabilities(executionCapabilityList)
+                                    .build();
+
+    List<String> extractSelectorsList = assignDelegateService.extractSelectors(delegateTask);
+
+    assertThat(extractSelectorsList).isNotNull();
+    assertThat(extractSelectorsList).isNotEmpty();
+    assertThat(extractSelectorsList).containsExactlyInAnyOrder("a", "b", "c", "d");
   }
 
   @Test
