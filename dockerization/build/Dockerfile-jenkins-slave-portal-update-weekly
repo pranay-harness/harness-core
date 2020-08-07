@@ -1,10 +1,17 @@
-#For updating image weekly. Use jenkins-slave-portal-open-8u242:jdk242_with_bazel as base_jdk
+#For updating image weekly. Use jenkins-slave-portal-open-8u242:kubectl_with_gcc as base_jdk
 
 FROM base_jdk
-RUN cd /opt/harness/portal \
-    && git pull origin master \
+COPY settings.xml /opt/harness/.m2/settings.xml
+RUN chown -R jenkins:jenkins /opt/harness
+
+ARG GITHUB_USERNAME=?
+ARG GITHUB_PASSWORD=?
+
+RUN cd /opt/harness \
+    && git clone https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/wings-software/portal.git \
+    && cd portal \
     && source /etc/profile.d/maven.sh \
-    && mvn -Dmaven.repo.local=/opt/harness/.m2/repository -s /opt/harness/.m2/settings.xml clean install -DskipTests \
+    && mvn -T 2C -Dmaven.repo.local=/opt/harness/.m2/repository -s /opt/harness/.m2/settings.xml clean install -DskipTests \
     && rm -rf `find . -type d -name target`
 
 ENTRYPOINT  ["jenkins-slave"]
