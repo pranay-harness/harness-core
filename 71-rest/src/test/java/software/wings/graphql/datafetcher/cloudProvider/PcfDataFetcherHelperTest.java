@@ -46,6 +46,7 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
                                         .endpointUrl(RequestField.ofNullable(URL))
                                         .userName(RequestField.ofNullable(USERNAME))
                                         .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                                        .skipValidation(RequestField.ofNullable(Boolean.TRUE))
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -57,6 +58,7 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
     assertThat(config.getEndpointUrl()).isEqualTo(URL);
     assertThat(config.getUsername()).isEqualTo(USERNAME);
     assertThat(config.getEncryptedPassword()).isEqualTo(PASSWORD);
+    assertThat(config.isSkipValidation()).isEqualTo(Boolean.TRUE);
   }
 
   @Test
@@ -68,6 +70,7 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
                                         .endpointUrl(RequestField.ofNull())
                                         .userName(RequestField.ofNull())
                                         .passwordSecretId(RequestField.ofNull())
+                                        .skipValidation(RequestField.ofNull())
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -84,6 +87,7 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
                                               .endpointUrl(RequestField.ofNullable(URL))
                                               .userName(RequestField.ofNullable(USERNAME))
                                               .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                                              .skipValidation(RequestField.ofNullable(Boolean.TRUE))
                                               .build();
 
     SettingAttribute setting =
@@ -97,6 +101,7 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
     assertThat(config.getEndpointUrl()).isEqualTo(URL);
     assertThat(config.getUsername()).isEqualTo(USERNAME);
     assertThat(config.getEncryptedPassword()).isEqualTo(PASSWORD);
+    assertThat(config.isSkipValidation()).isEqualTo(Boolean.TRUE);
   }
 
   @Test
@@ -108,6 +113,7 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
                                               .endpointUrl(RequestField.ofNull())
                                               .userName(RequestField.ofNull())
                                               .passwordSecretId(RequestField.ofNull())
+                                              .skipValidation(RequestField.ofNull())
                                               .build();
 
     SettingAttribute setting =

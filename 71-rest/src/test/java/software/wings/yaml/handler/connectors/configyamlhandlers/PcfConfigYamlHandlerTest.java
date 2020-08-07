@@ -67,6 +67,7 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
                                                    .endpointUrl(endpointUrl)
                                                    .password(PASSWORD)
                                                    .accountId(ACCOUNT_ID)
+                                                   .skipValidation(true)
                                                    .build())
                                     .build());
   }

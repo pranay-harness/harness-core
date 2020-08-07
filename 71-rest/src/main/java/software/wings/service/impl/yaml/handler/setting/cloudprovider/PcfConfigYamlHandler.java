@@ -20,6 +20,7 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
                     .endpointUrl(pcfConfig.getEndpointUrl())
                     .password(getEncryptedValue(pcfConfig, "password", false))
                     .type(pcfConfig.getType())
+                    .skipValidation(pcfConfig.isSkipValidation())
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
@@ -37,6 +38,7 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
                            .username(yaml.getUsername())
                            .encryptedPassword(yaml.getPassword())
                            .endpointUrl(yaml.getEndpointUrl())
+                           .skipValidation(yaml.isSkipValidation())
                            .build();
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);

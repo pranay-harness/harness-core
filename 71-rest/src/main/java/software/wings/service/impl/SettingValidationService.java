@@ -226,7 +226,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof AzureConfig) {
       azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof PcfConfig) {
-      validatePcfConfig((PcfConfig) settingValue, encryptedDataDetails);
+      if (!((PcfConfig) settingValue).isSkipValidation()) {
+        validatePcfConfig((PcfConfig) settingValue, encryptedDataDetails);
+      }
     } else if (settingValue instanceof AwsConfig) {
       validateAwsConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof KubernetesClusterConfig) {

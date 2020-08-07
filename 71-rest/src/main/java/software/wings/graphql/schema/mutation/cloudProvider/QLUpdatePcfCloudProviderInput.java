@@ -17,4 +17,6 @@ public class QLUpdatePcfCloudProviderInput {
   private RequestField<String> endpointUrl;
   private RequestField<String> userName;
   private RequestField<String> passwordSecretId;
+
+  private RequestField<Boolean> skipValidation;
 }

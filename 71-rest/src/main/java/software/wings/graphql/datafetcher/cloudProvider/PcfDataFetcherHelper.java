@@ -26,6 +26,9 @@ public class PcfDataFetcherHelper {
     if (input.getPasswordSecretId().isPresent()) {
       input.getPasswordSecretId().getValue().ifPresent(pcfConfigBuilder::encryptedPassword);
     }
+    if (input.getSkipValidation().isPresent()) {
+      input.getSkipValidation().getValue().ifPresent(pcfConfigBuilder::skipValidation);
+    }
 
     SettingAttribute.Builder settingAttributeBuilder = SettingAttribute.Builder.aSettingAttribute()
                                                            .withValue(pcfConfigBuilder.build())
@@ -51,6 +54,9 @@ public class PcfDataFetcherHelper {
     }
     if (input.getPasswordSecretId().isPresent()) {
       input.getPasswordSecretId().getValue().ifPresent(pcfConfig::setEncryptedPassword);
+    }
+    if (input.getSkipValidation().isPresent()) {
+      input.getSkipValidation().getValue().ifPresent(pcfConfig::setSkipValidation);
     }
     settingAttribute.setValue(pcfConfig);
 
