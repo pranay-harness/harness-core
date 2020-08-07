@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -11,6 +12,7 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
@@ -32,9 +34,6 @@ import software.wings.service.intfc.DelegateService;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 
-/**
- * Created by brett on 8/4/17
- */
 @Singleton
 @ValidateOnExecution
 @Slf4j
@@ -123,7 +122,13 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       logger.warn("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
-    wingsPersistence.save(delegateScope);
+
+    try {
+      wingsPersistence.save(delegateScope);
+    } catch (DuplicateKeyException e) {
+      ignoredOnPurpose(e);
+      throw new InvalidRequestException("Scope with given name already exists for this account");
+    }
     logger.info("Added delegate scope: {}", delegateScope.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateScope.getAccountId(), null, delegateScope, Event.Type.CREATE);
