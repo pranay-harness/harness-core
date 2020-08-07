@@ -617,6 +617,8 @@ systemCatalogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 tagLinks {"name": "entityTagIdx", "unique": true} {"accountId": 1, "entityId": 1, "key": 1}
 tagLinks {"name": "tagValueIdx", "background": true} {"accountId": 1, "key": 1, "value": 1}
 tags {"name": "tagIdx", "unique": true} {"accountId": 1, "key": 1}
+taskSelectorMaps {"name": "createdAt_1", "background": true} {"createdAt": 1}
+taskSelectorMaps {"name": "uniqueGroup", "unique": true} {"accountId": 1, "taskGroup": 1}
 templateFolders {"name": "account_gallery_app_idx", "background": true} {"accountId": 1, "galleryId": 1, "appId": 1}
 templateFolders {"name": "appId_1", "background": true} {"appId": 1}
 templateFolders {"name": "createdAt_1", "background": true} {"createdAt": 1}

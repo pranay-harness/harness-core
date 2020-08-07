@@ -475,6 +475,6 @@ public class PermissionAttribute {
     /**
      * Manage Pipeline Governance Standards
      */
-    MANAGE_PIPELINE_GOVERNANCE_STANDARDS
+    MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
   }
 }
