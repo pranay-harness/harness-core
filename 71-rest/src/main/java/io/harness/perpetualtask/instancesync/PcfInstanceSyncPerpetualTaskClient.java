@@ -13,7 +13,6 @@ import com.google.protobuf.Message;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -101,12 +100,6 @@ public class PcfInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceC
     Map<String, String> clientParams = clientContext.getClientParams();
     return getPerpetualTaskParams(clientParams.get(INFRASTRUCTURE_MAPPING_ID), clientParams.get(PCF_APPLICATION_NAME),
         clientParams.get(HARNESS_APPLICATION_ID));
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    // Instance Sync Perpetual Task Framework takes care of this via Perpetual Task Response
   }
 
   private PcfInstanceSyncPTDelegateParams getPerpetualTaskParamsInternal(

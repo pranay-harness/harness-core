@@ -10,7 +10,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -61,12 +60,6 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
                                                         .build();
     logger.debug("Get Task params {} ", ecsPerpetualTaskParams.toString());
     return ecsPerpetualTaskParams;
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    logger.debug("Nothing to do !!");
   }
 
   private AwsConfig getAwsConfig(String settingId) {

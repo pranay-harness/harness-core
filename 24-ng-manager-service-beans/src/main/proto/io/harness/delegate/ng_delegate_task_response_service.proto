@@ -14,6 +14,4 @@ service NgDelegateTaskResponseService {
       returns (perpetualtask.ObtainPerpetualTaskValidationDetailsResponse);
   rpc ObtainPerpetualTaskExecutionParams(perpetualtask.ObtainPerpetualTaskExecutionParamsRequest)
       returns (perpetualtask.ObtainPerpetualTaskExecutionParamsResponse);
-  rpc ReportPerpetualTaskStateChange(perpetualtask.ReportPerpetualTaskStateChangeRequest)
-      returns (perpetualtask.ReportPerpetualTaskStateChangeResponse);
 }

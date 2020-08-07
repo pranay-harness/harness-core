@@ -84,12 +84,6 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
   }
 
   @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    // Instance Sync Perpetual Task Framework takes care of this via Perpetual Task Response
-  }
-
-  @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     PerpetualTaskData taskData = getPerpetualTaskData(clientContext);
     AwsEc2ListInstancesRequest request = AwsEc2ListInstancesRequest.builder()

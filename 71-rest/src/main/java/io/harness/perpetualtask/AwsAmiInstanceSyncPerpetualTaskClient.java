@@ -59,12 +59,6 @@ public class AwsAmiInstanceSyncPerpetualTaskClient implements PerpetualTaskServi
   }
 
   @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    // Instance Sync Perpetual Task Framework takes care of this via Perpetual Task Response
-  }
-
-  @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     final PerpetualTaskData perpetualTaskData = getPerpetualTaskData(clientContext);
     return DelegateTask.builder()

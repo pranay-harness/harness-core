@@ -204,18 +204,11 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     }
     boolean heartbeatUpdated = perpetualTaskRecordDao.saveHeartbeat(taskRecord, heartbeatMillis);
     perpetualTaskRecordDao.setTaskState(taskId, perpetualTaskResponse.getPerpetualTaskState());
-    stateChangeCallback(taskId, perpetualTaskResponse);
     return heartbeatUpdated;
   }
 
   @Override
   public void setTaskState(String taskId, PerpetualTaskState state) {
     perpetualTaskRecordDao.setTaskState(taskId, state);
-  }
-
-  private void stateChangeCallback(String taskId, PerpetualTaskResponse perpetualTaskResponse) {
-    PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
-    PerpetualTaskServiceClient client = clientRegistry.getClient(task.getPerpetualTaskType());
-    client.onTaskStateChange(task.getUuid(), perpetualTaskResponse, perpetualTaskResponse);
   }
 }

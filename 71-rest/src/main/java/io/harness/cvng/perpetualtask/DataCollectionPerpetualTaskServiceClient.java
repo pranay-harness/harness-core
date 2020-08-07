@@ -9,7 +9,6 @@ import com.google.protobuf.Message;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -63,12 +62,6 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
       params.setCvConfigId(cvConfigId);
     }
     return params.build();
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    // ignore - no state change implementation needed for this.
   }
 
   @Override

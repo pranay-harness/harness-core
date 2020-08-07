@@ -28,17 +28,9 @@ public final class NgPerpetualtaskServiceClient {
   static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_io_harness_perpetualtask_ObtainPerpetualTaskExecutionParamsResponse_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeRequest_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeRequest_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskExecutionResponse_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskExecutionResponse_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeResponse_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -67,19 +59,10 @@ public final class NgPerpetualtaskServiceClient {
         + "\007context\"o\n*ObtainPerpetualTaskExecution"
         + "ParamsResponse\022A\n\021customized_params\030\001 \001("
         + "\0132\024.google.protobuf.AnyR\020customizedParam"
-        + "s\"\274\002\n%ReportPerpetualTaskStateChangeRequ"
-        + "est\022\033\n\ttask_type\030\001 \001(\tR\010taskType\022*\n\021perp"
-        + "etual_task_id\030\002 \001(\tR\017perpetualTaskId\022d\n\021"
-        + "new_task_response\030\003 \001(\01328.io.harness.per"
-        + "petualtask.PerpetualTaskExecutionRespons"
-        + "eR\017newTaskResponse\022d\n\021old_task_response\030"
-        + "\004 \001(\01328.io.harness.perpetualtask.Perpetu"
-        + "alTaskExecutionResponseR\017oldTaskResponse"
-        + "\"\217\001\n\036PerpetualTaskExecutionResponse\022\035\n\nt"
-        + "ask_state\030\001 \001(\tR\ttaskState\022#\n\rresponse_c"
-        + "ode\030\002 \001(\005R\014responseCode\022)\n\020response_mess"
-        + "age\030\003 \001(\tR\017responseMessage\"(\n&ReportPerp"
-        + "etualTaskStateChangeResponseB\002P\001b\006proto3"};
+        + "s\"\217\001\n\036PerpetualTaskExecutionResponse\022\035\n\n"
+        + "task_state\030\001 \001(\tR\ttaskState\022#\n\rresponse_"
+        + "code\030\002 \001(\005R\014responseCode\022)\n\020response_mes"
+        + "sage\030\003 \001(\tR\017responseMessageB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.AnyProto.getDescriptor(),
@@ -122,19 +105,8 @@ public final class NgPerpetualtaskServiceClient {
             new java.lang.String[] {
                 "CustomizedParams",
             });
-    internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeRequest_descriptor =
-        getDescriptor().getMessageTypes().get(4);
-    internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeRequest_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeRequest_descriptor,
-            new java.lang.String[] {
-                "TaskType",
-                "PerpetualTaskId",
-                "NewTaskResponse",
-                "OldTaskResponse",
-            });
     internal_static_io_harness_perpetualtask_PerpetualTaskExecutionResponse_descriptor =
-        getDescriptor().getMessageTypes().get(5);
+        getDescriptor().getMessageTypes().get(4);
     internal_static_io_harness_perpetualtask_PerpetualTaskExecutionResponse_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_PerpetualTaskExecutionResponse_descriptor,
@@ -143,12 +115,6 @@ public final class NgPerpetualtaskServiceClient {
                 "ResponseCode",
                 "ResponseMessage",
             });
-    internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeResponse_descriptor =
-        getDescriptor().getMessageTypes().get(6);
-    internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeResponse_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeResponse_descriptor,
-            new java.lang.String[] {});
     com.google.protobuf.AnyProto.getDescriptor();
     io.harness.delegate.NgTask.getDescriptor();
     io.harness.perpetualtask.NgPerpetualTaskClient.getDescriptor();

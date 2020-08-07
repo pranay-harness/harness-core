@@ -19,8 +19,6 @@ import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsResponse;
-import io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest;
-import io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,8 +36,6 @@ public class NgManagerServiceDriver {
       decoratedObtainPerpetualTaskParamsFunction;
   private final Function<ObtainPerpetualTaskValidationDetailsRequest, ObtainPerpetualTaskValidationDetailsResponse>
       decoratedObtainPerpetualTaskValidationDetailFunction;
-  private final Function<ReportPerpetualTaskStateChangeRequest, ReportPerpetualTaskStateChangeResponse>
-      decoratedReportPerpetualTaskStateChangeFunction;
   private final Retry retry;
 
   @Inject
@@ -56,9 +52,6 @@ public class NgManagerServiceDriver {
     decoratedObtainPerpetualTaskParamsFunction = decorateFunction(request
         -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
                .obtainPerpetualTaskExecutionParams(request));
-    decoratedReportPerpetualTaskStateChangeFunction = decorateFunction(request
-        -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-               .reportPerpetualTaskStateChange(request));
   }
 
   public boolean sendTaskResult(String taskId, ResponseData responseData) {
@@ -139,10 +132,5 @@ public class NgManagerServiceDriver {
   public ObtainPerpetualTaskExecutionParamsResponse obtainPerpetualTaskExecutionParams(
       ObtainPerpetualTaskExecutionParamsRequest request) {
     return decoratedObtainPerpetualTaskParamsFunction.apply(request);
-  }
-
-  public ReportPerpetualTaskStateChangeResponse reportPerpetualTaskStateChange(
-      ReportPerpetualTaskStateChangeRequest request) {
-    return decoratedReportPerpetualTaskStateChangeFunction.apply(request);
   }
 }

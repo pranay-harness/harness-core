@@ -14,7 +14,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -65,12 +64,6 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClient implements PerpetualTask
         .setSpotinstConfig(spotinstConfigBytes)
         .setSpotinstEncryptedData(spotinstEncryptedDataBytes)
         .build();
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    // Instance Sync Perpetual Task Framework takes care of this via Perpetual Task Response
   }
 
   @Override

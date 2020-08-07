@@ -24,8 +24,6 @@ import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsResponse;
-import io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest;
-import io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse;
 import io.harness.perpetualtask.remote.ValidationTaskDetails;
 import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.WaitNotifyEngine;
@@ -79,16 +77,6 @@ public class NgDelegateTaskResponseGrpcServer
     final Message taskParams = pTaskServiceClientManager.getTaskParams(request.getTaskType(), request.getContext());
     responseObserver.onNext(
         ObtainPerpetualTaskExecutionParamsResponse.newBuilder().setCustomizedParams(Any.pack(taskParams)).build());
-    responseObserver.onCompleted();
-  }
-
-  @Override
-  public void reportPerpetualTaskStateChange(ReportPerpetualTaskStateChangeRequest request,
-      StreamObserver<ReportPerpetualTaskStateChangeResponse> responseObserver) {
-    pTaskServiceClientManager.reportPerpetualTaskStateChange(request.getPerpetualTaskId(), request.getTaskType(),
-        request.getNewTaskResponse(), request.getOldTaskResponse());
-
-    responseObserver.onNext(ReportPerpetualTaskStateChangeResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 

@@ -144,47 +144,6 @@ public final class NgDelegateTaskResponseServiceGrpc {
     return getObtainPerpetualTaskExecutionParamsMethod;
   }
 
-  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest,
-      io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse> getReportPerpetualTaskStateChangeMethod;
-
-  @io.grpc.stub.annotations
-      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "ReportPerpetualTaskStateChange",
-          requestType = io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest.class,
-          responseType = io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse.class,
-          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-      public static io.grpc.MethodDescriptor<io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest,
-          io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse>
-      getReportPerpetualTaskStateChangeMethod() {
-    io.grpc.MethodDescriptor<io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest,
-        io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse> getReportPerpetualTaskStateChangeMethod;
-    if ((getReportPerpetualTaskStateChangeMethod =
-                NgDelegateTaskResponseServiceGrpc.getReportPerpetualTaskStateChangeMethod)
-        == null) {
-      synchronized (NgDelegateTaskResponseServiceGrpc.class) {
-        if ((getReportPerpetualTaskStateChangeMethod =
-                    NgDelegateTaskResponseServiceGrpc.getReportPerpetualTaskStateChangeMethod)
-            == null) {
-          NgDelegateTaskResponseServiceGrpc.getReportPerpetualTaskStateChangeMethod =
-              getReportPerpetualTaskStateChangeMethod =
-                  io.grpc.MethodDescriptor
-                      .<io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest,
-                          io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse>newBuilder()
-                      .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                      .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ReportPerpetualTaskStateChange"))
-                      .setSampledToLocalTracing(true)
-                      .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                          io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest.getDefaultInstance()))
-                      .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                          io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse.getDefaultInstance()))
-                      .setSchemaDescriptor(
-                          new NgDelegateTaskResponseServiceMethodDescriptorSupplier("ReportPerpetualTaskStateChange"))
-                      .build();
-        }
-      }
-    }
-    return getReportPerpetualTaskStateChangeMethod;
-  }
-
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -234,13 +193,6 @@ public final class NgDelegateTaskResponseServiceGrpc {
       asyncUnimplementedUnaryCall(getObtainPerpetualTaskExecutionParamsMethod(), responseObserver);
     }
 
-    /**
-     */
-    public void reportPerpetualTaskStateChange(io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest request,
-        io.grpc.stub.StreamObserver<io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(getReportPerpetualTaskStateChangeMethod(), responseObserver);
-    }
-
     @java.
     lang.Override
     public final io.grpc.ServerServiceDefinition bindService() {
@@ -256,10 +208,6 @@ public final class NgDelegateTaskResponseServiceGrpc {
               asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest,
                   io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse>(
                   this, METHODID_OBTAIN_PERPETUAL_TASK_EXECUTION_PARAMS)))
-          .addMethod(getReportPerpetualTaskStateChangeMethod(),
-              asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest,
-                  io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse>(
-                  this, METHODID_REPORT_PERPETUAL_TASK_STATE_CHANGE)))
           .build();
     }
   }
@@ -307,14 +255,6 @@ public final class NgDelegateTaskResponseServiceGrpc {
       asyncUnaryCall(getChannel().newCall(getObtainPerpetualTaskExecutionParamsMethod(), getCallOptions()), request,
           responseObserver);
     }
-
-    /**
-     */
-    public void reportPerpetualTaskStateChange(io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest request,
-        io.grpc.stub.StreamObserver<io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse> responseObserver) {
-      asyncUnaryCall(
-          getChannel().newCall(getReportPerpetualTaskStateChangeMethod(), getCallOptions()), request, responseObserver);
-    }
   }
 
   /**
@@ -355,13 +295,6 @@ public final class NgDelegateTaskResponseServiceGrpc {
     public io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse obtainPerpetualTaskExecutionParams(
         io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest request) {
       return blockingUnaryCall(getChannel(), getObtainPerpetualTaskExecutionParamsMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse reportPerpetualTaskStateChange(
-        io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest request) {
-      return blockingUnaryCall(getChannel(), getReportPerpetualTaskStateChangeMethod(), getCallOptions(), request);
     }
   }
 
@@ -407,21 +340,11 @@ public final class NgDelegateTaskResponseServiceGrpc {
       return futureUnaryCall(
           getChannel().newCall(getObtainPerpetualTaskExecutionParamsMethod(), getCallOptions()), request);
     }
-
-    /**
-     */
-    public com.google.common.util.concurrent
-        .ListenableFuture<io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse>
-        reportPerpetualTaskStateChange(io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest request) {
-      return futureUnaryCall(
-          getChannel().newCall(getReportPerpetualTaskStateChangeMethod(), getCallOptions()), request);
-    }
   }
 
   private static final int METHODID_SEND_TASK_RESULT = 0;
   private static final int METHODID_OBTAIN_PERPETUAL_TASK_VALIDATION_DETAILS = 1;
   private static final int METHODID_OBTAIN_PERPETUAL_TASK_EXECUTION_PARAMS = 2;
-  private static final int METHODID_REPORT_PERPETUAL_TASK_STATE_CHANGE = 3;
 
   private static final class MethodHandlers<Req, Resp>
       implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -455,12 +378,6 @@ public final class NgDelegateTaskResponseServiceGrpc {
           serviceImpl.obtainPerpetualTaskExecutionParams(
               (io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest) request,
               (io.grpc.stub.StreamObserver<io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse>)
-                  responseObserver);
-          break;
-        case METHODID_REPORT_PERPETUAL_TASK_STATE_CHANGE:
-          serviceImpl.reportPerpetualTaskStateChange(
-              (io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest) request,
-              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse>)
                   responseObserver);
           break;
         default:
@@ -532,7 +449,6 @@ public final class NgDelegateTaskResponseServiceGrpc {
                   .addMethod(getSendTaskResultMethod())
                   .addMethod(getObtainPerpetualTaskValidationDetailsMethod())
                   .addMethod(getObtainPerpetualTaskExecutionParamsMethod())
-                  .addMethod(getReportPerpetualTaskStateChangeMethod())
                   .build();
         }
       }
