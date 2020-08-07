@@ -47,9 +47,9 @@ public class ConnectorMapper {
     connector.setScope(getScopeFromConnectorDTO(connectorRequestDTO));
     connector.setAccountIdentifier(accountIdentifier);
     connector.setOrgIdentifier(connectorRequestDTO.getOrgIdentifier());
-    connector.setProjectIdentifier(connectorRequestDTO.getProjectIdentifer());
+    connector.setProjectIdentifier(connectorRequestDTO.getProjectIdentifier());
     connector.setFullyQualifiedIdentifier(FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
-        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifer(),
+        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifier(),
         connectorRequestDTO.getIdentifier()));
     connector.setTags(connectorRequestDTO.getTags());
     connector.setDescription(connectorRequestDTO.getDescription());
@@ -59,7 +59,7 @@ public class ConnectorMapper {
 
   @VisibleForTesting
   Connector.Scope getScopeFromConnectorDTO(ConnectorRequestDTO connectorRequestDTO) {
-    if (isNotBlank(connectorRequestDTO.getProjectIdentifer())) {
+    if (isNotBlank(connectorRequestDTO.getProjectIdentifier())) {
       return PROJECT;
     }
     if (isNotBlank(connectorRequestDTO.getOrgIdentifier())) {
@@ -76,7 +76,7 @@ public class ConnectorMapper {
         .description(connector.getDescription())
         .accountIdentifier(connector.getAccountIdentifier())
         .orgIdentifier(connector.getOrgIdentifier())
-        .projectIdentifer(connector.getProjectIdentifier())
+        .projectIdentifier(connector.getProjectIdentifier())
         .connectorConfig(connectorConfigDTO)
         .connectorType(connector.getType())
         .tags(connector.getTags())

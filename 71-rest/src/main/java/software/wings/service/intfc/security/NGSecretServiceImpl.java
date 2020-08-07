@@ -14,7 +14,6 @@ import io.harness.beans.PageResponse;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
@@ -204,8 +203,6 @@ public class NGSecretServiceImpl implements NGSecretService {
                                            .build());
             }
           }
-        } else {
-          throw new InvalidRequestException("Secret identifier or scope not present", USER);
         }
       } catch (IllegalAccessException exception) {
         throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, exception, USER);

@@ -9,9 +9,9 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect")
 public class K8sOpenIdConnect implements KubernetesAuth {
   String oidcIssuerUrl;
-  String oidcClientId;
+  String oidcClientIdRef;
   String oidcUsername;
-  String oidcPassword;
-  String oidcSecret;
+  String oidcPasswordRef;
+  String oidcSecretRef;
   String oidcScopes;
 }

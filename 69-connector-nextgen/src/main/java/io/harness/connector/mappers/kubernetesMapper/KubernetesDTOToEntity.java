@@ -20,6 +20,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCredential;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
@@ -128,34 +129,36 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
       KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO) {
     return K8sUserNamePassword.builder()
         .userName(kubernetesUserNamePasswordDTO.getUsername())
-        .password(kubernetesUserNamePasswordDTO.getEncryptedPassword())
-        .cacert(kubernetesUserNamePasswordDTO.getCacert())
+        .passwordRef(SecretRefHelper.getSecretConfigString(kubernetesUserNamePasswordDTO.getPasswordRef()))
+        .caCertRef(SecretRefHelper.getSecretConfigString(kubernetesUserNamePasswordDTO.getCaCertRef()))
         .build();
   }
 
   private KubernetesAuth toClientKeyCertKubernetesCredential(KubernetesClientKeyCertDTO kubernetesClientKeyCertDTO) {
     return K8sClientKeyCert.builder()
-        .clientKey(kubernetesClientKeyCertDTO.getEncryptedClientKey())
-        .clientCert(kubernetesClientKeyCertDTO.getEncryptedClientCert())
-        .clientKeyPassphrase(kubernetesClientKeyCertDTO.getEncryptedClientKeyPassphrase())
+        .clientKeyRef(SecretRefHelper.getSecretConfigString(kubernetesClientKeyCertDTO.getClientKeyRef()))
+        .clientCertRef(SecretRefHelper.getSecretConfigString(kubernetesClientKeyCertDTO.getClientCertRef()))
+        .clientKeyPassphraseRef(
+            SecretRefHelper.getSecretConfigString(kubernetesClientKeyCertDTO.getClientKeyPassphraseRef()))
         .clientKeyAlgo(kubernetesClientKeyCertDTO.getClientKeyAlgo())
         .build();
   }
 
   private KubernetesAuth toServiceAccountKubernetesCredential(KubernetesServiceAccountDTO kubernetesServiceAccountDTO) {
     return K8sServiceAccount.builder()
-        .serviceAcccountToken(kubernetesServiceAccountDTO.getEncryptedServiceAccountToken())
+        .serviceAcccountTokenRef(
+            SecretRefHelper.getSecretConfigString(kubernetesServiceAccountDTO.getServiceAccountTokenRef()))
         .build();
   }
 
   private KubernetesAuth toOpenIdConnectKubernetesCredential(KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO) {
     return K8sOpenIdConnect.builder()
         .oidcUsername(kubernetesOpenIdConnectDTO.getOidcUsername())
-        .oidcSecret(kubernetesOpenIdConnectDTO.getEncryptedOidcSecret())
+        .oidcSecretRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcSecretRef()))
         .oidcScopes(kubernetesOpenIdConnectDTO.getOidcScopes())
-        .oidcPassword(kubernetesOpenIdConnectDTO.getEncryptedOidcPassword())
+        .oidcPasswordRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcPasswordRef()))
         .oidcScopes(kubernetesOpenIdConnectDTO.getOidcScopes())
-        .oidcClientId(kubernetesOpenIdConnectDTO.getEncryptedOidcClientId())
+        .oidcClientIdRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcClientIdRef()))
         .oidcIssuerUrl(kubernetesOpenIdConnectDTO.getOidcIssuerUrl())
         .build();
   }

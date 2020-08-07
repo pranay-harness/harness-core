@@ -132,29 +132,29 @@ public class KubernetesValidationHelper {
     if (isNotBlank(userNamePassword.getUsername())) {
       configBuilder.withUsername(userNamePassword.getUsername().trim());
     }
-    if (userNamePassword.getPassword() != null) {
-      configBuilder.withPassword(String.valueOf(userNamePassword.getPassword()));
+    if (userNamePassword.getPasswordRef() != null) {
+      configBuilder.withPassword(String.valueOf(userNamePassword.getPasswordRef().getDecryptedValue()));
     }
-    if (userNamePassword.getCacert() != null) {
-      configBuilder.withCaCertData(userNamePassword.getCacert());
+    if (userNamePassword.getCaCertRef().getDecryptedValue() != null) {
+      configBuilder.withCaCertData(String.valueOf(userNamePassword.getCaCertRef().getDecryptedValue()));
     }
   }
 
   private void populateServiceAccountInConfig(KubernetesServiceAccountDTO serviceAccount, ConfigBuilder configBuilder) {
-    if (serviceAccount.getServiceAccountToken() != null) {
-      configBuilder.withOauthToken(String.valueOf(serviceAccount.getServiceAccountToken()));
+    if (serviceAccount.getServiceAccountTokenRef().getDecryptedValue() != null) {
+      configBuilder.withOauthToken(String.valueOf(serviceAccount.getServiceAccountTokenRef().getDecryptedValue()));
     }
   }
 
   private void populateClientKeyCertInConfig(KubernetesClientKeyCertDTO clientKey, ConfigBuilder configBuilder) {
-    if (clientKey.getClientCert() != null) {
-      configBuilder.withClientCertData(encode(clientKey.getClientCert()));
+    if (clientKey.getClientCertRef().getDecryptedValue() != null) {
+      configBuilder.withClientCertData(encode(clientKey.getClientCertRef().getDecryptedValue()));
     }
-    if (clientKey.getClientKey() != null) {
-      configBuilder.withClientKeyData(encode(clientKey.getClientKey()));
+    if (clientKey.getClientKeyRef().getDecryptedValue() != null) {
+      configBuilder.withClientKeyData(encode(clientKey.getClientKeyRef().getDecryptedValue()));
     }
-    if (clientKey.getClientKeyPassphrase() != null) {
-      configBuilder.withClientKeyPassphrase(String.valueOf(clientKey.getClientKeyPassphrase()));
+    if (clientKey.getClientKeyPassphraseRef().getDecryptedValue() != null) {
+      configBuilder.withClientKeyPassphrase(String.valueOf(clientKey.getClientKeyPassphraseRef().getDecryptedValue()));
     }
     if (isNotBlank(clientKey.getClientKeyAlgo())) {
       configBuilder.withClientKeyAlgo(clientKey.getClientKeyAlgo().trim());

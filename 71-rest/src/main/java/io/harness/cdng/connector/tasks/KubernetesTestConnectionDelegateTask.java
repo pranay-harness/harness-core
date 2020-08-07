@@ -10,11 +10,11 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private KubernetesConnectorDelegateService kubernetesConnectorDelegateService;
-  @Inject private EncryptionService encryptionService;
+  @Inject private SecretDecryptionService secretDecryptionService;
   private static final String EMPTY_STR = "";
 
   public KubernetesTestConnectionDelegateTask(
@@ -34,10 +34,9 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
   public KubernetesConnectionTaskResponse run(TaskParameters parameters) {
     KubernetesConnectionTaskParams kubernetesConnectionTaskParams = (KubernetesConnectionTaskParams) parameters;
     KubernetesClusterConfigDTO kubernetesClusterConfig = kubernetesConnectionTaskParams.getKubernetesClusterConfig();
-    KubernetesAuthCredentialDTO kubernetesCredentialEncryptedSettings =
-        getKubernetesCredentialsEncrypedSettings((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
-    encryptionService.decrypt(
-        kubernetesCredentialEncryptedSettings, kubernetesConnectionTaskParams.getEncryptionDetails());
+    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
+        getKubernetesCredentialsAuth((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getConfig());
+    secretDecryptionService.decrypt(kubernetesCredentialAuth, kubernetesConnectionTaskParams.getEncryptionDetails());
     Exception execptionInProcessing = null;
     boolean validCredentials = false;
     try {
@@ -52,7 +51,7 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
         .build();
   }
 
-  private KubernetesAuthCredentialDTO getKubernetesCredentialsEncrypedSettings(
+  private KubernetesAuthCredentialDTO getKubernetesCredentialsAuth(
       KubernetesClusterDetailsDTO kubernetesClusterConfigDTO) {
     return kubernetesClusterConfigDTO.getAuth().getCredentials();
   }

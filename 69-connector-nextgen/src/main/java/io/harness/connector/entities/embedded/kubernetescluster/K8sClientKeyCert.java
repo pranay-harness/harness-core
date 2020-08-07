@@ -8,8 +8,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert")
 public class K8sClientKeyCert implements KubernetesAuth {
-  String clientCert;
-  String clientKey;
-  String clientKeyPassphrase;
+  String clientCertRef;
+  String clientKeyRef;
+  String clientKeyPassphraseRef;
   String clientKeyAlgo;
 }

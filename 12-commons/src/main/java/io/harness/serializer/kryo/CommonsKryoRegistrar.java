@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.VerificationOperationException;
@@ -12,5 +13,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(VerificationOperationException.class, 3001);
     kryo.register(ServiceNowException.class, 3002);
     kryo.register(SecretRefData.class, 3003);
+    kryo.register(Scope.class, 3004);
   }
 }

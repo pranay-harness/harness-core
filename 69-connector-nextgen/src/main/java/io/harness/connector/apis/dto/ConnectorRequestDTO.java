@@ -29,19 +29,19 @@ public class ConnectorRequestDTO {
   @NotBlank String identifier;
   String description;
   String orgIdentifier;
-  String projectIdentifer;
+  String projectIdentifier;
   List<String> tags;
 
   @JsonProperty("type") ConnectorType connectorType;
 
   @Builder
   public ConnectorRequestDTO(String name, String identifier, String description, String orgIdentifier,
-      String projectIdentifer, List<String> tags, ConnectorType connectorType, ConnectorConfigDTO connectorConfig) {
+      String projectIdentifier, List<String> tags, ConnectorType connectorType, ConnectorConfigDTO connectorConfig) {
     this.name = name;
     this.identifier = identifier;
     this.description = description;
     this.orgIdentifier = orgIdentifier;
-    this.projectIdentifer = projectIdentifer;
+    this.projectIdentifier = projectIdentifier;
     this.tags = tags;
     this.connectorType = connectorType;
     this.connectorConfig = connectorConfig;

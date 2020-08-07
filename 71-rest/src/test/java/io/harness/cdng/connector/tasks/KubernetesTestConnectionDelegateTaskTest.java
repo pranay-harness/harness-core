@@ -18,7 +18,10 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.SecretDecryptionService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -26,19 +29,20 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Collections;
 
 public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
   @Mock KubernetesConnectorDelegateService kubernetesConnectorDelegateService;
-  @Mock EncryptionService encryptionService;
+  @Mock SecretDecryptionService secretDecryptionService;
 
+  String passwordRef = "passwordRef";
+  SecretRefData passwordSecretRef = SecretRefData.builder().identifier(passwordRef).scope(Scope.ACCOUNT).build();
   KubernetesAuthDTO kubernetesAuthDTO =
       KubernetesAuthDTO.builder()
           .authType(KubernetesAuthType.USER_PASSWORD)
           .credentials(
-              KubernetesUserNamePasswordDTO.builder().username("username").password("password".toCharArray()).build())
+              KubernetesUserNamePasswordDTO.builder().username("username").passwordRef(passwordSecretRef).build())
           .build();
 
   @InjectMocks
@@ -68,7 +72,7 @@ public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void run() {
-    when(encryptionService.decrypt(any(), anyList())).thenReturn(kubernetesAuthDTO.getCredentials());
+    when(secretDecryptionService.decrypt(any(), anyList())).thenReturn(kubernetesAuthDTO.getCredentials());
     kubernetesTestConnectionDelegateTask.run();
     verify(kubernetesConnectorDelegateService, times(1)).validate(any());
   }

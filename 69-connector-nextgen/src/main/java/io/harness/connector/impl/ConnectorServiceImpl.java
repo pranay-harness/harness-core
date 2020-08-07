@@ -106,7 +106,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
     Objects.requireNonNull(connectorRequestDTO.getIdentifier());
     String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
-        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifer(),
+        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifier(),
         connectorRequestDTO.getIdentifier());
     Optional<Connector> existingConnector =
         connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
@@ -130,9 +130,10 @@ public class ConnectorServiceImpl implements ConnectorService {
     return connectorsDeleted == 1;
   }
 
-  public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountId) {
+  public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountIdentifier) {
     ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
-    return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountId);
+    return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountIdentifier,
+        connectorDTO.getOrgIdentifier(), connectorDTO.getProjectIdentifier());
   }
 
   public boolean validateTheIdentifierIsUnique(
@@ -151,8 +152,8 @@ public class ConnectorServiceImpl implements ConnectorService {
     if (connectorOptional.isPresent()) {
       ConnectorDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
       ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
-      ConnectorValidationResult validationResult =
-          connectionValidator.validate(connectorDTO.getConnectorConfig(), accountIdentifier);
+      ConnectorValidationResult validationResult = connectionValidator.validate(
+          connectorDTO.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
       updateConnectivityStatusOfConnector(connectorOptional.get(), validationResult);
       return validationResult;
     } else {

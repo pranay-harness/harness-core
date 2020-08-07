@@ -7,15 +7,19 @@ public enum Scope {
   ACCOUNT("acc"),
   ORG("org"),
   PROJECT("proj");
-  private final String representation;
+  private final String yamlRepresentation;
+
+  public String getYamlRepresentation() {
+    return yamlRepresentation;
+  }
 
   Scope(String scopeStr) {
-    this.representation = scopeStr;
+    this.yamlRepresentation = scopeStr;
   }
 
   public static Scope fromString(String scopeStr) {
     Optional<Scope> scopeOptional =
-        Arrays.stream(Scope.values()).filter(scope -> scope.representation.equalsIgnoreCase(scopeStr)).findFirst();
+        Arrays.stream(Scope.values()).filter(scope -> scope.yamlRepresentation.equalsIgnoreCase(scopeStr)).findFirst();
     if (scopeOptional.isPresent()) {
       return scopeOptional.get();
     }

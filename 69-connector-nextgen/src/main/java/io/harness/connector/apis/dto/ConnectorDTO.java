@@ -24,7 +24,7 @@ public class ConnectorDTO {
   String description;
   String accountIdentifier;
   String orgIdentifier;
-  String projectIdentifer;
+  String projectIdentifier;
   List<String> tags;
 
   @NotNull @JsonProperty("type") ConnectorType connectorType;
