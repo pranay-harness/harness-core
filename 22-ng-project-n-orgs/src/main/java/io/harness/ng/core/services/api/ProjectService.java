@@ -4,7 +4,6 @@ import io.harness.ng.core.entities.Project;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.Optional;
 
@@ -16,8 +15,6 @@ public interface ProjectService {
   Project update(Project project);
 
   Page<Project> list(Criteria criteria, Pageable pageable);
-
-  Page<Project> list(TextCriteria textCriteria, Criteria criteria, Pageable pageable);
 
   boolean delete(String orgIdentifier, String projectIdentifier);
 }

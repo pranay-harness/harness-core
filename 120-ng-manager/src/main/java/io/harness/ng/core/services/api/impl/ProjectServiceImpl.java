@@ -17,7 +17,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -61,12 +60,6 @@ public class ProjectServiceImpl implements ProjectService {
   @Override
   public Page<Project> list(@NotNull Criteria criteria, @NotNull Pageable pageable) {
     return projectRepository.findAll(criteria, pageable);
-  }
-
-  @Override
-  public Page<Project> list(
-      @NotNull TextCriteria textCriteria, @NotNull Criteria criteria, @NotNull Pageable pageable) {
-    return projectRepository.findAll(textCriteria, criteria, pageable);
   }
 
   @Override

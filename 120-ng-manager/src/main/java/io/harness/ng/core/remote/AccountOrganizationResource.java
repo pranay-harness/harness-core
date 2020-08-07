@@ -21,7 +21,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -53,15 +52,12 @@ public class AccountOrganizationResource {
                             .is(accountIdentifier)
                             .and(OrganizationKeys.deleted)
                             .ne(Boolean.TRUE);
-    Page<OrganizationDTO> organizations;
     if (isNotBlank(search)) {
-      TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(search);
-      organizations = organizationService.list(textCriteria, criteria, getPageRequest(page, size, sort))
-                          .map(OrganizationMapper::writeDto);
-    } else {
-      organizations =
-          organizationService.list(criteria, getPageRequest(page, size, sort)).map(OrganizationMapper::writeDto);
+      criteria.orOperator(Criteria.where(OrganizationKeys.name).regex(search, "i"),
+          Criteria.where(OrganizationKeys.tags).regex(search, "i"));
     }
+    Page<OrganizationDTO> organizations =
+        organizationService.list(criteria, getPageRequest(page, size, sort)).map(OrganizationMapper::writeDto);
     return ResponseDTO.newResponse(getNGPageResponse(organizations));
   }
 }
