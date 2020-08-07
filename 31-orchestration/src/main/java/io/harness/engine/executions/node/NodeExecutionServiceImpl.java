@@ -8,9 +8,12 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.events.OrchestrationEvent;
+import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.status.Status;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,7 @@ import java.util.function.Consumer;
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private NodeExecutionRepository nodeExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
+  @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -115,6 +119,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
     if (updated == null) {
       logger.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
+    } else {
+      eventEmitter.emitEvent(OrchestrationEvent.builder()
+                                 .ambiance(updated.getAmbiance())
+                                 .eventType(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE)
+                                 .build());
     }
     return updated;
   }

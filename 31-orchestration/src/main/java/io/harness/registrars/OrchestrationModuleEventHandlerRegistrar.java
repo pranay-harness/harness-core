@@ -2,6 +2,7 @@ package io.harness.registrars;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.events.OrchestrationStartEventHandler;
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
@@ -15,5 +16,7 @@ public class OrchestrationModuleEventHandlerRegistrar implements OrchestrationEv
   @Override
   public void register(Set<Pair<OrchestrationEventType, Class<? extends OrchestrationEventHandler>>> handlerClasses) {
     handlerClasses.add(Pair.of(OrchestrationEventType.ORCHESTRATION_START, OrchestrationStartEventHandler.class));
+    handlerClasses.add(
+        Pair.of(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE, NodeExecutionStatusUpdateEventHandler.class));
   }
 }
