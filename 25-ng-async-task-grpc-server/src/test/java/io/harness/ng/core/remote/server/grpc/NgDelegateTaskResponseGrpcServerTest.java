@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -28,10 +27,7 @@ import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsResponse;
-import io.harness.perpetualtask.PerpetualTaskExecutionResponse;
 import io.harness.perpetualtask.RemotePerpetualTaskClientContext;
-import io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest;
-import io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse;
 import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.perpetualtask.remote.ValidationTaskDetails;
@@ -141,26 +137,5 @@ public class NgDelegateTaskResponseGrpcServerTest extends CategoryTest {
     final ObtainPerpetualTaskExecutionParamsResponse response =
         ngDelegateTaskServiceBlockingStub.obtainPerpetualTaskExecutionParams(request);
     assertThat(response.getCustomizedParams()).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = ROHIT_KUMAR)
-  @Category(UnitTests.class)
-  public void reportPerpetualTaskStateChange() {
-    doNothing()
-        .when(pTaskServiceClientManager)
-        .reportPerpetualTaskStateChange(anyString(), anyString(), any(PerpetualTaskExecutionResponse.class),
-            any(PerpetualTaskExecutionResponse.class));
-    final ReportPerpetualTaskStateChangeRequest request =
-        ReportPerpetualTaskStateChangeRequest.newBuilder()
-            .setTaskType(getTaskType())
-            .setPerpetualTaskId("id")
-            .setOldTaskResponse(PerpetualTaskExecutionResponse.newBuilder().build())
-            .setNewTaskResponse(PerpetualTaskExecutionResponse.newBuilder().build())
-            .build();
-
-    final ReportPerpetualTaskStateChangeResponse response =
-        ngDelegateTaskServiceBlockingStub.reportPerpetualTaskStateChange(request);
-    assertThat(response).isNotNull();
   }
 }

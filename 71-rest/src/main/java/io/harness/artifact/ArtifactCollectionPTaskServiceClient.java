@@ -8,7 +8,6 @@ import com.google.protobuf.ByteString;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.serializer.KryoSerializer;
@@ -37,12 +36,6 @@ public class ArtifactCollectionPTaskServiceClient implements PerpetualTaskServic
         .setArtifactStreamId(artifactStreamId)
         .setBuildSourceParams(bytes)
         .build();
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    logger.debug("Nothing to do !!");
   }
 
   @Override

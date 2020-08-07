@@ -4,8 +4,6 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Any;
@@ -58,29 +56,6 @@ public class ForwardingPerpetualTaskServiceClientTest extends CategoryTest {
 
     assertThat(taskParams).isInstanceOf(SamplePerpetualTaskParams.class);
     assertThat(((SamplePerpetualTaskParams) taskParams).getCountry()).isEqualTo("country");
-  }
-
-  @Test
-  @Owner(developers = ROHIT_KUMAR)
-  @Category(UnitTests.class)
-  public void onTaskStateChange() {
-    final PerpetualTaskResponse newPerpetualTaskResponse =
-        PerpetualTaskResponse.builder()
-            .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-            .responseCode(100)
-            .build();
-    final PerpetualTaskResponse oldTaskResponse = PerpetualTaskResponse.builder()
-                                                      .perpetualTaskState(PerpetualTaskState.TASK_ASSIGNED)
-                                                      .responseCode(200)
-                                                      .responseMessage("old task")
-                                                      .build();
-
-    doReturn(ReportPerpetualTaskStateChangeResponse.newBuilder().build())
-        .when(ngManagerServiceDriver)
-        .reportPerpetualTaskStateChange(any());
-    forwardingPerpetualTaskServiceClient.onTaskStateChange("taskId", newPerpetualTaskResponse, oldTaskResponse);
-
-    verify(ngManagerServiceDriver, times(1)).reportPerpetualTaskStateChange(any());
   }
 
   @Test

@@ -1,6 +1,5 @@
 package io.harness.perpetualtask;
 
-import static com.google.common.base.Strings.nullToEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
@@ -47,27 +46,6 @@ public class ForwardingPerpetualTaskServiceClient implements PerpetualTaskServic
 
                     .build());
     return AnyUtils.findClassAndUnpack(response.getCustomizedParams());
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    getDriverForService(remoteServiceId)
-        .reportPerpetualTaskStateChange(
-            ReportPerpetualTaskStateChangeRequest.newBuilder()
-                .setTaskType(perpetualTaskType)
-                .setPerpetualTaskId(taskId)
-                .setNewTaskResponse(PerpetualTaskExecutionResponse.newBuilder()
-                                        .setTaskState(newPerpetualTaskResponse.getPerpetualTaskState().name())
-                                        .setResponseCode(newPerpetualTaskResponse.getResponseCode())
-                                        .setResponseMessage(nullToEmpty(newPerpetualTaskResponse.getResponseMessage()))
-                                        .build())
-                .setOldTaskResponse(PerpetualTaskExecutionResponse.newBuilder()
-                                        .setResponseMessage(nullToEmpty(oldPerpetualTaskResponse.getResponseMessage()))
-                                        .setResponseCode(oldPerpetualTaskResponse.getResponseCode())
-                                        .setTaskState(oldPerpetualTaskResponse.getPerpetualTaskState().name())
-                                        .build())
-                .build());
   }
 
   @Override

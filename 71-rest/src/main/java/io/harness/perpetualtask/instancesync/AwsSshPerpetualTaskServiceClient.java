@@ -13,7 +13,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -63,12 +62,6 @@ public class AwsSshPerpetualTaskServiceClient implements PerpetualTaskServiceCli
         .setFilter(filterBytes)
         .setEncryptedData(encryptionDetailsBytes)
         .build();
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    // Instance Sync Perpetual Task Framework takes care of this via Perpetual Task Response
   }
 
   @Override

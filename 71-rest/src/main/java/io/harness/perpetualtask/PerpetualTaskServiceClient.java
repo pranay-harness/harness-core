@@ -9,9 +9,5 @@ import io.harness.beans.DelegateTask;
  */
 public interface PerpetualTaskServiceClient {
   Message getTaskParams(PerpetualTaskClientContext clientContext);
-
-  void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse);
-
   DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId);
 }

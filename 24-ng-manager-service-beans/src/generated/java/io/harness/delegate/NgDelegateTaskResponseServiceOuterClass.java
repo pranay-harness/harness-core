@@ -22,7 +22,7 @@ public final class NgDelegateTaskResponseServiceOuterClass {
         + "esponse_service.proto\022\023io.harness.delega"
         + "te\0320io/harness/delegate/delegate_task_re"
         + "sponse.proto\032>io/harness/perpetualtask/n"
-        + "g_perpetualtask_service_client.proto2\232\005\n"
+        + "g_perpetualtask_service_client.proto2\364\003\n"
         + "\035NgDelegateTaskResponseService\022i\n\016SendTa"
         + "skResult\022*.io.harness.delegate.SendTaskR"
         + "esultRequest\032+.io.harness.delegate.SendT"
@@ -35,11 +35,7 @@ public final class NgDelegateTaskResponseServiceOuterClass {
         + "\022C.io.harness.perpetualtask.ObtainPerpet"
         + "ualTaskExecutionParamsRequest\032D.io.harne"
         + "ss.perpetualtask.ObtainPerpetualTaskExec"
-        + "utionParamsResponse\022\243\001\n\036ReportPerpetualT"
-        + "askStateChange\022?.io.harness.perpetualtas"
-        + "k.ReportPerpetualTaskStateChangeRequest\032"
-        + "@.io.harness.perpetualtask.ReportPerpetu"
-        + "alTaskStateChangeResponseB\002P\001b\006proto3"};
+        + "utionParamsResponseB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.delegate.DelegateTaskResponse.getDescriptor(),

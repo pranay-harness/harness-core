@@ -6,7 +6,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +27,6 @@ public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceCli
     int population = samplePTaskService.getPopulation(countryName);
     logger.info("Country = [{}], population = [{}]", countryName, population);
     return SamplePerpetualTaskParams.newBuilder().setCountry(countryName).setPopulation(population).build();
-  }
-
-  @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    logger.debug("Nothing to do !");
   }
 
   @Override

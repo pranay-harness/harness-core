@@ -65,12 +65,6 @@ public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskSe
   }
 
   @Override
-  public void onTaskStateChange(
-      String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     throw new UnsupportedOperationException();
   }

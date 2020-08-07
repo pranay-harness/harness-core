@@ -28,18 +28,8 @@ message ObtainPerpetualTaskExecutionParamsResponse {
   google.protobuf.Any customized_params = 1;
 }
 
-message ReportPerpetualTaskStateChangeRequest {
-  string task_type = 1;
-  string perpetual_task_id = 2;
-  PerpetualTaskExecutionResponse new_task_response = 3;
-  PerpetualTaskExecutionResponse old_task_response = 4;
-}
-
 message PerpetualTaskExecutionResponse {
   string task_state = 1;
   int32 response_code = 2;
   string response_message = 3;
-}
-
-message ReportPerpetualTaskStateChangeResponse {
 }
