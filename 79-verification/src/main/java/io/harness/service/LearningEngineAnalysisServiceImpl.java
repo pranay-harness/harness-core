@@ -625,15 +625,20 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     return nextBackoffCount;
   }
 
-  @Override
-  public boolean isTaskRunningOrQueued(String cvConfigId, long analysisMinute) {
-    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-                                          .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
-                                          .field(LearningEngineAnalysisTaskKeys.analysis_minute)
-                                          .greaterThanOrEq(analysisMinute)
-                                          .field(LearningEngineAnalysisTaskKeys.executionStatus)
-                                          .in(Arrays.asList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED))
-                                          .get();
+  public boolean isTaskRunningOrQueued(String cvConfigId) {
+    return isTaskRunningOrQueued(cvConfigId, Optional.empty());
+  }
+
+  private boolean isTaskRunningOrQueued(String cvConfigId, Optional<Long> analysisMinute) {
+    Query<LearningEngineAnalysisTask> taskQuery =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter(LearningEngineAnalysisTaskKeys.cvConfigId, cvConfigId)
+            .field(LearningEngineAnalysisTaskKeys.executionStatus)
+            .in(Arrays.asList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED));
+    if (analysisMinute.isPresent()) {
+      taskQuery = taskQuery.field(LearningEngineAnalysisTaskKeys.analysis_minute).greaterThanOrEq(analysisMinute.get());
+    }
+    LearningEngineAnalysisTask task = taskQuery.get();
     if (task == null) {
       logger.info(
           "There are no tasks running or queued for cvConfig {} after analysisMinute {}", cvConfigId, analysisMinute);
@@ -643,6 +648,11 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
           "Found a task running or queued for cvConfig {} and minute {}", cvConfigId, task.getAnalysis_minute());
       return true;
     }
+  }
+
+  @Override
+  public boolean isTaskRunningOrQueued(String cvConfigId, long analysisMinute) {
+    return isTaskRunningOrQueued(cvConfigId, Optional.of(analysisMinute));
   }
 
   @Override
