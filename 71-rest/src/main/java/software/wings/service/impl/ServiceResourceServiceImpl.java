@@ -1738,6 +1738,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
     command.setAppId(appId);
+    command.setAccountId(accountId);
     if (isNotEmpty(command.getCommandUnits())) {
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }

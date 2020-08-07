@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountIdToActivityCollection;
 import migrations.all.AddAccountIdToCloudFormationRollBackConfig;
+import migrations.all.AddAccountIdToCommandCollection;
 import migrations.all.AddAccountIdToCommandLogs;
 import migrations.all.AddAccountIdToDeploymentEntities;
 import migrations.all.AddAccountIdToEntityVersion;
@@ -253,6 +254,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(148, AddCeFullTrialLicenseToCurrentAccounts.class))
         .add(Pair.of(149, AddAccountIdToServiceInstance.class))
         .add(Pair.of(150, BaseMigration.class))
+        .add(Pair.of(151, AddAccountIdToCommandCollection.class))
         .build();
   }
 }
