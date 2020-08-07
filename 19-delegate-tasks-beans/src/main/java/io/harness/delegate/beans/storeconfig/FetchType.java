@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.delegate.beans.storeconfig;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

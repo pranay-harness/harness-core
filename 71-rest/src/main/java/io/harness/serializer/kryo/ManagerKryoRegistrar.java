@@ -26,7 +26,6 @@ import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
-import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
@@ -1749,7 +1748,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GitStore.class, 8023);
     kryo.register(GitFetchRequest.class, 8025);
     kryo.register(io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig.class, 8026);
-    kryo.register(FetchType.class, 8030);
     kryo.register(DockerArtifactSourceAttributes.class, 8004);
     kryo.register(DockerArtifactAttributes.class, 8005);
     kryo.register(DockerhubConnectorConfig.class, 8006);

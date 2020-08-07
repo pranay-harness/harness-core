@@ -60,4 +60,5 @@ public enum TaskGroup {
   CI,
   SLACK,
   ARTIFACT_COLLECT,
+  K8S_NG,
 }

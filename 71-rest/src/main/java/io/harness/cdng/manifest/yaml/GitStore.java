@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.storeconfig.FetchType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -56,6 +56,7 @@ import io.harness.delegate.beans.git.GitCommitResult;
 import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.delegate.beans.git.GitPushResult;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.ArtifactServerException;
@@ -79,6 +80,9 @@ import io.harness.delegate.task.azure.response.AzureVMSSListVirtualMachineScaleS
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.k8s.K8sDeployRequest;
+import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ScriptType;
@@ -215,5 +219,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(EntityScope.Scope.class, 19096);
     kryo.register(GitPushResult.RefUpdate.class, 19097);
     kryo.register(SelectorCapability.class, 19098);
+    kryo.register(K8sDeployResponse.class, 19099);
+    kryo.register(K8sRollingDeployRequest.class, 19100);
+    kryo.register(K8sDeployRequest.class, 19101);
+    kryo.register(FetchType.class, 8030);
   }
 }

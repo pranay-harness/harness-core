@@ -7,12 +7,12 @@ import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
