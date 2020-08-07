@@ -26,5 +26,6 @@ public enum CapabilityType {
   SHELL_CONNECTION,
   GIT_CONNECTION,
   KUSTOMIZE,
-  SMB;
+  SMB,
+  SELECTORS;
 }

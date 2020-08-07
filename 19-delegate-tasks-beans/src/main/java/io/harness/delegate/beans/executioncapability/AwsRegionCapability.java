@@ -11,6 +11,11 @@ public class AwsRegionCapability implements ExecutionCapability {
   @Default private final CapabilityType capabilityType = CapabilityType.AWS_REGION;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public CapabilityType getCapabilityType() {
     return capabilityType;
   }

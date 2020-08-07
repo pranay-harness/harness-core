@@ -26,6 +26,11 @@ public class SSHHostValidationCapability implements ExecutionCapability {
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SSH_HOST_CONNECTION;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     if (validationInfo.isExecuteOnDelegate()) {
       return "localhost";

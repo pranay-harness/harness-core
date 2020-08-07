@@ -17,6 +17,11 @@ public class SocketConnectivityExecutionCapability implements ExecutionCapabilit
   protected String url;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     // maintaining backward compatibility for now
     if (shouldUseOriginalUrl()) {

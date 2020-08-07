@@ -18,6 +18,7 @@ import static io.harness.delegate.beans.DelegateType.ECS;
 import static io.harness.delegate.beans.DelegateType.HELM_DELEGATE;
 import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
+import static io.harness.delegate.beans.executioncapability.ExecutionCapability.EvaluationMode;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
@@ -2335,6 +2336,14 @@ public class DelegateServiceImpl implements DelegateService {
               secretManager, delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
               delegateTask.getData().getExpressionFunctorToken());
 
+      List<ExecutionCapability> executionCapabilityList = emptyList();
+      if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
+        executionCapabilityList = delegateTask.getExecutionCapabilities()
+                                      .stream()
+                                      .filter(x -> x.evaluationMode() == EvaluationMode.AGENT)
+                                      .collect(toList());
+      }
+
       DelegateTaskPackageBuilder delegateTaskPackageBuilder =
           DelegateTaskPackage.builder()
               .accountId(delegateTask.getAccountId())
@@ -2342,7 +2351,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateTaskId(delegateTask.getUuid())
               .delegateTask(delegateTask)
               .capabilityFrameworkEnabled(delegateTask.isCapabilityFrameworkEnabled())
-              .executionCapabilities(delegateTask.getExecutionCapabilities());
+              .executionCapabilities(executionCapabilityList);
 
       if (delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {

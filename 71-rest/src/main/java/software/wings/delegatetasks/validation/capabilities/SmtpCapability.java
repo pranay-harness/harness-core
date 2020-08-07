@@ -19,6 +19,11 @@ public class SmtpCapability implements ExecutionCapability {
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SMTP;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return smtpConfig.getHost() + ":" + smtpConfig.getPort();
   }

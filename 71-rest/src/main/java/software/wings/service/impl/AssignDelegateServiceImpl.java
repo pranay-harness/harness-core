@@ -17,7 +17,10 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateActivity;
+
 import io.harness.delegate.beans.TaskGroup;
+
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,7 @@ import software.wings.utils.DelegateTaskUtils;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -118,11 +122,33 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (delegate == null) {
       return false;
     }
-    boolean canAssign = canAssignScopes(batch, delegate, task) && canAssignSelectors(batch, delegate, task.getTags());
+
+    List<String> taskSelectors = extractSelectors(task);
+
+    boolean canAssign = canAssignScopes(batch, delegate, task) && canAssignSelectors(batch, delegate, taskSelectors);
     if (canAssign) {
       delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
     }
     return canAssign;
+  }
+
+  public List<String> extractSelectors(DelegateTask task) {
+    Set<String> selectors = new HashSet<>();
+
+    if (isNotEmpty(task.getExecutionCapabilities())) {
+      Set<String> selectorsCapability = task.getExecutionCapabilities()
+                                            .stream()
+                                            .filter(c -> c instanceof SelectorCapability)
+                                            .flatMap(c -> ((SelectorCapability) c).getSelectors().stream())
+                                            .collect(Collectors.toSet());
+      selectors.addAll(selectorsCapability);
+    }
+
+    if (isNotEmpty(task.getTags())) {
+      selectors.addAll(task.getTags());
+    }
+
+    return new ArrayList<>(selectors);
   }
 
   @Override

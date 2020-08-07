@@ -20,6 +20,11 @@ public class ClusterMasterUrlValidationCapability implements ExecutionCapability
   CapabilityType capabilityType = CapabilityType.CLUSTER_MASTER_URL;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof KubernetesClusterConfig) {

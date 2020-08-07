@@ -19,6 +19,11 @@ public class PcfConnectivityCapability implements ExecutionCapability {
   private final CapabilityType capabilityType = CapabilityType.PCF_CONNECTIVITY;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return "Pcf:" + pcfConfig.getEndpointUrl() + "/" + pcfConfig.getUsername();
   }

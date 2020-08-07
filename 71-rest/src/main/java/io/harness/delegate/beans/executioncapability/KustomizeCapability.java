@@ -11,6 +11,12 @@ import software.wings.helpers.ext.kustomize.KustomizeConfig;
 @Builder
 public class KustomizeCapability implements ExecutionCapability {
   private KustomizeConfig kustomizeConfig;
+
+  @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
   @Override
   public CapabilityType getCapabilityType() {
     return KUSTOMIZE;

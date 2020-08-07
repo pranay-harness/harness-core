@@ -9,6 +9,11 @@ public class ChartMuseumCapability implements ExecutionCapability {
   CapabilityType capabilityType = CapabilityType.CHART_MUSEUM;
 
   @Override
+  public EvaluationMode evaluationMode() {
+    return EvaluationMode.AGENT;
+  }
+
+  @Override
   public String fetchCapabilityBasis() {
     return capabilityType.name();
   }
