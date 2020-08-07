@@ -23,7 +23,6 @@ import static software.wings.utils.WingsTestConstants.WORKSPACE;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
@@ -74,14 +73,12 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   private static final String GIT_BRANCH = "test/git_branch";
   private static final String GIT_REPO_DIRECTORY = "repository/terraformTest";
 
-  TerraformProvisionTask terraformProvisionTask = new TerraformProvisionTask(
-      DelegateTaskPackage.builder()
-          .delegateId(WingsTestConstants.DELEGATE_ID)
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
-          .build(),
-      delegateTaskResponse -> {}, () -> true);
+  TerraformProvisionTask terraformProvisionTask =
+      new TerraformProvisionTask(DelegateTaskPackage.builder()
+                                     .delegateId(WingsTestConstants.DELEGATE_ID)
+                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                     .build(),
+          delegateTaskResponse -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

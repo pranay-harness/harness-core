@@ -1,3 +1,4 @@
+
 package software.wings.delegatetasks.validation;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -61,7 +62,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   public void setUp() {
     TaskData taskData = mock(TaskData.class);
     DelegateTask delegateTask = mock(DelegateTask.class);
-    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder().delegateTask(delegateTask).build();
+    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder().data(taskData).build();
 
     when(delegateTask.getData()).thenReturn(taskData);
     validation = new TestSecretManagerValidation(UUIDGenerator.generateUuid(), delegateTaskPackage, null);

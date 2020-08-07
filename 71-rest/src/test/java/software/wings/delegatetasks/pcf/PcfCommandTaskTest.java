@@ -12,7 +12,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidArgumentsException;
@@ -47,9 +46,8 @@ public class PcfCommandTaskTest extends WingsBaseTest {
   private final PcfCommandTask pcfTask = (PcfCommandTask) TaskType.PCF_COMMAND_TASK.getDelegateRunnableTask(
       DelegateTaskPackage.builder()
           .delegateId("delegateId")
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+
           .build(),
       notifyResponseData -> {}, () -> true);
 

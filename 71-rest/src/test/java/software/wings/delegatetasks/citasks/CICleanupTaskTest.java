@@ -7,7 +7,6 @@ import static org.joor.Reflect.on;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -33,9 +32,7 @@ public class CICleanupTaskTest extends WingsBaseTest {
   private CICleanupTask task = (CICleanupTask) TaskType.CI_CLEANUP.getDelegateRunnableTask(
       DelegateTaskPackage.builder()
           .delegateId("delegateid")
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
       notifyResponseData -> {}, () -> true);
 

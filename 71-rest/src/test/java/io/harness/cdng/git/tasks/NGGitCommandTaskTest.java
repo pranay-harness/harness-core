@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.delegate.beans.ResponseData;
@@ -54,15 +53,13 @@ public class NGGitCommandTaskTest extends WingsBaseTest {
       (NGGitCommandTask) TaskType.NG_GIT_COMMAND.getDelegateRunnableTask(
           DelegateTaskPackage.builder()
               .delegateId("delegateid")
-              .delegateTask(DelegateTask.builder()
-                                .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                          .parameters(new Object[] {GitCommandParams.builder()
-                                                                        .gitCommandType(GitCommandType.VALIDATE)
-                                                                        .encryptionDetails(Collections.emptyList())
-                                                                        .gitConfig(gitConfig)
-                                                                        .build()})
-                                          .build())
-                                .build())
+              .data((TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                        .parameters(new Object[] {GitCommandParams.builder()
+                                                      .gitCommandType(GitCommandType.VALIDATE)
+                                                      .encryptionDetails(Collections.emptyList())
+                                                      .gitConfig(gitConfig)
+                                                      .build()})
+                        .build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

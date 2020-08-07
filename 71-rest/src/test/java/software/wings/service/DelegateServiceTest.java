@@ -2036,7 +2036,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                               .validated(true)
                               .build()));
     assertThat(delegateTaskPackage).isNotNull();
-    assertThat(delegateTaskPackage.getDelegateTask().getStatus()).isEqualTo(STARTED);
+    assertThat(wingsPersistence.get(DelegateTask.class, delegateTask.getUuid()).getDelegateId()).isEqualTo(DELEGATE_ID);
   }
 
   @Test

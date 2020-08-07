@@ -10,7 +10,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -54,10 +53,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private final HelmCommandTask helmCommandTask = (HelmCommandTask) TaskType.HELM_COMMAND_TASK.getDelegateRunnableTask(
-      DelegateTaskPackage.builder()
-          .delegateId("delegateId")
-          .delegateTask(DelegateTask.builder().data(TaskData.builder().async(false).build()).build())
-          .build(),
+      DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(false).build()).build(),
       notifyResponseData -> {}, () -> true);
 
   @Before
@@ -198,10 +194,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
 
   private static HelmCommandTask getTask(boolean async) {
     return (HelmCommandTask) TaskType.HELM_COMMAND_TASK.getDelegateRunnableTask(
-        DelegateTaskPackage.builder()
-            .delegateId("delegateId")
-            .delegateTask(DelegateTask.builder().data(TaskData.builder().async(async).build()).build())
-            .build(),
+        DelegateTaskPackage.builder().delegateId("delegateId").data(TaskData.builder().async(async).build()).build(),
         notifyResponseData -> {}, () -> true);
   }
 }

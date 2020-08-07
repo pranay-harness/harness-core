@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -25,9 +24,8 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   TerraformFetchTargetsTask terraformFetchTargetsTask = new TerraformFetchTargetsTask(
       DelegateTaskPackage.builder()
           .delegateId(WingsTestConstants.DELEGATE_ID)
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+
           .build(),
 
       delegateTaskResponse -> {}, () -> true);

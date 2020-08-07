@@ -18,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -58,10 +57,7 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
   @InjectMocks
   private ShellScriptProvisionTask shellScriptProvisionTask =
       (ShellScriptProvisionTask) TaskType.SHELL_SCRIPT_PROVISION_TASK.getDelegateRunnableTask(
-          DelegateTaskPackage.builder()
-              .delegateId("delegateid")
-              .delegateTask(DelegateTask.builder().data(TaskData.builder().build()).build())
-              .build(),
+          DelegateTaskPackage.builder().delegateId("delegateid").data(TaskData.builder().build()).build(),
           notifyResponseData -> {}, () -> true);
 
   @Before

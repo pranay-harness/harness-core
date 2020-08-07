@@ -4,16 +4,12 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,22 +32,17 @@ public class AcrValidationTest extends WingsBaseTest {
 
   static DelegateTaskPackage delegateTaskPackage =
       DelegateTaskPackage.builder()
-          .delegateTask(DelegateTask.builder()
-                            .uuid("id")
-                            .accountId(ACCOUNT_ID)
-                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                            .waitId("")
-                            .data(TaskData.builder()
-                                      .async(true)
-                                      .taskType(TaskType.ACR_GET_BUILDS.name())
-                                      .parameters(new Object[] {ArtifactStreamAttributes.builder()
-                                                                    .registryName(registryName)
-                                                                    .repositoryName(repositoryName)
-                                                                    .build(),
-                                          asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
-                                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                      .build())
-                            .build())
+          .data(TaskData.builder()
+                    .async(true)
+                    .taskType(TaskType.ACR_GET_BUILDS.name())
+                    .parameters(new Object[] {ArtifactStreamAttributes.builder()
+                                                  .registryName(registryName)
+                                                  .repositoryName(repositoryName)
+                                                  .build(),
+                        asList(EncryptedDataDetail.builder().build()), AzureConfig.builder().build()})
+                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                    .build())
+
           .build();
 
   @Before

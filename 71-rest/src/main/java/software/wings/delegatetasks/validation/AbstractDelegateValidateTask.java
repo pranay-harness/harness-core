@@ -33,9 +33,9 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
     this.accountId = delegateTaskPackage.getAccountId();
     this.delegateId = delegateId;
     this.delegateTaskId = delegateTaskPackage.getDelegateTaskId();
-    this.taskType = delegateTaskPackage.getDelegateTask().getData().getTaskType();
+    this.taskType = delegateTaskPackage.getData().getTaskType();
     this.consumer = consumer;
-    this.taskData = delegateTaskPackage.getDelegateTask().getData();
+    this.taskData = delegateTaskPackage.getData();
     this.executionCapabilities = delegateTaskPackage.getExecutionCapabilities();
   }
 

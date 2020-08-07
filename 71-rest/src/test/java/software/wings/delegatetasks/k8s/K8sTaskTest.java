@@ -15,7 +15,6 @@ import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
 import static software.wings.utils.WingsTestConstants.TIMEOUT_INTERVAL;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -50,11 +49,8 @@ public class K8sTaskTest extends WingsBaseTest {
   private K8sClusterConfig k8sClusterConfig;
 
   @InjectMocks
-  private K8sTask k8sTask =
-      new K8sTask(DelegateTaskPackage.builder()
-                      .delegateTask(DelegateTask.builder().data(TaskData.builder().build()).build())
-                      .build(),
-          mock(Consumer.class), mock(BooleanSupplier.class));
+  private K8sTask k8sTask = new K8sTask(DelegateTaskPackage.builder().data(TaskData.builder().build()).build(),
+      mock(Consumer.class), mock(BooleanSupplier.class));
 
   private K8sTaskParameters k8sTaskParameters;
 

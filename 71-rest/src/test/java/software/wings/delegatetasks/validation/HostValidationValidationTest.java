@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -127,19 +126,18 @@ public class HostValidationValidationTest extends CategoryTest {
       List<String> hostNames, SettingAttribute connectionSetting) throws IllegalAccessException {
     HostValidationValidation hostValidationValidation = new HostValidationValidation(generateUuid(),
         DelegateTaskPackage.builder()
-            .delegateTask(DelegateTask.builder()
-                              .data(TaskData.builder()
-                                        .async(true)
-                                        .parameters(new Object[] {HostValidationTaskParameters.builder()
-                                                                      .hostNames(hostNames)
-                                                                      .encryptionDetails(Lists.newArrayList(
-                                                                          EncryptedDataDetail.builder().build()))
-                                                                      .connectionSetting(connectionSetting)
-                                                                      .build(),
-                                            null, hostNames})
-                                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                        .build())
-                              .build())
+            .data(TaskData.builder()
+                      .async(true)
+                      .parameters(new Object[] {
+                          HostValidationTaskParameters.builder()
+                              .hostNames(hostNames)
+                              .encryptionDetails(Lists.newArrayList(EncryptedDataDetail.builder().build()))
+                              .connectionSetting(connectionSetting)
+                              .build(),
+                          null, hostNames})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+
             .build(),
         null);
 

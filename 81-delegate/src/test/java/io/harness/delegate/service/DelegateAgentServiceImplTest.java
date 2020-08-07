@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.SecretDetail;
@@ -59,15 +58,11 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
     String delegateTaskId = UUIDGenerator.generateUuid();
     String accountId = UUIDGenerator.generateUuid();
 
-    DelegateTaskPackage delegateTaskPackage =
-        DelegateTaskPackage.builder()
-            .accountId(accountId)
-            .delegateTaskId(delegateTaskId)
-            .delegateTask(DelegateTask.builder()
-                              .uuid(delegateTaskId)
-                              .data(TaskData.builder().async(true).taskType("HTTP").build())
-                              .build())
-            .build();
+    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
+                                                  .accountId(accountId)
+                                                  .delegateTaskId(delegateTaskId)
+                                                  .data(TaskData.builder().async(true).taskType("HTTP").build())
+                                                  .build();
 
     delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(0)).decrypt(anyMap());
@@ -93,17 +88,13 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
 
     secretDetails.put("SECRET_UUID", secretDetail);
 
-    DelegateTaskPackage delegateTaskPackage =
-        DelegateTaskPackage.builder()
-            .accountId(accountId)
-            .delegateTaskId(delegateTaskId)
-            .delegateTask(DelegateTask.builder()
-                              .uuid(delegateTaskId)
-                              .data(TaskData.builder().async(true).taskType("HTTP").build())
-                              .build())
-            .encryptionConfigs(encryptionConfigMap)
-            .secretDetails(secretDetails)
-            .build();
+    DelegateTaskPackage delegateTaskPackage = DelegateTaskPackage.builder()
+                                                  .accountId(accountId)
+                                                  .delegateTaskId(delegateTaskId)
+                                                  .data(TaskData.builder().async(true).taskType("HTTP").build())
+                                                  .encryptionConfigs(encryptionConfigMap)
+                                                  .secretDetails(secretDetails)
+                                                  .build();
 
     delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(1)).decrypt(anyMap());

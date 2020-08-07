@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -50,11 +49,8 @@ public class APMValidationTest extends WingsBaseTest {
     delegateId = generateUuid();
     delegateTaskPackage =
         DelegateTaskPackage.builder()
-            .delegateTask(
-                DelegateTask.builder()
-                    .uuid(generateUuid())
-                    .data(TaskData.builder().taskType(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name()).build())
-                    .build())
+            .data(TaskData.builder().taskType(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name()).build())
+
             .build();
     delegateConnectionConsumer = Mockito.spy(Consumer.class);
 

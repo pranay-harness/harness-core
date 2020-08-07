@@ -2349,7 +2349,7 @@ public class DelegateServiceImpl implements DelegateService {
               .accountId(delegateTask.getAccountId())
               .delegateId(delegateTask.getDelegateId())
               .delegateTaskId(delegateTask.getUuid())
-              .delegateTask(delegateTask)
+              .data(delegateTask.getData())
               .capabilityFrameworkEnabled(delegateTask.isCapabilityFrameworkEnabled())
               .executionCapabilities(executionCapabilityList);
 
@@ -2407,7 +2407,7 @@ public class DelegateServiceImpl implements DelegateService {
             .accountId(delegateTask.getAccountId())
             .delegateId(delegateTask.getDelegateId())
             .delegateTaskId(delegateTask.getUuid())
-            .delegateTask(delegateTask)
+            .data(delegateTask.getData())
             .encryptionConfigs(encryptionConfigMap)
             .build();
       }

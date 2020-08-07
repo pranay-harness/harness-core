@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Maps;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -47,9 +46,7 @@ public class BambooTaskTest extends CategoryTest {
   private BambooTask bambooTask = (BambooTask) TaskType.BAMBOO.getDelegateRunnableTask(
       DelegateTaskPackage.builder()
           .delegateId("delid1")
-          .delegateTask(DelegateTask.builder()
-                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                            .build())
+          .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
       notifyResponseData -> {}, () -> true);
 

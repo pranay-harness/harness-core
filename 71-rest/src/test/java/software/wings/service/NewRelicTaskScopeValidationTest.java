@@ -1,3 +1,4 @@
+
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -12,7 +13,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.common.collect.Lists;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.network.Http;
@@ -101,22 +101,20 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   private void validate(boolean shouldBeValidated) {
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTaskPackage.builder()
-            .delegateTask(
-                DelegateTask.builder()
-                    .data(TaskData.builder()
-                              .async(true)
-                              .parameters(new Object[] {NewRelicConfig.builder()
-                                                            .newRelicUrl(newRelicUrl)
-                                                            .accountId(generateUuid())
-                                                            .apiKey(generateUuid().toCharArray())
-                                                            .build(),
-                                  NewRelicDataCollectionInfo.builder()
-                                      .encryptedDataDetails(Lists.newArrayList(
-                                          EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
-                                      .build()})
-                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                              .build())
-                    .build())
+            .data(TaskData.builder()
+                      .async(true)
+                      .parameters(new Object[] {NewRelicConfig.builder()
+                                                    .newRelicUrl(newRelicUrl)
+                                                    .accountId(generateUuid())
+                                                    .apiKey(generateUuid().toCharArray())
+                                                    .build(),
+                          NewRelicDataCollectionInfo.builder()
+                              .encryptedDataDetails(Lists.newArrayList(
+                                  EncryptedDataDetail.builder().encryptionConfig(vaultConfig).build()))
+                              .build()})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+
+                      .build())
             .build(),
         null);
     List<DelegateConnectionResult> validate = newRelicValidation.validate();

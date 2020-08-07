@@ -15,14 +15,12 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -85,21 +83,15 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
             .baseUrl("http://api.datadog.com/v1/")
             .build();
 
-    DelegateTask task = DelegateTask.builder()
-                            .accountId(accountId)
-                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-                            .waitId(waitId)
-                            .data(TaskData.builder()
-                                      .async(true)
-                                      .taskType(APM_METRIC_DATA_COLLECTION_TASK.name())
-                                      .parameters(new Object[] {dataCollectionInfo})
-                                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
-                                      .build())
-                            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
-                            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType(APM_METRIC_DATA_COLLECTION_TASK.name())
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
                             .build();
+
     dataCollectionTask = new APMDataCollectionTask(
-        DelegateTaskPackage.builder().delegateId(delegateId).delegateTask(task).build(), null, null);
+        DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null);
     FieldUtils.writeField(dataCollectionTask, "delegateLogService", delegateLogService, true);
     FieldUtils.writeField(dataCollectionTask, "metricStoreService", metricStoreService, true);
     FieldUtils.writeField(dataCollectionTask, "encryptionService", encryptionService, true);

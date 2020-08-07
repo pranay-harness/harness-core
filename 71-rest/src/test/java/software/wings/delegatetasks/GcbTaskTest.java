@@ -29,7 +29,6 @@ import static software.wings.utils.WingsTestConstants.TAG_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 
 import io.harness.CategoryTest;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
@@ -79,12 +78,10 @@ public class GcbTaskTest extends CategoryTest {
 
   @InjectMocks
   private final GcbTask task = spy((GcbTask) GCB.getDelegateRunnableTask(
+
       DelegateTaskPackage.builder()
           .delegateId("delid1")
-          .delegateTask(
-              DelegateTask.builder()
-                  .data(TaskData.builder().async(true).taskType(GCB.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                  .build())
+          .data(TaskData.builder().async(true).taskType(GCB.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
           .build(),
       Functions::doNothing, Functions::staticTruth));
 
