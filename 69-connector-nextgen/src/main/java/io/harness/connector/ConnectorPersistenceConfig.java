@@ -20,6 +20,7 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import java.util.Collection;
@@ -39,21 +40,16 @@ public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
   @Bean(name = "connectorMongoTemplate")
   @Primary
   public MongoTemplate connectorMongoTemplate() throws Exception {
-    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
-  }
-
-  @Override
-  public MappingMongoConverter mappingMongoConverter() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
-    TypeInformationMapper informationMapper =
-        ConnectorTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
-    MongoTypeMapper typeMapper = new DefaultMongoTypeMapper(
-        DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Collections.singletonList(informationMapper));
-    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
+    TypeInformationMapper typeMapper = ConnectorTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
+    MongoTypeMapper mongoTypeMapper =
+        new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Collections.singletonList(typeMapper));
+    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
+    converter.setTypeMapper(mongoTypeMapper);
     converter.setCustomConversions(customConversions());
     converter.setCodecRegistryProvider(mongoDbFactory());
-    converter.setTypeMapper(typeMapper);
-    return converter;
+    converter.afterPropertiesSet();
+    return new HMongoTemplate(mongoDbFactory(), converter);
   }
 
   private Map<String, Class<?>> collectAliasMap() {
