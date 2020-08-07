@@ -38,6 +38,9 @@ public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLT
     Trigger trigger = null;
     if (parameters.getTriggerId() != null) {
       trigger = persistence.get(Trigger.class, parameters.getTriggerId());
+      if (trigger == null) {
+        return null;
+      }
     } else if (parameters.getTriggerName() != null) {
       if (EmptyPredicate.isEmpty(parameters.getApplicationId())) {
         throw new InvalidRequestException(EMPTY_APPLICATION_ID, WingsException.USER);
@@ -50,10 +53,11 @@ public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLT
                     .filter(TriggerKeys.name, parameters.getTriggerName())
                     .filter(TriggerKeys.appId, parameters.getApplicationId())
                     .get();
-    }
-
-    if (trigger == null) {
-      return null;
+      if (trigger == null) {
+        throw new InvalidRequestException(String.format("Trigger %s does not exist in given application %s",
+                                              parameters.getTriggerName(), parameters.getApplicationId()),
+            USER);
+      }
     }
 
     if (!accountId.equals(appService.getAccountIdByAppId(trigger.getAppId()))) {
