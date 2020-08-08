@@ -444,7 +444,9 @@ public enum ErrorCode {
 
   GIT_UNSEEN_REMOTE_HEAD_COMMIT,
 
-  TIMEOUT_ENGINE_EXCEPTION;
+  TIMEOUT_ENGINE_EXCEPTION,
+
+  NO_AVAILABLE_DELEGATES(NOT_FOUND);
 
   private Status status = BAD_REQUEST;
   private String description;
