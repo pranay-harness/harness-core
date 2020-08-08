@@ -380,7 +380,7 @@ public class PreAggregatedBillingDataHelper {
       Instant trendFilterStartTime) {
     PreAggregateBillingEntityDataPointBuilder dataPointBuilder = PreAggregateBillingEntityDataPoint.builder();
     PreAggregatedCostDataBuilder preAggregatedCostDataBuilder = PreAggregatedCostData.builder();
-    Double gcpCost = Double.valueOf(0);
+    Double cloudCost = Double.valueOf(0);
     dataPointBuilder.id(totalStringValueConstant);
     for (Field field : fields) {
       String value = null;
@@ -418,13 +418,13 @@ public class PreAggregatedBillingDataHelper {
         case entityConstantAwsBlendedCost:
         case entityConstantRawTableAwsBlendedCost:
           double blendedCost = getNumericValue(row, field);
-          preAggregatedCostDataBuilder.cost(blendedCost);
+          cloudCost += blendedCost;
           dataPointBuilder.awsBlendedCost(billingDataHelper.getRoundedDoubleValue(blendedCost));
           break;
         case entityConstantAwsUnBlendedCost:
         case entityConstantRawTableAwsUnBlendedCost:
           double unBlendedCost = getNumericValue(row, field);
-          preAggregatedCostDataBuilder.cost(unBlendedCost);
+          cloudCost += unBlendedCost;
           dataPointBuilder.awsUnblendedCost(billingDataHelper.getRoundedDoubleValue(unBlendedCost));
           break;
         case entityConstantGcpProjectId:
@@ -475,12 +475,12 @@ public class PreAggregatedBillingDataHelper {
           break;
         case entityConstantGcpCost:
           double cost = getNumericValue(row, field);
-          gcpCost += cost;
+          cloudCost += cost;
           dataPointBuilder.gcpTotalCost(billingDataHelper.getRoundedDoubleValue(cost));
           break;
         case entityConstantGcpDiscount:
           double discount = getNumericValue(row, field);
-          gcpCost += discount;
+          cloudCost += discount;
           dataPointBuilder.gcpDiscount(billingDataHelper.getRoundedDoubleValue(discount));
           break;
         default:
@@ -488,8 +488,8 @@ public class PreAggregatedBillingDataHelper {
       }
     }
 
-    preAggregatedCostDataBuilder.cost(gcpCost);
-    dataPointBuilder.gcpSubTotalCost(billingDataHelper.getRoundedDoubleValue(gcpCost));
+    preAggregatedCostDataBuilder.cost(cloudCost);
+    dataPointBuilder.gcpSubTotalCost(billingDataHelper.getRoundedDoubleValue(cloudCost));
 
     PreAggregatedCostData preAggregatedCostData =
         preAggregatedCostDataBuilder.maxStartTime(getTimeStampValue(row, maxPreAggStartTimeConstant))
