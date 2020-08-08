@@ -73,4 +73,26 @@ public interface AzureVMSSHelperServiceDelegate {
    * @return
    */
   List<String> listResourceGroupsNamesBySubscriptionId(AzureConfig azureConfig, String subscriptionId);
+
+  /**
+   * Wait for all VMSS Instances to be in Running State
+   *
+   * @param azureConfig
+   * @param subscriptionId
+   * @param virtualMachineScaleSetId
+   * @param autoScalingSteadyStateTimeout
+   */
+  void waitForAllVmssInstancesToBeReady(AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId,
+      Integer autoScalingSteadyStateTimeout);
+
+  /**
+   * Check if all VMSS Instances are in running state
+   *
+   * @param azureConfig
+   * @param subscriptionId
+   * @param virtualMachineScaleSetId
+   * @return
+   */
+  boolean checkIfAllVmssInstancesAreInRunningState(
+      AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId);
 }

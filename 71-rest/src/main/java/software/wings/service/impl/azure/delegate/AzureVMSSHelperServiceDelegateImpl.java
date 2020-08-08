@@ -1,14 +1,23 @@
 package software.wings.service.impl.azure.delegate;
 
+import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofSeconds;
+
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import io.fabric8.utils.Objects;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -18,6 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -32,6 +42,8 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
   public static final String AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG = "Azure management client can't be null";
   public static final String VIRTUAL_SCALE_SET_NAME_NULL_VALIDATION_MSG =
       "Parameter virtualScaleSetName is required and cannot be null";
+
+  private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
   @Override
   public List<VirtualMachineScaleSet> listVirtualMachineScaleSetsByResourceGroupName(
@@ -140,5 +152,42 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
     logger.debug("Start listing resource groups names for subscriptionId {}", subscriptionId);
     List<ResourceGroup> resourceGroupList = azure.resourceGroups().list();
     return resourceGroupList.stream().map(HasName::name).collect(Collectors.toList());
+  }
+
+  @Override
+  public void waitForAllVmssInstancesToBeReady(AzureConfig azureConfig, String subscriptionId,
+      String virtualMachineScaleSetId, Integer autoScalingSteadyStateTimeout) {
+    TimeLimiter timeLimiter = new SimpleTimeLimiter();
+    try {
+      timeLimiter.callWithTimeout(() -> {
+        while (true) {
+          if (checkIfAllVmssInstancesAreInRunningState(azureConfig, subscriptionId, virtualMachineScaleSetId)) {
+            return true;
+          }
+          sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
+        }
+      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.error("Timed out waiting for all VMSS Instances to be in Running State", e);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException("Error while waiting for all VMSS Instaces to be in Running State", e);
+    }
+  }
+
+  @Override
+  public boolean checkIfAllVmssInstancesAreInRunningState(
+      AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId) {
+    Objects.notNull(subscriptionId, SUBSCRIPTION_ID_NULL_VALIDATION_MSG);
+    Objects.notNull(virtualMachineScaleSetId, VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG);
+
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+    VirtualMachineScaleSet virtualMachineScaleSet = azure.virtualMachineScaleSets().getById(virtualMachineScaleSetId);
+    PagedList<VirtualMachineScaleSetVM> vmssInstanceList = virtualMachineScaleSet.virtualMachines().list();
+
+    return vmssInstanceList.isEmpty()
+        || vmssInstanceList.stream().allMatch(
+               instance -> instance.instanceView().statuses().get(0).displayStatus().equals("Provisioning succeeded"));
   }
 }
