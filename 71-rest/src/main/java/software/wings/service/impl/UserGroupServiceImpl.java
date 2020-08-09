@@ -464,10 +464,8 @@ public class UserGroupServiceImpl implements UserGroupService {
       Set<String> memberIdsToBeAdded = Sets.difference(newMemberIds, existingMemberIds);
       Set<String> memberIdsToBeRemoved = Sets.difference(existingMemberIds, newMemberIds);
 
-      logger.info("Update userGroup={} in account={}. Members to be added={}", updatedUserGroup.getName(),
-          updatedUserGroup.getAccountId(), memberIdsToBeAdded);
-      logger.info("Update userGroup={} in account={}. Members to be removed={}", updatedUserGroup.getName(),
-          updatedUserGroup.getAccountId(), memberIdsToBeRemoved);
+      logger.info("Update userGroup={} in account={}. Members to be added={}. Members to be removed={}",
+          updatedUserGroup.getName(), updatedUserGroup.getAccountId(), memberIdsToBeAdded, memberIdsToBeRemoved);
 
       auditServiceHelper.reportForAuditingUsingAccountId(
           userGroup.getAccountId(), userGroup, updatedUserGroup, Type.UPDATE);
