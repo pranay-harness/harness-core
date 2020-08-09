@@ -1,6 +1,7 @@
 package software.wings.beans.security;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.ImmutableSet;
@@ -197,5 +198,13 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
   @JsonIgnore
   public List<String> getEmailAddresses() {
     return null != notificationSettings ? notificationSettings.getEmailAddresses() : Collections.emptyList();
+  }
+
+  private boolean hasMember(String userId) {
+    return isNotEmpty(memberIds) && memberIds.contains(userId);
+  }
+
+  public boolean hasMember(User user) {
+    return user != null && hasMember(user.getUuid());
   }
 }

@@ -171,6 +171,7 @@ public class EntityHelper {
       affectedResourceName = userGroup.getName();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
+      logger.info("Auditing user group. User Group : {}. Operation : {}.", entityName, affectedResourceOperation);
     } else if (entity instanceof Whitelist) {
       Whitelist whitelist = (Whitelist) entity;
       entityType = EntityType.WHITELISTED_IP.name();
@@ -187,6 +188,7 @@ public class EntityHelper {
       affectedResourceName = user.getName();
       affectedResourceType = entityType;
       affectedResourceOperation = type.name();
+      logger.info("Auditing user. User : {}. Operation : {}.", entityName, affectedResourceOperation);
     } else if (entity instanceof UserInvite) {
       UserInvite userInvite = (UserInvite) entity;
       entityType = EntityType.USER_INVITE.name();

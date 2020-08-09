@@ -37,11 +37,11 @@ public class SamlUserGroupSync {
     List<UserGroup> userAddedToGroups = new ArrayList<>();
 
     userGroupsToSync.forEach(userGroup -> {
-      if (userGroup.getMembers().contains(user) && !newUserGroups.contains(userGroup.getSsoGroupId())) {
+      if (userGroup.hasMember(user) && !newUserGroups.contains(userGroup.getSsoGroupId())) {
         logger.info("Removing user: {} from user group: {} in account: {}", samlUserAuthorization.getEmail(),
             userGroup.getName(), userGroup.getAccountId());
         userGroupService.removeMembers(userGroup, Collections.singletonList(user), false, true);
-      } else if (!userGroup.getMembers().contains(user) && newUserGroups.contains(userGroup.getSsoGroupId())) {
+      } else if (!userGroup.hasMember(user) && newUserGroups.contains(userGroup.getSsoGroupId())) {
         userAddedToGroups.add(userGroup);
       }
     });
