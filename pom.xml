@@ -1587,6 +1587,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>io.specto</groupId>
+                <artifactId>hoverfly-java</artifactId>
+                <version>0.13.1</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>net.javacrumbs.json-unit</groupId>
                 <artifactId>json-unit-fluent</artifactId>
                 <version>1.12.1</version>
