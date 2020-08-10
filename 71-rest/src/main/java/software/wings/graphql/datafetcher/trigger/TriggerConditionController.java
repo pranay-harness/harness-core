@@ -105,14 +105,18 @@ public class TriggerConditionController {
           webhookSource = QLWebhookSource.valueOf(webHookTriggerCondition.getWebhookSource().toString());
         }
 
-        StringBuilder stringBuilder = new StringBuilder(mainConfiguration.getPortal().getUrl());
-        stringBuilder.append("/api/webhooks/")
-            .append(webHookTriggerCondition.getWebHookToken().getWebHookToken())
-            .append("?accountId=")
-            .append(accountId);
+        String webhookUrl = mainConfiguration.getPortal().getUrl().trim();
+        if (!webhookUrl.endsWith("/")) {
+          webhookUrl += "/";
+        }
+        if (!webhookUrl.contains("gateway")) {
+          webhookUrl += "gateway";
+        }
 
+        webhookUrl +=
+            "/api/webhooks/" + webHookTriggerCondition.getWebHookToken().getWebHookToken() + "?accountId=" + accountId;
         QLWebhookDetails details = QLWebhookDetails.builder()
-                                       .webhookURL(stringBuilder.toString())
+                                       .webhookURL(webhookUrl)
                                        .header("content-type: application/json")
                                        .method(webHookTriggerCondition.getWebHookToken().getHttpMethod())
                                        .payload(webHookTriggerCondition.getWebHookToken().getPayload())

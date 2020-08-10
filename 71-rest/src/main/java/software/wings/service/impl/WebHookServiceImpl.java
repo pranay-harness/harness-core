@@ -83,7 +83,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private ServiceResourceService serviceResourceService;
   @Transient @Inject protected FeatureFlagService featureFlagService;
 
-  private String getBaseUrl() {
+  private String getBaseUrlUI() {
     String baseUrl = configuration.getPortal().getUrl().trim();
     if (!baseUrl.endsWith("/")) {
       baseUrl += "/";
@@ -94,17 +94,25 @@ public class WebHookServiceImpl implements WebHookService {
   private String getUiUrl(
       boolean isPipeline, String accountId, String appId, String envId, String workflowExecutionId) {
     if (isPipeline) {
-      return format("%s#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", getBaseUrl(),
+      return format("%s#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", getBaseUrlUI(),
           accountId, appId, workflowExecutionId);
     } else {
-      return format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrl(), accountId, appId, envId,
+      return format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrlUI(), accountId, appId, envId,
           workflowExecutionId);
     }
   }
 
   private String getApiUrl(String accountId, String appId, String workflowExecutionId) {
-    return format("%sapi/external/v1/executions/%s/status?accountId=%s&appId=%s", getBaseUrl(), workflowExecutionId,
+    return format("%sapi/external/v1/executions/%s/status?accountId=%s&appId=%s", getBaseUrlAPI(), workflowExecutionId,
         accountId, appId);
+  }
+
+  private String getBaseUrlAPI() {
+    String baseUrl = configuration.getApiUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    return baseUrl;
   }
 
   @Override
@@ -159,7 +167,7 @@ public class WebHookServiceImpl implements WebHookService {
     WorkflowExecution workflowExecution = triggerService.triggerExecutionByWebHook(
         appId, token, serviceBuildNumbers, webHookRequest.getParameters(), TriggerExecution.builder().build());
 
-    return constructSuccessResponse(appId, app, workflowExecution);
+    return constructSuccessResponse(appId, app.getAccountId(), workflowExecution);
   }
   private boolean isGithubPingEvent(HttpHeaders httpHeaders) {
     if (httpHeaders == null) {
@@ -503,15 +511,15 @@ public class WebHookServiceImpl implements WebHookService {
     }
   }
 
-  private Response constructSuccessResponse(String appId, Application app, WorkflowExecution workflowExecution) {
-    WebHookResponse webHookResponse =
-        WebHookResponse.builder()
-            .requestId(workflowExecution.getUuid())
-            .status(workflowExecution.getStatus().name())
-            .apiUrl(getApiUrl(app.getAccountId(), appId, workflowExecution.getUuid()))
-            .uiUrl(getUiUrl(PIPELINE == workflowExecution.getWorkflowType(), app.getAccountId(), appId,
-                workflowExecution.getEnvId(), workflowExecution.getUuid()))
-            .build();
+  @VisibleForTesting
+  public Response constructSuccessResponse(String appId, String accountId, WorkflowExecution workflowExecution) {
+    WebHookResponse webHookResponse = WebHookResponse.builder()
+                                          .requestId(workflowExecution.getUuid())
+                                          .status(workflowExecution.getStatus().name())
+                                          .apiUrl(getApiUrl(accountId, appId, workflowExecution.getUuid()))
+                                          .uiUrl(getUiUrl(PIPELINE == workflowExecution.getWorkflowType(), accountId,
+                                              appId, workflowExecution.getEnvId(), workflowExecution.getUuid()))
+                                          .build();
 
     return prepareResponse(webHookResponse, Response.Status.OK);
   }
