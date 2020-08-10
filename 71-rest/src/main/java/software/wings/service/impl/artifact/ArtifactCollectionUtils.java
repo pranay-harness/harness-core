@@ -856,9 +856,11 @@ public class ArtifactCollectionUtils {
     String prefix = isCollection ? "ASYNC_ARTIFACT_CRON" : "ASYNC_ARTIFACT_CLEANUP_CRON";
     String action = isCollection ? "collection" : "cleanup";
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())) {
-      logger.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
-          artifactStream.getUuid(), action);
-      return true;
+      if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
+        logger.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
+            artifactStream.getUuid(), action);
+        return true;
+      }
     } else if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
       // If perpetual task is not enabled but the artifact stream still has a perpetual task id, delete the perpetual
       // task.
