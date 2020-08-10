@@ -3,7 +3,6 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -36,11 +35,8 @@ import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
-import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
-import io.harness.k8s.model.KubernetesResourceId;
-import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -75,7 +71,9 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper k8sTaskHelper;
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @Mock private K8sRollingBaseHandler k8sRollingBaseHandler;
+
   @InjectMocks private K8sRollingDeployTaskHandler k8sRollingDeployTaskHandler;
+  @InjectMocks private K8sRollingBaseHandler k8sRollingDeployTaskBaseHandler;
 
   @Test
   @Owner(developers = ANSHUL)
@@ -133,29 +131,6 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testUpdateDeploymentConfigRevision() throws Exception {
-    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-
-    Release.KubernetesResourceIdRevision resourceIdMock = Mockito.mock(Release.KubernetesResourceIdRevision.class);
-    Release release = Release.builder().managedWorkloads(asList(resourceIdMock)).build();
-
-    on(k8sRollingDeployTaskHandler).set("release", release);
-    when(k8sTaskHelperBase.getLatestRevision(any(), any(), any())).thenReturn("2");
-    when(resourceIdMock.getWorkload())
-        .thenReturn(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build());
-
-    k8sRollingDeployTaskHandler.updateDeploymentConfigRevision(delegateTaskParams);
-    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(resourceIdMock).setRevision(captor.capture());
-    assertThat(captor.getValue()).isEqualTo("2");
-
-    when(resourceIdMock.getWorkload()).thenReturn(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build());
-    verify(resourceIdMock, times(1)).setRevision(anyString());
   }
 
   @Test
