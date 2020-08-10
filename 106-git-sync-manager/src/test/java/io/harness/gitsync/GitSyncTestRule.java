@@ -69,7 +69,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
       }
     });
     modules.add(KryoModule.getInstance());
-    modules.add(new GitSyncModule());
+    modules.add(GitSyncModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(new GitSyncPersistenceTestConfig());
     modules.add(NGCoreModule.getInstance());
