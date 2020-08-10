@@ -1,5 +1,6 @@
 package io.harness.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
@@ -65,6 +66,10 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
   }
 
   private boolean deleteProcessedResponses(Set<String> responsesToBeDeleted) {
+    if (isEmpty(responsesToBeDeleted)) {
+      return true;
+    }
+
     boolean deleteSuccessful =
         persistence.delete(persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
                                .field(DelegateAsyncTaskResponseKeys.uuid)
