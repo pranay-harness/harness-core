@@ -69,11 +69,11 @@ public class ServiceResourceTest extends NgManagerTest {
         .get("ACCOUNT_ID", serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(),
             serviceRequestDTO.getIdentifier());
 
-    Optional<ServiceResponseDTO> serviceResponse =
+    ServiceResponseDTO serviceResponse =
         serviceResource.get("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
 
-    assertThat(serviceResponse).isPresent();
-    assertThat(serviceResponse.get()).isEqualTo(serviceResponseDTO);
+    assertThat(serviceResponse).isNotNull();
+    assertThat(serviceResponse).isEqualTo(serviceResponseDTO);
   }
 
   @Test
@@ -104,10 +104,9 @@ public class ServiceResourceTest extends NgManagerTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     doReturn(serviceEntity).when(serviceEntityService).update(serviceEntity);
-    Optional<ServiceResponseDTO> response =
-        serviceResource.update(serviceEntity.getAccountId(), serviceRequestDTO).getData();
-    assertThat(response).isPresent();
-    assertThat(response.get()).isEqualTo(serviceResponseDTO);
+    ServiceResponseDTO response = serviceResource.update(serviceEntity.getAccountId(), serviceRequestDTO).getData();
+    assertThat(response).isNotNull();
+    assertThat(response).isEqualTo(serviceResponseDTO);
   }
 
   @Test
@@ -115,10 +114,9 @@ public class ServiceResourceTest extends NgManagerTest {
   @Category(UnitTests.class)
   public void testUpsert() {
     doReturn(serviceEntity).when(serviceEntityService).upsert(serviceEntity);
-    Optional<ServiceResponseDTO> response =
-        serviceResource.upsert(serviceEntity.getAccountId(), serviceRequestDTO).getData();
-    assertThat(response).isPresent();
-    assertThat(response.get()).isEqualTo(serviceResponseDTO);
+    ServiceResponseDTO response = serviceResource.upsert(serviceEntity.getAccountId(), serviceRequestDTO).getData();
+    assertThat(response).isNotNull();
+    assertThat(response).isEqualTo(serviceResponseDTO);
   }
 
   @Test

@@ -76,11 +76,11 @@ public class EnvironmentResourceTest extends CategoryTest {
         .get("ACCOUNT_ID", environmentRequestDTO.getOrgIdentifier(), environmentRequestDTO.getProjectIdentifier(),
             environmentRequestDTO.getIdentifier());
 
-    Optional<EnvironmentResponseDTO> envResponse =
+    EnvironmentResponseDTO envResponse =
         environmentResource.get("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
 
-    assertThat(envResponse).isPresent();
-    assertThat(envResponse.get()).isEqualTo(environmentResponseDTO);
+    assertThat(envResponse).isNotNull();
+    assertThat(envResponse).isEqualTo(environmentResponseDTO);
   }
 
   @Test
@@ -111,10 +111,10 @@ public class EnvironmentResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     doReturn(environmentEntity).when(environmentService).update(environmentEntity);
-    Optional<EnvironmentResponseDTO> response =
+    EnvironmentResponseDTO response =
         environmentResource.update(environmentEntity.getAccountId(), environmentRequestDTO).getData();
-    assertThat(response).isPresent();
-    assertThat(response.get()).isEqualTo(environmentResponseDTO);
+    assertThat(response).isNotNull();
+    assertThat(response).isEqualTo(environmentResponseDTO);
   }
 
   @Test
@@ -122,10 +122,10 @@ public class EnvironmentResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpsert() {
     doReturn(environmentEntity).when(environmentService).upsert(environmentEntity);
-    Optional<EnvironmentResponseDTO> response =
+    EnvironmentResponseDTO response =
         environmentResource.upsert(environmentEntity.getAccountId(), environmentRequestDTO).getData();
-    assertThat(response).isPresent();
-    assertThat(response.get()).isEqualTo(environmentResponseDTO);
+    assertThat(response).isNotNull();
+    assertThat(response).isEqualTo(environmentResponseDTO);
   }
 
   @Test

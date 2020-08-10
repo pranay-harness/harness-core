@@ -56,12 +56,12 @@ public class ServiceResource {
   @GET
   @Path("{serviceIdentifier}")
   @ApiOperation(value = "Gets a Service by identifier", nickname = "getService")
-  public ResponseDTO<Optional<ServiceResponseDTO>> get(@PathParam("serviceIdentifier") String serviceIdentifier,
+  public ResponseDTO<ServiceResponseDTO> get(@PathParam("serviceIdentifier") String serviceIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier) {
     Optional<ServiceEntity> serviceEntity =
         serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier);
-    return ResponseDTO.newResponse(serviceEntity.map(ServiceElementMapper::writeDTO));
+    return ResponseDTO.newResponse(serviceEntity.map(ServiceElementMapper::writeDTO).orElse(null));
   }
 
   @POST
@@ -85,21 +85,21 @@ public class ServiceResource {
 
   @PUT
   @ApiOperation(value = "Update a service by identifier", nickname = "updateService")
-  public ResponseDTO<Optional<ServiceResponseDTO>> update(
+  public ResponseDTO<ServiceResponseDTO> update(
       @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
-    return ResponseDTO.newResponse(Optional.ofNullable(ServiceElementMapper.writeDTO(updatedService)));
+    return ResponseDTO.newResponse(ServiceElementMapper.writeDTO(updatedService));
   }
 
   @PUT
   @Path("upsert")
   @ApiOperation(value = "Upsert a service by identifier", nickname = "upsertService")
-  public ResponseDTO<Optional<ServiceResponseDTO>> upsert(
+  public ResponseDTO<ServiceResponseDTO> upsert(
       @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity upsertedService = serviceEntityService.upsert(requestService);
-    return ResponseDTO.newResponse(Optional.ofNullable(ServiceElementMapper.writeDTO(upsertedService)));
+    return ResponseDTO.newResponse(ServiceElementMapper.writeDTO(upsertedService));
   }
 
   @GET
