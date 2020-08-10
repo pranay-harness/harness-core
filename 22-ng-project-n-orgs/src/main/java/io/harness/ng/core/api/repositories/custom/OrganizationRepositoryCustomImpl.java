@@ -1,8 +1,8 @@
-package io.harness.ng.core.dao.api.repositories.custom;
+package io.harness.ng.core.api.repositories.custom;
 
 import com.google.inject.Inject;
 
-import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.entities.Organization;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,14 +15,14 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 import java.util.List;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
-public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
+public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public Page<Project> findAll(Criteria criteria, Pageable pageable) {
+  public Page<Organization> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
-    List<Project> projects = mongoTemplate.find(query, Project.class);
+    List<Organization> organizations = mongoTemplate.find(query, Organization.class);
     return PageableExecutionUtils.getPage(
-        projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Project.class));
+        organizations, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Organization.class));
   }
 }

@@ -3,10 +3,10 @@ package io.harness.ng.core;
 import com.google.inject.AbstractModule;
 
 import io.harness.mongo.MongoPersistence;
-import io.harness.ng.core.services.api.OrganizationService;
-import io.harness.ng.core.services.api.ProjectService;
-import io.harness.ng.core.services.api.impl.OrganizationServiceImpl;
-import io.harness.ng.core.services.api.impl.ProjectServiceImpl;
+import io.harness.ng.core.impl.OrganizationServiceImpl;
+import io.harness.ng.core.impl.ProjectServiceImpl;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
 
 public class CoreModule extends AbstractModule {

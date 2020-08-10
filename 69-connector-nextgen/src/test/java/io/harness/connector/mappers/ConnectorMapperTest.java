@@ -56,11 +56,11 @@ public class ConnectorMapperTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     String cacert = "caCertRef";
     secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
     SecretRefData passwordSecretRefData =
         SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
-    MockitoAnnotations.initMocks(this);
     when(kubernetesConfigCastHelper.castToKubernetesDelegateCredential(any())).thenCallRealMethod();
     when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
     when(kubernetesDTOToEntity.toConnectorEntity(any())).thenCallRealMethod();

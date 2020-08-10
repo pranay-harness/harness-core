@@ -1,4 +1,4 @@
-package io.harness.ng.core.services.api;
+package io.harness.ng.core.services;
 
 import io.harness.ng.core.entities.Project;
 import org.springframework.data.domain.Page;

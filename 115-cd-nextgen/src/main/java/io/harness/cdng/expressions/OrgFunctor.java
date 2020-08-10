@@ -4,7 +4,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.LateBindingValue;
-import io.harness.ng.core.services.api.OrganizationService;
+import io.harness.ng.core.services.OrganizationService;
 
 public class OrgFunctor implements LateBindingValue {
   private final OrganizationService organizationService;

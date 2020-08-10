@@ -1,4 +1,4 @@
-package io.harness.ng.core.services.api.impl;
+package io.harness.ng.core.api.impl;
 
 import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;
@@ -6,7 +6,7 @@ import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fro
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ng.core.services.api.NGSecretService;
+import io.harness.ng.core.api.NGSecretService;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;

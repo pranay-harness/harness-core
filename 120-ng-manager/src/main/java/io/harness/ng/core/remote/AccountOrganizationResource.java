@@ -12,7 +12,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
-import io.harness.ng.core.services.api.OrganizationService;
+import io.harness.ng.core.services.OrganizationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;

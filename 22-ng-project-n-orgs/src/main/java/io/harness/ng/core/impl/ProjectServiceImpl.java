@@ -1,4 +1,4 @@
-package io.harness.ng.core.services.api.impl;
+package io.harness.ng.core.impl;
 
 import static io.harness.exception.WingsException.USER_SRE;
 
@@ -7,10 +7,10 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.ng.core.dao.api.repositories.spring.ProjectRepository;
+import io.harness.ng.core.api.repositories.spring.ProjectRepository;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.services.api.OrganizationService;
-import io.harness.ng.core.services.api.ProjectService;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;

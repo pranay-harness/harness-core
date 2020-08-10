@@ -1,7 +1,7 @@
-package io.harness.ng.core.dao.api.repositories.spring;
+package io.harness.ng.core.api.repositories.spring;
 
 import io.harness.annotation.HarnessRepo;
-import io.harness.ng.core.dao.api.repositories.custom.OrganizationRepositoryCustom;
+import io.harness.ng.core.api.repositories.custom.OrganizationRepositoryCustom;
 import io.harness.ng.core.entities.Organization;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

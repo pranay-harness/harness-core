@@ -10,7 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.services.api.OrganizationService;
+import io.harness.ng.core.services.OrganizationService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

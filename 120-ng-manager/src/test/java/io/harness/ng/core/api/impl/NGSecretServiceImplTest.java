@@ -1,4 +1,4 @@
-package io.harness.ng.core.services.api.impl;
+package io.harness.ng.core.api.impl;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
