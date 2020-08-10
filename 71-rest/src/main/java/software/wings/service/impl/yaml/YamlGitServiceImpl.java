@@ -106,6 +106,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.EntityTypeLogContext;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.impl.yaml.sync.GitSyncFailureAlertDetails;
@@ -183,6 +184,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject GitSyncService gitSyncService;
   @Inject GitSyncErrorService gitSyncErrorService;
+  @Inject GitConfigHelperService gitConfigHelperService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -602,6 +604,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       }
 
       ensureValidNameSyntax(gitFileChanges);
+
+      gitConfigHelperService.convertToRepoGitConfig(gitConfig, yamlGitConfig.getRepositoryName());
 
       logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
 
