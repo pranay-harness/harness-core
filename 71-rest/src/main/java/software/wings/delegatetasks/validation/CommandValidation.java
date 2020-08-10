@@ -26,6 +26,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.KubernetesSetupParams;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSession;
@@ -112,7 +113,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(), config.getPort(),
         config.isUseSSL());
 
-    try (WinRmSession ignore = new WinRmSession(config)) {
+    try (WinRmSession ignore = new WinRmSession(config, new NoopExecutionCallback())) {
       resultBuilder.validated(true);
     } catch (Exception e) {
       logger.info("Exception in WinrmSession Validation: {}", e);

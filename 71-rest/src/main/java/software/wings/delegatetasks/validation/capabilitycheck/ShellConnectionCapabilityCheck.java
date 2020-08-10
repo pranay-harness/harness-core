@@ -11,6 +11,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSession;
@@ -46,7 +47,7 @@ public class ShellConnectionCapabilityCheck implements CapabilityCheck {
       logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
           winrmConfig.getPort(), winrmConfig.isUseSSL());
 
-      try (WinRmSession ignore = new WinRmSession(winrmConfig)) {
+      try (WinRmSession ignore = new WinRmSession(winrmConfig, new NoopExecutionCallback())) {
         return CapabilityResponse.builder().validated(true).delegateCapability(capability).build();
       }
 

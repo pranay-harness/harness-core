@@ -1,7 +1,5 @@
 package software.wings.core.ssh.executors;
 
-import static io.harness.logging.LogLevel.ERROR;
-import static java.lang.String.format;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
@@ -15,17 +13,11 @@ import io.harness.logging.LogCallback;
 import io.harness.security.EncryptionUtils;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.beans.KerberosConfig;
 import software.wings.beans.command.NoopExecutionCallback;
+import software.wings.utils.SshHelperUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -84,7 +76,8 @@ public class SshSessionFactory {
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme() == KERBEROS) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
       logger.info("SSH using Kerberos Auth");
-      generateTGT(config, logCallback);
+      SshHelperUtils.generateTGT(config.getUserName(),
+          config.getPassword() != null ? new String(config.getPassword()) : null, config.getKeyPath(), logCallback);
 
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
@@ -128,81 +121,6 @@ public class SshSessionFactory {
     session.connect(config.getSshConnectionTimeout());
 
     return session;
-  }
-
-  public static void generateTGT(SshSessionConfig config, LogCallback logCallback) throws JSchException {
-    logger.info("Do we need to generate Ticket Granting Ticket(TGT)? " + config.getKerberosConfig().isGenerateTGT());
-    if (config.getKerberosConfig() != null && config.getKerberosConfig().isGenerateTGT()) {
-      if (!isValidKeyTabFile(config.getKerberosConfig().getKeyTabFilePath())) {
-        logCallback.saveExecutionLog("Cannot proceed with Ticket Granting Ticket(TGT) generation.", ERROR);
-        logger.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
-        throw new JSchException(
-            "Failure: Invalid keytab file path. Cannot proceed with Ticket Granting Ticket(TGT) generation");
-      }
-      logger.info("Generating Ticket Granting Ticket(TGT)...");
-      boolean ticketGenerated = generateTGT(config.getKerberosConfig(),
-          config.getPassword() != null ? new String(config.getPassword()) : null, logCallback);
-      if (ticketGenerated) {
-        logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for "
-            + config.getKerberosConfig().getPrincipalWithRealm());
-        logger.info("Ticket Granting Ticket(TGT) generated successfully for "
-            + config.getKerberosConfig().getPrincipalWithRealm());
-      } else {
-        logger.error("Failure: could not generate Ticket Granting Ticket(TGT)");
-        throw new JSchException("Failure: could not generate Ticket Granting Ticket(TGT)");
-      }
-    }
-  }
-
-  private static boolean generateTGT(KerberosConfig kerberosConfig, String password, LogCallback logCallback) {
-    logCallback.saveExecutionLog(
-        "Generating Ticket Granting Ticket(TGT) for principal: " + kerberosConfig.getPrincipalWithRealm());
-    logger.info("Generating Ticket Granting Ticket(TGT) for principal: " + kerberosConfig.getPrincipalWithRealm());
-    String commandString = !StringUtils.isEmpty(password)
-        ? format("echo %s | kinit %s", password, kerberosConfig.getPrincipalWithRealm())
-        : format("kinit -k -t %s %s", kerberosConfig.getKeyTabFilePath(), kerberosConfig.getPrincipalWithRealm());
-    return executeLocalCommand(commandString);
-  }
-
-  private static boolean isValidKeyTabFile(String keyTabFilePath) {
-    if (!StringUtils.isEmpty(keyTabFilePath)) {
-      if (new File(keyTabFilePath).exists()) {
-        logger.info("Found keytab file at path: [{}]", keyTabFilePath);
-        return true;
-      } else {
-        logger.error("Invalid keytab file path: [{}].", keyTabFilePath);
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private static boolean executeLocalCommand(String cmdString) {
-    String[] commandList = new String[] {"sh", "-c", cmdString};
-    ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .command(commandList)
-                                          .directory(new File(System.getProperty("user.home")))
-                                          .readOutput(true)
-                                          .redirectOutput(new LogOutputStream() {
-                                            @Override
-                                            protected void processLine(String line) {
-                                              logger.info(line);
-                                            }
-                                          })
-                                          .redirectError(new LogOutputStream() {
-                                            @Override
-                                            protected void processLine(String line) {
-                                              logger.error(line);
-                                            }
-                                          });
-
-    ProcessResult processResult = null;
-    try {
-      processResult = processExecutor.execute();
-    } catch (IOException | InterruptedException | TimeoutException e) {
-      logger.error("Failed to execute command ", e);
-    }
-    return processResult != null && processResult.getExitValue() == 0;
   }
 
   protected static String getKeyPath(SshSessionConfig config) {

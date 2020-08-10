@@ -36,6 +36,9 @@ public class InstallUtils {
   private static final String goTemplateClientVersion = "v0.4";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
+  private static final String harnessPywinrmVersion = "v0.1-dev";
+  private static final String harnessPywinrmBaseDir = "./client-tools/harness-pywinrm/";
+
   static final String helm3Version = "v3.1.2";
 
   static final String helm2Version = "v2.13.1";
@@ -57,6 +60,7 @@ public class InstallUtils {
   private static String kustomizePath = "kustomize";
 
   private static String goTemplateToolPath = "go-template";
+  private static String harnessPywinrmToolPath = "harness-pywinrm";
   private static Map<String, String> helmPaths = new HashMap<>();
 
   static {
@@ -78,6 +82,8 @@ public class InstallUtils {
       "public/shared/tools/chartmuseum/release/%s/bin/%s/amd64/chartmuseum";
   private static final String GO_TEMPLATE_CDN_PATH =
       "public/shared/tools/go-template/release/%s/bin/%s/amd64/go-template";
+  private static final String HARNESS_PYWINRM_CDN_PATH =
+      "public/shared/tools/harness-pywinrm/release/%s/bin/%s/amd64/harness-pywinrm";
   private static final String OC_CDN_PATH = "public/shared/tools/oc/release/%s/bin/%s/amd64/oc";
   private static final String HELM_CDN_PATH = "public/shared/tools/helm/release/%s/bin/%s/amd64/helm";
   private static final String TERRAFORM_CONFIG_CDN_PATH =
@@ -95,6 +101,10 @@ public class InstallUtils {
 
   public static String getGoTemplateToolPath() {
     return goTemplateToolPath;
+  }
+
+  public static String getHarnessPywinrmToolPath() {
+    return harnessPywinrmToolPath;
   }
 
   public static String getHelm2Path() {
@@ -278,6 +288,88 @@ public class InstallUtils {
     }
   }
 
+  public static boolean installHarnessPywinrm(DelegateConfiguration configuration) {
+    try {
+      if (SystemUtils.IS_OS_WINDOWS) {
+        logger.info("Skipping harness-pywinrm install on Windows");
+        return true;
+      }
+
+      String harnessPywinrmClientDirectory = harnessPywinrmBaseDir + harnessPywinrmVersion;
+
+      if (validateHarnessPywinrmExists(harnessPywinrmClientDirectory)) {
+        harnessPywinrmToolPath =
+            Paths.get(harnessPywinrmClientDirectory + "/harness-pywinrm").toAbsolutePath().normalize().toString();
+        logger.info("harness-pywinrm version {} already installed", harnessPywinrmVersion);
+        return true;
+      }
+
+      logger.info("Installing harness-pywinrm");
+
+      createDirectoryIfDoesNotExist(harnessPywinrmClientDirectory);
+
+      String downloadUrl = getHarnessPywinrmDownloadUrl(configuration, harnessPywinrmVersion);
+
+      logger.info("download Url is {}", downloadUrl);
+
+      String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
+          + "chmod +x ./harness-pywinrm\n";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(harnessPywinrmClientDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        harnessPywinrmToolPath =
+            Paths.get(harnessPywinrmClientDirectory + "/harness-pywinrm").toAbsolutePath().normalize().toString();
+        logger.info(format("harness-pywinrm version: %s", result.outputUTF8()));
+        if (validateHarnessPywinrmExists(harnessPywinrmClientDirectory)) {
+          logger.info("harness-pywinrm path: {}", harnessPywinrmToolPath);
+          return true;
+        } else {
+          logger.error("harness-pywinrm not validated after download: {}", harnessPywinrmToolPath);
+          return false;
+        }
+      } else {
+        logger.error("harness-pywinrm install failed\n" + result.outputUTF8());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error installing harness-pywinrm", e);
+      return false;
+    }
+  }
+
+  private static boolean validateHarnessPywinrmExists(String harnessPywinrmClientDirectory) {
+    try {
+      if (!Files.exists(Paths.get(harnessPywinrmClientDirectory + "/harness-pywinrm"))) {
+        return false;
+      }
+
+      String script = "./harness-pywinrm -v\n";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(harnessPywinrmClientDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        logger.info(result.outputUTF8());
+        return true;
+      } else {
+        logger.error(result.outputUTF8());
+        return false;
+      }
+    } catch (Exception e) {
+      logger.error("Error checking harness-winrm", e);
+      return false;
+    }
+  }
+
   private static boolean validateGoTemplateClientExists(String goTemplateClientDirectory) {
     try {
       if (!Files.exists(Paths.get(goTemplateClientDirectory + "/go-template"))) {
@@ -313,6 +405,17 @@ public class InstallUtils {
     return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
         + "storage/harness-download/snapshot-go-template/release/" + version + "/bin/" + getOsPath()
         + "/amd64/go-template";
+  }
+
+  private static String getHarnessPywinrmDownloadUrl(DelegateConfiguration delegateConfiguration, String version) {
+    if (delegateConfiguration.isUseCdn()) {
+      return join(
+          "/", delegateConfiguration.getCdnUrl(), String.format(HARNESS_PYWINRM_CDN_PATH, version, getOsPath()));
+    }
+
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
+        + "storage/harness-download/snapshot-harness-pywinrm/release/" + version + "/bin/" + getOsPath()
+        + "/amd64/harness-pywinrm";
   }
 
   private static String getManagerBaseUrl(String managerUrl) {

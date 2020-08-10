@@ -120,6 +120,20 @@ function setupDelegateJars(){
 
       done
 
+      for version in v0.1-dev; do
+
+        echo "Copying harness-pywinrm  ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/snapshot-harness-pywinrm/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o harness-pywinrm https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/${version}/bin/${platform}/amd64/harness-pywinrm
+
+        echo $(ls -sh harness-pywinrm  | cut -d ' ' -f1)
+
+        sudo cp harness-pywinrm ${STORAGE_DIR}/harness-download/snapshot-harness-pywinrm/release/${version}/bin/${platform}/amd64/
+
+      done
+
 
       for version in v2.13.1 v3.0.2 v3.1.2; do
 

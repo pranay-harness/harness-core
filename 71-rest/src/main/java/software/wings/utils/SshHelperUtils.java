@@ -12,6 +12,8 @@ import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
+import static io.harness.logging.LogLevel.ERROR;
+import static java.lang.String.format;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -24,7 +26,14 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import com.jcraft.jsch.JSchException;
 import com.sun.mail.iap.ConnectionException;
 import io.harness.eraro.ErrorCode;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 import io.netty.channel.ConnectTimeoutException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -37,15 +46,19 @@ import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by anubhaw on 2/23/17.
  */
+@Slf4j
 public class SshHelperUtils {
   private static ExecutorType getExecutorType(
       SettingAttribute hostConnectionSetting, SettingAttribute bastionHostConnectionSetting) {
@@ -198,5 +211,67 @@ public class SshHelperUtils {
 
       builder.withBastionHostConfig(sshSessionConfig.build());
     }
+  }
+
+  public static void generateTGT(String userPrincipal, String password, String keyTabFilePath, LogCallback logCallback)
+      throws JSchException {
+    if (!isValidKeyTabFile(keyTabFilePath)) {
+      logCallback.saveExecutionLog("Cannot proceed with Ticket Granting Ticket(TGT) generation.", ERROR);
+      logger.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
+      throw new JSchException(
+          "Failure: Invalid keytab file path. Cannot proceed with Ticket Granting Ticket(TGT) generation");
+    }
+    logger.info("Generating Ticket Granting Ticket(TGT)...");
+    logCallback.saveExecutionLog("Generating Ticket Granting Ticket(TGT) for principal: " + userPrincipal);
+    String commandString = !StringUtils.isEmpty(password) ? format("echo \"%s\" | kinit %s", password, userPrincipal)
+                                                          : format("kinit -k -t %s %s", keyTabFilePath, userPrincipal);
+    boolean ticketGenerated = executeLocalCommand(commandString, logCallback);
+    if (ticketGenerated) {
+      logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
+      logger.info("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
+    } else {
+      logger.error("Failure: could not generate Ticket Granting Ticket(TGT)");
+      throw new JSchException("Failure: could not generate Ticket Granting Ticket(TGT)");
+    }
+  }
+  private static boolean isValidKeyTabFile(String keyTabFilePath) {
+    if (!StringUtils.isEmpty(keyTabFilePath)) {
+      if (new File(keyTabFilePath).exists()) {
+        logger.info("Found keytab file at path: [{}]", keyTabFilePath);
+        return true;
+      } else {
+        logger.error("Invalid keytab file path: [{}].", keyTabFilePath);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static boolean executeLocalCommand(String cmdString, LogCallback logCallback) {
+    String[] commandList = new String[] {"sh", "-c", cmdString};
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .command(commandList)
+                                          .directory(new File(System.getProperty("user.home")))
+                                          .readOutput(true)
+                                          .redirectOutput(new LogOutputStream() {
+                                            @Override
+                                            protected void processLine(String line) {
+                                              logCallback.saveExecutionLog(line, LogLevel.INFO);
+                                            }
+                                          })
+                                          .redirectError(new LogOutputStream() {
+                                            @Override
+                                            protected void processLine(String line) {
+                                              logCallback.saveExecutionLog(line, ERROR);
+                                            }
+                                          });
+
+    ProcessResult processResult = null;
+    try {
+      processResult = processExecutor.execute();
+    } catch (IOException | InterruptedException | TimeoutException e) {
+      logger.error("Failed to execute command ", e);
+    }
+    return processResult != null && processResult.getExitValue() == 0;
   }
 }

@@ -111,6 +111,24 @@ for goversion in v0.2 v0.3 v0.4; do
     curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 done
 
+for harnesspywinrm in v0.1-dev; do
+    echo "Adding harness-pywinrm $harnesspywinrm"
+    HARNESSPYWINRM_LINUX_DIR="${IMAGES_DIR}/harness-pywinrm/linux/$harnesspywinrm/"
+    HARNESSPYWINRM_MAC_DIR="${IMAGES_DIR}/harness-pywinrm/darwin/$harnesspywinrm/"
+
+    HARNESSPYWINRM_LINUX_URL=https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/"$harnesspywinrm"/bin/linux/amd64/harness-pywinrm
+    HARNESSPYWINRM_MAC_URL=https://app.harness.io/storage/harness-download/snapshot-harness-pywinrm/release/"$harnesspywinrm"/bin/darwin/amd64/harness-pywinrm
+
+    echo "$HARNESSPYWINRM_MAC_DIR"
+    echo "$HARNESSPYWINRM_LINUX_DIR"
+
+    mkdir -p $HARNESSPYWINRM_LINUX_DIR
+    mkdir -p $HARNESSPYWINRM_MAC_DIR
+
+    curl -L -o "${HARNESSPYWINRM_LINUX_DIR}harness-pywinrm" "${HARNESSPYWINRM_LINUX_URL}"
+    curl -L -o "${HARNESSPYWINRM_MAC_DIR}harness-pywinrm" "${HARNESSPYWINRM_MAC_URL}"
+done
+
 for helmversion in v2.13.1 v3.0.2 v3.1.2; do
     echo "Adding helmversion $helmversion"
     HELM_LINUX_DIR="${IMAGES_DIR}/helm/linux/$helmversion/"
@@ -217,6 +235,11 @@ function setupClientUtils(){
         for gotemplateversion in v0.2 v0.3 v0.4; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
             cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
+        done
+
+        for harnesspywinrmversion in v0.1-dev; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnesspywinrmversion/bin/${platform}/amd64/
+            cp images/harness-pywinrm/${platform}/$harnesspywinrmversion/harness-pywinrm ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnesspywinrmversion/bin/${platform}/amd64/
         done
 
         for helmversion in v2.13.1 v3.0.2 v3.1.2; do
