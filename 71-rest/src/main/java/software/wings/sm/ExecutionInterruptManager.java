@@ -66,6 +66,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionInterrupt.ExecutionInterruptKeys;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
@@ -90,6 +91,7 @@ public class ExecutionInterruptManager {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject private AppService appService;
 
   Map<ExecutionInterruptType, List<ExecutionStatus>> acceptableIndividualStatusList =
       ImmutableMap.<ExecutionInterruptType, List<ExecutionStatus>>builder()
@@ -166,6 +168,9 @@ public class ExecutionInterruptManager {
       seizeAllInterrupts(res);
     }
 
+    if (executionInterrupt.getAccountId() == null) {
+      executionInterrupt.setAccountId(appService.getAccountIdByAppId(executionInterrupt.getAppId()));
+    }
     wingsPersistence.save(executionInterrupt);
     stateMachineExecutor.handleInterrupt(executionInterrupt);
 
