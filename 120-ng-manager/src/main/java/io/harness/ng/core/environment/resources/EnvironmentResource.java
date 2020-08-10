@@ -56,12 +56,12 @@ public class EnvironmentResource {
   @GET
   @Path("{environmentIdentifier}")
   @ApiOperation(value = "Gets a Environment by identifier", nickname = "getEnvironment")
-  public ResponseDTO<Optional<EnvironmentResponseDTO>> get(
-      @PathParam("environmentIdentifier") String environmentIdentifier, @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+  public ResponseDTO<EnvironmentResponseDTO> get(@PathParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("projectIdentifier") String projectIdentifier) {
     Optional<Environment> environment =
         environmentService.get(accountId, orgIdentifier, projectIdentifier, environmentIdentifier);
-    return ResponseDTO.newResponse(environment.map(EnvironmentMapper::writeDTO));
+    return ResponseDTO.newResponse(environment.map(EnvironmentMapper::writeDTO).orElse(null));
   }
 
   @POST
@@ -85,21 +85,21 @@ public class EnvironmentResource {
 
   @PUT
   @ApiOperation(value = "Update an environment by identifier", nickname = "updateEnvironment")
-  public ResponseDTO<Optional<EnvironmentResponseDTO>> update(
+  public ResponseDTO<EnvironmentResponseDTO> update(
       @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     Environment updatedEnvironment = environmentService.update(requestEnvironment);
-    return ResponseDTO.newResponse(Optional.ofNullable(EnvironmentMapper.writeDTO(updatedEnvironment)));
+    return ResponseDTO.newResponse(EnvironmentMapper.writeDTO(updatedEnvironment));
   }
 
   @PUT
   @Path("upsert")
   @ApiOperation(value = "Upsert an environment by identifier", nickname = "upsertEnvironment")
-  public ResponseDTO<Optional<EnvironmentResponseDTO>> upsert(
+  public ResponseDTO<EnvironmentResponseDTO> upsert(
       @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     Environment updatedEnvironment = environmentService.upsert(requestEnvironment);
-    return ResponseDTO.newResponse(Optional.ofNullable(EnvironmentMapper.writeDTO(updatedEnvironment)));
+    return ResponseDTO.newResponse(EnvironmentMapper.writeDTO(updatedEnvironment));
   }
 
   @GET
