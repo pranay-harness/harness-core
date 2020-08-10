@@ -1,4 +1,4 @@
-package io.harness.ng.core.dao.api.repositories.custom;
+package io.harness.ng.core.api.repositories.custom;
 
 import io.harness.ng.core.entities.Organization;
 import org.springframework.data.domain.Page;

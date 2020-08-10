@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 
 import io.harness.connector.entities.Connector;
 import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.services.api.OrganizationService;
+import io.harness.ng.core.services.OrganizationService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;

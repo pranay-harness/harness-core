@@ -14,10 +14,10 @@ import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toD
 import com.google.inject.Inject;
 
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.ng.core.api.NGSecretFileService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.services.api.NGSecretFileService;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;

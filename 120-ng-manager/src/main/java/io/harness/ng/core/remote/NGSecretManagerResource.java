@@ -7,10 +7,10 @@ import static io.harness.secretmanagerclient.NGConstants.PROJECT_IDENTIFIER_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.services.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.swagger.annotations.Api;

@@ -1,11 +1,11 @@
-package io.harness.ng.core.services.api.impl;
+package io.harness.ng.core.api.impl;
 
 import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ng.core.services.api.NGSecretManagerService;
+import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;

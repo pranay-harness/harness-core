@@ -2,12 +2,12 @@ package io.harness.ng.core;
 
 import com.google.inject.AbstractModule;
 
-import io.harness.ng.core.services.api.NGSecretFileService;
-import io.harness.ng.core.services.api.NGSecretFileServiceImpl;
-import io.harness.ng.core.services.api.NGSecretManagerService;
-import io.harness.ng.core.services.api.NGSecretService;
-import io.harness.ng.core.services.api.impl.NGSecretManagerServiceImpl;
-import io.harness.ng.core.services.api.impl.NGSecretServiceImpl;
+import io.harness.ng.core.api.NGSecretFileService;
+import io.harness.ng.core.api.NGSecretFileServiceImpl;
+import io.harness.ng.core.api.NGSecretManagerService;
+import io.harness.ng.core.api.NGSecretService;
+import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
+import io.harness.ng.core.api.impl.NGSecretServiceImpl;
 
 public class SecretManagementModule extends AbstractModule {
   @Override

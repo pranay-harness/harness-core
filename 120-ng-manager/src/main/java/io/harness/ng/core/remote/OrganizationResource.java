@@ -16,7 +16,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
-import io.harness.ng.core.services.api.OrganizationService;
+import io.harness.ng.core.services.OrganizationService;
 import io.harness.utils.PageUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

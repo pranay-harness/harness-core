@@ -1,4 +1,4 @@
-package io.harness.ng.core.services.api;
+package io.harness.ng.core.api;
 
 import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;

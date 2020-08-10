@@ -1,4 +1,4 @@
-package io.harness.ng.core.services.api;
+package io.harness.ng.core.api;
 
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;

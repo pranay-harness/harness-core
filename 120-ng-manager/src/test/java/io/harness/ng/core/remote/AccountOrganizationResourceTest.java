@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.io.harness.ng.utils.PageTestUtils;
-import io.harness.ng.core.services.api.OrganizationService;
+import io.harness.ng.core.services.OrganizationService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
