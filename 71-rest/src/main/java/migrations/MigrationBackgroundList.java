@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountIdToActivityCollection;
+import migrations.all.AddAccountIdToBarrierInstanceCollection;
 import migrations.all.AddAccountIdToCloudFormationRollBackConfig;
 import migrations.all.AddAccountIdToCommandCollection;
 import migrations.all.AddAccountIdToCommandLogs;
@@ -254,6 +255,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(149, AddAccountIdToServiceInstance.class))
         .add(Pair.of(150, BaseMigration.class))
         .add(Pair.of(151, AddAccountIdToCommandCollection.class))
+        .add(Pair.of(152, AddAccountIdToBarrierInstanceCollection.class))
         .build();
   }
 }

@@ -49,6 +49,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.BarrierStatusData;
@@ -73,6 +74,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Inject private WorkflowService workflowService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private MorphiaPersistenceProvider<BarrierInstance> persistenceProvider;
+  @Inject private AppService appService;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -92,6 +94,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Override
   public String save(@Valid BarrierInstance barrier) {
+    if (barrier.getAccountId() == null) {
+      barrier.setAccountId(appService.getAccountIdByAppId(barrier.getAppId()));
+    }
     return wingsPersistence.save(barrier);
   }
 

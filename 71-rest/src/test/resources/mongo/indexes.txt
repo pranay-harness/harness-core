@@ -86,6 +86,7 @@ awsSecretsManagerConfig {"name": "appId_1", "background": true} {"appId": 1}
 awsSecretsManagerConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 awsSecretsManagerConfig {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1}
 barrierExecutionInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
+barrierInstances {"name": "accountId_1", "background": true} {"accountId": 1}
 barrierInstances {"name": "appId_1", "background": true} {"appId": 1}
 barrierInstances {"name": "next", "background": true} {"state": 1, "nextIteration": 1}
 barrierInstances {"name": "search2", "unique": true} {"name": 1, "pipeline.executionId": 1, "pipeline.parallelIndex": 1}
