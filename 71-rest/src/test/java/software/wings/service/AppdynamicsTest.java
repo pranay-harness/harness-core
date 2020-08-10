@@ -12,11 +12,14 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.specto.hoverfly.junit.core.HoverflyConfig;
+import io.specto.hoverfly.junit.core.SimulationSource;
+import io.specto.hoverfly.junit.rule.HoverflyRule;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,9 +42,10 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,6 +68,9 @@ public class AppdynamicsTest extends WingsBaseTest {
   private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+  @ClassRule
+  public static final HoverflyRule rule =
+      HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -96,9 +103,9 @@ public class AppdynamicsTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void validateConfig() {
+    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/appd-validate-test.json")));
     ((AppDynamicsConfig) settingAttribute.getValue())
         .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
     newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS, Collections.emptyList());
@@ -106,22 +113,23 @@ public class AppdynamicsTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = RAGHU)
-  @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
-  public void getAllApplications() throws IOException {
+  public void getAllApplications() {
+    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/appd-apps-test.json")));
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertThat(applications.isEmpty()).isFalse();
   }
 
   @Test
-  @Owner(developers = RAGHU, intermittent = true)
-  @Repeat(times = 5, successes = 1)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void getTiers() throws IOException {
+  public void getTiers() {
+    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/appd-tiers-test.json")));
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertThat(applications.isEmpty()).isFalse();
-    Set<AppdynamicsTier> tiers =
-        appdynamicsService.getTiers(settingAttribute.getUuid(), applications.iterator().next().getId());
+    Optional<NewRelicApplication> app =
+        applications.stream().filter(application -> application.getName().equals("cv-app")).findFirst();
+    Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), app.get().getId());
     assertThat(tiers.isEmpty()).isFalse();
   }
 }

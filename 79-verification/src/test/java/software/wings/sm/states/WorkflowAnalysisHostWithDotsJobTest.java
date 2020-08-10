@@ -169,6 +169,8 @@ public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
                                       .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
                                       .build()))
                               .build());
+    // distinct query fails if the collection doesn't exists, as a workaround initialize logDataRecords collection
+    wingsPersistence.save(LogDataRecord.builder().build());
   }
 
   private AnalysisContext getAnalysisContext(StateType appDynamics) {

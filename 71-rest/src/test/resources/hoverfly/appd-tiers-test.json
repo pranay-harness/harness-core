@@ -1,0 +1,109 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controller/rest/applications"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "json"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAL2YT4vbMBDF7/spFp9XIMm2LPUWuqXbQ7q0G7qkpYSxrCRu4z9YcpZQ+t0rJ86th1nK1AdDZEx+zMx785JvN7fx+nW+Jy00Lnlzm9gjq1zTJXeX48p5O9R9qLt2eno9rqv4yRRSm/kArO3GNrwfz0+SgpeZ5pVkwuUVy0pdMV1awwyXvASlwQmexDd/3/2NoYXgWdf2g2swHELyglNwdOV29BamL2XB+YCDkXlKAnOuhz3uxhZwIKkgqYrMWMHimEDfCxRI7A4JyPBzYmC93eI4cp2RjOvbL+zTgq3ePa1w5TCioMCo3HFqix/b+oACEWmhKEAeYGid9+zeHXF9ybUms5FYka0rkTYiSJT7MXJsFn2PnQ6SYkz+xQbY7UdsT0i0cgyzsU/SrXBjKnNBYqi9a5nf11ucr2dCSwoM3700J2Chq7pDHXskUTRprklmtR+g/QGHSTb4jccliaFFBjv60DVuQGeSKQuQ6Edm16WHk7EyJPqJyw7dGFUoklJUSF/nhcr/g2JwY5HJjKYWB7eD4BiMYY/0EUmydf0LNKdXuKpSJKKNoey8avYwTBkAyyMlNyTDMoeAFLl8JYli8MZR5IZkOmY/f006FDQb5gnCCRpsHtJGk+j26XmxXG++Pj4uceuWGxKMEgZ7gJPHpsO43gjLsVysVw8fPq/WOEtVnCSXLe55vIRWOM3mRpMY2cVP0SEo+ilJNS4YFrdxhaLZcrOJ4qJpNFGShswQGRIipVsn/YD8AyYnyYDXzLHBhtH4Q5+kI5M4NlcaJIn+V5XcfP8DfeY52LgUAAA=",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Length" : [ "614" ],
+          "Content-Type" : [ "application/json;charset=UTF-8" ],
+          "Date" : [ "Mon, 10 Aug 2020 10:21:58 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "Set-Cookie" : [ "JSESSIONID=7e422720689dde197396e32a416f; Path=/controller; HttpOnly; Secure" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controller/rest/applications/7596/tiers"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "json"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAIvmUgCCajCplJiemlcSUlmQqmSloOQYEBDv6O7qF6KkA5HNS8wFS6TkJ2enFumWZKYWwaRSUouTizILSjLz80AqYMKZKUCeoYm5iaEZzIzS3KTUIv80v3ygFqCkpQFUogRma0FBTmZyIsgkheDUojKgHUAFtTo4nRkQGeLh7xeP07UFlSUZ+XlEu9bUxMTY1BKHa42N0FwbADYc2aFcsQDjFr25UgEAAA==",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Length" : [ "178" ],
+          "Content-Type" : [ "application/json;charset=UTF-8" ],
+          "Date" : [ "Mon, 10 Aug 2020 10:21:59 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "Set-Cookie" : [ "JSESSIONID=7e4252982b3d649ca1ed666034ac; Path=/controller; HttpOnly; Secure" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2020-08-10T15:52:00+05:30"
+  }
+}

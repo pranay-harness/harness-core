@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
@@ -9,7 +10,9 @@ import static software.wings.service.intfc.analysis.ClusterLevel.H0;
 import static software.wings.service.intfc.analysis.ClusterLevel.H1;
 import static software.wings.service.intfc.analysis.ClusterLevel.L0;
 import static software.wings.service.intfc.analysis.ClusterLevel.L1;
+import static software.wings.service.intfc.analysis.ClusterLevel.L2;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
@@ -22,11 +25,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class LogAnalysisServiceImplTest extends VerificationBaseTest {
@@ -87,5 +92,49 @@ public class LogAnalysisServiceImplTest extends VerificationBaseTest {
     dataRecords = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority).asList();
     assertThat(dataRecords.size()).isEqualTo(1);
     assertThat(dataRecords.get(0).getClusterLevel()).isEqualTo(H1);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetHostsForMinute() {
+    Set<String> evenHosts = Sets.newHashSet("host1", "host2", "host3");
+    Set<String> oddHosts = Sets.newHashSet("host4", "host5");
+    int numOfMinutes = 20;
+    for (int i = 0; i < numOfMinutes; i++) {
+      wingsPersistence.save(LogDataRecord.builder()
+                                .cvConfigId(cvConfigId)
+                                .clusterLevel(L2)
+                                .logCollectionMinute(i)
+                                .host(generateUuid())
+                                .logMessage(generateUuid())
+                                .build());
+      if (i % 2 == 0) {
+        for (String host : evenHosts) {
+          wingsPersistence.save(LogDataRecord.builder()
+                                    .cvConfigId(cvConfigId)
+                                    .clusterLevel(L1)
+                                    .logCollectionMinute(i)
+                                    .host(host)
+                                    .logMessage(generateUuid())
+                                    .build());
+        }
+      } else {
+        for (String host : oddHosts) {
+          wingsPersistence.save(LogDataRecord.builder()
+                                    .cvConfigId(cvConfigId)
+                                    .clusterLevel(L1)
+                                    .logCollectionMinute(i)
+                                    .host(host)
+                                    .logMessage(generateUuid())
+                                    .build());
+        }
+      }
+    }
+
+    for (int i = 0; i < numOfMinutes; i++) {
+      assertThat(logAnalysisService.getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, i, L1))
+          .isEqualTo(i % 2 == 0 ? evenHosts : oddHosts);
+    }
   }
 }

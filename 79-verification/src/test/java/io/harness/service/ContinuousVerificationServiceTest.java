@@ -3483,16 +3483,19 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         level = ClusterLevel.L1;
         heartbeat = ClusterLevel.H1;
       }
+      String host = generateUuid();
       LogDataRecord l2Record = LogDataRecord.builder()
                                    .cvConfigId(sumoConfig.getUuid())
                                    .clusterLevel(level)
                                    .logCollectionMinute(time)
+                                   .host(host)
                                    .build();
 
       LogDataRecord l2Heartbeat = LogDataRecord.builder()
                                       .cvConfigId(sumoConfig.getUuid())
                                       .clusterLevel(heartbeat)
                                       .logCollectionMinute(time)
+                                      .host(host)
                                       .build();
       wingsPersistence.save(Arrays.asList(l2Record, l2Heartbeat));
     }
@@ -3542,16 +3545,19 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         level = ClusterLevel.L1;
         heartbeat = ClusterLevel.H1;
       }
+      String host = generateUuid();
       LogDataRecord l2Record = LogDataRecord.builder()
                                    .cvConfigId(sumoConfig.getUuid())
                                    .clusterLevel(level)
                                    .logCollectionMinute(time)
+                                   .host(host)
                                    .build();
 
       LogDataRecord l2Heartbeat = LogDataRecord.builder()
                                       .cvConfigId(sumoConfig.getUuid())
                                       .clusterLevel(heartbeat)
                                       .logCollectionMinute(time)
+                                      .host(host)
                                       .build();
       wingsPersistence.save(Arrays.asList(l2Record, l2Heartbeat));
     }

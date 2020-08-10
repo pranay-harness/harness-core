@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -1095,23 +1096,20 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public Set<String> getHostsForMinute(String appId, String fieldNameForQuery, String fieldValueForQuery,
       long logRecordMinute, ClusterLevel... clusterLevels) {
-    Set<String> hosts = new HashSet<>();
-    Set<ClusterLevel> finalClusterLevels = Sets.newHashSet(clusterLevels);
-
-    Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
-                                                  .filter(fieldNameForQuery, fieldValueForQuery)
-                                                  .filter(LogDataRecordKeys.logCollectionMinute, logRecordMinute)
-                                                  .project(LogDataRecordKeys.logMessage, false);
-
-    try (HIterator<LogDataRecord> logRecordIterator = new HIterator<>(logDataRecordQuery.fetch())) {
-      while (logRecordIterator.hasNext()) {
-        LogDataRecord logDataRecord = logRecordIterator.next();
-        if (finalClusterLevels.contains(logDataRecord.getClusterLevel())) {
-          hosts.add(logDataRecord.getHost());
-        }
-      }
+    Set<String> clusterLevelNames = new HashSet<>();
+    for (ClusterLevel clusterLevel : clusterLevels) {
+      clusterLevelNames.add(clusterLevel.name());
     }
-    return hosts;
+
+    BasicDBObject logDataRecordQuery = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(fieldNameForQuery, fieldValueForQuery));
+    conditions.add(new BasicDBObject(LogDataRecordKeys.logCollectionMinute, logRecordMinute));
+    conditions.add(new BasicDBObject(LogDataRecordKeys.clusterLevel, new BasicDBObject("$in", clusterLevelNames)));
+    logDataRecordQuery.put("$and", conditions);
+
+    return new HashSet<>(
+        wingsPersistence.getCollection(LogDataRecord.class).distinct(LogDataRecordKeys.host, logDataRecordQuery));
   }
 
   @Override

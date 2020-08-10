@@ -856,6 +856,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.specto</groupId>
+            <artifactId>hoverfly-java</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -913,7 +918,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
     <build>
         <finalName>rest</finalName>
