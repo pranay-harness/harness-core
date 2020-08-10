@@ -3,8 +3,10 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.serializer.JsonUtils;
+import software.wings.beans.NameValuePair;
 import software.wings.exception.IncompleteStateException;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
+import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.Collections;
@@ -102,6 +104,7 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
       if (gcbOptions.getTriggerSpec().getSource() == null) {
         throw new IncompleteStateException("\"source\" could not be empty or null. Please, provide value");
       }
+      validateSubstitutions(gcbOptions.getTriggerSpec());
       if (isBlank(gcbOptions.getTriggerSpec().getName())) {
         throw new IncompleteStateException("\"name\" could not be empty or null. Please, provide value");
       } else if (gcbOptions.getTriggerSpec().getName().startsWith("${")
@@ -115,6 +118,19 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
           && !isValidExpression(gcbOptions.getTriggerSpec().getSourceId())) {
         throw new IncompleteStateException(
             "Invalid expression for \"sourceId\". Please, provide value or valid expression");
+      }
+    }
+  }
+
+  private void validateSubstitutions(GcbTriggerBuildSpec triggerSpec) {
+    if (triggerSpec.getSubstitutions() != null) {
+      for (NameValuePair pair : triggerSpec.getSubstitutions()) {
+        if (isBlank(pair.getValue())) {
+          throw new IncompleteStateException("value of substitution could not be empty or null. Please, provide value");
+        } else if (pair.getValue().startsWith("${") && !isValidExpression(pair.getValue())) {
+          throw new IncompleteStateException(
+              "Invalid expression for substitution value. Please, provide value or valid expression");
+        }
       }
     }
   }
