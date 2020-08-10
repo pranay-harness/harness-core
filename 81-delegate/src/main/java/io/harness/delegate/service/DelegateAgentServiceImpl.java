@@ -153,6 +153,7 @@ import org.atmosphere.wasync.Request.TRANSPORT;
 import org.atmosphere.wasync.RequestBuilder;
 import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
+import org.atmosphere.wasync.transport.TransportNotSupported;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -681,7 +682,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void handleError(Exception e) {
     logger.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
-    if (e instanceof SSLException) {
+    if (e instanceof SSLException || e instanceof TransportNotSupported) {
       logger.info("Reopening connection to manager");
       try {
         socket.close();
