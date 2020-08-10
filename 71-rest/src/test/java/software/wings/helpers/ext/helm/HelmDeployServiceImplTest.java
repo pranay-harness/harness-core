@@ -184,7 +184,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              anyString(), anyString(), any(ExecutionLogCallback.class)))
@@ -233,7 +233,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              eq("default"), anyString(), any(ExecutionLogCallback.class)))
@@ -844,7 +844,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .commandExecutionStatus(SUCCESS)
                         .build());
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              eq("default"), anyString(), any(ExecutionLogCallback.class)))
@@ -993,7 +993,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
 
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              anyString(), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(false);

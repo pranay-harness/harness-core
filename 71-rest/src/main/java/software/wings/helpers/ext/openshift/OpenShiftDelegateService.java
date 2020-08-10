@@ -9,13 +9,13 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import io.harness.beans.FileData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cli.CliResponse;
 
@@ -30,9 +30,8 @@ import java.util.Map;
 public class OpenShiftDelegateService {
   @Inject private OpenShiftClient openShiftClient;
 
-  public List<ManifestFile> processTemplatization(@NotEmpty String manifestFilesDirectory,
-      @NotEmpty String ocBinaryPath, @NotEmpty String templateFilePath, ExecutionLogCallback executionLogCallback,
-      List<String> paramFilesContent) {
+  public List<FileData> processTemplatization(@NotEmpty String manifestFilesDirectory, @NotEmpty String ocBinaryPath,
+      @NotEmpty String templateFilePath, ExecutionLogCallback executionLogCallback, List<String> paramFilesContent) {
     List<String> paramsFilePaths = null;
     if (isNotEmpty(paramFilesContent)) {
       paramsFilePaths = writeParamsToFile(manifestFilesDirectory, paramFilesContent);
@@ -49,7 +48,7 @@ public class OpenShiftDelegateService {
       String kubernetesReadyYaml = prepareKubernetesReadyYaml(processedTemplateFile);
 
       return Collections.singletonList(
-          ManifestFile.builder().fileName("manifest.yaml").fileContent(kubernetesReadyYaml).build());
+          FileData.builder().fileName("manifest.yaml").fileContent(kubernetesReadyYaml).build());
     } else {
       throw new InvalidRequestException("Oc process command failed. " + cliResponse.getOutput());
     }
