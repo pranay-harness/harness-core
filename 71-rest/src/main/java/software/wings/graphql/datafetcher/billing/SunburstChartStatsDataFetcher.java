@@ -73,6 +73,7 @@ public class SunburstChartStatsDataFetcher
       boolean isClusterGroupBy) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
+    int retryCount = 0;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupBy);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupBy);
 
@@ -85,14 +86,26 @@ public class SunburstChartStatsDataFetcher
         billingDataHelper.getBillingAmountDataForEntityCostTrend(
             accountId, aggregateFunction, filters, modifiedEntityGroupBy, groupByTime, sort);
 
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(queryData.getQuery());
-      return generateSunburstGridData(queryData, resultSet, isClusterGroupBy, entityIdToPrevBillingAmountData, filters);
-    } catch (SQLException e) {
-      logger.error("SunburstChartStatsDataFetcher (getSunburstGridData) Error exception {}", e);
-    } finally {
-      DBUtils.close(resultSet);
+    while (retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        return generateSunburstGridData(
+            queryData, resultSet, isClusterGroupBy, entityIdToPrevBillingAmountData, filters);
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in SunburstChartStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in SunburstChartStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
     return QLSunburstChartData.builder().build();
   }
