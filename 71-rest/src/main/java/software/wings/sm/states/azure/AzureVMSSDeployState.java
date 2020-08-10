@@ -132,9 +132,10 @@ public class AzureVMSSDeployState extends State {
 
     AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping =
         azureVMSSStateHelper.getAzureVMSSInfrastructureMapping(context.fetchInfraMappingId(), appId);
-    AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(azureVMSSInfrastructureMapping);
-    List<EncryptedDataDetail> azureEncryptionDetails =
-        azureVMSSStateHelper.getEncryptedDataDetails(context, azureVMSSInfrastructureMapping);
+    AzureConfig azureConfig =
+        azureVMSSStateHelper.getAzureConfig(azureVMSSInfrastructureMapping.getComputeProviderSettingId());
+    List<EncryptedDataDetail> azureEncryptionDetails = azureVMSSStateHelper.getEncryptedDataDetails(
+        context, azureVMSSInfrastructureMapping.getComputeProviderSettingId());
 
     int newDesiredCount = updateNewDesiredCount(azureVMSSSetupContextElement);
     int oldDesiredCount = updatedOldDesiredCount(azureVMSSSetupContextElement, newDesiredCount);

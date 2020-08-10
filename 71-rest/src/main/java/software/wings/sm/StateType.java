@@ -462,16 +462,15 @@ public enum StateType implements StateTypeDescriptor {
    * Azure Virtual Machine Scale Set setup states.
    */
   AZURE_VMSS_SETUP(AzureVMSSSetupState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_SETUP,
-      Lists.newArrayList(InfrastructureMappingType.AZURE_VMSS_INFRA), asList(PhaseStepType.AZURE_VMSS_SETUP),
+      Lists.newArrayList(InfrastructureMappingType.AZURE_VMSS), asList(PhaseStepType.AZURE_VMSS_SETUP),
       ORCHESTRATION_STENCILS),
 
   AZURE_VMSS_DEPLOY(AzureVMSSDeployState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_DEPLOY,
-      Lists.newArrayList(InfrastructureMappingType.AZURE_VMSS_INFRA), asList(PhaseStepType.AZURE_VMSS_DEPLOY),
+      Lists.newArrayList(InfrastructureMappingType.AZURE_VMSS), asList(PhaseStepType.AZURE_VMSS_DEPLOY),
       ORCHESTRATION_STENCILS),
 
   AZURE_VMSS_ROLLBACK(AzureVMSSRollbackState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_ROLLBACK,
-      asList(InfrastructureMappingType.AZURE_VMSS_INFRA), asList(PhaseStepType.AZURE_VMSS_ROLLBACK),
-      ORCHESTRATION_STENCILS),
+      asList(InfrastructureMappingType.AZURE_VMSS), asList(PhaseStepType.AZURE_VMSS_ROLLBACK), ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Select state.

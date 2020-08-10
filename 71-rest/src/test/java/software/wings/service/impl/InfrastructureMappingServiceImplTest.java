@@ -381,7 +381,7 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
                                                                      .resourceGroupName("ResName")
                                                                      .userName("UName")
                                                                      .vmssAuthType(PASSWORD)
-                                                                     .password("passwd")
+                                                                     .passwordSecretTextName("passwd")
                                                                      .build();
     infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping);
 
@@ -410,10 +410,10 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class);
     infrastructureMapping.setVmssAuthType(PASSWORD);
 
-    infrastructureMapping.setPassword("");
+    infrastructureMapping.setPasswordSecretTextName("");
     assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
         .isInstanceOf(InvalidRequestException.class);
-    infrastructureMapping.setPassword("SubsId");
+    infrastructureMapping.setPasswordSecretTextName("SubsId");
 
     infrastructureMapping.setVmssAuthType(SSH_PUBLIC_KEY);
     assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
