@@ -409,7 +409,12 @@ public class HelmTaskHelper {
   }
 
   private String getPassword(char[] password) {
-    return isEmpty(password) ? StringUtils.EMPTY : "--password " + new String(password);
+    if (password == null) {
+      return StringUtils.EMPTY;
+    }
+
+    String passwordAsString = new String(password);
+    return isBlank(passwordAsString) ? StringUtils.EMPTY : "--password " + passwordAsString;
   }
 
   private String getHttpRepoAddCommand(String repoName, String chartRepoUrl, String username, char[] password,
@@ -453,7 +458,7 @@ public class HelmTaskHelper {
       String workingDirectory, HelmVersion helmVersion) {
     String repoAddCommand =
         getHttpRepoAddCommandWithoutPassword(repoName, chartRepoUrl, username, workingDirectory, helmVersion);
-    String evaluatedPassword = isEmpty(password) ? StringUtils.EMPTY : "--password *******";
+    String evaluatedPassword = isEmpty(getPassword(password)) ? StringUtils.EMPTY : "--password *******";
 
     return repoAddCommand.replace("${PASSWORD}", evaluatedPassword);
   }
