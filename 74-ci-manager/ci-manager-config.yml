@@ -1,7 +1,7 @@
 managerUrl: https://localhost:9090/api/
 xxxxxxxx
   applicationConnectors:
-    - type: h2
+    - type: https
       port: 7171
       keyStorePath: keystore.jks
       keyStorePassword: password
@@ -13,7 +13,7 @@ xxxxxxxx
       port: 4457
       maxRequestHeaderSize: 100KiB
   adminConnectors:
-    - type: h2
+    - type: https
       port: 7071
       keyStorePath: keystore.jks
       keyStorePassword: password
