@@ -19,6 +19,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
+import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
@@ -26,6 +27,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.NgAsyncTaskGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.impl.RemotePerpetualTaskServiceClientManagerImpl;
 import io.harness.ng.orchestration.NgDelegateTaskExecutor;
@@ -143,6 +145,8 @@ public class NextGenModule extends DependencyModule {
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
 
     bind(RemotePerpetualTaskServiceClientManager.class).to(RemotePerpetualTaskServiceClientManagerImpl.class);
+
+    bind(GitSyncManagerInterface.class).to(GitSyncManagerInterfaceImpl.class);
   }
 
   private ValidatorFactory getValidatorFactory() {
