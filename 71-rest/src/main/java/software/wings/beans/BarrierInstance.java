@@ -58,6 +58,8 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
 
   private BarrierInstancePipeline pipeline;
 
+  @FdIndex private String accountId;
+
   @JsonIgnore
   @SchemaIgnore
   @FdTtlIndex
