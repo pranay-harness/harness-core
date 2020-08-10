@@ -70,7 +70,13 @@ public class BudgetAlertsServiceImpl {
     List<String> accountIds = ceEnabledAccounts.stream().map(Account::getUuid).collect(Collectors.toList());
     accountIds.forEach(accountId -> {
       List<Budget> budgets = budgetUtils.listBudgetsForAccount(accountId);
-      budgets.forEach(this ::checkAndSendAlerts);
+      budgets.forEach(budget -> {
+        try {
+          checkAndSendAlerts(budget);
+        } catch (Exception e) {
+          logger.error("Can't send alert for budget : {}, Exception: ", budget.getUuid(), e);
+        }
+      });
     });
   }
 
@@ -190,7 +196,7 @@ public class BudgetAlertsServiceImpl {
                                   .accountId(accountId)
                                   .build();
         emailData.setCc(emptyList());
-        emailData.setRetries(2);
+        emailData.setRetries(0);
         emailNotificationService.send(emailData);
       });
     } catch (URISyntaxException e) {

@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
@@ -170,9 +170,16 @@ public class BudgetUtils {
 
   private void addEnvironmentIdFilter(Budget budget, List<QLBillingDataFilter> filters) {
     ApplicationBudgetScope scope = (ApplicationBudgetScope) budget.getScope();
-    if (scope.getEnvironmentType() != EnvironmentType.ALL) {
+    if (!scope.getEnvironmentType().toString().equals("ALL")) {
       String[] appIds = scope.getApplicationIds();
-      List<String> envIds = getEnvIdsByAppsAndType(Arrays.asList(appIds), scope.getEnvironmentType().toString());
+      String env = scope.getEnvironmentType().toString();
+      EnvironmentType environmentType;
+      if (env.equals("NON_PROD")) {
+        environmentType = EnvironmentType.NON_PROD;
+      } else {
+        environmentType = EnvironmentType.PROD;
+      }
+      List<String> envIds = getEnvIdsByAppsAndType(Arrays.asList(appIds), environmentType);
       filters.add(
           QLBillingDataFilter.builder()
               .environment(QLIdFilter.builder().operator(QLIdOperator.IN).values(envIds.toArray(new String[0])).build())
@@ -180,7 +187,7 @@ public class BudgetUtils {
     }
   }
 
-  public List<String> getEnvIdsByAppsAndType(List<String> appIds, String environmentType) {
+  public List<String> getEnvIdsByAppsAndType(List<String> appIds, EnvironmentType environmentType) {
     List<Environment> environments = wingsPersistence.createQuery(Environment.class)
                                          .field(EnvironmentKeys.appId)
                                          .in(appIds)
