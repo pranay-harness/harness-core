@@ -64,9 +64,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testValidateCredentialForIOExceptionForGetAPIEndingWithForwardSlash() {
-    wireMockRule.stubFor(get(urlEqualTo("/v2/"))
-                             .willReturn(aResponse().withStatus(200).withHeader("Www-Authenticate",
-                                 "Bearer realm=\"https://localhost:9883/service/token\",service=\"harbor-registry\"")));
+    wireMockRule.stubFor(get(urlEqualTo("/v2/")).willReturn(aResponse().withFault(Fault.EMPTY_RESPONSE)));
     dockerRegistryService.validateCredentials(dockerConfig);
   }
 
