@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.app.DelegateApplication.getProcessId;
 import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
+import static io.harness.delegate.configuration.InstallUtils.installHarnessPywinrm;
 import static io.harness.delegate.configuration.InstallUtils.installHelm;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
@@ -371,6 +372,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       boolean kubectlInstalled = installKubectl(delegateConfiguration);
       boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
+      boolean harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
       boolean helmInstalled = installHelm(delegateConfiguration);
       boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
       boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
@@ -490,7 +492,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       startProfileCheck();
 
       if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
-          || !tfConfigInspectInstalled) {
+          || !tfConfigInspectInstalled || !harnessPywinrmInstalled) {
         systemExecutor.submit(() -> {
           boolean kubectl = kubectlInstalled;
           boolean goTemplate = goTemplateInstalled;
@@ -499,15 +501,20 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           boolean tfConfigInspect = tfConfigInspectInstalled;
           boolean oc = ocInstalled;
           boolean kustomize = kustomizeInstalled;
+          boolean harnessPywinrm = harnessPywinrmInstalled;
 
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect) && retries > 0) {
+          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect || !harnessPywinrm)
+              && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectl) {
               kubectl = installKubectl(delegateConfiguration);
             }
             if (!goTemplate) {
               goTemplate = installGoTemplateTool(delegateConfiguration);
+            }
+            if (!harnessPywinrm) {
+              harnessPywinrm = installHarnessPywinrm(delegateConfiguration);
             }
             if (!helm) {
               helm = installHelm(delegateConfiguration);
@@ -537,6 +544,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           if (!goTemplate) {
             logger.error("Failed to install go-template after {} retries", CLIENT_TOOL_RETRIES);
           }
+
+          if (!harnessPywinrm) {
+            logger.error("Failed to install harness-pywinrm after {} retries", CLIENT_TOOL_RETRIES);
+          }
+
           if (!helm) {
             logger.error("Failed to install helm after {} retries", CLIENT_TOOL_RETRIES);
           }

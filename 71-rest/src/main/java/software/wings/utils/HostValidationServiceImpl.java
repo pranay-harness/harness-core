@@ -26,6 +26,7 @@ import software.wings.beans.HostValidationResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionFactory;
@@ -140,7 +141,7 @@ public class HostValidationServiceImpl implements HostValidationService {
                  .environment(Collections.emptyMap())
                  .build();
 
-    try (WinRmSession ignore = new WinRmSession(config)) {
+    try (WinRmSession ignore = new WinRmSession(config, new NoopExecutionCallback())) {
       noop();
     } catch (Exception e) {
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);

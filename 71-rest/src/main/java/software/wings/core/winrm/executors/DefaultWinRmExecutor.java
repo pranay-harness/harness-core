@@ -18,7 +18,6 @@ import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmCl
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
@@ -32,6 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -39,7 +39,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.utils.ExecutionLogWriter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -90,8 +89,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
     CommandExecutionStatus commandExecutionStatus;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
+    ExecutionLogCallback executionLogCallback = getExecutionLogCallback(config.getCommandUnitName());
 
-    try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
+    try (WinRmSession session = new WinRmSession(config, executionLogCallback);
+         ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
          ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
       if (displayCommand) {
@@ -104,10 +105,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       String psScriptFile = null;
       if (disableCommandEncoding) {
         psScriptFile = getPSScriptFile();
-        WinRmToolResponse winRmToolResponse =
-            session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile));
-        exitCode = winRmToolResponse.getStatusCode();
-        buildStdOutputAndErrorFromWinRmToolResponse(winRmToolResponse, outputWriter, errorWriter);
+        exitCode = session.executeCommandsList(
+            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter);
       } else {
         exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
       }
@@ -124,17 +123,6 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     }
     return commandExecutionStatus;
-  }
-
-  private void buildStdOutputAndErrorFromWinRmToolResponse(WinRmToolResponse winRmToolResponse,
-      ExecutionLogWriter outputWriter, ExecutionLogWriter errorWriter) throws IOException {
-    if (!winRmToolResponse.getStdOut().isEmpty()) {
-      outputWriter.write(winRmToolResponse.getStdOut());
-    }
-
-    if (!winRmToolResponse.getStdErr().isEmpty()) {
-      errorWriter.write(winRmToolResponse.getStdErr());
-    }
   }
 
   private String addEnvVariablesCollector(
@@ -168,6 +156,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
     CommandExecutionStatus commandExecutionStatus;
+    ExecutionLogCallback executionLogCallback = getExecutionLogCallback(config.getCommandUnitName());
+
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
     String envVariablesOutputFile = null;
     String psScriptFile = null;
@@ -177,7 +167,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
           + "harness-" + this.config.getExecutionId() + ".out";
     }
 
-    try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
+    try (WinRmSession session = new WinRmSession(config, executionLogCallback);
+         ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
          ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
       saveExecutionLog(format("Executing command ...%n"), INFO);
@@ -186,10 +177,9 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       int exitCode;
       if (disableCommandEncoding) {
         psScriptFile = getPSScriptFile();
-        WinRmToolResponse winRmToolResponse =
-            session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile));
-        exitCode = winRmToolResponse.getStatusCode();
-        buildStdOutputAndErrorFromWinRmToolResponse(winRmToolResponse, outputWriter, errorWriter);
+
+        exitCode = session.executeCommandsList(
+            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter);
       } else {
         exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
       }
@@ -233,20 +223,14 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         + "\" -Encoding UTF8 -Raw; Write-Host $envVarString -NoNewline ";
 
     String psScriptFile = null;
+
     try (StringWriter outputAccumulator = new StringWriter(1024);
          StringWriter errorAccumulator = new StringWriter(1024)) {
       int exitCode;
       if (disableCommandEncoding) {
         psScriptFile = getPSScriptFile();
-        WinRmToolResponse winRmToolResponse =
-            session.executeCommandsList(constructPSScriptWithCommands(commandWithoutEncoding, psScriptFile));
-        exitCode = winRmToolResponse.getStatusCode();
-        if (winRmToolResponse.getStdOut() != null) {
-          outputAccumulator.write(winRmToolResponse.getStdOut());
-        }
-        if (!winRmToolResponse.getStdErr().isEmpty()) {
-          errorAccumulator.write(winRmToolResponse.getStdErr());
-        }
+        exitCode = session.executeCommandsList(
+            constructPSScriptWithCommands(commandWithoutEncoding, psScriptFile), outputAccumulator, errorAccumulator);
       } else {
         exitCode =
             session.executeCommandString(psWrappedCommandWithEncoding(command), outputAccumulator, errorAccumulator);
@@ -288,6 +272,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   @VisibleForTesting
   protected void cleanupFiles(WinRmSession session, String file) {
+    if (file == null) {
+      return;
+    }
+
     String command = "Remove-Item -Path '" + file + "'";
     try (StringWriter outputAccumulator = new StringWriter(1024)) {
       if (disableCommandEncoding) {
@@ -376,10 +364,17 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
             .build());
   }
 
+  public ExecutionLogCallback getExecutionLogCallback(String commandUnit) {
+    return new ExecutionLogCallback(
+        logService, config.getAccountId(), config.getAppId(), config.getExecutionId(), commandUnit);
+  }
+
   private CommandExecutionStatus downloadConfigFile(ConfigFileMetaData configFileMetaData) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
+    ExecutionLogCallback executionLogCallback = getExecutionLogCallback(config.getCommandUnitName());
 
-    try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
+    try (WinRmSession session = new WinRmSession(config, executionLogCallback);
+         ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
          ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
       saveExecutionLog(format("Executing command ...%n"), INFO);
@@ -406,6 +401,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       int exitCode;
       String command;
       String psScriptFile = null;
+
       if (disableCommandEncoding) {
         // Keep the temp script in working directory or in Temp is working directory is not set.
         psScriptFile = config.getWorkingDirectory() == null
@@ -415,10 +411,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
             + "$commandString = {" + new String(fileBytes) + "}"
             + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
             + "Write-Host \"Copied config file to the host.\"\n";
-        WinRmToolResponse winRmToolResponse =
-            session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile));
-        exitCode = winRmToolResponse.getStatusCode();
-        buildStdOutputAndErrorFromWinRmToolResponse(winRmToolResponse, outputWriter, errorWriter);
+        exitCode = session.executeCommandsList(
+            constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter);
       } else {
         String encodedFile = EncodingUtils.encodeBase64(fileBytes);
         command = "#### Convert Base64 string back to config file ####\n"

@@ -5,14 +5,17 @@ import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import com.jcraft.jsch.JSchException;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse.CapabilityResponseBuilder;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
+import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
@@ -40,7 +43,7 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
     logger.info("Validating Winrm Session to Host: {}, Port: {}, useSsl: {}", config.getHostname(), config.getPort(),
         config.isUseSSL());
 
-    try (WinRmSession ignore = makeSession(config)) {
+    try (WinRmSession ignore = makeSession(config, new NoopExecutionCallback())) {
       capabilityResponseBuilder.validated(true);
     } catch (Exception e) {
       logger.info("Exception in WinrmSession Validation: {}", e);
@@ -73,7 +76,7 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
   }
 
   @VisibleForTesting
-  WinRmSession makeSession(WinRmSessionConfig config) {
-    return new WinRmSession(config);
+  WinRmSession makeSession(WinRmSessionConfig config, LogCallback logCallback) throws JSchException {
+    return new WinRmSession(config, logCallback);
   }
 }

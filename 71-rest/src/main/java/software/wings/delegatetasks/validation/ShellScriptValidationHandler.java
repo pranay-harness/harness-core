@@ -18,6 +18,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSession;
@@ -87,7 +88,7 @@ public class ShellScriptValidationHandler {
           logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
               winrmConfig.getPort(), winrmConfig.isUseSSL());
 
-          try (WinRmSession ignore = new WinRmSession(winrmConfig)) {
+          try (WinRmSession ignore = new WinRmSession(winrmConfig, new NoopExecutionCallback())) {
             return true;
           }
         } catch (Exception e) {

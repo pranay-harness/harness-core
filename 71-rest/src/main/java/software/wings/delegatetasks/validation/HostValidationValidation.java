@@ -20,6 +20,7 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
@@ -103,7 +104,7 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
             logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(),
                 config.getPort(), config.isUseSSL());
 
-            try (WinRmSession ignore = new WinRmSession(config)) {
+            try (WinRmSession ignore = new WinRmSession(config, new NoopExecutionCallback())) {
               resultBuilder.validated(true);
             } catch (Exception e) {
               logger.info("Exception in WinrmSession Validation: {}", e);

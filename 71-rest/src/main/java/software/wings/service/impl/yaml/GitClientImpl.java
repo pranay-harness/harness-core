@@ -111,6 +111,7 @@ import software.wings.beans.yaml.GitPushResult.RefUpdate;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.exception.GitClientException;
 import software.wings.service.intfc.yaml.GitClient;
+import software.wings.utils.SshHelperUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -1250,7 +1251,9 @@ public class GitClientImpl implements GitClient {
       HttpTransport.setConnectionFactory(new ApacheHttpConnectionFactory());
       URL url = new URL(gitConfig.getRepoUrl());
       SshSessionConfig sshSessionConfig = createSshSessionConfig(gitConfig.getSshSettingAttribute(), url.getHost());
-      software.wings.core.ssh.executors.SshSessionFactory.generateTGT(sshSessionConfig, new NoopExecutionCallback());
+      SshHelperUtils.generateTGT(sshSessionConfig.getUserName(),
+          sshSessionConfig.getPassword() != null ? new String(sshSessionConfig.getPassword()) : null,
+          sshSessionConfig.getKeyPath(), new NoopExecutionCallback());
     } catch (Exception e) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
           gitConfig.getRepoUrl(), getMessage(e));

@@ -8,8 +8,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import com.jcraft.jsch.JSchException;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,8 +63,8 @@ public class WinrmHostValidationCapabilityCheckTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldPerformCapabilityCheck() {
-    doReturn(mockSession).when(spyCapabilityCheck).makeSession(any(WinRmSessionConfig.class));
+  public void shouldPerformCapabilityCheck() throws JSchException {
+    doReturn(mockSession).when(spyCapabilityCheck).makeSession(any(WinRmSessionConfig.class), any(LogCallback.class));
     CapabilityResponse capabilityResponse = spyCapabilityCheck.performCapabilityCheck(capability);
     assertThat(capabilityResponse).isNotNull();
     assertThat(capabilityResponse.isValidated()).isTrue();

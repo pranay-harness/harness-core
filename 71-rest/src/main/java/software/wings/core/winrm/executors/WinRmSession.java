@@ -3,33 +3,63 @@ package software.wings.core.winrm.executors;
 import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 import static java.lang.String.format;
 
+import com.jcraft.jsch.JSchException;
 import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientBuilder;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
+import io.harness.delegate.configuration.InstallUtils;
+import io.harness.logging.LogCallback;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
+import software.wings.utils.SshHelperUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+@Slf4j
 public class WinRmSession implements AutoCloseable {
   private static final int retryCount = 1;
+  private static final String COMMAND_PLACEHOLDER = "%s %s";
 
   private final ShellCommand shell;
   private final WinRmTool winRmTool;
+  private final LogCallback logCallback;
+  private PyWinrmArgs args;
 
-  public WinRmSession(WinRmSessionConfig config) {
+  public WinRmSession(WinRmSessionConfig config, LogCallback logCallback) throws JSchException {
     Map<String, String> processedEnvironmentMap = new HashMap<>();
     if (config.getEnvironment() != null) {
       for (Entry<String, String> entry : config.getEnvironment().entrySet()) {
         processedEnvironmentMap.put(entry.getKey(), escapeEnvValueSpecialChars(entry.getValue()));
       }
     }
+    this.logCallback = logCallback;
+    if (config.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
+      args = PyWinrmArgs.builder()
+                 .hostname(getEndpoint(config.getHostname(), config.getPort(), config.isUseSSL()))
+                 .username(config.getUsername())
+                 .environmentMap(processedEnvironmentMap)
+                 .workingDir(config.getWorkingDirectory())
+                 .timeout(config.getTimeout())
+                 .build();
+      SshHelperUtils.generateTGT(getUserPrincipal(config.getUsername(), config.getDomain()), config.getPassword(),
+          config.getKeyTabFilePath(), logCallback);
+      shell = null;
+      winRmTool = null;
+      return;
+    }
+
     WinRmClientBuilder clientBuilder =
         WinRmClient.builder(getEndpoint(config.getHostname(), config.getPort(), config.isUseSSL()))
             .disableCertificateChecks(config.isSkipCertChecks())
@@ -39,58 +69,76 @@ public class WinRmSession implements AutoCloseable {
             .environment(processedEnvironmentMap)
             .retriesForConnectionFailures(retryCount)
             .operationTimeout(config.getTimeout());
-    if (config.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
-      clientBuilder.requestNewKerberosTicket(true);
-      if (config.isUseKeyTab()) {
-        clientBuilder.useKeyTab(config.isUseKeyTab()).keyTabFilePath(config.getKeyTabFilePath());
-      }
-    }
-
     WinRmClient client = clientBuilder.build();
 
     WinRmClientContext context = WinRmClientContext.newInstance();
 
-    if (config.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
-      winRmTool = WinRmTool.Builder.builder(config.getHostname(), config.getUsername(), config.getPassword())
-                      .disableCertificateChecks(config.isSkipCertChecks())
-                      .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
-                      .workingDirectory(config.getWorkingDirectory())
-                      .environment(processedEnvironmentMap)
-                      .port(config.getPort())
-                      .useHttps(config.isUseSSL())
-                      .context(context)
-                      .requestNewKerberosTicket(true)
-                      .useKeyTab(config.isUseKeyTab())
-                      .useKeyTab(config.getKeyTabFilePath())
-                      .build();
-    } else {
-      winRmTool = WinRmTool.Builder.builder(config.getHostname(), config.getUsername(), config.getPassword())
-                      .disableCertificateChecks(config.isSkipCertChecks())
-                      .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
-                      .workingDirectory(config.getWorkingDirectory())
-                      .environment(processedEnvironmentMap)
-                      .port(config.getPort())
-                      .useHttps(config.isUseSSL())
-                      .context(context)
-                      .build();
-    }
+    winRmTool = WinRmTool.Builder.builder(config.getHostname(), config.getUsername(), config.getPassword())
+                    .disableCertificateChecks(config.isSkipCertChecks())
+                    .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
+                    .workingDirectory(config.getWorkingDirectory())
+                    .environment(processedEnvironmentMap)
+                    .port(config.getPort())
+                    .useHttps(config.isUseSSL())
+                    .context(context)
+                    .build();
 
     shell = client.createShell();
   }
 
   public int executeCommandString(String command, Writer output, Writer error) {
+    if (args != null) {
+      try {
+        File commandFile = File.createTempFile("winrm-kerberos-command", null);
+        byte[] buff = command.getBytes(StandardCharsets.UTF_8);
+        Files.write(Paths.get(commandFile.getPath()), buff);
+
+        return SshHelperUtils.executeLocalCommand(format(COMMAND_PLACEHOLDER, InstallUtils.getHarnessPywinrmToolPath(),
+                                                      args.getArgs(commandFile.getAbsolutePath())),
+                   logCallback)
+            ? 0
+            : 1;
+      } catch (IOException e) {
+        logger.error(format("Error while creating temporary file: %s", e));
+        logCallback.saveExecutionLog("Error while creating temporary file");
+        return 1;
+      }
+    }
     return shell.execute(command, output, error);
   }
 
-  public WinRmToolResponse executeCommandsList(List<List<String>> commandList) {
+  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error) throws IOException {
     WinRmToolResponse winRmToolResponse = null;
-    for (List<String> list : commandList) {
-      winRmToolResponse = winRmTool.executeCommand(list);
-      if (winRmToolResponse.getStatusCode() != 0) {
-        break;
+    if (commandList.isEmpty()) {
+      return -1;
+    }
+    int statusCode = 0;
+    if (args != null) {
+      for (List<String> list : commandList) {
+        String command = String.join(" & ", list);
+        statusCode = executeCommandString(command, output, error);
+        if (statusCode != 0) {
+          return statusCode;
+        }
+      }
+    } else {
+      for (List<String> list : commandList) {
+        winRmToolResponse = winRmTool.executeCommand(list);
+        if (!winRmToolResponse.getStdOut().isEmpty()) {
+          output.write(winRmToolResponse.getStdOut());
+        }
+
+        if (!winRmToolResponse.getStdErr().isEmpty()) {
+          error.write(winRmToolResponse.getStdErr());
+        }
+        statusCode = winRmToolResponse.getStatusCode();
+        if (statusCode != 0) {
+          return statusCode;
+        }
       }
     }
-    return winRmToolResponse;
+
+    return statusCode;
   }
 
   private static String getEndpoint(String hostname, int port, boolean useHttps) {
@@ -115,5 +163,12 @@ public class WinRmSession implements AutoCloseable {
     if (shell != null) {
       shell.close();
     }
+  }
+
+  private String getUserPrincipal(String username, String domain) {
+    if (username.contains("@")) {
+      return username;
+    }
+    return format("%s@%s", username, domain);
   }
 }

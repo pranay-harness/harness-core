@@ -485,6 +485,11 @@ function setupClientUtils(){
             cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
         done
 
+        for harnessPywinrmVersion in v0.1-dev; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
+            cp images/harness-pywinrm/${platform}/$harnessPywinrmVersion/harness-pywinrm ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
+        done
+
         for helmversion in v2.13.1; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
             cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
