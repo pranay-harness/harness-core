@@ -2,8 +2,10 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -27,12 +29,14 @@ import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -143,6 +147,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
 
     doReturn(trigger).when(triggerService).getTriggerByWebhookToken(anyString());
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(configuration.getApiUrl()).thenReturn(PORTAL_URL);
   }
 
   @Test
@@ -990,5 +995,45 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testConstructSuccessResponseURLs() {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .uuid(UUID)
+                                              .status(SUCCESS)
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .envId(ENV_ID)
+                                              .build();
+    when(configuration.getApiUrl()).thenReturn("app.harness.io/gratis");
+    when(configuration.getPortal().getUrl()).thenReturn("app.harness.io");
+    WebHookServiceImpl webHookServiceImpl = (WebHookServiceImpl) webHookService;
+
+    Response response = webHookServiceImpl.constructSuccessResponse(APP_ID, ACCOUNT_ID, workflowExecution);
+    assertThat(response.getEntity()).isNotNull();
+    assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getApiUrl())
+        .isEqualTo("app.harness.io/gratis/api/external/v1/executions/UUID/status?accountId=ACCOUNT_ID&appId=APP_ID");
+    assertThat(webHookResponse.getUiUrl())
+        .isEqualTo("app.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/ENV_ID/executions/UUID/details");
+
+    WorkflowExecution pipelineExecution = WorkflowExecution.builder()
+                                              .uuid(UUID)
+                                              .status(SUCCESS)
+                                              .workflowType(WorkflowType.PIPELINE)
+                                              .envId(ENV_ID)
+                                              .build();
+    response = webHookServiceImpl.constructSuccessResponse(APP_ID, ACCOUNT_ID, pipelineExecution);
+    assertThat(response.getEntity()).isNotNull();
+    assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
+    webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getApiUrl())
+        .isEqualTo("app.harness.io/gratis/api/external/v1/executions/UUID/status?accountId=ACCOUNT_ID&appId=APP_ID");
+    assertThat(webHookResponse.getUiUrl())
+        .isEqualTo(
+            "app.harness.io/#/account/ACCOUNT_ID/app/APP_ID/pipeline-execution/UUID/workflow-execution/undefined/details");
   }
 }

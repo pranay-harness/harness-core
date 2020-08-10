@@ -132,7 +132,10 @@ public class TriggerConditionControllerTest extends CategoryTest {
     WebHookToken webHookToken =
         WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
     StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
-    webhookURL.append("/api/webhooks/").append(webHookToken.getWebHookToken()).append("?accountId=").append(accountId);
+    webhookURL.append("/gateway/api/webhooks/")
+        .append(webHookToken.getWebHookToken())
+        .append("?accountId=")
+        .append(accountId);
 
     WebHookTriggerCondition webhookTriggerCondition = WebHookTriggerCondition.builder()
                                                           .webHookToken(webHookToken)
@@ -189,7 +192,10 @@ public class TriggerConditionControllerTest extends CategoryTest {
     WebHookToken webHookToken =
         WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
     StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
-    webhookURL.append("/api/webhooks/").append(webHookToken.getWebHookToken()).append("?accountId=").append(accountId);
+    webhookURL.append("/gateway/api/webhooks/")
+        .append(webHookToken.getWebHookToken())
+        .append("?accountId=")
+        .append(accountId);
 
     WebHookTriggerCondition webhookTriggerCondition = WebHookTriggerCondition.builder()
                                                           .webHookToken(webHookToken)
@@ -245,7 +251,10 @@ public class TriggerConditionControllerTest extends CategoryTest {
     WebHookToken webHookToken =
         WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
     StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
-    webhookURL.append("/api/webhooks/").append(webHookToken.getWebHookToken()).append("?accountId=").append(accountId);
+    webhookURL.append("/gateway/api/webhooks/")
+        .append(webHookToken.getWebHookToken())
+        .append("?accountId=")
+        .append(accountId);
 
     WebHookTriggerCondition webhookTriggerCondition = WebHookTriggerCondition.builder()
                                                           .webHookToken(webHookToken)
@@ -301,7 +310,10 @@ public class TriggerConditionControllerTest extends CategoryTest {
     WebHookToken webHookToken =
         WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
     StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
-    webhookURL.append("/api/webhooks/").append(webHookToken.getWebHookToken()).append("?accountId=").append(accountId);
+    webhookURL.append("/gateway/api/webhooks/")
+        .append(webHookToken.getWebHookToken())
+        .append("?accountId=")
+        .append(accountId);
 
     WebHookTriggerCondition webhookTriggerCondition = WebHookTriggerCondition.builder()
                                                           .webHookToken(webHookToken)
@@ -354,7 +366,10 @@ public class TriggerConditionControllerTest extends CategoryTest {
     WebHookToken webHookToken =
         WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
     StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
-    webhookURL.append("/api/webhooks/").append(webHookToken.getWebHookToken()).append("?accountId=").append(accountId);
+    webhookURL.append("/gateway/api/webhooks/")
+        .append(webHookToken.getWebHookToken())
+        .append("?accountId=")
+        .append(accountId);
 
     WebHookTriggerCondition webhookTriggerCondition =
         WebHookTriggerCondition.builder()
