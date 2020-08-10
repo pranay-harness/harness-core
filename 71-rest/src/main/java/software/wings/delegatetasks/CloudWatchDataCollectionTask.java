@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateImpl;
@@ -232,15 +231,14 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
         dataCollectionInfo.getHosts().forEach(
             (host, groupName)
                 -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
-                    -> callables.add(()
-                                         -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2,
-                                             cloudWatchClient, cloudWatchMetric, host, groupName, dataCollectionInfo,
-                                             dataCollectionInfo.getApplicationId(),
-                                             collectionStartTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                                             collectionStartTime,
-                                             ThirdPartyApiCallLog.fromDetails(
-                                                 createApiCallLog(dataCollectionInfo.getStateExecutionId())),
-                                             is247Task, hostStartTimeMap))));
+                    -> callables.add(
+                        ()
+                            -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient,
+                                cloudWatchMetric, host, groupName, dataCollectionInfo,
+                                dataCollectionInfo.getApplicationId(),
+                                collectionStartTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                                collectionStartTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()),
+                                is247Task, hostStartTimeMap))));
       }
       logger.info("Fetching CloudWatch metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
           dataCollectionInfo.getAnalysisComparisonStrategy(), dataCollectionMinute);
@@ -273,9 +271,8 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                 -> cloudWatchDelegateService.getMetricDataRecords(nameSpace, cloudWatchClient, cloudWatchMetric,
                     entityType, DEFAULT_GROUP_NAME, dataCollectionInfo, dataCollectionInfo.getApplicationId(),
                     System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                    System.currentTimeMillis(),
-                    ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())),
-                    is247Task, hostStartTimeMap));
+                    System.currentTimeMillis(), createApiCallLog(dataCollectionInfo.getStateExecutionId()), is247Task,
+                    hostStartTimeMap));
       }));
     }
   }

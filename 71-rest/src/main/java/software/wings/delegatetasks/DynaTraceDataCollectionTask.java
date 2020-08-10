@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.TaskType;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -252,9 +251,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                       .endTimestamp(collectionStartTime + TimeUnit.MINUTES.toMillis(2))
                       .build();
 
-              DynaTraceMetricDataResponse metricDataResponse =
-                  dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
-                      ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+              DynaTraceMetricDataResponse metricDataResponse = dynaTraceDelegateService.fetchMetricData(dynaTraceConfig,
+                  dataRequest, encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
               metricDataResponse.getResult().setHost(DynatraceState.TEST_HOST_NAME);
               return metricDataResponse;
             });
@@ -285,7 +283,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
                 DynaTraceMetricDataResponse metricDataResponse =
                     dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
-                        ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+                        createApiCallLog(dataCollectionInfo.getStateExecutionId()));
                 metricDataResponse.getResult().setHost(hostName);
                 return metricDataResponse;
               });
@@ -322,7 +320,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                       .endTimestamp(endTimeStamp)
                       .build();
               return dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
-                  ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+                  createApiCallLog(dataCollectionInfo.getStateExecutionId()));
             });
           }
           break;

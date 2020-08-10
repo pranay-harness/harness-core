@@ -113,8 +113,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           for (String host : dataCollectionInfo.getHosts()) {
             addHeartbeat(host, dataCollectionInfo, logCollectionMinute, logElements);
 
-            ThirdPartyApiCallLog apiCallLog =
-                ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+            ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
             final long collectionEndTime =
                 is247Task ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
 

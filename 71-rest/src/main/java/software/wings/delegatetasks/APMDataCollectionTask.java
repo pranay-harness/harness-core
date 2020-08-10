@@ -289,8 +289,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
     private String collect(Call<Object> request) {
       try {
-        ThirdPartyApiCallLog apiCallLog =
-            ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+        ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
         apiCallLog.setTitle("Fetch request to: " + dataCollectionInfo.getBaseUrl());
         Object response = requestExecutor.executeRequest(apiCallLog, request, getStringsToMask());
         return JsonUtils.asJson(response);
