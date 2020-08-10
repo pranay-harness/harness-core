@@ -92,13 +92,13 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
+    when(k8sTaskHelperBase.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelperBase, times(0)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateVirtualServiceManifestFilesWithRoutesForCanary(any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any());
-    verify(k8sTaskHelper, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
+    verify(k8sTaskHelperBase, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
@@ -121,14 +121,14 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
-    when(k8sTaskHelper.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
+    when(k8sTaskHelperBase.readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean())).thenReturn(emptyList());
 
     k8sRollingDeployTaskHandler.init(rollingDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelperBase, times(1)).dryRunManifests(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateVirtualServiceManifestFilesWithRoutesForCanary(any(), any(), any());
     verify(k8sTaskHelperBase, times(0)).updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    verify(k8sTaskHelper, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
+    verify(k8sTaskHelperBase, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
     verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
@@ -227,7 +227,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     List<KubernetesResource> kubernetesResources = getResources();
     K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
     doReturn(kubernetesResources)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .readManifestAndOverrideLocalSecrets(anyList(), any(ExecutionLogCallback.class), anyBoolean());
     doReturn(true)
         .when(k8sTaskHelper)
@@ -282,7 +282,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     List<KubernetesResource> kubernetesResources = getResources();
     doReturn(kubernetesResources)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .readManifestAndOverrideLocalSecrets(anyList(), any(ExecutionLogCallback.class), anyBoolean());
     K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
     doReturn(mock(ExecutionLogCallback.class))
@@ -343,7 +343,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
     doReturn(kubernetesResources)
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .readManifestAndOverrideLocalSecrets(anyList(), any(ExecutionLogCallback.class), anyBoolean());
     doReturn(mock(ExecutionLogCallback.class))
         .when(k8sTaskHelper)

@@ -7,12 +7,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.FileData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cli.CliResponse;
 
@@ -27,7 +27,7 @@ public class KustomizeTaskHelper {
   @Inject private KustomizeClient kustomizeClient;
 
   @Nonnull
-  public List<ManifestFile> build(@Nonnull String manifestFilesDirectory, @Nonnull String kustomizeBinaryPath,
+  public List<FileData> build(@Nonnull String manifestFilesDirectory, @Nonnull String kustomizeBinaryPath,
       @Nonnull KustomizeConfig kustomizeConfig, ExecutionLogCallback executionLogCallback) {
     CliResponse cliResponse;
     try {
@@ -50,14 +50,14 @@ public class KustomizeTaskHelper {
 
     if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       return Collections.singletonList(
-          ManifestFile.builder().fileName("manifest.yaml").fileContent(cliResponse.getOutput()).build());
+          FileData.builder().fileName("manifest.yaml").fileContent(cliResponse.getOutput()).build());
     } else {
       throw new InvalidRequestException("Kustomize build failed. Msg: " + cliResponse.getOutput(), WingsException.USER);
     }
   }
 
   @NotNull
-  public List<ManifestFile> buildForApply(@Nonnull String kustomizeBinaryPath, @Nonnull KustomizeConfig kustomizeConfig,
+  public List<FileData> buildForApply(@Nonnull String kustomizeBinaryPath, @Nonnull KustomizeConfig kustomizeConfig,
       @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply,
       ExecutionLogCallback executionLogCallback) {
     if (isEmpty(filesToApply)) {

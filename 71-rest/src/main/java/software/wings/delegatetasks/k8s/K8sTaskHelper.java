@@ -2,22 +2,14 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
-import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
-import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
-import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
-import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
-import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
-import static io.harness.k8s.manifest.ManifestHelper.yml_file_extension;
 import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -33,27 +25,20 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.harness.beans.FileData;
-import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
-import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
-import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
-import io.harness.k8s.model.Release;
-import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -83,14 +68,10 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Singleton
@@ -103,9 +84,8 @@ public class K8sTaskHelper {
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
-  @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject private OpenShiftDelegateService openShiftDelegateService;
-  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
+  @Inject K8sTaskHelperBase k8sTaskHelperBase;
 
   public boolean doHelmStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       HelmCommandRequest helmInstallCommandRequest, ExecutionLogCallback executionLogCallback) throws Exception {
@@ -123,19 +103,6 @@ public class K8sTaskHelper {
             .kubeconfigPath(kubeconfigPath)
             .build(),
         namespace, executionLogCallback, false);
-  }
-
-  private String writeValuesToFile(String directoryPath, List<String> valuesFiles) throws Exception {
-    StringBuilder valuesFilesOptionsBuilder = new StringBuilder(128);
-
-    for (int i = 0; i < valuesFiles.size(); i++) {
-      validateValuesFileContents(valuesFiles.get(i));
-      String valuesFileName = format("values-%d.yaml", i);
-      FileIo.writeUtf8StringToFile(directoryPath + '/' + valuesFileName, valuesFiles.get(i));
-      valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
-    }
-
-    return valuesFilesOptionsBuilder.toString();
   }
 
   private boolean writeManifestFilesToDirectory(
@@ -166,15 +133,15 @@ public class K8sTaskHelper {
     }
   }
 
-  public List<ManifestFile> renderTemplateForHelm(String helmPath, String manifestFilesDirectory,
-      List<String> valuesFiles, String releaseName, String namespace, ExecutionLogCallback executionLogCallback,
-      HelmVersion helmVersion, long timeoutInMillis) throws Exception {
-    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+  public List<FileData> renderTemplateForHelm(String helmPath, String manifestFilesDirectory, List<String> valuesFiles,
+      String releaseName, String namespace, LogCallback executionLogCallback, HelmVersion helmVersion,
+      long timeoutInMillis) throws Exception {
+    String valuesFileOptions = k8sTaskHelperBase.writeValuesToFile(manifestFilesDirectory, valuesFiles);
     logger.info("Values file options: " + valuesFileOptions);
 
     printHelmPath(executionLogCallback, helmPath);
 
-    List<ManifestFile> result = new ArrayList<>();
+    List<FileData> result = new ArrayList<>();
     try (LogOutputStream logErrorStream = K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
       String helmTemplateCommand = getHelmCommandForRender(
           helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, helmVersion);
@@ -186,95 +153,13 @@ public class K8sTaskHelper {
         throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
       }
 
-      result.add(ManifestFile.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
+      result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
     }
 
     return result;
   }
 
-  private List<ManifestFile> readManifestFilesFromDirectory(String manifestFilesDirectory) {
-    List<FileData> fileDataList;
-    Path directory = Paths.get(manifestFilesDirectory);
-
-    try {
-      fileDataList = getFilesUnderPath(directory.toString());
-    } catch (Exception ex) {
-      logger.error(ExceptionUtils.getMessage(ex));
-      throw new WingsException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
-    }
-
-    List<ManifestFile> manifestFiles = new ArrayList<>();
-    for (FileData fileData : fileDataList) {
-      if (isValidManifestFile(fileData.getFilePath())) {
-        manifestFiles.add(ManifestFile.builder()
-                              .fileName(fileData.getFilePath())
-                              .fileContent(new String(fileData.getFileBytes(), StandardCharsets.UTF_8))
-                              .build());
-      } else {
-        logger.info("Found file [{}] with unsupported extension", fileData.getFilePath());
-      }
-    }
-
-    return manifestFiles;
-  }
-
-  private List<ManifestFile> renderManifestFilesForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback,
-      long timeoutInMillis) throws Exception {
-    if (isEmpty(valuesFiles)) {
-      executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
-      return manifestFiles;
-    }
-
-    String valuesFileOptions = null;
-    try {
-      valuesFileOptions = writeValuesToFile(k8sDelegateTaskParams.getWorkingDirectory(), valuesFiles);
-    } catch (KubernetesValuesException kvexception) {
-      String message = kvexception.getParams().get("reason").toString();
-      executionLogCallback.saveExecutionLog(message, ERROR);
-      throw new KubernetesValuesException(message, kvexception.getCause());
-    }
-
-    logger.info("Values file options: " + valuesFileOptions);
-
-    List<ManifestFile> result = new ArrayList<>();
-
-    executionLogCallback.saveExecutionLog(color("\nRendering manifest files using go template", White, Bold));
-    executionLogCallback.saveExecutionLog(
-        color("Only manifest files with [.yaml] or [.yml] extension will be processed", White, Bold));
-
-    for (ManifestFile manifestFile : manifestFiles) {
-      if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
-        continue;
-      }
-
-      FileIo.writeUtf8StringToFile(
-          k8sDelegateTaskParams.getWorkingDirectory() + "/template.yaml", manifestFile.getFileContent());
-
-      try (
-          LogOutputStream logErrorStream = K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
-        String goTemplateCommand = encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getGoTemplateClientPath())
-            + " -t template.yaml " + valuesFileOptions;
-        ProcessResult processResult = k8sTaskHelperBase.executeShellCommand(
-            k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
-
-        if (processResult.getExitValue() != 0) {
-          throw new InvalidRequestException(format("Failed to render template for %s. Error %s",
-                                                manifestFile.getFileName(), processResult.getOutput().getUTF8()),
-              USER);
-        }
-
-        result.add(ManifestFile.builder()
-                       .fileName(manifestFile.getFileName())
-                       .fileContent(processResult.outputUTF8())
-                       .build());
-      }
-    }
-
-    return result;
-  }
-
-  public List<ManifestFile> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
+  public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory, List<String> valuesFiles,
       String releaseName, String namespace, ExecutionLogCallback executionLogCallback,
       K8sTaskParameters k8sTaskParameters) throws Exception {
@@ -284,8 +169,8 @@ public class K8sTaskHelper {
     switch (storeType) {
       case Local:
       case Remote:
-        List<ManifestFile> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
-        return renderManifestFilesForGoTemplate(
+        List<FileData> manifestFiles = k8sTaskHelperBase.readManifestFilesFromDirectory(manifestFilesDirectory);
+        return k8sTaskHelperBase.renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
 
       case HelmSourceRepo:
@@ -313,7 +198,7 @@ public class K8sTaskHelper {
     return new ArrayList<>();
   }
 
-  public List<ManifestFile> renderTemplateForGivenFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
+  public List<FileData> renderTemplateForGivenFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory,
       @NotEmpty List<String> filesList, List<String> valuesFiles, String releaseName, String namespace,
       ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
@@ -323,9 +208,9 @@ public class K8sTaskHelper {
     switch (storeType) {
       case Local:
       case Remote:
-        List<ManifestFile> manifestFiles =
-            readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
-        return renderManifestFilesForGoTemplate(
+        List<FileData> manifestFiles =
+            k8sTaskHelperBase.readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
+        return k8sTaskHelperBase.renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
 
       case HelmSourceRepo:
@@ -349,58 +234,21 @@ public class K8sTaskHelper {
     return new ArrayList<>();
   }
 
-  private static boolean isValidManifestFile(String filename) {
-    return (StringUtils.endsWith(filename, yaml_file_extension) || StringUtils.endsWith(filename, yml_file_extension))
-        && !StringUtils.equals(filename, values_filename);
-  }
-
-  public List<KubernetesResource> readManifestAndOverrideLocalSecrets(
-      List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback, boolean overrideLocalSecrets) {
-    if (overrideLocalSecrets) {
-      replaceManifestPlaceholdersWithLocalDelegateSecrets(manifestFiles);
-    }
-    return readManifests(manifestFiles, executionLogCallback);
-  }
-
   public List<KubernetesResource> getResourcesFromManifests(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory,
       @NotEmpty List<String> filesList, List<String> valuesFiles, String releaseName, String namespace,
       ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
-    List<ManifestFile> manifestFiles =
+    List<FileData> manifestFiles =
         renderTemplateForGivenFiles(k8sDelegateTaskParams, k8sDelegateManifestConfig, manifestFilesDirectory, filesList,
             valuesFiles, releaseName, namespace, executionLogCallback, k8sTaskParameters);
     if (isEmpty(manifestFiles)) {
       return new ArrayList<>();
     }
 
-    List<KubernetesResource> resources = readManifests(manifestFiles, executionLogCallback);
+    List<KubernetesResource> resources = k8sTaskHelperBase.readManifests(manifestFiles, executionLogCallback);
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, namespace);
 
     return resources;
-  }
-  public List<KubernetesResource> readManifests(
-      List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) {
-    List<KubernetesResource> result = new ArrayList<>();
-
-    for (ManifestFile manifestFile : manifestFiles) {
-      if (isValidManifestFile(manifestFile.getFileName())) {
-        try {
-          result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
-        } catch (Exception e) {
-          executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
-          throw e;
-        }
-      }
-    }
-
-    return result.stream().sorted(new KubernetesResourceComparer()).collect(toList());
-  }
-
-  private void replaceManifestPlaceholdersWithLocalDelegateSecrets(List<ManifestFile> manifestFiles) {
-    for (ManifestFile manifestFile : manifestFiles) {
-      manifestFile.setFileContent(
-          delegateLocalConfigService.replacePlaceholdersWithLocalConfig(manifestFile.getFileContent()));
-    }
   }
 
   private void printGitConfigInExecutionLogs(
@@ -540,50 +388,20 @@ public class K8sTaskHelper {
     }
   }
 
-  private List<ManifestFile> readFilesFromDirectory(
-      String directory, List<String> filePaths, ExecutionLogCallback executionLogCallback) {
-    List<ManifestFile> manifestFiles = new ArrayList<>();
-
-    for (String filepath : filePaths) {
-      if (isValidManifestFile(filepath)) {
-        Path path = Paths.get(directory, filepath);
-        byte[] fileBytes;
-
-        try {
-          fileBytes = Files.readAllBytes(path);
-        } catch (Exception ex) {
-          logger.info(ExceptionUtils.getMessage(ex));
-          throw new InvalidRequestException(
-              format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(ex)));
-        }
-
-        manifestFiles.add(ManifestFile.builder()
-                              .fileName(filepath)
-                              .fileContent(new String(fileBytes, StandardCharsets.UTF_8))
-                              .build());
-      } else {
-        executionLogCallback.saveExecutionLog(
-            color(format("Ignoring file [%s] with unsupported extension", filepath), Yellow, Bold));
-      }
-    }
-
-    return manifestFiles;
-  }
-
-  private List<ManifestFile> renderTemplateForHelmChartFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
+  private List<FileData> renderTemplateForHelmChartFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
       String manifestFilesDirectory, List<String> chartFiles, List<String> valuesFiles, String releaseName,
-      String namespace, ExecutionLogCallback executionLogCallback, HelmVersion helmVersion, long timeoutInMillis)
+      String namespace, LogCallback executionLogCallback, HelmVersion helmVersion, long timeoutInMillis)
       throws Exception {
-    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    String valuesFileOptions = k8sTaskHelperBase.writeValuesToFile(manifestFilesDirectory, valuesFiles);
     String helmPath = k8sDelegateTaskParams.getHelmPath();
     logger.info("Values file options: " + valuesFileOptions);
 
     printHelmPath(executionLogCallback, helmPath);
 
-    List<ManifestFile> result = new ArrayList<>();
+    List<FileData> result = new ArrayList<>();
 
     for (String chartFile : chartFiles) {
-      if (isValidManifestFile(chartFile)) {
+      if (K8sTaskHelperBase.isValidManifestFile(chartFile)) {
         try (LogOutputStream logErrorStream =
                  K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
           String helmTemplateCommand = getHelmCommandForRender(
@@ -596,7 +414,7 @@ public class K8sTaskHelper {
             throw new WingsException(format("Failed to render chart file [%s]", chartFile));
           }
 
-          result.add(ManifestFile.builder().fileName(chartFile).fileContent(processResult.outputUTF8()).build());
+          result.add(FileData.builder().fileName(chartFile).fileContent(processResult.outputUTF8()).build());
         }
       } else {
         executionLogCallback.saveExecutionLog(
@@ -607,12 +425,12 @@ public class K8sTaskHelper {
     return result;
   }
 
-  private void printHelmPath(ExecutionLogCallback executionLogCallback, final String helmPath) {
+  private void printHelmPath(LogCallback executionLogCallback, final String helmPath) {
     executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
     executionLogCallback.saveExecutionLog(color(format("Using helm binary %s", helmPath), White, Normal));
   }
 
-  private void printHelmTemplateCommand(ExecutionLogCallback executionLogCallback, final String helmTemplateCommand) {
+  private void printHelmTemplateCommand(LogCallback executionLogCallback, final String helmTemplateCommand) {
     executionLogCallback.saveExecutionLog(color("Running Helm command", White, Bold));
     executionLogCallback.saveExecutionLog(color(helmTemplateCommand, White, Normal));
   }
@@ -645,46 +463,10 @@ public class K8sTaskHelper {
         .replace("${OVERRIDE_VALUES}", valueOverrides);
   }
 
-  public List<KubernetesResourceId> fetchAllResourcesForRelease(K8sDeleteTaskParameters k8sDeleteTaskParameters,
-      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) throws IOException {
-    String releaseName = k8sDeleteTaskParameters.getReleaseName();
-    executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
-
-    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
-
-    if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
-      executionLogCallback.saveExecutionLog("No resource history was available");
-      return emptyList();
-    }
-
-    String releaseHistoryDataString = configMap.getData().get(ReleaseHistoryKeyName);
-    ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
-
-    if (isEmpty(releaseHistory.getReleases())) {
-      return emptyList();
-    }
-
-    Map<String, KubernetesResourceId> kubernetesResourceIdMap = new HashMap<>();
-    for (Release release : releaseHistory.getReleases()) {
-      if (isNotEmpty(release.getResources())) {
-        release.getResources().forEach(
-            resource -> kubernetesResourceIdMap.put(generateResourceIdentifier(resource), resource));
-      }
-    }
-
-    KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
-                                                          .kind(configMap.getKind())
-                                                          .name(releaseName)
-                                                          .namespace(kubernetesConfig.getNamespace())
-                                                          .build();
-    kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
-    return new ArrayList<>(kubernetesResourceIdMap.values());
-  }
-
   public List<KubernetesResourceId> getResourceIdsForDeletion(K8sDeleteTaskParameters k8sDeleteTaskParameters,
       KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) throws IOException {
-    List<KubernetesResourceId> kubernetesResourceIds =
-        fetchAllResourcesForRelease(k8sDeleteTaskParameters, kubernetesConfig, executionLogCallback);
+    List<KubernetesResourceId> kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
+        k8sDeleteTaskParameters.getReleaseName(), kubernetesConfig, executionLogCallback);
 
     // If namespace deletion is NOT selected,remove all Namespace resources from deletion list
     if (!k8sDeleteTaskParameters.isDeleteNamespacesForRelease()) {
@@ -695,15 +477,5 @@ public class K8sTaskHelper {
     }
 
     return k8sTaskHelperBase.arrangeResourceIdsInDeletionOrder(kubernetesResourceIds);
-  }
-
-  String generateResourceIdentifier(KubernetesResourceId resourceId) {
-    return new StringBuilder(128)
-        .append(resourceId.getNamespace())
-        .append('/')
-        .append(resourceId.getKind())
-        .append('/')
-        .append(resourceId.getName())
-        .toString();
   }
 }

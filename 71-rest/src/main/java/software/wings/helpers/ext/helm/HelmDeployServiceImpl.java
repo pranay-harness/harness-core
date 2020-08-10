@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.Pod;
+import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -233,13 +234,13 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
 
-    List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
+    List<FileData> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
         helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
         commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
         (ExecutionLogCallback) executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis);
 
     List<KubernetesResource> resources =
-        k8sTaskHelper.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
+        k8sTaskHelperBase.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
         resources, commandRequest.getContainerServiceParams().getNamespace());
 

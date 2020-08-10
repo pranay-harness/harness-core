@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -17,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cli.CliResponse;
 
@@ -135,7 +135,7 @@ public class OpenShiftDelegateServiceTest extends WingsBaseTest {
         .when(openShiftClient)
         .process(OC_BINARY_PATH, TEMPLATE_FILE_PATH, paramFilePaths, MANIFEST_DIRECTORY_PATH, executionLogCallback);
 
-    List<ManifestFile> manifestFiles = openShiftDelegateService.processTemplatization(
+    List<FileData> manifestFiles = openShiftDelegateService.processTemplatization(
         MANIFEST_DIRECTORY_PATH, OC_BINARY_PATH, TEMPLATE_FILE_PATH, executionLogCallback, paramFileContent);
 
     assertThat(manifestFiles).hasSize(1);

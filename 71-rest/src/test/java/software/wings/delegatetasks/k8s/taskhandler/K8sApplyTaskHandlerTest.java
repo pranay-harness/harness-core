@@ -22,6 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
@@ -79,9 +80,9 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
     when(k8sTaskHelper.renderTemplateForGivenFiles(any(), any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(asList(ManifestFile.builder().build()));
+        .thenReturn(asList(FileData.builder().build()));
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(Collections.emptyList());
 
     k8sApplyTaskHandler.init(k8sApplyTaskParameters, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelperBase, times(0)).dryRunManifests(any(), any(), any(), any());
@@ -102,9 +103,9 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
     when(k8sTaskHelper.renderTemplateForGivenFiles(any(), any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(asList(ManifestFile.builder().build()));
+        .thenReturn(asList(FileData.builder().build()));
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(Collections.emptyList());
 
     k8sApplyTaskHandler.init(k8sApplyTaskParameters, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelperBase, times(1)).dryRunManifests(any(), any(), any(), any());
@@ -201,7 +202,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
             any(ExecutionLogCallback.class), any(K8sTaskParameters.class));
 
     doThrow(new KubernetesYamlException("reason"))
-        .when(k8sTaskHelper)
+        .when(k8sTaskHelperBase)
         .readManifests(anyList(), any(ExecutionLogCallback.class));
 
     final boolean success = k8sApplyTaskHandler.init(K8sApplyTaskParameters.builder().filePaths("a,b,c").build(),

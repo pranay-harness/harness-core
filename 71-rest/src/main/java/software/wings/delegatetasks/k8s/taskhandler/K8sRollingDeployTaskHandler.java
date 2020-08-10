@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
+import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sRollingBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -53,7 +54,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -223,17 +223,17 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       k8sTaskHelperBase.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
-      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
+      List<FileData> manifestFiles = k8sTaskHelper.renderTemplate(k8sDelegateTaskParams,
           request.getK8sDelegateManifestConfig(), manifestFilesDirectory, request.getValuesYamlList(), releaseName,
           kubernetesConfig.getNamespace(), executionLogCallback, request);
 
-      resources = k8sTaskHelper.readManifestAndOverrideLocalSecrets(
+      resources = k8sTaskHelperBase.readManifestAndOverrideLocalSecrets(
           manifestFiles, executionLogCallback, request.isLocalOverrideFeatureFlag());
       k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       if (request.isInCanaryWorkflow()) {
-        updateDestinationRuleManifestFilesWithSubsets(executionLogCallback);
-        updateVirtualServiceManifestFilesWithRoutes(executionLogCallback);
+        updateDestinationRuleWithSubsets(executionLogCallback);
+        updateVirtualServiceWithRoutes(executionLogCallback);
       }
 
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
@@ -308,14 +308,12 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
 
-  private void updateVirtualServiceManifestFilesWithRoutes(ExecutionLogCallback executionLogCallback)
-      throws IOException {
+  private void updateVirtualServiceWithRoutes(ExecutionLogCallback executionLogCallback) throws IOException {
     k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
         resources, kubernetesConfig, executionLogCallback);
   }
 
-  private void updateDestinationRuleManifestFilesWithSubsets(ExecutionLogCallback executionLogCallback)
-      throws IOException {
+  private void updateDestinationRuleWithSubsets(ExecutionLogCallback executionLogCallback) throws IOException {
     k8sTaskHelperBase.updateDestinationRuleManifestFilesWithSubsets(resources,
         asList(HarnessLabelValues.trackCanary, HarnessLabelValues.trackStable), kubernetesConfig, executionLogCallback);
   }

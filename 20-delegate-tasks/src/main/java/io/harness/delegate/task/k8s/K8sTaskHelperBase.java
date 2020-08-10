@@ -6,10 +6,15 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.k8s.K8sConstants.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
+import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.kubectl.AbstractExecutable.getPrintableCommand;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static io.harness.k8s.manifest.ManifestHelper.getFirstLoadBalancerService;
+import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
+import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.k8s.manifest.ManifestHelper.yaml_file_extension;
+import static io.harness.k8s.manifest.ManifestHelper.yml_file_extension;
 import static io.harness.k8s.model.K8sExpressions.canaryDestinationExpression;
 import static io.harness.k8s.model.K8sExpressions.stableDestinationExpression;
 import static io.harness.k8s.model.Release.Status.Failed;
@@ -22,6 +27,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -42,6 +48,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
@@ -50,8 +57,10 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.K8sConstants;
@@ -133,6 +142,7 @@ public class K8sTaskHelperBase {
   @Inject private TimeLimiter timeLimiter;
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private KubernetesHelperService kubernetesHelperService;
+  @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
   public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
       + "subset: $ISTIO_DESTINATION_SUBSET_NAME";
@@ -207,6 +217,11 @@ public class K8sTaskHelperBase {
     Path fileAbsolutePath = Paths.get(filePath).toAbsolutePath();
     Path prefixAbsolutePath = Paths.get(prefixPath).toAbsolutePath();
     return prefixAbsolutePath.relativize(fileAbsolutePath).toString();
+  }
+
+  public static boolean isValidManifestFile(String filename) {
+    return (StringUtils.endsWith(filename, yaml_file_extension) || StringUtils.endsWith(filename, yml_file_extension))
+        && !StringUtils.equals(filename, values_filename);
   }
 
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
@@ -1280,5 +1295,207 @@ public class K8sTaskHelperBase {
 
       executionLogCallback.saveExecutionLog("\n");
     }
+  }
+
+  public List<KubernetesResource> readManifests(List<FileData> manifestFiles, LogCallback executionLogCallback) {
+    List<KubernetesResource> result = new ArrayList<>();
+
+    for (FileData manifestFile : manifestFiles) {
+      if (isValidManifestFile(manifestFile.getFileName())) {
+        try {
+          result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
+        } catch (Exception e) {
+          executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
+          throw e;
+        }
+      }
+    }
+
+    return result.stream().sorted(new KubernetesResourceComparer()).collect(toList());
+  }
+
+  public List<FileData> readManifestFilesFromDirectory(String manifestFilesDirectory) {
+    List<FileData> fileDataList;
+    Path directory = Paths.get(manifestFilesDirectory);
+
+    try {
+      fileDataList = getFilesUnderPath(directory.toString());
+    } catch (Exception ex) {
+      logger.error(ExceptionUtils.getMessage(ex));
+      throw new WingsException("Failed to get files. Error: " + ExceptionUtils.getMessage(ex));
+    }
+
+    List<FileData> manifestFiles = new ArrayList<>();
+    for (FileData fileData : fileDataList) {
+      if (isValidManifestFile(fileData.getFilePath())) {
+        manifestFiles.add(FileData.builder()
+                              .fileName(fileData.getFilePath())
+                              .fileContent(new String(fileData.getFileBytes(), UTF_8))
+                              .build());
+      } else {
+        logger.info("Found file [{}] with unsupported extension", fileData.getFilePath());
+      }
+    }
+
+    return manifestFiles;
+  }
+
+  public List<FileData> replaceManifestPlaceholdersWithLocalDelegateSecrets(List<FileData> manifestFiles) {
+    List<FileData> updatedManifestFiles = new ArrayList<>();
+    for (FileData manifestFile : manifestFiles) {
+      updatedManifestFiles.add(
+          FileData.builder()
+              .fileName(manifestFile.getFileName())
+              .fileContent(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(manifestFile.getFileContent()))
+              .build());
+    }
+
+    return updatedManifestFiles;
+  }
+
+  public List<KubernetesResource> readManifestAndOverrideLocalSecrets(
+      List<FileData> manifestFiles, LogCallback executionLogCallback, boolean overrideLocalSecrets) {
+    if (overrideLocalSecrets) {
+      manifestFiles = replaceManifestPlaceholdersWithLocalDelegateSecrets(manifestFiles);
+    }
+    return readManifests(manifestFiles, executionLogCallback);
+  }
+
+  public String writeValuesToFile(String directoryPath, List<String> valuesFiles) throws Exception {
+    StringBuilder valuesFilesOptionsBuilder = new StringBuilder(128);
+
+    for (int i = 0; i < valuesFiles.size(); i++) {
+      validateValuesFileContents(valuesFiles.get(i));
+      String valuesFileName = format("values-%d.yaml", i);
+      FileIo.writeUtf8StringToFile(directoryPath + '/' + valuesFileName, valuesFiles.get(i));
+      valuesFilesOptionsBuilder.append(" -f ").append(valuesFileName);
+    }
+
+    return valuesFilesOptionsBuilder.toString();
+  }
+
+  public List<FileData> renderManifestFilesForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
+      List<FileData> manifestFiles, List<String> valuesFiles, LogCallback executionLogCallback, long timeoutInMillis)
+      throws Exception {
+    if (isEmpty(valuesFiles)) {
+      executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
+      return manifestFiles;
+    }
+
+    String valuesFileOptions = null;
+    try {
+      valuesFileOptions = writeValuesToFile(k8sDelegateTaskParams.getWorkingDirectory(), valuesFiles);
+    } catch (KubernetesValuesException kvexception) {
+      String message = kvexception.getParams().get("reason").toString();
+      executionLogCallback.saveExecutionLog(message, ERROR);
+      throw new KubernetesValuesException(message, kvexception.getCause());
+    }
+
+    logger.info("Values file options: " + valuesFileOptions);
+
+    List<FileData> result = new ArrayList<>();
+
+    executionLogCallback.saveExecutionLog(color("\nRendering manifest files using go template", White, Bold));
+    executionLogCallback.saveExecutionLog(
+        color("Only manifest files with [.yaml] or [.yml] extension will be processed", White, Bold));
+
+    for (FileData manifestFile : manifestFiles) {
+      if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
+        continue;
+      }
+
+      FileIo.writeUtf8StringToFile(
+          k8sDelegateTaskParams.getWorkingDirectory() + "/template.yaml", manifestFile.getFileContent());
+
+      try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+        String goTemplateCommand = encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getGoTemplateClientPath())
+            + " -t template.yaml " + valuesFileOptions;
+        ProcessResult processResult = executeShellCommand(
+            k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
+
+        if (processResult.getExitValue() != 0) {
+          throw new InvalidRequestException(format("Failed to render template for %s. Error %s",
+                                                manifestFile.getFileName(), processResult.getOutput().getUTF8()),
+              USER);
+        }
+
+        result.add(
+            FileData.builder().fileName(manifestFile.getFileName()).fileContent(processResult.outputUTF8()).build());
+      }
+    }
+
+    return result;
+  }
+
+  public String generateResourceIdentifier(KubernetesResourceId resourceId) {
+    return new StringBuilder(128)
+        .append(resourceId.getNamespace())
+        .append('/')
+        .append(resourceId.getKind())
+        .append('/')
+        .append(resourceId.getName())
+        .toString();
+  }
+
+  public List<KubernetesResourceId> fetchAllResourcesForRelease(
+      String releaseName, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
+    executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
+
+    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+
+    if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
+      executionLogCallback.saveExecutionLog("No resource history was available");
+      return emptyList();
+    }
+
+    String releaseHistoryDataString = configMap.getData().get(ReleaseHistoryKeyName);
+    ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
+
+    if (isEmpty(releaseHistory.getReleases())) {
+      return emptyList();
+    }
+
+    Map<String, KubernetesResourceId> kubernetesResourceIdMap = new HashMap<>();
+    for (Release release : releaseHistory.getReleases()) {
+      if (isNotEmpty(release.getResources())) {
+        release.getResources().forEach(
+            resource -> kubernetesResourceIdMap.put(generateResourceIdentifier(resource), resource));
+      }
+    }
+
+    KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
+                                                          .kind(configMap.getKind())
+                                                          .name(releaseName)
+                                                          .namespace(kubernetesConfig.getNamespace())
+                                                          .build();
+    kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    return new ArrayList<>(kubernetesResourceIdMap.values());
+  }
+
+  public List<FileData> readFilesFromDirectory(
+      String directory, List<String> filePaths, LogCallback executionLogCallback) {
+    List<FileData> manifestFiles = new ArrayList<>();
+
+    for (String filepath : filePaths) {
+      if (isValidManifestFile(filepath)) {
+        Path path = Paths.get(directory, filepath);
+        byte[] fileBytes;
+
+        try {
+          fileBytes = Files.readAllBytes(path);
+        } catch (Exception ex) {
+          logger.info(ExceptionUtils.getMessage(ex));
+          throw new InvalidRequestException(
+              format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(ex)));
+        }
+
+        manifestFiles.add(FileData.builder().fileName(filepath).fileContent(new String(fileBytes, UTF_8)).build());
+      } else {
+        executionLogCallback.saveExecutionLog(
+            color(format("Ignoring file [%s] with unsupported extension", filepath), Yellow, Bold));
+      }
+    }
+
+    return manifestFiles;
   }
 }

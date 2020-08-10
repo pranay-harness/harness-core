@@ -194,11 +194,11 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(emptyList());
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
 
     k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelperBase, times(0)).dryRunManifests(any(), any(), any(), any());
-    verify(k8sTaskHelper, times(1)).readManifests(any(), any());
+    verify(k8sTaskHelperBase, times(1)).readManifests(any(), any());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
@@ -221,11 +221,11 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
-    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(emptyList());
+    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
 
     k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
     verify(k8sTaskHelperBase, times(1)).dryRunManifests(any(), any(), any(), any());
-    verify(k8sTaskHelper, times(1)).readManifests(any(), any());
+    verify(k8sTaskHelperBase, times(1)).readManifests(any(), any());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());

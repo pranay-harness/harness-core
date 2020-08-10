@@ -10,6 +10,7 @@ import static org.mockito.Mockito.spy;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -102,7 +103,7 @@ public class KustomizeTaskHelperTest extends WingsBaseTest {
         CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).output(RANDOM).build();
     doReturn(cliResponse).when(kustomizeClient).buildWithPlugins(RANDOM, RANDOM, RANDOM, RANDOM, executionLogCallback);
 
-    List<ManifestFile> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback);
+    List<FileData> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback);
     assertThat(manifestFiles).hasSize(1);
     assertThat(manifestFiles.get(0).getFileContent()).isEqualTo(RANDOM);
   }
@@ -115,7 +116,7 @@ public class KustomizeTaskHelperTest extends WingsBaseTest {
         CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).output(RANDOM).build();
     doReturn(cliResponse).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, executionLogCallback);
 
-    List<ManifestFile> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback);
+    List<FileData> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback);
     assertThat(manifestFiles).hasSize(1);
     assertThat(manifestFiles.get(0).getFileContent()).isEqualTo(RANDOM);
   }
@@ -140,7 +141,7 @@ public class KustomizeTaskHelperTest extends WingsBaseTest {
         .when(spyKustomizeTaskHelper)
         .build(eq(RANDOM), eq(RANDOM), captor.capture(), eq(executionLogCallback));
 
-    List<ManifestFile> actualManifestFiles =
+    List<FileData> actualManifestFiles =
         spyKustomizeTaskHelper.buildForApply(RANDOM, kustomizeConfig, RANDOM, file, executionLogCallback);
 
     assertThat(actualManifestFiles).isEqualTo(manifestFiles);
