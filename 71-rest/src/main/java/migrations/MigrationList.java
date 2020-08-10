@@ -118,6 +118,7 @@ import migrations.all.RemoveUnusedLogDataRecordMigration;
 import migrations.all.ResourceLookupMigration;
 import migrations.all.ScheduleSegmentPublishJob;
 import migrations.all.SecretManagerConfigMigration;
+import migrations.all.SecretManagerPermissionMigration;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.ServerlessInstanceChangeCollectionNameMigration;
 import migrations.all.ServiceAddArtifactStreamIdsMigration;
@@ -360,6 +361,7 @@ public class MigrationList {
         .add(Pair.of(323, VaultAppRoleRenewalMigration.class))
         .add(Pair.of(324, ServerlessInstanceChangeCollectionNameMigration.class))
         .add(Pair.of(325, ManageCloudProvidersAndConnectorsPermissionMigration.class))
+        .add(Pair.of(326, SecretManagerPermissionMigration.class))
         .build();
   }
 }

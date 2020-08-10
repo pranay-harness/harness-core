@@ -22,7 +22,7 @@ public class AccountSetupService {
   @Inject OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
 
-  public Account ensureAccount() {
+  Account ensureAccount() {
     String directoryPath = Project.rootDirectory(AbstractFunctionalTest.class);
     final File lockfile = new File(directoryPath, GENERIC_TEST.name());
     try {

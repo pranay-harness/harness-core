@@ -2,7 +2,7 @@ package software.wings.resources.secretsmanagement;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.FeatureName.CUSTOM_SECRETS_MANAGER;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
@@ -32,7 +32,7 @@ import javax.ws.rs.QueryParam;
 @Path("/custom-secrets-managers")
 @Produces("application/json")
 @Scope(SETTING)
-@AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+@AuthRule(permissionType = MANAGE_SECRET_MANAGERS)
 @Slf4j
 public class CustomSecretsManagerResource {
   private CustomSecretsManagerService customSecretsManagerService;

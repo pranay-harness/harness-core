@@ -269,7 +269,7 @@ public class AccountGenerator {
     return account;
   }
 
-  public Account ensureUserGroup(Account account, String userGroupName) {
+  private Account ensureUserGroup(Account account, String userGroupName) {
     if (userGroupService.fetchUserGroupByName(account.getUuid(), userGroupName) == null) {
       User readOnlyUser = ensureUser(
           readOnlyUserUuid, readOnlyUserName, readOnlyEmail, scmSecret.decryptToCharArray(readOnlyPassword), account);
