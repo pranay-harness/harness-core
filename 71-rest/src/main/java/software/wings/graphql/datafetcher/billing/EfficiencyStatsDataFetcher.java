@@ -66,6 +66,8 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     QLStatsBreakdownInfo costStats = QLStatsBreakdownInfo.builder().build();
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
+    boolean successful = false;
+    int retryCount = 0;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupBy);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupBy);
 
@@ -80,15 +82,27 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     StringJoiner entityIdAppender = new StringJoiner(":");
     QLBillingAmountData prevBillingAmountData = entityIdToPrevBillingAmountData.get(entityIdAppender.toString());
 
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(queryData.getQuery());
-      costStats =
-          getCostBreakdown(queryData, resultSet, entityIdToPrevBillingAmountData, filters, entityIdAppender.toString());
-    } catch (SQLException e) {
-      logger.error("SunburstChartStatsDataFetcher (getSunburstGridData) Error exception {}", e);
-    } finally {
-      DBUtils.close(resultSet);
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        costStats = getCostBreakdown(
+            queryData, resultSet, entityIdToPrevBillingAmountData, filters, entityIdAppender.toString());
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in EfficiencyStatsDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in EfficiencyStatsDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
     }
 
     return QLEfficiencyStatsData.builder()

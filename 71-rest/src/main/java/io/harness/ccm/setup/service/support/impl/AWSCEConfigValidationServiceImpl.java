@@ -40,12 +40,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
 public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationService {
   @Inject private AwsCredentialHelper awsCredentialHelper;
   @Inject private AwsEKSHelperService awsEKSHelperService;
+  private static final String rolePrefix = "arn:aws:iam";
   private static final String ceAWSRegion = "us-east-1";
   private static final String compression = "GZIP";
   private static final String timeGranularity = "HOURLY";
@@ -85,6 +87,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
     for (BucketPolicyStatement statement : policyJson.getStatement()) {
       Map<String, List<String>> principal = statement.getPrincipal();
       List<String> rolesList = principal.get(aws);
+      rolesList = rolesList.stream().filter(roleArn -> roleArn.contains(rolePrefix)).collect(Collectors.toList());
       if (rolesList.contains(crossAccountRoleArn)) {
         return true;
       }

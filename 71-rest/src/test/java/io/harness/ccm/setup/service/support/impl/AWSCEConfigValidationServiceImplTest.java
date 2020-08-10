@@ -60,7 +60,7 @@ public class AWSCEConfigValidationServiceImplTest {
   private static final String reportVersioning = "OVERWRITE_REPORT";
   private static final String invalidValue = "invalidValue";
   private static final String awsS3BucketName = "awsS3BucketName";
-  private static final String roleArnPredefined = "roleArnPredefined";
+  private static final String roleArnPredefined = "arn:aws:iam::awsMasterAccount:role/roleArnPredefined";
   private static final String aws = "AWS";
   private static final String sid = "Sid";
   private static final String version = "version";
@@ -139,7 +139,6 @@ public class AWSCEConfigValidationServiceImplTest {
     assertThat(bucketPolicyJson.getStatement().get(0).getAction()).isEqualTo(action);
     assertThat(bucketPolicyJson.getStatement().get(0).getResource()).isEqualTo(resource);
     assertThat(bucketPolicyJson.getStatement().get(0).getCondition()).isNull();
-    assertThat(bucketPolicyJson.getStatement().get(0).getPrincipal().get(aws).contains(roleArnPredefined)).isTrue();
     assertThat(bucketPolicyJson.getStatement().get(0).getPrincipal().get(aws).contains(roleArnPredefined)).isTrue();
     assertThat(updateBucketPolicy).isTrue();
 
