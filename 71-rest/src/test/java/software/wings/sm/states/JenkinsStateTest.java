@@ -102,6 +102,8 @@ public class JenkinsStateTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecute() {
+    when(settingsService.getFilteredSettingAttributes(any(), any(), any()))
+        .thenReturn(Collections.singletonList(new SettingAttribute()));
     ExecutionResponse executionResponse = jenkinsState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -121,6 +123,8 @@ public class JenkinsStateTest extends CategoryTest {
     when(templateExpressionProcessor.getTemplateExpression(jenkinsState.getTemplateExpressions(), "jenkinsConfigId"))
         .thenReturn(jenkinsExp);
     when(templateExpressionProcessor.resolveTemplateExpression(executionContext, jenkinsExp)).thenReturn(SETTING_ID);
+    when(settingsService.getFilteredSettingAttributes(any(), any(), any()))
+        .thenReturn(Collections.singletonList(new SettingAttribute()));
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     ExecutionResponse response = jenkinsState.execute(executionContext);
     assertThat(response).isNotNull();
@@ -158,7 +162,7 @@ public class JenkinsStateTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  public void shouldReturnExecutionResponsWithFailedStatus() {
+  public void shouldReturnExecutionResponseWithFailedStatus() {
     TemplateExpression jenkinsExp =
         new TemplateExpression("jenkinsConfigId", "${JENKINS_SERVER}", true, null, false, null);
     jenkinsState.setTemplateExpressions(Collections.singletonList(jenkinsExp));
@@ -171,6 +175,17 @@ public class JenkinsStateTest extends CategoryTest {
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.getErrorMessage())
         .isEqualTo("Jenkins Server was deleted. Please update with an appropriate server.");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnExecutionResponseWithFailedStatusWhenServerIsRestrictedWithinTheScope() {
+    when(settingsService.get(SETTING_ID)).thenReturn(new SettingAttribute());
+    ExecutionResponse response = jenkinsState.execute(executionContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Usage of provided Jenkins Server is not allowed within this scope");
   }
 
   @Test

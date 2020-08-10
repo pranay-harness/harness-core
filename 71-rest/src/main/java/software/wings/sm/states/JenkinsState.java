@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
-import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -256,19 +255,20 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
             .executionStatus(FAILED)
             .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
             .build();
-      } else if (settingsService
-                     .getFilteredSettingAttributes(
-                         Collections.singletonList(settingAttribute), context.getAppId(), null)
-                     .isEmpty()) {
-        return ExecutionResponse.builder()
-            .executionStatus(REJECTED)
-            .errorMessage("Usage of provided Jenkins Server is not allowed within this scope")
-            .build();
       }
       setJenkinsConfigId(settingAttribute.getUuid());
       jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     }
 
+    if (settingsService
+            .getFilteredSettingAttributes(
+                Collections.singletonList(settingsService.get(jenkinsConfigId)), context.getAppId(), null)
+            .isEmpty()) {
+      return ExecutionResponse.builder()
+          .executionStatus(FAILED)
+          .errorMessage("Usage of provided Jenkins Server is not allowed within this scope")
+          .build();
+    }
     String evaluatedJobName = context.renderExpression(jobName);
 
     Map<String, String> jobParameterMap = isEmpty(jobParameters)
