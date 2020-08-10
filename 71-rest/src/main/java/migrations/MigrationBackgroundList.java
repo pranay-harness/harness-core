@@ -91,6 +91,7 @@ import migrations.all.UpdateStaleDefaultAccountIds;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
 import migrations.all.WFEAddDeploymentMetaData;
+import migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -256,6 +257,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(150, BaseMigration.class))
         .add(Pair.of(151, AddAccountIdToCommandCollection.class))
         .add(Pair.of(152, AddAccountIdToBarrierInstanceCollection.class))
+        .add(Pair.of(153, WorkflowExecutionAddCDPageCandidateMigration.class))
+
         .build();
   }
 }
