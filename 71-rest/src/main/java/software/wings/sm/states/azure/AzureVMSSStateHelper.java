@@ -16,6 +16,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.collect.ImmutableList;
@@ -48,10 +49,12 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
@@ -59,6 +62,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -236,16 +240,39 @@ public class AzureVMSSStateHelper {
     return (AzureVMSSInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
   }
 
-  public List<EncryptedDataDetail> getEncryptedDataDetails(
-      ExecutionContext context, InfrastructureMapping infrastructureMapping) {
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+  public List<EncryptedDataDetail> getEncryptedDataDetails(ExecutionContext context, final String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
     return secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
   }
 
-  public AzureConfig getAzureConfig(InfrastructureMapping infrastructureMapping) {
-    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+  public List<EncryptedDataDetail> getServiceVariableEncryptedDataDetails(
+      ExecutionContext context, ServiceVariable serviceVariable) {
+    return secretManager.getEncryptionDetails(serviceVariable, context.getAppId(), context.getWorkflowExecutionId());
+  }
+
+  public AzureConfig getAzureConfig(final String computeProviderSettingId) {
+    SettingAttribute settingAttribute = settingsService.get(computeProviderSettingId);
     return (AzureConfig) settingAttribute.getValue();
+  }
+
+  public HostConnectionAttributes getHostConnectionAttributes(final String hostConnectionAttrsKeyRefId) {
+    SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsKeyRefId);
+    return (HostConnectionAttributes) settingAttribute.getValue();
+  }
+
+  public ServiceVariable buildEncryptedServiceVariable(
+      final String accountId, final String appId, final String envId, final String secretTextName) {
+    EncryptedData encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretTextName);
+    if (encryptedData == null) {
+      throw new InvalidRequestException("No secret found with name + [" + secretTextName + "]", USER);
+    }
+    return ServiceVariable.builder()
+        .accountId(accountId)
+        .type(ENCRYPTED_TEXT)
+        .encryptedValue(encryptedData.getUuid())
+        .secretTextName(secretTextName)
+        .build();
   }
 
   public Integer getAzureVMSSStateTimeoutFromContext(ExecutionContext context) {

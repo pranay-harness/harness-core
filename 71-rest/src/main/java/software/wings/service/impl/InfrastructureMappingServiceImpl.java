@@ -1248,7 +1248,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (PASSWORD == infrastructureMapping.getVmssAuthType()) {
-      if (isEmpty(infrastructureMapping.getPassword())) {
+      if (isEmpty(infrastructureMapping.getPasswordSecretTextName())) {
         throw new InvalidRequestException("Password should not be empty");
       }
     }

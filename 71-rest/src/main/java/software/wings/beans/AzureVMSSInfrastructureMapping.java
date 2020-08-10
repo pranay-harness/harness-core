@@ -23,13 +23,13 @@ public class AzureVMSSInfrastructureMapping extends InfrastructureMapping {
   private String userName;
   private String resourceGroupName;
   private String subscriptionId;
-  private String password;
+  private String passwordSecretTextName;
   private String hostConnectionAttrs;
   private VMSSAuthType vmssAuthType;
   private VMSSDeploymentType vmssDeploymentType;
 
   public AzureVMSSInfrastructureMapping() {
-    super(InfrastructureMappingType.AZURE_VMSS_INFRA.name());
+    super(InfrastructureMappingType.AZURE_VMSS.name());
   }
 
   @Override
@@ -54,14 +54,14 @@ public class AzureVMSSInfrastructureMapping extends InfrastructureMapping {
 
   @Builder
   public AzureVMSSInfrastructureMapping(String baseVMSSName, String userName, String resourceGroupName,
-      String subscriptionId, String password, String hostConnectionAttrs, VMSSAuthType vmssAuthType,
+      String subscriptionId, String passwordSecretTextName, String hostConnectionAttrs, VMSSAuthType vmssAuthType,
       VMSSDeploymentType vmssDeploymentType) {
-    super(InfrastructureMappingType.AZURE_VMSS_INFRA.name());
+    super(InfrastructureMappingType.AZURE_VMSS.name());
     this.baseVMSSName = baseVMSSName;
     this.userName = userName;
     this.resourceGroupName = resourceGroupName;
     this.subscriptionId = subscriptionId;
-    this.password = password;
+    this.passwordSecretTextName = passwordSecretTextName;
     this.hostConnectionAttrs = hostConnectionAttrs;
     this.vmssAuthType = vmssAuthType;
     this.vmssDeploymentType = vmssDeploymentType;
@@ -75,22 +75,23 @@ public class AzureVMSSInfrastructureMapping extends InfrastructureMapping {
     private String userName;
     private String resourceGroupName;
     private String subscriptionId;
-    private String password;
+    private String passwordSecretTextName;
     private String hostConnectionAttrs;
     private VMSSAuthType vmssAuthType;
     private VMSSDeploymentType vmssDeploymentType;
 
     public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
         String deploymentType, String computeProviderType, String computeProviderName, Map<String, Object> blueprints,
-        String baseVMSSName, String userName, String resourceGroupName, String subscriptionId, String password,
-        String hostConnectionAttrs, VMSSAuthType vmssAuthType, VMSSDeploymentType vmssDeploymentType) {
+        String baseVMSSName, String userName, String resourceGroupName, String subscriptionId,
+        String passwordSecretTextName, String hostConnectionAttrs, VMSSAuthType vmssAuthType,
+        VMSSDeploymentType vmssDeploymentType) {
       super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
           computeProviderName, blueprints);
       this.baseVMSSName = baseVMSSName;
       this.userName = userName;
       this.resourceGroupName = resourceGroupName;
       this.subscriptionId = subscriptionId;
-      this.password = password;
+      this.passwordSecretTextName = passwordSecretTextName;
       this.hostConnectionAttrs = hostConnectionAttrs;
       this.vmssAuthType = vmssAuthType;
       this.vmssDeploymentType = vmssDeploymentType;

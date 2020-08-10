@@ -399,7 +399,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     when(settingsService.get(computeProviderSettingId)).thenReturn(settingAttribute);
     when(settingAttribute.getValue()).thenReturn(AzureConfig.builder().accountId(accountId).build());
 
-    AzureConfig result = azureVMSSStateHelper.getAzureConfig(infrastructureMapping);
+    AzureConfig result = azureVMSSStateHelper.getAzureConfig(infrastructureMapping.getComputeProviderSettingId());
 
     assertThat(result).isNotNull();
     assertThat(result).isInstanceOf(AzureConfig.class);

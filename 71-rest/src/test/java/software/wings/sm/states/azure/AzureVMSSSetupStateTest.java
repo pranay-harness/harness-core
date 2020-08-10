@@ -80,7 +80,7 @@ public class AzureVMSSSetupStateTest extends WingsBaseTest {
                                                                .baseVMSSName("baseVMSSName")
                                                                .resourceGroupName("resourceGroupName")
                                                                .subscriptionId("subscriptionId")
-                                                               .password("password")
+                                                               .passwordSecretTextName("password")
                                                                .userName("userName")
                                                                .vmssAuthType(VMSSAuthType.PASSWORD)
                                                                .vmssDeploymentType(VMSSDeploymentType.NATIVE_VMSS)
@@ -107,10 +107,12 @@ public class AzureVMSSSetupStateTest extends WingsBaseTest {
     doReturn(azureVMSSInfrastructureMapping)
         .when(azureVMSSStateHelper)
         .getAzureVMSSInfrastructureMapping(anyString(), anyString());
-    doReturn(azureConfig).when(azureVMSSStateHelper).getAzureConfig(azureVMSSInfrastructureMapping);
+    doReturn(azureConfig)
+        .when(azureVMSSStateHelper)
+        .getAzureConfig(azureVMSSInfrastructureMapping.getComputeProviderSettingId());
     doReturn(encryptedDataDetails)
         .when(azureVMSSStateHelper)
-        .getEncryptedDataDetails(context, azureVMSSInfrastructureMapping);
+        .getEncryptedDataDetails(context, azureVMSSInfrastructureMapping.getComputeProviderSettingId());
     doReturn(artifact).when(azureVMSSStateHelper).getArtifact(any(), any());
     doReturn(isBlueGreen).when(azureVMSSStateHelper).isBlueGreenWorkflow(context);
     doReturn(userData).when(azureVMSSStateHelper).getBase64EncodedUserData(context, appId, serviceId);

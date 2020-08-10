@@ -25,7 +25,7 @@ public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, Field
   private String userName;
   private String resourceGroupName;
   private String subscriptionId;
-  private String password;
+  private String passwordSecretTextName;
   private String hostConnectionAttrs;
   private VMSSAuthType vmssAuthType;
   @IncludeFieldMap private VMSSDeploymentType vmssDeploymentType;
@@ -37,7 +37,7 @@ public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, Field
                                                                .userName(userName)
                                                                .resourceGroupName(resourceGroupName)
                                                                .subscriptionId(subscriptionId)
-                                                               .password(password)
+                                                               .passwordSecretTextName(passwordSecretTextName)
                                                                .hostConnectionAttrs(hostConnectionAttrs)
                                                                .vmssAuthType(vmssAuthType)
                                                                .vmssDeploymentType(vmssDeploymentType)
@@ -70,14 +70,14 @@ public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, Field
     private String userName;
     private String resourceGroupName;
     private String subscriptionId;
-    private String password;
+    private String passwordSecretTextName;
     private String hostConnectionAttrs;
     private VMSSAuthType vmssAuthType;
     private VMSSDeploymentType vmssDeploymentType;
 
     @Builder
     public Yaml(String type, String cloudProviderName, String baseVMSSName, String userName, String resourceGroupName,
-        String subscriptionId, String password, String hostConnectionAttrs, VMSSAuthType vmssAuthType,
+        String subscriptionId, String passwordSecretTextName, String hostConnectionAttrs, VMSSAuthType vmssAuthType,
         VMSSDeploymentType vmssDeploymentType) {
       super(type);
       this.cloudProviderName = cloudProviderName;
@@ -85,7 +85,7 @@ public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, Field
       this.userName = userName;
       this.resourceGroupName = resourceGroupName;
       this.subscriptionId = subscriptionId;
-      this.password = password;
+      this.passwordSecretTextName = passwordSecretTextName;
       this.hostConnectionAttrs = hostConnectionAttrs;
       this.vmssAuthType = vmssAuthType;
       this.vmssDeploymentType = vmssDeploymentType;

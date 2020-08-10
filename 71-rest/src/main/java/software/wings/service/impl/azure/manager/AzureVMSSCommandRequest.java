@@ -8,6 +8,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.ServiceVariable;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.ArrayList;
@@ -20,12 +22,26 @@ import java.util.Set;
 public class AzureVMSSCommandRequest implements TaskParameters, ExecutionCapabilityDemander {
   private AzureConfig azureConfig;
   private List<EncryptedDataDetail> azureEncryptionDetails;
+  private HostConnectionAttributes hostConnectionAttributes;
+  private List<EncryptedDataDetail> hostConnectionAttributesEncryptionDetails;
+  private ServiceVariable serviceVariable;
+  private List<EncryptedDataDetail> serviceVariableEncryptionDetails;
   private AzureVMSSTaskParameters azureVMSSTaskParameters;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     Set<ExecutionCapability> executionCapabilities = new HashSet<>();
     executionCapabilities.addAll(CapabilityHelper.generateDelegateCapabilities(azureConfig, azureEncryptionDetails));
+
+    if (hostConnectionAttributes != null && hostConnectionAttributesEncryptionDetails != null) {
+      executionCapabilities.addAll(CapabilityHelper.generateDelegateCapabilities(
+          hostConnectionAttributes, hostConnectionAttributesEncryptionDetails));
+    }
+
+    if (serviceVariableEncryptionDetails != null) {
+      executionCapabilities.addAll(
+          CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(serviceVariableEncryptionDetails));
+    }
     return new ArrayList<>(executionCapabilities);
   }
 }
