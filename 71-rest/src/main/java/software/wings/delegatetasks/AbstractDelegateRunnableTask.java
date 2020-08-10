@@ -15,7 +15,6 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.delegate.task.DelegateRunnableTask;
@@ -29,6 +28,7 @@ import io.harness.logging.ExceptionLogger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DelegateTaskPackage;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -147,8 +147,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     return dataCollectionService.executeParrallel(callables);
   }
 
-  public ThirdPartyApiCallLogDetails createApiCallLog(String stateExecutionId) {
-    return ThirdPartyApiCallLogDetails.builder()
+  public ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {
+    return ThirdPartyApiCallLog.builder()
         .accountId(getAccountId())
         .delegateId(getDelegateId())
         .delegateTaskId(getTaskId())
