@@ -19,8 +19,10 @@ import io.harness.batch.processing.pricing.service.support.GCPCustomInstanceDeta
 import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.service.intfc.PricingProfileService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
+import io.harness.ccm.cluster.entities.PricingProfile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,17 +38,19 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private final InstanceResourceService instanceResourceService;
   private final EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
   private final CustomBillingMetaDataService customBillingMetaDataService;
+  private final PricingProfileService pricingProfileService;
 
   @Autowired
   public ComputeInstancePricingStrategy(VMPricingService vmPricingService,
       AwsCustomBillingService awsCustomBillingService, InstanceResourceService instanceResourceService,
       EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy,
-      CustomBillingMetaDataService customBillingMetaDataService) {
+      CustomBillingMetaDataService customBillingMetaDataService, PricingProfileService pricingProfileService) {
     this.vmPricingService = vmPricingService;
     this.awsCustomBillingService = awsCustomBillingService;
     this.instanceResourceService = instanceResourceService;
     this.ecsFargateInstancePricingStrategy = ecsFargateInstancePricingStrategy;
     this.customBillingMetaDataService = customBillingMetaDataService;
+    this.pricingProfileService = pricingProfileService;
   }
 
   @Override
@@ -68,7 +72,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
       if (GCPCustomInstanceDetailProvider.isCustomGCPInstance(instanceFamily, cloudProvider)) {
         return GCPCustomInstanceDetailProvider.getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
       } else if (ImmutableList.of(CloudProvider.ON_PREM, CloudProvider.IBM).contains(cloudProvider)) {
-        return getIBMInstancePricingData(instanceData);
+        return getUserCustomInstancePricingData(instanceData);
       } else if (cloudProvider == CloudProvider.AWS && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
         return ecsFargateInstancePricingStrategy.getPricePerHour(
             instanceData, startTime, endTime, instanceActiveSeconds);
@@ -85,9 +89,10 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     return customVMPricing;
   }
 
-  private PricingData getIBMInstancePricingData(InstanceData instanceData) {
-    double cpuPricePerHr = 0.016;
-    double memoryPricePerHr = 0.008;
+  private PricingData getUserCustomInstancePricingData(InstanceData instanceData) {
+    PricingProfile profileData = pricingProfileService.fetchPricingProfile(instanceData.getAccountId());
+    double cpuPricePerHr = profileData.getVCpuPricePerHr();
+    double memoryPricePerHr = profileData.getMemoryGbPricePerHr();
     Double cpuUnits = instanceData.getTotalResource().getCpuUnits();
     Double memoryMb = instanceData.getTotalResource().getMemoryMb();
     if (instanceData.getInstanceType() == InstanceType.K8S_POD) {

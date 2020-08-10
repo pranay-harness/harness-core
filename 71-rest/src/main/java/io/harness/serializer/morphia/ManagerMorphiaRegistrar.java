@@ -16,6 +16,7 @@ import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.cluster.entities.PricingProfile;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.config.GcpBillingAccount;
@@ -1005,6 +1006,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PipelineGovernanceConfig.class);
     set.add(Preference.class);
     set.add(Principal.class);
+    set.add(PricingProfile.class);
     set.add(PrometheusCVServiceConfiguration.class);
     set.add(ProvisionerWithOnlyAuditNeededData.class);
     set.add(PruneEvent.class);

@@ -12,6 +12,7 @@ import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.service.intfc.PricingProfileService;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -27,6 +28,7 @@ public class InstancePricingStrategyContextTest extends CategoryTest {
   @Mock private InstanceResourceService instanceResourceService;
   @Mock private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
   @Mock private CustomBillingMetaDataService customBillingMetaDataService;
+  @Mock private PricingProfileService pricingProfileService;
 
   @Test
   @Owner(developers = HITESH)
@@ -34,7 +36,7 @@ public class InstancePricingStrategyContextTest extends CategoryTest {
   public void testGetInstancePricingStrategy() {
     InstancePricingStrategyContext instancePricingStrategyContext = new InstancePricingStrategyContext(
         new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
-            ecsFargateInstancePricingStrategy, customBillingMetaDataService),
+            ecsFargateInstancePricingStrategy, customBillingMetaDataService, pricingProfileService),
         new EcsFargateInstancePricingStrategy(vmPricingService));
     InstancePricingStrategy computeInstancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.EC2_INSTANCE);

@@ -2,6 +2,7 @@ package io.harness.batch.processing.billing.service;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
+import static io.harness.rule.OwnerRule.SANDESH;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -24,8 +25,10 @@ import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.service.intfc.PricingProfileService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.PricingProfile;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,6 +55,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Mock private InstanceResourceService instanceResourceService;
   @Mock private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
   @Mock private CustomBillingMetaDataService customBillingMetaDataService;
+  @Mock private PricingProfileService pricingProfileService;
 
   private final Instant NOW = Instant.now().truncatedTo(ChronoUnit.DAYS);
   private final Instant INSTANCE_STOP_TIMESTAMP = NOW;
@@ -490,7 +494,36 @@ public class BillingCalculationServiceTest extends CategoryTest {
 
   private ComputeInstancePricingStrategy getComputeInstancePricingStrategy() {
     return new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
-        ecsFargateInstancePricingStrategy, customBillingMetaDataService);
+        ecsFargateInstancePricingStrategy, customBillingMetaDataService, pricingProfileService);
+  }
+
+  @Test
+  @Owner(developers = SANDESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceBillingAmountCustomInstance() throws IOException {
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
+        .thenReturn(getComputeInstancePricingStrategy());
+    Resource instanceResource = getInstanceResource(4 * 1024, 5 * 1024);
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.IBM.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, "b2c.4x16.encrypted");
+    metaData.put(InstanceMetaDataConstants.REGION, "eu-de");
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
+    addParentResource(metaData, 8 * 1024, 20 * 1024);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
+    when(pricingProfileService.fetchPricingProfile(instanceData.getAccountId()))
+        .thenReturn(PricingProfile.builder()
+                        .accountId(instanceData.getAccountId())
+                        .vCpuPricePerHr(0.016)
+                        .memoryGbPricePerHr(0.008)
+                        .build());
+    UtilizationData utilizationData = getUtilization(1, 1);
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
+        .isEqualTo(new BigDecimal("1.2960000000000001500"));
   }
 
   @Test
@@ -510,6 +543,12 @@ public class BillingCalculationServiceTest extends CategoryTest {
     InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
     UtilizationData utilizationData = getUtilization(1, 1);
+    when(pricingProfileService.fetchPricingProfile(instanceData.getAccountId()))
+        .thenReturn(PricingProfile.builder()
+                        .accountId(instanceData.getAccountId())
+                        .vCpuPricePerHr(0.016)
+                        .memoryGbPricePerHr(0.008)
+                        .build());
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
