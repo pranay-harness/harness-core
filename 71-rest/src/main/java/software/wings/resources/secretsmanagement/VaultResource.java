@@ -1,6 +1,8 @@
 package software.wings.resources.secretsmanagement;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
 
@@ -12,8 +14,6 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.VaultConfig;
-import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
@@ -32,8 +32,8 @@ import javax.ws.rs.QueryParam;
 @Api("vault")
 @Path("/vault")
 @Produces("application/json")
-@Scope(ResourceType.SETTING)
-@AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@Scope(SETTING)
+@AuthRule(permissionType = MANAGE_SECRET_MANAGERS)
 @Slf4j
 public class VaultResource {
   @Inject private VaultService vaultService;

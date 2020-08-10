@@ -2,6 +2,8 @@ package software.wings.resources.secretsmanagement;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
 
@@ -15,8 +17,6 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.GcpKmsConfig;
-import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
@@ -39,8 +39,8 @@ import javax.ws.rs.core.MediaType;
 @Path("/gcp-secrets-manager")
 @Consumes(MediaType.MULTIPART_FORM_DATA)
 @Produces("application/json")
-@Scope(ResourceType.SETTING)
-@AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@Scope(SETTING)
+@AuthRule(permissionType = MANAGE_SECRET_MANAGERS)
 public class GcpSecretsManagerResource {
   private GcpSecretsManagerService gcpSecretsManagerService;
   private AccountPermissionUtils accountPermissionUtils;
