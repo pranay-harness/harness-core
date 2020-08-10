@@ -5,8 +5,6 @@ CONFIG_FILE=/opt/harness/ci-manager-config.yml
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
-yq delete -i $CONFIG_FILE grpcServer.connectors[0]
-
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
 fi
@@ -26,6 +24,9 @@ else
   yq write -i $CONFIG_FILE server.applicationConnectors[0].port "7090"
 fi
 
+if [[ "" != "$MANAGER_URL" ]]; then
+  yq write -i /opt/harness/cimanager-config.yml managerUrl "$MANAGER_URL"
+fi
 
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
   yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
@@ -37,38 +38,10 @@ if [[ "" != "$ALLOWED_ORIGINS" ]]; then
 fi
 
 if [[ "" != "$MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
+  yq write -i $CONFIG_FILE harness-mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
-if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
-  yq write -i $CONFIG_FILE mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
-fi
-
-if [[ "" != "$MONGO_SERVER_SELECTION_TIMEOUT" ]]; then
-  yq write -i $CONFIG_FILE mongo.serverSelectionTimeout $MONGO_SERVER_SELECTION_TIMEOUT
-fi
-
-if [[ "" != "$MAX_CONNECTION_IDLE_TIME" ]]; then
-  yq write -i $CONFIG_FILE mongo.maxConnectionIdleTime $MAX_CONNECTION_IDLE_TIME
-fi
-
-if [[ "" != "$MONGO_CONNECTIONS_PER_HOST" ]]; then
-  yq write -i $CONFIG_FILE mongo.connectionsPerHost $MONGO_CONNECTIONS_PER_HOST
-fi
-
-if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
-  yq write -i $CONFIG_FILE mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
-fi
-
-if [[ "" != "$MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClient.target $MANAGER_TARGET
-fi
-
-if [[ "" != "$MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcClient.authority $MANAGER_AUTHORITY
-fi
-
-if [[ "" != "$GRPC_SERVER_PORT" ]]; then
-  yq write -i $CONFIG_FILE grpcServer.connectors[0].port "$GRPC_SERVER_PORT"
+if [[ "" != "$CIMANAGER_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE cimanager-mongo.uri "$CIMANAGER_MONGO_URI"
 fi
 
