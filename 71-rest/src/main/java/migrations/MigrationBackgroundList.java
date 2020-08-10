@@ -10,6 +10,7 @@ import migrations.all.AddAccountIdToCommandCollection;
 import migrations.all.AddAccountIdToCommandLogs;
 import migrations.all.AddAccountIdToDeploymentEntities;
 import migrations.all.AddAccountIdToEntityVersion;
+import migrations.all.AddAccountIdToExecutionInterruptCollection;
 import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
@@ -258,7 +259,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(151, AddAccountIdToCommandCollection.class))
         .add(Pair.of(152, AddAccountIdToBarrierInstanceCollection.class))
         .add(Pair.of(153, WorkflowExecutionAddCDPageCandidateMigration.class))
-
+        .add(Pair.of(154, AddAccountIdToExecutionInterruptCollection.class))
         .build();
   }
 }

@@ -29,6 +29,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +42,7 @@ import java.util.List;
 @Slf4j
 public class ExecutionInterruptManagerTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
+  @Mock private AppService appService;
   @InjectMocks @Inject private ExecutionInterruptManager executionInterruptManager;
   @Mock private StateMachineExecutor stateMachineExecutor;
 

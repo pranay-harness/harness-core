@@ -50,6 +50,7 @@ public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedA
   private String envId;
   @NotNull @FdIndex private String executionUuid;
   @FdIndex private String stateExecutionInstanceId;
+  @FdIndex private String accountId;
 
   private Map<String, Object> properties;
 
@@ -138,6 +139,7 @@ public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedA
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String accoundId;
 
     private ExecutionInterruptBuilder() {}
 
@@ -205,6 +207,11 @@ public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedA
       return this;
     }
 
+    public ExecutionInterruptBuilder accountId(String accoundId) {
+      this.accoundId = accoundId;
+      return this;
+    }
+
     public ExecutionInterrupt build() {
       ExecutionInterrupt executionInterrupt = new ExecutionInterrupt();
       executionInterrupt.setExecutionInterruptType(executionInterruptType);
@@ -219,6 +226,7 @@ public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedA
       executionInterrupt.setCreatedAt(createdAt);
       executionInterrupt.setLastUpdatedBy(lastUpdatedBy);
       executionInterrupt.setLastUpdatedAt(lastUpdatedAt);
+      executionInterrupt.setAccountId(accoundId);
       return executionInterrupt;
     }
   }
