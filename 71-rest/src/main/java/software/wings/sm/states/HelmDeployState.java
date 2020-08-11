@@ -854,6 +854,7 @@ public class HelmDeployState extends State {
       } else {
         gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
       }
+      gitClientHelper.updateRepoUrl(gitConfig, gitFileConfig.getRepoName());
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 
