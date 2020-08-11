@@ -13,6 +13,9 @@ import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskManager;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 
 import java.util.Map;
@@ -31,17 +34,12 @@ import javax.ws.rs.QueryParam;
 @Api("/delegate-tasks")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
+@AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
+@Slf4j
 public class NGDelegateClientResource {
   private static final String HTTP_URL_200 = "http://httpstat.us/200";
   private final ManagerDelegateServiceDriver managerDelegateServiceDriver;
   private final SampleRemotePTaskManager sampleRemotePTaskManager;
-
-  @Inject
-  public NGDelegateClientResource(
-      ManagerDelegateServiceDriver managerDelegateServiceDriver, SampleRemotePTaskManager sampleRemotePTaskManager) {
-    this.managerDelegateServiceDriver = managerDelegateServiceDriver;
-    this.sampleRemotePTaskManager = sampleRemotePTaskManager;
-  }
 
   @GET
   @ApiOperation(value = "Create a delegate tasks", nickname = "postDelegate")
