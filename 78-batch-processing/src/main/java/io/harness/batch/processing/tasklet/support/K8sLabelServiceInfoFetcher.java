@@ -1,4 +1,4 @@
-package io.harness.batch.processing.processor.support;
+package io.harness.batch.processing.tasklet.support;
 
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.HELM_RELEASE_NAME;
 import static io.harness.batch.processing.writer.constants.K8sCCMConstants.RELEASE_NAME;

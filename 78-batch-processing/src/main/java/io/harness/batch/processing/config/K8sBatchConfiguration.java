@@ -1,203 +1,90 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.ccm.InstanceEvent;
-import io.harness.batch.processing.ccm.InstanceInfo;
-import io.harness.batch.processing.processor.K8sNodeEventProcessor;
-import io.harness.batch.processing.processor.K8sNodeInfoProcessor;
-import io.harness.batch.processing.processor.K8sPodEventProcessor;
-import io.harness.batch.processing.processor.K8sPodInfoProcessor;
-import io.harness.batch.processing.reader.EventReaderFactory;
-import io.harness.batch.processing.writer.K8SSyncEventWriter;
-import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
+import io.harness.batch.processing.tasklet.K8sNodeEventTasklet;
+import io.harness.batch.processing.tasklet.K8sNodeInfoTasklet;
+import io.harness.batch.processing.tasklet.K8sPodEventTasklet;
+import io.harness.batch.processing.tasklet.K8sPodInfoTasklet;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
 public class K8sBatchConfiguration {
-  private static final int SKIP_LIMIT = 2000;
-  private static final int RETRY_LIMIT = 1;
-
-  @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
-  @Autowired @Qualifier("instanceInfoWriter") private ItemWriter instanceInfoWriter;
-  @Autowired @Qualifier("instanceEventWriter") private ItemWriter instanceEventWriter;
-  @Autowired private BatchMainConfig batchMainConfig;
   @Autowired private StepBuilderFactory stepBuilderFactory;
-  @Autowired private SkipListener ecsStepSkipListener;
 
   @Bean
-  @StepScope
-  public ItemReader<PublishedMessage> k8sPodInfoMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
-      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_POD_INFO, startDate, endDate,
-        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
+  public Tasklet k8sNodeInfoTasklet() {
+    return new K8sNodeInfoTasklet();
   }
 
   @Bean
-  @StepScope
-  public ItemReader<PublishedMessage> k8sPodEventMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
-      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_POD_EVENT, startDate, endDate,
-        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
+  public Tasklet k8sNodeEventTasklet() {
+    return new K8sNodeEventTasklet();
   }
 
   @Bean
-  @StepScope
-  public ItemReader<PublishedMessage> k8sClusterSyncEventMessageReader(
-      @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
-      @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_SYNC_EVENT, startDate, endDate,
-        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
+  public Tasklet k8sPodInfoTasklet() {
+    return new K8sPodInfoTasklet();
   }
 
   @Bean
-  @StepScope
-  public ItemReader<PublishedMessage> k8sNodeInfoMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
-      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_NODE_INFO, startDate, endDate,
-        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
+  public Tasklet k8sPodEventTasklet() {
+    return new K8sPodEventTasklet();
   }
 
   @Bean
-  @StepScope
-  public ItemReader<PublishedMessage> k8sNodeEventMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
-      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_NODE_EVENT, startDate, endDate,
-        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
+  public Tasklet k8SSyncEventTasklet() {
+    return new K8SSyncEventTasklet();
   }
 
   @Bean
-  public ItemProcessor<PublishedMessage, InstanceInfo> k8sNodeInfoProcessor() {
-    return new K8sNodeInfoProcessor();
+  public Step k8sSyncEventStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("k8sSyncEventStep").tasklet(k8SSyncEventTasklet()).build();
   }
 
   @Bean
-  public ItemProcessor<PublishedMessage, InstanceEvent> k8sNodeEventProcessor() {
-    return new K8sNodeEventProcessor();
+  public Step k8sNodeInfoStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("k8sNodeInfoStep").tasklet(k8sNodeInfoTasklet()).build();
   }
 
   @Bean
-  public ItemProcessor<PublishedMessage, InstanceInfo> k8sPodInfoProcessor() {
-    return new K8sPodInfoProcessor();
+  public Step k8sNodeEventStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("k8sNodeEventStep").tasklet(k8sNodeEventTasklet()).build();
   }
 
   @Bean
-  public ItemProcessor<PublishedMessage, InstanceEvent> k8sPodEventProcessor() {
-    return new K8sPodEventProcessor();
+  public Step k8sPodInfoStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("k8sPodInfoStep").tasklet(k8sPodInfoTasklet()).build();
   }
 
   @Bean
-  public ItemWriter<PublishedMessage> k8sSyncEventWriter() {
-    return new K8SSyncEventWriter();
+  public Step k8sPodEventStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("k8sPodEventStep").tasklet(k8sPodEventTasklet()).build();
   }
 
   @Bean
   @Autowired
   @Qualifier(value = "k8sJob")
   public Job k8sJob(JobBuilderFactory jobBuilderFactory, Step k8sNodeInfoStep, Step k8sNodeEventStep,
-      Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sClusterSyncEventStep) {
+      Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sSyncEventStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_EVENT.name())
         .incrementer(new RunIdIncrementer())
         .start(k8sNodeInfoStep)
         .next(k8sNodeEventStep)
         .next(k8sPodInfoStep)
         .next(k8sPodEventStep)
-        .next(k8sClusterSyncEventStep)
-        .build();
-  }
-
-  @Bean
-  public Step k8sNodeInfoStep() {
-    return stepBuilderFactory.get("k8sNodeInfoStep")
-        .<PublishedMessage, InstanceInfo>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
-        .reader(k8sNodeInfoMessageReader(null, null, null))
-        .processor(k8sNodeInfoProcessor())
-        .writer(instanceInfoWriter)
-        .faultTolerant()
-        .retryLimit(RETRY_LIMIT)
-        .retry(Exception.class)
-        .skipLimit(SKIP_LIMIT)
-        .skip(Exception.class)
-        .listener(ecsStepSkipListener)
-        .build();
-  }
-
-  @Bean
-  public Step k8sNodeEventStep() {
-    return stepBuilderFactory.get("k8sNodeEventStep")
-        .<PublishedMessage, InstanceEvent>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
-        .reader(k8sNodeEventMessageReader(null, null, null))
-        .processor(k8sNodeEventProcessor())
-        .writer(instanceEventWriter)
-        .faultTolerant()
-        .retryLimit(RETRY_LIMIT)
-        .retry(Exception.class)
-        .skipLimit(SKIP_LIMIT)
-        .skip(Exception.class)
-        .listener(ecsStepSkipListener)
-        .build();
-  }
-
-  @Bean
-  public Step k8sPodInfoStep() {
-    return stepBuilderFactory.get("k8sPodInfoStep")
-        .<PublishedMessage, InstanceInfo>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
-        .reader(k8sPodInfoMessageReader(null, null, null))
-        .processor(k8sPodInfoProcessor())
-        .writer(instanceInfoWriter)
-        .faultTolerant()
-        .retryLimit(RETRY_LIMIT)
-        .retry(Exception.class)
-        .skipLimit(SKIP_LIMIT)
-        .skip(Exception.class)
-        .listener(ecsStepSkipListener)
-        .build();
-  }
-
-  @Bean
-  public Step k8sPodEventStep() {
-    return stepBuilderFactory.get("k8sPodEventStep")
-        .<PublishedMessage, InstanceEvent>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
-        .reader(k8sPodEventMessageReader(null, null, null))
-        .processor(k8sPodEventProcessor())
-        .writer(instanceEventWriter)
-        .faultTolerant()
-        .retryLimit(RETRY_LIMIT)
-        .retry(Exception.class)
-        .skipLimit(SKIP_LIMIT)
-        .skip(Exception.class)
-        .listener(ecsStepSkipListener)
-        .build();
-  }
-
-  @Bean
-  public Step k8sClusterSyncEventStep() {
-    return stepBuilderFactory.get("k8sClusterSyncEventStep")
-        .<PublishedMessage, PublishedMessage>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
-        .reader(k8sClusterSyncEventMessageReader(null, null, null))
-        .writer(k8sSyncEventWriter())
-        .faultTolerant()
-        .retryLimit(RETRY_LIMIT)
-        .retry(Exception.class)
-        .skipLimit(SKIP_LIMIT)
-        .skip(Exception.class)
-        .listener(ecsStepSkipListener)
+        .next(k8sSyncEventStep)
         .build();
   }
 }

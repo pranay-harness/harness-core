@@ -16,10 +16,10 @@ import io.harness.batch.processing.events.timeseries.data.CostEventData.CostEven
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.batch.processing.k8s.EstimatedCostDiff;
 import io.harness.batch.processing.k8s.WatchEventCostEstimator;
-import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.support.Deduper;
+import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;

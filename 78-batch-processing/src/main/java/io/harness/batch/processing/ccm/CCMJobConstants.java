@@ -17,6 +17,10 @@ public class CCMJobConstants {
     return Instant.ofEpochMilli(Long.parseLong(parameters.getString(fieldName)));
   }
 
+  public static Long getFieldLongValueFromJobParams(JobParameters parameters, String fieldName) {
+    return Long.valueOf(parameters.getString(fieldName));
+  }
+
   public static BatchJobType getBatchJobTypeFromJobParams(JobParameters parameters, String fieldName) {
     return BatchJobType.valueOf(parameters.getString(fieldName));
   }

@@ -1,7 +1,7 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
 import static io.harness.batch.processing.config.k8s.recommendation.ResourceId.NOT_FOUND;
-import static io.harness.batch.processing.processor.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
+import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MEMORY_AGGREGATION_INTERVAL;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDER_VERSION;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;

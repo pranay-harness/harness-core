@@ -8,7 +8,7 @@ import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
-import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
+import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;

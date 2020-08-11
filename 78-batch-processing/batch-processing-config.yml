@@ -22,7 +22,7 @@ timescaledb:
   loggerLevel: OFF
 
 batchQueryConfig:
-  queryBatchSize: 2000
+  queryBatchSize: 4000
   instanceDataBatchSize: 5000
 
 podInfo:
