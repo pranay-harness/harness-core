@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,6 +61,7 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -283,6 +285,21 @@ public class GitCommandCallbackTest extends CategoryTest {
     List<GitFileChange> allFilesProcessed =
         commandCallback.getAllFilesSuccessFullyProccessed(fileChangesPartOfYamlChangeSet, filesCommited);
     assertThat(allFilesProcessed.size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_getAllFilesSuccessFullyProccessedEmpty() {
+    GitFileChange gitFileChange1 = aGitFileChange().withFilePath("a").build();
+    GitFileChange gitFileChange3 = aGitFileChange().withFilePath("b").build();
+
+    List<GitFileChange> fileChangesPartOfYamlChangeSet = Arrays.asList(gitFileChange1, gitFileChange3);
+    List<GitFileChange> filesCommited = new ArrayList<>();
+    List<GitFileChange> allFilesProcessed =
+        commandCallback.getAllFilesSuccessFullyProccessed(fileChangesPartOfYamlChangeSet, filesCommited);
+    assertThat(allFilesProcessed.size()).isEqualTo(2);
+    assertThat(allFilesProcessed).isEqualTo(fileChangesPartOfYamlChangeSet);
   }
 
   @Test
