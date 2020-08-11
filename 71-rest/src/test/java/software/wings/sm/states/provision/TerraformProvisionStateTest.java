@@ -87,6 +87,7 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
@@ -127,6 +128,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private GitClientHelper gitClientHelper;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
 
@@ -291,6 +293,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(taskCaptor.capture());
     DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
 
     assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
@@ -333,6 +336,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(taskCaptor.capture());
     DelegateTask createdTask = taskCaptor.getValue();
 
+    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
     assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
     assertThat(createdTask.getAppId()).isEqualTo(APP_ID);
@@ -383,6 +387,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(taskCaptor.capture());
     DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
 
     assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
@@ -418,6 +423,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(taskCaptor.capture());
     DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
 
     assertThat(response.getDelegateTaskId()).isEqualTo("taskId");
     assertThat(response.isAsync()).isTrue();
@@ -467,6 +473,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         .thenReturn(encryptedDataDetails);
     ExecutionResponse executionResponse = state.execute(executionContext);
 
+    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
     verify(fileService, times(1)).getLatestFileId(anyString(), any(FileBucket.class));
     verify(gitUtilsManager, times(1)).getGitConfig(anyString());

@@ -50,6 +50,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     yaml.setPath(bean.getPath());
     yaml.setSourceRepoSettingName(getSourceRepoSettingName(appId, bean.getSourceRepoSettingId()));
     yaml.setSourceRepoBranch(bean.getSourceRepoBranch());
+    yaml.setRepoName(bean.getRepoName());
     if (isNotEmpty(bean.getBackendConfigs())) {
       NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
       List<NameValuePair.Yaml> nvpYamlList =
@@ -98,6 +99,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     bean.setPath(yaml.getPath());
     bean.setSourceRepoSettingId(getSourceRepoSettingId(appId, yaml.getSourceRepoSettingName()));
     bean.setSourceRepoBranch(yaml.getSourceRepoBranch());
+    bean.setRepoName(yaml.getRepoName());
 
     if (isNotEmpty(yaml.getBackendConfigs())) {
       List<NameValuePair> nameValuePairList = yaml.getBackendConfigs()

@@ -165,6 +165,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
 
       List<String> targets = configParameter.getTargets();
       targets = resolveTargets(targets, context);
+      gitClientHelper.updateRepoUrl(gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
 
       ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
           terraformProvisioner.getAppId(), activityId, commandUnit().name());
