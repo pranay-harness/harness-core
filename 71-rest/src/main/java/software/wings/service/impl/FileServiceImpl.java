@@ -204,6 +204,16 @@ public class FileServiceImpl implements FileService {
   }
 
   @Override
+  public String getLatestFileIdByQualifier(String entityId, FileBucket fileBucket, String qualifier) {
+    String latestFileId = mongoFileService.getLatestFileIdByQualifier(entityId, fileBucket, qualifier);
+    if (!gcsStorageEnabled || isNotEmpty(latestFileId)) {
+      return latestFileId;
+    } else {
+      return googleCloudFileService.getLatestFileIdByQualifier(entityId, fileBucket, qualifier);
+    }
+  }
+
+  @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
     String fileId = mongoFileService.getFileIdByVersion(entityId, version, fileBucket);
     if (!gcsStorageEnabled || isNotEmpty(fileId)) {

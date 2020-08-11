@@ -36,6 +36,8 @@ public interface FileService extends DelegateAgentFileService {
 
   String getLatestFileId(String entityId, FileBucket fileBucket);
 
+  String getLatestFileIdByQualifier(String entityId, FileBucket fileBucket, String qualifier);
+
   String getFileIdByVersion(String entityId, int version, FileBucket fileBucket);
 
   String uploadFromStream(String filename, BoundedInputStream in, FileBucket fileBucket, Map<String, Object> metaData);

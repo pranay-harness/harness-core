@@ -368,7 +368,9 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                     .build())
             .build();
 
-    doReturn("fileId").when(fileService).getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE));
+    doReturn("fileId")
+        .when(fileService)
+        .getLatestFileIdByQualifier(anyString(), eq(FileBucket.TERRAFORM_STATE), eq("apply"));
     doReturn(fileMetadata).when(fileService).getFileMetadata("fileId", FileBucket.TERRAFORM_STATE);
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
     doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));

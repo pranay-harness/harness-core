@@ -251,6 +251,11 @@ public class GoogleCloudFileServiceImpl implements FileService {
   }
 
   @Override
+  public String getLatestFileIdByQualifier(String entityId, FileBucket fileBucket, String qualifier) {
+    return getLatestFileIdFromGcsFileMetadataByQualifier(entityId, fileBucket, qualifier);
+  }
+
+  @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
     return getFileIdFromGcsFileMetadataByVersion(entityId, version, fileBucket);
   }
@@ -449,6 +454,18 @@ public class GoogleCloudFileServiceImpl implements FileService {
     GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
                                           .filter(GcsFileMetadataKeys.entityId, entityId)
                                           .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
+                                          .order(Sort.descending(GcsFileMetadataKeys.createdAt))
+                                          .get();
+
+    return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();
+  }
+
+  private String getLatestFileIdFromGcsFileMetadataByQualifier(
+      String entityId, FileBucket fileBucket, String qualifier) {
+    GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
+                                          .filter(GcsFileMetadataKeys.entityId, entityId)
+                                          .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
+                                          .filter("qualifier", qualifier)
                                           .order(Sort.descending(GcsFileMetadataKeys.createdAt))
                                           .get();
 
