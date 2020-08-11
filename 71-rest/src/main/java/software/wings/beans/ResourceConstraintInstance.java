@@ -10,6 +10,7 @@ import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
@@ -69,7 +70,7 @@ public class ResourceConstraintInstance implements PersistentRegularIterable, Uu
   @Id @NotNull(groups = {Update.class}) private String uuid;
   @NotNull protected String appId;
 
-  private String accountId;
+  @FdIndex private String accountId;
 
   private String resourceConstraintId;
   private String resourceUnit;
