@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 
 import io.harness.connector.ConnectorFilterHelper;
 import io.harness.connector.ConnectorScopeHelper;
-import io.harness.connector.FullyQualitifedIdentifierHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
@@ -23,6 +22,7 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
@@ -47,7 +47,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public Optional<ConnectorDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Optional<Connector> connector = connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
     if (connector.isPresent()) {
@@ -101,7 +101,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
     Objects.requireNonNull(connectorRequestDTO.getIdentifier());
-    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
         connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifier(),
         connectorRequestDTO.getIdentifier());
     Optional<Connector> existingConnector =
@@ -120,7 +120,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Long connectorsDeleted = connectorRepository.deleteByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
     return connectorsDeleted == 1;
@@ -134,14 +134,14 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   public boolean validateTheIdentifierIsUnique(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     return !connectorRepository.existsByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
   }
 
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Optional<Connector> connectorOptional =
         connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);

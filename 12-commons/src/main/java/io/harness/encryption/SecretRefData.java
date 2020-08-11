@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.utils.IdentifierRefHelper;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +41,7 @@ public class SecretRefData {
       this.scope = PROJECT;
     } else if (secretStringWithScopeSplitted.length == 2) {
       this.identifier = secretStringWithScopeSplitted[1];
-      this.scope = getScope(secretStringWithScopeSplitted[0]);
+      this.scope = IdentifierRefHelper.getScope(secretStringWithScopeSplitted[0]);
       if (this.scope == PROJECT) {
         // The user should not specify proj if it is a project level ref
         throw new InvalidRequestException("Invalid Secret Reference");
@@ -54,17 +55,6 @@ public class SecretRefData {
     this.identifier = identifier;
     this.scope = scope;
     this.decryptedValue = decryptedValue == null ? null : decryptedValue.clone();
-  }
-
-  private Scope getScope(String secretScopeString) {
-    if (isBlank(secretScopeString)) {
-      return null;
-    }
-    Scope secretScope = Scope.fromString(secretScopeString);
-    if (secretScope == null) {
-      throw new UnknownEnumTypeException("Scope", secretScopeString);
-    }
-    return secretScope;
   }
 
   @JsonValue
