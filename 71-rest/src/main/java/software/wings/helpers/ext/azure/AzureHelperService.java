@@ -5,8 +5,8 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AZURE_SERVICE_EXCEPTION;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_AZURE_VAULT_CONFIGURATION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
@@ -42,15 +42,18 @@ import io.fabric8.kubernetes.api.model.Cluster;
 import io.fabric8.kubernetes.api.model.Context;
 import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.AzureServiceException;
+import io.harness.exception.ClusterNotFoundException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.http.HttpStatus;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -91,7 +94,7 @@ public class AzureHelperService {
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AzureConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+      throw new InvalidArgumentsException(ImmutablePair.of("args", "InvalidConfiguration"));
     }
 
     return (AzureConfig) computeProviderSetting.getValue();
@@ -371,7 +374,7 @@ public class AzureHelperService {
       } else {
         logger.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
             + " Response: " + response.raw());
-        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", response.message());
+        throw new AzureServiceException(response.message(), AZURE_SERVICE_EXCEPTION, USER);
       }
     } catch (Exception e) {
       HandleAzureAuthenticationException(e);
@@ -392,7 +395,7 @@ public class AzureHelperService {
       } else {
         logger.error("Error occurred while getting Tags from subscriptionId : " + subscriptionId
             + " Response: " + response.raw());
-        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", response.message());
+        throw new AzureServiceException(response.message(), AZURE_SERVICE_EXCEPTION, USER);
       }
     } catch (Exception e) {
       HandleAzureAuthenticationException(e);
@@ -495,7 +498,8 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
               + registryName,
           e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new AzureServiceException(
+          "Failed to list repositories " + ExceptionUtils.getMessage(e), AZURE_SERVICE_EXCEPTION, USER);
     }
   }
 
@@ -521,7 +525,8 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName/repositoryName :"
               + subscriptionId + "/" + registryName + "/" + repositoryName,
           e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
+      throw new AzureServiceException(
+          "Failed to retrieve repository tags " + ExceptionUtils.getMessage(e), AZURE_SERVICE_EXCEPTION, USER);
     }
   }
 
@@ -538,7 +543,8 @@ public class AzureHelperService {
           .getTags();
     } catch (Exception e) {
       logger.error("Error occurred while getting Tags for Repository :" + registryHostName + "/" + repositoryName, e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new AzureServiceException(
+          "Failed to retrieve repository tags " + ExceptionUtils.getMessage(e), AZURE_SERVICE_EXCEPTION, USER);
     }
   }
 
@@ -594,9 +600,9 @@ public class AzureHelperService {
         logger.error(errorMessage);
         int statusCode = response.code();
         if (statusCode == HttpStatus.SC_NOT_FOUND) {
-          throw new WingsException(CLUSTER_NOT_FOUND).addParam("message", errorMessage);
+          throw new ClusterNotFoundException(errorMessage, CLUSTER_NOT_FOUND, USER);
         } else {
-          throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", response.message());
+          throw new AzureServiceException(response.message(), AZURE_SERVICE_EXCEPTION, USER);
         }
       }
     } catch (Exception e) {
@@ -624,7 +630,8 @@ public class AzureHelperService {
           .clientKey(currentAuthInfo.getClientKeyData().toCharArray())
           .build();
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new AzureServiceException(
+          "Failed to create kubernetes configuration " + ExceptionUtils.getMessage(e), AZURE_SERVICE_EXCEPTION, USER);
     }
   }
 
@@ -719,12 +726,11 @@ public class AzureHelperService {
     while (e1.getCause() != null) {
       e1 = e1.getCause();
       if (e1 instanceof AuthenticationException) {
-        throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
-            .addParam("message", "Invalid Azure credentials." + e1.getMessage());
+        throw new InvalidCredentialsException("Invalid Azure credentials." + e1.getMessage(), USER);
       }
     }
 
-    throw new InvalidRequestException("Failed to connect to Azure cluster. " + ExceptionUtils.getMessage(e), e, USER);
+    throw new InvalidRequestException("Failed to connect to Azure cluster. " + ExceptionUtils.getMessage(e), USER);
   }
 
   public List<Vault> listVaults(String accountId, AzureVaultConfig azureVaultConfig) {
@@ -732,7 +738,7 @@ public class AzureHelperService {
       return listVaultsInternal(accountId, azureVaultConfig);
     } catch (Exception ex) {
       logger.error("Listing vaults failed for account Id {}", accountId, ex);
-      throw new WingsException(INVALID_AZURE_VAULT_CONFIGURATION);
+      throw new AzureServiceException("Failed to list vaults.", INVALID_AZURE_VAULT_CONFIGURATION, USER);
     }
   }
 
