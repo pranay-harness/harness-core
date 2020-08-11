@@ -17,6 +17,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
@@ -38,11 +40,14 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
@@ -56,12 +61,14 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.api.TerraformExecutionData;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
@@ -74,9 +81,9 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -84,7 +91,9 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandR
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -94,6 +103,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
+import software.wings.utils.GitUtilsManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,6 +128,9 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock ResourceLookupService resourceLookupService;
   @Mock AppService appService;
   @Mock GitFileConfigHelperService gitFileConfigHelperService;
+  @Mock GitUtilsManager gitUtilsManager;
+  @Mock GitClientHelper gitClientHelper;
+  @Mock DelegateService delegateService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
   @Inject private WingsPersistence wingsPersistence;
@@ -251,7 +264,9 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                                   .path("module/main.tf")
                                                                   .sourceRepoSettingId(SETTING_ID)
                                                                   .build();
-    InfrastructureProvisionerServiceImpl provisionerService = spy(InfrastructureProvisionerServiceImpl.class);
+    InfrastructureProvisionerServiceImpl provisionerService = infrastructureProvisionerServiceImpl;
+    doReturn(GitConfig.builder().build()).when(gitUtilsManager).getGitConfig(SETTING_ID);
+
     provisionerService.validateProvisioner(terraformProvisioner);
 
     shouldValidateRepoBranch(terraformProvisioner, provisionerService);
@@ -359,7 +374,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     terraformProvisioner.setSourceRepoSettingId(null);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
-    terraformProvisioner.setSourceRepoSettingId("settingId");
+    terraformProvisioner.setSourceRepoSettingId(SETTING_ID);
   }
 
   private void shouldValidatePath(TerraformInfrastructureProvisioner terraformProvisioner,
@@ -459,8 +474,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     Set<String> settingAttributeIds = Sets.newHashSet(asList("id1", "id2"));
     settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
     PageResponse<SettingAttribute> settingAttributePageResponse = new PageResponse<>();
-    SettingAttribute settingAttribute1 = Builder.aSettingAttribute().withUuid("id1").build();
-    SettingAttribute settingAttribute2 = Builder.aSettingAttribute().withUuid("id2").build();
+    SettingAttribute settingAttribute1 = aSettingAttribute().withUuid("id1").build();
+    SettingAttribute settingAttribute2 = aSettingAttribute().withUuid("id2").build();
     settingAttributePageResponse.setResponse(asList(settingAttribute1, settingAttribute2));
     when(settingService.list(settingAttributePageRequest, null, null)).thenReturn(settingAttributePageResponse);
 
@@ -732,5 +747,55 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     Map<String, Object> resolveExpressions = infrastructureProvisionerService.resolveExpressions(
         infrastructureDefinition, contextMap, ShellScriptInfrastructureProvisioner.builder().build());
     assertThat(resolveExpressions.get("key")).isEqualTo("VAL");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void getTerraformVariablesExceptionTest() {
+    SettingAttribute attribute = aSettingAttribute().build();
+    doReturn(attribute).when(settingService).get(SETTING_ID);
+    assertThatThrownBy(()
+                           -> infrastructureProvisionerService.getTerraformVariables(
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", "repo"))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void getTerraformVariablesTest() throws Exception {
+    GitConfig gitConfig = GitConfig.builder().build();
+    SettingAttribute attribute = aSettingAttribute().withValue(gitConfig).build();
+    doReturn(attribute).when(settingService).get(SETTING_ID);
+
+    String repoName = "repoName";
+    ArgumentCaptor<GitConfig> gitConfigArgumentCaptor = ArgumentCaptor.forClass(GitConfig.class);
+    ArgumentCaptor<String> repoNameArgumentCaptor = ArgumentCaptor.forClass(String.class);
+
+    List<NameValuePair> expectedVariables = singletonList(NameValuePair.builder().build());
+    doNothing()
+        .when(gitClientHelper)
+        .updateRepoUrl(gitConfigArgumentCaptor.capture(), repoNameArgumentCaptor.capture());
+    TerraformInputVariablesTaskResponse response =
+        TerraformInputVariablesTaskResponse.builder()
+            .terraformExecutionData(TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
+            .variablesList(expectedVariables)
+            .build();
+    doReturn(response).when(delegateService).executeTask(any(DelegateTask.class));
+    List<NameValuePair> variables =
+        infrastructureProvisionerService.getTerraformVariables(APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", repoName);
+
+    assertThat(gitConfigArgumentCaptor.getValue()).isEqualTo(gitConfig);
+    assertThat(repoNameArgumentCaptor.getValue()).isEqualTo(repoName);
+    assertThat(variables).isEqualTo(expectedVariables);
+    verify(delegateService).executeTask(any(DelegateTask.class));
+
+    response.getTerraformExecutionData().setExecutionStatus(ExecutionStatus.FAILED);
+    response.getTerraformExecutionData().setErrorMessage("error");
+    assertThatThrownBy(()
+                           -> infrastructureProvisionerService.getTerraformVariables(
+                               APP_ID, SETTING_ID, ".", ACCOUNT_ID, "branch", repoName))
+        .isInstanceOf(WingsException.class);
   }
 }

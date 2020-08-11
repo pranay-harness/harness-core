@@ -91,6 +91,7 @@ import software.wings.infra.ProvisionerAware;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -111,6 +112,7 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.utils.GitUtilsManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -142,6 +144,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private AppService appService;
   @Inject YamlPushService yamlPushService;
   @Inject private DelegateService delegateService;
+  @Inject private GitClientHelper gitClientHelper;
   @Inject private SecretManager secretManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject FileService fileService;
@@ -154,6 +157,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private GitUtilsManager gitUtilsManager;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
 
   static final String DUPLICATE_VAR_MSG_PREFIX = "variable names should be unique, duplicate variable(s) found: ";
@@ -334,7 +338,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           idToSettingAttributeMapping.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
 
       if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
-        detailsBuilder.repository(((GitConfig) settingAttribute.getValue()).getRepoUrl());
+        GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+        gitClientHelper.updateRepoUrl(gitConfig, terraformInfrastructureProvisioner.getRepoName());
+        detailsBuilder.repository(gitConfig.getRepoUrl());
       }
     } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
       CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner =
@@ -767,8 +773,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
-  public List<NameValuePair> getTerraformVariables(
-      String appId, String scmSettingId, String terraformDirectory, String accountId, String sourceRepoBranch) {
+  public List<NameValuePair> getTerraformVariables(String appId, String scmSettingId, String terraformDirectory,
+      String accountId, String sourceRepoBranch, String repoName) {
     SettingAttribute gitSettingAttribute = settingService.get(scmSettingId);
     notNullCheck("Source repo provided is not Valid", gitSettingAttribute);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
@@ -779,6 +785,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
     gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
+    gitClientHelper.updateRepoUrl(gitConfig, repoName);
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
@@ -846,6 +853,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
+    gitClientHelper.updateRepoUrl(gitConfig, terraformInfrastructureProvisioner.getRepoName());
 
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -897,6 +905,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       throw new InvalidRequestException("Provisioner path cannot be null");
     } else if (isEmpty(terraformProvisioner.getSourceRepoSettingId())) {
       throw new InvalidRequestException("Provisioner should have a source repo");
+    }
+    GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
+    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && isEmpty(terraformProvisioner.getRepoName())) {
+      throw new InvalidRequestException("Repo name cannot be empty for account level git connector");
     }
 
     boolean areVariablesValid =

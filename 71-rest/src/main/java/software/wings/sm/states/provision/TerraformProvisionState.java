@@ -75,6 +75,7 @@ import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GitConfigHelperService;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -144,6 +145,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject private transient LogService logService;
   @Inject protected FeatureFlagService featureFlagService;
   @Inject protected SweepingOutputService sweepingOutputService;
+  @Inject protected GitClientHelper gitClientHelper;
 
   @Inject protected transient MainConfiguration configuration;
 
@@ -546,6 +548,8 @@ public abstract class TerraformProvisionState extends State {
     List<String> targets = element.getTargets();
     targets = resolveTargets(targets, context);
 
+    gitClientHelper.updateRepoUrl(gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
@@ -691,6 +695,7 @@ public abstract class TerraformProvisionState extends State {
     }
 
     targets = resolveTargets(targets, context);
+    gitClientHelper.updateRepoUrl(gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
 
     if (runPlanOnly && this instanceof DestroyTerraformProvisionState) {
       exportPlanToApplyStep = true;

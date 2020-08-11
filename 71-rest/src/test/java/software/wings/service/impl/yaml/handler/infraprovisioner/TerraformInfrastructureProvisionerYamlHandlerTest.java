@@ -77,6 +77,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
       + "  - name: tags\n"
       + "    value: ${terraform.archive_tags}\n"
       + "  serviceName: ServiceName\n"
+      + "repoName: REPO_NAME\n"
       + "sourceRepoBranch: master\n"
       + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO\n"
       + "variables:\n"
@@ -112,6 +113,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
     assertThat(SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
     assertThat(1).isEqualTo(provisionerSaved.getMappingBlueprints().size());
+    assertThat(provisionerSaved.getRepoName()).isEqualTo("REPO_NAME");
 
     Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
     String yamlContent = getYamlContent(yamlFromObject);
@@ -128,6 +130,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
             .description("Desc1")
             .sourceRepoSettingId(SETTING_ID)
             .sourceRepoBranch("master")
+            .repoName("REPO_NAME")
             .variables(variables)
             .backendConfigs(variables)
             .mappingBlueprints(Collections.singletonList(
