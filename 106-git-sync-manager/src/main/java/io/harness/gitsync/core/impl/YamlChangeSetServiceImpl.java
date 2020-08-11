@@ -33,7 +33,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -317,7 +316,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public UpdateResult updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
       Status oldStatus, Status newStatus, long timeout, String messageCode) {
     return yamlChangeSetRepository.updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
-        oldStatus, newStatus, System.currentTimeMillis() - Duration.ofDays(timeout).toMillis(), messageCode);
+        oldStatus, newStatus, System.currentTimeMillis() - timeout, messageCode);
   }
 
   @Override
