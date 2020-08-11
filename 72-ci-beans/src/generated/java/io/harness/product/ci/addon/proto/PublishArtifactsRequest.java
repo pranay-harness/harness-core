@@ -18,6 +18,7 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
   private PublishArtifactsRequest() {
     files_ = java.util.Collections.emptyList();
     images_ = java.util.Collections.emptyList();
+    stepId_ = "";
   }
 
   @java.
@@ -77,6 +78,12 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
             }
             images_.add(
                 input.readMessage(io.harness.product.ci.addon.proto.BuildPublishImage.parser(), extensionRegistry));
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            stepId_ = s;
             break;
           }
           default: {
@@ -206,6 +213,38 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
     return images_.get(index);
   }
 
+  public static final int STEP_ID_FIELD_NUMBER = 4;
+  private volatile java.lang.Object stepId_;
+  /**
+   * <code>string step_id = 4[json_name = "stepId"];</code>
+   * @return The stepId.
+   */
+  public java.lang.String getStepId() {
+    java.lang.Object ref = stepId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      stepId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string step_id = 4[json_name = "stepId"];</code>
+   * @return The bytes for stepId.
+   */
+  public com.google.protobuf.ByteString getStepIdBytes() {
+    java.lang.Object ref = stepId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      stepId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -230,6 +269,9 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
     for (int i = 0; i < images_.size(); i++) {
       output.writeMessage(3, images_.get(i));
     }
+    if (!getStepIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, stepId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -248,6 +290,9 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
     }
     for (int i = 0; i < images_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, images_.get(i));
+    }
+    if (!getStepIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, stepId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -275,6 +320,8 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
       return false;
     if (!getImagesList().equals(other.getImagesList()))
       return false;
+    if (!getStepId().equals(other.getStepId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -299,6 +346,8 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
       hash = (37 * hash) + IMAGES_FIELD_NUMBER;
       hash = (53 * hash) + getImagesList().hashCode();
     }
+    hash = (37 * hash) + STEP_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getStepId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -433,6 +482,8 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
       } else {
         imagesBuilder_.clear();
       }
+      stepId_ = "";
+
       return this;
     }
 
@@ -488,6 +539,7 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
       } else {
         result.images_ = imagesBuilder_.build();
       }
+      result.stepId_ = stepId_;
       onBuilt();
       return result;
     }
@@ -582,6 +634,10 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
             imagesBuilder_.addAllMessages(other.images_);
           }
         }
+      }
+      if (!other.getStepId().isEmpty()) {
+        stepId_ = other.stepId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1181,6 +1237,75 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
         images_ = null;
       }
       return imagesBuilder_;
+    }
+
+    private java.lang.Object stepId_ = "";
+    /**
+     * <code>string step_id = 4[json_name = "stepId"];</code>
+     * @return The stepId.
+     */
+    public java.lang.String getStepId() {
+      java.lang.Object ref = stepId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        stepId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string step_id = 4[json_name = "stepId"];</code>
+     * @return The bytes for stepId.
+     */
+    public com.google.protobuf.ByteString getStepIdBytes() {
+      java.lang.Object ref = stepId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        stepId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string step_id = 4[json_name = "stepId"];</code>
+     * @param value The stepId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setStepId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      stepId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string step_id = 4[json_name = "stepId"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearStepId() {
+      stepId_ = getDefaultInstance().getStepId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string step_id = 4[json_name = "stepId"];</code>
+     * @param value The bytes for stepId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setStepIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      stepId_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

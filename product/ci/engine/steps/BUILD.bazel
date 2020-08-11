@@ -8,6 +8,7 @@ go_library(
         "restore_cache.go",
         "run.go",
         "save_cache.go",
+        "tail_helper.go",
     ],
     importpath = "github.com/wings-software/portal/product/ci/engine/steps",
     visibility = ["//visibility:public"],
@@ -36,6 +37,7 @@ go_test(
         "restore_cache_test.go",
         "run_test.go",
         "save_cache_test.go",
+        "tail_helper_test.go",
     ],
     embed = [":go_default_library"],
     deps = [

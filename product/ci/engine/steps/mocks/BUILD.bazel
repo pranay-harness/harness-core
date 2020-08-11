@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "publish_artifacts_mock.go",
         "restore_cache_mock.go",
+        "run_mock.go",
         "save_cache_mock.go",
     ],
     importpath = "github.com/wings-software/portal/product/ci/engine/steps/mocks",

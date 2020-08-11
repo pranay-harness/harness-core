@@ -67,6 +67,26 @@ public final class AddonOuterClass {
       .Descriptor internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesResponse_descriptor;
   static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_addon_proto_StartTailRequest_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_StartTailRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_addon_proto_StartTailRequest_AdditionalFieldsEntry_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_io_harness_product_ci_addon_proto_StartTailRequest_AdditionalFieldsEntry_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_addon_proto_StartTailResponse_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_StartTailResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_addon_proto_StopTailRequest_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_StopTailRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_addon_proto_StopTailResponse_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_StopTailResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -95,48 +115,64 @@ public final class AddonOuterClass {
         + "connector\022T\n\rlocation_type\030\003 \001(\0162/.io.ha"
         + "rness.product.ci.addon.proto.LocationTyp"
         + "eR\014locationType\022\026\n\006region\030\004 \001(\tR\006region\""
-        + "\360\001\n\027PublishArtifactsRequest\022B\n\007task_id\030\001"
+        + "\211\002\n\027PublishArtifactsRequest\022B\n\007task_id\030\001"
         + " \001(\0132).io.harness.product.ci.addon.proto"
         + ".TaskIdR\006taskId\022C\n\005files\030\002 \003(\0132-.io.harn"
         + "ess.product.ci.addon.proto.UploadFileR\005f"
         + "iles\022L\n\006images\030\003 \003(\01324.io.harness.produc"
         + "t.ci.addon.proto.BuildPublishImageR\006imag"
-        + "es\"\032\n\030PublishArtifactsResponse\"Y\n\023TaskPr"
-        + "ogressRequest\022B\n\007task_id\030\001 \001(\0132).io.harn"
-        + "ess.product.ci.addon.proto.TaskIdR\006taskI"
-        + "d\"\023\n\021SignalStopRequest\"\024\n\022SignalStopResp"
-        + "onse\"\252\001\n\024TaskProgressResponse\022R\n\rcurrent"
-        + "_stage\030\001 \001(\0162-.io.harness.product.ci.add"
-        + "on.proto.TaskStatusR\014currentStage\022>\n\005err"
-        + "or\030\002 \001(\0132(.io.harness.product.ci.addon.p"
-        + "roto.ErrorR\005error\"`\n\032TaskProgressUpdates"
-        + "Request\022B\n\007task_id\030\001 \001(\0132).io.harness.pr"
-        + "oduct.ci.addon.proto.TaskIdR\006taskId\"\261\001\n\033"
-        + "TaskProgressUpdatesResponse\022R\n\rcurrent_s"
-        + "tage\030\001 \001(\0162-.io.harness.product.ci.addon"
-        + ".proto.TaskStatusR\014currentStage\022>\n\005error"
-        + "\030\002 \001(\0132(.io.harness.product.ci.addon.pro"
-        + "to.ErrorR\005error*F\n\tErrorType\022\014\n\010NO_ERROR"
-        + "\020\000\022\021\n\rNETWORK_ERROR\020\001\022\030\n\024AUTHENTICATION_"
-        + "ERROR\020\002*X\n\014LocationType\022\013\n\007UNKNOWN\020\000\022\006\n\002"
-        + "S3\020\001\022\007\n\003GCS\020\002\022\t\n\005JFROG\020\003\022\007\n\003GCR\020\004\022\007\n\003ECR"
-        + "\020\005\022\r\n\tDOCKERHUB\020\006*;\n\010AuthType\022\016\n\nBASIC_A"
-        + "UTH\020\000\022\017\n\013SECRET_FILE\020\001\022\016\n\nACCESS_KEY\020\0022\252"
-        + "\004\n\005Addon\022\213\001\n\020PublishArtifacts\022:.io.harne"
-        + "ss.product.ci.addon.proto.PublishArtifac"
-        + "tsRequest\032;.io.harness.product.ci.addon."
-        + "proto.PublishArtifactsResponse\022y\n\nSignal"
-        + "Stop\0224.io.harness.product.ci.addon.proto"
-        + ".SignalStopRequest\0325.io.harness.product."
-        + "ci.addon.proto.SignalStopResponse\022\177\n\014Tas"
-        + "kProgress\0226.io.harness.product.ci.addon."
-        + "proto.TaskProgressRequest\0327.io.harness.p"
-        + "roduct.ci.addon.proto.TaskProgressRespon"
-        + "se\022\226\001\n\023TaskProgressUpdates\022=.io.harness."
-        + "product.ci.addon.proto.TaskProgressUpdat"
-        + "esRequest\032>.io.harness.product.ci.addon."
-        + "proto.TaskProgressUpdatesResponse0\001B\rP\001Z"
-        + "\tciaddonpbb\006proto3"};
+        + "es\022\027\n\007step_id\030\004 \001(\tR\006stepId\"\032\n\030PublishAr"
+        + "tifactsResponse\"Y\n\023TaskProgressRequest\022B"
+        + "\n\007task_id\030\001 \001(\0132).io.harness.product.ci."
+        + "addon.proto.TaskIdR\006taskId\"\023\n\021SignalStop"
+        + "Request\"\024\n\022SignalStopResponse\"\252\001\n\024TaskPr"
+        + "ogressResponse\022R\n\rcurrent_stage\030\001 \001(\0162-."
+        + "io.harness.product.ci.addon.proto.TaskSt"
+        + "atusR\014currentStage\022>\n\005error\030\002 \001(\0132(.io.h"
+        + "arness.product.ci.addon.proto.ErrorR\005err"
+        + "or\"`\n\032TaskProgressUpdatesRequest\022B\n\007task"
+        + "_id\030\001 \001(\0132).io.harness.product.ci.addon."
+        + "proto.TaskIdR\006taskId\"\261\001\n\033TaskProgressUpd"
+        + "atesResponse\022R\n\rcurrent_stage\030\001 \001(\0162-.io"
+        + ".harness.product.ci.addon.proto.TaskStat"
+        + "usR\014currentStage\022>\n\005error\030\002 \001(\0132(.io.har"
+        + "ness.product.ci.addon.proto.ErrorR\005error"
+        + "\"\221\002\n\020StartTailRequest\022\033\n\tfile_name\030\001 \001(\t"
+        + "R\010fileName\022#\n\rdisallow_json\030\002 \001(\010R\014disal"
+        + "lowJson\022v\n\021additional_fields\030\003 \003(\0132I.io."
+        + "harness.product.ci.addon.proto.StartTail"
+        + "Request.AdditionalFieldsEntryR\020additiona"
+        + "lFields\032C\n\025AdditionalFieldsEntry\022\020\n\003key\030"
+        + "\001 \001(\tR\003key\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\023\n\021"
+        + "StartTailResponse\"B\n\017StopTailRequest\022\033\n\t"
+        + "file_name\030\001 \001(\tR\010fileName\022\022\n\004wait\030\002 \001(\010R"
+        + "\004wait\"\022\n\020StopTailResponse*F\n\tErrorType\022\014"
+        + "\n\010NO_ERROR\020\000\022\021\n\rNETWORK_ERROR\020\001\022\030\n\024AUTHE"
+        + "NTICATION_ERROR\020\002*X\n\014LocationType\022\013\n\007UNK"
+        + "NOWN\020\000\022\006\n\002S3\020\001\022\007\n\003GCS\020\002\022\t\n\005JFROG\020\003\022\007\n\003GC"
+        + "R\020\004\022\007\n\003ECR\020\005\022\r\n\tDOCKERHUB\020\006*;\n\010AuthType\022"
+        + "\016\n\nBASIC_AUTH\020\000\022\017\n\013SECRET_FILE\020\001\022\016\n\nACCE"
+        + "SS_KEY\020\0022\227\006\n\005Addon\022\213\001\n\020PublishArtifacts\022"
+        + ":.io.harness.product.ci.addon.proto.Publ"
+        + "ishArtifactsRequest\032;.io.harness.product"
+        + ".ci.addon.proto.PublishArtifactsResponse"
+        + "\022y\n\nSignalStop\0224.io.harness.product.ci.a"
+        + "ddon.proto.SignalStopRequest\0325.io.harnes"
+        + "s.product.ci.addon.proto.SignalStopRespo"
+        + "nse\022v\n\tStartTail\0223.io.harness.product.ci"
+        + ".addon.proto.StartTailRequest\0324.io.harne"
+        + "ss.product.ci.addon.proto.StartTailRespo"
+        + "nse\022s\n\010StopTail\0222.io.harness.product.ci."
+        + "addon.proto.StopTailRequest\0323.io.harness"
+        + ".product.ci.addon.proto.StopTailResponse"
+        + "\022\177\n\014TaskProgress\0226.io.harness.product.ci"
+        + ".addon.proto.TaskProgressRequest\0327.io.ha"
+        + "rness.product.ci.addon.proto.TaskProgres"
+        + "sResponse\022\226\001\n\023TaskProgressUpdates\022=.io.h"
+        + "arness.product.ci.addon.proto.TaskProgre"
+        + "ssUpdatesRequest\032>.io.harness.product.ci"
+        + ".addon.proto.TaskProgressUpdatesResponse"
+        + "0\001B\rP\001Z\tciaddonpbb\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.product.ci.addon.proto.Progress.getDescriptor(),
@@ -201,6 +237,7 @@ public final class AddonOuterClass {
                 "TaskId",
                 "Files",
                 "Images",
+                "StepId",
             });
     internal_static_io_harness_product_ci_addon_proto_PublishArtifactsResponse_descriptor =
         getDescriptor().getMessageTypes().get(7);
@@ -252,6 +289,44 @@ public final class AddonOuterClass {
                 "CurrentStage",
                 "Error",
             });
+    internal_static_io_harness_product_ci_addon_proto_StartTailRequest_descriptor =
+        getDescriptor().getMessageTypes().get(14);
+    internal_static_io_harness_product_ci_addon_proto_StartTailRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_addon_proto_StartTailRequest_descriptor,
+            new java.lang.String[] {
+                "FileName",
+                "DisallowJson",
+                "AdditionalFields",
+            });
+    internal_static_io_harness_product_ci_addon_proto_StartTailRequest_AdditionalFieldsEntry_descriptor =
+        internal_static_io_harness_product_ci_addon_proto_StartTailRequest_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_product_ci_addon_proto_StartTailRequest_AdditionalFieldsEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_addon_proto_StartTailRequest_AdditionalFieldsEntry_descriptor,
+            new java.lang.String[] {
+                "Key",
+                "Value",
+            });
+    internal_static_io_harness_product_ci_addon_proto_StartTailResponse_descriptor =
+        getDescriptor().getMessageTypes().get(15);
+    internal_static_io_harness_product_ci_addon_proto_StartTailResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_addon_proto_StartTailResponse_descriptor, new java.lang.String[] {});
+    internal_static_io_harness_product_ci_addon_proto_StopTailRequest_descriptor =
+        getDescriptor().getMessageTypes().get(16);
+    internal_static_io_harness_product_ci_addon_proto_StopTailRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_addon_proto_StopTailRequest_descriptor,
+            new java.lang.String[] {
+                "FileName",
+                "Wait",
+            });
+    internal_static_io_harness_product_ci_addon_proto_StopTailResponse_descriptor =
+        getDescriptor().getMessageTypes().get(17);
+    internal_static_io_harness_product_ci_addon_proto_StopTailResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_addon_proto_StopTailResponse_descriptor, new java.lang.String[] {});
     io.harness.product.ci.addon.proto.Progress.getDescriptor();
   }
 

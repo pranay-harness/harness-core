@@ -70,6 +70,7 @@ message PublishArtifactsRequest {
   TaskId task_id = 1;
   repeated UploadFile files = 2;
   repeated BuildPublishImage images = 3;
+  string step_id = 4;  // Necessary for all addon RPCs to propagate Step ID
 }
 
 message PublishArtifactsResponse {
@@ -99,6 +100,31 @@ message TaskProgressUpdatesResponse {
   Error error = 2;
 }
 
+message StartTailRequest {
+  string file_name = 1;
+
+  // Logs are emitted in JSON by default. If this value is set as true, logs are emitted to stdout/stderr
+  // as they are.
+  bool disallow_json = 2;
+
+  // Additional fields to append log messages with. For example, if the log message is
+  // "20/12/7 INFO: Test" and additional_fields are {"foo": "x", "bar": "y"} then the
+  // emitted log message is {"foo": "x", "bar": "y", "log": "20/12/7 INFO: Test"}
+  // Not valid if disallow_json is specified as true
+  map<string, string> additional_fields = 3;
+}
+
+message StartTailResponse {
+}
+
+message StopTailRequest {
+  string file_name = 1;
+  bool wait = 2;  // Wait for file tailing to be completed before returning
+}
+
+message StopTailResponse {
+}
+
 service Addon {
   // Asynchronous RPC to upload files as well as build docker images and publish them
   // It takes a list of files/file_patterns and uploads them to a destination location
@@ -108,6 +134,12 @@ service Addon {
 
   // Synchronous RPC to send a signal to stop GRPC server
   rpc SignalStop(SignalStopRequest) returns (SignalStopResponse);
+
+  // RPC to start tailing on a file. Used for logging purposes.
+  rpc StartTail(StartTailRequest) returns (StartTailResponse);
+
+  // RPC to stop tailing on a file.
+  rpc StopTail(StopTailRequest) returns (StopTailResponse);
 
   // Synchronous RPC to get progress of a given task_id
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);

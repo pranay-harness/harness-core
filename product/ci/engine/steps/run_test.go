@@ -94,6 +94,18 @@ func TestExecuteDeadlineExceeded(t *testing.T) {
 		timeoutSecs: 0,
 	}
 
+	oldStartTailFn := startTailFn
+	startTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, additionalFields map[string]string) error {
+		return nil
+	}
+	defer func() { startTailFn = oldStartTailFn }()
+
+	oldStopTailFn := stopTailFn
+	stopTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, wait bool) error {
+		return nil
+	}
+	defer func() { stopTailFn = oldStopTailFn }()
+
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	logFile.EXPECT().Close().Return(nil)
 
@@ -120,6 +132,18 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 		fs:          fs,
 		timeoutSecs: 5,
 	}
+
+	oldStartTailFn := startTailFn
+	startTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, additionalFields map[string]string) error {
+		return nil
+	}
+	defer func() { startTailFn = oldStartTailFn }()
+
+	oldStopTailFn := stopTailFn
+	stopTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, wait bool) error {
+		return nil
+	}
+	defer func() { stopTailFn = oldStopTailFn }()
 
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	logFile.EXPECT().Close().Return(nil)
@@ -155,6 +179,18 @@ func TestExecuteSuccess(t *testing.T) {
 		timeoutSecs: 5,
 	}
 
+	oldStartTailFn := startTailFn
+	startTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, additionalFields map[string]string) error {
+		return nil
+	}
+	defer func() { startTailFn = oldStartTailFn }()
+
+	oldStopTailFn := stopTailFn
+	stopTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, wait bool) error {
+		return nil
+	}
+	defer func() { stopTailFn = oldStopTailFn }()
+
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	logFile.EXPECT().Close().Return(nil)
 
@@ -184,6 +220,18 @@ func TestExecuteErrorWithOutput(t *testing.T) {
 		fs:            fs,
 		timeoutSecs:   5,
 	}
+
+	oldStartTailFn := startTailFn
+	startTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, additionalFields map[string]string) error {
+		return nil
+	}
+	defer func() { startTailFn = oldStartTailFn }()
+
+	oldStopTailFn := stopTailFn
+	stopTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, wait bool) error {
+		return nil
+	}
+	defer func() { stopTailFn = oldStopTailFn }()
 
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	fs.EXPECT().Open(gomock.Any()).Return(nil, errors.New(
@@ -226,6 +274,18 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 		fs:            fs,
 		timeoutSecs:   5,
 	}
+
+	oldStartTailFn := startTailFn
+	startTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, additionalFields map[string]string) error {
+		return nil
+	}
+	defer func() { startTailFn = oldStartTailFn }()
+
+	oldStopTailFn := stopTailFn
+	stopTailFn = func(ctx context.Context, log *zap.SugaredLogger, filename string, wait bool) error {
+		return nil
+	}
+	defer func() { stopTailFn = oldStopTailFn }()
 
 	fs.EXPECT().Open(gomock.Any()).Return(f1, nil)
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)

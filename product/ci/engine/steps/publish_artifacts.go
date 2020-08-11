@@ -104,6 +104,7 @@ func (s *publishArtifactsStep) createPublishArtifactArg() (*addonpb.PublishArtif
 		TaskId: taskID,
 		Files:  resolvedFiles,
 		Images: resolvedImages,
+		StepId: s.id,
 	}, nil
 }
 

@@ -63,4 +63,15 @@ public interface PublishArtifactsRequestOrBuilder extends
    * <code>repeated .io.harness.product.ci.addon.proto.BuildPublishImage images = 3[json_name = "images"];</code>
    */
   io.harness.product.ci.addon.proto.BuildPublishImageOrBuilder getImagesOrBuilder(int index);
+
+  /**
+   * <code>string step_id = 4[json_name = "stepId"];</code>
+   * @return The stepId.
+   */
+  java.lang.String getStepId();
+  /**
+   * <code>string step_id = 4[json_name = "stepId"];</code>
+   * @return The bytes for stepId.
+   */
+  com.google.protobuf.ByteString getStepIdBytes();
 }

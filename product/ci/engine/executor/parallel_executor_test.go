@@ -8,10 +8,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	cengine "github.com/wings-software/portal/product/ci/engine/grpc/client"
 	emgrpc "github.com/wings-software/portal/product/ci/engine/grpc/client/mocks"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
+	"github.com/wings-software/portal/product/ci/engine/steps"
+	emsteps "github.com/wings-software/portal/product/ci/engine/steps/mocks"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -82,17 +85,6 @@ func TestParallelExecutorRun(t *testing.T) {
 			expectedErr: false,
 		},
 		{
-			name: "error main-only parallel nultiple unit steps",
-			step: &pb.ParallelStep{
-				Id: "ptest3",
-				Steps: []*pb.UnitStep{
-					testGetRunStep("ptest3_1", []string{"ls"}),
-					testGetRunStep("ptest3_2", []string{"ls -l"}),
-					testGetRunStep("ptest3_3", []string{"l"})},
-			},
-			expectedErr: true,
-		},
-		{
 			name: "main-only parallel with error in non-run unit steps",
 			step: &pb.ParallelStep{
 				Id: "ptest4",
@@ -103,6 +95,17 @@ func TestParallelExecutorRun(t *testing.T) {
 			},
 			expectedErr: true,
 		},
+	}
+
+	// Mock out unit Executor run step
+	oldRunStep := runStep
+	defer func() { runStep = oldRunStep }()
+	mockedRunStep := emsteps.NewMockRunStep(ctrl)
+	mockedRunStep.EXPECT().Run(ctx).Return(nil).AnyTimes()
+
+	runStep = func(step *pb.UnitStep, stepLogPath string, tmpFilePath string,
+		fs filesystem.FileSystem, log *zap.SugaredLogger) steps.RunStep {
+		return mockedRunStep
 	}
 	for _, tc := range tests {
 		e := NewParallelExecutor(logPath, tmpFilePath, nil, log.Sugar())

@@ -108,7 +108,7 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep) error {
 		}(w)
 	}
 
-	// Evaluate the parallel step results
+	// // Evaluate the parallel step results
 	for i := 0; i < numSteps; i++ {
 		result := <-results
 		if result.err != nil {
