@@ -3,8 +3,8 @@ package software.wings.helpers.ext.docker;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.DockerConfig;
-import software.wings.helpers.ext.jenkins.BuildDetails;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ public interface DockerRegistryService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds);
+  List<BuildDetailsInternal> getBuilds(DockerInternalConfig dockerConfig, String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets labels.
@@ -34,7 +34,7 @@ public interface DockerRegistryService {
    * @param tags         the image tags to find labels of
    * @return the builds
    */
-  List<Map<String, String>> getLabels(DockerConfig dockerConfig, String imageName, List<String> tags);
+  List<Map<String, String>> getLabels(DockerInternalConfig dockerConfig, String imageName, List<String> tags);
 
   /**
    * Gets last successful build.
@@ -43,20 +43,20 @@ public interface DockerRegistryService {
    * @param imageName    the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName);
+  BuildDetailsInternal getLastSuccessfulBuild(DockerInternalConfig dockerConfig, String imageName);
 
   /**
    * Validates the Image
-   *  @param dockerConfig
-   * @param imageName
+   * @param dockerConfig the docker config
+   * @param imageName the image name
    */
-  boolean verifyImageName(DockerConfig dockerConfig, String imageName);
+  boolean verifyImageName(DockerInternalConfig dockerConfig, String imageName);
 
   /**
    * Validate the credentials
    *
-   * @param dockerConfig
-   * @return
+   * @param dockerConfig the docker config
+   * @return boolean validate
    */
-  boolean validateCredentials(DockerConfig dockerConfig);
+  boolean validateCredentials(DockerInternalConfig dockerConfig);
 }

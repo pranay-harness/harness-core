@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -22,11 +23,14 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.ArtifactConfigMapper;
+import software.wings.service.mappers.artifact.DockerConfigToInternalMapper;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 1/6/17.
@@ -42,8 +46,11 @@ public class DockerBuildServiceImpl implements DockerBuildService {
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), DOCKER.name());
     encryptionService.decrypt(dockerConfig, encryptionDetails);
+    List<BuildDetailsInternal> builds =
+        dockerRegistryService.getBuilds(DockerConfigToInternalMapper.toDockerInternalConfig(dockerConfig),
+            artifactStreamAttributes.getImageName(), 250);
     return wrapNewBuildsWithLabels(
-        dockerRegistryService.getBuilds(dockerConfig, artifactStreamAttributes.getImageName(), 250),
+        builds.stream().map(ArtifactConfigMapper::toBuildDetails).collect(Collectors.toList()),
         artifactStreamAttributes, dockerConfig);
   }
 
@@ -88,14 +95,15 @@ public class DockerBuildServiceImpl implements DockerBuildService {
           "Could not reach Docker Registry at : " + config.getDockerRegistryUrl(), USER);
     }
     encryptionService.decrypt(config, encryptedDataDetails);
-    return dockerRegistryService.validateCredentials(config);
+    return dockerRegistryService.validateCredentials(DockerConfigToInternalMapper.toDockerInternalConfig(config));
   }
 
   @Override
   public boolean validateArtifactSource(DockerConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     encryptionService.decrypt(config, encryptionDetails);
-    return dockerRegistryService.verifyImageName(config, artifactStreamAttributes.getImageName());
+    return dockerRegistryService.verifyImageName(
+        DockerConfigToInternalMapper.toDockerInternalConfig(config), artifactStreamAttributes.getImageName());
   }
 
   @Override
@@ -119,6 +127,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public List<Map<String, String>> getLabels(
       String imageName, List<String> buildNos, DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(dockerConfig, encryptionDetails);
-    return dockerRegistryService.getLabels(dockerConfig, imageName, buildNos);
+    return dockerRegistryService.getLabels(
+        DockerConfigToInternalMapper.toDockerInternalConfig(dockerConfig), imageName, buildNos);
   }
 }

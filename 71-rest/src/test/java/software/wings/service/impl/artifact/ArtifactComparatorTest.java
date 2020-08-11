@@ -22,13 +22,13 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import java.util.List;
 
 public class ArtifactComparatorTest extends CategoryTest {
-  private Artifact.Builder artifactBuilder = anArtifact()
-                                                 .withAppId(APP_ID)
-                                                 .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                                                 .withRevision("1.0")
-                                                 .withDisplayName("DISPLAY_NAME")
-                                                 .withCreatedAt(System.currentTimeMillis())
-                                                 .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+  private final Artifact.Builder artifactBuilder = anArtifact()
+                                                       .withAppId(APP_ID)
+                                                       .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                                       .withRevision("1.0")
+                                                       .withDisplayName("DISPLAY_NAME")
+                                                       .withCreatedAt(System.currentTimeMillis())
+                                                       .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
   @Test
   @Owner(developers = GEORGE)

@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -24,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DockerConfig;
 import software.wings.exception.InvalidArtifactServerException;
 
 public class DockerRegistryServiceImplTest extends WingsBaseTest {
@@ -33,9 +33,8 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks DockerRegistryService dockerRegistryService;
 
   private static final String url = "http://localhost:9883/";
-
-  private static DockerConfig dockerConfig =
-      DockerConfig.builder().dockerRegistryUrl(url).username("username").password("password".toCharArray()).build();
+  private static DockerInternalConfig dockerConfig =
+      DockerInternalConfig.builder().dockerRegistryUrl(url).username("username").password("password").build();
 
   @Test(expected = InvalidArtifactServerException.class)
   @Owner(developers = ANSHUL)
@@ -97,13 +96,13 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateCredentialForMissingPassword() {
     try {
-      dockerConfig.setPassword(null);
-      dockerRegistryService.validateCredentials(dockerConfig);
+      DockerInternalConfig dockerInternalConfig =
+          DockerInternalConfig.builder().dockerRegistryUrl(url).username("username").build();
+      dockerRegistryService.validateCredentials(dockerInternalConfig);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(getMessage(ex)).isEqualTo("Password is a required field along with Username");
     }
-    dockerConfig.setPassword("password".toCharArray());
   }
 
   @Test()

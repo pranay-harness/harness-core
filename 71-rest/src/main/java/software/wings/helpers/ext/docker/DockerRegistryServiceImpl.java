@@ -4,12 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactMetadataKeys;
+import io.harness.artifacts.BuildDetailsInternalComparatorAscending;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -23,12 +26,8 @@ import okhttp3.Credentials;
 import okhttp3.Headers;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
-import software.wings.beans.DockerConfig;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
-import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;
 import java.net.URL;
@@ -56,8 +55,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
   @Override
-  public List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds) {
-    List<BuildDetails> buildDetails;
+  public List<BuildDetailsInternal> getBuilds(
+      DockerInternalConfig dockerConfig, String imageName, int maxNumberOfBuilds) {
+    List<BuildDetailsInternal> buildDetails;
     try {
       if (dockerConfig.hasCredentials()) {
         buildDetails = getBuildDetails(dockerConfig, imageName);
@@ -68,13 +68,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER);
     }
     // Sorting at build tag for docker artifacts.
-    return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
+    return buildDetails.stream().sorted(new BuildDetailsInternalComparatorAscending()).collect(toList());
   }
 
-  private List<BuildDetails> getBuildDetails(DockerConfig dockerConfig, String imageName) throws IOException {
+  private List<BuildDetailsInternal> getBuildDetails(DockerInternalConfig dockerConfig, String imageName)
+      throws IOException {
     DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
-    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
-    List<BuildDetails> buildDetails = new ArrayList<>();
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
+    List<BuildDetailsInternal> buildDetails = new ArrayList<>();
     String token = null;
     Response<DockerImageTagResponse> response = registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
     if (response.code() == 401) { // unauthorized
@@ -128,8 +129,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return buildDetails;
   }
 
-  private List<BuildDetails> processBuildResponse(
-      DockerImageTagResponse dockerImageTagResponse, DockerConfig dockerConfig, String imageName) {
+  private List<BuildDetailsInternal> processBuildResponse(
+      DockerImageTagResponse dockerImageTagResponse, DockerInternalConfig dockerConfig, String imageName) {
     String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
         ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
         : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
@@ -140,47 +141,48 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         .stream()
         .map(tag -> {
           Map<String, String> metadata = new HashMap();
-          metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag);
-          metadata.put(ArtifactMetadataKeys.tag, tag);
-          return aBuildDetails()
-              .withNumber(tag)
-              .withBuildUrl(tagUrl + tag)
-              .withMetadata(metadata)
-              .withUiDisplayName("Tag# " + tag)
+          metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag);
+          metadata.put(ArtifactMetadataKeys.TAG, tag);
+          return BuildDetailsInternal.builder()
+              .number(tag)
+              .buildUrl(tagUrl + tag)
+              .uiDisplayName("Tag# " + tag)
+              .metadata(metadata)
               .build();
         })
         .collect(toList());
   }
 
   @Override
-  public List<Map<String, String>> getLabels(DockerConfig dockerConfig, String imageName, List<String> buildNos) {
+  public List<Map<String, String>> getLabels(
+      DockerInternalConfig dockerConfig, String imageName, List<String> buildNos) {
     if (!dockerConfig.hasCredentials()) {
       return dockerPublicRegistryProcessor.getLabels(dockerConfig, imageName, buildNos);
     }
 
     DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
-    String authHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+    String authHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
     Function<Headers, String> getToken = headers -> getToken(dockerConfig, headers, registryRestClient);
     return dockerRegistryUtils.getLabels(registryRestClient, getToken, authHeader, imageName, buildNos);
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName) {
+  public BuildDetailsInternal getLastSuccessfulBuild(DockerInternalConfig dockerConfig, String imageName) {
     return null;
   }
 
   @Override
-  public boolean verifyImageName(DockerConfig dockerConfig, String imageName) {
+  public boolean verifyImageName(DockerInternalConfig dockerConfig, String imageName) {
     if (dockerConfig.hasCredentials()) {
       return checkImageName(dockerConfig, imageName);
     }
     return dockerPublicRegistryProcessor.verifyImageName(dockerConfig, imageName);
   }
 
-  private boolean checkImageName(DockerConfig dockerConfig, String imageName) {
+  private boolean checkImageName(DockerInternalConfig dockerConfig, String imageName) {
     try {
       DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
-      String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+      String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
       Response<DockerImageTagResponse> response =
           registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
       if (response.code() == 401) { // unauthorized
@@ -199,9 +201,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   @Override
-  public boolean validateCredentials(DockerConfig dockerConfig) {
+  public boolean validateCredentials(DockerInternalConfig dockerConfig) {
     if (dockerConfig.hasCredentials()) {
-      if (isEmpty(dockerConfig.getPassword()) && isEmpty(dockerConfig.getEncryptedPassword())) {
+      if (isEmpty(dockerConfig.getPassword())) {
         throw new InvalidArtifactServerException("Password is a required field along with Username", USER);
       }
       DockerRegistryRestClient registryRestClient = null;
@@ -211,7 +213,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       DockerRegistryToken dockerRegistryToken;
       try {
         registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
-        basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+        basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
         response = registryRestClient.getApiVersion(basicAuthHeader).execute();
         if (response.code() == 401) { // unauthorized
           authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
@@ -226,7 +228,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         try {
           // This is special case for repositories that require "/v2/" path for getting API version . Eg. Harbor docker
           // registry We get an IO exception with '/v2' path so we are retrying with forward slash API
-          basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+          basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
           response = registryRestClient.getApiVersionEndingWithForwardSlash(basicAuthHeader).execute();
           if (response.code() == 401) { // unauthorized
             authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
@@ -246,8 +248,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return true;
   }
 
-  private String getToken(DockerConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {
-    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+  private String getToken(
+      DockerInternalConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
     String authHeaderValue = headers.get(AUTHENTICATE_HEADER);
     if (!cachedBearerTokens.containsKey(authHeaderValue)) {
       DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
