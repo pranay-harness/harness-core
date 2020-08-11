@@ -29,6 +29,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 
 @Data
 @Builder
@@ -110,6 +111,7 @@ public class K8sWorkloadRecommendation
   public void prePersist() {
     // set validRecommendation to false in case empty recommendation
     validRecommendation = false;
+    boolean noDiffInAllContainers = true;
     if (containerRecommendations != null) {
       validRecommendation = true;
       for (ContainerRecommendation cr : containerRecommendations.values()) {
@@ -126,6 +128,9 @@ public class K8sWorkloadRecommendation
                               .requests(SANITIZER.encodeDotsInKey(cr.getBurstable().getRequests()))
                               .limits(SANITIZER.encodeDotsInKey(cr.getBurstable().getLimits()))
                               .build());
+          if (!Objects.equals(cr.getCurrent(), cr.getBurstable())) {
+            noDiffInAllContainers = false;
+          }
         }
         if (isEmpty(cr.getGuaranteed())) {
           validRecommendation = false;
@@ -134,8 +139,14 @@ public class K8sWorkloadRecommendation
                                .requests(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getRequests()))
                                .limits(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getLimits()))
                                .build());
+          if (!Objects.equals(cr.getCurrent(), cr.getGuaranteed())) {
+            noDiffInAllContainers = false;
+          }
         }
       }
+    }
+    if (noDiffInAllContainers) {
+      validRecommendation = false;
     }
   }
 }

@@ -124,6 +124,19 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
+  public void shouldComputeResourceChangePercentAsZeroWhenNoDifferenceInCurrentAndRecommendation() throws Exception {
+    ImmutableMap<String, ContainerRecommendation> containerRecommendations = ImmutableMap.of("ctr1",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "30m").request("memory", "10Mi").build())
+            .guaranteed(ResourceRequirement.builder().request("cpu", "30m").request("memory", "10Mi").build())
+            .build());
+    assertThat(ComputedRecommendationWriter.resourceChangePercent(containerRecommendations, "cpu")).isZero();
+    assertThat(ComputedRecommendationWriter.resourceChangePercent(containerRecommendations, "memory")).isZero();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
   public void shouldEstimateMonthlySavings() throws Exception {
     ImmutableMap<String, ContainerRecommendation> containerRecommendations = ImmutableMap.of("ctr1",
         ContainerRecommendation.builder()
