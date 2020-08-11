@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
@@ -12,6 +13,8 @@ import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlCons
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_CONTENT;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_CONTENT_INFRA_DEF;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_FILE_PATH;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_USER_GROUP;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -127,5 +130,78 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   public void testFailures() throws Exception {
     testFailures(BUILD_VALID_YAML_CONTENT, BUILD_VALID_YAML_FILE_PATH, BUILD_INVALID_YAML_CONTENT,
         BUILD_INVALID_YAML_FILE_PATH, yamlHandler, BuildWorkflowYaml.class);
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void testCRUDForUserGroupTemplatized() throws Exception {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
+
+    ChangeContext<BuildWorkflowYaml> changeContext =
+        getChangeContext(BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
+
+    BuildWorkflowYaml yamlObject =
+        (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2, BuildWorkflowYaml.class);
+    changeContext.setYaml(yamlObject);
+
+    Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    assertThat(workflow).isNotNull();
+    assertThat(workflowName).isEqualTo(workflow.getName());
+
+    BuildWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isEqualTo("BUILD");
+
+    String yamlContent = getYamlContent(yaml);
+    assertThat(yamlContent).isNotNull();
+    yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
+    assertThat(yamlContent).isEqualTo(BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2);
+
+    Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
+    assertThat(savedWorkflow).isNotNull();
+    assertThat(workflowName).isEqualTo(savedWorkflow.getName());
+
+    yamlHandler.delete(changeContext);
+
+    Workflow deletedWorkflow = yamlHandler.get(ACCOUNT_ID, BUILD_VALID_YAML_FILE_PATH);
+    assertThat(deletedWorkflow).isNull();
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void testCRUDForUserGroup() throws Exception {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
+
+    ChangeContext<BuildWorkflowYaml> changeContext =
+        getChangeContext(BUILD_VALID_YAML_USER_GROUP, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
+
+    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_USER_GROUP, BuildWorkflowYaml.class);
+    changeContext.setYaml(yamlObject);
+
+    Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    assertThat(workflow).isNotNull();
+    assertThat(workflowName).isEqualTo(workflow.getName());
+
+    BuildWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isEqualTo("BUILD");
+
+    String yamlContent = getYamlContent(yaml);
+    assertThat(yamlContent).isNotNull();
+    yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
+    assertThat(yamlContent).isEqualTo(BUILD_VALID_YAML_USER_GROUP);
+
+    Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
+    assertThat(savedWorkflow).isNotNull();
+    assertThat(workflowName).isEqualTo(savedWorkflow.getName());
+
+    yamlHandler.delete(changeContext);
+
+    Workflow deletedWorkflow = yamlHandler.get(ACCOUNT_ID, BUILD_VALID_YAML_FILE_PATH);
+    assertThat(deletedWorkflow).isNull();
   }
 }
