@@ -1,10 +1,15 @@
 package software.wings.service.impl;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
@@ -16,6 +21,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.Activity;
@@ -33,14 +40,19 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
@@ -48,6 +60,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AWSTemporaryCredentials;
 import software.wings.beans.AwsConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -59,6 +72,8 @@ import java.util.List;
 import java.util.Set;
 
 public class AwsHelperServiceTest extends WingsBaseTest {
+  @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
+
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
@@ -332,5 +347,88 @@ public class AwsHelperServiceTest extends WingsBaseTest {
       assertThat(ErrorCode.GENERAL_ERROR).isEqualTo(autoScaleException.getCode());
       assertThat(WingsException.USER).isEqualTo(autoScaleException.getReportTargets());
     }
+  }
+
+  private String jsonToStringConverter(Object object) {
+    ObjectMapper mapper = new ObjectMapper();
+    String json = null;
+    try {
+      json = mapper.writeValueAsString(object);
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    return json;
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetCredentialsForIAMROleOnDelegate() {
+    String url = "http://localhost:9877/";
+    AWSTemporaryCredentials credentials = AWSTemporaryCredentials.builder()
+                                              .code("SUCCESS")
+                                              .accessKeyId(ACCESS_KEY)
+                                              .secretKey(String.valueOf(SECRET_KEY))
+                                              .build();
+
+    String credentialsString = jsonToStringConverter(credentials);
+
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/"))
+                             .willReturn(aResponse().withBody("role").withStatus(200)));
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/role"))
+                             .willReturn(aResponse().withBody(credentialsString).withStatus(200)));
+
+    AwsHelperService service = new AwsHelperService();
+
+    AWSTemporaryCredentials cred = service.getCredentialsForIAMROleOnDelegate(url);
+    assertThat(cred).isEqualTo(credentials);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetCredentialsForIAMRoleOnDelegateWithErrorResponseCodeException() {
+    String url = "http://localhost:9877/";
+    AWSTemporaryCredentials credentials = AWSTemporaryCredentials.builder()
+                                              .code("SUCCESS")
+                                              .accessKeyId(ACCESS_KEY)
+                                              .secretKey(String.valueOf(SECRET_KEY))
+                                              .build();
+
+    String credentialsString = jsonToStringConverter(credentials);
+
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/"))
+                             .willReturn(aResponse().withBody("role").withStatus(200)));
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/role"))
+                             .willReturn(aResponse().withBody(credentialsString).withStatus(400)));
+
+    AwsHelperService service = new AwsHelperService();
+
+    assertThatThrownBy(() -> service.getCredentialsForIAMROleOnDelegate(url))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetCredentialsForIAMRoleOnDelegateWithEmptyRoleException() {
+    String url = "http://localhost:9877/";
+    AWSTemporaryCredentials credentials = AWSTemporaryCredentials.builder()
+                                              .code("SUCCESS")
+                                              .accessKeyId(ACCESS_KEY)
+                                              .secretKey(String.valueOf(SECRET_KEY))
+                                              .build();
+
+    String credentialsString = jsonToStringConverter(credentials);
+
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/"))
+                             .willReturn(aResponse().withBody("").withStatus(200)));
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/role"))
+                             .willReturn(aResponse().withBody(credentialsString).withStatus(200)));
+
+    AwsHelperService service = new AwsHelperService();
+
+    assertThatThrownBy(() -> service.getCredentialsForIAMROleOnDelegate(url))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

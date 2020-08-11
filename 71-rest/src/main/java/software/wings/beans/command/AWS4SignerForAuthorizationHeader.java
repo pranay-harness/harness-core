@@ -43,7 +43,7 @@ public class AWS4SignerForAuthorizationHeader {
   }
 
   public static String getAWSV4AuthorizationHeader(
-      URL endpointUrl, String regionName, String awsAccessKey, String awsSecretKey, Date now) {
+      URL endpointUrl, String regionName, String awsAccessKey, String awsSecretKey, Date now, String awsToken) {
     // for a simple GET, we have no body so supply the precomputed 'empty' hash
     Map<String, String> headers = new HashMap<>();
     headers.put("x-amz-content-sha256", EMPTY_BODY_SHA256);
@@ -65,6 +65,10 @@ public class AWS4SignerForAuthorizationHeader {
       hostHeader = hostHeader.concat(":" + port);
     }
     headers.put("Host", hostHeader);
+
+    if (isNotEmpty(awsToken)) {
+      headers.put("X-Amz-Security-Token", awsToken);
+    }
 
     // canonicalize the headers; we need the set of header names as well as the
     // names and values to go into the signature process

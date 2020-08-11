@@ -30,6 +30,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.AWSTemporaryCredentials;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
@@ -302,8 +303,21 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
     AwsConfig awsConfig = (AwsConfig) artifactStreamAttributes.getServerSetting().getValue();
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    String awsAccessKey = awsConfig.getAccessKey();
-    String awsSecretKey = String.valueOf(awsConfig.getSecretKey());
+    String awsAccessKey;
+    String awsSecretKey;
+    String awsToken = null;
+    // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html (Retrieving security
+    // credentials from instance metadata)
+    if (awsConfig.isUseEc2IamCredentials()) {
+      String url = "http://169.254.169.254/";
+      AWSTemporaryCredentials credentials = awsHelperService.getCredentialsForIAMROleOnDelegate(url);
+      awsAccessKey = credentials.getAccessKeyId();
+      awsSecretKey = credentials.getSecretKey();
+      awsToken = credentials.getToken();
+    } else {
+      awsAccessKey = awsConfig.getAccessKey();
+      awsSecretKey = String.valueOf(awsConfig.getSecretKey());
+    }
     String bucketName = metadata.get(ArtifactMetadataKeys.bucketName);
     String region = awsHelperService.getBucketRegion(awsConfig, encryptionDetails, bucketName);
     String artifactPath = metadata.get(ArtifactMetadataKeys.artifactPath);
@@ -321,7 +335,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     dateTimeFormat.setTimeZone(new SimpleTimeZone(0, "UTC"));
     String dateTimeStamp = dateTimeFormat.format(now);
     String authorizationHeader = AWS4SignerForAuthorizationHeader.getAWSV4AuthorizationHeader(
-        endpointUrl, region, awsAccessKey, awsSecretKey, now);
+        endpointUrl, region, awsAccessKey, awsSecretKey, now, awsToken);
     String command;
     switch (this.getScriptType()) {
       case POWERSHELL:
@@ -329,6 +343,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + "    Authorization = \"" + authorizationHeader + "\"\n"
             + "    \"x-amz-content-sha256\" = \"" + EMPTY_BODY_SHA256 + "\"\n"
             + "    \"x-amz-date\" = \"" + dateTimeStamp + "\"\n"
+            + (isEmpty(awsToken) ? "" : " \"x-amz-security-token\" = \"" + awsToken + "\"\n")
             + "}\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile (New-Item -Path \""
             + getCommandPath() + "\\" + artifactFileName + "\""
             + " -Force)";
@@ -343,8 +358,9 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + " \\\n"
             + "-H \"Authorization: " + authorizationHeader + "\" \\\n"
             + "-H \"x-amz-content-sha256: " + EMPTY_BODY_SHA256 + "\" \\\n"
-            + "-H \"x-amz-date: " + dateTimeStamp + "\""
-            + " -o \"" + getCommandPath() + "/" + artifactFileName + "\"";
+            + "-H \"x-amz-date: " + dateTimeStamp + "\" \\\n"
+            + (isEmpty(awsToken) ? "" : "-H \"x-amz-security-token: " + awsToken + "\" \\\n") + " -o \""
+            + getCommandPath() + "/" + artifactFileName + "\"";
         break;
       default:
         throw new InvalidRequestException("Invalid Script type", USER);

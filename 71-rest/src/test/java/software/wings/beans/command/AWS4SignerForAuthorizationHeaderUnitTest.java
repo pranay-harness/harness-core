@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.INDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
@@ -31,7 +32,21 @@ public class AWS4SignerForAuthorizationHeaderUnitTest extends WingsBaseTest {
     URL endPointUrl = new URL("https://" + BUCKET_NAME + ".s3.amazonaws.com"
         + "/" + ARTIFACT_PATH);
     String authorizationHeader = AWS4SignerForAuthorizationHeader.getAWSV4AuthorizationHeader(
-        endPointUrl, "us-east-1", ACCESS_KEY, String.valueOf(SECRET_KEY), now);
+        endPointUrl, "us-east-1", ACCESS_KEY, String.valueOf(SECRET_KEY), now, "");
+    assertThat(authorizationHeader).isEqualTo(expectedAuthHeader);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testAWSV4AuthorizationHeaderWithNonEmptyToken() throws MalformedURLException {
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=ACCESS_KEY/20200421/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-security-token, Signature=5e1d85d87e1c23947ccf716584d09a9d88301a1e83b957c14ef8a83185d00383";
+    Date now = new Date(1587504698159L);
+    URL endPointUrl = new URL("https://" + BUCKET_NAME + ".s3.amazonaws.com"
+        + "/" + ARTIFACT_PATH);
+    String authorizationHeader = AWS4SignerForAuthorizationHeader.getAWSV4AuthorizationHeader(
+        endPointUrl, "us-east-1", ACCESS_KEY, String.valueOf(SECRET_KEY), now, "TOKEN");
     assertThat(authorizationHeader).isEqualTo(expectedAuthHeader);
   }
 }

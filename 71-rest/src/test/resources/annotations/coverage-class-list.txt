@@ -308,6 +308,7 @@
 71-rest/src/main/java/software/wings/api/jira/JiraIssueType.java
 71-rest/src/main/java/software/wings/api/jira/JiraProjectData.java
 71-rest/src/main/java/software/wings/api/ondemandrollback/OnDemandRollbackInfo.java
+71-rest/src/main/java/software/wings/beans/AWSTemporaryCredentials.java
 71-rest/src/main/java/software/wings/beans/ArtifactStreamMetadata.java
 71-rest/src/main/java/software/wings/beans/BambooConfig.java
 71-rest/src/main/java/software/wings/beans/BasicOrchestrationWorkflow.java

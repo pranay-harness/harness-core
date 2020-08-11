@@ -168,10 +168,17 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
 import org.apache.commons.collections.CollectionUtils;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AWSTemporaryCredentials;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -179,9 +186,11 @@ import software.wings.beans.EcrConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.amazons3.AWSTemporaryCredentialsRestClient;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -1548,5 +1557,43 @@ public class AwsHelperService {
     encryptionService.decrypt(awsConfig, encryptedDataDetails);
     tracker.trackECSCall("Untag Resource");
     return getAmazonEcsClient(region, awsConfig).untagResource(untagResourceRequest);
+  }
+
+  AWSTemporaryCredentialsRestClient getAWSTemporaryCredentialsRestClient(String url) {
+    OkHttpClient okHttpClient = Http.getUnsafeOkHttpClient(url);
+    Retrofit retrofit = new Retrofit.Builder()
+                            .client(okHttpClient)
+                            .baseUrl(url)
+                            .addConverterFactory(JacksonConverterFactory.create())
+                            .build();
+    return retrofit.create(AWSTemporaryCredentialsRestClient.class);
+  }
+
+  @VisibleForTesting
+  public AWSTemporaryCredentials getCredentialsForIAMROleOnDelegate(String url) {
+    AWSTemporaryCredentialsRestClient credentialsRestClient = getAWSTemporaryCredentialsRestClient(url);
+    String roleName;
+    try {
+      Response<ResponseBody> response = credentialsRestClient.getRoleName().execute();
+      roleName = response.body().string();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Cannot get the role name", e);
+    }
+
+    if (isEmpty(roleName)) {
+      throw new InvalidRequestException("No role attached to the instance");
+    }
+    try {
+      Response<AWSTemporaryCredentials> response = credentialsRestClient.getTemporaryCredentials(roleName).execute();
+      if (response.isSuccessful()) {
+        return response.body();
+      } else {
+        throw new InvalidRequestException(
+            "Cannot get the temporary credentials, api returned error code: " + response.code());
+      }
+
+    } catch (IOException e) {
+      throw new InvalidRequestException("Cannot get the temporary credentials", e);
+    }
   }
 }
