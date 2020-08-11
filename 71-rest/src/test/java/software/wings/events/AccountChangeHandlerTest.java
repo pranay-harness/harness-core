@@ -138,6 +138,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(false);
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
       when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
           .thenReturn(50.0);
@@ -171,6 +172,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
 
       User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
       when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
@@ -211,6 +213,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
       when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
@@ -253,6 +256,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
@@ -289,6 +293,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(true);
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
       when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(true);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
@@ -332,6 +337,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
       when(accountService.get(anyString())).thenReturn(account);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
       when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
@@ -372,6 +378,47 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
+      when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
+      when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
+          .thenReturn(50.0);
+      SecretManagerConfig secretManagerConfig = KmsConfig.builder().build();
+      when(secretManagerConfigService.getDefaultSecretManager(anyString())).thenReturn(secretManagerConfig);
+      when(userService.getUsersOfAccount(anyString())).thenReturn(Arrays.asList(user));
+      accountChangeHandler.handleEvent(event);
+      verify(utils, times(1)).getFirstName(anyString(), anyString());
+      verify(utils, times(1)).getLastName(anyString(), anyString());
+      verify(segmentHelper, times(1)).enqueue(any(IdentifyMessage.Builder.class));
+      verify(segmentHelper, times(1)).enqueue(any(GroupMessage.Builder.class));
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC4_testAccountGroupMessageToSegment() {
+    UserThreadLocal.set(user);
+    try {
+      EventType eventType = EventType.ACCOUNT_ENTITY_CHANGE;
+      Map<String, String> properties = new HashMap<>();
+      properties.put("ACCOUNT_ID", "ACCOUNT_ID");
+      properties.put("EMAIL_ID", "admin@harness.io");
+
+      AccountEntityEvent accountEntityEvent = new AccountEntityEvent(account);
+      EventData eventData = EventData.builder().eventInfo(accountEntityEvent).build();
+      Event event = Event.builder().eventData(eventData).eventType(eventType).build();
+
+      User newUser = User.Builder.anUser().email("admin@harness.io").accounts(Arrays.asList(account)).build();
+      when(userService.getUserByEmail(anyString())).thenReturn(newUser);
+      when(salesforceAccountCheck.isAccountPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.isSalesForceIntegrationEnabled()).thenReturn(true);
+      when(salesforceApiCheck.isPresentInSalesforce(account)).thenReturn(false);
+      when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
+      when(userService.update(any(User.class))).thenReturn(newUser);
+      when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.isPaidAccount(anyString())).thenReturn(false);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
       when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
           .thenReturn(50.0);
@@ -411,6 +458,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(salesforceApiCheck.getSalesforceAccountName()).thenReturn("account_name");
       when(userService.update(any(User.class))).thenReturn(user);
       when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.isPaidAccount(anyString())).thenReturn(true);
       when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
       when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
           .thenReturn(50.0);

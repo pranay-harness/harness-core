@@ -861,6 +861,12 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public boolean isPaidAccount(String accountId) {
+    Optional<String> accountType = getAccountType(accountId);
+    return accountType.isPresent() && AccountType.PAID.equals(accountType.get());
+  }
+
+  @Override
   public Optional<Account> getOnPremAccount() {
     List<Account> accounts = listAccounts(Sets.newHashSet(GLOBAL_ACCOUNT_ID));
     return isNotEmpty(accounts) ? Optional.of(accounts.get(0)) : Optional.empty();

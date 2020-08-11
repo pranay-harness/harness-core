@@ -64,6 +64,8 @@ public interface AccountService {
 
   String generateSampleDelegate(String accountId);
 
+  boolean isPaidAccount(String accountId);
+
   boolean sampleDelegateExists(String accountId);
 
   List<ProvisionStep> sampleDelegateProgress(String accountId);
