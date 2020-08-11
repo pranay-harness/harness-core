@@ -173,7 +173,7 @@ public class SalesforceApiCheck {
     }
   }
 
-  private boolean isFoundInSalesforce(String queryString) {
+  private boolean isFoundInSalesforce(String accountId, String queryString) {
     String responseString = retryQueryResponse(queryString);
 
     if (EmptyPredicate.isEmpty(responseString)) {
@@ -184,7 +184,7 @@ public class SalesforceApiCheck {
     try {
       if (jsonObject.has("totalSize")) {
         if ((Integer) jsonObject.get("totalSize") > 0) {
-          logger.info("The account was found in Salesforce, with response={}", jsonObject);
+          logger.info("The account {} was found in Salesforce, with response={}", accountId, jsonObject);
           try {
             this.salesforceAccountName =
                 ((JSONObject) ((JSONArray) jsonObject.get("records")).get(0)).get("Name").toString();
@@ -192,9 +192,10 @@ public class SalesforceApiCheck {
             logger.error("JSON Exception while getting Salesforce Account Name from API", je);
             return false;
           }
+          logger.info("The account {} was found in Salesforce when sending group calls to Segment", accountId);
           return true;
         } else {
-          logger.info("The account was not found in Salesforce when sending group calls to Segment");
+          logger.info("The account {} was not found in Salesforce when sending group calls to Segment", accountId);
           return false;
         }
       } else {
@@ -211,7 +212,7 @@ public class SalesforceApiCheck {
       return false;
     }
     String queryString = createSOQLQuery(account);
-    return isFoundInSalesforce(queryString);
+    return isFoundInSalesforce(account.getUuid(), queryString);
   }
 
   private String createSOQLQuery(Account account) {

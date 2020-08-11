@@ -169,10 +169,13 @@ public class AccountChangeHandler implements EventHandler {
                   .count();
     }
 
-    boolean isPresentInSalesforce =
-        salesforceApiCheck.isSalesForceIntegrationEnabled() && salesforceApiCheck.isPresentInSalesforce(account);
-    if (isPresentInSalesforce) {
-      name = salesforceApiCheck.getSalesforceAccountName();
+    boolean isPresentInSalesforce = false;
+    if (accountService.isPaidAccount(accountId)) {
+      isPresentInSalesforce =
+          salesforceApiCheck.isSalesForceIntegrationEnabled() && salesforceApiCheck.isPresentInSalesforce(account);
+      if (isPresentInSalesforce) {
+        name = salesforceApiCheck.getSalesforceAccountName();
+      }
     }
 
     Map<String, Object> groupTraits =
