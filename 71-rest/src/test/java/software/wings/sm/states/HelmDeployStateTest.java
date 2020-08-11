@@ -525,6 +525,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getChartName()).isEqualTo(null);
     assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(null);
     verify(delegateService).queueTask(any());
+    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
   }
 
   @Test()
