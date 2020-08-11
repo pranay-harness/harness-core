@@ -42,7 +42,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.helpers.ext.pcf.PcfClientImpl.BIN_SH;
+import static software.wings.helpers.ext.pcf.PcfClientImpl.BIN_BASH;
 
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
@@ -144,15 +144,15 @@ public class PivotalClientTest extends WingsBaseTest {
     ProcessExecutor processExecutor =
         new ProcessExecutor()
             .timeout(1, TimeUnit.MINUTES)
-            .command(
-                "/bin/sh", "-c", new StringBuilder(128).append("echo ").append(password).append(" | cat ").toString());
+            .command("/bin/bash", "-c",
+                new StringBuilder(128).append("echo ").append(password).append(" | cat ").toString());
     ProcessResult processResult = processExecutor.execute();
     assertThat(processResult.getExitValue()).isNotEqualTo(0);
 
     password = pcfClient.handlePwdForSpecialCharsForShell("Ab1~!@#$%^&*()\"_c");
     processExecutor = new ProcessExecutor()
                           .timeout(1, TimeUnit.MINUTES)
-                          .command("/bin/sh", "-c",
+                          .command("/bin/bash", "-c",
                               new StringBuilder(128).append("echo ").append(password).append(" | cat ").toString());
     processResult = processExecutor.execute();
     assertThat(processResult.getExitValue()).isEqualTo(0);
@@ -944,7 +944,7 @@ public class PivotalClientTest extends WingsBaseTest {
     ProcessExecutor processExecutor = pcfClient.createProccessExecutorForPcfTask(
         1, CF_COMMAND_FOR_CHECKING_AUTOSCALAR, appAutoscalarEnvMapForCustomPlugin, logCallback);
 
-    assertThat(processExecutor.getCommand()).containsExactly("/bin/sh", "-c", "cf plugins | grep autoscaling-apps");
+    assertThat(processExecutor.getCommand()).containsExactly("/bin/bash", "-c", "cf plugins | grep autoscaling-apps");
     assertThat(processExecutor.getEnvironment()).isEqualTo(appAutoscalarEnvMapForCustomPlugin);
   }
 
@@ -961,7 +961,7 @@ public class PivotalClientTest extends WingsBaseTest {
     ProcessExecutor processExecutor =
         pcfClient.createExecutorForAutoscalarPluginCheck(appAutoscalarEnvMapForCustomPlugin);
 
-    assertThat(processExecutor.getCommand()).containsExactly("/bin/sh", "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR);
+    assertThat(processExecutor.getCommand()).containsExactly("/bin/bash", "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR);
     assertThat(processExecutor.getEnvironment()).isEqualTo(appAutoscalarEnvMapForCustomPlugin);
   }
 
@@ -1092,7 +1092,7 @@ public class PivotalClientTest extends WingsBaseTest {
         PcfRequestConfig.builder().applicationName(APP_NAME).build(), logCallback);
 
     assertThat(processExecutorForLogTailing.getCommand())
-        .containsExactly(BIN_SH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, APP_NAME));
+        .containsExactly(BIN_BASH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, APP_NAME));
   }
 
   @Test
