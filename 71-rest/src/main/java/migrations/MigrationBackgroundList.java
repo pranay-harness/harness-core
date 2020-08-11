@@ -15,6 +15,7 @@ import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
 import migrations.all.AddAccountIdToNewRelicMetricAnalysisRecords;
+import migrations.all.AddAccountIdToResourceContraintInstanceCollection;
 import migrations.all.AddAccountIdToServiceCommands;
 import migrations.all.AddAccountIdToServiceInstance;
 import migrations.all.AddAccountIdToServiceVariables;
@@ -260,6 +261,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(152, AddAccountIdToBarrierInstanceCollection.class))
         .add(Pair.of(153, WorkflowExecutionAddCDPageCandidateMigration.class))
         .add(Pair.of(154, AddAccountIdToExecutionInterruptCollection.class))
+        .add(Pair.of(155, AddAccountIdToResourceContraintInstanceCollection.class))
         .build();
   }
 }
