@@ -47,10 +47,12 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 
+import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -146,7 +148,8 @@ public class IndexManagerSession {
     Set<String> processedCollections = new HashSet<>();
     Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
     mappedClasses.forEach(mc -> {
-      if (mc.getEntityAnnotation() == null) {
+      Entity entity = mc.getEntityAnnotation();
+      if (entity == null) {
         return;
       }
 
@@ -156,6 +159,14 @@ public class IndexManagerSession {
           return;
         }
         processedCollections.add(collection.getName());
+
+        if (entity.noClassnameStored() && !Modifier.isFinal(mc.getClazz().getModifiers())) {
+          logger.error(
+              "No class store collection {} with not final class {}", collection.getName(), mc.getClazz().getName());
+        }
+        if (!entity.noClassnameStored() && Modifier.isFinal(mc.getClazz().getModifiers())) {
+          logger.error("Class store collection {} with final class {}", collection.getName(), mc.getClazz().getName());
+        }
 
         processor.process(mc, collection);
       }
