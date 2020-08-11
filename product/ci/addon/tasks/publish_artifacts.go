@@ -60,6 +60,7 @@ func (p *publishArtifacts) Publish(ctx context.Context, in *pb.PublishArtifactsR
 	// and error out if any argument is invalid or we can do preliminary validation to ensure that
 	// the request is mostly correct and then error out if an individual publish fails. We are going with
 	// the second approach here.
+	p.log.Infow("Publishing artifacts", "owner", "user")
 	err := validatePublishRequest(in)
 	if err != nil {
 		logWarning(p.log, "invalid artifact upload arguments", in.String(), start, err)
@@ -112,6 +113,7 @@ func (p *publishArtifacts) Publish(ctx context.Context, in *pb.PublishArtifactsR
 	p.log.Infow(
 		"Successfully published all artifacts",
 		"elapsed_time_ms", utils.TimeSince(start),
+		"owner", "user",
 	)
 	return nil
 }

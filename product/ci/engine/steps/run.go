@@ -20,7 +20,13 @@ const (
 	outputEnvSuffix    string = "output"
 )
 
-var execCmdCtx = exec.CommandContext
+var (
+	execCmdCtx  = exec.CommandContext
+	startTailFn = StartTail
+	stopTailFn  = StopTail
+)
+
+// go:generate mockgen -source run.go -package=steps -destination mocks/run_mock.go RunStep
 
 // RunStep represents interface to execute a run step
 type RunStep interface {
@@ -85,7 +91,6 @@ func (e *runStep) validate() error {
 		err := fmt.Errorf("commands in run step should have atleast one item")
 		e.log.Warnw(
 			"failed to validate run step",
-			"step_id", e.id,
 			zap.Error(err),
 		)
 		return err
@@ -144,9 +149,16 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 	}
 	defer logFile.Close()
 
+	m := make(map[string]string)
+	m["step_id"] = e.id
+	m["owner"] = "user" // Show RUN step logs to the user
+
+	startTailFn(ctx, e.log, logFilePath, m)
+
 	cmd := execCmdCtx(ctx, "sh", cmdArgs...)
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
+	e.log.Infow(fmt.Sprintf("Executing %s", commands), "owner", "user")
 	err = cmd.Run()
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
 		logCommandExecWarning(e.log, "time out while executing run step", e.id, commands, retryCount, start, ctxErr)
@@ -157,6 +169,8 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 		logCommandExecWarning(e.log, "error encountered while executing run step", e.id, commands, retryCount, start, err)
 		return err
 	}
+
+	stopTailFn(ctx, e.log, logFilePath, true)
 
 	outputVars := make(map[string]string)
 	if e.envVarOutputs != nil {
@@ -170,10 +184,10 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 
 	e.log.Infow(
 		"Successfully executed step",
-		"step_id", e.id,
 		"arguments", commands,
 		"output", outputVars,
 		"elapsed_time_ms", utils.TimeSince(start),
+		"owner", "user",
 	)
 	return nil
 }
@@ -181,7 +195,6 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 func logFileCreateWarning(log *zap.SugaredLogger, warnMsg, stepID, filePath, args string, startTime time.Time, err error) {
 	log.Warnw(
 		warnMsg,
-		"step_id", stepID,
 		"file_path", filePath,
 		"arguments", args,
 		"elapsed_time_ms", utils.TimeSince(startTime),
@@ -192,7 +205,6 @@ func logFileCreateWarning(log *zap.SugaredLogger, warnMsg, stepID, filePath, arg
 func logCommandExecWarning(log *zap.SugaredLogger, warnMsg, stepID, args string, retryCount int32, startTime time.Time, err error) {
 	log.Warnw(
 		warnMsg,
-		"step_id", stepID,
 		"arguments", args,
 		"retry_count", retryCount,
 		"elapsed_time_ms", utils.TimeSince(startTime),

@@ -67,7 +67,6 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 	if err != nil {
 		s.log.Warnw(
 			"failed to archive files",
-			"step_id", s.id,
 			"key", s.key,
 			"files", s.paths,
 			"elapsed_time_ms", utils.TimeSince(start),
@@ -80,7 +79,6 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 	if err != nil {
 		s.log.Warnw(
 			"failed to compute xxhash",
-			"step_id", s.id,
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
@@ -92,7 +90,6 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 	if err != nil {
 		s.log.Warnw(
 			"error while uploading file to cache",
-			"step_id", s.id,
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
@@ -102,7 +99,6 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 
 	s.log.Infow(
 		"Successfully saved cache",
-		"step_id", s.id,
 		"key", s.key,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
@@ -126,7 +122,6 @@ func (s *saveCacheStep) uploadWithRetries(ctx context.Context, xxhashSum, tmpArc
 		if err != nil {
 			s.log.Warnw(
 				"failed to upload to cache",
-				"step_id", s.id,
 				"key", s.key,
 				"elapsed_time_ms", utils.TimeSince(start),
 				zap.Error(err),
@@ -156,7 +151,7 @@ func (s *saveCacheStep) upload(ctx context.Context, xxhashSum, tmpArchivePath st
 			s.log.Debugw("Key already exists", "key", s.key, "existing_xxhash",
 				uXXHashSum, "current_xxhash", xxhashSum)
 			if uXXHashSum == xxhashSum {
-				s.log.Infow("Key is already cached", "step_id", s.id, "key", s.key)
+				s.log.Infow("Key is already cached", "key", s.key)
 				return nil
 			}
 		}

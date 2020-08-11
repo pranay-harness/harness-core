@@ -16,6 +16,7 @@ var (
 	saveCacheStep        = steps.NewSaveCacheStep
 	restoreCacheStep     = steps.NewRestoreCacheStep
 	publishArtifactsStep = steps.NewPublishArtifactsStep
+	runStep              = steps.NewRunStep
 )
 
 //go:generate mockgen -source unit_executor.go -package=executor -destination mocks/unit_executor_mock.go UnitExecutor
@@ -56,6 +57,8 @@ func (e *unitExecutor) validate(step *pb.UnitStep) error {
 
 // Executes a unit step
 func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep) error {
+	// Ensure step_id is present as a parameter for all logs
+	e.log = e.log.With(zap.String("step_id", step.GetId()))
 	fs := filesystem.NewOSFileSystem(e.log)
 	if err := e.validate(step); err != nil {
 		return err
@@ -64,7 +67,7 @@ func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep) error {
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
 		e.log.Infow("Run step info", "step", x.Run.String())
-		if err := steps.NewRunStep(step, e.stepLogPath, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
+		if err := runStep(step, e.stepLogPath, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
 			return err
 		}
 	case *pb.UnitStep_SaveCache:
@@ -118,6 +121,7 @@ func ExecuteStep(input, logpath, tmpFilePath string, log *zap.SugaredLogger) {
 			"error while executing step",
 			"embedded_stage", input,
 			"log_path", logpath,
+			"step_id", step.GetId(),
 			zap.Error(err),
 		)
 	}
@@ -129,6 +133,7 @@ func ExecuteStep(input, logpath, tmpFilePath string, log *zap.SugaredLogger) {
 			"error while executing step",
 			"step", step.String(),
 			"log_path", logpath,
+			"step_id", step.GetId(),
 			zap.Error(err),
 		)
 	}

@@ -76,7 +76,6 @@ func (s *restoreCacheStep) Run(ctx context.Context) error {
 	if err != nil {
 		s.log.Warnw(
 			"failed to download from cache",
-			"step_id", s.id,
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
@@ -87,7 +86,6 @@ func (s *restoreCacheStep) Run(ctx context.Context) error {
 	if s.ignoreUnarchive {
 		s.log.Infow(
 			"Key does not exist. Continuing without restoring cache",
-			"step_id", s.id,
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
 		)
@@ -99,7 +97,6 @@ func (s *restoreCacheStep) Run(ctx context.Context) error {
 		s.log.Warnw(
 			"failed to unarchive file",
 			"file_path", tmpArchivePath,
-			"step_id", s.id,
 			"key", s.key,
 			"elapsed_time_ms", utils.TimeSince(start),
 			zap.Error(err),
@@ -109,7 +106,6 @@ func (s *restoreCacheStep) Run(ctx context.Context) error {
 
 	s.log.Infow(
 		"Successfully restored cache",
-		"step_id", s.id,
 		"key", s.key,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
@@ -123,7 +119,6 @@ func (s *restoreCacheStep) downloadWithRetries(ctx context.Context, tmpArchivePa
 		if err != nil {
 			s.log.Warnw(
 				"failed to download from cache",
-				"step_id", s.id,
 				"key", s.key,
 				"elapsed_time_ms", utils.TimeSince(start),
 				zap.Error(err),
@@ -154,7 +149,6 @@ func (s *restoreCacheStep) download(ctx context.Context, tmpArchivePath string) 
 				s.ignoreUnarchive = true
 				s.log.Warnw(
 					"Continuing on Key not exist error from cache",
-					"step_id", s.id,
 					"key", s.key,
 					"failIfNotExist", s.failIfNotExist,
 				)
@@ -191,7 +185,6 @@ func (s *restoreCacheStep) download(ctx context.Context, tmpArchivePath string) 
 	}
 	s.log.Infow(
 		"Downloaded file from cache",
-		"step_id", s.id,
 		"key", s.key,
 		"size", fi.Size(),
 		"file_path", tmpArchivePath,
