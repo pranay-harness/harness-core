@@ -1,11 +1,30 @@
 package io.harness.k8s;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.k8s.K8sConstants.CLIENT_ID_KEY;
+import static io.harness.k8s.K8sConstants.CLIENT_SECRET_KEY;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
+import static io.harness.k8s.K8sConstants.ID_TOKEN_KEY;
+import static io.harness.k8s.K8sConstants.ISSUER_URL_KEY;
+import static io.harness.k8s.K8sConstants.KUBE_CONFIG_OIDC_TEMPLATE;
+import static io.harness.k8s.K8sConstants.KUBE_CONFIG_TEMPLATE;
+import static io.harness.k8s.K8sConstants.MASTER_URL;
+import static io.harness.k8s.K8sConstants.NAME;
+import static io.harness.k8s.K8sConstants.NAMESPACE;
+import static io.harness.k8s.K8sConstants.NAMESPACE_KEY;
+import static io.harness.k8s.K8sConstants.OIDC_AUTH_NAME;
+import static io.harness.k8s.K8sConstants.OIDC_AUTH_NAME_VAL;
+import static io.harness.k8s.K8sConstants.OIDC_CLIENT_ID;
+import static io.harness.k8s.K8sConstants.OIDC_CLIENT_SECRET;
+import static io.harness.k8s.K8sConstants.OIDC_ID_TOKEN;
+import static io.harness.k8s.K8sConstants.OIDC_ISSUER_URL;
+import static io.harness.k8s.K8sConstants.OIDC_RERESH_TOKEN;
+import static io.harness.k8s.K8sConstants.REFRESH_TOKEN;
 import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
@@ -23,17 +42,22 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -86,14 +110,21 @@ import io.harness.container.ContainerInfo.ContainerInfoBuilder;
 import io.harness.container.ContainerInfo.Status;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
+import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.model.Kind;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
+import io.harness.oidc.model.OidcTokenRequestData;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import lombok.extern.slf4j.Slf4j;
@@ -111,9 +142,15 @@ import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
+import org.zeroturnaround.exec.ProcessResult;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -142,6 +179,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
   @Inject private K8sResourceValidatorImpl k8sResourceValidator;
+  @Inject private OidcTokenRetriever oidcTokenRetriever;
+  @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
   public HasMetadata createOrReplaceController(KubernetesConfig kubernetesConfig, HasMetadata definition) {
@@ -358,10 +397,57 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void validate(KubernetesConfig kubernetesConfig) {
-    listControllers(kubernetesConfig);
+    tryListControllersKubectl(kubernetesConfig);
   }
 
   @Override
+  public void tryListControllersKubectl(final KubernetesConfig kubernetesConfig) {
+    ProcessResult result = null;
+    final File kubeConfigDir = Files.createTempDir();
+    try (ByteArrayOutputStream errStream = new ByteArrayOutputStream()) {
+      final String kubeconfigFileContent = getConfigFileContent(kubernetesConfig);
+      final String kubeconfigPath = Paths.get(kubeConfigDir.getPath(), K8sConstants.KUBECONFIG_FILENAME).toString();
+      FileIo.writeUtf8StringToFile(kubeconfigPath, kubeconfigFileContent);
+      final Kubectl client = getKubectlClient();
+      for (final String workloadType : Arrays.asList(
+               Kind.ReplicaSet.name(), Kind.StatefulSet.name(), Kind.DaemonSet.name(), Kind.Deployment.name())) {
+        errStream.reset();
+        result = client.get()
+                     .resources(workloadType)
+                     .namespace(kubernetesConfig.getNamespace())
+                     .execute(kubeConfigDir.getPath(), null, errStream, false);
+        if (0 == result.getExitValue()) {
+          return;
+        }
+      }
+      throw new InvalidRequestException(errStream.toString("UTF-8"), USER);
+    } catch (IOException ex) {
+      throw new GeneralException("Could not list deployments because kubeconfig could not be created", ex);
+    } catch (WingsException ex) {
+      throw ex;
+    } catch (KubernetesClientException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex, USER);
+    } catch (Exception ex) {
+      logger.error("Failed to list Deployments", ex);
+      throw new InvalidRequestException("Failed to List Deployments", USER);
+    } finally {
+      cleanupDir(kubeConfigDir);
+    }
+  }
+
+  @VisibleForTesting
+  Kubectl getKubectlClient() {
+    return Kubectl.client(k8sGlobalConfigService.getKubectlPath(), K8sConstants.KUBECONFIG_FILENAME);
+  }
+
+  private void cleanupDir(File kubeConfigDir) {
+    try {
+      FileIo.deleteDirectoryAndItsContentIfExists(kubeConfigDir.getPath());
+    } catch (IOException e) {
+      logger.warn(format("Failed to cleanup directory %s", kubeConfigDir.getPath()), e);
+    }
+  }
+
   public void validateCEPermissions(KubernetesConfig kubernetesConfig) {
     ApiClient apiClient = ApiClientFactoryImpl.fromKubernetesConfig(kubernetesConfig);
     validateCEMetricsServer(apiClient);
@@ -1487,5 +1573,82 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public VersionInfo getVersion(KubernetesConfig kubernetesConfig) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).getVersion();
+  }
+
+  @Override
+  public String getConfigFileContent(KubernetesConfig config) {
+    encodeCharsIfNeeded(config);
+
+    if (isBlank(config.getMasterUrl())) {
+      return "";
+    }
+
+    if (KubernetesClusterAuthType.OIDC == config.getAuthType()) {
+      OidcTokenRequestData oidcTokenRequestData = oidcTokenRetriever.createOidcTokenRequestData(config);
+      return generateKubeConfigStringForOpenID(config, oidcTokenRequestData);
+    }
+
+    String clientCertData =
+        isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
+    String clientKeyData =
+        isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
+    String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
+    String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() : "";
+    String namespace = isNotEmpty(config.getNamespace()) ? "namespace: " + config.getNamespace() : "";
+    String serviceAccountTokenData =
+        isNotEmpty(config.getServiceAccountToken()) ? "token: " + new String(config.getServiceAccountToken()) : "";
+
+    return KUBE_CONFIG_TEMPLATE.replace("${MASTER_URL}", config.getMasterUrl())
+        .replace("${NAMESPACE}", namespace)
+        .replace("${USER_NAME}", username)
+        .replace("${CLIENT_CERT_DATA}", clientCertData)
+        .replace("${CLIENT_KEY_DATA}", clientKeyData)
+        .replace("${PASSWORD}", password)
+        .replace("${SERVICE_ACCOUNT_TOKEN_DATA}", serviceAccountTokenData);
+  }
+
+  private void encodeCharsIfNeeded(KubernetesConfig config) {
+    config.setCaCert(getEncodedChars(config.getCaCert()));
+    config.setClientCert(getEncodedChars(config.getClientCert()));
+    config.setClientKey(getEncodedChars(config.getClientKey()));
+  }
+
+  private char[] getEncodedChars(char[] chars) {
+    if (isEmpty(chars) || !(new String(chars).startsWith("-----BEGIN "))) {
+      return chars;
+    }
+    return encodeBase64(chars).toCharArray();
+  }
+
+  @VisibleForTesting
+  String generateKubeConfigStringForOpenID(KubernetesConfig config, OidcTokenRequestData oidcTokenRequestData) {
+    OpenIdOAuth2AccessToken openIdOAuth2AccessToken =
+        oidcTokenRetriever.retrieveOpenIdAccessToken(oidcTokenRequestData);
+
+    String clientIdData =
+        isNotEmpty(oidcTokenRequestData.getClientId()) ? CLIENT_ID_KEY + oidcTokenRequestData.getClientId() : EMPTY;
+    String clientSecretData = isNotEmpty(oidcTokenRequestData.getClientSecret())
+        ? CLIENT_SECRET_KEY + oidcTokenRequestData.getClientSecret()
+        : EMPTY;
+    String idToken = isNotEmpty(openIdOAuth2AccessToken.getOpenIdToken())
+        ? ID_TOKEN_KEY + openIdOAuth2AccessToken.getOpenIdToken()
+        : EMPTY;
+    String providerUrl = isNotEmpty(oidcTokenRequestData.getProviderUrl())
+        ? ISSUER_URL_KEY + oidcTokenRequestData.getProviderUrl()
+        : EMPTY;
+    String refreshToken = isNotEmpty(openIdOAuth2AccessToken.getRefreshToken())
+        ? REFRESH_TOKEN + openIdOAuth2AccessToken.getRefreshToken()
+        : EMPTY;
+    String authConfigName = NAME + OIDC_AUTH_NAME_VAL;
+    String namespace = isNotEmpty(config.getNamespace()) ? NAMESPACE_KEY + config.getNamespace() : EMPTY;
+
+    return KUBE_CONFIG_OIDC_TEMPLATE.replace(MASTER_URL, config.getMasterUrl())
+        .replace(NAMESPACE, namespace)
+        .replace(OIDC_CLIENT_ID, clientIdData)
+        .replace(OIDC_CLIENT_SECRET, clientSecretData)
+        .replace(OIDC_ID_TOKEN, idToken)
+        .replace(OIDC_ISSUER_URL, providerUrl)
+        .replace(OIDC_RERESH_TOKEN, refreshToken)
+        .replace(OIDC_AUTH_NAME, authConfigName);
   }
 }

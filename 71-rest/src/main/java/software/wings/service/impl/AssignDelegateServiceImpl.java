@@ -17,9 +17,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateActivity;
-
 import io.harness.delegate.beans.TaskGroup;
-
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
+import static io.harness.k8s.K8sConstants.KUBECONFIG_FILENAME;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.logging.LogLevel.ERROR;
@@ -18,7 +19,6 @@ import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.beans.LogWeight.Normal;
-import static software.wings.delegatetasks.k8s.K8sTask.KUBECONFIG_FILENAME;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;

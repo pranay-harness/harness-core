@@ -364,6 +364,9 @@ public class SettingValidationService {
     try {
       return containerService.validate(containerServiceParams)
           && (!isCloudCostEnabled || containerService.validateCE(containerServiceParams));
+    } catch (InvalidRequestException ex) {
+      throw ex;
+
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }

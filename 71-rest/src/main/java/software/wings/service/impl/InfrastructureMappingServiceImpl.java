@@ -1001,6 +1001,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+    } catch (InvalidRequestException ex) {
+      throw ex;
     } catch (Exception e) {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

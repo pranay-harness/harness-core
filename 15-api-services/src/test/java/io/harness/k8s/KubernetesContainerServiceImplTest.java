@@ -1,5 +1,6 @@
 package io.harness.k8s;
 
+import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -12,6 +13,8 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -19,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.util.concurrent.TimeLimiter;
 
+import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
@@ -78,6 +82,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.OidcGrantType;
+import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -87,15 +93,18 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -202,6 +211,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Mock private TimeLimiter timeLimiter;
   @Mock private Clock clock;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
+  @Spy @InjectMocks private OidcTokenRetriever oidcTokenRetriever;
 
   @InjectMocks private KubernetesContainerServiceImpl kubernetesContainerService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -629,5 +639,62 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(deploymentFilteredList.list()).thenReturn(new DeploymentList());
     activeServiceCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(KUBERNETES_CONFIG, emptyMap());
     assertThat(activeServiceCounts).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetConfigFileContent() throws InterruptedException, ExecutionException, IOException {
+    String expected = "apiVersion: v1\n"
+        + "clusters:\n"
+        + "- cluster:\n"
+        + "    xxxxxxxx masterUrl\n"
+        + "    insecure-skip-tls-verify: true\n"
+        + "  name: CLUSTER_NAME\n"
+        + "contexts:\n"
+        + "- context:\n"
+        + "    cluster: CLUSTER_NAME\n"
+        + "    user: HARNESS_USER\n"
+        + "    namespace: namespace\n"
+        + "  name: CURRENT_CONTEXT\n"
+        + "current-context: CURRENT_CONTEXT\n"
+        + "kind: Config\n"
+        + "preferences: {}\n"
+        + "users:\n"
+        + "- name: HARNESS_USER\n"
+        + "  user:\n"
+        + "    auth-provider:\n"
+        + "      config:\n"
+        + "        client-id: clientId\n"
+        + "        client-secret: secret\n"
+        + "        id-token: id_token\n"
+        + "        refresh-token: refresh_token\n"
+        + "        idp-issuer-url: url\n"
+        + "      name: oidc\n";
+
+    OpenIdOAuth2AccessToken accessToken = mock(OpenIdOAuth2AccessToken.class);
+    doReturn("id_token").when(accessToken).getOpenIdToken();
+    doReturn(3600).when(accessToken).getExpiresIn();
+    doReturn("bearer").when(accessToken).getTokenType();
+    doReturn("refresh_token").when(accessToken).getRefreshToken();
+
+    doReturn(accessToken).when(oidcTokenRetriever).getAccessToken(any());
+
+    // Test generating KubernetesConfig from KubernetesClusterConfig
+    final KubernetesConfig kubeConfig = KubernetesConfig.builder()
+                                            .masterUrl("masterUrl")
+                                            .namespace("namespace")
+                                            .accountId("accId")
+                                            .authType(OIDC)
+                                            .oidcIdentityProviderUrl("url")
+                                            .oidcUsername("user")
+                                            .oidcGrantType(OidcGrantType.password)
+                                            .oidcPassword("pwd".toCharArray())
+                                            .oidcClientId("clientId".toCharArray())
+                                            .oidcSecret("secret".toCharArray())
+                                            .build();
+
+    String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
+    assertThat(expected).isEqualTo(configFileContent);
   }
 }

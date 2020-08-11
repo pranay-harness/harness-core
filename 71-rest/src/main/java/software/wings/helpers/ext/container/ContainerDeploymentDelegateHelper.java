@@ -65,12 +65,12 @@ public class ContainerDeploymentDelegateHelper {
   }
 
   public String getKubeconfigFileContent(K8sClusterConfig k8sClusterConfig) {
-    return containerDeploymentDelegateBaseHelper.getConfigFileContent(getKubernetesConfig(k8sClusterConfig));
+    return kubernetesContainerService.getConfigFileContent(getKubernetesConfig(k8sClusterConfig));
   }
 
   private String createKubeConfig(KubernetesConfig kubernetesConfig) {
     try {
-      String configFileContent = containerDeploymentDelegateBaseHelper.getConfigFileContent(kubernetesConfig);
+      String configFileContent = kubernetesContainerService.getConfigFileContent(kubernetesConfig);
       String md5Hash = DigestUtils.md5Hex(configFileContent);
 
       synchronized (lockObjects.get(md5Hash)) {
@@ -92,7 +92,7 @@ public class ContainerDeploymentDelegateHelper {
   public String getKubeConfigFileContent(ContainerServiceParams containerServiceParam) {
     try {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
-      return containerDeploymentDelegateBaseHelper.getConfigFileContent(kubernetesConfig);
+      return kubernetesContainerService.getConfigFileContent(kubernetesConfig);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
@@ -157,7 +157,7 @@ public class ContainerDeploymentDelegateHelper {
 
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
     VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig);
-    logCallback.saveExecutionLog(format("Kubernetess version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
+    logCallback.saveExecutionLog(format("Kubernetes version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
     int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionInfo.getMajor() + versionInfo.getMinor()));
 
     return KUBERNETESS_116_VERSION <= versionMajorMin;

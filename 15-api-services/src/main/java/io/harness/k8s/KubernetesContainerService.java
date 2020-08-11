@@ -132,4 +132,8 @@ public interface KubernetesContainerService {
   VersionInfo getVersion(KubernetesConfig kubernetesConfig);
 
   void validateCEPermissions(KubernetesConfig kubernetesConfig);
+
+  void tryListControllersKubectl(KubernetesConfig kubernetesConfig);
+
+  String getConfigFileContent(KubernetesConfig config);
 }
