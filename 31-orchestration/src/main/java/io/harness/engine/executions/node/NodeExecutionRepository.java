@@ -34,4 +34,6 @@ public interface NodeExecutionRepository extends CrudRepository<NodeExecution, S
 
   List<NodeExecution> findByAmbiancePlanExecutionIdAndNodeStepTypeAndNodeIdentifier(
       String planExecutionId, StepType stepType, String identifier);
+
+  List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> statuses);
 }

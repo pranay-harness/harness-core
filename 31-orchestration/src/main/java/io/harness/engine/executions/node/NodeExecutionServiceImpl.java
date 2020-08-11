@@ -1,12 +1,15 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.execution.status.Status.DISCONTINUING;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
+import com.mongodb.client.result.UpdateResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.exception.InvalidRequestException;
@@ -15,6 +18,8 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.status.Status;
+import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.InterruptEffect;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,7 +34,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private NodeExecutionRepository nodeExecutionRepository;
-  @Inject private MongoTemplate mongoTemplate;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
@@ -126,5 +131,63 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                                  .build());
     }
     return updated;
+  }
+
+  @Override
+  public boolean markLeavesDiscontinuingOnAbort(
+      String interruptId, ExecutionInterruptType interruptType, String planExecutionId, List<String> leafInstanceIds) {
+    Update ops = new Update();
+    ops.set(NodeExecutionKeys.status, DISCONTINUING);
+    ops.addToSet(NodeExecutionKeys.interruptHistories,
+        InterruptEffect.builder()
+            .interruptId(interruptId)
+            .tookEffectAt(System.currentTimeMillis())
+            .interruptType(interruptType)
+            .build());
+
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.uuid).in(leafInstanceIds));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+    if (!updateResult.wasAcknowledged()) {
+      logger.warn("No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", planExecutionId);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Update the old execution -> set oldRetry flag set to true
+   *
+   * @param nodeExecutionId Id of Failed Node Execution
+   */
+  @Override
+  public boolean markRetried(String nodeExecutionId) {
+    Update ops = new Update().set(NodeExecutionKeys.oldRetry, Boolean.TRUE);
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    NodeExecution nodeExecution = mongoTemplate.findAndModify(query, ops, NodeExecution.class);
+    if (nodeExecution == null) {
+      logger.error("Failed to mark node as retry");
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Update Nodes for which the previousId was failed node execution and replace it with the
+   * note execution which is being retried
+   *
+   * @param nodeExecutionId Old nodeExecutionId
+   * @param newNodeExecutionId Id of new retry node execution
+   */
+  @Override
+  public boolean updateRelationShipsForRetryNode(String nodeExecutionId, String newNodeExecutionId) {
+    Update ops = new Update().set(NodeExecutionKeys.previousId, newNodeExecutionId);
+    Query query = query(where(NodeExecutionKeys.previousId).is(nodeExecutionId));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+    if (updateResult.wasAcknowledged()) {
+      logger.warn("No previous nodeExecutions could be updated for this nodeExecutionId: {}", nodeExecutionId);
+      return false;
+    }
+    return true;
   }
 }

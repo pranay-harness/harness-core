@@ -3,7 +3,6 @@ package io.harness.mongo.iterator.provider;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.System.currentTimeMillis;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
@@ -26,7 +25,11 @@ import java.util.List;
 @Singleton
 public class SpringPersistenceProvider<T extends PersistentIterable>
     implements PersistenceProvider<T, SpringFilterExpander> {
-  @Inject private MongoTemplate persistence;
+  private final MongoTemplate persistence;
+
+  public SpringPersistenceProvider(MongoTemplate persistence) {
+    this.persistence = persistence;
+  }
 
   public Query createQuery(Class<T> clazz, String fieldName, SpringFilterExpander filterExpander) {
     Query query = new Query();

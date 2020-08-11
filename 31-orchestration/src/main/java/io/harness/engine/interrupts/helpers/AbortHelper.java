@@ -2,16 +2,12 @@ package io.harness.engine.interrupts.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.Status.DISCONTINUING;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
@@ -25,15 +21,11 @@ import io.harness.facilitator.modes.Abortable;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.InterruptEffect;
 import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
 import io.harness.tasks.TaskExecutor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -46,7 +38,6 @@ public class AbortHelper {
   @Inject private StepRegistry stepRegistry;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
-  @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEngine engine;
 
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
@@ -92,24 +83,8 @@ public class AbortHelper {
       return false;
     }
     List<String> leafInstanceIds = getAllLeafInstanceIds(interrupt, allNodeExecutions, statuses);
-    Update ops = new Update();
-    ops.set(NodeExecutionKeys.status, DISCONTINUING);
-    ops.addToSet(NodeExecutionKeys.interruptHistories,
-        InterruptEffect.builder()
-            .interruptId(interrupt.getUuid())
-            .tookEffectAt(System.currentTimeMillis())
-            .interruptType(interrupt.getType())
-            .build());
-
-    Query query = query(where(NodeExecutionKeys.planExecutionId).is(interrupt.getPlanExecutionId()))
-                      .addCriteria(where(NodeExecutionKeys.uuid).in(leafInstanceIds));
-    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
-    if (!updateResult.wasAcknowledged()) {
-      logger.warn(
-          "No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", interrupt.getPlanExecutionId());
-      return false;
-    }
-    return true;
+    return nodeExecutionService.markLeavesDiscontinuingOnAbort(
+        interrupt.getUuid(), interrupt.getType(), interrupt.getPlanExecutionId(), leafInstanceIds);
   }
 
   private List<String> getAllLeafInstanceIds(
