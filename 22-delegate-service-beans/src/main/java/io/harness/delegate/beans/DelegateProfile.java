@@ -34,8 +34,8 @@ import javax.validation.constraints.NotNull;
 @CdUniqueIndex(name = "uniqueName",
     fields = { @Field(value = DelegateProfileKeys.accountId)
                , @Field(value = DelegateProfileKeys.name) })
-public class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                        UpdatedByAware, AccountAccess {
+public final class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                              UpdatedAtAware, UpdatedByAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @NotEmpty private String accountId;

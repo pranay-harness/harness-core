@@ -168,7 +168,7 @@ class IndexManagerCollectionSession {
         .forEach(entry -> {
           Duration passed = Duration.between(entry.getValue().getSince().toInstant(), ZonedDateTime.now().toInstant());
           try (AutoLogContext ignore = new IndexLogContext(entry.getKey(), OVERRIDE_ERROR)) {
-            logger.error("Index is not used at for {} days", passed.toDays());
+            logger.warn("Index is not used at for {} days", passed.toDays());
           }
         });
   }

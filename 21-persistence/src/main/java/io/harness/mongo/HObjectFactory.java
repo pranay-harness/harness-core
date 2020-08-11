@@ -92,6 +92,25 @@ public class HObjectFactory extends DefaultCreator {
     return null;
   }
 
+  private static boolean noClassNameStored(Class clazz) {
+    if (clazz == null) {
+      return false;
+    }
+    return Modifier.isFinal(clazz.getModifiers());
+  }
+
+  private Class fetchClass(Class clazz, final DBObject dbObj) {
+    if (noClassNameStored(clazz)) {
+      return clazz;
+    }
+
+    Class c = fetchClass(dbObj);
+    if (c != null) {
+      return c;
+    }
+    return clazz;
+  }
+
   @SuppressWarnings("unchecked")
   private Class fetchClass(final DBObject dbObj) {
     // see if there is a className value
@@ -136,6 +155,11 @@ public class HObjectFactory extends DefaultCreator {
       collections.add(collectionName);
       logger.error("Need migration for class from {} to {}", className, actualClassName);
     }
+  }
+
+  @Override
+  public <T> T createInstance(final Class<T> clazz, final DBObject dbObj) {
+    return (T) createInstance(fetchClass(clazz, dbObj));
   }
 
   @Override
