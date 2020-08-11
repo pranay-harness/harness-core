@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -87,7 +88,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String WORKSPACE_DIR_BASE = "terraform.tfstate.d";
   private static final String WORKSPACE_STATE_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/%s/terraform.tfstate";
   private static final String WORKSPACE_PLAN_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/$WORKSPACE_NAME/tfplan";
+  private static final String WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT =
+      WORKSPACE_DIR_BASE + "/$WORKSPACE_NAME/tfdestroyplan";
   private static final String TERRAFORM_PLAN_FILE_OUTPUT_NAME = "tfplan";
+  private static final String TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME = "tfdestroyplan";
   private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs-%s";
@@ -317,10 +321,30 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
-            command = format("terraform destroy -force %s %s", targetArgs, varParams);
-            commandToLog = format("terraform destroy -force %s %s", targetArgs, uiLogs);
-            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
-            code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+            if (parameters.isRunPlanOnly()) {
+              command = format("terraform plan -destroy -out=tfdestroyplan -input=false %s %s ", targetArgs, varParams);
+              commandToLog =
+                  format("terraform plan -destroy -out=tfdestroyplan -input=false %s %s ", targetArgs, uiLogs);
+              saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
+              code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
+            } else {
+              if (parameters.getTerraformPlan() == null) {
+                command = format("terraform destroy -force %s %s", targetArgs, varParams);
+                commandToLog = format("terraform destroy -force %s %s", targetArgs, uiLogs);
+                saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
+                code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+              } else {
+                // case when we are inheriting the approved destroy plan
+                saveTerraformPlanContentToFile(parameters, scriptDirectory);
+                saveExecutionLog(
+                    parameters, "Using approved terraform destroy plan", CommandExecutionStatus.RUNNING, INFO);
+
+                command = "terraform apply -input=false tfdestroyplan";
+                commandToLog = command;
+                saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
+                code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
+              }
+            }
           }
           break;
         }
@@ -391,7 +415,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
 
       byte[] terraformPlan = parameters.isRunPlanOnly() && parameters.isExportPlanToApplyStep()
-          ? getTerraformPlanFile(scriptDirectory, parameters.getWorkspace())
+          ? getTerraformPlanFile(scriptDirectory, parameters)
           : null;
 
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
@@ -584,23 +608,49 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   @VisibleForTesting
-  public byte[] getTerraformPlanFile(String scriptDirectory, String workspace) throws IOException {
-    return isEmpty(workspace) ? Files.readAllBytes(Paths.get(scriptDirectory, TERRAFORM_PLAN_FILE_OUTPUT_NAME))
-                              : Files.readAllBytes(Paths.get(scriptDirectory,
-                                    WORKSPACE_PLAN_FILE_PATH_FORMAT.replace("$WORKSPACE_NAME", workspace)));
+  public byte[] getTerraformPlanFile(String scriptDirectory, TerraformProvisionParameters parameters)
+      throws IOException {
+    return isEmpty(parameters.getWorkspace())
+        ? Files.readAllBytes(Paths.get(scriptDirectory, getPlanName(parameters)))
+        : Files.readAllBytes(Paths.get(scriptDirectory,
+              getWorkspacePlanFileFormat(parameters).replace("$WORKSPACE_NAME", parameters.getWorkspace())));
   }
 
   @VisibleForTesting
   public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
       throws IOException {
     File tfPlanFile = isEmpty(parameters.getWorkspace())
-        ? Paths.get(scriptDirectory, TERRAFORM_PLAN_FILE_OUTPUT_NAME).toFile()
+        ? Paths.get(scriptDirectory, getPlanName(parameters)).toFile()
         : Paths
               .get(scriptDirectory,
-                  WORKSPACE_PLAN_FILE_PATH_FORMAT.replace("$WORKSPACE_NAME", parameters.getWorkspace()))
+                  getWorkspacePlanFileFormat(parameters).replace("$WORKSPACE_NAME", parameters.getWorkspace()))
               .toFile();
 
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(parameters.getTerraformPlan()), tfPlanFile);
+  }
+
+  @NotNull
+  private String getPlanName(TerraformProvisionParameters parameters) {
+    switch (parameters.getCommand()) {
+      case APPLY:
+        return TERRAFORM_PLAN_FILE_OUTPUT_NAME;
+      case DESTROY:
+        return TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
+      default:
+        throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
+    }
+  }
+
+  @NotNull
+  private String getWorkspacePlanFileFormat(TerraformProvisionParameters parameters) {
+    switch (parameters.getCommand()) {
+      case APPLY:
+        return WORKSPACE_PLAN_FILE_PATH_FORMAT;
+      case DESTROY:
+        return WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT;
+      default:
+        throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
+    }
   }
 
   public String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {

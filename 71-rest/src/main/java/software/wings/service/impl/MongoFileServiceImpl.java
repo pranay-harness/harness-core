@@ -107,6 +107,20 @@ public class MongoFileServiceImpl implements FileService {
   }
 
   @Override
+  public String getLatestFileIdByQualifier(String entityId, FileBucket fileBucket, String qualifier) {
+    final GridFSFile first =
+        getOrCreateGridFSBucket(fileBucket.representationName())
+            .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("qualifier", qualifier)))
+            .sort(orderBy(descending("uploadDate")))
+            .limit(1)
+            .first();
+    if (first == null) {
+      return null;
+    }
+    return first.getId().asObjectId().getValue().toHexString();
+  }
+
+  @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
     final GridFSFile first =
         getOrCreateGridFSBucket(fileBucket.representationName())

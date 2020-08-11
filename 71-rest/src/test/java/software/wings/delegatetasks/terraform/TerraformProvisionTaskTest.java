@@ -18,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.COMMIT_REFERENCE;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.SOURCE_REPO_SETTINGS_ID;
-import static software.wings.utils.WingsTestConstants.TERRAFORM_STATE_FILE_ID;
 import static software.wings.utils.WingsTestConstants.WORKSPACE;
 
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.WingsBaseTest;
 import software.wings.api.TerraformExecutionData;
@@ -73,12 +73,19 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   private static final String GIT_BRANCH = "test/git_branch";
   private static final String GIT_REPO_DIRECTORY = "repository/terraformTest";
 
+  private GitConfig gitConfig;
+  private Map<String, EncryptedDataDetail> encryptedBackendConfigs;
+  private EncryptedDataDetail encryptedDataDetail;
+  private List<EncryptedDataDetail> sourceRepoEncryptyonDetails;
+
   TerraformProvisionTask terraformProvisionTask =
       new TerraformProvisionTask(DelegateTaskPackage.builder()
                                      .delegateId(WingsTestConstants.DELEGATE_ID)
                                      .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                      .build(),
           delegateTaskResponse -> {}, () -> true);
+
+  private TerraformProvisionTask terraformProvisionTaskSpy;
 
   @Before
   public void setUp() throws Exception {
@@ -87,6 +94,34 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     on(terraformProvisionTask).set("logService", logService);
     on(terraformProvisionTask).set("gitClientHelper", gitClientHelper);
     on(terraformProvisionTask).set("delegateFileManager", delegateFileManager);
+
+    gitConfig = GitConfig.builder().branch(GIT_BRANCH).build();
+    gitConfig.setReference(COMMIT_REFERENCE);
+
+    encryptedBackendConfigs = new HashMap<>();
+    encryptedDataDetail = EncryptedDataDetail.builder()
+                              .encryptedData(EncryptedRecordData.builder().uuid(WingsTestConstants.UUID).build())
+                              .build();
+    encryptedBackendConfigs.put("var2", encryptedDataDetail);
+
+    sourceRepoEncryptyonDetails = new ArrayList<>();
+    sourceRepoEncryptyonDetails.add(EncryptedDataDetail.builder().build());
+
+    doReturn(GIT_REPO_DIRECTORY).when(gitClientHelper).getRepoDirectory(any(GitOperationContext.class));
+
+    terraformProvisionTaskSpy = spy(terraformProvisionTask);
+
+    doReturn(0)
+        .when(terraformProvisionTaskSpy)
+        .executeShellCommand(
+            anyString(), anyString(), any(TerraformProvisionParameters.class), any(LogOutputStream.class));
+    doReturn("latestCommit")
+        .when(terraformProvisionTaskSpy)
+        .getLatestCommitSHAFromLocalRepo(any(GitOperationContext.class));
+    doReturn(new ArrayList<String>()).when(terraformProvisionTaskSpy).getWorkspacesList(anyString(), anyLong());
+    doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail);
+
+    when(delegateFileManager.upload(any(DelegateFile.class), any(InputStream.class))).thenReturn(new DelegateFile());
   }
 
   @Test
@@ -133,78 +168,14 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testRunApply() throws IOException, TimeoutException, InterruptedException {
-    GitConfig gitConfig = GitConfig.builder().branch(GIT_BRANCH).build();
-    gitConfig.setReference(COMMIT_REFERENCE);
-
-    List<EncryptedDataDetail> sourceRepoEncryptyonDetails = new ArrayList<>();
-    sourceRepoEncryptyonDetails.add(EncryptedDataDetail.builder().build());
-
-    Map<String, String> backendConfigs = new HashMap<>();
-    backendConfigs.put("var1", "value1");
-
-    Map<String, EncryptedDataDetail> encryptedBackendConfigs = new HashMap<>();
-    EncryptedDataDetail encryptedDataDetail =
-        EncryptedDataDetail.builder()
-            .encryptedData(EncryptedRecordData.builder().uuid(WingsTestConstants.UUID).build())
-            .build();
-    encryptedBackendConfigs.put("var2", encryptedDataDetail);
-
-    Map<String, String> variables = new HashMap<>();
-    variables.put("var3", "val3");
-
-    List<String> tfVarFiles = Arrays.asList("tfVarFile");
-
-    TerraformProvisionParameters terraformProvisionParameters =
-        TerraformProvisionParameters.builder()
-            .sourceRepo(gitConfig)
-            .sourceRepoSettingId(SOURCE_REPO_SETTINGS_ID)
-            .sourceRepoEncryptionDetails(sourceRepoEncryptyonDetails)
-            .scriptPath("scriptPath")
-            .commandUnit(TerraformProvisionParameters.TerraformCommandUnit.Apply)
-            .command(TerraformProvisionParameters.TerraformCommand.APPLY)
-            .accountId(ACCOUNT_ID)
-            .entityId(ENTITY_ID)
-            .workspace(WORKSPACE)
-            .backendConfigs(backendConfigs)
-            .encryptedBackendConfigs(encryptedBackendConfigs)
-            .variables(variables)
-            .tfVarFiles(tfVarFiles)
-            .currentStateFileId(TERRAFORM_STATE_FILE_ID)
-            .build();
-
     FileIo.createDirectoryIfDoesNotExist(GIT_REPO_DIRECTORY.concat("/scriptPath"));
     FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-ENTITY_ID"), new byte[] {});
     FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-ENTITY_ID.tfvars"), new byte[] {});
 
-    doReturn(GIT_REPO_DIRECTORY).when(gitClientHelper).getRepoDirectory(any(GitOperationContext.class));
-
-    TerraformProvisionTask terraformProvisionTaskSpy = spy(terraformProvisionTask);
-    doReturn(0)
-        .when(terraformProvisionTaskSpy)
-        .executeShellCommand(
-            anyString(), anyString(), any(TerraformProvisionParameters.class), any(LogOutputStream.class));
-    doReturn("latestCommit")
-        .when(terraformProvisionTaskSpy)
-        .getLatestCommitSHAFromLocalRepo(any(GitOperationContext.class));
-    doReturn(new ArrayList<String>()).when(terraformProvisionTaskSpy).getWorkspacesList(anyString(), anyLong());
-    doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail);
-    doReturn(new ByteArrayInputStream(new byte[] {}))
-        .when(delegateFileManager)
-        .downloadByFileId(any(DelegateAgentFileService.FileBucket.class), anyString(), anyString());
-    when(delegateFileManager.upload(any(DelegateFile.class), any(InputStream.class))).thenReturn(new DelegateFile());
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
+        TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformProvisionParameters.TerraformCommand.APPLY);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
-
-    verify(mockEncryptionService, times(1)).decrypt(gitConfig, sourceRepoEncryptyonDetails);
-    verify(gitClient, times(1)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
-    verify(gitClientHelper, times(1)).getRepoDirectory(any(GitOperationContext.class));
-    verify(delegateFileManager, times(2)).upload(any(DelegateFile.class), any(InputStream.class));
-    assertThat(terraformExecutionData.getWorkspace()).isEqualTo(WORKSPACE);
-    assertThat(terraformExecutionData.getEntityId()).isEqualTo(ENTITY_ID);
-    assertThat(terraformExecutionData.getPlanLogFileId()).isEqualTo(null);
-    assertThat(terraformExecutionData.getCommandExecuted())
-        .isEqualTo(TerraformProvisionParameters.TerraformCommand.APPLY);
-    assertThat(terraformExecutionData.getSourceRepoReference()).isEqualTo("latestCommit");
-    assertThat(terraformExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY, 1);
 
     FileIo.deleteDirectoryAndItsContentIfExists(GIT_REPO_DIRECTORY);
     FileIo.deleteDirectoryAndItsContentIfExists("./terraform-working-dir");
@@ -218,13 +189,18 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     String scriptDirectory = "repository/terraformTest";
     String workspacePath = "workspace";
     TerraformProvisionParameters terraformProvisionParameters =
-        TerraformProvisionParameters.builder().workspace(workspacePath).terraformPlan(planContent).build();
+        TerraformProvisionParameters.builder()
+            .workspace(workspacePath)
+            .terraformPlan(planContent)
+            .command(TerraformProvisionParameters.TerraformCommand.APPLY)
+            .build();
     terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
     assertThat(fileDataList.size()).isEqualTo(1);
     assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);
 
-    byte[] retrievedTerraformPlanContent = terraformProvisionTask.getTerraformPlanFile(scriptDirectory, workspacePath);
+    byte[] retrievedTerraformPlanContent =
+        terraformProvisionTask.getTerraformPlanFile(scriptDirectory, terraformProvisionParameters);
     assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
 
     FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
@@ -234,78 +210,89 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testRunDestroy() throws IOException, TimeoutException, InterruptedException {
-    GitConfig gitConfig = GitConfig.builder().branch(GIT_BRANCH).build();
-    gitConfig.setReference(COMMIT_REFERENCE);
-
-    List<EncryptedDataDetail> sourceRepoEncryptyonDetails = new ArrayList<>();
-    sourceRepoEncryptyonDetails.add(EncryptedDataDetail.builder().build());
-
-    Map<String, String> backendConfigs = new HashMap<>();
-    backendConfigs.put("var1", "value1");
-
-    Map<String, EncryptedDataDetail> encryptedBackendConfigs = new HashMap<>();
-    EncryptedDataDetail encryptedDataDetail =
-        EncryptedDataDetail.builder()
-            .encryptedData(EncryptedRecordData.builder().uuid(WingsTestConstants.UUID).build())
-            .build();
-    encryptedBackendConfigs.put("var2", encryptedDataDetail);
-
-    Map<String, String> variables = new HashMap<>();
-    variables.put("var3", "val3");
-
-    TerraformProvisionParameters terraformProvisionParameters =
-        TerraformProvisionParameters.builder()
-            .sourceRepo(gitConfig)
-            .sourceRepoSettingId(SOURCE_REPO_SETTINGS_ID)
-            .sourceRepoEncryptionDetails(sourceRepoEncryptyonDetails)
-            .scriptPath("scriptPath")
-            .commandUnit(TerraformProvisionParameters.TerraformCommandUnit.Destroy)
-            .command(TerraformProvisionParameters.TerraformCommand.DESTROY)
-            .accountId(ACCOUNT_ID)
-            .entityId(ENTITY_ID)
-            .workspace(WORKSPACE)
-            .backendConfigs(backendConfigs)
-            .encryptedBackendConfigs(encryptedBackendConfigs)
-            .variables(variables)
-            .build();
-
     FileIo.createDirectoryIfDoesNotExist(GIT_REPO_DIRECTORY.concat("/scriptPath"));
     FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-ENTITY_ID"), new byte[] {});
     FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-ENTITY_ID.tfvars"), new byte[] {});
 
-    doReturn(GIT_REPO_DIRECTORY).when(gitClientHelper).getRepoDirectory(any(GitOperationContext.class));
-
-    TerraformProvisionTask terraformProvisionTaskSpy = spy(terraformProvisionTask);
-    doReturn(0)
-        .when(terraformProvisionTaskSpy)
-        .executeShellCommand(
-            anyString(), anyString(), any(TerraformProvisionParameters.class), any(LogOutputStream.class));
-    doReturn("latestCommit")
-        .when(terraformProvisionTaskSpy)
-        .getLatestCommitSHAFromLocalRepo(any(GitOperationContext.class));
-    doReturn(new ArrayList<String>()).when(terraformProvisionTaskSpy).getWorkspacesList(anyString(), anyLong());
-    doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail);
     doReturn(new ByteArrayInputStream(new byte[] {}))
         .when(delegateFileManager)
         .downloadByFileId(any(DelegateAgentFileService.FileBucket.class), anyString(), anyString());
-    when(delegateFileManager.upload(any(DelegateFile.class), any(InputStream.class))).thenReturn(new DelegateFile());
 
+    // regular destroy with no plan exported
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
+        TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+        TerraformProvisionParameters.TerraformCommand.DESTROY);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 1);
 
-    verify(mockEncryptionService, times(1)).decrypt(gitConfig, sourceRepoEncryptyonDetails);
-    verify(gitClient, times(1)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
-    verify(gitClientHelper, times(1)).getRepoDirectory(any(GitOperationContext.class));
-    verify(delegateFileManager, times(1)).upload(any(DelegateFile.class), any(InputStream.class));
-    assertThat(terraformExecutionData.getWorkspace()).isEqualTo(WORKSPACE);
-    assertThat(terraformExecutionData.getEntityId()).isEqualTo(ENTITY_ID);
-    assertThat(terraformExecutionData.getPlanLogFileId()).isEqualTo(null);
-    assertThat(terraformExecutionData.getCommandExecuted())
-        .isEqualTo(TerraformProvisionParameters.TerraformCommand.DESTROY);
-    assertThat(terraformExecutionData.getSourceRepoReference()).isEqualTo("latestCommit");
-    assertThat(terraformExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    // use exported plan
+    byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
+    terraformProvisionParameters = createTerraformProvisionParameters(false, false, terraformDestroyPlan,
+        TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+        TerraformProvisionParameters.TerraformCommand.DESTROY);
+    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 2);
+
+    // run destroy plan only
+    terraformProvisionParameters =
+        createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+            TerraformProvisionParameters.TerraformCommand.DESTROY);
+    doReturn(terraformDestroyPlan)
+        .when(terraformProvisionTaskSpy)
+        .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 3);
+    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformDestroyPlan);
 
     FileIo.deleteDirectoryAndItsContentIfExists(GIT_REPO_DIRECTORY);
     FileIo.deleteDirectoryAndItsContentIfExists("./terraform-working-dir");
+  }
+
+  private void verify(
+      TerraformExecutionData terraformExecutionData, TerraformProvisionParameters.TerraformCommand command, int i) {
+    Mockito.verify(mockEncryptionService, times(i)).decrypt(gitConfig, sourceRepoEncryptyonDetails);
+    Mockito.verify(gitClient, times(i)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
+    Mockito.verify(gitClientHelper, times(i)).getRepoDirectory(any(GitOperationContext.class));
+    int uploadTimes = TerraformProvisionParameters.TerraformCommand.DESTROY.equals(command) ? i : i + 1;
+    Mockito.verify(delegateFileManager, times(uploadTimes)).upload(any(DelegateFile.class), any(InputStream.class));
+    assertThat(terraformExecutionData.getWorkspace()).isEqualTo(WORKSPACE);
+    assertThat(terraformExecutionData.getEntityId()).isEqualTo(ENTITY_ID);
+    assertThat(terraformExecutionData.getPlanLogFileId()).isEqualTo(null);
+    assertThat(terraformExecutionData.getCommandExecuted()).isEqualTo(command);
+    assertThat(terraformExecutionData.getSourceRepoReference()).isEqualTo("latestCommit");
+    assertThat(terraformExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  private TerraformProvisionParameters createTerraformProvisionParameters(boolean runPlanOnly,
+      boolean exportPlanToApplyStep, byte[] terraformPlan,
+      TerraformProvisionParameters.TerraformCommandUnit commandUnit,
+      TerraformProvisionParameters.TerraformCommand command) {
+    Map<String, String> backendConfigs = new HashMap<>();
+    backendConfigs.put("var1", "value1");
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("var3", "val3");
+
+    List<String> tfVarFiles = Arrays.asList("tfVarFile");
+
+    return TerraformProvisionParameters.builder()
+        .sourceRepo(gitConfig)
+        .sourceRepoSettingId(SOURCE_REPO_SETTINGS_ID)
+        .sourceRepoEncryptionDetails(sourceRepoEncryptyonDetails)
+        .scriptPath("scriptPath")
+        .command(command)
+        .commandUnit(commandUnit)
+        .accountId(ACCOUNT_ID)
+        .workspace(WORKSPACE)
+        .entityId(ENTITY_ID)
+        .backendConfigs(backendConfigs)
+        .encryptedBackendConfigs(encryptedBackendConfigs)
+        .terraformPlan(terraformPlan)
+        .runPlanOnly(runPlanOnly)
+        .exportPlanToApplyStep(exportPlanToApplyStep)
+        .variables(variables)
+        .tfVarFiles(tfVarFiles)
+        .build();
   }
 
   @Test
@@ -315,13 +302,19 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     byte[] planContent = "terraformPlanContent".getBytes();
     String scriptDirectory = "repository/terraformTest";
     TerraformProvisionParameters terraformProvisionParameters =
-        TerraformProvisionParameters.builder().terraformPlan(planContent).build();
+        TerraformProvisionParameters.builder()
+            .terraformPlan(planContent)
+            .command(TerraformProvisionParameters.TerraformCommand.APPLY)
+            .build();
     terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
     assertThat(fileDataList.size()).isEqualTo(1);
     assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);
 
-    byte[] retrievedTerraformPlanContent = terraformProvisionTask.getTerraformPlanFile(scriptDirectory, null);
+    TerraformProvisionParameters provisionParameters =
+        TerraformProvisionParameters.builder().command(TerraformProvisionParameters.TerraformCommand.APPLY).build();
+    byte[] retrievedTerraformPlanContent =
+        terraformProvisionTask.getTerraformPlanFile(scriptDirectory, provisionParameters);
     assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
 
     FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
