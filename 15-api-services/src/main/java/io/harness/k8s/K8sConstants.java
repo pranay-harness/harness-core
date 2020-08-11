@@ -48,6 +48,8 @@ public interface K8sConstants {
       + "        " + OIDC_ISSUER_URL + "\n"
       + "      " + OIDC_AUTH_NAME + "\n";
 
+  String KUBECONFIG_FILENAME = "config";
+
   String HARNESS_KUBERNETES_REVISION_LABEL_KEY = "harness.io/revision";
   String KUBE_CONFIG_TEMPLATE = "apiVersion: v1\n"
       + "clusters:\n"

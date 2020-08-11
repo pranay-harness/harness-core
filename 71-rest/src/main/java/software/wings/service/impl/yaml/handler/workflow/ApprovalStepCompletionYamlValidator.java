@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import software.wings.exception.IncompleteStateException;
-
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.HashMap;

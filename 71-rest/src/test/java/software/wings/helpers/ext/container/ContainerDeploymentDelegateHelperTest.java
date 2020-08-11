@@ -108,8 +108,19 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
 
     // Test generating KubernetesConfig from KubernetesClusterConfig
     KubernetesConfig kubeConfig = clusterConfig.createKubernetesConfig("namespace");
-    String configFileContent = containerDeploymentDelegateBaseHelper.getConfigFileContent(kubeConfig);
-    assertThat(expected).isEqualTo(configFileContent);
+    assertThat(kubeConfig)
+        .isEqualTo(KubernetesConfig.builder()
+                       .masterUrl("masterUrl")
+                       .namespace("namespace")
+                       .accountId("accId")
+                       .authType(OIDC)
+                       .oidcIdentityProviderUrl("url")
+                       .oidcUsername("user")
+                       .oidcGrantType(OidcGrantType.password)
+                       .oidcPassword("pwd".toCharArray())
+                       .oidcClientId("clientId".toCharArray())
+                       .oidcSecret("secret".toCharArray())
+                       .build());
   }
 
   @Test

@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
+import io.harness.k8s.K8sConstants;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
@@ -35,7 +36,6 @@ public class K8sTask extends AbstractDelegateRunnableTask {
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String WORKING_DIR_BASE = "./repository/k8s/";
-  public static final String KUBECONFIG_FILENAME = "config";
   public static final String MANIFEST_FILES_DIR = "manifest-files";
 
   public K8sTask(
@@ -77,14 +77,15 @@ public class K8sTask extends AbstractDelegateRunnableTask {
 
         createDirectoryIfDoesNotExist(workingDirectory);
         waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
-        writeUtf8StringToFile(Paths.get(workingDirectory, KUBECONFIG_FILENAME).toString(), kubeconfigFileContent);
+        writeUtf8StringToFile(
+            Paths.get(workingDirectory, K8sConstants.KUBECONFIG_FILENAME).toString(), kubeconfigFileContent);
 
         createDirectoryIfDoesNotExist(Paths.get(workingDirectory, MANIFEST_FILES_DIR).toString());
 
         K8sDelegateTaskParams k8SDelegateTaskParams =
             K8sDelegateTaskParams.builder()
                 .kubectlPath(k8sGlobalConfigService.getKubectlPath())
-                .kubeconfigPath(KUBECONFIG_FILENAME)
+                .kubeconfigPath(K8sConstants.KUBECONFIG_FILENAME)
                 .workingDirectory(workingDirectory)
                 .goTemplateClientPath(k8sGlobalConfigService.getGoTemplateClientPath())
                 .helmPath(k8sGlobalConfigService.getHelmPath(k8sTaskParameters.getHelmVersion()))
