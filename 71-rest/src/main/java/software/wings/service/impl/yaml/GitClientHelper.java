@@ -52,8 +52,6 @@ import java.util.stream.Stream;
 @Slf4j
 public class GitClientHelper {
   public static final String REPOSITORY = "./repository";
-  private static final String GIT_REPO_BASE_DIR =
-      "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${CONNECTOR_ID}/${REPO_NAME}/${REPO_URL_HASH}";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS = "./repository/gitFileDownloads";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS_ACCOUNT = "./repository/gitFileDownloads/{ACCOUNT_ID}";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS_BASE =
@@ -62,7 +60,8 @@ public class GitClientHelper {
       REPOSITORY_GIT_FILE_DOWNLOADS_BASE + "/{REPO_NAME}";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR =
       REPOSITORY_GIT_FILE_DOWNLOADS_REPO_BASE_DIR + "/{REPO_URL_HASH}";
-
+  private static final String GIT_REPO_BASE_DIR =
+      "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${CONNECTOR_ID}/${REPO_NAME}/${REPO_URL_HASH}";
   private LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
                                                    .maximumSize(2000)
                                                    .expireAfterAccess(1, TimeUnit.HOURS)

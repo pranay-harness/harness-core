@@ -40,6 +40,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.model.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -139,8 +140,7 @@ import java.util.stream.Stream;
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
 
-  @Override
-  public synchronized GitCloneResult clone(
+  private synchronized GitCloneResult clone(
       GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
@@ -346,8 +346,7 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  @Override
-  public synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext) {
+  private synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext) {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
 
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
@@ -380,8 +379,7 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  @Override
-  public synchronized GitCommitResult commit(GitOperationContext gitOperationContext) {
+  private synchronized GitCommitResult commit(GitOperationContext gitOperationContext) {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
     GitCommitRequest gitCommitRequest = gitOperationContext.getGitCommitRequest();
     boolean pushOnlyIfHeadSeen = gitCommitRequest.isPushOnlyIfHeadSeen();
@@ -633,8 +631,7 @@ public class GitClientImpl implements GitClient {
     });
   }
 
-  @Override
-  public synchronized GitPushResult push(GitOperationContext gitOperationContext) {
+  private synchronized GitPushResult push(GitOperationContext gitOperationContext) {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
     boolean forcePush = gitOperationContext.getGitCommitRequest().isForcePush();
 
@@ -941,12 +938,6 @@ public class GitClientImpl implements GitClient {
     return gitFiles;
   }
 
-  @Override
-  public void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
-    validateRequiredArgs(gitRequest, gitConfig);
-    checkoutFiles(gitConfig, gitRequest);
-  }
-
   private Predicate<Path> matchingFilesExtensions(GitFetchFilesRequest gitRequest) {
     return path -> {
       if (isEmpty(gitRequest.getFileExtensions())) {
@@ -1039,8 +1030,7 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  @Override
-  public void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
+  private void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
       logger.info("Resetting repo");
       ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetType.HARD);
@@ -1090,7 +1080,7 @@ public class GitClientImpl implements GitClient {
    *
    * @param gitConfig the git config
    */
-  public synchronized void cloneRepoForFilePathCheckout(GitConfig gitConfig, String branch, String connectorId) {
+  private synchronized void cloneRepoForFilePathCheckout(GitConfig gitConfig, String branch, String connectorId) {
     logger.info(new StringBuilder(64)
                     .append(getGitLogMessagePrefix(gitConfig.getGitRepoType()))
                     .append("Cloning repo without checkout for file fetch op, for GitConfig: ")
@@ -1261,20 +1251,6 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  public static class ApacheHttpConnectionFactory implements HttpConnectionFactory {
-    @Override
-    public HttpConnection create(URL url) throws IOException {
-      return create(url, null);
-    }
-
-    @Override
-    public HttpConnection create(URL url, Proxy proxy) throws IOException {
-      HttpConnection connection = new HttpClientConnectionFactory().create(url, proxy);
-      HttpSupport.disableSslVerify(connection);
-      return connection;
-    }
-  }
-
   private SshSessionFactory getSshSessionFactory(SettingAttribute settingAttribute) {
     return new JschConfigSessionFactory() {
       @Override
@@ -1292,6 +1268,20 @@ public class GitClientImpl implements GitClient {
   private void defaultRepoTypeToYaml(GitConfig gitConfig) {
     if (gitConfig.getGitRepoType() == null) {
       gitConfig.setGitRepoType(GitRepositoryType.YAML);
+    }
+  }
+
+  public static class ApacheHttpConnectionFactory implements HttpConnectionFactory {
+    @Override
+    public HttpConnection create(URL url) throws IOException {
+      return create(url, null);
+    }
+
+    @Override
+    public HttpConnection create(URL url, Proxy proxy) throws IOException {
+      HttpConnection connection = new HttpClientConnectionFactory().create(url, proxy);
+      HttpSupport.disableSslVerify(connection);
+      return connection;
     }
   }
 }

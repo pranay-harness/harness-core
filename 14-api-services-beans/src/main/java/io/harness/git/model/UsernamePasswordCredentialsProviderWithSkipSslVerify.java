@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml;
+package io.harness.git.model;
 
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;

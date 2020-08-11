@@ -36,6 +36,7 @@ import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.delegate.beans.git.GitFileChange.ChangeType;
 import io.harness.delegate.beans.git.GitPushResult;
 import io.harness.exception.YamlException;
+import io.harness.git.model.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -70,7 +71,6 @@ import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.jetbrains.annotations.NotNull;
 import software.wings.exception.GitClientException;
-import software.wings.service.impl.yaml.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 
 import java.io.File;
 import java.io.IOException;
