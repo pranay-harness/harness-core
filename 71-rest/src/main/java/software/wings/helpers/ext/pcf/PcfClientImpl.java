@@ -127,7 +127,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class PcfClientImpl implements PcfClient {
-  public static final String BIN_SH = "/bin/sh";
+  public static final String BIN_BASH = "/bin/bash";
   public static final String SUCCESS = "SUCCESS";
 
   public CloudFoundryOperationsWrapper getCloudFoundryOperationsWrapper(PcfRequestConfig pcfRequestConfig)
@@ -591,7 +591,7 @@ public class PcfClientImpl implements PcfClient {
   ProcessExecutor createExecutorForAutoscalarPluginCheck(Map<String, String> map) {
     return new ProcessExecutor()
         .timeout(1, TimeUnit.MINUTES)
-        .command(BIN_SH, "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR)
+        .command(BIN_BASH, "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR)
         .readOutput(true)
         .environment(map);
   }
@@ -633,7 +633,7 @@ public class PcfClientImpl implements PcfClient {
       long timeout, String command, Map<String, String> env, ExecutionLogCallback executionLogCallback) {
     return new ProcessExecutor()
         .timeout(timeout, TimeUnit.MINUTES)
-        .command(BIN_SH, "-c", command)
+        .command(BIN_BASH, "-c", command)
         .readOutput(true)
         .environment(env)
         .redirectOutput(new LogOutputStream() {
@@ -726,7 +726,7 @@ public class PcfClientImpl implements PcfClient {
     String command = constructCfPushCommand(requestData, finalFilePath);
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
-                                          .command(BIN_SH, "-c", command)
+                                          .command(BIN_BASH, "-c", command)
                                           .readOutput(true)
                                           .environment(environmentMapForPcfExecutor)
                                           .redirectOutput(new LogOutputStream() {
@@ -818,7 +818,7 @@ public class PcfClientImpl implements PcfClient {
     logCallback.saveExecutionLog(format("Executing command: [%s]", command));
     ProcessExecutor executor = new ProcessExecutor()
                                    .timeout(5, TimeUnit.MINUTES)
-                                   .command(BIN_SH, "-c", command)
+                                   .command(BIN_BASH, "-c", command)
                                    .readOutput(true)
                                    .environment(env)
                                    .redirectOutput(new LogOutputStream() {
@@ -1378,7 +1378,7 @@ public class PcfClientImpl implements PcfClient {
         ProcessExecutor processExecutor =
             new ProcessExecutor()
                 .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
-                .command(BIN_SH, "-c", pcfRunPluginScriptRequestData.getFinalScriptString())
+                .command(BIN_BASH, "-c", pcfRunPluginScriptRequestData.getFinalScriptString())
                 .readOutput(true)
                 .environment(
                     getEnvironmentMapForPcfExecutor(pcfRunPluginScriptRequestData.getWorkingDirectory(), pcfPluginHome))
@@ -1437,7 +1437,8 @@ public class PcfClientImpl implements PcfClient {
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) {
     return new ProcessExecutor()
         .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
-        .command(BIN_SH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, pcfRequestConfig.getApplicationName()))
+        .command(
+            BIN_BASH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, pcfRequestConfig.getApplicationName()))
         .readOutput(true)
         .environment(getEnvironmentMapForPcfExecutor(pcfRequestConfig.getCfHomeDirPath()))
         .redirectOutput(new LogOutputStream() {
