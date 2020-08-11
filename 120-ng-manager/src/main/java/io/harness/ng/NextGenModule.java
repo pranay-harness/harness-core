@@ -1,5 +1,6 @@
 package io.harness.ng;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -7,10 +8,14 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.callback.MongoDatabase;
 import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.orchestration.NgStepRegistrar;
@@ -22,6 +27,9 @@ import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.DelegateServiceGrpcClientModule;
+import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
@@ -38,18 +46,23 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
+import io.harness.service.DelegateServiceDriverModule;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
+@Slf4j
 public class NextGenModule extends DependencyModule {
   private final NextGenConfiguration appConfig;
 
@@ -62,9 +75,30 @@ public class NextGenModule extends DependencyModule {
   @Named("morphiaClasses")
   Map<Class, String> morphiaCustomCollectionNames() {
     return ImmutableMap.<Class, String>builder()
-        .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
-        .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+        .put(DelegateSyncTaskResponse.class, "ngManager_delegateSyncTaskResponses")
+        .put(DelegateAsyncTaskResponse.class, "ngManager_delegateAsyncTaskResponses")
         .build();
+  }
+
+  @Provides
+  @Singleton
+  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
+      DelegateServiceGrpcClient delegateServiceGrpcClient) {
+    return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, appConfig));
+  }
+
+  private DelegateCallbackToken getDelegateCallbackToken(
+      DelegateServiceGrpcClient delegateServiceClient, NextGenConfiguration appConfig) {
+    logger.info("Generating Delegate callback token");
+    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
+        DelegateCallback.newBuilder()
+            .setMongoDatabase(MongoDatabase.newBuilder()
+                                  .setCollectionNamePrefix("ngManager")
+                                  .setConnection(appConfig.getMongoConfig().getUri())
+                                  .build())
+            .build());
+    logger.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
+    return delegateCallbackToken;
   }
 
   @Override
@@ -109,6 +143,7 @@ public class NextGenModule extends DependencyModule {
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
     install(new NgAsyncTaskGrpcServerModule(
         this.appConfig.getGrpcServerConfig(), "manager", this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new DelegateServiceGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -147,6 +182,9 @@ public class NextGenModule extends DependencyModule {
     bind(RemotePerpetualTaskServiceClientManager.class).to(RemotePerpetualTaskServiceClientManagerImpl.class);
 
     bind(GitSyncManagerInterface.class).to(GitSyncManagerInterfaceImpl.class);
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("taskPollExecutor"))
+        .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
   }
 
   private ValidatorFactory getValidatorFactory() {
@@ -163,6 +201,6 @@ public class NextGenModule extends DependencyModule {
                                             .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
                                             .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
                                             .build()),
-        ExecutionPlanModule.getInstance());
+        ExecutionPlanModule.getInstance(), DelegateServiceDriverModule.getInstance());
   }
 }
