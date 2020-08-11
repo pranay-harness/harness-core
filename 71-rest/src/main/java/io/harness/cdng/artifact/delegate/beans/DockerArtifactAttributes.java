@@ -1,10 +1,10 @@
 package io.harness.cdng.artifact.delegate.beans;
 
+import io.harness.artifact.ComparatorUtils;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jetbrains.annotations.NotNull;
-import software.wings.common.ComparatorUtils;
 
 @Value
 @Builder
@@ -21,7 +21,7 @@ public class DockerArtifactAttributes implements ArtifactAttributes {
   public int compareTo(@NotNull ArtifactAttributes that) {
     if (that instanceof DockerArtifactAttributes) {
       DockerArtifactAttributes artifactAttributes = (DockerArtifactAttributes) that;
-      return ComparatorUtils.compareDecending(this.getTag(), artifactAttributes.getTag());
+      return ComparatorUtils.compareDescending(this.getTag(), artifactAttributes.getTag());
     } else {
       throw new IllegalArgumentException("ArtifactAttributes list doesn't have all DockerArtifactAttributes elements.");
     }

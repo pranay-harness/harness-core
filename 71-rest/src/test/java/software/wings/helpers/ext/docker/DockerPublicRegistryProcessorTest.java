@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Rule;
@@ -20,9 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DockerConfig;
 import software.wings.exception.InvalidArtifactServerException;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,14 +37,14 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
   @Mock private DockerPublicImageTagResponse.Result result;
   @Inject @InjectMocks DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
 
-  private static DockerConfig dockerConfig =
-      DockerConfig.builder().dockerRegistryUrl(url).username("username").password("password".toCharArray()).build();
+  private static final DockerInternalConfig dockerConfig =
+      DockerInternalConfig.builder().dockerRegistryUrl(url).username("username").password("password").build();
 
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testPaginate() throws Exception {
-    List<BuildDetails> images = dockerPublicRegistryProcessor.paginate(null, dockerConfig, "image", null, 10);
+    List<BuildDetailsInternal> images = dockerPublicRegistryProcessor.paginate(null, dockerConfig, "image", null, 10);
     assertThat(images).isEmpty();
 
     when(result.getName()).thenReturn("1");

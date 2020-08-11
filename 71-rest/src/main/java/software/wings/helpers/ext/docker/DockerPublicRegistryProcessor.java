@@ -3,13 +3,14 @@ package software.wings.helpers.ext.docker;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -21,12 +22,10 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
-import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerRegistryToken;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -46,7 +45,7 @@ public class DockerPublicRegistryProcessor {
 
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
-  public boolean verifyImageName(DockerConfig dockerConfig, String imageName) {
+  public boolean verifyImageName(DockerInternalConfig dockerConfig, String imageName) {
     try {
       DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
       Response<DockerPublicImageTagResponse> response =
@@ -63,8 +62,8 @@ public class DockerPublicRegistryProcessor {
     return true;
   }
 
-  public List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds)
-      throws IOException {
+  public List<BuildDetailsInternal> getBuilds(
+      DockerInternalConfig dockerConfig, String imageName, int maxNumberOfBuilds) throws IOException {
     DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     Response<DockerPublicImageTagResponse> response =
         registryRestClient.listPublicImageTags(imageName, null, maxNumberOfBuilds).execute();
@@ -80,16 +79,18 @@ public class DockerPublicRegistryProcessor {
    * Paginates through the results of tags and accumulates them in one list.
    *
    * @param tagsPage response page from the APO
+   * @param dockerConfig
    * @param limit maximum build to paginate upto. A repo like library/node has 1500+ builds,
    *              we might not want to show all of them on UI.
    * @throws IOException
+   * @return
    */
 
   @VisibleForTesting
-  List<BuildDetails> paginate(DockerPublicImageTagResponse tagsPage, DockerConfig dockerConfig, String imageName,
-      DockerRegistryRestClient registryRestClient, int limit) throws IOException {
+  List<BuildDetailsInternal> paginate(DockerPublicImageTagResponse tagsPage, DockerInternalConfig dockerConfig,
+      String imageName, DockerRegistryRestClient registryRestClient, int limit) throws IOException {
     // process first page
-    List<BuildDetails> details = processPage(tagsPage, dockerConfig, imageName);
+    List<BuildDetailsInternal> details = processPage(tagsPage, dockerConfig, imageName);
 
     if (details.size() >= limit || tagsPage == null || tagsPage.getNext() == null) {
       return details.stream().limit(limit).collect(Collectors.toList());
@@ -108,7 +109,7 @@ public class DockerPublicRegistryProcessor {
       }
 
       DockerPublicImageTagResponse page = pageResponse.body();
-      List<BuildDetails> pageDetails = processPage(page, dockerConfig, imageName);
+      List<BuildDetailsInternal> pageDetails = processPage(page, dockerConfig, imageName);
       details.addAll(pageDetails);
 
       if (details.size() >= limit || page == null || page.getNext() == null) {
@@ -122,8 +123,8 @@ public class DockerPublicRegistryProcessor {
     return details.stream().limit(limit).collect(Collectors.toList());
   }
 
-  private List<BuildDetails> processPage(
-      DockerPublicImageTagResponse publicImageTags, DockerConfig dockerConfig, String imageName) {
+  private List<BuildDetailsInternal> processPage(
+      DockerPublicImageTagResponse publicImageTags, DockerInternalConfig dockerConfig, String imageName) {
     String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
         ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
         : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
@@ -137,11 +138,11 @@ public class DockerPublicRegistryProcessor {
             Map<String, String> metadata = new HashMap<>();
             metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag.getName());
             metadata.put(ArtifactMetadataKeys.tag, tag.getName());
-            return aBuildDetails()
-                .withNumber(tag.getName())
-                .withBuildUrl(tagUrl + tag.getName())
-                .withMetadata(metadata)
-                .withUiDisplayName("Tag# " + tag.getName())
+            return BuildDetailsInternal.builder()
+                .number(tag.getName())
+                .buildUrl(tagUrl + tag.getName())
+                .uiDisplayName("Tag# " + tag.getName())
+                .metadata(metadata)
                 .build();
           })
           .collect(Collectors.toList());
@@ -156,7 +157,8 @@ public class DockerPublicRegistryProcessor {
     }
   }
 
-  public List<Map<String, String>> getLabels(DockerConfig dockerConfig, String imageName, List<String> buildNos) {
+  public List<Map<String, String>> getLabels(
+      DockerInternalConfig dockerConfig, String imageName, List<String> buildNos) {
     DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     Function<Headers, String> getToken = headers -> getToken(headers, registryRestClient);
     return dockerRegistryUtils.getLabels(registryRestClient, getToken, "", imageName, buildNos);

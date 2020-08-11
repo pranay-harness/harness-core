@@ -1,4 +1,4 @@
-package software.wings.common;
+package io.harness.artifact;
 
 import lombok.experimental.UtilityClass;
 
@@ -33,7 +33,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class ComparatorUtils {
-  public static boolean isDigit(char ch) {
+  public boolean isDigit(char ch) {
     return (ch >= 48) && (ch <= 57);
   }
 
@@ -44,7 +44,7 @@ public class ComparatorUtils {
    * @param s2
    * @return
    */
-  public static int compare(String s1, String s2) {
+  public int compare(String s1, String s2) {
     if ((s1 == null) || (s2 == null)) {
       return 0;
     }
@@ -91,7 +91,7 @@ public class ComparatorUtils {
   /**
    * Length of string is passed in for improved efficiency (only need to calculate it once)
    **/
-  public static String getChunk(String s, int slength, int marker) {
+  public String getChunk(String s, int slength, int marker) {
     StringBuilder chunk = new StringBuilder();
     char c = s.charAt(marker);
     chunk.append(c);
@@ -118,7 +118,7 @@ public class ComparatorUtils {
     return chunk.toString();
   }
 
-  public static int compareDecending(String s1, String s2) {
+  public int compareDescending(String s1, String s2) {
     return compare(s2, s1);
   }
 }

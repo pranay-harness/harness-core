@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -19,7 +21,6 @@ import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.docker.DockerRegistryService;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.DockerBuildService;
 
@@ -44,8 +45,9 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsWithoutCredentials() {
-    DockerConfig dockerConfig = DockerConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).build();
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder().dockerRegistryUrl(DOCKER_REGISTRY_URL).build();
+    List<BuildDetailsInternal> builds = dockerRegistryService.getBuilds(dockerInternalConfig, "library/mysql", 5);
     logger.info(builds.toString());
     assertThat(builds.size()).isEqualTo(5);
   }
@@ -55,13 +57,13 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsWithCredentials() {
-    DockerConfig dockerConfig =
-        DockerConfig.builder()
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder()
             .dockerRegistryUrl(DOCKER_REGISTRY_URL)
             .username("anubhaw")
-            .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .password(scmSecret.decryptToString(new SecretName("docker_config_anubhaw_password")))
             .build();
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
+    List<BuildDetailsInternal> builds = dockerRegistryService.getBuilds(dockerInternalConfig, "library/mysql", 5);
     logger.info(builds.toString());
     assertThat(builds.size()).isGreaterThanOrEqualTo(5);
   }
@@ -71,13 +73,13 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {
-    DockerConfig dockerConfig =
-        DockerConfig.builder()
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder()
             .dockerRegistryUrl(DOCKER_REGISTRY_URL)
             .username("anubhaw")
-            .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .password(scmSecret.decryptToString(new SecretName("docker_config_anubhaw_password")))
             .build();
-    BuildDetails build = dockerRegistryService.getLastSuccessfulBuild(dockerConfig, "library/mysql");
+    BuildDetailsInternal build = dockerRegistryService.getLastSuccessfulBuild(dockerInternalConfig, "library/mysql");
     logger.info(build.toString());
   }
 
@@ -106,14 +108,14 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldValidateCredentials() {
-    DockerConfig dockerConfig =
-        DockerConfig.builder()
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder()
             .dockerRegistryUrl(DOCKER_REGISTRY_URL)
             .username("invalid")
-            .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .password(scmSecret.decryptToString(new SecretName("docker_config_anubhaw_password")))
             .build();
     try {
-      dockerRegistryService.validateCredentials(dockerConfig);
+      dockerRegistryService.validateCredentials(dockerInternalConfig);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();
