@@ -118,7 +118,7 @@ public class SplunkConnectorTest extends CategoryTest {
   public void testGetSplunkConnector() {
     createConnector();
     when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
-    ConnectorDTO connectorDTO = connectorService.get(null, null, null, identifier).get();
+    ConnectorDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureSplunkConnectorFieldsAreCorrect(connectorDTO);
   }
 }

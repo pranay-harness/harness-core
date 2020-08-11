@@ -9,7 +9,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.connector.FullyQualitifedIdentifierHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.entities.Connector;
@@ -20,6 +19,7 @@ import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -48,7 +48,7 @@ public class ConnectorMapper {
     connector.setAccountIdentifier(accountIdentifier);
     connector.setOrgIdentifier(connectorRequestDTO.getOrgIdentifier());
     connector.setProjectIdentifier(connectorRequestDTO.getProjectIdentifier());
-    connector.setFullyQualifiedIdentifier(FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+    connector.setFullyQualifiedIdentifier(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
         connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifier(),
         connectorRequestDTO.getIdentifier()));
     connector.setTags(connectorRequestDTO.getTags());
