@@ -10,6 +10,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
@@ -23,13 +24,14 @@ import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(CDC)
 @Slf4j
 public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRestraintInstance> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private SpringPersistenceProvider<ResourceRestraintInstance> persistenceProvider;
   @Inject private ResourceRestraintService resourceRestraintService;
+  @Inject @Named("orchestrationMongoTemplate") MongoTemplate mongoTemplate;
 
   public void registerIterators() {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
@@ -48,7 +50,7 @@ public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRest
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
             .schedulingType(REGULAR)
-            .persistenceProvider(persistenceProvider)
+            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));
   }
 

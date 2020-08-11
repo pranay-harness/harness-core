@@ -5,6 +5,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.status.StepStatusUpdateInfo;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
-  @Inject private MongoTemplate mongoTemplate;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
 
   @Override
   public PlanExecution save(PlanExecution planExecution) {

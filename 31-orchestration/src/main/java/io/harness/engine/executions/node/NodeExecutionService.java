@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
+import io.harness.interrupts.ExecutionInterruptType;
 import lombok.NonNull;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -41,4 +42,11 @@ public interface NodeExecutionService {
 
   List<NodeExecution> fetchChildrenNodeExecutionsByStatuses(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
+
+  boolean markLeavesDiscontinuingOnAbort(
+      String interruptId, ExecutionInterruptType interruptType, String planExecutionId, List<String> leafInstanceIds);
+
+  boolean markRetried(String nodeExecutionId);
+
+  boolean updateRelationShipsForRetryNode(String nodeExecutionId, String newNodeExecutionId);
 }

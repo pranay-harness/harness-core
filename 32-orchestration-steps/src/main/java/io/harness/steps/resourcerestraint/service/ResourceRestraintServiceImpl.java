@@ -15,6 +15,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
@@ -50,7 +51,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
   private static final String PLAN = "PLAN";
 
   @Inject private ResourceRestraintInstanceRepository restraintInstanceRepository;
-  @Inject private MongoTemplate mongoTemplate;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject private RestraintService<? extends ResourceRestraint> restraintService;

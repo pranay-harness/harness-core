@@ -16,6 +16,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier;
@@ -23,7 +24,6 @@ import io.harness.distribution.barrier.BarrierId;
 import io.harness.distribution.barrier.ForceProctor;
 import io.harness.distribution.barrier.Forcer;
 import io.harness.distribution.barrier.ForcerId;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
@@ -61,10 +61,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private BarrierNodeRepository barrierNodeRepository;
-  @Inject private MongoTemplate mongoTemplate;
-  @Inject private SpringPersistenceProvider<BarrierExecutionInstance> persistenceProvider;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public void registerIterators() {
@@ -84,7 +82,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             .filterExpander(
                 query -> query.addCriteria(Criteria.where(BarrierExecutionInstanceKeys.barrierState).in(STANDING)))
             .schedulingType(REGULAR)
-            .persistenceProvider(persistenceProvider)
+            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));
   }
 

@@ -17,7 +17,6 @@ import org.reflections.Reflections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -56,7 +55,6 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
   }
 
   @Bean(name = "orchestrationMongoTemplate")
-  @Primary
   public MongoTemplate orchestrationMongoTemplate() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
     TypeInformationMapper typeMapper = OrchestrationTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
