@@ -1,10 +1,9 @@
 package io.harness.connector.repositories.base;
 
-import com.google.inject.Inject;
-
+import io.harness.annotation.HarnessRepo;
 import io.harness.connector.entities.Connector;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -14,9 +13,14 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@HarnessRepo
 public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository {
   private final MongoTemplate mongoTemplate;
+
+  @Autowired
+  public ConnectorCustomRepositoryImpl(@Qualifier("connectorMongoTemplate") MongoTemplate mongoTemplate) {
+    this.mongoTemplate = mongoTemplate;
+  }
 
   @Override
   public Page<Connector> findAll(Criteria criteria, Pageable pageable) {
