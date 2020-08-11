@@ -1,27 +1,37 @@
-package io.harness.batch.processing.processor;
+package io.harness.batch.processing.tasklet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.dao.intfc.InstanceDataDao;
+import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
-import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
-import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
+import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
+import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
+import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
@@ -31,8 +41,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
+public class K8sNodeInfoTasklet implements Tasklet {
+  private JobParameters parameters;
+  @Autowired private BatchMainConfig config;
+  @Autowired private InstanceDataDao instanceDataDao;
   @Autowired private InstanceDataService instanceDataService;
+  @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private CloudProviderService cloudProviderService;
   @Autowired private InstanceResourceService instanceResourceService;
 
@@ -40,6 +54,36 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
   private static final String AZURE_SPOT_INSTANCE = "spot";
 
   @Override
+  public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
+    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
+    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
+    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
+    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+    int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
+
+    String messageType = EventTypeConstants.K8S_NODE_INFO;
+    PublishedMessageReader publishedMessageReader =
+        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+    List<PublishedMessage> publishedMessageList;
+    do {
+      publishedMessageList = publishedMessageReader.getNext();
+      publishedMessageList.stream()
+          .map(this ::processNodeInfoMessage)
+          .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
+          .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
+    } while (publishedMessageList.size() == batchSize);
+    return null;
+  }
+
+  public InstanceInfo processNodeInfoMessage(PublishedMessage publishedMessage) {
+    try {
+      return process(publishedMessage);
+    } catch (Exception ex) {
+      logger.error("K8sNodeInfoTasklet Exception ", ex);
+    }
+    return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
+  }
+
   public InstanceInfo process(PublishedMessage publishedMessage) {
     NodeInfo nodeInfo = (NodeInfo) publishedMessage.getMessage();
     String accountId = publishedMessage.getAccountId();

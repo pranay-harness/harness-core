@@ -1,4 +1,4 @@
-package io.harness.batch.processing.processor.util;
+package io.harness.batch.processing.tasklet.util;
 
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;

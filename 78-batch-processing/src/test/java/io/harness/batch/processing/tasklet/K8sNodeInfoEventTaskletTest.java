@@ -1,11 +1,14 @@
-package io.harness.batch.processing.processor;
+package io.harness.batch.processing.tasklet;
 
 import static io.harness.batch.processing.pricing.data.CloudProvider.AWS;
 import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
 import static io.harness.batch.processing.pricing.data.CloudProvider.GCP;
 import static io.harness.rule.OwnerRule.HITESH;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
@@ -14,11 +17,15 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.dao.intfc.InstanceDataDao;
+import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
@@ -34,26 +41,37 @@ import io.harness.perpetualtask.k8s.watch.NodeEvent.EventType;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.repeat.RepeatStatus;
+import software.wings.security.authentication.BatchQueryConfig;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
-public class K8sNodeInfoEventProcessorTest extends CategoryTest {
-  @InjectMocks private K8sNodeEventProcessor k8sNodeEventProcessor;
-  @InjectMocks private K8sNodeInfoProcessor k8sNodeInfoProcessor;
+public class K8sNodeInfoEventTaskletTest extends CategoryTest {
+  @InjectMocks private K8sNodeEventTasklet k8sNodeEventTasklet;
+  @InjectMocks private K8sNodeInfoTasklet k8sNodeInfoTasklet;
   @Mock private CloudProviderService cloudProviderService;
   @Mock private InstanceResourceService instanceResourceService;
   @Mock private InstanceDataService instanceDataService;
+  @Mock private PublishedMessageDao publishedMessageDao;
+  @Mock private InstanceDataDao instanceDataDao;
+  @Mock private BatchMainConfig config;
 
   private static final String NODE_UID = "node_uid";
   private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
@@ -65,6 +83,77 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   private static final String CLUSTER_NAME = "cluster_name";
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
+  private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
+  private final long END_TIME_MILLIS = NOW.toEpochMilli();
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testNodeInfoExecute() {
+    ChunkContext chunkContext = mock(ChunkContext.class);
+    StepContext stepContext = mock(StepContext.class);
+    StepExecution stepExecution = mock(StepExecution.class);
+    JobParameters parameters = mock(JobParameters.class);
+
+    when(chunkContext.getStepContext()).thenReturn(stepContext);
+    when(stepContext.getStepExecution()).thenReturn(stepExecution);
+    when(stepExecution.getJobParameters()).thenReturn(parameters);
+
+    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
+    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+
+    when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.GCP);
+    when(cloudProviderService.getFirstClassSupportedCloudProviders()).thenReturn(ImmutableList.of(AWS, AZURE, GCP));
+
+    when(instanceResourceService.getComputeVMResource(any(), any(), any()))
+        .thenReturn(Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build());
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
+    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
+    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    Map<String, Quantity> requestQuantity = new HashMap<>();
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "n"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, ""));
+    PublishedMessage k8sNodeInfoMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
+        CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
+
+    when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
+        .thenReturn(Arrays.asList(k8sNodeInfoMessage));
+
+    RepeatStatus repeatStatus = k8sNodeInfoTasklet.execute(null, chunkContext);
+    assertThat(repeatStatus).isNull();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testNodeEventExecute() {
+    ChunkContext chunkContext = mock(ChunkContext.class);
+    StepContext stepContext = mock(StepContext.class);
+    StepExecution stepExecution = mock(StepExecution.class);
+    JobParameters parameters = mock(JobParameters.class);
+
+    when(chunkContext.getStepContext()).thenReturn(stepContext);
+    when(stepContext.getStepExecution()).thenReturn(stepExecution);
+    when(stepExecution.getJobParameters()).thenReturn(parameters);
+
+    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
+    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+    PublishedMessage k8sNodeEventMessage =
+        getK8sNodeEventMessage(NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_STOP, START_TIMESTAMP);
+    when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
+        .thenReturn(Arrays.asList(k8sNodeEventMessage));
+    RepeatStatus repeatStatus = k8sNodeEventTasklet.execute(null, chunkContext);
+    assertThat(repeatStatus).isNull();
+  }
 
   @Test
   @Owner(developers = HITESH)
@@ -72,7 +161,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInstanceStartNodeEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
         getK8sNodeEventMessage(NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_START, START_TIMESTAMP);
-    InstanceEvent instanceEvent = k8sNodeEventProcessor.process(k8sNodeEventMessage);
+    InstanceEvent instanceEvent = k8sNodeEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
     assertThat(instanceEvent.getTimestamp()).isEqualTo(HTimestamps.toInstant(START_TIMESTAMP));
   }
@@ -83,7 +172,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInvalidInstanceNodeEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage = getK8sNodeEventMessage(
         NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_UNSPECIFIED, START_TIMESTAMP);
-    InstanceEvent instanceEvent = k8sNodeEventProcessor.process(k8sNodeEventMessage);
+    InstanceEvent instanceEvent = k8sNodeEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
     assertThat(instanceEvent.getType()).isNull();
   }
@@ -94,7 +183,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInstanceStopNodeEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
         getK8sNodeEventMessage(NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_STOP, START_TIMESTAMP);
-    InstanceEvent instanceEvent = k8sNodeEventProcessor.process(k8sNodeEventMessage);
+    InstanceEvent instanceEvent = k8sNodeEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
   }
 
@@ -105,8 +194,8 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, NODE_UID))
         .thenReturn(InstanceData.builder().build());
     PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
-        CLUSTER_NAME, CLUSTER_ID, Collections.emptyMap(), Collections.emptyMap(), START_TIMESTAMP);
-    InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
+        CLUSTER_NAME, CLUSTER_ID, emptyMap(), emptyMap(), START_TIMESTAMP);
+    InstanceInfo instanceInfo = k8sNodeInfoTasklet.process(k8sNodeEventMessage);
     assertThat(instanceInfo.getInstanceId()).isNull();
   }
   @Test
@@ -127,7 +216,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, ""));
     PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
         CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
-    InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
+    InstanceInfo instanceInfo = k8sNodeInfoTasklet.process(k8sNodeEventMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     io.harness.batch.processing.ccm.Resource infoAllocatableResource = instanceInfo.getAllocatableResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
@@ -164,7 +253,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, ""));
     PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
         CLUSTER_NAME, CLUSTER_ID, label, requestQuantity, START_TIMESTAMP);
-    InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
+    InstanceInfo instanceInfo = k8sNodeInfoTasklet.process(k8sNodeEventMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
@@ -189,7 +278,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
     label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2");
     label.put("kubernetes.io/lifecycle", "spot");
-    InstanceCategory instanceCategory = k8sNodeInfoProcessor.getInstanceCategory(CloudProvider.AWS, label);
+    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AWS, label);
     assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
   }
 
@@ -198,7 +287,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldReturnCloudProviderInstance() {
     String providerId = "aws:///eu-west-2c/i-072ecaefff88547de";
-    String cloudProviderInstanceId = k8sNodeInfoProcessor.getCloudProviderInstanceId(providerId);
+    String cloudProviderInstanceId = k8sNodeInfoTasklet.getCloudProviderInstanceId(providerId);
     assertThat(cloudProviderInstanceId).isEqualTo("i-072ecaefff88547de");
   }
 
@@ -211,7 +300,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
     label.put(K8sCCMConstants.AZURE_LIFECYCLE_KEY, "spot");
-    InstanceCategory instanceCategory = k8sNodeInfoProcessor.getInstanceCategory(CloudProvider.AZURE, label);
+    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AZURE, label);
     assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
   }
 
@@ -223,7 +312,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
-    InstanceCategory instanceCategory = k8sNodeInfoProcessor.getInstanceCategory(CloudProvider.AZURE, label);
+    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AZURE, label);
     assertThat(instanceCategory).isEqualTo(InstanceCategory.ON_DEMAND);
   }
 

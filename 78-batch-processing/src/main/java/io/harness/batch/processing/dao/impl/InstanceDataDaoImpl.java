@@ -15,7 +15,7 @@ import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.batch.processing.pricing.data.CloudProvider;
-import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
+import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;

@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
-import io.harness.batch.processing.processor.util.K8sResourceUtils;
+import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.AggregatedUsage;

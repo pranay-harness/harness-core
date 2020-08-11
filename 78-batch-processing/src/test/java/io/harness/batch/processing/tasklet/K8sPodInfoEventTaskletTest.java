@@ -1,7 +1,10 @@
-package io.harness.batch.processing.processor;
+package io.harness.batch.processing.tasklet;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -10,13 +13,17 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.dao.intfc.InstanceDataDao;
+import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.processor.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
+import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
@@ -29,29 +36,40 @@ import io.harness.perpetualtask.k8s.watch.Resource;
 import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.repeat.RepeatStatus;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.security.authentication.BatchQueryConfig;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
-public class K8sPodInfoEventProcessorTest extends CategoryTest {
-  @InjectMocks private K8sPodEventProcessor k8sPodEventProcessor;
-  @InjectMocks private K8sPodInfoProcessor k8sPodInfoProcessor;
-  @Mock private InstanceDataService instanceDataService;
+public class K8sPodInfoEventTaskletTest extends CategoryTest {
+  @InjectMocks private K8sPodEventTasklet k8sPodEventTasklet;
+  @InjectMocks private K8sPodInfoTasklet k8sPodInfoTasklet;
+  @Mock private BatchMainConfig config;
   @Mock private HPersistence hPersistence;
+  @Mock private InstanceDataDao instanceDataDao;
   @Mock private WorkloadRepository workloadRepository;
-
+  @Mock private InstanceDataService instanceDataService;
+  @Mock private PublishedMessageDao publishedMessageDao;
   @Mock private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
 
   private static final String POD_UID = "pod_uid";
@@ -74,6 +92,81 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   private static final String WORKLOAD_ID = "workload_id";
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
+  private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
+  private final long END_TIME_MILLIS = NOW.toEpochMilli();
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testPodInfoExecute() {
+    ChunkContext chunkContext = mock(ChunkContext.class);
+    StepContext stepContext = mock(StepContext.class);
+    StepExecution stepExecution = mock(StepExecution.class);
+    JobParameters parameters = mock(JobParameters.class);
+
+    when(chunkContext.getStepContext()).thenReturn(stepContext);
+    when(stepContext.getStepExecution()).thenReturn(stepExecution);
+    when(stepExecution.getJobParameters()).thenReturn(parameters);
+
+    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
+    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+
+    InstanceData instanceData = getNodeInstantData();
+    when(instanceDataService.fetchInstanceDataWithName(
+             ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
+        .thenReturn(instanceData);
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
+    when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, CLOUD_PROVIDER_ID, NAMESPACE, POD_NAME, label))
+        .thenReturn(harnessServiceInfo());
+    Map<String, Quantity> requestQuantity = new HashMap<>();
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
+    Map<String, Quantity> limitQuantity = new HashMap<>();
+    limitQuantity.put("cpu", getQuantity(CPU_LIMIT_AMOUNT, "M"));
+    limitQuantity.put("memory", getQuantity(MEMORY_LIMIT_AMOUNT, "M"));
+    Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).putAllLimits(limitQuantity).build();
+    PublishedMessage k8sPodInfoMessage =
+        getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
+            NAMESPACE, label, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+
+    when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
+        .thenReturn(Arrays.asList(k8sPodInfoMessage));
+
+    RepeatStatus repeatStatus = k8sPodInfoTasklet.execute(null, chunkContext);
+    assertThat(repeatStatus).isNull();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testPodEventExecute() {
+    ChunkContext chunkContext = mock(ChunkContext.class);
+    StepContext stepContext = mock(StepContext.class);
+    StepExecution stepExecution = mock(StepExecution.class);
+    JobParameters parameters = mock(JobParameters.class);
+
+    when(chunkContext.getStepContext()).thenReturn(stepContext);
+    when(stepContext.getStepExecution()).thenReturn(stepExecution);
+    when(stepExecution.getJobParameters()).thenReturn(parameters);
+
+    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
+    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+    PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
+        POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, PodEvent.EventType.EVENT_TYPE_SCHEDULED, START_TIMESTAMP);
+    when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
+        .thenReturn(Arrays.asList(k8sNodeEventMessage));
+    RepeatStatus repeatStatus = k8sPodEventTasklet.execute(null, chunkContext);
+    assertThat(repeatStatus).isNull();
+  }
 
   @Test
   @Owner(developers = HITESH)
@@ -81,7 +174,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInstanceStartPodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
         POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, PodEvent.EventType.EVENT_TYPE_SCHEDULED, START_TIMESTAMP);
-    InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
+    InstanceEvent instanceEvent = k8sPodEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
     assertThat(instanceEvent.getTimestamp()).isEqualTo(HTimestamps.toInstant(START_TIMESTAMP));
   }
@@ -92,7 +185,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInvalidInstancePodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
         POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_UNSPECIFIED, START_TIMESTAMP);
-    InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
+    InstanceEvent instanceEvent = k8sPodEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
     assertThat(instanceEvent.getType()).isNull();
   }
@@ -103,7 +196,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   public void shouldCreateInstanceStopPodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
         POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_TERMINATED, START_TIMESTAMP);
-    InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
+    InstanceEvent instanceEvent = k8sPodEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
   }
 
@@ -116,7 +209,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID,
         ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME, NAMESPACE, Collections.emptyMap(), Resource.newBuilder().build(),
         START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
-    InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     assertThat(instanceInfo.getInstanceId()).isNull();
   }
 
@@ -142,7 +235,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
             NAMESPACE, label, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
-    InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
     Map<String, String> metaData = instanceInfo.getMetaData();
@@ -185,7 +278,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, KUBE_PROXY_POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID,
             CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, resource, START_TIMESTAMP, "", "", "");
-    InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
 
