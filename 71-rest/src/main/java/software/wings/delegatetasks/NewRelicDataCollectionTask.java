@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -137,7 +138,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       this.taskResult = taskResult;
       this.allTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
-          createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
       this.analysisType = dataCollectionInfo.getTimeSeriesMlAnalysisType();
       logger.info("NewRelic collector initialized : managerAnalysisStartTime - {}, windowStartTimeManager {}",
           managerAnalysisStartTime, windowStartTimeManager);
@@ -183,11 +184,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       if (isPredictiveAnalysis()) {
         metricData = newRelicDelegateService.getMetricDataApplication(dataCollectionInfo.getNewRelicConfig(),
             dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), metricNames,
-            getStartTime(), endTime, false, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+            getStartTime(), endTime, false,
+            ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
       } else {
         metricData = newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
             dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-            metricNames, getStartTime(), endTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+            metricNames, getStartTime(), endTime,
+            ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
       }
       return metricData;
     }
@@ -358,13 +361,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       logger.debug("all txns so far {} for {}", allTxns.size(), dataCollectionInfo.getStateExecutionId());
       Set<NewRelicMetric> newTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
-          createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
       newTxns.removeAll(allTxns);
       logger.debug("new txns {} for {}", newTxns.size(), dataCollectionInfo.getStateExecutionId());
-      Set<NewRelicMetric> txnsWithData =
-          newRelicDelegateService.getTxnsWithDataInLastHour(allTxns, dataCollectionInfo.getNewRelicConfig(),
-              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
-              checkNotAllowedStrings, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+      Set<NewRelicMetric> txnsWithData = newRelicDelegateService.getTxnsWithDataInLastHour(allTxns,
+          dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+          dataCollectionInfo.getNewRelicAppId(), checkNotAllowedStrings,
+          ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
       logger.debug("txns with data {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
       txnsWithData.addAll(newTxns);
       logger.debug("txns to collect {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
@@ -390,9 +393,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         try {
           Set<NewRelicMetric> txnsToCollect = getTxnsToCollect(dataCollectionInfo.isCheckNotAllowedStrings());
           logger.debug("Found total new relic metrics " + txnsToCollect.size());
-          List<NewRelicApplicationInstance> instances = newRelicDelegateService.getApplicationInstances(
-              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-              dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          List<NewRelicApplicationInstance> instances =
+              newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
+                  dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
+                  ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())));
           logger.debug("Got {} new relic nodes.", instances.size());
 
           Map<String, List<Set<String>>> metricBatches =

@@ -136,7 +136,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
           final List<LogElement> logElements = new ArrayList<>();
           for (String hostName : dataCollectionInfo.getHosts()) {
             addHeartbeat(hostName, dataCollectionInfo, logCollectionMinute, logElements);
-            ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
+            ThirdPartyApiCallLog apiCallLog =
+                ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId()));
 
             Object searchResponse;
             String hostnameField;

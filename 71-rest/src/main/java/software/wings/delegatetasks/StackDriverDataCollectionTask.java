@@ -382,7 +382,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           .startTime(startTime)
           .endTime(endTime)
           .is247Task(is247Task)
-          .apiCallLog(createApiCallLog(dataCollectionInfo.getStateExecutionId()))
+          .apiCallLog(ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())))
           .groupByFields(Optional.empty())
           .perSeriesAligner(Optional.empty())
           .dataCollectionMinute(dataCollectionCurrentMinute)
