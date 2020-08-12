@@ -38,6 +38,7 @@ public class AzureVMSSSetupContextElement implements ContextElement {
   private String infraMappingId;
   private ResizeStrategy resizeStrategy;
   private List<String> baseVMSSScalingPolicyJSONs;
+  private AzureVMSSPreDeploymentData preDeploymentData;
 
   @Override
   public ContextElementType getElementType() {

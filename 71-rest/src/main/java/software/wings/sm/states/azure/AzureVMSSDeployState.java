@@ -1,6 +1,7 @@
 package software.wings.sm.states.azure;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.azure.model.AzureConstants.SKIP_VMSS_DEPLOY;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -81,6 +82,10 @@ public class AzureVMSSDeployState extends State {
     super(name, AZURE_VMSS_DEPLOY.name());
   }
 
+  public AzureVMSSDeployState(String name, String stateType) {
+    super(name, stateType);
+  }
+
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     // Do nothing on abort
@@ -102,14 +107,16 @@ public class AzureVMSSDeployState extends State {
     }
   }
 
-  private ExecutionResponse executeInternal(ExecutionContext context) {
+  @Override
+  public boolean isRollback() {
+    return false;
+  }
+
+  protected ExecutionResponse executeInternal(ExecutionContext context) {
     AzureVMSSSetupContextElement azureVMSSSetupContextElement =
         context.getContextElement(ContextElementType.AZURE_VMSS_SETUP);
     if (azureVMSSSetupContextElement == null) {
-      return ExecutionResponse.builder()
-          .executionStatus(SKIPPED)
-          .errorMessage("No Azure VMSS setup context element found. Skipping deploy.")
-          .build();
+      return ExecutionResponse.builder().executionStatus(SKIPPED).errorMessage(getSkipMessage()).build();
     }
 
     Application app = azureVMSSStateHelper.getApplication(context);
@@ -137,8 +144,8 @@ public class AzureVMSSDeployState extends State {
     List<EncryptedDataDetail> azureEncryptionDetails = azureVMSSStateHelper.getEncryptedDataDetails(
         context, azureVMSSInfrastructureMapping.getComputeProviderSettingId());
 
-    int newDesiredCount = updateNewDesiredCount(azureVMSSSetupContextElement);
-    int oldDesiredCount = updatedOldDesiredCount(azureVMSSSetupContextElement, newDesiredCount);
+    int newDesiredCount = getNewDesiredCount(azureVMSSSetupContextElement);
+    int oldDesiredCount = getOldDesiredCount(azureVMSSSetupContextElement, newDesiredCount);
 
     AzureVMSSDeployStateExecutionData azureVMSSDeployStateExecutionData = buildAzureVMSSDeployStateExecutionData(
         azureVMSSSetupContextElement, activity, newDesiredCount, oldDesiredCount);
@@ -175,7 +182,11 @@ public class AzureVMSSDeployState extends State {
         .build();
   }
 
-  protected int updateNewDesiredCount(AzureVMSSSetupContextElement azureVMSSSetupContextElement) {
+  protected String getSkipMessage() {
+    return SKIP_VMSS_DEPLOY;
+  }
+
+  protected int getNewDesiredCount(AzureVMSSSetupContextElement azureVMSSSetupContextElement) {
     int desiredInstances = azureVMSSSetupContextElement.getDesiredInstances();
     return getTotalExpectedCount(desiredInstances);
   }
@@ -193,7 +204,7 @@ public class AzureVMSSDeployState extends State {
     return updateCount;
   }
 
-  private int updatedOldDesiredCount(AzureVMSSSetupContextElement azureVMSSSetupContextElement, int newDesiredCount) {
+  protected int getOldDesiredCount(AzureVMSSSetupContextElement azureVMSSSetupContextElement, int newDesiredCount) {
     // If it's final phase then old desired count = 0, else oldDesiredCount minus the new count
     int oldDesiredCount = azureVMSSSetupContextElement.getOldDesiredCount();
     return isFinalDeployState(oldDesiredCount) ? 0 : Math.max(0, oldDesiredCount - newDesiredCount);
@@ -260,7 +271,7 @@ public class AzureVMSSDeployState extends State {
     }
   }
 
-  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     String appId = context.getAppId();
     // Execution Response
@@ -348,7 +359,7 @@ public class AzureVMSSDeployState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (!isRollback() && (instanceCount == null || instanceCount < 0)) {
+    if (instanceCount == null || instanceCount < 0) {
       invalidFields.put("instanceCount", "Instance count needs to be populated");
     }
     return invalidFields;
