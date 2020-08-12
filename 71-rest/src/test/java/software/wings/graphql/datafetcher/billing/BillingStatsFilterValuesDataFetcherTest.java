@@ -36,6 +36,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
@@ -503,6 +504,11 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   public QLCCMGroupBy makePodEntityGroupBy() {
     QLCCMEntityGroupBy podGroupBy = QLCCMEntityGroupBy.Pod;
     return QLCCMGroupBy.builder().entityGroupBy(podGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeLabelGroupBy() {
+    QLBillingDataLabelAggregation labelAggregation = QLBillingDataLabelAggregation.builder().name(LABEL_NAME).build();
+    return QLCCMGroupBy.builder().labelAggregation(labelAggregation).build();
   }
 
   public QLBillingDataFilter makeClusterFilter(String[] values) {
