@@ -149,11 +149,11 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.licensing.LicenseService;
 import software.wings.security.AccountPermissionSummary;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
-import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
@@ -2482,7 +2482,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public String generateJWTToken(Map<String, String> claims, SecretManager.JWT_CATEGORY category) {
+  public String generateJWTToken(Map<String, String> claims, JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException(INCORRECT_PORTAL_SETUP);
@@ -2505,7 +2505,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User verifyJWTToken(String jwtToken, SecretManager.JWT_CATEGORY category) {
+  public User verifyJWTToken(String jwtToken, JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException(INCORRECT_PORTAL_SETUP);

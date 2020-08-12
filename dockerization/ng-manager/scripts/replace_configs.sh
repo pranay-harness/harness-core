@@ -72,3 +72,10 @@ if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE grpcServer.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.managerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
+if [[ "" != "$AUTH_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
+fi

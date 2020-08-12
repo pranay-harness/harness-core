@@ -323,13 +323,13 @@ public class AuthenticationFilterTest extends CategoryTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testIsNextGenAuthorizationValid_For_NextGenAuthorization() {
-    when(secretManager.verifyJWTToken(anyString(), eq(SecretManager.JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET)))
+    when(secretManager.verifyJWTToken(anyString(), eq(JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET)))
         .thenReturn(new HashMap<>());
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn(NEXT_GEN_MANAGER_PREFIX);
     boolean isAuthorizationValid = authenticationFilter.isNextGenAuthorizationValid(context);
     assertThat(isAuthorizationValid).isTrue();
 
-    when(secretManager.verifyJWTToken(anyString(), eq(SecretManager.JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET)))
+    when(secretManager.verifyJWTToken(anyString(), eq(JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET)))
         .thenThrow(new WingsException(INVALID_CREDENTIAL));
     try {
       isAuthorizationValid = authenticationFilter.isNextGenAuthorizationValid(context);

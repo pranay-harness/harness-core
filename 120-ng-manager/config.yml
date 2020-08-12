@@ -69,6 +69,8 @@ secretManagerClient:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+enableAuth: false
+
 grpcClient:
   target: localhost:9880
   authority: localhost

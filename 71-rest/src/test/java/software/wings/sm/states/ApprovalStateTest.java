@@ -34,7 +34,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSE_NOTIFICATION;
-import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
+import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;

@@ -22,7 +22,7 @@ import software.wings.features.TwoFactorAuthenticationFeature;
 import software.wings.features.api.AccountId;
 import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
-import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;

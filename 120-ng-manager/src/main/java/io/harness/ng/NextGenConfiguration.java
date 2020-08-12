@@ -35,6 +35,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
+  @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

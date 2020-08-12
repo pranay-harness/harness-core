@@ -12,18 +12,20 @@ import io.harness.serializer.kryo.KryoConverterFactory;
 public class OrganizationManagementClientModule extends AbstractModule {
   private final OrganizationManagerClientConfig organizationManagerClientConfig;
   private final String serviceSecret;
+  private final String clientId;
 
   public OrganizationManagementClientModule(
-      OrganizationManagerClientConfig organizationManagerClientConfig, String serviceSecret) {
+      OrganizationManagerClientConfig organizationManagerClientConfig, String serviceSecret, String clientId) {
     this.organizationManagerClientConfig = organizationManagerClientConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
   }
 
   @Provides
   private OrganizationManagerHttpClientFactory organizationManagerHttpClientFactory(
       KryoConverterFactory kryoConverterFactory) {
     return new OrganizationManagerHttpClientFactory(
-        organizationManagerClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
+        organizationManagerClientConfig, serviceSecret, clientId, new ServiceTokenGenerator(), kryoConverterFactory);
   }
 
   @Override

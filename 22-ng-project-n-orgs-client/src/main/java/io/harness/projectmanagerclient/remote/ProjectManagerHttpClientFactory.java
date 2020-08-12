@@ -38,14 +38,15 @@ public class ProjectManagerHttpClientFactory implements Provider<ProjectManagerC
   public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
   private final ProjectManagerClientConfig projectManagerClientConfig;
   private final String serviceSecret;
+  private final String clientId;
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
-  private static final String CLIENT_ID = "NextGenManager";
 
   public ProjectManagerHttpClientFactory(ProjectManagerClientConfig projectManagerClientConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
+      String clientId, ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
     this.projectManagerClientConfig = projectManagerClientConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
   }
@@ -99,7 +100,7 @@ public class ProjectManagerHttpClientFactory implements Provider<ProjectManagerC
     return chain -> {
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
       Request request = chain.request();
-      return chain.proceed(request.newBuilder().header("Authorization", CLIENT_ID + StringUtils.SPACE + token).build());
+      return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };
   }
 
@@ -108,6 +109,6 @@ public class ProjectManagerHttpClientFactory implements Provider<ProjectManagerC
     if (StringUtils.isNotBlank(managerServiceSecret)) {
       return managerServiceSecret.trim();
     }
-    throw new InvalidRequestException("No secret key for client for " + CLIENT_ID);
+    throw new InvalidRequestException("No secret key for client for " + clientId);
   }
 }

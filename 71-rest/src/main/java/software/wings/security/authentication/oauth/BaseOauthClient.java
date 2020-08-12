@@ -4,8 +4,8 @@ import io.fabric8.utils.Strings;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
-import software.wings.security.SecretManager.JWT_CATEGORY;
 
 import java.net.URI;
 import java.net.URISyntaxException;

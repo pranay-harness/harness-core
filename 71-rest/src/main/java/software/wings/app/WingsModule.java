@@ -1139,8 +1139,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
-    install(new OrganizationManagementClientModule(
-        configuration.getOrganizationManagerClientConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
+    install(new OrganizationManagementClientModule(configuration.getOrganizationManagerClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), "Manager"));
 
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());

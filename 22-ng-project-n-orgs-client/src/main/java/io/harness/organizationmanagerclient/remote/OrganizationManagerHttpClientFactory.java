@@ -38,14 +38,16 @@ public class OrganizationManagerHttpClientFactory implements Provider<Organizati
   public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
   private final OrganizationManagerClientConfig organizationManagerClientConfig;
   private final String serviceSecret;
+  private final String clientId;
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
-  private static final String CLIENT_ID = "NextGenManager";
 
   public OrganizationManagerHttpClientFactory(OrganizationManagerClientConfig organizationManagerClientConfig,
-      String serviceSecret, ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
+      String serviceSecret, String clientId, ServiceTokenGenerator tokenGenerator,
+      KryoConverterFactory kryoConverterFactory) {
     this.organizationManagerClientConfig = organizationManagerClientConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
   }
@@ -99,7 +101,7 @@ public class OrganizationManagerHttpClientFactory implements Provider<Organizati
     return chain -> {
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
       Request request = chain.request();
-      return chain.proceed(request.newBuilder().header("Authorization", CLIENT_ID + StringUtils.SPACE + token).build());
+      return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };
   }
 
@@ -108,6 +110,6 @@ public class OrganizationManagerHttpClientFactory implements Provider<Organizati
     if (StringUtils.isNotBlank(managerServiceSecret)) {
       return managerServiceSecret.trim();
     }
-    throw new InvalidRequestException("No secret key for client for " + CLIENT_ID);
+    throw new InvalidRequestException("No secret key for client for " + clientId);
   }
 }

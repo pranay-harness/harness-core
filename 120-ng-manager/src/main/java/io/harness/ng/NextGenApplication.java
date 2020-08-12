@@ -1,6 +1,7 @@
 package io.harness.ng;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -28,7 +29,6 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
@@ -41,6 +41,7 @@ import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.security.JWTAuthenticationFilter;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
@@ -51,20 +52,27 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.NextGenManagerAuth;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 
 @Slf4j
 public class NextGenApplication extends Application<NextGenConfiguration> {
@@ -107,7 +115,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       @Override
       public List<NamedType> findSubtypes(Annotated a) {
         final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
-        if (EmptyPredicate.isNotEmpty(subtypesFromSuper)) {
+        if (isNotEmpty(subtypesFromSuper)) {
           return subtypesFromSuper;
         }
         return emptyIfNull(subtypeResolver.findSubtypes(a));
@@ -139,6 +147,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector);
     registerExecutionPlanCreators(injector);
     registerRemotePerpetualTaskServiceClients(injector);
+    registerAuthFilters(appConfig, environment, injector);
     MaintenanceController.forceMaintenance(false);
 
     logger.info("Initializing gRPC server...");
@@ -226,5 +235,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         injector.getInstance(RemotePerpetualTaskServiceClientRegistry.class);
     clientRegistry.registerClient(RemotePerpetualTaskType.REMOTE_SAMPLE.getTaskType(),
         injector.getInstance(SampleRemotePTaskServiceClient.class));
+  }
+
+  private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
+    if (configuration.isEnableAuth()) {
+      // sample usage
+      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+      Map<String, String> serviceToSecretMapping = new HashMap<>();
+      serviceToSecretMapping.put("IdentityService", configuration.getNextGenConfig().getManagerServiceSecret());
+      serviceToSecretMapping.put("Manager", configuration.getNextGenConfig().getManagerServiceSecret());
+      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    }
   }
 }

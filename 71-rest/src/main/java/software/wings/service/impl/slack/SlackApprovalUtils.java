@@ -1,7 +1,7 @@
 package software.wings.service.impl.slack;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
+import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.states.ApprovalState.JSON;
 
 import com.google.api.client.util.Charsets;
