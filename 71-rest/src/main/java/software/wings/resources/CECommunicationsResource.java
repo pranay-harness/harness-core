@@ -87,6 +87,16 @@ public class CECommunicationsResource {
   }
 
   @POST
+  @Path("{accountId}/addEmails")
+  @Timed
+  @ExceptionMetered
+  public RestResponse addMultipleEmail(
+      @PathParam("accountId") String accountId, @QueryParam("type") CommunicationType type, List<String> emails) {
+    emails.forEach(email -> communicationsService.update(accountId, email, type, true, false));
+    return new RestResponse<>();
+  }
+
+  @POST
   @Path("{accountId}/internal")
   @Timed
   @ExceptionMetered

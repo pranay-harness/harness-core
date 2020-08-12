@@ -158,12 +158,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     List<QLBillingDataFilter> filters = new ArrayList<>();
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makeClusterEntityGroupBy(), makeClusterNameEntityGroupBy(), makeCloudProviderEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.Cluster));
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Cluster);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getClusters().get(0).getId()).isEqualTo(CLUSTER1_ID);
@@ -187,12 +187,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     List<QLBillingDataFilter> filters = new ArrayList<>();
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makeClusterEntityGroupBy(), makeClusterTypeEntityGroupBy(), makeCloudProviderEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.CloudProvider));
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.CloudProvider);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getClusters().get(0).getId()).isEqualTo(CLUSTER1_ID);
@@ -216,12 +216,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     List<QLBillingDataFilter> filters = new ArrayList<>();
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makeApplicationEntityGroupBy(), makeServiceEntityGroupBy(), makeEnvironmentEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.Service));
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Service);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getApplications().get(0).getName()).isEqualTo(APP1_ID_ACCOUNT1);
@@ -247,14 +247,14 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
 
     List<QLBillingDataFilter> filters = Arrays.asList(makeClusterFilter(clusterValues));
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.Workload));
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(filters.get(0).getCluster().getOperator()).isEqualTo(QLIdOperator.EQUALS);
     assertThat(filters.get(0).getCluster().getValues()).isEqualTo(clusterValues);
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Workload);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getWorkloadNames().get(0).getName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
@@ -278,14 +278,14 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     List<QLBillingDataFilter> filters = Arrays.asList(makeClusterFilter(clusterValues));
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makeCloudServiceNameEntityGroupBy(), makeTaskIdEntityGroupBy(), makeLaunchTypeEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.TaskId));
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(filters.get(0).getCluster().getOperator()).isEqualTo(QLIdOperator.EQUALS);
     assertThat(filters.get(0).getCluster().getValues()).isEqualTo(clusterValues);
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.TaskId);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getCloudServiceNames().get(0).getName()).isEqualTo(CLOUD_SERVICE_NAME_ACCOUNT1);
@@ -312,12 +312,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     filters.add(makeWorkloadNameFilter(workloadNameValues));
     filters.add(makeNamespaceFilter(namespaceValues));
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.Workload));
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Workload);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getK8sLabels().get(0).getName()).isEqualTo(LABEL_NAME);
@@ -349,13 +349,11 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     filters.add(makeNamespaceFilter(namespaceValues));
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makeNodeEntityGroupBy(), makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Collections.emptyList();
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
-    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getWorkloadNames().get(0).getName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getNamespaces().get(0).getName()).isEqualTo(NAMESPACE1);
@@ -386,13 +384,11 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     filters.add(makeNamespaceFilter(namespaceValues));
     List<QLCCMGroupBy> groupBy =
         Arrays.asList(makePodEntityGroupBy(), makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Collections.emptyList();
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
-    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getWorkloadNames().get(0).getName()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getNamespaces().get(0).getName()).isEqualTo(NAMESPACE1);
@@ -415,12 +411,12 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeNamespaceFilterForSearch(namespaceValues));
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeNamespaceEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeSortingCriteria(QLBillingSortType.Namespace));
 
     QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
         ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Namespace);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getNamespaces().get(0).getName()).isEqualTo(NAMESPACE1);
@@ -527,6 +523,10 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   public QLBillingDataFilter makeNamespaceFilterForSearch(String[] values) {
     QLIdFilter namespaceFilter = QLIdFilter.builder().operator(QLIdOperator.LIKE).values(values).build();
     return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
+  }
+
+  public QLBillingSortCriteria makeSortingCriteria(QLBillingSortType type) {
+    return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(type).build();
   }
 
   private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {

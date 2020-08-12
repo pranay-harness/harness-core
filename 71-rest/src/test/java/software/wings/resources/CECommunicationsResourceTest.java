@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.utils.ResourceTestRule;
 
+import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.GenericType;
@@ -100,6 +101,18 @@ public class CECommunicationsResourceTest extends CategoryTest {
         .request()
         .delete(new GenericType<RestResponse<CECommunications>>() {});
     verify(communicationsService).delete(accountId, email, type);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testAddMultipleEmails() {
+    RESOURCES.client()
+        .target(format("/ceCommunications/%s/addEmails?type=%s", accountId, type))
+        .request()
+        .post(entity(Collections.singletonList(email), MediaType.APPLICATION_JSON),
+            new GenericType<RestResponse<CECommunications>>() {});
+    verify(communicationsService).update(accountId, email, type, true, false);
   }
 
   @Test

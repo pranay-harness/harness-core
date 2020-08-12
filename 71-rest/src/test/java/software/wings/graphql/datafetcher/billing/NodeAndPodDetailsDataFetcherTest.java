@@ -85,6 +85,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String NAMESPACE = "namespace";
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
+  private static final Integer LIMIT = 10;
+  private static final Integer OFFSET = 0;
 
   @Before
   public void setup() throws SQLException {
@@ -113,7 +115,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     when(timeScaleDBService.isValid()).thenReturn(false);
     assertThatThrownBy(()
                            -> nodeAndPodDetailsDataFetcher.fetch(ACCOUNT1_ID, Collections.EMPTY_LIST,
-                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST))
+                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -128,8 +130,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException());
 
-    QLData data = nodeAndPodDetailsDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+    QLData data = nodeAndPodDetailsDataFetcher.fetch(ACCOUNT1_ID, Collections.EMPTY_LIST, Collections.EMPTY_LIST,
+        Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET);
     assertThat(data).isNull();
   }
 
@@ -148,7 +150,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
         makeIdleCostAggregation(), makeUnallocatedCostAggregation(), makeNetworkCostAggregation());
 
     QLNodeAndPodDetailsTableData data = (QLNodeAndPodDetailsTableData) nodeAndPodDetailsDataFetcher.fetch(
-        ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria);
+        ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getId()).isEqualTo(INSTANCE_ID);
@@ -181,7 +183,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
         Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation(), makeUnallocatedCostAggregation());
 
     QLNodeAndPodDetailsTableData data = (QLNodeAndPodDetailsTableData) nodeAndPodDetailsDataFetcher.fetch(
-        ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria);
+        ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getId()).isEqualTo(INSTANCE_ID);

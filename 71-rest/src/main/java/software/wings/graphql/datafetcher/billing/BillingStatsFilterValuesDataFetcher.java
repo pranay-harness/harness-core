@@ -61,7 +61,7 @@ public class BillingStatsFilterValuesDataFetcher
     try {
       if (timeScaleDBService.isValid()) {
         List<String> selectedFields = getSelectedFields(dataFetchingEnvironment);
-        return getEntityData(accountId, filters, groupBy, limit, offset, selectedFields);
+        return getEntityData(accountId, filters, groupBy, sortCriteria, limit, offset, selectedFields);
       } else {
         throw new InvalidRequestException("Cannot process request in BillingStatsFilterValuesDataFetcher");
       }
@@ -71,7 +71,8 @@ public class BillingStatsFilterValuesDataFetcher
   }
 
   protected QLFilterValuesListData getEntityData(@NotNull String accountId, List<QLBillingDataFilter> filters,
-      List<QLCCMGroupBy> groupByList, Integer limit, Integer offset, List<String> selectedFields) {
+      List<QLCCMGroupBy> groupByList, List<QLBillingSortCriteria> sortCriteria, Integer limit, Integer offset,
+      List<String> selectedFields) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     boolean successful = false;
@@ -97,12 +98,12 @@ public class BillingStatsFilterValuesDataFetcher
     if (!groupByNodeAndPodList.isEmpty()) {
       instanceIds = getInstanceIdValues(accountId,
           getFiltersForInstanceIdQuery(filters, isGroupByPodPresent(groupByNodeAndPodList)), groupByNodeAndPodList,
-          limit, offset);
+          sortCriteria, limit, offset);
       filters = getFiltersExcludingInstanceTypeFilter(filters);
     }
 
     queryData = billingDataQueryBuilder.formFilterValuesQuery(
-        accountId, filters, groupByEntityListExcludingNodeAndPod, limit, offset);
+        accountId, filters, groupByEntityListExcludingNodeAndPod, sortCriteria, limit, offset);
     logger.info("BillingStatsFilterValuesDataFetcher query!! {}", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
@@ -130,12 +131,13 @@ public class BillingStatsFilterValuesDataFetcher
   }
 
   private Set<String> getInstanceIdValues(String accountId, List<QLBillingDataFilter> filters,
-      List<QLCCMEntityGroupBy> groupByNodeAndPodList, Integer limit, Integer offset) {
+      List<QLCCMEntityGroupBy> groupByNodeAndPodList, List<QLBillingSortCriteria> sortCriteria, Integer limit,
+      Integer offset) {
     ResultSet resultSet = null;
     boolean successful = false;
     int retryCount = 0;
-    BillingDataQueryMetadata queryData =
-        billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByNodeAndPodList, limit, offset);
+    BillingDataQueryMetadata queryData = billingDataQueryBuilder.formFilterValuesQuery(
+        accountId, filters, groupByNodeAndPodList, sortCriteria, limit, offset);
     logger.info("BillingStatsFilterValuesDataFetcher query to get InstanceIds!! {}", queryData.getQuery());
     Set<String> instanceIds = new HashSet<>();
     while (!successful && retryCount < MAX_RETRY) {

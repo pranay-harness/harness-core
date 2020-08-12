@@ -2,13 +2,14 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -32,8 +33,9 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
-    QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
+public class NodeAndPodDetailsDataFetcher
+    extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
+        QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject BillingDataHelper billingDataHelper;
@@ -50,10 +52,11 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
-      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria) {
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
+      Integer limit, Integer offset) {
     try {
       if (timeScaleDBService.isValid()) {
-        return getData(accountId, filters, aggregateFunction, groupBy, sortCriteria);
+        return getData(accountId, filters, aggregateFunction, groupBy, sortCriteria, limit, offset);
       } else {
         throw new InvalidRequestException("Cannot process request in NodeAndPodDetailsDataFetcher");
       }
@@ -64,7 +67,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
 
   protected QLNodeAndPodDetailsTableData getData(@NotNull String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMGroupBy> groupByList,
-      List<QLBillingSortCriteria> sortCriteria) {
+      List<QLBillingSortCriteria> sortCriteria, Integer limit, Integer offset) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     QLNodeAndPodDetailsTableData costData = null;
@@ -72,7 +75,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
 
     queryData = billingDataQueryBuilder.formNodeAndPodDetailsQuery(
-        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria);
+        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, limit, offset);
 
     logger.info("NodeAndPodDetailsDataFetcher query!! {}", queryData.getQuery());
     boolean successful = false;
@@ -272,12 +275,20 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
 
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
-      List<QLCCMAggregationFunction> aggregationFunctions, List<QLBillingSortCriteria> sortCriteria, QLData qlData) {
+      List<QLCCMAggregationFunction> aggregations, List<QLBillingSortCriteria> sort, QLData qlData, Integer limit,
+      boolean includeOthers) {
     return null;
   }
 
   @Override
   public String getEntityType() {
+    return null;
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
+      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 }
