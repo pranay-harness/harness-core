@@ -50,14 +50,14 @@ public class EventJobScheduler {
   }
 
   // this job runs every 1 hours "0 0 * ? * *". For debugging, run every minute "* * * ? * *"
-  @Scheduled(cron = "0 0 * ? * *")
-  public void runCloudEfficiencyOutOfClusterJobs() {
-    runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER);
-  }
-
   @Scheduled(cron = "0 */20 * * * ?")
   public void runCloudEfficiencyInClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER);
+  }
+
+  @Scheduled(cron = "0 0 * ? * *")
+  public void runCloudEfficiencyOutOfClusterJobs() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER);
   }
 
   private void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket) {
@@ -133,6 +133,9 @@ public class EventJobScheduler {
   private void runJob(String accountId, Job job) {
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
+      if (BatchJobType.AWS_ECS_CLUSTER_DATA_SYNC == batchJobType && !accountId.equals("zEaak-FLS425IEO7OLzMUg")) {
+        return;
+      }
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);

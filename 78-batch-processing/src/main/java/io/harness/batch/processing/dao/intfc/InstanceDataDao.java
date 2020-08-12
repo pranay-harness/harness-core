@@ -3,20 +3,26 @@ package io.harness.batch.processing.dao.intfc;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 public interface InstanceDataDao {
   boolean create(InstanceData instanceData);
+
+  boolean updateInstanceStopTime(InstanceData instanceData, Instant stopTime);
 
   InstanceData upsert(InstanceEvent instanceEvent);
 
   InstanceData upsert(InstanceInfo instanceInfo);
 
   InstanceData fetchInstanceData(String instanceId);
+
+  List<InstanceData> fetchInstanceData(Set<String> instanceIds);
 
   boolean updateInstanceState(
       InstanceData instanceData, Instant instant, String instantField, InstanceState instanceState);
@@ -32,6 +38,9 @@ public interface InstanceDataDao {
 
   List<InstanceData> fetchClusterActiveInstanceData(
       String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime);
+
+  List<InstanceData> fetchClusterActiveInstanceData(
+      String accountId, String clusterName, List<InstanceType> instanceTypes, InstanceState instanceState);
 
   InstanceData getActiveInstance(String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider);
 

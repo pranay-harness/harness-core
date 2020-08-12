@@ -50,7 +50,6 @@ public class AwsECSClusterServiceImpl implements AwsECSClusterService {
     List<CECluster> clusters = new ArrayList<>();
     awsRegions.forEach(awsRegion -> {
       List<String> ecsClusters = awsECSHelperService.listECSClusters(awsRegion.getValue(), awsCrossAccountAttributes);
-      logger.info("ECS clusters {}", ecsClusters);
       ecsClusters.forEach(ecsCluster -> {
         CECluster ceCluster = CECluster.builder()
                                   .accountId(accountId)

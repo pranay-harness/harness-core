@@ -1,5 +1,7 @@
 package io.harness.batch.processing.dao.impl;
 
+import static io.harness.persistence.HQuery.excludeCount;
+
 import com.google.inject.Inject;
 
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
@@ -22,7 +24,7 @@ public class PublishedMessageDaoImpl implements PublishedMessageDao {
   @Override
   public List<PublishedMessage> fetchPublishedMessage(
       String accountId, String messageType, Long startTime, Long endTime, int batchSize) {
-    Query<PublishedMessage> query = hPersistence.createQuery(PublishedMessage.class)
+    Query<PublishedMessage> query = hPersistence.createQuery(PublishedMessage.class, excludeCount)
                                         .filter(PublishedMessageKeys.accountId, accountId)
                                         .filter(PublishedMessageKeys.type, messageType)
                                         .order(PublishedMessageKeys.createdAt);

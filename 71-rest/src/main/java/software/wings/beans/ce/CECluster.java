@@ -1,5 +1,9 @@
 package software.wings.beans.ce;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.google.common.hash.Hashing;
+
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
@@ -17,8 +21,9 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import software.wings.beans.ce.CECluster.CEClusterKeys;
 
+import java.util.Base64;
+
 @Data
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCluster", noClassnameStored = true)
 @CdUniqueIndex(name = "no_dup",
@@ -38,8 +43,32 @@ public class CECluster implements PersistentEntity, UuidAware, CreatedAtAware, U
   String infraAccountId;
   String infraMasterAccountId;
   String parentAccountSettingId; // setting id of ce connectors
-  String cloudProviderId; // setting id of this clusters cloud provider
+  String hash;
   long lastReceivedAt;
   long createdAt;
   long lastUpdatedAt;
+
+  @Builder(toBuilder = true)
+  private CECluster(String accountId, String clusterName, String clusterArn, String region, String infraAccountId,
+      String infraMasterAccountId, String parentAccountSettingId) {
+    this.accountId = accountId;
+    this.clusterName = clusterName;
+    this.clusterArn = clusterArn;
+    this.region = region;
+    this.infraAccountId = infraAccountId;
+    this.infraMasterAccountId = infraMasterAccountId;
+    this.parentAccountSettingId = parentAccountSettingId;
+    this.hash = hash(accountId, clusterName, region, infraAccountId);
+  }
+
+  public static String hash(String accountId, String clusterName, String region, String infraAccountId) {
+    return Base64.getEncoder().encodeToString(Hashing.sha1()
+                                                  .newHasher()
+                                                  .putString(accountId, UTF_8)
+                                                  .putString(clusterName, UTF_8)
+                                                  .putString(region, UTF_8)
+                                                  .putString(infraAccountId, UTF_8)
+                                                  .hash()
+                                                  .asBytes());
+  }
 }

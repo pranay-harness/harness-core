@@ -169,7 +169,7 @@ public class UtilizationDataServiceImpl {
           || instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE) {
         utilInstanceId = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_ARN, instanceData);
       } else if (instanceData.getInstanceType() == InstanceType.ECS_CONTAINER_INSTANCE) {
-        utilInstanceId = instanceData.getClusterName();
+        utilInstanceId = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_ARN, instanceData);
       }
       instanceIds.computeIfAbsent(utilInstanceId, k -> new ArrayList<>()).add(instanceId);
     });
