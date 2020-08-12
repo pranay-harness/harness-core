@@ -43,6 +43,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.app.MainConfiguration;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.AuditHeader.RequestType;
@@ -109,6 +110,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private EnvironmentService environmentService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private AuditPreferenceHelper auditPreferenceHelper;
+  @Inject private MainConfiguration configuration;
 
   private WingsPersistence wingsPersistence;
 
@@ -328,12 +330,14 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public void finalize(AuditHeader header, byte[] payload) {
     AuditHeader auditHeader = wingsPersistence.get(AuditHeader.class, header.getUuid());
-    String fileUuid = savePayload(auditHeader.getUuid(), RequestType.RESPONSE, new ByteArrayInputStream(payload));
     UpdateOperations<AuditHeader> ops = wingsPersistence.createUpdateOperations(AuditHeader.class)
                                             .set("responseStatusCode", header.getResponseStatusCode())
                                             .set("responseTime", header.getResponseTime());
-    if (fileUuid != null) {
-      ops = ops.set("responsePayloadUuid", fileUuid);
+    if (configuration.getAuditConfig().isStoreResponsePayload()) {
+      String fileUuid = savePayload(auditHeader.getUuid(), RequestType.RESPONSE, new ByteArrayInputStream(payload));
+      if (fileUuid != null) {
+        ops = ops.set("responsePayloadUuid", fileUuid);
+      }
     }
 
     wingsPersistence.update(auditHeader, ops);

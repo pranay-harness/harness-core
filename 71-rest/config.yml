@@ -26,6 +26,10 @@ xxxxxxxx
         threshold: ERROR
   maxThreads: 1024
 
+auditConfig:
+  storeRequestPayload: false
+  storeResponsePayload: false
+
 backgroundScheduler:
   enabled: true
   schedulerName: automation_background_scheduler

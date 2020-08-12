@@ -91,6 +91,10 @@ public class AuditRequestFilter implements ContainerRequestFilter {
 
     header = auditHelper.create(header);
 
+    if (!configuration.getAuditConfig().isStoreRequestPayload()) {
+      return;
+    }
+
     try {
       if (headerString.contains("multipart/form-data")) {
         // don't store file content in audit logs
