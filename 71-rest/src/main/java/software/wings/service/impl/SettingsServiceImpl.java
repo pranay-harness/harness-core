@@ -680,7 +680,7 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingServiceHelper.updateReferencedSecrets(settingAttribute);
     settingValidationService.validate(settingAttribute);
-    validateAndUpdateCEDetails(settingAttribute);
+    validateAndUpdateCEDetails(settingAttribute, true);
     // e.g. User is saving GitConnector and setWebhookToken is needed.
     // This fields is populated by us and not by user
     autoGenerateFieldsIfRequired(settingAttribute);
@@ -708,12 +708,12 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @VisibleForTesting
-  void validateAndUpdateCEDetails(SettingAttribute settingAttribute) {
+  void validateAndUpdateCEDetails(SettingAttribute settingAttribute, boolean isSave) {
     if (CE_CONNECTOR == settingAttribute.getCategory()) {
       int maxCloudAccountsAllowed = ceCloudAccountFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
       int currentCloudAccountsCount = ccmSettingService.listCeCloudAccounts(settingAttribute.getAccountId()).size();
 
-      if (currentCloudAccountsCount >= maxCloudAccountsAllowed) {
+      if (currentCloudAccountsCount >= maxCloudAccountsAllowed && isSave) {
         logger.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
             settingAttribute.getValue().getType(), settingAttribute.getAccountId());
         throw new InvalidRequestException(String.format(
@@ -868,7 +868,7 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;
     if (settingAttribute.getValue() instanceof CEAwsConfig) {
-      validateAndUpdateCEDetails(settingAttribute);
+      validateAndUpdateCEDetails(settingAttribute, false);
     }
 
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
