@@ -29,6 +29,7 @@ import migrations.all.AddAccountIdToTimeSeriesMetricGroupMigration;
 import migrations.all.AddAccountIdToTimeSeriesMetricTemplatesMigration;
 import migrations.all.AddAccountIdToTimeSeriesRiskSummary;
 import migrations.all.AddAccountIdToTimeSeriesTransactionThresholdsMigration;
+import migrations.all.AddAccountIdToTriggerExecutions;
 import migrations.all.AddAccountIdToTriggers;
 import migrations.all.AddAccountIdToWorkflowExecutionBaselines;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
@@ -264,6 +265,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(154, AddAccountIdToExecutionInterruptCollection.class))
         .add(Pair.of(155, AddAccountIdToResourceContraintInstanceCollection.class))
         .add(Pair.of(156, AddAccountIdToServiceTemplates.class))
+        .add(Pair.of(157, AddAccountIdToTriggerExecutions.class))
         .build();
   }
 }
