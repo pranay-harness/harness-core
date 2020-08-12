@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,7 +36,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.AccountType.PAID;
+import static software.wings.beans.AccountType.TRIAL;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
@@ -123,9 +126,11 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Event.Type;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -1382,5 +1387,47 @@ public class UserServiceTest extends WingsBaseTest {
     when(accountService.get(anyString())).thenReturn(account);
     when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL);
     userService.inviteUsers(userInvite);
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void setNewDefaultAccountIdTest() {
+    Account account1 = getAccount(AccountStatus.ACTIVE, PAID, "111");
+    Account account2 = getAccount(AccountStatus.ACTIVE, ESSENTIALS, "222");
+    User user1 = anUser().accounts(Arrays.asList(account2, account1)).build();
+    userService.setNewDefaultAccountId(user1);
+
+    assertThat(user1.getDefaultAccountId()).isEqualTo("111");
+
+    Account account3 = getAccount(AccountStatus.EXPIRED, PAID, "111");
+    Account account4 = getAccount(AccountStatus.ACTIVE, TRIAL, "222");
+    User user2 = anUser().accounts(Arrays.asList(account3, account4)).build();
+    userService.setNewDefaultAccountId(user2);
+
+    assertThat(user2.getDefaultAccountId()).isEqualTo("222");
+
+    Account account5 = getAccount(AccountStatus.INACTIVE, PAID, "111");
+    Account account6 = getAccount(AccountStatus.DELETED, ESSENTIALS, "222");
+    Account account7 = getAccount(AccountStatus.EXPIRED, TRIAL, "333");
+    User user3 = anUser().accounts(Arrays.asList(account5, account6, account7)).build();
+    userService.setNewDefaultAccountId(user3);
+
+    assertThat(user3.getDefaultAccountId()).isEqualTo("333");
+
+    Account account8 = getAccount(AccountStatus.DELETED, PAID, "111");
+    Account account9 = getAccount(AccountStatus.DELETED, ESSENTIALS, "222");
+    Account account10 = getAccount(AccountStatus.DELETED, TRIAL, "333");
+    User user4 = anUser().accounts(Arrays.asList(account8, account9, account10)).build();
+    userService.setNewDefaultAccountId(user4);
+
+    assertThat(user4.getDefaultAccountId()).isEqualTo("111");
+  }
+
+  private Account getAccount(String accountStatus, String accountType, String uuid) {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(accountStatus);
+    licenseInfo.setAccountType(accountType);
+    return anAccount().withLicenseInfo(licenseInfo).withUuid(uuid).build();
   }
 }

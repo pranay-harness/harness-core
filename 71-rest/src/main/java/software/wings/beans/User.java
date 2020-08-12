@@ -31,6 +31,8 @@ import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -465,9 +467,46 @@ public class User extends Base implements Principal {
 
   public String getDefaultAccountId() {
     if (defaultAccountId == null && isNotEmpty(accounts)) {
-      defaultAccountId = accounts.get(0).getUuid();
+      return getDefaultAccountCandidate();
     }
     return defaultAccountId;
+  }
+
+  @JsonIgnore
+  public String getDefaultAccountCandidate() {
+    final List<String> accountStatusesOrderedByPriority =
+        Arrays.asList(AccountStatus.ACTIVE, AccountStatus.EXPIRED, AccountStatus.INACTIVE, AccountStatus.DELETED);
+    final List<String> accountTypesOrderedByPriority =
+        Arrays.asList(AccountType.PAID, AccountType.ESSENTIALS, AccountType.TRIAL, AccountType.COMMUNITY);
+
+    List<Account> userAccounts = getAccounts();
+
+    if (isEmpty(userAccounts)) {
+      return null;
+    }
+
+    Comparator<Account> byStatus =
+        Comparator.comparingInt(account -> accountStatusesOrderedByPriority.indexOf(getAccountStatus(account)));
+    Comparator<Account> byType =
+        Comparator.comparingInt(account -> accountTypesOrderedByPriority.indexOf(getAccountType(account)));
+
+    userAccounts.sort(byStatus.thenComparing(byType));
+
+    return userAccounts.get(0).getUuid();
+  }
+
+  @JsonIgnore
+  private String getAccountStatus(Account account) {
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    return licenseInfo == null || licenseInfo.getAccountStatus() == null ? AccountStatus.ACTIVE
+                                                                         : licenseInfo.getAccountStatus();
+  }
+
+  @JsonIgnore
+  private String getAccountType(Account account) {
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    return licenseInfo == null || licenseInfo.getAccountType() == null ? AccountType.PAID
+                                                                       : licenseInfo.getAccountType();
   }
 
   public void setDefaultAccountId(String accountId) {
