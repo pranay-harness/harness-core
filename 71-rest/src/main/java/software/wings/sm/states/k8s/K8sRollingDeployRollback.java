@@ -16,6 +16,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -89,9 +90,9 @@ public class K8sRollingDeployRollback extends State {
 
       Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME,
           getStateType(), activityService,
-          ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.Rollback),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState)));
+          ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
+              new K8sDummyCommandUnit(K8sCommandUnitConstants.Rollback),
+              new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState)));
 
       K8sTaskParameters k8sTaskParameters = K8sRollingDeployRollbackTaskParameters.builder()
                                                 .activityId(activity.getUuid())

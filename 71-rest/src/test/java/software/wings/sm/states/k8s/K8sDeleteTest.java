@@ -30,6 +30,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -121,7 +122,7 @@ public class K8sDeleteTest extends WingsBaseTest {
 
     @SuppressWarnings("unchecked") List<K8sDummyCommandUnit> commandUnits = listArgumentCaptor.getValue();
     assertThat(commandUnits.stream().map(K8sDummyCommandUnit::getName).collect(Collectors.toList()))
-        .containsExactly(K8sDummyCommandUnit.Init, K8sDummyCommandUnit.Delete);
+        .containsExactly(K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Delete);
 
     verify(k8sStateHelper, times(1))
         .queueK8sDelegateTask(eq(context),
@@ -156,7 +157,7 @@ public class K8sDeleteTest extends WingsBaseTest {
 
     @SuppressWarnings("unchecked") List<K8sDummyCommandUnit> commandUnits = listArgumentCaptor.getValue();
     assertThat(commandUnits.stream().map(K8sDummyCommandUnit::getName).collect(Collectors.toList()))
-        .containsExactly(K8sDummyCommandUnit.Init, K8sDummyCommandUnit.Delete);
+        .containsExactly(K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Delete);
 
     verify(k8sStateHelper, times(1))
         .queueK8sDelegateTask(eq(context),
@@ -270,9 +271,9 @@ public class K8sDeleteTest extends WingsBaseTest {
   public void testCommandUnitList() {
     List<CommandUnit> applyCommandUnits = k8sDelete.commandUnitList(true);
     assertThat(applyCommandUnits).isNotEmpty();
-    assertThat(applyCommandUnits.get(0).getName()).isEqualTo(K8sDummyCommandUnit.FetchFiles);
-    assertThat(applyCommandUnits.get(1).getName()).isEqualTo(K8sDummyCommandUnit.Init);
-    assertThat(applyCommandUnits.get(applyCommandUnits.size() - 1).getName()).isEqualTo(K8sDummyCommandUnit.Delete);
+    assertThat(applyCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(applyCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);
+    assertThat(applyCommandUnits.get(applyCommandUnits.size() - 1).getName()).isEqualTo(K8sCommandUnitConstants.Delete);
   }
 
   @Test

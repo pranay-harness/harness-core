@@ -1,9 +1,9 @@
 package io.harness.cdng.tasks.manifestFetch;
 
+import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
-import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
 

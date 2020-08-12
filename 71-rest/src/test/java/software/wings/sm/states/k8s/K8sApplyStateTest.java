@@ -26,6 +26,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,6 @@ import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
@@ -201,10 +201,10 @@ public class K8sApplyStateTest extends WingsBaseTest {
   public void testCommandUnitList() {
     List<CommandUnit> applyCommandUnits = k8sApplyState.commandUnitList(true);
     assertThat(applyCommandUnits).isNotEmpty();
-    assertThat(applyCommandUnits.get(0).getName()).isEqualTo(K8sDummyCommandUnit.FetchFiles);
-    assertThat(applyCommandUnits.get(1).getName()).isEqualTo(K8sDummyCommandUnit.Init);
-    assertThat(applyCommandUnits.get(4).getName()).isEqualTo(K8sDummyCommandUnit.WaitForSteadyState);
-    assertThat(applyCommandUnits.get(applyCommandUnits.size() - 1).getName()).isEqualTo(K8sDummyCommandUnit.WrapUp);
+    assertThat(applyCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(applyCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);
+    assertThat(applyCommandUnits.get(4).getName()).isEqualTo(K8sCommandUnitConstants.WaitForSteadyState);
+    assertThat(applyCommandUnits.get(applyCommandUnits.size() - 1).getName()).isEqualTo(K8sCommandUnitConstants.WrapUp);
   }
 
   @Test

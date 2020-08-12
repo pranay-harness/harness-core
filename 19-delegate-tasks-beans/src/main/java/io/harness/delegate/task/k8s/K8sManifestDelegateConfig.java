@@ -8,4 +8,8 @@ import lombok.Value;
 @Builder
 public class K8sManifestDelegateConfig implements ManifestDelegateConfig {
   StoreDelegateConfig storeDelegateConfig;
+
+  public ManifestType getManifestType() {
+    return ManifestType.K8S_MANIFEST;
+  }
 }

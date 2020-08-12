@@ -24,6 +24,7 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@Slf4j
 public class K8sRollingBaseHandler {
   @Inject K8sTaskHelperBase k8sTaskHelperBase;
 

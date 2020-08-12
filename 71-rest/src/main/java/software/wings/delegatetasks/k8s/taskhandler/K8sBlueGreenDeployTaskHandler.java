@@ -2,6 +2,13 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.K8sCommandUnitConstants.Apply;
+import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
+import static io.harness.k8s.K8sCommandUnitConstants.Init;
+import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
+import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
+import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
+import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.k8s.manifest.ManifestHelper.getKubernetesResourceFromSpec;
 import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getPrimaryService;
@@ -22,13 +29,6 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
-import static software.wings.beans.command.K8sDummyCommandUnit.Apply;
-import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
-import static software.wings.beans.command.K8sDummyCommandUnit.Init;
-import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
-import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
-import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
-import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;

@@ -12,5 +12,5 @@ import java.util.List;
 public class DirectK8sInfraDelegateConfig implements K8sInfraDelegateConfig {
   String namespace;
   KubernetesClusterConfigDTO kubernetesClusterConfigDTO;
-  List<EncryptedDataDetail> encryptionDetails;
+  List<EncryptedDataDetail> encryptionDataDetails;
 }

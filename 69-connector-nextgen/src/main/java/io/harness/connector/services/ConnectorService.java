@@ -5,9 +5,13 @@ import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.ng.core.NGAccess;
+import io.harness.security.encryption.EncryptedDataDetail;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 
 public interface ConnectorService {
   Optional<ConnectorDTO> get(
@@ -28,4 +32,6 @@ public interface ConnectorService {
 
   ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
+
+  List<EncryptedDataDetail> getEncryptionDataDetails(@Nonnull ConnectorDTO connectorDTO, @Nonnull NGAccess ngAccess);
 }

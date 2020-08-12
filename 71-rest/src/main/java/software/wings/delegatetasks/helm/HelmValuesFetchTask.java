@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.helm;
 
+import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -9,7 +10,6 @@ import static java.lang.String.format;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
-import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
 

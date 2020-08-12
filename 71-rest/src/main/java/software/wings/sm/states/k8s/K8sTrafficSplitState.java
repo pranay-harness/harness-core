@@ -17,6 +17,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
@@ -116,8 +117,8 @@ public class K8sTrafficSplitState extends State {
 
   private Activity createActivity(ExecutionContext context) {
     return k8sStateHelper.createK8sActivity(context, K8S_TRAFFIC_SPLIT_STATE_NAME, getStateType(), activityService,
-        ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
-            new K8sDummyCommandUnit(K8sDummyCommandUnit.TrafficSplit)));
+        ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
+            new K8sDummyCommandUnit(K8sCommandUnitConstants.TrafficSplit)));
   }
 
   private void renderStateVariables(ExecutionContext context) {

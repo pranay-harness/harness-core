@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
@@ -198,14 +199,14 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     List<CommandUnit> rollingDeployCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {
-      rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
+      rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
     }
 
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState));
-    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
+    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
+    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
+    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
+    rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
 
     return rollingDeployCommandUnits;
   }

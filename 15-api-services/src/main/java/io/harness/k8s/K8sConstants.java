@@ -83,4 +83,6 @@ public interface K8sConstants {
   String ocRolloutHistoryCommand = "{OC_COMMAND_PREFIX} rollout history {RESOURCE_ID} {NAMESPACE}";
   String ocRolloutUndoCommand = "{OC_COMMAND_PREFIX} rollout undo {RESOURCE_ID} {NAMESPACE}{REVISION}";
   String SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT = "harness.io/skip-file-for-deploy";
+
+  String MANIFEST_FILES_DIR = "manifest-files";
 }

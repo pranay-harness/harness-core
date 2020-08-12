@@ -6,17 +6,6 @@ import io.harness.logging.CommandExecutionStatus;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class K8sDummyCommandUnit extends AbstractCommandUnit {
-  public static final String FetchFiles = "Fetch Files";
-  public static final String Init = "Initialize";
-  public static final String Prepare = "Prepare";
-  public static final String Apply = "Apply";
-  public static final String Scale = "Scale";
-  public static final String Delete = "Delete";
-  public static final String Rollback = "Rollback";
-  public static final String WaitForSteadyState = "Wait for Steady State";
-  public static final String WrapUp = "Wrap Up";
-  public static final String TrafficSplit = "Traffic Split";
-
   public K8sDummyCommandUnit(String name) {
     super(K8S_DUMMY);
     setName(name);
