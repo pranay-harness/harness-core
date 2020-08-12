@@ -98,7 +98,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     attribute.setAccountId(ACCOUNT_ID);
     when(ceCloudAccountFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(2);
     when(ccmSettingService.listCeCloudAccounts(ACCOUNT_ID)).thenReturn(Collections.emptyList());
-    settingsService.validateAndUpdateCEDetails(attribute);
+    settingsService.validateAndUpdateCEDetails(attribute, true);
     CEAwsConfig modifiedConfig = (CEAwsConfig) attribute.getValue();
     assertThat(modifiedConfig.getAwsAccountId()).isEqualTo("830767422336");
     assertThat(modifiedConfig.getAwsMasterAccountId()).isEqualTo("830767422336");
