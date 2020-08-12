@@ -26,8 +26,11 @@ import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSI
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.WebhookEventType;
@@ -367,5 +370,14 @@ public class WebhookEventUtils {
     }
 
     return WebhookEventType.PING == webhookEventType;
+  }
+
+  public Map<String, Object> obtainPayloadMap(String yamlWebHookPayload, HttpHeaders headers) {
+    try {
+      return JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
+    } catch (Exception ex) {
+      throw new InvalidRequestException(
+          "Failed to parse the webhook payload. Error " + ExceptionUtils.getMessage(ex), ex, USER);
+    }
   }
 }

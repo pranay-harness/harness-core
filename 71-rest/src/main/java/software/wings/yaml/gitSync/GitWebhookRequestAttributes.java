@@ -13,6 +13,7 @@ public class GitWebhookRequestAttributes {
   private String webhookBody;
   private String webhookHeaders;
   @NotEmpty private String branchName;
+  private String repositoryName;
   @NotEmpty private String gitConnectorId;
   String headCommitId;
 }

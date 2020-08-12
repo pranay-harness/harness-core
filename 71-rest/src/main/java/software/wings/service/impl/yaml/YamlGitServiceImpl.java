@@ -59,7 +59,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -729,16 +728,18 @@ public class YamlGitServiceImpl implements YamlGitService {
       }
 
       String gitConnectorId = null;
+      GitConfig gitConfig = null;
       for (SettingAttribute settingAttribute : settingAttributes) {
         SettingValue settingValue = settingAttribute.getValue();
 
         if (settingValue instanceof GitConfig && webhookToken.equals(((GitConfig) settingValue).getWebhookToken())) {
           gitConnectorId = settingAttribute.getUuid();
+          gitConfig = (GitConfig) settingValue;
           break;
         }
       }
 
-      if (isEmpty(gitConnectorId)) {
+      if (isEmpty(gitConnectorId) || gitConfig == null) {
         throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
       }
 
@@ -754,6 +755,19 @@ public class YamlGitServiceImpl implements YamlGitService {
         logger.info(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
             webhookToken, yamlWebHookPayload, headers);
         throw new InvalidRequestException("Branch not found from webhook payload", USER);
+      }
+
+      String repositoryName = null;
+      if (gitConfig.getUrlType() == UrlType.ACCOUNT) {
+        repositoryName =
+            obtainRepositoryNameFromPayload(yamlWebHookPayload, headers)
+                .filter(EmptyPredicate::isNotEmpty)
+                .orElseThrow(() -> {
+                  logger.info(GIT_YAML_LOG_PREFIX
+                          + "Repository name not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
+                      webhookToken, yamlWebHookPayload, headers);
+                  return new InvalidRequestException("Repository name not found from webhook payload", USER);
+                });
       }
 
       String headCommitId = obtainCommitIdFromPayload(yamlWebHookPayload, headers);
@@ -774,6 +788,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                .webhookBody(yamlWebHookPayload)
                                                .gitConnectorId(gitConnectorId)
                                                .webhookHeaders(convertHeadersToJsonString(headers))
+                                               .repositoryName(repositoryName)
                                                .branchName(branchName)
                                                .headCommitId(headCommitId)
                                                .build())
@@ -1146,18 +1161,24 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
     webhookEventUtils.validatePushEvent(webhookSource, headers);
-
-    Map<String, Object> payLoadMap;
-    try {
-      payLoadMap = JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
-    } catch (Exception ex) {
-      logger.info("Webhook payload: " + yamlWebHookPayload, ex);
-      throw new InvalidRequestException(
-          "Failed to parse the webhook payload. Error " + ExceptionUtils.getMessage(ex), USER);
-    }
+    Map<String, Object> payLoadMap = webhookEventUtils.obtainPayloadMap(yamlWebHookPayload, headers);
 
     return webhookEventUtils.obtainBranchName(webhookSource, headers, payLoadMap);
   }
+
+  private Optional<String> obtainRepositoryNameFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
+    if (headers == null) {
+      logger.info("Empty header found");
+      return Optional.empty();
+    }
+
+    WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
+    webhookEventUtils.validatePushEvent(webhookSource, headers);
+    Map<String, Object> payLoadMap = webhookEventUtils.obtainPayloadMap(yamlWebHookPayload, headers);
+
+    return webhookEventUtils.obtainRepositoryName(webhookSource, headers, payLoadMap);
+  }
+
   @Override
   @SuppressWarnings("PMD.AvoidCatchingThrowable")
   public void asyncFullSyncForEntireAccount(String accountId) {
