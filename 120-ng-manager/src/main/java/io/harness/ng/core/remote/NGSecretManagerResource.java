@@ -1,9 +1,9 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
 import static io.harness.secretmanagerclient.NGConstants.IDENTIFIER_KEY;
-import static io.harness.secretmanagerclient.NGConstants.ORG_IDENTIFIER_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PROJECT_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
 
 import com.google.inject.Inject;
 
@@ -52,10 +52,8 @@ public class NGSecretManagerResource {
 
   @GET
   @ApiOperation(value = "Get secret managers", nickname = "listSecretManagers")
-  public ResponseDTO<List<SecretManagerConfigDTO>> list(
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier) {
+  public ResponseDTO<List<SecretManagerConfigDTO>> list(@QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier) {
     List<SecretManagerConfigDTO> secretManagerConfigs =
         ngSecretManagerService.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(secretManagerConfigs);
@@ -65,9 +63,8 @@ public class NGSecretManagerResource {
   @Path("/{identifier}")
   @ApiOperation(value = "Get a secret manager by identifier", nickname = "getSecretManagerByIdentifier")
   public ResponseDTO<SecretManagerConfigDTO> get(@PathParam(IDENTIFIER_KEY) String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier) {
+      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_KEY) String projectIdentifier) {
     SecretManagerConfigDTO secretManagerConfig =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(secretManagerConfig);
@@ -77,10 +74,8 @@ public class NGSecretManagerResource {
   @Path("/{identifier}")
   @ApiOperation(value = "Update secret manager", nickname = "updateSecretManager")
   public ResponseDTO<SecretManagerConfigDTO> update(@PathParam(IDENTIFIER_KEY) String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier,
-      NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
+      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_KEY) String projectIdentifier, NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
     return ResponseDTO.newResponse(ngSecretManagerService.updateSecretManager(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, secretManagerConfigUpdateDTO));
   }
@@ -89,9 +84,8 @@ public class NGSecretManagerResource {
   @Path("/{identifier}")
   @ApiOperation(value = "Delete secret manager", nickname = "deleteSecretManager")
   public ResponseDTO<Boolean> delete(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) @NotNull String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) String projectIdentifier) {
+      @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
         ngSecretManagerService.deleteSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }

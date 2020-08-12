@@ -1,16 +1,23 @@
 package io.harness.secretmanagerclient.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import io.harness.secretmanagerclient.ValueType;
+import lombok.Builder;
+import lombok.Data;
 
-@Getter
-@Setter
-@NoArgsConstructor
+import java.util.List;
+import javax.validation.constraints.NotNull;
+
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Builder
 public class SecretTextUpdateDTO {
-  private String value;
-  private String path;
+  @NotNull private String value;
+  @NotNull private ValueType valueType;
+  @JsonIgnore private String path;
   private String description;
+  @NotNull private String name;
+  private List<String> tags;
+  @JsonIgnore private boolean draft;
 }

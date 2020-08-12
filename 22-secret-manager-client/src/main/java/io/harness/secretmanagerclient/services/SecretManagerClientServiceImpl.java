@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
@@ -28,7 +29,13 @@ public class SecretManagerClientServiceImpl implements SecretManagerClientServic
 
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
+    BaseNGAccess baseNGAccess = BaseNGAccess.builder()
+                                    .accountIdentifier(ngAccess.getAccountIdentifier())
+                                    .orgIdentifier(ngAccess.getOrgIdentifier())
+                                    .projectIdentifier(ngAccess.getProjectIdentifier())
+                                    .identifier(ngAccess.getIdentifier())
+                                    .build();
     return getResponse(secretManagerClient.getEncryptionDetails(
-        NGAccessWithEncryptionConsumer.builder().ngAccess(ngAccess).decryptableEntity(consumer).build()));
+        NGAccessWithEncryptionConsumer.builder().ngAccess(baseNGAccess).decryptableEntity(consumer).build()));
   }
 }

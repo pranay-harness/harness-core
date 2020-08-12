@@ -7,7 +7,9 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static org.apache.http.HttpStatus.SC_BAD_GATEWAY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -15,8 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
-import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.exception.SecretManagementClientException;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import okhttp3.MediaType;
@@ -27,6 +28,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
+import software.wings.resources.secretsmanagement.EncryptedDataMapper;
 import software.wings.security.encryption.EncryptedData;
 
 import java.io.IOException;
@@ -34,8 +36,8 @@ import java.io.IOException;
 public class NGSecretServiceImplTest extends CategoryTest {
   private SecretManagerClient secretManagerClient;
   private NGSecretServiceImpl ngSecretService;
+  private NGSecretServiceImpl spyNGSecretService;
   private final String SECRET_IDENTIFIER = "SECRET_ID";
-  private final String SECRET_NAME = "SECRET_NAME";
   private final String ACCOUNT_IDENTIFIER = "ACCOUNT";
   private final String PROJECT_IDENTIFIER = "PROJECT";
   private final String ORG_IDENTIFIER = "ORG";
@@ -45,13 +47,14 @@ public class NGSecretServiceImplTest extends CategoryTest {
   public void doSetup() {
     secretManagerClient = mock(SecretManagerClient.class);
     ngSecretService = new NGSecretServiceImpl(secretManagerClient);
+    spyNGSecretService = spy(ngSecretService);
   }
 
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecretById() throws IOException {
-    EncryptedDataDTO encryptedData = EncryptedDataDTO.builder().name(SECRET_NAME).build();
+    EncryptedDataDTO encryptedData = random(EncryptedDataDTO.class);
     RestResponse<EncryptedDataDTO> restResponse = new RestResponse<>(encryptedData);
     Response<RestResponse<EncryptedDataDTO>> response = Response.success(restResponse);
     Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
@@ -62,7 +65,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
     EncryptedData returnedEncryptedData =
         ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
     assertThat(returnedEncryptedData).isNotNull();
-    assertThat(returnedEncryptedData.getName()).isEqualTo(SECRET_NAME);
+    assertThat(returnedEncryptedData.getName()).isEqualTo(encryptedData.getName());
   }
 
   @Test
@@ -127,12 +130,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     RestResponse<EncryptedDataDTO> restResponse = new RestResponse<>(dto);
     Response<RestResponse<EncryptedDataDTO>> response = Response.success(restResponse);
     Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
-    SecretTextCreateDTO randomSecretText = random(SecretTextCreateDTO.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.createSecret(any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    EncryptedData savedData = ngSecretService.create(randomSecretText);
+    EncryptedData savedData = ngSecretService.create(randomSecretText, false);
     assertThat(savedData).isNotNull();
     assertThat(savedData.getName()).isEqualTo(dto.getName());
   }
@@ -158,14 +161,14 @@ public class NGSecretServiceImplTest extends CategoryTest {
       }
     });
     Call<RestResponse<EncryptedDataDTO>> restResponseCall = (Call<RestResponse<EncryptedDataDTO>>) mock(Call.class);
-    SecretTextCreateDTO randomSecretText = random(SecretTextCreateDTO.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.createSecret(any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.create(randomSecretText);
+      ngSecretService.create(randomSecretText, false);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -178,14 +181,14 @@ public class NGSecretServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateSecret_For_Exception() throws IOException {
     Call<RestResponse<EncryptedDataDTO>> restResponseCall = (Call<RestResponse<EncryptedDataDTO>>) mock(Call.class);
-    SecretTextCreateDTO randomSecretText = random(SecretTextCreateDTO.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.createSecret(any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.create(randomSecretText);
+      ngSecretService.create(randomSecretText, false);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -199,14 +202,17 @@ public class NGSecretServiceImplTest extends CategoryTest {
   public void testUpdateSecret() throws IOException {
     RestResponse<Boolean> restResponse = new RestResponse<>(true);
     Response<RestResponse<Boolean>> response = Response.success(restResponse);
-    Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretTextUpdateDTO randomSecretText = random(SecretTextUpdateDTO.class);
+    Call<RestResponse<Boolean>> updateResponseCall = mock(Call.class);
 
-    when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(restResponseCall);
-    when(restResponseCall.execute()).thenReturn(response);
+    SecretTextDTO dto = random(SecretTextDTO.class);
+    EncryptedData encryptedData = EncryptedDataMapper.fromDTO(dto);
 
-    Boolean returnedResult =
-        ngSecretService.update(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
+    when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(updateResponseCall);
+    doReturn(encryptedData).when(spyNGSecretService).get(any(), any(), any(), any());
+
+    when(updateResponseCall.execute()).thenReturn(response);
+
+    Boolean returnedResult = spyNGSecretService.update(dto, false);
     assertThat(returnedResult).isNotNull();
     assertThat(returnedResult).isEqualTo(true);
   }
@@ -232,14 +238,15 @@ public class NGSecretServiceImplTest extends CategoryTest {
       }
     });
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretTextUpdateDTO randomSecretText = random(SecretTextUpdateDTO.class);
+    SecretTextDTO dto = random(SecretTextDTO.class);
 
     when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
+    doReturn(EncryptedDataMapper.fromDTO(dto)).when(spyNGSecretService).get(any(), any(), any(), any());
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.update(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
+      spyNGSecretService.update(dto, false);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -252,14 +259,15 @@ public class NGSecretServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdateSecret_For_Exception() throws IOException {
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretTextUpdateDTO randomSecretText = random(SecretTextUpdateDTO.class);
+    SecretTextDTO dto = random(SecretTextDTO.class);
 
     when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
+    doReturn(EncryptedDataMapper.fromDTO(dto)).when(spyNGSecretService).get(any(), any(), any(), any());
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.update(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
+      spyNGSecretService.update(dto, false);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);

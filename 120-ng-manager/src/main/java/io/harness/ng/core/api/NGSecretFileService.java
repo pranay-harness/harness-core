@@ -1,14 +1,11 @@
 package io.harness.ng.core.api;
 
+import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.stream.BoundedInputStream;
 import software.wings.security.encryption.EncryptedData;
 
-import java.util.List;
-
 public interface NGSecretFileService {
-  EncryptedData create(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      String secretManagerIdentifier, String name, String description, List<String> tags, BoundedInputStream file);
+  EncryptedData create(SecretFileDTO dto, BoundedInputStream file);
 
-  boolean update(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      String description, List<String> tags, BoundedInputStream file);
+  boolean update(SecretFileDTO dto, BoundedInputStream file);
 }

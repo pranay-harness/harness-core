@@ -1,8 +1,7 @@
 package io.harness.ng.core.api;
 
 import io.harness.secretmanagerclient.SecretType;
-import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
-import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import software.wings.security.encryption.EncryptedData;
 
 import java.util.List;
@@ -13,10 +12,9 @@ public interface NGSecretService {
   List<EncryptedData> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       SecretType secretType, String searchTerm);
 
-  EncryptedData create(SecretTextCreateDTO dto);
+  EncryptedData create(SecretTextDTO dto, boolean viaYaml);
 
-  boolean update(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      SecretTextUpdateDTO dto);
+  boolean update(SecretTextDTO dto, boolean viaYaml);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }
