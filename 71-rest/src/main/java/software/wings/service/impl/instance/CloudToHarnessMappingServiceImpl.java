@@ -10,6 +10,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
@@ -404,6 +405,29 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     }
 
     return user;
+  }
+
+  @Override
+  public CEUserInfo getUserForCluster(String clusterId) {
+    Query<ClusterRecord> clusterQuery =
+        persistence.createQuery(ClusterRecord.class).filter(ClusterRecordKeys.uuid, new ObjectId(clusterId));
+    ClusterRecord cluster = clusterQuery.get();
+    if (cluster == null) {
+      return null;
+    }
+    String cloudProviderId = cluster.getCluster().getCloudProviderId();
+
+    Query<SettingAttribute> cloudProviderQuery =
+        persistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.uuid, cloudProviderId);
+    SettingAttribute cloudProvider = cloudProviderQuery.get();
+
+    if (cloudProvider != null) {
+      return CEUserInfo.builder()
+          .name(cloudProvider.getCreatedBy().getName())
+          .email(cloudProvider.getCreatedBy().getEmail())
+          .build();
+    }
+    return null;
   }
 
   public Account decryptLicenseInfo(Account account, boolean setExpiry) {
