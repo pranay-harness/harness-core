@@ -87,8 +87,10 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size, String accountIdentifier) {
-    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(connectorFilter, accountIdentifier);
+  public Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(
+        connectorFilter, accountIdentifier, orgIdentifier, projectIdentifier);
     Pageable pageable = getPageRequest(page, size);
     Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
     return connectorScopeHelper.createConnectorSummaryListForConnectors(connectors);

@@ -11,17 +11,18 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 public class ConnectorFilterHelper {
-  public Criteria createCriteriaFromConnectorFilter(ConnectorFilter connectorFilter, String accountIdentifier) {
+  public Criteria createCriteriaFromConnectorFilter(
+      ConnectorFilter connectorFilter, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Criteria criteria = new Criteria();
     if (connectorFilter == null) {
       return criteria;
     }
-    criteria.and(ConnectorKeys.accountIdentifier).is(connectorFilter.getAccountId());
-    if (isNotBlank(connectorFilter.getOrgId())) {
-      criteria.and(ConnectorKeys.orgIdentifier).is(connectorFilter.getOrgId());
+    criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
+    if (isNotBlank(orgIdentifier)) {
+      criteria.and(ConnectorKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotBlank(connectorFilter.getProjectId())) {
-      criteria.and(ConnectorKeys.projectIdentifier).is(connectorFilter.getProjectId());
+    if (isNotBlank(projectIdentifier)) {
+      criteria.and(ConnectorKeys.projectIdentifier).is(projectIdentifier);
     }
     if (connectorFilter.getType() != null) {
       criteria.and(ConnectorKeys.type).is(connectorFilter.getType().name());
