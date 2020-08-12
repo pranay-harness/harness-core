@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.secrets;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -12,9 +13,9 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.secrets.input.QLCreateSecretInput;
 import software.wings.graphql.schema.mutation.secrets.payload.QLCreateSecretPayload;
 import software.wings.graphql.schema.type.secrets.QLSecret;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.auth.SecretAuthHandler;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -25,6 +26,8 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
   @Inject private EncryptedTextController encryptedTextController;
   @Inject private SSHCredentialController sshCredentialController;
   @Inject private SettingsService settingsService;
+  @Inject private SecretAuthHandler secretAuthHandler;
+
   @Inject
   public CreateSecretDataFetcher(SecretManager secretManager) {
     super(QLCreateSecretInput.class, QLCreateSecretPayload.class);
@@ -61,11 +64,12 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
   }
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLCreateSecretPayload mutateAndFetch(QLCreateSecretInput input, MutationContext mutationContext) {
     QLSecret secret = null;
     switch (input.getSecretType()) {
       case ENCRYPTED_TEXT:
+        secretAuthHandler.authorize();
         EncryptedData encryptedText = saveEncryptedText(input, mutationContext.getAccountId());
         secret = encryptedTextController.populateEncryptedText(encryptedText);
         break;
@@ -78,6 +82,7 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
         secret = sshCredentialController.populateSSHCredential(savedSSH);
         break;
       case ENCRYPTED_FILE:
+        secretAuthHandler.authorize();
         throw new InvalidRequestException("Encrypted file secret cannot be created through API.");
       default:
         throw new InvalidRequestException("Invalid secret Type");
