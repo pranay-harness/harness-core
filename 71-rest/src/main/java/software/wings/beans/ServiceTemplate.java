@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import lombok.Getter;
@@ -44,6 +45,7 @@ public class ServiceTemplate extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENVIRONMENT_ID_KEY = "envId";
 
+  @FdIndex @Getter @Setter private String accountId;
   @NotEmpty private String envId;
   @NotEmpty private String name;
   private String description;
@@ -367,6 +369,7 @@ public class ServiceTemplate extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String accountId;
 
     private Builder() {}
 
@@ -581,6 +584,17 @@ public class ServiceTemplate extends Base {
     }
 
     /**
+     * With last updated at builder.
+     *
+     * @param accountId the last updated at
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -607,7 +621,8 @@ public class ServiceTemplate extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withAccountId(accountId);
     }
 
     /**
@@ -638,6 +653,7 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setCreatedAt(createdAt);
       serviceTemplate.setLastUpdatedBy(lastUpdatedBy);
       serviceTemplate.setLastUpdatedAt(lastUpdatedAt);
+      serviceTemplate.setAccountId(accountId);
       return serviceTemplate;
     }
   }
