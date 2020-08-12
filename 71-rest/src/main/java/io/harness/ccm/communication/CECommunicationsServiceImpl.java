@@ -6,6 +6,8 @@ import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CECommunicationsServiceImpl implements CECommunicationsService {
   @Inject CECommunicationsDao ceCommunicationsDao;
@@ -52,5 +54,19 @@ public class CECommunicationsServiceImpl implements CECommunicationsService {
 
   public List<CECommunications> getEnabledEntries(String accountId, CommunicationType type) {
     return ceCommunicationsDao.getEnabledEntries(accountId, type);
+  }
+
+  @Override
+  public void unsubscribe(String id) {
+    CECommunications entry = ceCommunicationsDao.get(id);
+    if (entry != null) {
+      ceCommunicationsDao.update(entry.getAccountId(), entry.getEmailId(), entry.getType(), false);
+    }
+  }
+
+  @Override
+  public Map<String, String> getUniqueIdPerUser(String accountId, CommunicationType type) {
+    List<CECommunications> enabledEntries = ceCommunicationsDao.getEnabledEntries(accountId, type);
+    return enabledEntries.stream().collect(Collectors.toMap(CECommunications::getEmailId, CECommunications::getUuid));
   }
 }

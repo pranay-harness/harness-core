@@ -25,6 +25,12 @@ public class CECommunicationsDao {
     return save(entry);
   }
 
+  public CECommunications get(String uuid) {
+    Query<CECommunications> query =
+        persistence.createQuery(CECommunications.class).field(CECommunicationsKeys.uuid).equal(uuid);
+    return query.get();
+  }
+
   public CECommunications get(String accountId, String emailId, CommunicationType type) {
     Query<CECommunications> query = persistence.createQuery(CECommunications.class)
                                         .field(CECommunicationsKeys.accountId)
