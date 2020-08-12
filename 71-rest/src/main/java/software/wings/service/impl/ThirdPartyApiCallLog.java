@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.exception.WingsException;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -263,5 +264,17 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
     }
 
     return ExecutionStatus.SUCCESS;
+  }
+
+  public static ThirdPartyApiCallLog fromDetails(ThirdPartyApiCallLogDetails details) {
+    if (details == null) {
+      return null;
+    }
+    return ThirdPartyApiCallLog.builder()
+        .accountId(details.getAccountId())
+        .delegateId(details.getDelegateId())
+        .delegateTaskId(details.getDelegateTaskId())
+        .stateExecutionId(details.getStateExecutionId())
+        .build();
   }
 }
