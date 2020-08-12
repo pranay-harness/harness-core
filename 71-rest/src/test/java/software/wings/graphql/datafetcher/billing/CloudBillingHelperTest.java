@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -39,10 +40,13 @@ public class CloudBillingHelperTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void getBillingDataPipelineCacheObject() {
-    BillingDataPipelineRecord billingDataPipelineRecord =
-        BillingDataPipelineRecord.builder().dataSetId(datasetId).awsLinkedAccountsToExclude(excludeAccounts).build();
-    when(billingDataPipelineRecordDao.fetchBillingPipelineMetaDataFromAccountId(accountId))
-        .thenReturn(billingDataPipelineRecord);
+    BillingDataPipelineRecord billingDataPipelineRecord = BillingDataPipelineRecord.builder()
+                                                              .cloudProvider("AWS")
+                                                              .dataSetId(datasetId)
+                                                              .awsLinkedAccountsToExclude(excludeAccounts)
+                                                              .build();
+    when(billingDataPipelineRecordDao.fetchBillingPipelineRecords(accountId))
+        .thenReturn(Arrays.asList(billingDataPipelineRecord));
     BillingDataPipelineCacheObject billingDataPipelineCacheObject =
         cloudBillingHelper.getBillingDataPipelineCacheObject(accountId);
     assertThat(billingDataPipelineCacheObject.getDataSetId()).isEqualTo(datasetId);
@@ -56,10 +60,29 @@ public class CloudBillingHelperTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void processAndAddLinkedAccountsFilter() {
-    BillingDataPipelineRecord billingDataPipelineRecord =
-        BillingDataPipelineRecord.builder().dataSetId(datasetId).awsLinkedAccountsToExclude(excludeAccounts).build();
-    when(billingDataPipelineRecordDao.fetchBillingPipelineMetaDataFromAccountId(accountId))
-        .thenReturn(billingDataPipelineRecord);
+    BillingDataPipelineRecord billingDataPipelineRecord = BillingDataPipelineRecord.builder()
+                                                              .cloudProvider("AWS")
+                                                              .dataSetId(datasetId)
+                                                              .awsLinkedAccountsToExclude(excludeAccounts)
+                                                              .build();
+    when(billingDataPipelineRecordDao.fetchBillingPipelineRecords(accountId))
+        .thenReturn(Arrays.asList(billingDataPipelineRecord));
+    List<CloudBillingFilter> filters = new ArrayList<>();
+    cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
+    assertThat(filters.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void processAndAddLinkedAccountsFilterWhitelist() {
+    BillingDataPipelineRecord billingDataPipelineRecord = BillingDataPipelineRecord.builder()
+                                                              .cloudProvider("AWS")
+                                                              .dataSetId(datasetId)
+                                                              .awsLinkedAccountsToInclude(excludeAccounts)
+                                                              .build();
+    when(billingDataPipelineRecordDao.fetchBillingPipelineRecords(accountId))
+        .thenReturn(Arrays.asList(billingDataPipelineRecord));
     List<CloudBillingFilter> filters = new ArrayList<>();
     cloudBillingHelper.processAndAddLinkedAccountsFilter(accountId, filters);
     assertThat(filters.size()).isEqualTo(1);

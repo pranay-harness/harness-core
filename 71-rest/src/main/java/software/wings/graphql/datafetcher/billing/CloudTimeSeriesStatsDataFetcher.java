@@ -80,6 +80,7 @@ public class CloudTimeSeriesStatsDataFetcher
             .map(Collection::stream)
             .orElseGet(Stream::empty)
             .map(cloudBillingHelper.getFiltersMapper(isAWSCloudProvider, isQueryRawTableRequired))
+            .filter(condition -> condition != null)
             .collect(Collectors.toList()),
         Optional.ofNullable(sort)
             .map(Collection::stream)

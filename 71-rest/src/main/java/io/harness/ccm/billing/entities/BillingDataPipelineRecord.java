@@ -48,4 +48,5 @@ public class BillingDataPipelineRecord implements PersistentEntity, UuidAware, C
   private Instant lastSuccessfulS3Sync;
 
   private List<String> awsLinkedAccountsToExclude;
+  private List<String> awsLinkedAccountsToInclude;
 }

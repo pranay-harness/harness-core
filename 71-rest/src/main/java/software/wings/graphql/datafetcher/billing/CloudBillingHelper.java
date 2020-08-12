@@ -21,12 +21,14 @@ import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
+import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.exception.InvalidRequestException;
 import org.jetbrains.annotations.NotNull;
 import software.wings.app.MainConfiguration;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -54,12 +56,22 @@ public class CloudBillingHelper {
   }
 
   public BillingDataPipelineCacheObject getBillingDataPipelineCacheObject(String accountId) {
-    BillingDataPipelineRecord billingDataPipelineRecord =
-        billingDataPipelineRecordDao.fetchBillingPipelineMetaDataFromAccountId(accountId);
+    List<BillingDataPipelineRecord> listOfPipelineRecords =
+        billingDataPipelineRecordDao.fetchBillingPipelineRecords(accountId);
+
+    BillingDataPipelineRecord billingDataPipelineRecord = getPipelineRecord(listOfPipelineRecords);
     return BillingDataPipelineCacheObject.builder()
         .dataSetId(billingDataPipelineRecord.getDataSetId())
         .awsLinkedAccountsToExclude(billingDataPipelineRecord.getAwsLinkedAccountsToExclude())
+        .awsLinkedAccountsToInclude(billingDataPipelineRecord.getAwsLinkedAccountsToInclude())
         .build();
+  }
+
+  private BillingDataPipelineRecord getPipelineRecord(List<BillingDataPipelineRecord> listOfPipelineRecords) {
+    return listOfPipelineRecords.stream()
+        .filter(billingDataPipelineRecord -> billingDataPipelineRecord.getCloudProvider().equals("AWS"))
+        .findFirst()
+        .orElse(listOfPipelineRecords.get(0));
   }
 
   public String getCloudProviderTableName(String accountId) {
@@ -174,22 +186,49 @@ public class CloudBillingHelper {
   }
 
   public void processAndAddLinkedAccountsFilter(String accountId, List<CloudBillingFilter> filters) {
-    String[] linkedAccounts = getLinkedAccounts(accountId);
-    if (linkedAccounts != null) {
+    String[] linkedAccountsToBlacklist = getLinkedAccountsToBlacklist(accountId);
+    String[] linkedAccountsToWhitelist = getLinkedAccountsToWhitelist(accountId);
+
+    boolean isLinkedAccountFilterPresent =
+        filters.stream().anyMatch(billingFilter -> billingFilter.getAwsLinkedAccount() != null);
+
+    if (linkedAccountsToBlacklist != null) {
       CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
       cloudBillingFilter.setAwsLinkedAccount(
-          CloudBillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(linkedAccounts).build());
+          CloudBillingIdFilter.builder().operator(QLIdOperator.NOT_IN).values(linkedAccountsToBlacklist).build());
+      filters.add(cloudBillingFilter);
+    }
+
+    if (!isLinkedAccountFilterPresent && linkedAccountsToWhitelist != null) {
+      CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+      cloudBillingFilter.setAwsLinkedAccount(
+          CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(linkedAccountsToWhitelist).build());
       filters.add(cloudBillingFilter);
     }
   }
 
-  private String[] getLinkedAccounts(String accountId) {
+  private String[] getLinkedAccountsToBlacklist(String accountId) {
     BillingDataPipelineCacheObject dataPipelineMetadata = getDataPipelineMetadata(accountId);
     List<String> awsLinkedAccountsToExclude = dataPipelineMetadata.getAwsLinkedAccountsToExclude();
 
     if (awsLinkedAccountsToExclude != null && awsLinkedAccountsToExclude.size() > 0) {
-      String[] linkedAccounts = new String[awsLinkedAccountsToExclude.size()];
-      return awsLinkedAccountsToExclude.toArray(linkedAccounts);
+      List<String> awsLinkedAccounts = new ArrayList<>(awsLinkedAccountsToExclude);
+      awsLinkedAccounts.add(PreAggregateConstants.entityConstantAwsNoLinkedAccount);
+      String[] linkedAccounts = new String[awsLinkedAccounts.size()];
+      return awsLinkedAccounts.toArray(linkedAccounts);
+    }
+    return null;
+  }
+
+  private String[] getLinkedAccountsToWhitelist(String accountId) {
+    BillingDataPipelineCacheObject dataPipelineMetadata = getDataPipelineMetadata(accountId);
+    List<String> awsLinkedAccountsToInclude = dataPipelineMetadata.getAwsLinkedAccountsToInclude();
+
+    if (awsLinkedAccountsToInclude != null && awsLinkedAccountsToInclude.size() > 0) {
+      List<String> awsLinkedAccounts = new ArrayList<>(awsLinkedAccountsToInclude);
+      awsLinkedAccounts.add(PreAggregateConstants.entityConstantAwsNoLinkedAccount);
+      String[] linkedAccounts = new String[awsLinkedAccounts.size()];
+      return awsLinkedAccounts.toArray(linkedAccounts);
     }
     return null;
   }

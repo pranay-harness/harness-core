@@ -56,6 +56,7 @@ public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<Cloud
             .map(Collection::stream)
             .orElseGet(Stream::empty)
             .map(cloudBillingHelper.getFiltersMapper(isAWSCloudProvider, isQueryRawTableRequired))
+            .filter(condition -> condition != null)
             .collect(Collectors.toList()),
         queryTableName, leftJoin);
   }
