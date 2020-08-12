@@ -11,6 +11,7 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -230,7 +231,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DirectK8sInfraDelegateConfig.class, 19102);
     kryo.register(K8sManifestDelegateConfig.class, 19103);
     kryo.register(GitStoreDelegateConfig.class, 19104);
-
+    kryo.register(AppDynamicsConnectorDTO.class, 19105);
     kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
     kryo.register(HttpTaskParameters.class, 20002);
   }

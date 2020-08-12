@@ -45,8 +45,19 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>22-secret-manager-client</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>66-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>69-connector-nextgen</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>de.bwaldvogel</groupId>

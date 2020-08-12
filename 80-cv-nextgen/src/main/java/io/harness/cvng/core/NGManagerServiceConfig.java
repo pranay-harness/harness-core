@@ -1,4 +1,4 @@
-package io.harness.ng.core;
+package io.harness.cvng.core;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class NextGenConfig {
+public class NGManagerServiceConfig {
   String managerServiceSecret;
-  String cvNgServiceSecret;
+  String ngManagerUrl;
 }
