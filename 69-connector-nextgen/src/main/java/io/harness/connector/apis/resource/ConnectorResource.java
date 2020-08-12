@@ -63,8 +63,10 @@ public class ConnectorResource {
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
   public ResponseDTO<Page<ConnectorSummaryDTO>> list(@QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("100") int size, ConnectorFilter connectorFilter,
-      @NotEmpty @PathParam("accountIdentifier") String accountIdentifier) {
-    return ResponseDTO.newResponse(connectorService.list(connectorFilter, page, size, accountIdentifier));
+      @NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+    return ResponseDTO.newResponse(
+        connectorService.list(connectorFilter, page, size, accountIdentifier, orgIdentifier, projectIdentifier));
   }
 
   @POST

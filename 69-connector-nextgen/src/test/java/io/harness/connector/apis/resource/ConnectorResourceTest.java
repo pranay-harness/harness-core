@@ -106,12 +106,16 @@ public class ConnectorResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void list() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
     final Page<ConnectorSummaryDTO> page = new PageImpl<>(Arrays.asList(ConnectorSummaryDTO.builder().build()));
     ConnectorFilter connectorFilter = ConnectorFilter.builder().build();
-    when(connectorService.list(connectorFilter, 100, 0, accountIdentifier)).thenReturn(page);
+    when(connectorService.list(connectorFilter, 100, 0, accountIdentifier, orgIdentifier, projectIdentifier))
+        .thenReturn(page);
     ResponseDTO<Page<ConnectorSummaryDTO>> connectorSummaryListResponse =
-        connectorResource.list(100, 0, connectorFilter, accountIdentifier);
-    Mockito.verify(connectorService, times(1)).list(eq(connectorFilter), eq(100), eq(0), eq(accountIdentifier));
+        connectorResource.list(100, 0, connectorFilter, accountIdentifier, orgIdentifier, projectIdentifier);
+    Mockito.verify(connectorService, times(1))
+        .list(eq(connectorFilter), eq(100), eq(0), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier));
     assertThat(connectorSummaryListResponse.getData()).isNotNull();
   }
 

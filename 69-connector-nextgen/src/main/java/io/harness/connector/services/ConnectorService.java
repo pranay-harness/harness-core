@@ -17,7 +17,8 @@ public interface ConnectorService {
   Optional<ConnectorDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
-  Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size, String accountIdentifier);
+  Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier);
 
   ConnectorDTO create(ConnectorRequestDTO connector, String accountIdentifier);
 

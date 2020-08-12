@@ -15,9 +15,9 @@ public class ConnectorSummaryDTO {
   String name;
   String description;
 
-  String accountId;
-  String orgId;
-  String projectId;
+  String accountIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
 
   String accountName;
   String orgName;

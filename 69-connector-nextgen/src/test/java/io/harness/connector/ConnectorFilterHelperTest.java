@@ -35,14 +35,9 @@ public class ConnectorFilterHelperTest extends CategoryTest {
     String name = "name";
     String orgId = "orgId";
     String projectId = "projectId";
-    ConnectorFilter connectorFilter = ConnectorFilter.builder()
-                                          .accountId(accountId)
-                                          .name(name)
-                                          .orgId(orgId)
-                                          .projectId(projectId)
-                                          .type(KUBERNETES_CLUSTER)
-                                          .build();
-    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(connectorFilter, accountId);
+    ConnectorFilter connectorFilter = ConnectorFilter.builder().name(name).type(KUBERNETES_CLUSTER).build();
+    Criteria criteria =
+        connectorFilterHelper.createCriteriaFromConnectorFilter(connectorFilter, accountId, orgId, projectId);
     Document criteriaObject = criteria.getCriteriaObject();
     assertThat(criteriaObject.size()).isEqualTo(5);
     assertThat(criteriaObject.get(ConnectorKeys.accountIdentifier)).isEqualTo(accountId);

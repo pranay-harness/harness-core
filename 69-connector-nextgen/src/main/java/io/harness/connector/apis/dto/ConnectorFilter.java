@@ -9,11 +9,7 @@ import java.util.List;
 @Value
 @Builder
 public class ConnectorFilter {
-  String accountId;
-  String projectId;
-  String orgId;
   ConnectorType type;
-  // todo: @deepak Add tags here
   List<String> tag;
   Long lastActivity;
   String name;
