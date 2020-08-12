@@ -1,7 +1,7 @@
 package io.harness.azure.model;
 
 public interface AzureConstants {
-  int defaultSyncAzureVMSSTimeoutMin = 2;
+  int DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN = 2;
   String MIN_INSTANCES = "minInstancesExpr";
   String MAX_INSTANCES = "maxInstancesExpr";
   String DESIRED_INSTANCES = "targetInstancesExpr";
@@ -24,4 +24,8 @@ public interface AzureConstants {
   String DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Downscale wait for steady state";
   String DEPLOYMENT_STATUS = "Final Deployment status";
   String DELETE_NEW_VMSS = "Delete New Virtual Machine Scale Set";
+
+  // Messaging
+  String SKIP_VMSS_DEPLOY = "No Azure VMSS setup context element found. Skipping deploy";
+  String SKIP_VMSS_ROLLBACK = "No Azure VMSS setup context element found. Skipping rollback";
 }

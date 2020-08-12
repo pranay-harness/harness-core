@@ -1,6 +1,6 @@
 package software.wings.service.impl.azure.manager;
 
-import static io.harness.azure.model.AzureConstants.defaultSyncAzureVMSSTimeoutMin;
+import static io.harness.azure.model.AzureConstants.DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
@@ -108,7 +108,7 @@ public class AzureVMSSHelperServiceManagerImpl implements AzureVMSSHelperService
                       .async(false)
                       .taskType(TaskType.AZURE_VMSS_COMMAND_TASK.name())
                       .parameters(new Object[] {request})
-                      .timeout(TimeUnit.MINUTES.toMillis(defaultSyncAzureVMSSTimeoutMin))
+                      .timeout(TimeUnit.MINUTES.toMillis(DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN))
                       .build())
             .build();
     try {
