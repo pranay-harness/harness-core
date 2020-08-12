@@ -12,8 +12,9 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.InvalidRequestException;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
+import io.harness.secretmanagerclient.dto.SecretFileDTO;
+import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.stream.BoundedInputStream;
 import lombok.AllArgsConstructor;
 import software.wings.beans.SecretManagerConfig;
@@ -25,6 +26,7 @@ import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -33,95 +35,142 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
   private final NGSecretService ngSecretService;
   private final VaultService vaultService;
   private final WingsPersistence wingsPersistence;
+  private final SecretManagerConfigService secretManagerConfigService;
 
-  private EncryptedData encrypt(
-      String accountIdentifier, SecretManagerConfig secretManagerConfig, String name, byte[] bytes) {
+  private EncryptedData encrypt(String accountIdentifier, SecretManagerConfig secretManagerConfig, String name,
+      byte[] bytes, EncryptedData savedEncryptedData) {
     if (secretManagerConfig.getEncryptionType() == VAULT) {
-      vaultService.decryptVaultConfigSecrets(
-          secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig, false);
-      return vaultService.encryptFile(accountIdentifier, (VaultConfig) secretManagerConfig, name, bytes, null);
+      return vaultService.encryptFile(
+          accountIdentifier, (VaultConfig) secretManagerConfig, name, bytes, savedEncryptedData);
     }
     throw new UnsupportedOperationException(
         "Encryption type " + secretManagerConfig.getEncryptionType() + " not supported in next gen");
   }
 
   @Override
-  public EncryptedData create(EncryptedData encryptedData, BoundedInputStream inputStream) {
-    NGEncryptedDataMetadata metadata = encryptedData.getNgMetadata();
+  public EncryptedData create(SecretFileDTO dto, @NotNull BoundedInputStream inputStream) {
+    // create NG meta data out of DTO
+    NGEncryptedDataMetadata metadata = NGEncryptedDataMetadata.builder()
+                                           .accountIdentifier(dto.getAccount())
+                                           .orgIdentifier(dto.getOrg())
+                                           .projectIdentifier(dto.getProject())
+                                           .identifier(dto.getIdentifier())
+                                           .secretManagerIdentifier(dto.getSecretManager())
+                                           .description(dto.getDescription())
+                                           .tags(dto.getTags())
+                                           .build();
 
-    if (Optional.ofNullable(metadata).isPresent()) {
-      if (isEmpty(encryptedData.getName()) || containsIllegalCharacters(encryptedData.getName())) {
-        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-            "Encrypted file name/identifier should not have any of the following characters " + ILLEGAL_CHARACTERS,
-            USER);
-      }
+    // check for validity of name
+    if (isEmpty(dto.getName()) || containsIllegalCharacters(dto.getName())) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Encrypted file name/identifier should not have any of the following characters " + ILLEGAL_CHARACTERS, USER);
+    }
 
-      Optional<EncryptedData> encryptedDataOptional = ngSecretService.get(metadata.getAccountIdentifier(),
-          metadata.getOrgIdentifier(), metadata.getProjectIdentifier(), metadata.getIdentifier());
-      if (encryptedDataOptional.isPresent()) {
-        throw new SecretManagementException(
-            SECRET_MANAGEMENT_ERROR, "Encrypted file with same identifier exists in the scope", USER);
-      }
+    // check if a file with the same identifier does not exist in the scope (account/org/project)
+    if (ngSecretService
+            .get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(), metadata.getProjectIdentifier(),
+                metadata.getIdentifier())
+            .isPresent()) {
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Encrypted file with same identifier exists in the scope", USER);
+    }
 
-      Optional<SecretManagerConfig> secretManagerConfigOptional =
-          ngSecretManagerService.getSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
-              metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
-      byte[] inputBytes;
-      if (secretManagerConfigOptional.isPresent()) {
+    // get secret manager with which the file is to be encrypted
+    Optional<SecretManagerConfig> secretManagerConfigOptional =
+        ngSecretManagerService.getSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
+            metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+
+    // in case of file creation of YAML, we receive an empty stream, so we create an empty byte array to handle it
+    byte[] inputBytes = new byte[0];
+    if (secretManagerConfigOptional.isPresent()) {
+      if (inputStream.getTotalBytesRead() > 0) {
         try {
           inputBytes = ByteStreams.toByteArray(inputStream);
         } catch (IOException exception) {
           throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to convert input stream to bytes", SRE);
         }
-        EncryptedData savedEncryptedData = encrypt(
-            metadata.getAccountIdentifier(), secretManagerConfigOptional.get(), encryptedData.getName(), inputBytes);
-        encryptedData.setEncryptionKey(savedEncryptedData.getEncryptionKey());
-        encryptedData.setEncryptedValue(savedEncryptedData.getEncryptedValue());
-        encryptedData.setKmsId(secretManagerConfigOptional.get().getUuid());
-        encryptedData.setEncryptionType(secretManagerConfigOptional.get().getEncryptionType());
-        encryptedData.setType(SettingVariableTypes.CONFIG_FILE);
-        encryptedData.setAccountId(metadata.getAccountIdentifier());
-        encryptedData.setFileSize(inputBytes.length);
-        wingsPersistence.save(encryptedData);
-        return encryptedData;
-      } else {
-        throw new InvalidRequestException("No secret manager with given details found in scope.", USER);
       }
+
+      // decrypt secrets of secret manager before sending the config to delegate
+      secretManagerConfigService.decryptEncryptionConfigSecrets(
+          metadata.getAccountIdentifier(), secretManagerConfigOptional.get(), false);
+
+      // send to delegate for saving the secret in secret manager
+      EncryptedData savedEncryptedData =
+          encrypt(metadata.getAccountIdentifier(), secretManagerConfigOptional.get(), dto.getName(), inputBytes, null);
+
+      // set other fields and save secret file in DB
+      savedEncryptedData.setKmsId(secretManagerConfigOptional.get().getUuid());
+      savedEncryptedData.setEncryptionType(secretManagerConfigOptional.get().getEncryptionType());
+      savedEncryptedData.setType(SettingVariableTypes.CONFIG_FILE);
+      savedEncryptedData.setAccountId(metadata.getAccountIdentifier());
+      metadata.setSecretManagerName(secretManagerConfigOptional.get().getName()); // TODO{phoenikx} remove this later
+      savedEncryptedData.setNgMetadata(metadata);
+      wingsPersistence.save(savedEncryptedData);
+
+      return savedEncryptedData;
     } else {
-      throw new InvalidRequestException("NG Metadata not present in encrypted data", SRE);
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "No secret manager with given details found in scope.", USER);
     }
   }
 
   @Override
-  public boolean update(EncryptedData encryptedData, BoundedInputStream inputStream) {
-    NGEncryptedDataMetadata metadata = encryptedData.getNgMetadata();
-    if (Optional.ofNullable(metadata).isPresent()) {
-      byte[] inputBytes;
+  public boolean update(@NotNull String account, String org, String project, String identifier, SecretFileUpdateDTO dto,
+      @NotNull BoundedInputStream inputStream) {
+    // get secret file saved in DB
+    Optional<EncryptedData> encryptedDataOptional = ngSecretService.get(account, org, project, identifier);
+
+    if (encryptedDataOptional.isPresent()) {
+      EncryptedData encryptedData = encryptedDataOptional.get();
+      NGEncryptedDataMetadata metadata = encryptedData.getNgMetadata();
+
+      // In case of creating with YAML, file upload is not allowed, so we initialize inputBytes as an empty array
+      byte[] inputBytes = new byte[0];
       try {
-        inputBytes = ByteStreams.toByteArray(inputStream);
+        if (inputStream.getTotalBytesRead() > 0) {
+          inputBytes = ByteStreams.toByteArray(inputStream);
+        }
       } catch (IOException exception) {
         throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to convert input stream to bytes", SRE);
       }
+
+      // get secret manager to be used to save file
       Optional<SecretManagerConfig> secretManagerConfigOptional =
           ngSecretManagerService.getSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
               metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+
       if (secretManagerConfigOptional.isPresent()) {
-        EncryptedData savedEncryptedData = encrypt(
-            metadata.getAccountIdentifier(), secretManagerConfigOptional.get(), encryptedData.getName(), inputBytes);
+        // If name has changed, delete the old file (we do not allow reference with files)
+        if (!dto.getName().equals(encryptedData.getName())) {
+          ngSecretService.deleteSecretInSecretManager(
+              account, encryptedData.getEncryptionKey(), secretManagerConfigOptional.get());
+        }
+
+        // decrypt secrets of secret manager before sending secret manager config to delegate
+        secretManagerConfigService.decryptEncryptionConfigSecrets(
+            metadata.getAccountIdentifier(), secretManagerConfigOptional.get(), false);
+
+        // save/override secret file in secret manager
+        EncryptedData savedEncryptedData = encrypt(metadata.getAccountIdentifier(), secretManagerConfigOptional.get(),
+            encryptedData.getName(), inputBytes, encryptedData);
+
+        // set new fields before saving to DB
         encryptedData.setEncryptionKey(savedEncryptedData.getEncryptionKey());
         encryptedData.setEncryptedValue(savedEncryptedData.getEncryptedValue());
-        encryptedData.setKmsId(secretManagerConfigOptional.get().getUuid());
-        encryptedData.setEncryptionType(secretManagerConfigOptional.get().getEncryptionType());
-        encryptedData.setType(SettingVariableTypes.CONFIG_FILE);
-        encryptedData.setAccountId(metadata.getAccountIdentifier());
-        encryptedData.setFileSize(inputBytes.length);
+        encryptedData.setFileSize(savedEncryptedData.getFileSize());
+        encryptedData.setName(dto.getName());
+        encryptedData.getNgMetadata().setDescription(dto.getDescription());
+        encryptedData.getNgMetadata().setTags(dto.getTags());
+
+        // save to DB and return
         wingsPersistence.save(encryptedData);
         return true;
       } else {
-        throw new InvalidRequestException("No secret manager with given details found in scope.", USER);
+        throw new SecretManagementException(
+            SECRET_MANAGEMENT_ERROR, "No secret manager with given details found in scope.", USER);
       }
-    } else {
-      throw new InvalidRequestException("NG Metadata not present in encrypted data");
     }
+    throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "No such secret file found", USER);
   }
 }

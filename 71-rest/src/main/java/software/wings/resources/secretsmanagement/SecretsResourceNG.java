@@ -2,21 +2,18 @@ package software.wings.resources.secretsmanagement;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_IDENTIFIER_KEY;
-import static io.harness.secretmanagerclient.NGConstants.ORG_IDENTIFIER_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PROJECT_IDENTIFIER_KEY;
+import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
+import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
 
 import com.google.inject.Inject;
 
 import io.harness.NgManagerServiceDriver;
 import io.harness.beans.PageResponse;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.swagger.annotations.Api;
@@ -71,17 +68,17 @@ public class SecretsResourceNG {
   }
 
   @POST
-  public RestResponse<EncryptedDataDTO> createSecret(SecretTextCreateDTO dto) {
-    EncryptedData encryptedData = EncryptedDataMapper.fromDTO(dto);
-    EncryptedData createdEncryptedData = ngSecretService.createSecretText(encryptedData, dto.getValue());
+  @Produces("application/x-kryo")
+  @Consumes("application/x-kryo")
+  public RestResponse<EncryptedDataDTO> createSecret(SecretTextDTO dto) {
+    EncryptedData createdEncryptedData = ngSecretService.createSecretText(dto);
     return new RestResponse<>(EncryptedDataMapper.toDTO(createdEncryptedData));
   }
 
   @GET
   public RestResponse<PageResponse<EncryptedDataDTO>> listSecrets(
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier,
+      @QueryParam(ACCOUNT_KEY) final String accountIdentifier, @QueryParam(ORG_KEY) final String orgIdentifier,
+      @QueryParam(PROJECT_KEY) final String projectIdentifier,
       @QueryParam(LIMIT_KEY) @DefaultValue("100") final String limit,
       @QueryParam(OFFSET_KEY) @DefaultValue("0") final String offset, @QueryParam("searchTerm") final String searchTerm,
       @QueryParam("type") final SettingVariableTypes type) {
@@ -101,9 +98,8 @@ public class SecretsResourceNG {
   @GET
   @Path("{identifier}")
   public RestResponse<EncryptedDataDTO> get(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier) {
+      @QueryParam(ACCOUNT_KEY) final String accountIdentifier, @QueryParam(ORG_KEY) final String orgIdentifier,
+      @QueryParam(PROJECT_KEY) final String projectIdentifier) {
     Optional<EncryptedData> encryptedDataOptional =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return new RestResponse<>(encryptedDataOptional.map(EncryptedDataMapper::toDTO).orElse(null));
@@ -111,29 +107,18 @@ public class SecretsResourceNG {
 
   @PUT
   @Path("{identifier}")
+  @Consumes({"application/x-kryo"})
   public RestResponse<Boolean> updateSecret(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier, SecretTextUpdateDTO dto) {
-    if (!StringUtils.isEmpty(dto.getPath()) && !StringUtils.isEmpty(dto.getValue())) {
-      throw new InvalidRequestException("Cannot update both path and value", INVALID_REQUEST, USER);
-    }
-    Optional<EncryptedData> encryptedDataOptional =
-        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (encryptedDataOptional.isPresent()) {
-      EncryptedData appliedUpdate = EncryptedDataMapper.applyUpdate(dto, encryptedDataOptional.get());
-      boolean success = ngSecretService.updateSecretText(appliedUpdate, dto.getValue());
-      return new RestResponse<>(success);
-    }
-    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
+      @QueryParam(ACCOUNT_KEY) final String account, @QueryParam(ORG_KEY) final String org,
+      @QueryParam(PROJECT_KEY) final String project, SecretTextUpdateDTO dto) {
+    return new RestResponse<>(ngSecretService.updateSecretText(account, org, project, identifier, dto));
   }
 
   @DELETE
   @Path("{identifier}")
   public RestResponse<Boolean> deleteSecret(@PathParam("identifier") String identifier,
-      @QueryParam(ACCOUNT_IDENTIFIER_KEY) final String accountIdentifier,
-      @QueryParam(ORG_IDENTIFIER_KEY) final String orgIdentifier,
-      @QueryParam(PROJECT_IDENTIFIER_KEY) final String projectIdentifier) {
+      @QueryParam(ACCOUNT_KEY) final String accountIdentifier, @QueryParam(ORG_KEY) final String orgIdentifier,
+      @QueryParam(PROJECT_KEY) final String projectIdentifier) {
     return new RestResponse<>(
         ngSecretService.deleteSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }

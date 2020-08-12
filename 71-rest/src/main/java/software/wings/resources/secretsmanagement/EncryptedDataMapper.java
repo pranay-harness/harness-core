@@ -4,62 +4,72 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
+import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.ValueType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementException;
-import software.wings.settings.SettingVariableTypes;
 
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
 
 @UtilityClass
 @Slf4j
 public class EncryptedDataMapper {
-  public static EncryptedDataDTO toDTO(@NotNull EncryptedData encryptedData) {
+  public static EncryptedDataDTO toDTO(EncryptedData encryptedData) {
+    if (encryptedData == null) {
+      return null;
+    }
     EncryptedDataDTO dto = EncryptedDataDTO.builder()
                                .name(encryptedData.getName())
+                               .value(encryptedData.getPath())
                                .encryptionType(encryptedData.getEncryptionType())
-                               .fileSize(encryptedData.getFileSize())
-                               .id(encryptedData.getUuid())
-                               .path(encryptedData.getPath())
-                               .secretManagerId(encryptedData.getKmsId())
                                .lastUpdatedAt(encryptedData.getLastUpdatedAt())
-                               .type(encryptedData.getType())
+                               .type(SecretType.fromSettingVariableType(encryptedData.getType()))
                                .build();
+    if (SecretType.SecretText == dto.getType()) {
+      if (Optional.ofNullable(encryptedData.getPath()).isPresent()) {
+        dto.setValue(encryptedData.getPath());
+        dto.setValueType(ValueType.Reference);
+      } else {
+        dto.setValue(null);
+        dto.setValueType(ValueType.Inline);
+      }
+    }
     if (Optional.ofNullable(encryptedData.getNgMetadata()).isPresent()) {
       NGEncryptedDataMetadata metadata = encryptedData.getNgMetadata();
+      dto.setAccount(metadata.getAccountIdentifier());
+      dto.setOrg(metadata.getOrgIdentifier());
+      dto.setProject(metadata.getProjectIdentifier());
       dto.setIdentifier(metadata.getIdentifier());
-      dto.setAccountIdentifier(metadata.getAccountIdentifier());
-      dto.setOrgIdentifier(metadata.getOrgIdentifier());
-      dto.setSecretManagerIdentifier(metadata.getSecretManagerIdentifier());
-      dto.setProjectIdentifier(metadata.getProjectIdentifier());
-      dto.setSecretManagerName(metadata.getSecretManagerName());
+      dto.setSecretManager(metadata.getSecretManagerIdentifier());
+      dto.setSecretManagerName(metadata.getSecretManagerName()); // TODO{phoenikx} Query from DB instead of saving it
       dto.setDescription(metadata.getDescription());
       dto.setTags(metadata.getTags());
+      dto.setDraft(metadata.isDraft());
     }
     return dto;
   }
 
-  public static EncryptedData fromDTO(SecretTextCreateDTO dto) {
+  public static EncryptedData fromDTO(SecretTextDTO dto) {
     EncryptedData encryptedData = EncryptedData.builder()
                                       .name(dto.getName())
                                       .path(dto.getPath())
-                                      .accountId(dto.getAccountIdentifier())
-                                      .type(SettingVariableTypes.SECRET_TEXT)
+                                      .accountId(dto.getAccount())
+                                      .type(dto.getSettingVariableType())
                                       .enabled(true)
                                       .build();
     NGEncryptedDataMetadata metadata = NGEncryptedDataMetadata.builder()
                                            .identifier(dto.getIdentifier())
-                                           .accountIdentifier(dto.getAccountIdentifier())
-                                           .orgIdentifier(dto.getOrgIdentifier())
-                                           .projectIdentifier(dto.getProjectIdentifier())
-                                           .secretManagerIdentifier(dto.getSecretManagerIdentifier())
-                                           .secretManagerName(dto.getSecretManagerName())
+                                           .accountIdentifier(dto.getAccount())
+                                           .orgIdentifier(dto.getOrg())
+                                           .draft(dto.isDraft())
+                                           .projectIdentifier(dto.getProject())
+                                           .secretManagerIdentifier(dto.getSecretManager())
                                            .description(dto.getDescription())
                                            .tags(dto.getTags())
                                            .build();
@@ -68,25 +78,28 @@ public class EncryptedDataMapper {
   }
 
   public static EncryptedData fromDTO(EncryptedDataDTO dto) {
+    if (!Optional.ofNullable(dto).isPresent()) {
+      return null;
+    }
     EncryptedData encryptedData = EncryptedData.builder()
                                       .name(dto.getName())
-                                      .path(dto.getPath())
-                                      .accountId(dto.getAccountIdentifier())
-                                      .type(dto.getType())
+                                      .path(dto.getValue())
+                                      .accountId(dto.getAccount())
+                                      .type(SecretType.toSettingVariableType(dto.getType()))
                                       .enabled(true)
                                       .build();
     NGEncryptedDataMetadata metadata = NGEncryptedDataMetadata.builder()
                                            .identifier(dto.getIdentifier())
-                                           .accountIdentifier(dto.getAccountIdentifier())
-                                           .orgIdentifier(dto.getOrgIdentifier())
-                                           .projectIdentifier(dto.getProjectIdentifier())
-                                           .secretManagerIdentifier(dto.getSecretManagerIdentifier())
+                                           .accountIdentifier(dto.getAccount())
+                                           .orgIdentifier(dto.getOrg())
+                                           .projectIdentifier(dto.getProject())
+                                           .secretManagerIdentifier(dto.getSecretManager())
                                            .secretManagerName(dto.getSecretManagerName())
                                            .description(dto.getDescription())
                                            .tags(dto.getTags())
+                                           .draft(dto.isDraft())
                                            .build();
     encryptedData.setNgMetadata(metadata);
-    encryptedData.setFileSize(dto.getFileSize());
     encryptedData.setLastUpdatedAt(dto.getLastUpdatedAt());
     return encryptedData;
   }
@@ -99,10 +112,13 @@ public class EncryptedDataMapper {
     try {
       updatedEncryptedData = (EncryptedData) BeanUtils.cloneBean(encryptedData);
       updatedEncryptedData.setPath(dto.getPath());
+      updatedEncryptedData.setName(dto.getName());
       if (!Optional.ofNullable(updatedEncryptedData.getNgMetadata()).isPresent()) {
         updatedEncryptedData.setNgMetadata(NGEncryptedDataMetadata.builder().build());
       }
       updatedEncryptedData.getNgMetadata().setDescription(dto.getDescription());
+      updatedEncryptedData.getNgMetadata().setTags(dto.getTags());
+      updatedEncryptedData.getNgMetadata().setDraft(dto.isDraft());
       return updatedEncryptedData;
     } catch (Exception exception) {
       logger.error("Exception while copying object.", exception);

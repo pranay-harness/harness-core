@@ -23,4 +23,5 @@ public class NGEncryptedDataMetadata extends NGMetadata {
   private String secretManagerIdentifier;
   private String secretManagerName;
   private String description;
+  private boolean draft;
 }

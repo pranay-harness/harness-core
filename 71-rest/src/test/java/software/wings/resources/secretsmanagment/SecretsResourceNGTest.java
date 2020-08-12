@@ -19,6 +19,7 @@ import software.wings.WingsBaseTest;
 import software.wings.resources.secretsmanagement.SecretsResourceNG;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.NGSecretService;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Optional;
 
@@ -43,7 +44,8 @@ public class SecretsResourceNGTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGet() {
-    EncryptedData encryptedData = EncryptedData.builder().name(SECRET_NAME).build();
+    EncryptedData encryptedData =
+        EncryptedData.builder().name(SECRET_NAME).type(SettingVariableTypes.SECRET_TEXT).build();
     when(ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER))
         .thenReturn(Optional.of(encryptedData));
     RestResponse<EncryptedDataDTO> encryptedDataRestResponse =

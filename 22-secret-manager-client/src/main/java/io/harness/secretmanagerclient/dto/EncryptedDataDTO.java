@@ -1,12 +1,15 @@
 package io.harness.secretmanagerclient.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.ValueType;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 
@@ -14,21 +17,21 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class EncryptedDataDTO {
-  String name;
-  String path;
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
+  SecretType type;
+  ValueType valueType;
+  String value;
+  boolean draft;
+  String account;
+  String org;
+  String project;
   String identifier;
-  String secretManagerIdentifier;
+  String secretManager;
   String secretManagerName;
-  String secretManagerId;
+  String name;
   EncryptionType encryptionType;
-  SettingVariableTypes type;
-  long fileSize;
-  String id;
   List<String> tags;
-  private long lastUpdatedAt;
-  private String description;
+  long lastUpdatedAt;
+  String description;
 }
