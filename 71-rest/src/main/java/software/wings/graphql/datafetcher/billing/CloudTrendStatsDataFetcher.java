@@ -62,6 +62,7 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
             .map(Collection::stream)
             .orElseGet(Stream::empty)
             .map(cloudBillingHelper.getFiltersMapper(isAWSCloudProvider, isQueryRawTableRequired))
+            .filter(condition -> condition != null)
             .collect(Collectors.toList()),
         queryTableName, filters, leftJoin);
   }

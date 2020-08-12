@@ -8,6 +8,8 @@ import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipe
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 @Slf4j
 @Singleton
 public class BillingDataPipelineRecordDao {
@@ -25,6 +27,12 @@ public class BillingDataPipelineRecordDao {
     return persistence.createQuery(BillingDataPipelineRecord.class)
         .filter(BillingDataPipelineRecordKeys.accountId, accountId)
         .get();
+  }
+
+  public List<BillingDataPipelineRecord> fetchBillingPipelineRecords(String accountId) {
+    return persistence.createQuery(BillingDataPipelineRecord.class)
+        .filter(BillingDataPipelineRecordKeys.accountId, accountId)
+        .asList();
   }
 
   public BillingDataPipelineRecord fetchBillingPipelineRecord(String accountId, String settingId) {

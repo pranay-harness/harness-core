@@ -10,4 +10,5 @@ import java.util.List;
 public class BillingDataPipelineCacheObject {
   String dataSetId;
   List<String> awsLinkedAccountsToExclude;
+  List<String> awsLinkedAccountsToInclude;
 }

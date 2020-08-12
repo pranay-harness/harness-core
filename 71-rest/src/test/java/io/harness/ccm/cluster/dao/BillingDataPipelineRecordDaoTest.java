@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
+import java.util.List;
+
 public class BillingDataPipelineRecordDaoTest extends WingsBaseTest {
   @Inject BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   private static final String accountId = "ACCOUNT_ID";
@@ -35,6 +37,15 @@ public class BillingDataPipelineRecordDaoTest extends WingsBaseTest {
     BillingDataPipelineRecord billingDataPipelineRecord =
         billingDataPipelineRecordDao.fetchBillingPipelineMetaDataFromAccountId(accountId);
     assertThat(billingDataPipelineRecord.getDataSetId()).isEqualTo(dataSetId);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void fetchBillingPipelineRecords() {
+    List<BillingDataPipelineRecord> billingDataPipelineRecords =
+        billingDataPipelineRecordDao.fetchBillingPipelineRecords(accountId);
+    assertThat(billingDataPipelineRecords.get(0).getDataSetId()).isEqualTo(dataSetId);
   }
 
   @Test
