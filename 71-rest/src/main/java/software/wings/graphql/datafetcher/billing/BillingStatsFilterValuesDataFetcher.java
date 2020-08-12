@@ -77,6 +77,7 @@ public class BillingStatsFilterValuesDataFetcher
     ResultSet resultSet = null;
     boolean successful = false;
     int retryCount = 0;
+    boolean fetchLabels = isGroupByLabelPresent(groupByList);
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLCCMEntityGroupBy> groupByNodeAndPodList = new ArrayList<>();
     List<QLCCMEntityGroupBy> groupByEntityListExcludingNodeAndPod = new ArrayList<>();
@@ -111,7 +112,7 @@ public class BillingStatsFilterValuesDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateFilterValuesData(queryData, resultSet, instanceIds, accountId, totalCount);
+        return generateFilterValuesData(queryData, resultSet, instanceIds, accountId, fetchLabels, totalCount);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -217,7 +218,7 @@ public class BillingStatsFilterValuesDataFetcher
   }
 
   private QLFilterValuesListData generateFilterValuesData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      Set<String> instanceIds, String accountId, Long totalCount) throws SQLException {
+      Set<String> instanceIds, String accountId, boolean fetchLabels, Long totalCount) throws SQLException {
     QLFilterValuesDataBuilder filterValuesDataBuilder = QLFilterValuesData.builder();
     Set<String> cloudServiceNames = new HashSet<>();
     Set<String> workloadNames = new HashSet<>();
@@ -277,7 +278,7 @@ public class BillingStatsFilterValuesDataFetcher
     }
 
     // Fetching K8s labels if workload names are fetched
-    if (!workloadNames.isEmpty()) {
+    if (fetchLabels || !workloadNames.isEmpty()) {
       k8sLabels = k8sLabelConnectionDataFetcher.fetchAllLabels(
           Arrays.asList(prepareLabelFilters(getClusterIdsFromFilters(queryData.getFilters()),
               workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]), accountId)));
@@ -393,6 +394,15 @@ public class BillingStatsFilterValuesDataFetcher
   private boolean isGroupByPodPresent(List<QLCCMEntityGroupBy> groupByNodeAndPodList) {
     for (QLCCMEntityGroupBy entityGroupBy : groupByNodeAndPodList) {
       if (entityGroupBy == QLCCMEntityGroupBy.Pod) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isGroupByLabelPresent(List<QLCCMGroupBy> groupByList) {
+    for (QLCCMGroupBy groupBy : groupByList) {
+      if (groupBy.getLabelAggregation() != null) {
         return true;
       }
     }
