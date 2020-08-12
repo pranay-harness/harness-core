@@ -22,11 +22,11 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -35,7 +35,8 @@ import java.util.function.Consumer;
 @Slf4j
 public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClientNG gitClient;
-  @Inject private EncryptionService encryptionService;
+  @Inject private SecretDecryptionService decryptionService;
+
   public NGGitCommandTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
@@ -51,7 +52,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
     GitCommandParams gitCommandParams = (GitCommandParams) parameters;
     GitConfigDTO gitConfig = gitCommandParams.getGitConfig();
     List<EncryptedDataDetail> encryptionDetails = gitCommandParams.getEncryptionDetails();
-    encryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
+    decryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
     GitCommandType gitCommandType = gitCommandParams.getGitCommandType();
     GitCommandRequest gitCommandRequest = gitCommandParams.getGitCommandRequest();
 

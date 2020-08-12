@@ -26,6 +26,8 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.callback.GitCommandCallback;
 import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.WaitNotifyEngine;
@@ -90,8 +92,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
 
     logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
-
-    TaskData taskData = getTaskDataForCommitAndPush(yamlChangeSet, gitFileChange, yamlGitConfig, gitConfig.get());
+    TaskData taskData = getTaskDataForCommitAndPush(yamlChangeSet, gitFileChange, yamlGitConfig, gitConfig.get(),
+        accountId, yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId());
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
     String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
 
@@ -106,13 +108,18 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private TaskData getTaskDataForCommitAndPush(YamlChangeSet yamlChangeSet, GitFileChange gitFileChange,
-      YamlGitConfigDTO yamlGitConfig, GitConfigDTO gitConfig) {
+      YamlGitConfigDTO yamlGitConfig, GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier) {
     io.harness.delegate.beans.git.GitFileChange gitFileChangeDelegate =
         CommonsMapper.toDelegateGitFileChange(gitFileChange);
-    GitAuthenticationDTO gitAuthenticationEncryptedSetting = gitConfig.getGitAuth();
-    // TODO(abhinav): refactor to add new secret manager
+    GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
+    NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                       .accountIdentifier(accountIdentifier)
+                                       .orgIdentifier(orgIdentifier)
+                                       .projectIdentifier(projectIdentifier)
+                                       .build();
     List<EncryptedDataDetail> encryptedDataDetailList =
-        ngSecretService.getEncryptionDetails(gitAuthenticationEncryptedSetting);
+        ngSecretService.getEncryptionDetails(basicNGAccessObject, gitAuthenticationDecryptableEntity);
     GitCommandParams gitCommandParams = buildGitCommandParamsForCommitAndPush(
         yamlGitConfig, gitConfig, yamlChangeSet.getUuid(), gitFileChangeDelegate, encryptedDataDetailList);
     return TaskData.builder()

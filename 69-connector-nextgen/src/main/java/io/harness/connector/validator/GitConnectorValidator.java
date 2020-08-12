@@ -17,6 +17,8 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
@@ -39,7 +41,7 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
       GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifie) {
     validateFieldsPresent(gitConfig);
     GitCommandExecutionResponse gitCommandExecutionResponse =
-        createValidationDelegateTask(gitConfig, accountIdentifier);
+        createValidationDelegateTask(gitConfig, accountIdentifier, orgIdentifier, projectIdentifie);
     return buildConnectorValidationResult(gitCommandExecutionResponse);
   }
 
@@ -47,7 +49,7 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
     switch (gitConfig.getGitAuthType()) {
       case HTTP:
         GitHTTPAuthenticationDTO gitAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
-        validateRequiredFieldsPresent(gitAuthenticationDTO.getEncryptedPassword(), gitAuthenticationDTO.getUrl(),
+        validateRequiredFieldsPresent(gitAuthenticationDTO.getPasswordRef(), gitAuthenticationDTO.getUrl(),
             gitAuthenticationDTO.getUsername(), gitAuthenticationDTO.getGitConnectionType(),
             gitAuthenticationDTO.getBranchName());
         break;
@@ -74,11 +76,17 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
     }
   }
 
-  private GitCommandExecutionResponse createValidationDelegateTask(GitConfigDTO gitConfig, String accountId) {
-    Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
-    GitAuthenticationDTO gitAuthenticationEncryptedSetting = gitConfig.getGitAuth();
+  private GitCommandExecutionResponse createValidationDelegateTask(
+      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountIdentifier);
+    GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
+    NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                       .accountIdentifier(accountIdentifier)
+                                       .orgIdentifier(orgIdentifier)
+                                       .projectIdentifier(projectIdentifier)
+                                       .build();
     List<EncryptedDataDetail> encryptedDataDetailList =
-        ngSecretService.getEncryptionDetails(gitAuthenticationEncryptedSetting);
+        ngSecretService.getEncryptionDetails(basicNGAccessObject, gitAuthenticationDecryptableEntity);
     TaskData taskData = TaskData.builder()
                             .async(false)
                             .taskType("NG_GIT_COMMAND")
@@ -89,7 +97,7 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
                                                           .build()})
                             .timeout(TimeUnit.MINUTES.toMillis(1))
                             .build();
-    return managerDelegateServiceDriver.sendTask(accountId, setupAbstractions, taskData);
+    return managerDelegateServiceDriver.sendTask(accountIdentifier, setupAbstractions, taskData);
   }
 
   private void validateRequiredFieldsPresent(Object... fields) {

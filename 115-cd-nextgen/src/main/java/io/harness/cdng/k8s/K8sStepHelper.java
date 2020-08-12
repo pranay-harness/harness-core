@@ -114,14 +114,17 @@ public class K8sStepHelper {
       case GIT:
         GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
         GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-        GitConfig gitConfig = GitConfig.builder()
-                                  .repoUrl(gitAuth.getUrl())
-                                  .username(gitAuth.getUsername())
-                                  .encryptedPassword(gitAuth.getEncryptedPassword())
-                                  .branch(gitAuth.getBranchName())
-                                  .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
-                                  .accountId(connectorDTO.getAccountIdentifier())
-                                  .build();
+        GitConfig gitConfig =
+            GitConfig.builder()
+                .repoUrl(gitAuth.getUrl())
+                .username(gitAuth.getUsername())
+                // todo @Vaibhav/@Deepak: Now the git uses the new secret and this secret requires identifier and
+                // previous required uuid, this has to be changed according to the framework
+                /* .encryptedPassword(SecretRefHelper.getSecretConfigString())*/
+                .branch(gitAuth.getBranchName())
+                .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+                .accountId(connectorDTO.getAccountIdentifier())
+                .build();
         builder.withValue(gitConfig);
         break;
       default:

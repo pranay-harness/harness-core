@@ -101,6 +101,7 @@ import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
@@ -412,6 +413,7 @@ import software.wings.service.impl.security.LocalEncryptionServiceImpl;
 import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
 import software.wings.service.impl.security.NGSecretManagerServiceImpl;
 import software.wings.service.impl.security.RuntimeCredentialsInjector;
+import software.wings.service.impl.security.SecretDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerConfigServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
@@ -953,6 +955,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(TimeSeriesMLAnalysisRecordService.class).to(TimeSeriesMLAnalysisRecordServiceImpl.class);
     bind(ExperimentalMetricAnalysisRecordService.class).to(ExperimentalMetricAnalysisRecordServiceImpl.class);
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
+    bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
