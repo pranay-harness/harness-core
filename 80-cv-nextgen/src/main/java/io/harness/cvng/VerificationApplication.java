@@ -30,6 +30,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -59,6 +60,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
@@ -176,6 +178,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVServiceModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
+    modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
+    modules.add(new SecretManagementClientModule(configuration.getSecretManagerClientConfig(),
+        configuration.getNgManagerServiceConfig().getManagerServiceSecret()));
     modules.add(new CVNextGenCommonsServiceModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();

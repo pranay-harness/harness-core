@@ -9,7 +9,9 @@ import com.google.inject.Singleton;
 
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
+import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -82,6 +84,8 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(TestMongoModule.getInstance());
     modules.add(new CVServiceModule());
+    modules.add(new NextGenClientModule(
+        NGManagerServiceConfig.builder().managerServiceSecret("secret").ngManagerUrl("http://test-ng-host").build()));
     modules.add(new VerificationManagerClientModule("http://test-host"));
     return modules;
   }
