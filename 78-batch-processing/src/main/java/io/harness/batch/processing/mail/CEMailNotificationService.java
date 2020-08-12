@@ -3,11 +3,14 @@ package io.harness.batch.processing.mail;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
+
+import java.net.URISyntaxException;
 
 @Component
 @Slf4j
@@ -33,6 +36,13 @@ public class CEMailNotificationService {
     }
 
     return mailSentSuccessFully;
+  }
+
+  public String buildAbsoluteUrl(String fragment) throws URISyntaxException {
+    String baseUrl = mainConfiguration.getBaseUrl();
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setFragment(fragment);
+    return uriBuilder.toString();
   }
 
   private boolean sendMail(SmtpConfig config, EmailData emailData) {

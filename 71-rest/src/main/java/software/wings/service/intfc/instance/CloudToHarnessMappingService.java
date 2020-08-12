@@ -1,5 +1,6 @@
 package software.wings.service.intfc.instance;
 
+import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.config.GcpBillingAccount;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
@@ -54,4 +55,6 @@ public interface CloudToHarnessMappingService {
   UserGroup getUserGroup(String accountId, String userGroupId, boolean loadUsers);
 
   User getUser(String userId);
+
+  CEUserInfo getUserForCluster(String clusterId);
 }

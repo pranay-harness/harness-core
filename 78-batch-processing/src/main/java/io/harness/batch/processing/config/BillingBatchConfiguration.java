@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config;
 
+import io.harness.batch.processing.billing.tasklet.BillingDataGeneratedMailTasklet;
 import io.harness.batch.processing.billing.writer.InstanceBillingDataTasklet;
 import io.harness.batch.processing.ccm.BatchJobType;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,19 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class BillingBatchConfiguration {
   @Bean
+  public Tasklet billingDataGeneratedMailTasklet() {
+    return new BillingDataGeneratedMailTasklet();
+  }
+
+  @Bean
   public Tasklet instanceBillingDataTasklet() {
     return new InstanceBillingDataTasklet();
   }
 
   @Bean
   @Qualifier(value = "instanceBillingJob")
-  public Job instanceBillingJob(JobBuilderFactory jobBuilderFactory, Step instanceBillingStep) {
+  public Job instanceBillingJob(
+      JobBuilderFactory jobBuilderFactory, Step instanceBillingStep, Step billingDataGeneratedNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING.name())
         .incrementer(new RunIdIncrementer())
         .start(instanceBillingStep)
@@ -32,10 +39,19 @@ public class BillingBatchConfiguration {
 
   @Bean
   @Qualifier(value = "instanceBillingHourlyJob")
-  public Job instanceBillingHourlyJob(JobBuilderFactory jobBuilderFactory, Step instanceBillingStep) {
+  public Job instanceBillingHourlyJob(
+      JobBuilderFactory jobBuilderFactory, Step instanceBillingStep, Step billingDataGeneratedNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_HOURLY.name())
         .incrementer(new RunIdIncrementer())
         .start(instanceBillingStep)
+        .next(billingDataGeneratedNotificationStep)
+        .build();
+  }
+
+  @Bean
+  public Step billingDataGeneratedNotificationStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("billingDataGeneratedNotificationStep")
+        .tasklet(billingDataGeneratedMailTasklet())
         .build();
   }
 
