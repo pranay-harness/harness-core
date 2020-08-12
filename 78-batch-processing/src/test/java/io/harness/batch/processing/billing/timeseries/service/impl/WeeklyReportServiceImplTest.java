@@ -16,6 +16,7 @@ import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CESlackWebhook;
+import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -35,6 +36,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WeeklyReportServiceImplTest extends CategoryTest {
@@ -80,6 +83,9 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
         .thenReturn(Arrays.asList(CECommunications.builder().emailId("mailId").build()));
     when(ceSlackWebhookService.getByAccountId(ACCOUNT_ID))
         .thenReturn(CESlackWebhook.builder().webhookUrl("URL").sendCostReport(false).build());
+    Map<String, String> uniqueIds = new HashMap<>();
+    uniqueIds.put("mailId", "uniqueId");
+    when(ceCommunicationsService.getUniqueIdPerUser(ACCOUNT_ID, CommunicationType.WEEKLY_REPORT)).thenReturn(uniqueIds);
   }
 
   @Test

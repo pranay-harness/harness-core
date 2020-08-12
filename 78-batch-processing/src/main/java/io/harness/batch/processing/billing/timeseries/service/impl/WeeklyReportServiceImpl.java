@@ -37,7 +37,6 @@ import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
-import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.communication.entities.CommunicationMedium;
 import io.harness.ccm.communication.entities.CommunicationType;
@@ -69,6 +68,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -131,6 +131,7 @@ public class WeeklyReportServiceImpl {
   private static final String ENTITY = "ENTITY";
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String OVERVIEW_URL = "/account/%s/continuous-efficiency/overview";
+  private static final String UNSUBSCRIBE_URL = "/api/ceMailUnsubscribe/%s";
 
   public static final String COMMUNICATION_MEDIUM = "utm_medium";
 
@@ -189,7 +190,9 @@ public class WeeklyReportServiceImpl {
     String reportDateRange = getReportDateRange();
 
     accountIds.forEach(accountId -> {
-      List<String> emailIds = getEmailIdsForAccount(accountId);
+      Map<String, String> enabledUsers =
+          ceCommunicationsService.getUniqueIdPerUser(accountId, CommunicationType.WEEKLY_REPORT);
+      List<String> emailIds = new ArrayList<>(enabledUsers.keySet());
       if (emailIds.isEmpty()) {
         return;
       }
@@ -288,22 +291,27 @@ public class WeeklyReportServiceImpl {
       templateHelper.populateCostDataForTemplate(templateModel, costValues);
 
       templateModel.put("DATE", reportDateRange);
-      costValues.put("DATE", reportDateRange);
-      try {
-        templateModel.put("url", templateHelper.buildAbsoluteUrl(String.format(OVERVIEW_URL, accountId)));
-      } catch (URISyntaxException e) {
-        logger.error("Error in forming Explorer URL for Weekly Report", e);
-      }
 
-      EmailData emailData = EmailData.builder()
-                                .to(emailIds)
-                                .templateName("ce_weekly_report")
-                                .templateModel(templateModel)
-                                .accountId(accountId)
-                                .build();
-      emailData.setCc(Collections.emptyList());
-      emailData.setRetries(2);
-      emailNotificationService.send(emailData);
+      costValues.put("DATE", reportDateRange);
+      emailIds.forEach(emailId -> {
+        try {
+          templateModel.put("url", templateHelper.buildAbsoluteUrl(String.format(OVERVIEW_URL, accountId)));
+          templateModel.put("UNSUBSCRIBE_URL",
+              templateHelper.buildAbsoluteUrl(String.format(UNSUBSCRIBE_URL, enabledUsers.get(emailId))));
+        } catch (URISyntaxException e) {
+          logger.error("Error in forming Explorer URL for Weekly Report", e);
+        }
+
+        EmailData emailData = EmailData.builder()
+                                  .to(emailIds)
+                                  .templateName("ce_weekly_report")
+                                  .templateModel(templateModel)
+                                  .accountId(accountId)
+                                  .build();
+        emailData.setCc(Collections.emptyList());
+        emailData.setRetries(2);
+        emailNotificationService.send(emailData);
+      });
 
       // Sending report on Slack
       CESlackWebhook webhook = ceSlackWebhookService.getByAccountId(accountId);
@@ -428,12 +436,6 @@ public class WeeklyReportServiceImpl {
     Instant endInstant = getEndTime(getStartOfDayTimestamp(0));
     return startInstant.atZone(ZoneId.of(DEFAULT_TIMEZONE)).format(DateTimeFormatter.ofPattern(DATE_PATTERN)) + " to "
         + endInstant.atZone(ZoneId.of(DEFAULT_TIMEZONE)).format(DateTimeFormatter.ofPattern(DATE_PATTERN));
-  }
-
-  private List<String> getEmailIdsForAccount(String accountId) {
-    List<CECommunications> entries =
-        ceCommunicationsService.getEnabledEntries(accountId, CommunicationType.WEEKLY_REPORT);
-    return entries.stream().map(CECommunications::getEmailId).collect(Collectors.toList());
   }
 
   private boolean sendReportOnSlack(Map<String, String> values, String webhookUrl) throws IOException {
