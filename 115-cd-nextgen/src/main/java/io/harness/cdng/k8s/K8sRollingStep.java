@@ -24,10 +24,9 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
@@ -50,18 +49,11 @@ import io.harness.validation.Validator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.GitConfig;
-import software.wings.beans.GitFileConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
-import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDelegateManifestConfigBuilder;
-import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
@@ -170,31 +162,26 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     List<String> renderedValuesList = renderValues(ambiance, valuesFileContents);
     StoreConfig storeConfig = k8sManifest.getStoreConfigWrapper().getStoreConfig();
 
-    K8sDelegateManifestConfig k8sDelegateManifestConfig = getK8sDelegateManifestConfig(storeConfig, ambiance);
-    K8sClusterConfig k8sClusterConfig = k8sStepHelper.getK8sClusterConfig(infrastructure, ambiance);
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
-    K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters =
-        K8sRollingDeployTaskParameters.builder()
+    K8sRollingDeployRequest k8sRollingDeployRequest =
+        K8sRollingDeployRequest.builder()
             .skipDryRun(stepParameters.isSkipDryRun())
-            .isInCanaryWorkflow(false)
-            .k8sDelegateManifestConfig(k8sDelegateManifestConfig)
+            .inCanaryWorkflow(false)
             .releaseName(releaseName)
-            .activityId(UUIDGenerator.generateUuid())
             .commandName(K8sRollingDeploy.K8S_ROLLING_DEPLOY_COMMAND_NAME)
-            .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)
+            .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
             .timeoutIntervalInMin(stepParameters.getTimeout())
             .valuesYamlList(renderedValuesList)
-            .accountId(accountId)
-            .k8sClusterConfig(k8sClusterConfig)
-            .activityId(UUIDGenerator.generateUuid())
+            .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
+            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
             .build();
 
     TaskData taskData = TaskData.builder()
-                            .parameters(new Object[] {k8sRollingDeployTaskParameters})
-                            .taskType(TaskType.K8S_COMMAND_TASK.name())
+                            .parameters(new Object[] {k8sRollingDeployRequest})
+                            .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
                             .timeout(stepParameters.getTimeout())
                             .async(true)
                             .build();
@@ -212,36 +199,6 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
     return valuesFileContents.stream()
         .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
         .collect(Collectors.toList());
-  }
-
-  private K8sDelegateManifestConfig getK8sDelegateManifestConfig(StoreConfig storeConfig, Ambiance ambiance) {
-    K8sDelegateManifestConfigBuilder k8sDelegateManifestConfigBuilder = K8sDelegateManifestConfig.builder();
-
-    if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
-      StoreType storeType = StoreType.Remote;
-      GitStore gitStore = (GitStore) storeConfig;
-      SettingAttribute gitConfigSettingAttribute =
-          k8sStepHelper.getSettingAttribute(gitStore.getConnectorIdentifier(), ambiance);
-      List<EncryptedDataDetail> encryptionDetails =
-          k8sStepHelper.getEncryptedDataDetails((GitConfig) gitConfigSettingAttribute.getValue());
-
-      GitFileConfig gitFileConfig =
-          GitFileConfig.builder()
-              .connectorId(gitStore.getConnectorIdentifier())
-              .useBranch(gitStore.getGitFetchType() == FetchType.BRANCH)
-              .branch(gitStore.getGitFetchType() == FetchType.BRANCH ? gitStore.getBranch() : null)
-              .filePathList(gitStore.getPaths())
-              .filePath(isNotEmpty(gitStore.getPaths()) ? gitStore.getPaths().get(0) : null)
-              .commitId(gitStore.getGitFetchType() == FetchType.BRANCH ? null : gitStore.getBranch())
-              .build();
-
-      k8sDelegateManifestConfigBuilder.gitConfig((GitConfig) gitConfigSettingAttribute.getValue())
-          .manifestStoreTypes(storeType)
-          .encryptedDataDetails(encryptionDetails)
-          .gitFileConfig(gitFileConfig);
-    }
-    // TODO: local store preparation later
-    return k8sDelegateManifestConfigBuilder.build();
   }
 
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifest> aggregatedValuesManifests) {

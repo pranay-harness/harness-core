@@ -19,6 +19,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -166,11 +167,11 @@ public class K8sDelete extends State implements K8sStateExecutor {
     List<CommandUnit> applyCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {
-      applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
+      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
     }
 
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Delete));
+    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Delete));
 
     return applyCommandUnits;
   }
@@ -240,7 +241,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
 
   private Activity createActivity(ExecutionContext context) {
     return k8sStateHelper.createK8sActivity(context, K8S_DELETE_COMMAND_NAME, getStateType(), activityService,
-        ImmutableList.of(
-            new K8sDummyCommandUnit(K8sDummyCommandUnit.Init), new K8sDummyCommandUnit(K8sDummyCommandUnit.Delete)));
+        ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
+            new K8sDummyCommandUnit(K8sCommandUnitConstants.Delete)));
   }
 }

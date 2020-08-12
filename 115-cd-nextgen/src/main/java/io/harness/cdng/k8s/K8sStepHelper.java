@@ -9,6 +9,9 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -16,9 +19,15 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
+import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
@@ -123,5 +132,51 @@ public class K8sStepHelper {
   SettingAttribute getSettingAttribute(String connectorId, Ambiance ambiance) {
     ConnectorDTO connectorDTO = getConnector(connectorId, ambiance);
     return getSettingAttribute(connectorDTO);
+  }
+
+  public ManifestDelegateConfig getManifestDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
+    if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
+      GitStore gitStore = (GitStore) storeConfig;
+      ConnectorDTO connectorDTO = getConnector(gitStore.getConnectorIdentifier(), ambiance);
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
+
+      NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+      List<EncryptedDataDetail> encryptedDataDetailList =
+          secretManagerClientService.getEncryptionDetails(basicNGAccessObject, gitConfigDTO.getGitAuth());
+
+      return K8sManifestDelegateConfig.builder()
+          .storeDelegateConfig(GitStoreDelegateConfig.builder()
+                                   .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
+                                   .encryptedDataDetails(encryptedDataDetailList)
+                                   .fetchType(gitStore.getGitFetchType())
+                                   .branch(gitStore.getBranch())
+                                   .commitId(gitStore.getCommitId())
+                                   .paths(gitStore.getPaths())
+                                   .connectorName(connectorDTO.getName())
+                                   .build())
+          .build();
+    } else {
+      throw new UnsupportedOperationException(
+          String.format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
+    }
+  }
+
+  public K8sInfraDelegateConfig getK8sInfraDelegateConfig(Infrastructure infrastructure, Ambiance ambiance) {
+    switch (infrastructure.getKind()) {
+      case KUBERNETES_DIRECT:
+        K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
+        ConnectorDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
+
+        return DirectK8sInfraDelegateConfig.builder()
+            .namespace(k8SDirectInfrastructure.getNamespace())
+            .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
+            .encryptionDataDetails(
+                connectorService.getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .build();
+
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Unsupported Infrastructure type: [%s]", infrastructure.getKind()));
+    }
   }
 }

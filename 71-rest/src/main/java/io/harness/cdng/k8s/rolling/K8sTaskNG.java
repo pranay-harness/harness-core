@@ -10,21 +10,31 @@ import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
+import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.nio.file.Paths;
 import java.util.Map;
@@ -33,8 +43,10 @@ import java.util.function.Consumer;
 @Slf4j
 public class K8sTaskNG extends AbstractDelegateRunnableTask {
   @Inject private Map<String, K8sRequestHandler> k8sTaskTypeToRequestHandler;
-  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private SecretDecryptionService secretDecryptionService;
+
   private static final String WORKING_DIR_BASE = "./repository/k8s/";
   public static final String KUBECONFIG_FILENAME = "config";
   public static final String MANIFEST_FILES_DIR = "manifest-files";
@@ -45,7 +57,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public K8sTaskExecutionResponse run(Object[] parameters) {
+  public K8sDeployResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 
@@ -54,6 +66,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     K8sDeployRequest k8sDeployRequest = (K8sDeployRequest) parameters;
 
     logger.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
+    decryptRequestDTOs(k8sDeployRequest);
 
     if (k8sDeployRequest.getTaskType() == K8sTaskType.INSTANCE_SYNC) {
       try {
@@ -73,9 +86,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                                     .toString();
 
       try {
-        // TODO: fix this later with containerDeploymentDelegateHelper service
-        String kubeconfigFileContent = containerDeploymentDelegateHelper.getKubeconfigFileContent(null);
-        kubeconfigFileContent = "";
+        String kubeconfigFileContent = containerDeploymentDelegateBaseHelper.getKubeconfigFileContent(
+            k8sDeployRequest.getK8sInfraDelegateConfig());
 
         createDirectoryIfDoesNotExist(workingDirectory);
         waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
@@ -125,6 +137,47 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
       deleteDirectoryAndItsContentIfExists(workingDirectory);
     } catch (Exception ex) {
       logger.warn("Exception in directory cleanup.", ex);
+    }
+  }
+
+  public void decryptRequestDTOs(K8sDeployRequest k8sDeployRequest) {
+    decryptManifestDelegateConfig(k8sDeployRequest.getManifestDelegateConfig());
+    decryptK8sInfraDelegateConfig(k8sDeployRequest.getK8sInfraDelegateConfig());
+  }
+
+  private void decryptK8sInfraDelegateConfig(K8sInfraDelegateConfig k8sInfraDelegateConfig) {
+    if (k8sInfraDelegateConfig instanceof DirectK8sInfraDelegateConfig) {
+      DirectK8sInfraDelegateConfig directK8sInfraDelegateConfig = (DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig;
+
+      KubernetesClusterConfigDTO clusterConfigDTO =
+          (KubernetesClusterConfigDTO) directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO().getConfig();
+      if (clusterConfigDTO.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+        KubernetesClusterDetailsDTO clusterDetailsDTO = (KubernetesClusterDetailsDTO) clusterConfigDTO.getConfig();
+        KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
+        secretDecryptionService.decrypt(authCredentialDTO, directK8sInfraDelegateConfig.getEncryptionDataDetails());
+      }
+    }
+  }
+
+  private void decryptManifestDelegateConfig(ManifestDelegateConfig manifestDelegateConfig) {
+    if (manifestDelegateConfig == null) {
+      return;
+    }
+
+    switch (manifestDelegateConfig.getManifestType()) {
+      case K8S_MANIFEST:
+        StoreDelegateConfig storeDelegateConfig =
+            ((K8sManifestDelegateConfig) manifestDelegateConfig).getStoreDelegateConfig();
+        if (storeDelegateConfig instanceof GitStoreDelegateConfig) {
+          GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
+          secretDecryptionService.decrypt(
+              gitStoreDelegateConfig.getGitConfigDTO().getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
+        }
+        break;
+
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Unsupported Manifest type: [%s]", manifestDelegateConfig.getManifestType().name()));
     }
   }
 }

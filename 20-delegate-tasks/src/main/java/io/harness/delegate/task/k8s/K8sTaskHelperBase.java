@@ -57,8 +57,11 @@ import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.WingsException;
@@ -112,6 +115,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -1497,5 +1501,91 @@ public class K8sTaskHelperBase {
     }
 
     return manifestFiles;
+  }
+
+  public LogCallback getExecutionLogCallback(K8sRollingDeployRequest k8sRollingDeployRequest, String commandUnitName) {
+    // TODO Vaibhav/Anshul: integrate with NG Execution LogCallback when available
+    return null;
+  }
+
+  public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> valuesFiles,
+      String releaseName, String namespace, LogCallback executionLogCallback, Integer timeoutInMin) throws Exception {
+    ManifestType manifestType = manifestDelegateConfig.getManifestType();
+    long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(timeoutInMin);
+
+    switch (manifestType) {
+      case K8S_MANIFEST:
+        List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
+        return renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Manifest delegate config type: [%s]", manifestType.name()));
+    }
+  }
+
+  public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
+      String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis) {
+    ManifestType manifestType = manifestDelegateConfig.getManifestType();
+    switch (manifestType) {
+      case K8S_MANIFEST:
+        return downloadManifestFilesFromGit(manifestDelegateConfig, manifestFilesDirectory, executionLogCallback);
+
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Manifest delegate config type: [%s]", manifestType.name()));
+    }
+  }
+
+  private boolean downloadManifestFilesFromGit(
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, LogCallback executionLogCallback) {
+    if (!(manifestDelegateConfig instanceof K8sManifestDelegateConfig)) {
+      throw new InvalidArgumentsException(
+          Pair.of("manifestDelegateConfig", "Must be instance of K8sManifestDelegateConfig"));
+    }
+
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        (GitStoreDelegateConfig) (((K8sManifestDelegateConfig) manifestDelegateConfig).getStoreDelegateConfig());
+
+    // ToDo What to set here now as we have a list now?
+    //    if (isBlank(gitStoreDelegateConfig.getPaths().getFilePath())) {
+    //      delegateManifestConfig.getGitFileConfig().setFilePath(StringUtils.EMPTY);
+    //    }
+
+    try {
+      printGitConfigInExecutionLogs(gitStoreDelegateConfig, executionLogCallback);
+      // ToDo Uncomment below to download files from Git
+      // gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
+
+      executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
+      executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));
+      executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
+
+      return true;
+    } catch (Exception e) {
+      logger.error("Failure in fetching files from git", e);
+      executionLogCallback.saveExecutionLog(
+          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
+          CommandExecutionStatus.FAILURE);
+      return false;
+    }
+  }
+
+  private void printGitConfigInExecutionLogs(
+      GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
+    executionLogCallback.saveExecutionLog(
+        "Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getGitAuth().getUrl());
+
+    if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
+      executionLogCallback.saveExecutionLog("Branch: " + gitStoreDelegateConfig.getBranch());
+    } else {
+      executionLogCallback.saveExecutionLog("CommitId: " + gitStoreDelegateConfig.getCommitId());
+    }
+
+    gitStoreDelegateConfig.getPaths().stream().collect(
+        Collectors.joining(System.lineSeparator(), "\nFetching manifest files at path: ", System.lineSeparator()));
   }
 }

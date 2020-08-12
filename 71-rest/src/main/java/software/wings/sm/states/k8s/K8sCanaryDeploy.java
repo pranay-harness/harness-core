@@ -13,6 +13,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
@@ -213,14 +214,14 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     List<CommandUnit> canaryCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {
-      canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
+      canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
     }
 
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
+    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
 
     return canaryCommandUnits;
   }

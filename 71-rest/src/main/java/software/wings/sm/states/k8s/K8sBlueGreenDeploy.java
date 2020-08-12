@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
@@ -182,14 +183,14 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     List<CommandUnit> blueGreenCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {
-      blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
+      blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
     }
 
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState));
-    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
+    blueGreenCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
 
     return blueGreenCommandUnits;
   }

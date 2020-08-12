@@ -84,6 +84,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.WingsException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
@@ -293,8 +294,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateK8sActivity() {
     List<CommandUnit> commandUnits = new ArrayList<>();
-    commandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    commandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Scale));
+    commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+    commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Scale));
 
     k8sStateHelper.createK8sActivity(context, K8S_SCALE_COMMAND_NAME, K8S_SCALE.name(), activityService, commandUnits);
 

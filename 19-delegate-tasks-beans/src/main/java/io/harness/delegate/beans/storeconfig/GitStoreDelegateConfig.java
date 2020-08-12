@@ -15,7 +15,7 @@ public class GitStoreDelegateConfig implements StoreDelegateConfig {
   String commitId;
   String connectorName;
   @Singular List<String> paths;
-  FetchType gitFetchType;
+  FetchType fetchType;
 
   GitConfigDTO gitConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;

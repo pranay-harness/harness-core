@@ -14,6 +14,8 @@ public class K8sRollingDeployRequest implements K8sDeployRequest {
   K8sTaskType taskType;
   Integer timeoutIntervalInMin;
   List<String> valuesYamlList;
-  K8sInfraDelegateConfig k8SInfraDelegateConfig;
+  K8sInfraDelegateConfig k8sInfraDelegateConfig;
   ManifestDelegateConfig manifestDelegateConfig;
+  boolean inCanaryWorkflow;
+  boolean localOverrideFeatureFlag;
 }

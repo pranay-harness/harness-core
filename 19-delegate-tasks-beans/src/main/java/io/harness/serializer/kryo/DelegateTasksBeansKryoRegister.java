@@ -57,6 +57,7 @@ import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.delegate.beans.git.GitPushResult;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.ArtifactServerException;
@@ -80,8 +81,10 @@ import io.harness.delegate.task.azure.response.AzureVMSSListVirtualMachineScaleS
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
@@ -112,24 +115,29 @@ import io.harness.serializer.KryoRegistrar;
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
-    kryo.register(DelegateRetryableException.class, 5521);
-    kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
-    kryo.register(HttpTaskParameters.class, 20002);
-    kryo.register(ScriptType.class, 5253);
-    kryo.register(AwsElbListener.class, 5600);
+    kryo.register(DelegateTaskResponse.class, 5006);
     kryo.register(CommandExecutionData.class, 5035);
     kryo.register(CommandExecutionResult.class, 5036);
+    kryo.register(RemoteMethodReturnValueData.class, 5122);
+    kryo.register(ErrorNotifyResponseData.class, 5213);
+    kryo.register(ScriptType.class, 5253);
+    kryo.register(DelegateMetaInfo.class, 5372);
+    kryo.register(DelegateTaskNotifyResponseData.class, 5373);
+    kryo.register(DelegateTaskResponse.ResponseCode.class, 5520);
+    kryo.register(DelegateRetryableException.class, 5521);
+    kryo.register(AwsElbListener.class, 5600);
+
+    kryo.register(K8sTaskType.class, 7125);
+    kryo.register(ArtifactServerException.class, 7244);
+
+    kryo.register(FetchType.class, 8030);
+
     kryo.register(SecretDetail.class, 19001);
     kryo.register(TaskData.class, 19002);
     kryo.register(HttpConnectionExecutionCapability.class, 19003);
     kryo.register(CapabilityType.class, 19004);
-    kryo.register(DelegateMetaInfo.class, 5372);
-    kryo.register(DelegateTaskNotifyResponseData.class, 5373);
-    kryo.register(DelegateTaskResponse.ResponseCode.class, 5520);
-    kryo.register(DelegateTaskResponse.class, 5006);
     kryo.register(ProcessExecutorCapability.class, 19007);
     kryo.register(AwsRegionCapability.class, 19008);
-    kryo.register(RemoteMethodReturnValueData.class, 5122);
     kryo.register(SocketConnectivityExecutionCapability.class, 19009);
     kryo.register(SpotInstTaskParameters.class, 19011);
     kryo.register(SpotInstSetupTaskParameters.class, 19012);
@@ -141,7 +149,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
     kryo.register(SystemEnvCheckerCapability.class, 19022);
     kryo.register(SpotInstSwapRoutesTaskParameters.class, 19023);
-    kryo.register(ErrorNotifyResponseData.class, 5213);
     kryo.register(AwsLoadBalancerDetails.class, 19024);
     kryo.register(SpotInstGetElastigroupJsonParameters.class, 19025);
     kryo.register(SpotInstListElastigroupInstancesParameters.class, 19026);
@@ -151,7 +158,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SpotInstListElastigroupNamesResponse.class, 19030);
     kryo.register(LoadBalancerDetailsForBGDeployment.class, 19031);
     kryo.register(LoadBalancerType.class, 19032);
-    kryo.register(ArtifactServerException.class, 7244);
     kryo.register(PcfManifestsPackage.class, 19033);
     kryo.register(ArtifactFileMetadata.class, 19034);
     kryo.register(AwsElbListenerRuleData.class, 19035);
@@ -178,7 +184,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesConnectionTaskResponse.class, 19056);
     kryo.register(KubernetesConnectionTaskParams.class, 19057);
     kryo.register(KubernetesAuthCredentialDTO.class, 19058);
-    kryo.register(K8sTaskType.class, 7125);
     kryo.register(ConnectorValidationResult.class, 19059);
     kryo.register(GitConfigDTO.class, 19060);
     kryo.register(GitCommandParams.class, 19061);
@@ -222,6 +227,11 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sDeployResponse.class, 19099);
     kryo.register(K8sRollingDeployRequest.class, 19100);
     kryo.register(K8sDeployRequest.class, 19101);
-    kryo.register(FetchType.class, 8030);
+    kryo.register(DirectK8sInfraDelegateConfig.class, 19102);
+    kryo.register(K8sManifestDelegateConfig.class, 19103);
+    kryo.register(GitStoreDelegateConfig.class, 19104);
+
+    kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
+    kryo.register(HttpTaskParameters.class, 20002);
   }
 }

@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -39,7 +40,6 @@ import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
@@ -148,10 +148,10 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   public void testCommandUnitList() {
     List<CommandUnit> blueGreenCommandUnits = k8sRollingDeploy.commandUnitList(true);
     assertThat(blueGreenCommandUnits).isNotEmpty();
-    assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sDummyCommandUnit.FetchFiles);
-    assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sDummyCommandUnit.Init);
+    assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
+    assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);
     assertThat(blueGreenCommandUnits.get(blueGreenCommandUnits.size() - 1).getName())
-        .isEqualTo(K8sDummyCommandUnit.WrapUp);
+        .isEqualTo(K8sCommandUnitConstants.WrapUp);
   }
 
   @Test

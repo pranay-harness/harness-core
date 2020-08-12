@@ -13,6 +13,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -160,18 +161,18 @@ public class K8sApplyState extends State implements K8sStateExecutor {
     List<CommandUnit> applyCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {
-      applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.FetchFiles));
+      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
     }
 
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init));
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare));
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply));
+    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
+    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
 
     if (!skipSteadyStateCheck) {
-      applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState));
+      applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
     }
 
-    applyCommandUnits.add(new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp));
+    applyCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
 
     return applyCommandUnits;
   }

@@ -22,6 +22,7 @@ public class GitStore implements StoreConfig {
   @Wither private String connectorIdentifier;
   @Wither private FetchType gitFetchType;
   @Wither private String branch;
+  @Wither private String commitId;
   @Wither @Singular private List<String> paths;
 
   @Override
@@ -34,6 +35,7 @@ public class GitStore implements StoreConfig {
         .connectorIdentifier(connectorIdentifier)
         .gitFetchType(gitFetchType)
         .branch(branch)
+        .commitId(commitId)
         .paths(paths)
         .build();
   }
@@ -53,6 +55,9 @@ public class GitStore implements StoreConfig {
     }
     if (EmptyPredicate.isNotEmpty(gitStore.getBranch())) {
       resultantGitStore = resultantGitStore.withBranch(gitStore.getBranch());
+    }
+    if (EmptyPredicate.isNotEmpty(gitStore.getCommitId())) {
+      resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId());
     }
     return resultantGitStore;
   }

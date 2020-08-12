@@ -36,7 +36,6 @@ public class K8sTask extends AbstractDelegateRunnableTask {
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String WORKING_DIR_BASE = "./repository/k8s/";
-  public static final String MANIFEST_FILES_DIR = "manifest-files";
 
   public K8sTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -80,7 +79,7 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         writeUtf8StringToFile(
             Paths.get(workingDirectory, K8sConstants.KUBECONFIG_FILENAME).toString(), kubeconfigFileContent);
 
-        createDirectoryIfDoesNotExist(Paths.get(workingDirectory, MANIFEST_FILES_DIR).toString());
+        createDirectoryIfDoesNotExist(Paths.get(workingDirectory, K8sConstants.MANIFEST_FILES_DIR).toString());
 
         K8sDelegateTaskParams k8SDelegateTaskParams =
             K8sDelegateTaskParams.builder()

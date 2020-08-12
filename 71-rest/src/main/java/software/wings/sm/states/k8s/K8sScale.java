@@ -14,6 +14,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
@@ -164,13 +165,13 @@ public class K8sScale extends State {
   private Activity createActivity(ExecutionContext context) {
     if (this.skipSteadyStateCheck) {
       return k8sStateHelper.createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
-          ImmutableList.of(
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.Init), new K8sDummyCommandUnit(K8sDummyCommandUnit.Scale)));
+          ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
+              new K8sDummyCommandUnit(K8sCommandUnitConstants.Scale)));
     } else {
       return k8sStateHelper.createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
-          ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.Scale),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState)));
+          ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
+              new K8sDummyCommandUnit(K8sCommandUnitConstants.Scale),
+              new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState)));
     }
   }
 

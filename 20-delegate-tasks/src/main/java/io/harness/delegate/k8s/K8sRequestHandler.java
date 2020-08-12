@@ -52,8 +52,8 @@ public abstract class K8sRequestHandler {
     return result;
   }
 
-  protected abstract K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8SDelegateTaskParams) throws IOException, TimeoutException, InterruptedException;
+  protected abstract K8sDeployResponse executeTaskInternal(
+      K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams) throws Exception;
 
   private void logError(K8sDeployRequest k8sDeployRequest, Throwable ex) {
     logger.error("Exception in processing K8s task [{}]",

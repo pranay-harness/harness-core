@@ -10,4 +10,5 @@ import lombok.Value;
 public class K8sDeployResponse implements ResponseData {
   CommandExecutionStatus commandExecutionStatus;
   String errorMessage;
+  K8sNGTaskResponse k8sNGTaskResponse;
 }
