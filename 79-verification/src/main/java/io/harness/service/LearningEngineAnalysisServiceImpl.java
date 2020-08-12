@@ -52,6 +52,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -314,6 +315,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Override
   public void markCompleted(String accountId, String workflowExecutionId, String stateExecutionId, long analysisMinute,
       MLAnalysisType type, ClusterLevel level) {
+    long currentTimeMillis = Instant.now().toEpochMilli();
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
             .filter(LearningEngineAnalysisTaskKeys.workflow_execution_id, workflowExecutionId)
@@ -322,28 +324,37 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .filter(LearningEngineAnalysisTaskKeys.analysis_minute, analysisMinute)
             .filter(LearningEngineAnalysisTaskKeys.ml_analysis_type, type)
             .filter(LearningEngineAnalysisTaskKeys.cluster_level, level.getLevel());
-    UpdateOperations<LearningEngineAnalysisTask> updateOperations =
-        wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
-            .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
-    wingsPersistence.update(query, updateOperations);
-    logActivityOnAnalysisComplete(cvActivityLogService.getLoggerByStateExecutionId(accountId, stateExecutionId), level,
-        type, analysisMinute, false);
+
+    LearningEngineAnalysisTask task = query.get();
+    if (task != null) {
+      task.setExecutionStatus(ExecutionStatus.SUCCESS);
+      task.setTimeTaken(currentTimeMillis - task.getLastUpdatedAt());
+      wingsPersistence.save(task);
+
+      logActivityOnAnalysisComplete(cvActivityLogService.getLoggerByStateExecutionId(accountId, stateExecutionId),
+          level, type, analysisMinute, false);
+    }
   }
 
   @Override
   public void markCompleted(String taskId) {
+    long currentTimeMillis = Instant.now().toEpochMilli();
     if (taskId == null) {
       logger.warn("taskId is null");
       return;
     }
-    wingsPersistence.updateField(LearningEngineAnalysisTask.class, taskId,
-        LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.SUCCESS);
     LearningEngineAnalysisTask task = wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
-    logActivityOnAnalysisComplete(cvActivityLogService.getLogger(task.getAccountId(), task.getCvConfigId(),
-                                      task.getAnalysis_minute(), task.getState_execution_id()),
-        ClusterLevel.valueOf(task.getCluster_level()), task.getMl_analysis_type(), task.getAnalysis_minute(),
-        task.is24x7Task());
-    logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
+    if (task != null) {
+      task.setExecutionStatus(ExecutionStatus.SUCCESS);
+      task.setTimeTaken(currentTimeMillis - task.getLastUpdatedAt());
+      wingsPersistence.save(task);
+
+      logActivityOnAnalysisComplete(cvActivityLogService.getLogger(task.getAccountId(), task.getCvConfigId(),
+                                        task.getAnalysis_minute(), task.getState_execution_id()),
+          ClusterLevel.valueOf(task.getCluster_level()), task.getMl_analysis_type(), task.getAnalysis_minute(),
+          task.is24x7Task());
+      logger.info("Job has been marked as SUCCESS for taskId : {}", taskId);
+    }
   }
 
   private void logActivityOnAnalysisComplete(Logger activityLogger, ClusterLevel level, MLAnalysisType mlAnalysisType,
