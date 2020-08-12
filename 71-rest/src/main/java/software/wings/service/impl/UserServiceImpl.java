@@ -193,7 +193,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2184,18 +2183,8 @@ public class UserServiceImpl implements UserService {
   }
 
   public void setNewDefaultAccountId(User user) {
-    final List<String> accountStatusOrder =
-        Arrays.asList(AccountStatus.ACTIVE, AccountStatus.EXPIRED, AccountStatus.INACTIVE, AccountStatus.DELETED);
-
-    Optional<String> newDefaultAccountId =
-        user.getAccounts()
-            .stream()
-            .map(Account::getUuid)
-            .sorted(
-                Comparator.comparingInt(accId -> accountStatusOrder.indexOf(accountService.getAccountStatus(accId))))
-            .findFirst();
-
-    user.setDefaultAccountId(newDefaultAccountId.orElse(null));
+    String newDefaultAccountId = user.getDefaultAccountCandidate();
+    user.setDefaultAccountId(newDefaultAccountId);
   }
 
   /* (non-Javadoc)

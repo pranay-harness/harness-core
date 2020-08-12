@@ -299,6 +299,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
 
       User user = getUser(false);
       user.setAccounts(Arrays.asList(primaryAccount, account));
+      user.setDefaultAccountId(primaryAccount.getUuid());
 
       TwoFactorAuthenticationSettings settings =
           new TwoFactorAuthenticationSettingsBuilder().twoFactorAuthenticationEnabled(true).mechanism(TOTP).build();
