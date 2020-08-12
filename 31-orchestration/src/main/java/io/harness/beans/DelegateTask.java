@@ -50,6 +50,12 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 @CdIndex(name = "index", fields = { @Field(DelegateTaskKeys.status)
                                     , @Field(DelegateTaskKeys.expiry) })
+@CdIndex(name = "rebroadcast",
+    fields =
+    {
+      @Field(DelegateTaskKeys.version)
+      , @Field(DelegateTaskKeys.status), @Field(DelegateTaskKeys.delegateId), @Field(DelegateTaskKeys.nextBroadcast)
+    })
 @CdIndex(name = "pulling",
     fields =
     {
