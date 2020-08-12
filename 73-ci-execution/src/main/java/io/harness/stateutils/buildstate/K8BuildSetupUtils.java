@@ -81,6 +81,7 @@ public class K8BuildSetupUtils {
           ((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
 
       // TODO Use k8 connector from element input
+      logger.info("Sending pod creation task for {}", podSetupInfo.getName());
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
           buildEnvSetupStepInfo.getGitConnectorIdentifier(), buildEnvSetupStepInfo.getBranchName(),
           getPodParams(podSetupInfo, namespace, null, publishStepConnectorIdentifier, false)));

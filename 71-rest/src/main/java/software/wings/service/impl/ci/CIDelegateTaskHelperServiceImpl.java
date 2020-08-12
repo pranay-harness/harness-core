@@ -66,6 +66,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   @Override
   public K8sTaskExecutionResponse setBuildEnv(String k8ConnectorName, String gitConnectorName, String branchName,
       CIK8PodParams<CIK8ContainerParams> podParams) {
+    logger.info("Received pod creation call for pod {} on manager", podParams.getName());
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(ACCOUNT_ID, gitConnectorName);
     GitFetchFilesConfig gitFetchFilesConfig = null;
     if (cloudProvider != null) {
@@ -102,6 +103,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
             .build();
 
     try {
+      logger.info("Sending delegate task for pod creation from manager podname: {}", podParams.getName());
       ResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(ACCOUNT_ID)
@@ -118,7 +120,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
                         .timeout(TimeUnit.SECONDS.toMillis(600))
                         .build())
               .build());
-      logger.info(responseData.toString());
+      logger.info("delegate response for pod creation for ", responseData.toString());
 
       if (responseData instanceof K8sTaskExecutionResponse) {
         return (K8sTaskExecutionResponse) responseData;
