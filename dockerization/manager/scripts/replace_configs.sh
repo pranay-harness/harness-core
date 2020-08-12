@@ -56,6 +56,14 @@ if [[ "" != "$ALLOWED_ORIGINS" ]]; then
   yq write -i $CONFIG_FILE portal.allowedOrigins "$ALLOWED_ORIGINS"
 fi
 
+if [[ "" != "$STORE_REQUEST_PAYLOAD" ]]; then
+  yq write -i $CONFIG_FILE auditConfig.storeRequestPayload "$STORE_REQUEST_PAYLOAD"
+fi
+
+if [[ "" != "$STORE_RESPONSE_PAYLOAD" ]]; then
+  yq write -i $CONFIG_FILE auditConfig.storeResponsePayload "$STORE_RESPONSE_PAYLOAD"
+fi
+
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi

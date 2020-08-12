@@ -45,6 +45,7 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.DataStorageMode;
+import software.wings.audit.AuditConfig;
 import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.UrlInfo;
@@ -116,6 +117,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   private boolean trialRegistrationAllowedForBugathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
   @JsonProperty("pwnedPasswordsAllowed") private boolean pwnedPasswordsAllowed;
+  @JsonProperty("auditConfig") private AuditConfig auditConfig;
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
