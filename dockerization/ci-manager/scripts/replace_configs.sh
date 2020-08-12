@@ -25,7 +25,7 @@ else
 fi
 
 if [[ "" != "$MANAGER_URL" ]]; then
-  yq write -i /opt/harness/cimanager-config.yml managerUrl "$MANAGER_URL"
+  yq write -i $CONFIG_FILE managerUrl "$MANAGER_URL"
 fi
 
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
