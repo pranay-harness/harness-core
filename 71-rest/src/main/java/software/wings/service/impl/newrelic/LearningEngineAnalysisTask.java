@@ -130,6 +130,7 @@ public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
 
   private int retry;
+  private long timeTaken;
 
   @Default
   @JsonIgnore
