@@ -40,7 +40,6 @@ public class EksClusterStatsDataFetcher
     return QLEKSCluster.builder()
         .id(ceCluster.getUuid())
         .name(ceCluster.getClusterName())
-        .cloudProviderId(ceCluster.getCloudProviderId())
         .infraAccountId(ceCluster.getInfraAccountId())
         .infraMasterAccountId(ceCluster.getInfraMasterAccountId())
         .parentAccountSettingId(ceCluster.getParentAccountSettingId())

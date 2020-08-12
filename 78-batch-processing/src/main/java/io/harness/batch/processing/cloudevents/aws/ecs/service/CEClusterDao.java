@@ -32,6 +32,10 @@ public class CEClusterDao {
         .asList();
   }
 
+  public List<CECluster> getCECluster(String accountId) {
+    return hPersistence.createQuery(CECluster.class).field(CEClusterKeys.accountId).equal(accountId).asList();
+  }
+
   public boolean deleteCluster(String uuid) {
     Query<CECluster> query = hPersistence.createQuery(CECluster.class).field(CEClusterKeys.uuid).equal(uuid);
     return hPersistence.delete(query);

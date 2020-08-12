@@ -11,8 +11,17 @@ import com.google.common.collect.ImmutableList;
 
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.AmazonECSException;
+import com.amazonaws.services.ecs.model.ContainerInstance;
+import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
+import com.amazonaws.services.ecs.model.DescribeContainerInstancesResult;
+import com.amazonaws.services.ecs.model.DescribeServicesResult;
+import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
+import com.amazonaws.services.ecs.model.ListContainerInstancesResult;
+import com.amazonaws.services.ecs.model.ListServicesResult;
+import com.amazonaws.services.ecs.model.ListTasksResult;
+import com.amazonaws.services.ecs.model.Service;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -21,6 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import software.wings.beans.AwsCrossAccountAttributes;
 
 import java.util.List;
 
@@ -35,7 +45,7 @@ public class AwsECSHelperServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void testListEKSClusters() {
+  public void testListECSClusters() {
     String nextToken = "nextClusterToken";
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
     doReturn(mockClient).when(awsECSHelperService).getAmazonECSClient(any(), any());
@@ -59,7 +69,7 @@ public class AwsECSHelperServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void testListEmptyEKSClustersWhenExceptionOccur() {
+  public void testListEmptyECSClustersWhenExceptionOccur() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
     doReturn(mockClient).when(awsECSHelperService).getAmazonECSClient(any(), any());
 
@@ -68,5 +78,52 @@ public class AwsECSHelperServiceImplTest extends CategoryTest {
         .listClusters(new ListClustersRequest().withNextToken(null));
     List<String> eksClusters = awsECSHelperService.listECSClusters(any(), any());
     assertThat(eksClusters).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testListServicesForCluster() {
+    AmazonECSClient mockClient = mock(AmazonECSClient.class);
+    doReturn(mockClient).when(awsECSHelperService).getAmazonECSClient(any(), any());
+    doReturn(new ListServicesResult().withServiceArns("arn0", "arn1")).when(mockClient).listServices(any());
+    doReturn(new DescribeServicesResult().withServices(
+                 new Service().withServiceArn("arn0"), new Service().withServiceArn("arn1")))
+        .when(mockClient)
+        .describeServices(any());
+    List<Service> services =
+        awsECSHelperService.listServicesForCluster(AwsCrossAccountAttributes.builder().build(), "us-east-1", "cluster");
+    assertThat(services).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testListContainerInstancesForCluster() {
+    AmazonECSClient mockClient = mock(AmazonECSClient.class);
+    doReturn(mockClient).when(awsECSHelperService).getAmazonECSClient(any(), any());
+    doReturn(new ListServicesResult().withServiceArns("arn0", "arn1")).when(mockClient).listServices(any());
+    ContainerInstance containerInstance = new ContainerInstance().withContainerInstanceArn("arn1");
+    doReturn(new DescribeContainerInstancesResult().withContainerInstances(containerInstance))
+        .when(mockClient)
+        .describeContainerInstances(any());
+    doReturn(new ListContainerInstancesResult().withContainerInstanceArns("arn1"))
+        .when(mockClient)
+        .listContainerInstances(any());
+    List<ContainerInstance> containerInstances = awsECSHelperService.listContainerInstancesForCluster(
+        AwsCrossAccountAttributes.builder().build(), "us-east-1", "cluster", ContainerInstanceStatus.ACTIVE);
+    assertThat(containerInstances).hasSize(1).contains(containerInstance);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testListTaskArnForService() {
+    AmazonECSClient mockClient = mock(AmazonECSClient.class);
+    doReturn(mockClient).when(awsECSHelperService).getAmazonECSClient(any(), any());
+    doReturn(new ListTasksResult().withTaskArns("arn0", "arn1")).when(mockClient).listTasks(any());
+    List<String> taskArns = awsECSHelperService.listTasksArnForService(
+        AwsCrossAccountAttributes.builder().build(), "us-east-1", "cluster", "service", DesiredStatus.RUNNING);
+    assertThat(taskArns).hasSize(2);
   }
 }

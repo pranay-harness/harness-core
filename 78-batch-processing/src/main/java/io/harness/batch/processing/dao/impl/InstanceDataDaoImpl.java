@@ -2,6 +2,8 @@ package io.harness.batch.processing.dao.impl;
 
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeCount;
 import static java.util.Objects.isNull;
 
 import com.google.inject.Inject;
@@ -9,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
@@ -27,8 +30,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Repository
@@ -38,6 +43,13 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
   @Override
   public boolean create(InstanceData instanceData) {
+    return hPersistence.save(instanceData) != null;
+  }
+
+  @Override
+  public boolean updateInstanceStopTime(InstanceData instanceData, Instant stopTime) {
+    instanceData.setUsageStopTime(stopTime);
+    instanceData.setInstanceState(InstanceState.STOPPED);
     return hPersistence.save(instanceData) != null;
   }
 
@@ -158,7 +170,21 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
   @Override
   public InstanceData fetchInstanceData(String instanceId) {
-    return hPersistence.createQuery(InstanceData.class).filter(InstanceDataKeys.instanceId, instanceId).get();
+    return hPersistence.createQuery(InstanceData.class, excludeAuthority)
+        .filter(InstanceDataKeys.instanceId, instanceId)
+        .get();
+  }
+
+  @Override
+  public List<InstanceData> fetchInstanceData(Set<String> instanceIds) {
+    if (instanceIds.isEmpty()) {
+      return Collections.emptyList();
+    } else {
+      return hPersistence.createQuery(InstanceData.class, excludeAuthority)
+          .field(InstanceDataKeys.instanceId)
+          .in(instanceIds)
+          .asList();
+    }
   }
 
   private void updateDeploymentEvent(InstanceData instanceData) {
@@ -254,6 +280,18 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
+  public List<InstanceData> fetchClusterActiveInstanceData(
+      String accountId, String clusterName, List<InstanceType> instanceTypes, InstanceState instanceState) {
+    return hPersistence.createQuery(InstanceData.class)
+        .filter(InstanceDataKeys.accountId, accountId)
+        .filter(InstanceDataKeys.clusterId, clusterName)
+        .field(InstanceDataKeys.instanceType)
+        .in(instanceTypes)
+        .filter(InstanceDataKeys.instanceState, instanceState)
+        .asList();
+  }
+
+  @Override
   public InstanceData getActiveInstance(
       String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider) {
     Query<InstanceData> query =
@@ -284,7 +322,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   @Override
   public List<InstanceData> getInstanceDataLists(
       String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate) {
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
                                     .filter(InstanceDataKeys.accountId, accountId)
                                     .order(InstanceDataKeys.usageStartTime);
 

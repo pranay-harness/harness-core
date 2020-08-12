@@ -40,7 +40,6 @@ public class EksClusterStatsDataFetcherTest extends AbstractDataFetcherTest {
                               .infraMasterAccountId(INFRA_MASTER_ACCOUNT_ID)
                               .region(REGION1)
                               .parentAccountSettingId(SETTING_ID1)
-                              .cloudProviderId(CLOUD_PROVIDER1_ID_ACCOUNT1)
                               .build();
     createCECluster(ceCluster);
   }
@@ -49,7 +48,7 @@ public class EksClusterStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testFetchConnection() {
-    List<QLCESetupFilter> filters = Arrays.asList(getCloudProviderIdFilter(), getInfraMasterAccountIdFilter());
+    List<QLCESetupFilter> filters = Arrays.asList(getInfraMasterAccountIdFilter());
     QLEKSClusterData data = eksClusterStatsDataFetcher.fetchConnection(filters, null, null);
     assertThat(data.getCount()).isEqualTo(1);
     assertThat(data.getClusters().get(0).getInfraAccountId()).isEqualTo(INFRA_ACCOUNT_ID);
@@ -57,7 +56,6 @@ public class EksClusterStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getClusters().get(0).getName()).isEqualTo(CLUSTER1_NAME);
     assertThat(data.getClusters().get(0).getInfraMasterAccountId()).isEqualTo(INFRA_MASTER_ACCOUNT_ID);
     assertThat(data.getClusters().get(0).getRegion()).isEqualTo(REGION1);
-    assertThat(data.getClusters().get(0).getCloudProviderId()).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
     assertThat(data.getClusters().get(0).getParentAccountSettingId()).isEqualTo(SETTING_ID1);
   }
 
