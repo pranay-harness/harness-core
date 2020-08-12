@@ -12,16 +12,19 @@ import io.harness.serializer.kryo.KryoConverterFactory;
 public class ProjectManagementClientModule extends AbstractModule {
   private final ProjectManagerClientConfig projectManagerClientConfig;
   private final String serviceSecret;
+  private final String clientId;
 
-  public ProjectManagementClientModule(ProjectManagerClientConfig projectManagerClientConfig, String serviceSecret) {
+  public ProjectManagementClientModule(
+      ProjectManagerClientConfig projectManagerClientConfig, String serviceSecret, String clientId) {
     this.projectManagerClientConfig = projectManagerClientConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
   }
 
   @Provides
   private ProjectManagerHttpClientFactory projectManagerHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new ProjectManagerHttpClientFactory(
-        projectManagerClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
+        projectManagerClientConfig, serviceSecret, clientId, new ServiceTokenGenerator(), kryoConverterFactory);
   }
 
   @Override

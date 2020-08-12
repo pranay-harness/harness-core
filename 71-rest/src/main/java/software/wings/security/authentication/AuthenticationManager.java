@@ -32,7 +32,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
-import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
 import software.wings.security.authentication.oauth.OauthOptions;

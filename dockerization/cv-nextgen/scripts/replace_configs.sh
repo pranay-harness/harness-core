@@ -36,3 +36,7 @@ fi
 if [[ "" != "$DATA_STORE" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml dataStorageMode "$DATA_STORE"
 fi
+
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i /opt/harness/cv-nextgen-config.yml nextGen.managerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi

@@ -21,7 +21,7 @@ import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.loginSettings.PasswordStrengthViolations;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
-import software.wings.security.SecretManager;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LogoutResponse;
@@ -437,7 +437,7 @@ public interface UserService extends OwnedByAccount {
    * @return
    */
 
-  String generateJWTToken(Map<String, String> claims, @NotNull SecretManager.JWT_CATEGORY category);
+  String generateJWTToken(Map<String, String> claims, @NotNull JWT_CATEGORY category);
 
   /**
    *
@@ -445,7 +445,7 @@ public interface UserService extends OwnedByAccount {
    * @param category
    * @return
    */
-  User verifyJWTToken(@NotEmpty String jwtToken, @NotNull SecretManager.JWT_CATEGORY category);
+  User verifyJWTToken(@NotEmpty String jwtToken, @NotNull JWT_CATEGORY category);
 
   boolean isAccountAdmin(String accountId);
 

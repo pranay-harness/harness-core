@@ -22,8 +22,8 @@ import io.harness.security.EncryptionUtils;
 import io.harness.security.annotations.HarnessApiKeyAuth;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AuthenticationFilter;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
-import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.CryptoUtils;
 

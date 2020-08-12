@@ -6,8 +6,8 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.security.JWTTokenServiceUtils.extractToken;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -29,7 +29,6 @@ import io.harness.security.annotations.PublicApi;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.annotations.AdminPortalAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
@@ -313,14 +312,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     return resourceMethod.getAnnotation(PublicApi.class) != null
         || resourceClass.getAnnotation(PublicApi.class) != null;
-  }
-
-  protected String extractToken(ContainerRequestContext requestContext, String prefix) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_ADMIN);
-    }
-    return authorizationHeader.substring(prefix.length()).trim();
   }
 
   private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {

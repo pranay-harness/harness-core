@@ -10,8 +10,8 @@ import com.google.inject.Singleton;
 import com.auth0.jwt.interfaces.Claim;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
-import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.DownloadTokenService;
 
 import java.util.Map;

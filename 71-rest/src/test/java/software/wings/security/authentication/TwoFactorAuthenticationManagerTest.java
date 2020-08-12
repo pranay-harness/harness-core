@@ -49,7 +49,7 @@ import software.wings.beans.User;
 import software.wings.features.TwoFactorAuthenticationFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.licensing.LicenseService;
-import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings.TwoFactorAuthenticationSettingsBuilder;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;

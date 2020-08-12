@@ -14,7 +14,6 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.security.SecretManager.JWT_CATEGORY;
 
 import java.util.Map;
 
