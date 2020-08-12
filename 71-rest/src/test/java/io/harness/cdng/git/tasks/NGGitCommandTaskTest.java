@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.gitclient.GitClientNG;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
@@ -20,7 +21,9 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommitAndPushRequest;
 import io.harness.delegate.beans.git.GitCommitAndPushResult;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.SecretDecryptionService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,19 +33,21 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Collections;
 
 public class NGGitCommandTaskTest extends WingsBaseTest {
   @Mock GitClientNG gitClient;
-  @Mock EncryptionService encryptionService;
+  @Mock SecretDecryptionService encryptionService;
+  String passwordIdentifier = "passwordIdentifier";
+  String passwordReference = "acc." + passwordIdentifier;
+
+  SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
   GitConfigDTO gitConfig = GitConfigDTO.builder()
                                .gitAuth(GitHTTPAuthenticationDTO.builder()
                                             .gitConnectionType(GitConnectionType.REPO)
-                                            .accountId("ACCOUNT_ID")
                                             .branchName("branchName")
-                                            .encryptedPassword("abcd")
+                                            .passwordRef(passwordRef)
                                             .url("url")
                                             .username("username")
                                             .build())
@@ -78,7 +83,7 @@ public class NGGitCommandTaskTest extends WingsBaseTest {
                                 .gitCommandType(GitCommandType.VALIDATE)
                                 .build();
     doReturn(null).when(gitClient).validate(any());
-    doReturn(null).when(encryptionService).decrypt(any());
+    doReturn(null).when(encryptionService).decrypt(any(), any());
     ResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);
     assertThat(((GitCommandExecutionResponse) response).getGitCommandStatus()).isEqualTo(GitCommandStatus.SUCCESS);
@@ -95,7 +100,7 @@ public class NGGitCommandTaskTest extends WingsBaseTest {
                                 .gitCommandType(GitCommandType.COMMIT_AND_PUSH)
                                 .build();
     doReturn(GitCommitAndPushResult.builder().build()).when(gitClient).commitAndPush(any(), any(), any(), any());
-    doReturn(null).when(encryptionService).decrypt(any());
+    doReturn(null).when(encryptionService).decrypt(any(), any());
     ResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);
     assertThat(((GitCommandExecutionResponse) response).getGitCommandStatus()).isEqualTo(GitCommandStatus.SUCCESS);

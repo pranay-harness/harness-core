@@ -2,12 +2,14 @@ package io.harness.delegate.beans.connector.gitconnector;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.encryption.Encrypted;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotBlank;
-import software.wings.settings.SettingVariableTypes;
+
+import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -16,14 +18,7 @@ import software.wings.settings.SettingVariableTypes;
 public class GitHTTPAuthenticationDTO extends GitAuthenticationDTO {
   @JsonProperty("type") GitConnectionType gitConnectionType;
   @NotBlank String url;
-  String username;
-  @Encrypted(fieldName = "password", isReference = true) char[] password;
-  @JsonProperty("passwordReference") String encryptedPassword;
+  @NotBlank String username;
+  @NotNull @SecretReference SecretRefData passwordRef;
   String branchName;
-  String accountId;
-
-  @Override
-  public SettingVariableTypes getSettingType() {
-    return SettingVariableTypes.GIT_NG;
-  }
 }

@@ -7,6 +7,7 @@ import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -73,7 +74,7 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
       GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO) {
     return GitUserNamePasswordAuthentication.builder()
         .userName(gitHTTPAuthenticationDTO.getUsername())
-        .passwordReference(gitHTTPAuthenticationDTO.getEncryptedPassword())
+        .passwordReference(SecretRefHelper.getSecretConfigString(gitHTTPAuthenticationDTO.getPasswordRef()))
         .build();
   }
 

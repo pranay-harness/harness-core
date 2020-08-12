@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.connector.validator.GitConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
@@ -45,9 +46,8 @@ public class GitConnectorValidatorTest extends CategoryTest {
     GitConfigDTO gitConfig = GitConfigDTO.builder()
                                  .gitAuth(GitHTTPAuthenticationDTO.builder()
                                               .gitConnectionType(GitConnectionType.REPO)
-                                              .accountId(ACCOUNT_ID)
                                               .branchName("branchName")
-                                              .encryptedPassword("abcd")
+                                              .passwordRef(SecretRefHelper.createSecretRef("acc.abcd"))
                                               .url("url")
                                               .username("username")
                                               .build())
@@ -68,9 +68,8 @@ public class GitConnectorValidatorTest extends CategoryTest {
     GitConfigDTO gitConfig = GitConfigDTO.builder()
                                  .gitAuth(GitHTTPAuthenticationDTO.builder()
                                               .gitConnectionType(GitConnectionType.REPO)
-                                              .accountId(ACCOUNT_ID)
                                               .branchName("branchName")
-                                              .encryptedPassword("abcd")
+                                              .passwordRef(SecretRefHelper.createSecretRef("acc.abcd"))
                                               .url("url")
                                               .username("username")
                                               .build())

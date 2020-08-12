@@ -11,11 +11,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +39,10 @@ public class GitDTOToEntityTest extends CategoryTest {
   public void toGitConfigForUserNamePassword() {
     String url = "url";
     String userName = "userName";
-    String passwordReference = "password";
+    String passwordIdentifier = "passwordIdentifier";
+    String passwordReference = "acc." + passwordIdentifier;
+
+    SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
     CustomCommitAttributes customCommitAttributes = CustomCommitAttributes.builder()
                                                         .authorEmail("author")
                                                         .authorName("authorName")
@@ -49,7 +54,7 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                       .gitConnectionType(ACCOUNT)
                                                       .url(url)
                                                       .username(userName)
-                                                      .encryptedPassword(passwordReference)
+                                                      .passwordRef(passwordRef)
                                                       .build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitSyncConfig(gitSyncConfig).gitAuthType(HTTP).gitAuth(httpAuthentication).build();

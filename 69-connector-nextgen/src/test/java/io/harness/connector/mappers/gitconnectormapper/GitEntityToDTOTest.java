@@ -36,7 +36,7 @@ public class GitEntityToDTOTest extends CategoryTest {
   public void test_createGitConfigDTOForUserNamePassword() {
     String url = "url";
     String userName = "userName";
-    String passwordReference = "password";
+    String passwordReference = "acc.password";
     CustomCommitAttributes customCommitAttributes = CustomCommitAttributes.builder()
                                                         .authorEmail("author")
                                                         .authorName("authorName")
@@ -61,7 +61,7 @@ public class GitEntityToDTOTest extends CategoryTest {
     assertThat(gitAuthentication.getGitConnectionType()).isEqualTo(ACCOUNT);
     assertThat(gitAuthentication.getUrl()).isEqualTo(url);
     assertThat(gitAuthentication.getUsername()).isEqualTo(userName);
-    assertThat(gitAuthentication.getEncryptedPassword()).isEqualTo(passwordReference);
+    assertThat(gitAuthentication.getPasswordRef().toSecretRefStringValue()).isEqualTo(passwordReference);
   }
 
   @Test

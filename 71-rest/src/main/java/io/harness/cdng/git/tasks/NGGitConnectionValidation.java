@@ -9,11 +9,11 @@ import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class NGGitConnectionValidation extends AbstractDelegateValidateTask {
   @Inject private GitClientNG gitClient;
-  @Inject private EncryptionService encryptionService;
+  @Inject private SecretDecryptionService decryptionService;
 
   public NGGitConnectionValidation(
       String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
@@ -36,7 +36,7 @@ public class NGGitConnectionValidation extends AbstractDelegateValidateTask {
 
     logger.info("Running validation for task {} for repo {}", delegateTaskId, gitConfig.getGitAuth().getUrl());
     try {
-      encryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
+      decryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
     } catch (Exception e) {
       logger.info("Failed to decrypt " + gitConfig, e);
       return singletonList(DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());

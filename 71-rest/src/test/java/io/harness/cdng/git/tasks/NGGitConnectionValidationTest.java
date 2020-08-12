@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.gitclient.GitClientNG;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -16,6 +17,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandParams;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,12 +37,16 @@ public class NGGitConnectionValidationTest extends WingsBaseTest {
   @Mock GitClientNG gitClient;
   @Mock EncryptionService encryptionService;
 
+  String passwordIdentifier = "passwordIdentifier";
+  String passwordReference = "acc." + passwordIdentifier;
+
+  SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
+
   GitConfigDTO gitConfig = GitConfigDTO.builder()
                                .gitAuth(GitHTTPAuthenticationDTO.builder()
                                             .gitConnectionType(GitConnectionType.REPO)
-                                            .accountId("ACCOUNT_ID")
                                             .branchName("branchName")
-                                            .encryptedPassword("abcd")
+                                            .passwordRef(passwordRef)
                                             .url("url")
                                             .username("username")
                                             .build())

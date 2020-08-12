@@ -142,7 +142,7 @@ public class GitClientNGImpl implements GitClientNG {
 
   private void configureHttpCredentialProvider(TransportCommand gitCommand, GitHTTPAuthenticationDTO gitAuth) {
     String username = gitAuth.getUsername();
-    char[] password = gitAuth.getPassword();
+    char[] password = gitAuth.getPasswordRef().getDecryptedValue();
     // todo @deepak: add kerberos later
     gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(username, password));
   }

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
@@ -19,6 +20,7 @@ import io.harness.delegate.beans.git.GitCommitAndPushRequest;
 import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.delegate.beans.git.GitFileChange.ChangeType;
 import io.harness.delegate.beans.git.GitPushResult;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -63,12 +65,15 @@ public class GitClientNGTest extends WingsBaseTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testValidate() throws GitAPIException {
+    String passwordIdentifier = "passwordIdentifier";
+    String passwordReference = "acc." + passwordIdentifier;
+
+    SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
     GitConfigDTO gitConfig = GitConfigDTO.builder()
                                  .gitAuth(GitHTTPAuthenticationDTO.builder()
                                               .gitConnectionType(GitConnectionType.REPO)
-                                              .accountId(ACCOUNT_ID)
                                               .branchName("branchName")
-                                              .encryptedPassword("abcd")
+                                              .passwordRef(passwordRef)
                                               .url("http://url.com")
                                               .username("username")
                                               .build())
