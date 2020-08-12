@@ -1623,7 +1623,6 @@ public class AccountServiceImpl implements AccountService {
       throw new InvalidArgumentsException("Subdomain URL provided is invalid", USER);
     }
 
-    // Update Account with the given subdomainUrl
     setSubdomainUrl(get(accountId), subDomainUrl);
     return Boolean.TRUE;
   }

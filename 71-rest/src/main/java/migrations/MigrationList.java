@@ -89,6 +89,7 @@ import migrations.all.LimitCounterAccountIdMigration;
 import migrations.all.LogAnalysisDeprecatedRecordMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.LoginRateLimitMigration;
+import migrations.all.ManageSecretsMigration;
 import migrations.all.MarketoLeadDataMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
@@ -362,6 +363,7 @@ public class MigrationList {
         .add(Pair.of(324, ServerlessInstanceChangeCollectionNameMigration.class))
         .add(Pair.of(325, ManageCloudProvidersAndConnectorsPermissionMigration.class))
         .add(Pair.of(326, SecretManagerPermissionMigration.class))
+        .add(Pair.of(327, ManageSecretsMigration.class))
         .build();
   }
 }

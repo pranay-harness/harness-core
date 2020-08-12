@@ -3,6 +3,8 @@ package software.wings.resources.secretsmanagement;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -28,8 +30,6 @@ import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
@@ -71,7 +71,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/secrets")
 @Produces("application/json")
 @Consumes("application/json")
-@Scope(ResourceType.SETTING)
+@Scope(SETTING)
 @Slf4j
 public class SecretManagementResource {
   @Inject private SecretManager secretManager;
@@ -125,7 +125,7 @@ public class SecretManagementResource {
    */
   @GET
   @Path("/transition-config")
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_SECRETS)
   @Deprecated
   public RestResponse<Boolean> transitionSecrets(@QueryParam("accountId") final String accountId,
       @QueryParam("fromEncryptionType") EncryptionType fromEncryptionType, @QueryParam("fromKmsId") String fromKmsId,
@@ -136,7 +136,7 @@ public class SecretManagementResource {
 
   @PUT
   @Path("/transition-config")
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> transitionSecrets(@QueryParam("accountId") final String accountId,
       @QueryParam("fromEncryptionType") EncryptionType fromEncryptionType, @QueryParam("fromKmsId") String fromKmsId,
       @QueryParam("toEncryptionType") EncryptionType toEncryptionType, @QueryParam("toKmsId") String toKmsId,
@@ -157,6 +157,7 @@ public class SecretManagementResource {
 
   @POST
   @Path("/add-secret")
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Adding a secret");
@@ -166,6 +167,7 @@ public class SecretManagementResource {
 
   @POST
   @Path("/add-local-secret")
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<String> saveSecretUsingLocalMode(
       @QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     return new RestResponse<>(secretManager.saveSecretUsingLocalMode(accountId, secretText));
@@ -173,6 +175,7 @@ public class SecretManagementResource {
 
   @POST
   @Path("/update-secret")
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
       @QueryParam("uuid") final String uuid, @Body SecretText secretText) {
     return new RestResponse<>(secretManager.updateSecret(accountId, uuid, secretText));
@@ -181,6 +184,7 @@ public class SecretManagementResource {
   @DELETE
   @Path("/delete-secret")
   @Deprecated
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> deleteSecret(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -197,6 +201,7 @@ public class SecretManagementResource {
    */
   @POST
   @Path("/delete-secret")
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> deleteSecret(@QueryParam("accountId") final String accountId,
       @QueryParam("uuid") final String uuId, @Body Map<String, String> runtimeParameters) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -208,6 +213,7 @@ public class SecretManagementResource {
   @POST
   @Path("/add-file")
   @Consumes(MULTIPART_FORM_DATA)
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<String> saveFile(@Context HttpServletRequest request,
       @QueryParam("accountId") final String accountId, @Nullable @FormDataParam("kmsId") final String kmsId,
       @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
@@ -227,6 +233,7 @@ public class SecretManagementResource {
   @POST
   @Path("/update-file")
   @Consumes(MULTIPART_FORM_DATA)
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> updateFile(@Context HttpServletRequest request,
       @QueryParam("accountId") final String accountId, @FormDataParam("name") final String name,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
@@ -254,6 +261,7 @@ public class SecretManagementResource {
   @DELETE
   @Path("/delete-file")
   @Deprecated
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> deleteFile(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     return new RestResponse<>(secretManager.deleteFile(accountId, uuId, new HashMap<>()));
@@ -261,6 +269,7 @@ public class SecretManagementResource {
 
   @POST
   @Path("/delete-file")
+  @AuthRule(permissionType = MANAGE_SECRETS)
   public RestResponse<Boolean> deleteFilePost(@QueryParam("accountId") final String accountId,
       @QueryParam("uuid") final String uuId, @Body Map<String, String> runtimeParameters) {
     return new RestResponse<>(secretManager.deleteFile(accountId, uuId, runtimeParameters));
@@ -275,7 +284,6 @@ public class SecretManagementResource {
     try {
       pageRequest.addFilter("type", Operator.EQ, type);
       pageRequest.addFilter("accountId", Operator.EQ, accountId);
-
       return new RestResponse<>(
           secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details, false));
     } catch (IllegalAccessException e) {

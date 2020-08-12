@@ -17,6 +17,7 @@ import software.wings.graphql.schema.type.secrets.QLSecret;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialUpdate;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.auth.SecretAuthHandler;
 import software.wings.service.intfc.security.SecretManager;
 
 @Slf4j
@@ -25,6 +26,8 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   @Inject private WinRMCredentialController winRMCredentialController;
   @Inject private EncryptedTextController encryptedTextController;
   @Inject private SSHCredentialController sshCredentialController;
+  @Inject private SecretAuthHandler secretAuthHandler;
+
   @Inject
   public UpdateSecretDataFetcher() {
     super(QLUpdateSecretInput.class, QLUpdateSecretPayload.class);
@@ -79,6 +82,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
     QLSecret secret = null;
     switch (updateSecretInput.getSecretType()) {
       case ENCRYPTED_TEXT:
+        secretAuthHandler.authorize();
         EncryptedData encryptedText = updateEncryptedText(updateSecretInput, mutationContext.getAccountId());
         secret = encryptedTextController.populateEncryptedText(encryptedText);
         break;
@@ -92,6 +96,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
         secret = sshCredentialController.populateSSHCredential(savedSSH);
         break;
       case ENCRYPTED_FILE:
+        secretAuthHandler.authorize();
         throw new InvalidRequestException("Encrypted file secret cannot be updated through API.");
       default:
         throw new InvalidRequestException("Invalid Secret Type");

@@ -6,6 +6,7 @@ import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_
 import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_TEXT;
 import static software.wings.graphql.schema.type.secrets.QLSecretType.SSH_CREDENTIAL;
 import static software.wings.graphql.schema.type.secrets.QLSecretType.WINRM_CREDENTIAL;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
@@ -22,9 +23,9 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.secrets.input.QLDeleteSecretInput;
 import software.wings.graphql.schema.mutation.secrets.payload.QLDeleteSecretPayload;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.auth.SecretAuthHandler;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
@@ -33,6 +34,7 @@ import software.wings.settings.SettingValue;
 public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecretInput, QLDeleteSecretPayload> {
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
+  @Inject private SecretAuthHandler secretAuthHandler;
 
   @Inject
   public DeleteSecretDataFetcher() {
@@ -79,7 +81,7 @@ public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecr
   }
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLDeleteSecretPayload mutateAndFetch(QLDeleteSecretInput input, MutationContext mutationContext) {
     String secretId = input.getSecretId();
     String accountId = mutationContext.getAccountId();
@@ -88,6 +90,7 @@ public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecr
     }
     QLSecretType inputSecretType = input.getSecretType();
     if (inputSecretType == ENCRYPTED_TEXT || inputSecretType == ENCRYPTED_FILE) {
+      secretAuthHandler.authorize();
       deleteTextOrFileSecret(accountId, secretId, inputSecretType);
     } else if (inputSecretType == WINRM_CREDENTIAL || inputSecretType == SSH_CREDENTIAL) {
       deleteConnectionSecrets(accountId, secretId, inputSecretType);
