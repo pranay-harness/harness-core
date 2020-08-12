@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +28,7 @@ import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -62,6 +64,7 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -97,6 +100,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private ServiceVariableService serviceVariableService;
   @Mock private ApplicationManifestService appManifestService;
+  @Mock private AppService appService;
 
   @Inject @InjectMocks private ServiceTemplateService templateService;
   @Spy @InjectMocks private ServiceTemplateService spyTemplateService = new ServiceTemplateServiceImpl();
@@ -119,6 +123,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
         .thenReturn(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(wingsPersistence.createQuery(ServiceTemplate.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
   }
 
   /**
@@ -509,5 +514,18 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     assertThat(serviceTemplate.getEnvId()).isEqualTo(ENV_ID);
     assertThat(serviceTemplate.getName()).isEqualTo(SERVICE_NAME);
     assertThat(serviceTemplate.isDefaultServiceTemplate()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSaveWithAccountId() {
+    when(wingsPersistence.saveAndGet(eq(ServiceTemplate.class), any(ServiceTemplate.class)))
+        .thenAnswer(invocationOnMock -> {
+          ServiceTemplate serviceTemplate = invocationOnMock.getArgumentAt(1, ServiceTemplate.class);
+          return serviceTemplate;
+        });
+    ServiceTemplate template = templateService.save(builder.build());
+    assertThat(template.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 }

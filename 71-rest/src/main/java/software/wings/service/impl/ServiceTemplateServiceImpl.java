@@ -262,6 +262,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate save(ServiceTemplate serviceTemplate) {
+    String accountId = appService.getAccountIdByAppId(serviceTemplate.getAppId());
+    serviceTemplate.setAccountId(accountId);
     return PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate), "name", serviceTemplate.getName());
   }
