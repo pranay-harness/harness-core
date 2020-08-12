@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import lombok.Builder;
 import lombok.Data;
@@ -35,6 +36,7 @@ public class TriggerExecution extends Base {
   public static final String WEBHOOK_EVENT_DETAILS_BRANCH_NAME_KEY = "webhookEventDetails.branchName";
   public static final String WEBHOOK_EVENT_DETAILS_WEBHOOK_SOURCE_KEY = "webhookEventDetails.webhookSource";
 
+  @FdIndex private String accountId;
   @NotEmpty private String triggerId;
   @NotEmpty private String triggerName;
   String workflowExecutionId;

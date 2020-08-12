@@ -73,6 +73,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
+import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.utils.CryptoUtils;
 
 import java.io.File;
@@ -95,6 +96,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Inject ManagerExpressionEvaluator expressionEvaluator;
+  @Inject @InjectMocks TriggerExecutionService triggerExecutionService;
 
   @Inject @InjectMocks private WebHookService webHookService;
   @Inject WingsPersistence wingsPersistence;

@@ -693,6 +693,7 @@ timeseriesTransactionThresholds {"name": "accountId_1", "background": true} {"ac
 timeseriesTransactionThresholds {"name": "appId_1", "background": true} {"appId": 1}
 timeseriesTransactionThresholds {"name": "createdAt_1", "background": true} {"createdAt": 1}
 timeseriesTransactionThresholds {"name": "timeseriesThresholdsQueryIndex", "background": true} {"appId": 1, "serviceId": 1, "stateType": 1, "groupName": 1, "transactionName": 1, "metricName": 1, "cvConfigId": 1, "thresholdType": 1}
+triggerExecutions {"name": "accountId_1", "background": true} {"accountId": 1}
 triggerExecutions {"name": "appId_1", "background": true} {"appId": 1}
 triggerExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 triggerExecutions {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

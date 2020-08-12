@@ -14,6 +14,7 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 
 import java.util.EnumSet;
@@ -24,9 +25,12 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class TriggerExecutionServiceImpl implements TriggerExecutionService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AppService appService;
 
   @Override
   public TriggerExecution save(TriggerExecution triggerExecution) {
+    String accountId = appService.getAccountIdByAppId(triggerExecution.getAppId());
+    triggerExecution.setAccountId(accountId);
     return wingsPersistence.saveAndGet(TriggerExecution.class, triggerExecution);
   }
 
