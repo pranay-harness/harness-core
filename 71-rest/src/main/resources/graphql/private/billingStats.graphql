@@ -147,6 +147,18 @@ enum BillingSortType {
   Time
   Amount
   IdleCost
+  Application
+  Service
+  Cluster
+  Environment
+  CloudServiceName
+  TaskId
+  LaunchType
+  WorkloadName
+  Namespace
+  CloudProvider
+  Node
+  Pod
 }
 
 type BillingEntityDataPoint {

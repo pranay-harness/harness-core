@@ -186,7 +186,7 @@ public class BillingDataQueryBuilder {
   }
 
   protected BillingDataQueryMetadata formFilterValuesQuery(String accountId, List<QLBillingDataFilter> filters,
-      List<QLCCMEntityGroupBy> groupBy, Integer limit, Integer offset) {
+      List<QLCCMEntityGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria, Integer limit, Integer offset) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
     ResultType resultType;
@@ -218,10 +218,13 @@ public class BillingDataQueryBuilder {
 
     addAccountFilter(selectQuery, accountId);
 
+    List<QLBillingSortCriteria> finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
+
     selectQuery.getWhereClause().setDisableParens(true);
     queryMetaDataBuilder.fieldNames(fieldNames);
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.groupByFields(groupByFields);
+    queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
   }
@@ -263,12 +266,14 @@ public class BillingDataQueryBuilder {
 
   protected BillingDataQueryMetadata formNodeAndPodDetailsQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
-      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria) {
+      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria, Integer limit, Integer offset) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
 
     ResultType resultType;
     resultType = ResultType.NODE_AND_POD_DETAILS;
+    selectQuery.setFetchNext(limit);
+    selectQuery.setOffset(offset);
 
     queryMetaDataBuilder.resultType(resultType);
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
@@ -780,6 +785,40 @@ public class BillingDataQueryBuilder {
         break;
       case IdleCost:
         selectQuery.addCustomOrdering(BillingDataMetaDataFields.IDLECOST.getFieldName(), dir);
+        break;
+      case LaunchType:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.LAUNCHTYPE.getFieldName(), dir);
+        break;
+      case Service:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.SERVICEID.getFieldName(), dir);
+        break;
+      case CloudServiceName:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.CLOUDSERVICENAME.getFieldName(), dir);
+        break;
+      case Application:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.APPID.getFieldName(), dir);
+        break;
+      case TaskId:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.TASKID.getFieldName(), dir);
+        break;
+      case Namespace:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.NAMESPACE.getFieldName(), dir);
+        break;
+      case Cluster:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.CLUSTERID.getFieldName(), dir);
+        break;
+      case Node:
+      case Pod:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.INSTANCEID.getFieldName(), dir);
+        break;
+      case Environment:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.ENVID.getFieldName(), dir);
+        break;
+      case Workload:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.WORKLOADNAME.getFieldName(), dir);
+        break;
+      case CloudProvider:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.CLOUDPROVIDERID.getFieldName(), dir);
         break;
       default:
         throw new InvalidRequestException("Order type not supported " + sortType);
