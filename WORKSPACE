@@ -924,3 +924,45 @@ go_repository(
     sum = "h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=",
     version = "v1.0.0-20141024135613-dd632973f1e7",
 )
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+RULES_JVM_EXTERNAL_TAG = "3.3"
+RULES_JVM_EXTERNAL_SHA = "d85951a92c0908c80bd8551002d66cb23c3434409c814179c0ff026b53544dab"
+
+http_archive(
+    name = "rules_jvm_external",
+    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
+    sha256 = RULES_JVM_EXTERNAL_SHA,
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+)
+load("@rules_jvm_external//:defs.bzl", "maven_install")
+
+maven_install(
+    name = "maven",
+    artifacts= [
+              "junit:junit:4.12",
+              "org.slf4j:slf4j-api:1.7.29",
+              "org.powermock:powermock-module-junit4:1.7.4",
+              "ch.qos.logback:logback-classic:1.2.3",
+              "com.bettercloud:vault-java-driver:4.0.0",
+              "com.google.code.findbugs:annotations:3.0.0",
+              "com.google.guava:guava:21.0",
+              "com.google.inject:guice:4.2.3",
+              "commons-codec:commons-codec:1.10",
+              "net.rcarz:jira-client:0.8-SNAPSHOT",
+              "org.apache.commons:commons-lang3:3.7",
+              "org.assertj:assertj-core:3.16.1",
+              "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
+              "org.jacoco:org.jacoco.agent:0.8.5",
+              "org.mockito:mockito-core:1.10.19",
+              "org.projectlombok:lombok:1.18.6",
+    ],
+    version_conflict_policy = "pinned",
+    repositories=[
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+    ]
+)

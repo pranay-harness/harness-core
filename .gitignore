@@ -56,7 +56,7 @@ eventQueue
 **/*.tfstate.backup
 **/tfplan
 **/*.lock.info\
-
+user.bazelrc
 profile
 profile.result
 
