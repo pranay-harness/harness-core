@@ -189,6 +189,90 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
+  public void testUpdateConfiguration_prometheusWithoutError() {
+    List<TimeSeries> timeSeriesToAnalyze = new ArrayList<>();
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("cpu")
+                                .metricType(MetricType.INFRA.name())
+                                .txnName("test")
+                                .url("url1{pod_name=x}")
+                                .build());
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("error")
+                                .metricType(MetricType.ERROR.name())
+                                .txnName("test")
+                                .url("url2{pod_name=x}")
+                                .build());
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("throughput")
+                                .metricType(MetricType.THROUGHPUT.name())
+                                .txnName("test")
+                                .url("url3{pod_name=x}")
+                                .build());
+
+    PrometheusCVServiceConfiguration cvServiceConfiguration =
+        PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeriesToAnalyze).build();
+    addBasePropertiesToCVConfig(cvServiceConfiguration, StateType.PROMETHEUS);
+    wingsPersistence.save(cvServiceConfiguration);
+
+    timeSeriesToAnalyze.removeIf(ts -> ts.getMetricType().equals(MetricType.INFRA.name()));
+
+    cvServiceConfiguration.setTimeSeriesToAnalyze(timeSeriesToAnalyze);
+    cvConfigurationService.updateConfiguration(
+        accountId, appId, StateType.PROMETHEUS, cvServiceConfiguration, cvServiceConfiguration.getUuid());
+
+    PrometheusCVServiceConfiguration savedConfig = (PrometheusCVServiceConfiguration) wingsPersistence.get(
+        CVConfiguration.class, cvServiceConfiguration.getUuid());
+    assertThat(savedConfig.getTimeSeriesToAnalyze()).isEqualTo(timeSeriesToAnalyze);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testUpdateConfiguration_prometheusWithError() {
+    List<TimeSeries> timeSeriesToAnalyze = new ArrayList<>();
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("cpu")
+                                .metricType(MetricType.INFRA.name())
+                                .txnName("test")
+                                .url("url1{pod_name=x}")
+                                .build());
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("error")
+                                .metricType(MetricType.ERROR.name())
+                                .txnName("test")
+                                .url("url2{pod_name=x}")
+                                .build());
+
+    timeSeriesToAnalyze.add(TimeSeries.builder()
+                                .metricName("throughput")
+                                .metricType(MetricType.THROUGHPUT.name())
+                                .txnName("test")
+                                .url("url3{pod_name=x}")
+                                .build());
+
+    PrometheusCVServiceConfiguration cvServiceConfiguration =
+        PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeriesToAnalyze).build();
+    addBasePropertiesToCVConfig(cvServiceConfiguration, StateType.PROMETHEUS);
+    wingsPersistence.save(cvServiceConfiguration);
+
+    timeSeriesToAnalyze.removeIf(ts -> ts.getMetricType().equals(MetricType.THROUGHPUT.name()));
+
+    cvServiceConfiguration.setTimeSeriesToAnalyze(timeSeriesToAnalyze);
+    assertThatThrownBy(()
+                           -> cvConfigurationService.updateConfiguration(accountId, appId, StateType.PROMETHEUS,
+                               cvServiceConfiguration, cvServiceConfiguration.getUuid()))
+        .isInstanceOf(VerificationOperationException.class);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
   public void testGetMetricTemplateDatadog() {
     Map<String, String> dockerMetrics = new HashMap<>();
     dockerMetrics.put("filter1", "docker.cpu.usage, docker.mem.rss");
@@ -731,6 +815,17 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     logsCVConfiguration.setStateType(StateType.SUMO);
     logsCVConfiguration.setAlertPriority(FeedbackPriority.P5);
     return logsCVConfiguration;
+  }
+
+  private void addBasePropertiesToCVConfig(CVConfiguration cvConfiguration, StateType stateType) {
+    cvConfiguration.setName(generateUuid());
+    cvConfiguration.setAccountId(accountId);
+    cvConfiguration.setConnectorId(generateUuid());
+    cvConfiguration.setEnvId(generateUuid());
+    cvConfiguration.setServiceId(generateUuid());
+    cvConfiguration.setStateType(stateType);
+    cvConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
+    cvConfiguration.setAppId(appId);
   }
 
   private DatadogCVServiceConfiguration createDatadogCVConfiguration(boolean enabled24x7, boolean withDot)

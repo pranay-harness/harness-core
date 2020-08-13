@@ -432,6 +432,13 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case PROMETHEUS:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), PrometheusCVServiceConfiguration.class);
+        final Map<String, String> invalidFields = PrometheusResource.validateTransactions(
+            ((PrometheusCVServiceConfiguration) updatedConfig).getTimeSeriesToAnalyze(), true);
+
+        if (isNotEmpty(invalidFields)) {
+          throw new VerificationOperationException(
+              ErrorCode.PROMETHEUS_CONFIGURATION_ERROR, "Invalid configuration, reason: " + invalidFields);
+        }
         break;
       case DATA_DOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);

@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -136,7 +138,12 @@ public class PrometheusResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @Valid PrometheusSetupTestNodeData setupTestNodeData) {
-    validateTransactions(setupTestNodeData.getTimeSeriesToAnalyze(), setupTestNodeData.isServiceLevel());
+    Map<String, String> invalidFields =
+        validateTransactions(setupTestNodeData.getTimeSeriesToAnalyze(), setupTestNodeData.isServiceLevel());
+    if (isNotEmpty(invalidFields)) {
+      throw new VerificationOperationException(
+          ErrorCode.PROMETHEUS_CONFIGURATION_ERROR, "Invalid configuration, reason: " + invalidFields);
+    }
     return new RestResponse<>(analysisService.getMetricsWithDataForNode(setupTestNodeData));
   }
 }
