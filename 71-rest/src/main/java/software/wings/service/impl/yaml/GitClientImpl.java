@@ -36,6 +36,7 @@ import com.google.inject.Singleton;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
@@ -110,7 +111,6 @@ import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
 import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.exception.GitClientException;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.utils.SshHelperUtils;
 

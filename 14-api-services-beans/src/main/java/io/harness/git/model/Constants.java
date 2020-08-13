@@ -1,4 +1,4 @@
-package io.harness.git.constants;
+package io.harness.git.model;
 
 public interface Constants {
   String GIT_YAML_LOG_PREFIX = "GIT_YAML_LOG_ENTRY: ";

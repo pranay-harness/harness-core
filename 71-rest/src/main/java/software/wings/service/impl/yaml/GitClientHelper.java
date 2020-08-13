@@ -21,6 +21,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;

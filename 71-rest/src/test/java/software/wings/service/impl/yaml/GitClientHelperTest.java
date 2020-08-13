@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GitConnectionDelegateException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.eclipse.jgit.api.errors.GitAPIException;
