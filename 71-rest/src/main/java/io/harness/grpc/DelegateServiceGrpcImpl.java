@@ -75,6 +75,8 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
             .map(capability
                 -> (ExecutionCapability) kryoSerializer.asInflatedObject(capability.getKryoCapability().toByteArray()))
             .collect(Collectors.toList());
+    List<String> taskSelectors =
+        request.getSelectorsList().stream().map(selector -> selector.getSelector()).collect(Collectors.toList());
 
     DelegateTask task =
         DelegateTask.builder()
@@ -85,6 +87,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
             .setupAbstractions(setupAbstractions)
             .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
             .executionCapabilities(capabilities)
+            .tags(taskSelectors)
             .data(TaskData.builder()
                       .async(taskDetails.getMode() == TaskMode.ASYNC)
                       .taskType(taskDetails.getType().getType())

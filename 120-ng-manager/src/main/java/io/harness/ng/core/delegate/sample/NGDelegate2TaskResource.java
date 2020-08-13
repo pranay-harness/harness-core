@@ -65,7 +65,7 @@ public class NGDelegate2TaskResource {
             .setExecutionTimeout(Duration.newBuilder().setSeconds(timeoutInSecs).setNanos(0).build())
             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
             .build(),
-        taskParameters.fetchRequiredExecutionCapabilities());
+        taskParameters.fetchRequiredExecutionCapabilities(), null);
     logger.info("sync task id =[{}]", taskId.getId());
     return delegateSyncService.waitForTask(taskId.getId(), "", java.time.Duration.ofSeconds(timeoutInSecs));
   }
@@ -85,7 +85,7 @@ public class NGDelegate2TaskResource {
             .setExecutionTimeout(Duration.newBuilder().setSeconds(20).setNanos(0).build())
             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
             .build(),
-        taskParameters.fetchRequiredExecutionCapabilities());
+        taskParameters.fetchRequiredExecutionCapabilities(), null);
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION, new SimpleNotifyCallback(), taskId.getId());
     return taskId.getId();
   }

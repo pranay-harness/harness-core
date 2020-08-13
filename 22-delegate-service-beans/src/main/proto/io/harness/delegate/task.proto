@@ -59,3 +59,8 @@ message TaskDetails {
   // obtaining secrets are system generated, and not a hack from customers input.
   int64 expression_functor_token = 6;
 }
+
+// Task selector will be used as one of the ways to decide which delegate can be assigned to the given task
+message TaskSelector {
+  string selector = 1;
+}

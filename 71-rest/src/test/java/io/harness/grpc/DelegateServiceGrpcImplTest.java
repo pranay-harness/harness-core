@@ -62,7 +62,9 @@ import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.DelegateService;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -134,10 +136,12 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
                                       .setExpressionFunctorToken(200)
                                       .putAllExpressions(expressions);
 
+    List<String> taskSelectors = Arrays.asList("testSelector");
+
     TaskId taskId1 = delegateServiceGrpcClient.submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
         AccountId.newBuilder().setId(generateUuid()).build(),
         TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
-        builder.setMode(TaskMode.SYNC).build(), asList(SystemEnvCheckerCapability.builder().build()));
+        builder.setMode(TaskMode.SYNC).build(), asList(SystemEnvCheckerCapability.builder().build()), taskSelectors);
     assertThat(taskId1).isNotNull();
     assertThat(taskId1.getId()).isNotBlank();
     verify(delegateService).scheduleSyncTask(any(DelegateTask.class));
@@ -145,7 +149,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
     TaskId taskId2 = delegateServiceGrpcClient.submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
         AccountId.newBuilder().setId(generateUuid()).build(),
         TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
-        builder.setMode(TaskMode.ASYNC).build(), asList(SystemEnvCheckerCapability.builder().build()));
+        builder.setMode(TaskMode.ASYNC).build(), asList(SystemEnvCheckerCapability.builder().build()), taskSelectors);
     assertThat(taskId2).isNotNull();
     assertThat(taskId2.getId()).isNotBlank();
     verify(delegateService).queueTask(any(DelegateTask.class));

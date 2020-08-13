@@ -37,6 +37,7 @@ message SubmitTaskRequest {
   TaskSetupAbstractions setup_abstractions = 3;
   TaskDetails details = 4;
   repeated Capability capabilities = 5;
+  repeated TaskSelector selectors = 6;
 }
 
 message SubmitTaskResponse {

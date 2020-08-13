@@ -38,7 +38,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -93,7 +92,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
             .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
             .build(),
-        new ArrayList<>());
+        httpTaskParameters.fetchRequiredExecutionCapabilities(), null);
 
     ResponseData responseData =
         delegateSyncService.waitForTask(taskId.getId(), "Http Execution", Duration.ofSeconds(60));
@@ -143,7 +142,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
             .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
             .build(),
-        new ArrayList<>());
+        httpTaskParameters.fetchRequiredExecutionCapabilities(), null);
 
     Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
       NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, taskId.getId());
