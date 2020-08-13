@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import lombok.Builder;
@@ -24,14 +25,17 @@ public class Permit extends Base {
   private String group;
   @FdTtlIndex private Date expireAt;
   private long leaseDuration;
+  @FdIndex private String accountId;
 
   @Builder
   public Permit(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath, String key, String group, Date expireAt, long leaseDuration) {
+      long lastUpdatedAt, String entityYamlPath, String key, String group, Date expireAt, long leaseDuration,
+      String accountId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.key = key;
     this.group = group;
     this.expireAt = new Date(expireAt.getTime());
     this.leaseDuration = leaseDuration;
+    this.accountId = accountId;
   }
 }

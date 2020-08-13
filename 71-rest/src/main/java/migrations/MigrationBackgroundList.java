@@ -15,6 +15,7 @@ import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
 import migrations.all.AddAccountIdToNewRelicMetricAnalysisRecords;
+import migrations.all.AddAccountIdToPermitCollection;
 import migrations.all.AddAccountIdToResourceContraintInstanceCollection;
 import migrations.all.AddAccountIdToServiceCommands;
 import migrations.all.AddAccountIdToServiceInstance;
@@ -266,6 +267,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(155, AddAccountIdToResourceContraintInstanceCollection.class))
         .add(Pair.of(156, AddAccountIdToServiceTemplates.class))
         .add(Pair.of(157, AddAccountIdToTriggerExecutions.class))
+        .add(Pair.of(158, AddAccountIdToPermitCollection.class))
         .build();
   }
 }

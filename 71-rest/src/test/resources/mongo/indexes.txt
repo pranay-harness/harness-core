@@ -476,6 +476,7 @@ outcomeInstances {"name": "producedBySetupIdIdx", "background": true} {"planExec
 pcfServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}
 pcfServiceSpecification {"name": "appId_1", "background": true} {"appId": 1}
 pcfServiceSpecification {"name": "createdAt_1", "background": true} {"createdAt": 1}
+permits {"name": "accountId_1", "background": true} {"accountId": 1}
 permits {"name": "appId_1", "background": true} {"appId": 1}
 permits {"name": "createdAt_1", "background": true} {"createdAt": 1}
 permits {"name": "expireAt_1", "background": true, "expireAfterSeconds": 0} {"expireAt": 1}
