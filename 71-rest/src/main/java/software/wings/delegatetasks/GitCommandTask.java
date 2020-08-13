@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,6 @@ import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.service.impl.yaml.GitConnectionDelegateException;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 

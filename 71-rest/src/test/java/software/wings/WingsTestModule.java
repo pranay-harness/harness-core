@@ -15,6 +15,8 @@ import com.google.inject.name.Names;
 
 import io.harness.cache.HarnessCacheManager;
 import io.harness.exception.WingsException;
+import io.harness.git.GitClientV2;
+import io.harness.git.GitClientV2Impl;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
@@ -202,6 +204,7 @@ public class WingsTestModule extends AbstractModule {
     GitClientHelper gitClientHelper = mock(GitClientHelper.class);
     bind(GitClientImpl.class);
     bind(PcfDeploymentManagerImpl.class);
+    bind(GitClientV2.class).to(GitClientV2Impl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
     bind(AzureArtifactsService.class).to(AzureArtifactsServiceImpl.class);

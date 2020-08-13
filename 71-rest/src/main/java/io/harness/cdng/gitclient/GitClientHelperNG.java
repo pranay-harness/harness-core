@@ -18,6 +18,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
 import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.exception.GeneralException;
+import io.harness.exception.GitConnectionDelegateException;
 import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Status;
@@ -27,7 +28,6 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
 import org.jetbrains.annotations.NotNull;
-import software.wings.service.impl.yaml.GitConnectionDelegateException;
 
 import java.io.File;
 import java.util.Optional;

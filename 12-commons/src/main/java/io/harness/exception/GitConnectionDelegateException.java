@@ -1,8 +1,7 @@
-package software.wings.service.impl.yaml;
+package io.harness.exception;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
-import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 

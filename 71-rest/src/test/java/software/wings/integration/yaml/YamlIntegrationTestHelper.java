@@ -16,6 +16,7 @@ import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.GitConnectionDelegateException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -43,7 +44,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.yaml.GitConnectionDelegateException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;

@@ -33,6 +33,8 @@ import io.harness.delegate.service.K8sGlobalConfigServiceImpl;
 import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.git.GitClientV2;
+import io.harness.git.GitClientV2Impl;
 import io.harness.govern.DependencyModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
@@ -533,6 +535,7 @@ public class DelegateModule extends DependencyModule {
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(ContainerService.class).to(ContainerServiceImpl.class);
     bind(GitClient.class).to(GitClientImpl.class).asEagerSingleton();
+    bind(GitClientV2.class).to(GitClientV2Impl.class).asEagerSingleton();
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(KmsEncryptDecryptClient.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);

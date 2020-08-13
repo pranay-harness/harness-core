@@ -35,6 +35,7 @@ import io.harness.delegate.beans.git.GitCommitResult;
 import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.delegate.beans.git.GitFileChange.ChangeType;
 import io.harness.delegate.beans.git.GitPushResult;
+import io.harness.exception.GitClientException;
 import io.harness.exception.YamlException;
 import io.harness.git.model.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,6 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.jetbrains.annotations.NotNull;
-import software.wings.exception.GitClientException;
 
 import java.io.File;
 import java.io.IOException;
