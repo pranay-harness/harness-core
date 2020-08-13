@@ -60,8 +60,6 @@ echo "Running Sort Pom"
 executeWithRetry 'sortpom:sort'
 echo "Sort Pom Completed"
 
-${BASEDIR}/scripts/jenkins/build-protos.sh
-
 find . -iname "*.graphql" | xargs -L 1 prettier --write --print-width=120
 
 find . \( -iname "*.java" -o -iname "*.proto" \) | xargs clang-format -i
