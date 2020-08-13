@@ -948,6 +948,11 @@ public class UserServiceImpl implements UserService {
     // Stores information about newly added user groups
     Set<String> newUserGroups = Sets.newHashSet();
     for (UserGroup userGroup : userGroups) {
+      if (userGroup.getMembers() != null) {
+        logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
+            userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
+            userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
+      }
       List<User> userGroupMembers = userGroup.getMembers();
       if (isEmpty(userGroupMembers)) {
         userGroupMembers = new ArrayList<>();
