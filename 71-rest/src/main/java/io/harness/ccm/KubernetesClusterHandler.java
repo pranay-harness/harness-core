@@ -4,11 +4,14 @@ import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.segment.analytics.messages.TrackMessage;
 import io.harness.ccm.config.CCMConfig;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Delegate;
 import software.wings.beans.KubernetesClusterConfig;
@@ -22,10 +25,19 @@ import software.wings.settings.UsageRestrictions;
 @Slf4j
 public class KubernetesClusterHandler implements DelegateObserver {
   @Inject SettingsService settingsService;
+  @Inject SegmentHelper segmentHelper;
 
   @Override
   public void onAdded(Delegate delegate) {
     createKubernetes(delegate);
+    segmentHelper.enqueue(TrackMessage.builder("Delegate Connected")
+                              .properties(ImmutableMap.<String, Object>builder()
+                                              .put("accountId", delegate.getAccountId())
+                                              .put("delegateId", delegate.getUuid())
+                                              .put("delegateName", delegate.getDelegateName())
+                                              .put("product", "Continuous Efficiency")
+                                              .build())
+                              .anonymousId(delegate.getAccountId()));
   }
 
   private void createKubernetes(Delegate delegate) {
