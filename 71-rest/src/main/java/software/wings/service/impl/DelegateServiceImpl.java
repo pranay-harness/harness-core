@@ -2443,13 +2443,17 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response) {
+  @Override
+  public void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response) {
     if (delegateTask.getDriverId() == null) {
       handleInprocResponse(delegateTask, response);
     } else {
       handleDriverResponse(delegateTask, response);
     }
-    wingsPersistence.delete(taskQuery);
+
+    if (taskQuery != null) {
+      wingsPersistence.delete(taskQuery);
+    }
   }
 
   @VisibleForTesting
@@ -2468,9 +2472,11 @@ public class DelegateServiceImpl implements DelegateService {
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
       if (delegateTask.getData().isAsync()) {
+        logger.info("Publishing async task response...");
         delegateCallbackService.publishAsyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       } else {
+        logger.info("Publishing sync task response...");
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       }

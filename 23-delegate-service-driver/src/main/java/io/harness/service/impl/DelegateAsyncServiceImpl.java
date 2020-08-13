@@ -51,7 +51,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
         break;
       }
 
-      logger.debug("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
+      logger.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
 
       waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
           (ResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData()));

@@ -15,6 +15,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.validation.Create;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
@@ -139,6 +140,8 @@ public interface DelegateService extends OwnedByAccount {
   List<Integer> getCountOfDelegatesForAccounts(List<String> collect);
 
   Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId);
+
+  void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response);
 
   boolean validateThatDelegateNameIsUnique(String accountId, String delegateName);
 }
