@@ -235,8 +235,8 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     return value / 100;
   }
 
-  private void updateTasks(
-      String accountId, CECluster ceCluster, List<Task> tasks, Map<String, String> taskArnServiceNameMap) {
+  @VisibleForTesting
+  void updateTasks(String accountId, CECluster ceCluster, List<Task> tasks, Map<String, String> taskArnServiceNameMap) {
     Instant stopTime = Instant.now();
     String clusterId = ceCluster.getHash();
     String settingId = ceCluster.getParentAccountSettingId();
@@ -338,7 +338,8 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     return false;
   }
 
-  private HarnessServiceInfo getHarnessServiceInfo(String accountId, String clusterName, String serviceName) {
+  @VisibleForTesting
+  HarnessServiceInfo getHarnessServiceInfo(String accountId, String clusterName, String serviceName) {
     ContainerDeploymentKey containerDeploymentKey =
         ContainerDeploymentKey.builder().containerServiceName(serviceName).build();
     ContainerDeploymentInfoWithNames containerDeploymentInfoWithNames =
@@ -379,7 +380,8 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   }
 
   // TODO check for stop time
-  private void updateContainerInstance(String accountId, CECluster ceCluster,
+  @VisibleForTesting
+  void updateContainerInstance(String accountId, CECluster ceCluster,
       AwsCrossAccountAttributes awsCrossAccountAttributes, List<ContainerInstance> containerInstances) {
     Instant stopTime = Instant.now();
     String clusterId = ceCluster.getHash();
@@ -506,7 +508,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     return awsECSHelperService.listServicesForCluster(awsCrossAccountAttributes, region, clusterName);
   }
 
-  private Map<String, Instance> listEc2Instances(
+  Map<String, Instance> listEc2Instances(
       AwsCrossAccountAttributes awsCrossAccountAttributes, String region, Set<String> instanceIds) {
     Map<String, Instance> instanceMap = new HashMap<>();
     if (!CollectionUtils.isEmpty(instanceIds)) {
