@@ -2,6 +2,7 @@ package io.harness.functional.delegateservice;
 
 import static io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import static io.harness.rule.OwnerRule.MARKO;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
@@ -199,7 +200,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
             .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(30).setNanos(0).build())
             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
             .build(),
-        new ArrayList<>());
+        emptyList(), emptyList());
 
     Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
       NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, taskId.getId());
