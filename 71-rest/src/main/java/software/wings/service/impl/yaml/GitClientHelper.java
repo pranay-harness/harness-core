@@ -129,7 +129,7 @@ public class GitClientHelper {
               .replace("{REPO_NAME}", getRepoName(gitConfig)));
 
       FileIo.createDirectoryIfDoesNotExist(
-          REPOSITORY_GIT_FILE_DOWNLOADS_BASE.replace("{ACCOUNT_ID}", gitConfig.getAccountId())
+          REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR.replace("{ACCOUNT_ID}", gitConfig.getAccountId())
               .replace("{CONNECTOR_ID}", connectorId)
               .replace("{REPO_NAME}", getRepoName(gitConfig))
               .replace("{REPO_URL_HASH}", getRepoUrlHash(gitConfig)));
