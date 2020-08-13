@@ -53,6 +53,8 @@ public class OverviewPageStatsDataFetcher
   private static final String clusterIdColumnName = "clusterid";
   private static final String countFieldName = "count";
   private static final String queryTemplate =
+      "SELECT count(*) AS count FROM BILLING_DATA_HOURLY WHERE accountid = '%s' AND %s IS NOT NULL AND starttime >= '%s'";
+  private static final String queryTemplateDaily =
       "SELECT count(*) AS count FROM BILLING_DATA WHERE accountid = '%s' AND %s IS NOT NULL AND starttime >= '%s'";
   private static final String bigQueryTemplate =
       "SELECT count(*) AS count, cloudProvider FROM `%s.%s.%s` GROUP BY cloudProvider";
@@ -83,12 +85,13 @@ public class OverviewPageStatsDataFetcher
         Instant.ofEpochMilli(Instant.now().truncatedTo(ChronoUnit.DAYS).toEpochMilli() - TimeUnit.DAYS.toMillis(7));
     String applicationQuery = String.format(queryTemplate, accountId, appIdColumnName, sevenDaysPriorInstant);
     String clusterQuery = String.format(queryTemplate, accountId, clusterIdColumnName, sevenDaysPriorInstant);
+    String clusterDailyQuery = String.format(queryTemplateDaily, accountId, clusterIdColumnName, sevenDaysPriorInstant);
 
     if (getCount(applicationQuery, accountId) != 0) {
       isApplicationDataPresent = true;
     }
 
-    if (getCount(clusterQuery, accountId) != 0) {
+    if (getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0) {
       isClusterDataPresent = true;
     }
     overviewStatsDataBuilder.clusterDataPresent(isClusterDataPresent).applicationDataPresent(isApplicationDataPresent);
