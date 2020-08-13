@@ -11,10 +11,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -42,32 +39,29 @@ import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
- *
- * @author Rishi
  */
 @Slf4j
 public class DelegateQueueTask implements Runnable {
+  private static final SecureRandom random = new SecureRandom();
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
-  @Inject private TimeLimiter timeLimiter;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private DelegateService delegateService;
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
 
-  /* (non-Javadoc)
-   * @see java.lang.Runnable#run()
-   */
   @Override
   public void run() {
     if (getMaintenanceFlag()) {
@@ -75,16 +69,11 @@ public class DelegateQueueTask implements Runnable {
     }
 
     try {
-      timeLimiter.callWithTimeout(() -> {
-        if (configurationController.isPrimary()) {
-          markTimedOutTasksAsFailed();
-          markLongQueuedTasksAsFailed();
-        }
-        rebroadcastUnassignedTasks();
-        return true;
-      }, 1L, TimeUnit.MINUTES, true);
-    } catch (UncheckedTimeoutException exception) {
-      logger.error("Timed out processing delegate tasks");
+      if (configurationController.isPrimary()) {
+        markTimedOutTasksAsFailed();
+        markLongQueuedTasksAsFailed();
+      }
+      rebroadcastUnassignedTasks();
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
@@ -105,34 +94,45 @@ public class DelegateQueueTask implements Runnable {
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
       List<String> keyList = longRunningTimedOutTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
       logger.info("Marking following timed out tasks as failed [{}]", keyList);
-      markTasksAsFailed(keyList);
+      endTasks(keyList);
     }
   }
 
-  private void markLongQueuedTasksAsFailed() {
-    // Find tasks which have been queued for too long and update their status to ERROR.
+  private AtomicInteger clustering = new AtomicInteger(1);
 
-    List<Key<DelegateTask>> longQueuedTaskKeys = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                                     .filter(DelegateTaskKeys.status, QUEUED)
-                                                     .field(DelegateTaskKeys.expiry)
-                                                     .lessThan(currentTimeMillis())
-                                                     .asKeyList(expiryLimit);
+  private void markLongQueuedTasksAsFailed() {
+    // Find tasks which have been queued for too long
+    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                    .filter(DelegateTaskKeys.status, QUEUED)
+                                    .field(DelegateTaskKeys.expiry)
+                                    .lessThan(currentTimeMillis());
+
+    // We usually pick from the top, but if we have full bucket we maybe slowing down
+    // lets randomize a bit to increase the distribution
+    int clusteringValue = clustering.get();
+    if (clusteringValue > 1) {
+      query.field(DelegateTaskKeys.createdAt).mod(clusteringValue, random.nextInt(clusteringValue));
+    }
+
+    List<Key<DelegateTask>> longQueuedTaskKeys = query.asKeyList(expiryLimit);
+    clustering.set(longQueuedTaskKeys.size() == expiryLimit.getLimit() ? Math.min(16, clusteringValue * 2)
+                                                                       : Math.max(1, clusteringValue / 2));
 
     if (!longQueuedTaskKeys.isEmpty()) {
       List<String> keyList = longQueuedTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
       logger.info("Marking following long queued tasks as failed [{}]", keyList);
-      markTasksAsFailed(keyList);
+      endTasks(keyList);
     }
   }
 
-  private void markTasksAsFailed(List<String> taskIds) {
+  private void endTasks(List<String> taskIds) {
     Map<String, DelegateTask> delegateTasks = new HashMap<>();
     Map<String, String> taskWaitIds = new HashMap<>();
     try {
       List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                      .field(DelegateTaskKeys.uuid)
                                      .in(taskIds)
-                                     .project(ID_KEY, true)
+                                     .project(DelegateTaskKeys.uuid, true)
                                      .project(DelegateTaskKeys.delegateId, true)
                                      .project(DelegateTaskKeys.driverId, true)
                                      .project(DelegateTaskKeys.waitId, true)
