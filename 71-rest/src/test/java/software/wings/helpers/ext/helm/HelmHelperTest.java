@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.HelmTestConstants.INVALID_VALUES_YAML;
 import static software.wings.utils.HelmTestConstants.VALID_VALUES_YAML;
@@ -30,6 +31,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
+import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -64,6 +66,13 @@ public class HelmHelperTest extends WingsBaseTest {
     boolean isPresent = HelmHelper.checkStringPresentInHelmValueYaml(valuesYaml, toFind);
 
     assertThat(isPresent).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldReturnFalseWhenYamlFileContentIsEmpty() {
+    assertThat(HelmHelper.checkStringPresentInHelmValueYaml("", "anything")).isFalse();
   }
 
   @Test
@@ -127,6 +136,16 @@ public class HelmHelperTest extends WingsBaseTest {
                                                   .basePath("bar")
                                                   .build();
     assertThat(helmHelper.getRepoUrlForHelmRepoConfig(chartConfigParams)).isEqualTo("gs://foo/bar");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetRepoUrlForHelmRepoConfigForUnknownType() {
+    HelmChartConfigParams chartConfigParams =
+        HelmChartConfigParams.builder().helmRepoConfig(mock(HelmRepoConfig.class)).basePath("bar").build();
+
+    assertThat(helmHelper.getRepoUrlForHelmRepoConfig(chartConfigParams)).isNullOrEmpty();
   }
 
   @Test
