@@ -71,7 +71,7 @@ public class SettingAttributeTestHelper {
   private static KubernetesClusterConfig obtainKubernetesClusterConfig(boolean useK8sDelegate) {
     return KubernetesClusterConfig.builder()
         .masterUrl("dummy-url")
-        .username("dummy-username")
+        .username("dummy-username".toCharArray())
         .password("dummy-password".toCharArray())
         .accountId(ACCOUNT_ID)
         .skipValidation(false)

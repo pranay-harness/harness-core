@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.IGOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -19,9 +22,14 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLInheritClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLManualClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateInheritClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateK8sCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateManualClusterDetails;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateUsernameAndPasswordAuthentication;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUsernameAndPasswordAuthentication;
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
+import software.wings.graphql.schema.type.cloudProvider.k8s.QLManualClusterDetailsAuthenticationType;
 
 import java.sql.SQLException;
 
@@ -29,6 +37,8 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   private static final String NAME = "K8S";
   private static final String DELEGATE = "DELEGATE";
   private static final String ACCOUNT_ID = "777";
+  private static final String MASTER_URL = "MASTER_URL";
+  private static final String PASSWORD_SECRET_ID = "PASSWORD";
 
   @Mock private UsageScopeController usageScopeController;
 
@@ -159,5 +169,99 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
     assertThat(setting).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void toSettingAttributeUsernameAndUsernameSecretId() {
+    assertThatThrownBy(() -> toSettingAttributeUsernameAndUsernameSecretId(USER_NAME, USER_NAME))
+        .hasMessageContaining("Cannot set both value and secret reference for username field");
+
+    assertThatThrownBy(() -> toSettingAttributeUsernameAndUsernameSecretId(null, null))
+        .hasMessageContaining("One of fields 'userName' or 'userNameSecretId' is required");
+
+    assertSettingAttributeUsername(
+        toSettingAttributeUsernameAndUsernameSecretId(USER_NAME, null), USER_NAME.toCharArray(), null);
+    assertSettingAttributeUsername(toSettingAttributeUsernameAndUsernameSecretId(null, USER_NAME), null, USER_NAME);
+  }
+
+  private SettingAttribute toSettingAttributeUsernameAndUsernameSecretId(String userName, String userNameSecretId) {
+    final QLManualClusterDetails clusterDetails =
+        QLManualClusterDetails.builder()
+            .type(RequestField.ofNullable(QLManualClusterDetailsAuthenticationType.USERNAME_AND_PASSWORD))
+            .usernameAndPassword(
+                RequestField.ofNullable(QLUsernameAndPasswordAuthentication.builder()
+                                            .userName(RequestField.ofNullable(userName))
+                                            .userNameSecretId(RequestField.ofNullable(userNameSecretId))
+                                            .passwordSecretId(RequestField.ofNullable(PASSWORD_SECRET_ID))
+                                            .build()))
+            .masterUrl(RequestField.ofNullable(MASTER_URL))
+            .build();
+
+    final QLK8sCloudProviderInput input =
+        QLK8sCloudProviderInput.builder()
+            .name(RequestField.ofNullable(NAME))
+            .skipValidation(RequestField.ofNullable(Boolean.TRUE))
+            .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.MANUAL_CLUSTER_DETAILS))
+            .manualClusterDetails(RequestField.ofNullable(clusterDetails))
+            .build();
+
+    return helper.toSettingAttribute(input, ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void updateSettingAttributeUsernameAndUsernameSecretId() {
+    assertThatThrownBy(() -> updateSettingAttributeUsernameAndUsernameSecretId(USER_NAME, USER_NAME))
+        .hasMessageContaining("Cannot set both value and secret reference for username field");
+
+    assertSettingAttributeUsername(
+        updateSettingAttributeUsernameAndUsernameSecretId(USER_NAME, null), USER_NAME.toCharArray(), null);
+    assertSettingAttributeUsername(updateSettingAttributeUsernameAndUsernameSecretId(null, USER_NAME), null, USER_NAME);
+    // Keep existing values
+    assertSettingAttributeUsername(
+        updateSettingAttributeUsernameAndUsernameSecretId(null, null), USER_NAME.toCharArray(), USER_NAME);
+  }
+
+  private SettingAttribute updateSettingAttributeUsernameAndUsernameSecretId(String userName, String userNameSecretId) {
+    final QLUpdateManualClusterDetails clusterDetails =
+        QLUpdateManualClusterDetails.builder()
+            .type(RequestField.ofNullable(QLManualClusterDetailsAuthenticationType.USERNAME_AND_PASSWORD))
+            .usernameAndPassword(
+                RequestField.ofNullable(QLUpdateUsernameAndPasswordAuthentication.builder()
+                                            .userName(RequestField.ofNullable(userName))
+                                            .userNameSecretId(RequestField.ofNullable(userNameSecretId))
+                                            .passwordSecretId(RequestField.ofNullable(PASSWORD_SECRET_ID))
+                                            .build()))
+            .masterUrl(RequestField.ofNullable(MASTER_URL))
+            .build();
+
+    final QLUpdateK8sCloudProviderInput input =
+        QLUpdateK8sCloudProviderInput.builder()
+            .name(RequestField.ofNull())
+            .skipValidation(RequestField.ofNull())
+            .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.MANUAL_CLUSTER_DETAILS))
+            .manualClusterDetails(RequestField.ofNullable(clusterDetails))
+            .build();
+
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withValue(KubernetesClusterConfig.builder()
+                                                  .username(USER_NAME.toCharArray())
+                                                  .encryptedUsername(USER_NAME)
+                                                  .useEncryptedUsername(true)
+                                                  .build())
+                                   .build();
+    helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
+
+    return setting;
+  }
+
+  private void assertSettingAttributeUsername(SettingAttribute attribute, char[] username, String encryptedUsername) {
+    KubernetesClusterConfig attributeValue = (KubernetesClusterConfig) attribute.getValue();
+    assertThat(attributeValue.getUsername()).isEqualTo(username);
+    assertThat(attributeValue.getEncryptedUsername()).isEqualTo(encryptedUsername);
+    assertThat(attributeValue.isUseEncryptedUsername()).isEqualTo(encryptedUsername != null);
   }
 }

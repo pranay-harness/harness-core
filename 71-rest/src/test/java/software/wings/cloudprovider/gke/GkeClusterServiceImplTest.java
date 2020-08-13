@@ -160,7 +160,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
     verify(clusters).create(anyString(), any(CreateClusterRequest.class));
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
-    assertThat(config.getUsername()).isEqualTo("master1");
+    assertThat(config.getUsername()).isEqualTo("master1".toCharArray());
     assertThat(config.getPassword()).isEqualTo("password1".toCharArray());
   }
 
@@ -174,7 +174,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
     verify(clusters, times(0)).create(anyString(), any(CreateClusterRequest.class));
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
-    assertThat(config.getUsername()).isEqualTo("master1");
+    assertThat(config.getUsername()).isEqualTo("master1".toCharArray());
     assertThat(config.getPassword()).isEqualTo("password1".toCharArray());
   }
 
@@ -275,7 +275,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
     verify(clusters).get(anyString());
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
-    assertThat(config.getUsername()).isEqualTo("master1");
+    assertThat(config.getUsername()).isEqualTo("master1".toCharArray());
     assertThat(config.getPassword()).isEqualTo("password1".toCharArray());
   }
 

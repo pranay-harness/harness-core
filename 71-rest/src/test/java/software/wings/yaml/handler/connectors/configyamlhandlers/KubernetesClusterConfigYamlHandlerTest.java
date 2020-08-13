@@ -1,8 +1,10 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAUNAK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -102,10 +104,30 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
     assertThat(clusterConfig.isUseKubernetesDelegate()).isTrue();
     assertThat(clusterConfig.getDelegateName()).isEqualTo(SAMPLE_STRING);
     assertThat(clusterConfig.getMasterUrl()).isEqualTo(SAMPLE_STRING);
-    assertThat(clusterConfig.getUsername()).isEqualTo(SAMPLE_STRING);
+    assertThat(clusterConfig.getUsername()).isEqualTo(SAMPLE_STRING.toCharArray());
     assertThat(clusterConfig.getEncryptedCaCert()).isEqualTo(SAMPLE_STRING);
     assertThat(clusterConfig.getEncryptedOidcPassword()).isEqualTo(SAMPLE_STRING);
     assertThat(clusterConfig.getEncryptedServiceAccountToken()).isEqualTo(SAMPLE_STRING);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testToBeanBothUsernameAndUsernameSecretId() {
+    Yaml yaml = Yaml.builder().username(SAMPLE_STRING).usernameSecretId(SAMPLE_STRING).build();
+
+    Change change = Change.Builder.aFileChange()
+                        .withAccountId("ABC")
+                        .withFilePath("Setup/Cloud Providers/test-harness.yaml")
+                        .build();
+    ChangeContext<Yaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                            .withYamlType(YamlType.CLOUD_PROVIDER)
+                                            .withYaml(yaml)
+                                            .withChange(change)
+                                            .build();
+
+    assertThatThrownBy(() -> yamlHandler.toBean(null, changeContext, null))
+        .hasMessageContaining("Cannot set both value and secret reference for username field");
   }
 
   private SettingAttribute createKubernetesClusterConfigProvider(
@@ -118,7 +140,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(KubernetesClusterConfig.builder()
                                                    .masterUrl(masterUrl)
-                                                   .username(username)
+                                                   .username(username.toCharArray())
                                                    .password(password.toCharArray())
                                                    .accountId(ACCOUNT_ID)
                                                    .skipValidation(skipValidation)

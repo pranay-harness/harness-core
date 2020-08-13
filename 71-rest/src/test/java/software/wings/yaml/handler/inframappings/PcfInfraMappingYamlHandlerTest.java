@@ -14,7 +14,7 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -188,7 +188,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     return aSettingAttribute()
         .withName("COMPUTE_PROVIDER_NAME")
         .withUuid(SETTING_ID)
-        .withValue(PcfConfig.builder().username(USER_NAME).password(PASSWORD).endpointUrl("url").build())
+        .withValue(PcfConfig.builder().username(USER_NAME_DECRYPTED).password(PASSWORD).endpointUrl("url").build())
         .build();
   }
 

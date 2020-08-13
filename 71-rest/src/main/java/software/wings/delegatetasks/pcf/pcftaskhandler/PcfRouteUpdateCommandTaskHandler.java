@@ -67,7 +67,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
 
       PcfRequestConfig pcfRequestConfig =
           PcfRequestConfig.builder()
-              .userName(pcfConfig.getUsername())
+              .userName(String.valueOf(pcfConfig.getUsername()))
               .endpointUrl(pcfConfig.getEndpointUrl())
               .password(String.valueOf(pcfConfig.getPassword()))
               .orgName(pcfCommandRouteUpdateRequest.getOrganization())

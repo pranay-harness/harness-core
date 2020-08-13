@@ -811,7 +811,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     PcfConfig pcfConfig = new PcfConfig();
     pcfConfig.setAccountId(ACCOUNT_ID);
     pcfConfig.setEndpointUrl(url);
-    pcfConfig.setUsername(userName);
+    pcfConfig.setUsername(userName.toCharArray());
     pcfConfig.setPassword(password.toCharArray());
     pcfConfig.setSkipValidation(true);
     SettingAttribute attribute = new SettingAttribute();

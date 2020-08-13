@@ -49,7 +49,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.URL;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.beans.DelegateTask;
@@ -165,7 +165,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
   private SettingAttribute computeProvider =
       aSettingAttribute()
-          .withValue(PcfConfig.builder().accountId(ACCOUNT_ID).endpointUrl(URL).username(USER_NAME).build())
+          .withValue(PcfConfig.builder().accountId(ACCOUNT_ID).endpointUrl(URL).username(USER_NAME_DECRYPTED).build())
           .build();
   private ExecutionContextImpl context;
 
@@ -285,7 +285,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     assertThat(5 == pcfCommandRequest.getUpdateCount()).isTrue();
     assertThat(pcfCommandRequest.getNewReleaseName()).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
     assertThat(pcfCommandRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
     assertThat(pcfCommandRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandRequest.getSpace()).isEqualTo(SPACE);
     assertThat(pcfCommandRequest.getRouteMaps()).hasSize(2);

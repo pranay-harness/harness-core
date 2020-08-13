@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import com.google.inject.Inject;
 
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 
 public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   private final PcfConfig pcfConfig =
-      PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME).password(PASSWORD).build();
+      PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME_DECRYPTED).password(PASSWORD).build();
 
   private final PcfConnectivityCapability pcfConnectivityCapability = PcfConnectivityCapability.builder()
                                                                           .pcfConfig(pcfConfig)

@@ -71,7 +71,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
 
   private KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
                                                   .masterUrl("https://1.1.1.1/")
-                                                  .username("admin")
+                                                  .username("admin".toCharArray())
                                                   .password("password".toCharArray())
                                                   .namespace("default")
                                                   .build();

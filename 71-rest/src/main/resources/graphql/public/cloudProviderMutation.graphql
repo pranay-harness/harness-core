@@ -60,7 +60,8 @@ input PcfCloudProviderInput {
   name: String!
 
   endpointUrl: String!
-  userName: String!
+  userName: String
+  userNameSecretId: String
   passwordSecretId: String!
 
   skipValidation: Boolean
@@ -97,6 +98,7 @@ input UpdatePcfCloudProviderInput {
 
   endpointUrl: String
   userName: String
+  userNameSecretId: String
   passwordSecretId: String
 
   skipValidation: Boolean

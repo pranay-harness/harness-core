@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -7,6 +10,7 @@ import com.google.inject.Singleton;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMConfigYamlHandler;
 import io.harness.ccm.config.CCMSettingService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KubernetesClusterConfig;
@@ -28,17 +32,23 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
     KubernetesClusterConfig.Yaml yaml =
         KubernetesClusterConfig.Yaml.builder().harnessApiVersion(getHarnessApiVersion()).build();
-
     yaml.setUseKubernetesDelegate(kubernetesClusterConfig.isUseKubernetesDelegate());
     yaml.setDelegateName(kubernetesClusterConfig.getDelegateName());
     yaml.setType(kubernetesClusterConfig.getType());
     yaml.setMasterUrl(kubernetesClusterConfig.getMasterUrl());
-    yaml.setUsername(kubernetesClusterConfig.getUsername());
+    yaml.setUsername(
+        kubernetesClusterConfig.getUsername() != null ? String.valueOf(kubernetesClusterConfig.getUsername()) : null);
     yaml.setSkipValidation(kubernetesClusterConfig.isSkipValidation());
 
     String fieldName = null;
     String encryptedYamlRef;
     try {
+      if (kubernetesClusterConfig.isUseEncryptedUsername()) {
+        fieldName = "username";
+        encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
+        yaml.setUsernameSecretId(encryptedYamlRef);
+      }
+
       if (kubernetesClusterConfig.getEncryptedPassword() != null) {
         fieldName = "password";
         encryptedYamlRef = secretManager.getEncryptedYamlRef(kubernetesClusterConfig, fieldName);
@@ -127,12 +137,16 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
+    if (isNotEmpty(yaml.getUsername()) && isNotEmpty(yaml.getUsernameSecretId())) {
+      throw new InvalidRequestException("Cannot set both value and secret reference for username field", USER);
+    }
+
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().accountId(accountId).build();
 
     kubernetesClusterConfig.setUseKubernetesDelegate(yaml.isUseKubernetesDelegate());
     kubernetesClusterConfig.setDelegateName(yaml.getDelegateName());
     kubernetesClusterConfig.setMasterUrl(yaml.getMasterUrl());
-    kubernetesClusterConfig.setUsername(yaml.getUsername());
+    kubernetesClusterConfig.setUsername(yaml.getUsername() != null ? yaml.getUsername().toCharArray() : null);
     kubernetesClusterConfig.setClientKeyAlgo(yaml.getClientKeyAlgo());
 
     kubernetesClusterConfig.setEncryptedServiceAccountToken(yaml.getServiceAccountToken());
@@ -160,7 +174,14 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
       kubernetesClusterConfig.setCcmConfig(ccmConfig);
     }
 
-    String encryptedRef = yaml.getPassword();
+    String encryptedRef = yaml.getUsernameSecretId();
+    if (encryptedRef != null) {
+      kubernetesClusterConfig.setUsername(null);
+      kubernetesClusterConfig.setEncryptedUsername(encryptedRef);
+      kubernetesClusterConfig.setUseEncryptedUsername(true);
+    }
+
+    encryptedRef = yaml.getPassword();
     if (encryptedRef != null) {
       kubernetesClusterConfig.setPassword(null);
       kubernetesClusterConfig.setEncryptedPassword(encryptedRef);

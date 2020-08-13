@@ -71,14 +71,14 @@ public class ContainerServiceTest extends WingsBaseTest {
   private KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
                                                   .masterUrl("masterUrl")
                                                   .namespace("default")
-                                                  .username("user")
+                                                  .username("user".toCharArray())
                                                   .password("pass".toCharArray())
                                                   .accountId(ACCOUNT_ID)
                                                   .build();
 
   private KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
                                                                 .masterUrl("masterUrl")
-                                                                .username("user")
+                                                                .username("user".toCharArray())
                                                                 .password("pass".toCharArray())
                                                                 .accountId(ACCOUNT_ID)
                                                                 .build();

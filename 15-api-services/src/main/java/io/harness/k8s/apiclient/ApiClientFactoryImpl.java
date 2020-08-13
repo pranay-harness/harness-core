@@ -40,9 +40,9 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     if (kubernetesConfig.getServiceAccountToken() != null) {
       clientBuilder.setAuthentication(
           new AccessTokenAuthentication(new String(kubernetesConfig.getServiceAccountToken())));
-    } else if (isNotBlank(kubernetesConfig.getUsername()) && kubernetesConfig.getPassword() != null) {
+    } else if (kubernetesConfig.getUsername() != null && kubernetesConfig.getPassword() != null) {
       clientBuilder.setAuthentication(new UsernamePasswordAuthentication(
-          kubernetesConfig.getUsername(), new String(kubernetesConfig.getPassword())));
+          new String(kubernetesConfig.getUsername()), new String(kubernetesConfig.getPassword())));
     } else if (kubernetesConfig.getClientCert() != null && kubernetesConfig.getClientKey() != null) {
       clientBuilder.setAuthentication(
           new ClientCertificateAuthentication(new String(kubernetesConfig.getClientCert()).getBytes(UTF_8),

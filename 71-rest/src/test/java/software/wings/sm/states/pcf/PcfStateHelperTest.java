@@ -41,7 +41,7 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
@@ -441,7 +441,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
                                           .space("space")
                                           .build())
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
-            .pcfConfig(PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME).password(PASSWORD).build())
+            .pcfConfig(
+                PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME_DECRYPTED).password(PASSWORD).build())
             .requestConfigData(PcfRouteUpdateRequestConfigData.builder()
                                    .newApplicatiaonName("newApp")
                                    .downsizeOldApplication(false)
@@ -488,7 +489,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     assertThat(request.getSpace()).isEqualTo("space");
 
     assertThat(request.getPcfConfig().getEndpointUrl()).isEqualTo("pcfUrl");
-    assertThat(request.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(request.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
     assertThat(request.getPcfConfig().getPassword()).isEqualTo(PASSWORD);
 
     PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData =

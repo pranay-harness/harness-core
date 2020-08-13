@@ -1,6 +1,8 @@
 package io.harness.k8s;
 
 import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
+import static io.harness.k8s.model.KubernetesClusterAuthType.USER_PASSWORD;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -112,9 +114,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class KubernetesContainerServiceImplTest extends CategoryTest {
   public static final String MASTER_URL = "masterUrl";
-  public static final String USERNAME = "username";
+  public static final char[] USERNAME = "username".toCharArray();
   public static final char[] PASSWORD = "PASSWORD".toCharArray();
-
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder()
                                                                 .masterUrl(MASTER_URL)
                                                                 .username(USERNAME)
@@ -694,6 +695,45 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
                                             .oidcSecret("secret".toCharArray())
                                             .build();
 
+    String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
+    assertThat(expected).isEqualTo(configFileContent);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetConfigFileContentForBasicAuth() {
+    String expected = "apiVersion: v1\n"
+        + "clusters:\n"
+        + "- cluster:\n"
+        + "    xxxxxxxx masterUrl\n"
+        + "    insecure-skip-tls-verify: true\n"
+        + "  name: CLUSTER_NAME\n"
+        + "contexts:\n"
+        + "- context:\n"
+        + "    cluster: CLUSTER_NAME\n"
+        + "    user: HARNESS_USER\n"
+        + "    namespace: namespace\n"
+        + "  name: CURRENT_CONTEXT\n"
+        + "current-context: CURRENT_CONTEXT\n"
+        + "kind: Config\n"
+        + "preferences: {}\n"
+        + "users:\n"
+        + "- name: HARNESS_USER\n"
+        + "  user:\n"
+        + "    \n"
+        + "    \n"
+        + "    password: password\n"
+        + "    username: username\n"
+        + "    ";
+
+    KubernetesConfig kubeConfig = KubernetesConfig.builder()
+                                      .authType(USER_PASSWORD)
+                                      .namespace("namespace")
+                                      .masterUrl("masterUrl")
+                                      .username("username".toCharArray())
+                                      .password("password".toCharArray())
+                                      .build();
     String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
     assertThat(expected).isEqualTo(configFileContent);
   }

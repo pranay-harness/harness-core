@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.encryption.EncryptionReflectUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,7 +44,7 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
   @JsonIgnore
   @SchemaIgnore
   public List<Field> getEncryptedFields() {
-    return EncryptionReflectUtils.getEncryptedFields(this.getClass());
+    return SettingServiceHelper.getAllEncryptedFields(this);
   }
 
   public abstract String fetchResourceCategory();

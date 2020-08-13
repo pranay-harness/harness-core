@@ -78,7 +78,7 @@ public class CCMSettingServiceImplTest extends CategoryTest {
         CCMConfig.builder().cloudCostEnabled(cloudCostEnabled).skipK8sEventCollection(skipK8sEventCollection).build();
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
                                                           .masterUrl(masterUrl)
-                                                          .username(username)
+                                                          .username(username.toCharArray())
                                                           .password(password.toCharArray())
                                                           .accountId(accountIdWithCCM)
                                                           .ccmConfig(ccmConfig)
@@ -221,7 +221,7 @@ public class CCMSettingServiceImplTest extends CategoryTest {
     CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).build();
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
                                                           .masterUrl(masterUrl)
-                                                          .username(username)
+                                                          .username(username.toCharArray())
                                                           .password(password.toCharArray())
                                                           .accountId(accountIdNoCCM)
                                                           .ccmConfig(ccmConfig)

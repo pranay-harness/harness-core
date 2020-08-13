@@ -9,7 +9,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
 public class KubernetesConfig {
   @NotEmpty private String masterUrl;
-  private String username;
+  private char[] username;
   private char[] password;
   private char[] caCert;
   private char[] clientCert;
@@ -31,13 +31,13 @@ public class KubernetesConfig {
   private char[] oidcPassword;
 
   @Builder
-  public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
+  public KubernetesConfig(String masterUrl, char[] username, char[] password, char[] caCert, char[] clientCert,
       char[] clientKey, char[] clientKeyPassphrase, char[] serviceAccountToken, String clientKeyAlgo, String namespace,
       String accountId, KubernetesClusterAuthType authType, char[] oidcClientId, char[] oidcSecret,
       String oidcIdentityProviderUrl, String oidcUsername, char[] oidcPassword, String oidcScopes,
       OidcGrantType oidcGrantType) {
     this.masterUrl = masterUrl;
-    this.username = username;
+    this.username = username == null ? null : username.clone();
     this.password = password == null ? null : password.clone();
     this.caCert = caCert == null ? null : caCert.clone();
     this.clientCert = clientCert == null ? null : clientCert.clone();

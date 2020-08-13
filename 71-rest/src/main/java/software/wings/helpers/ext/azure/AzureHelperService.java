@@ -625,7 +625,7 @@ public class AzureHelperService {
           .namespace(namespace)
           .masterUrl(currentCluster.getServer())
           .caCert(currentCluster.getCertificateAuthorityData().toCharArray())
-          .username(currentContext.getUser())
+          .username(currentContext.getUser() != null ? currentContext.getUser().toCharArray() : null)
           .clientCert(currentAuthInfo.getClientCertificateData().toCharArray())
           .clientKey(currentAuthInfo.getClientKeyData().toCharArray())
           .build();
