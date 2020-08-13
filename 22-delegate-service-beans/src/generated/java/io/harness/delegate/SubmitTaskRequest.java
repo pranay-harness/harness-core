@@ -17,6 +17,7 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
   }
   private SubmitTaskRequest() {
     capabilities_ = java.util.Collections.emptyList();
+    selectors_ = java.util.Collections.emptyList();
   }
 
   @java.
@@ -109,6 +110,14 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
             capabilities_.add(input.readMessage(io.harness.delegate.Capability.parser(), extensionRegistry));
             break;
           }
+          case 50: {
+            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+              selectors_ = new java.util.ArrayList<io.harness.delegate.TaskSelector>();
+              mutable_bitField0_ |= 0x00000002;
+            }
+            selectors_.add(input.readMessage(io.harness.delegate.TaskSelector.parser(), extensionRegistry));
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -124,6 +133,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     } finally {
       if (((mutable_bitField0_ & 0x00000001) != 0)) {
         capabilities_ = java.util.Collections.unmodifiableList(capabilities_);
+      }
+      if (((mutable_bitField0_ & 0x00000002) != 0)) {
+        selectors_ = java.util.Collections.unmodifiableList(selectors_);
       }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
@@ -268,6 +280,39 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     return capabilities_.get(index);
   }
 
+  public static final int SELECTORS_FIELD_NUMBER = 6;
+  private java.util.List<io.harness.delegate.TaskSelector> selectors_;
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  public java.util.List<io.harness.delegate.TaskSelector> getSelectorsList() {
+    return selectors_;
+  }
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  public java.util.List<? extends io.harness.delegate.TaskSelectorOrBuilder> getSelectorsOrBuilderList() {
+    return selectors_;
+  }
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  public int getSelectorsCount() {
+    return selectors_.size();
+  }
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  public io.harness.delegate.TaskSelector getSelectors(int index) {
+    return selectors_.get(index);
+  }
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  public io.harness.delegate.TaskSelectorOrBuilder getSelectorsOrBuilder(int index) {
+    return selectors_.get(index);
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -298,6 +343,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     for (int i = 0; i < capabilities_.size(); i++) {
       output.writeMessage(5, capabilities_.get(i));
     }
+    for (int i = 0; i < selectors_.size(); i++) {
+      output.writeMessage(6, selectors_.get(i));
+    }
     unknownFields.writeTo(output);
   }
 
@@ -322,6 +370,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     }
     for (int i = 0; i < capabilities_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, capabilities_.get(i));
+    }
+    for (int i = 0; i < selectors_.size(); i++) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(6, selectors_.get(i));
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -364,6 +415,8 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     }
     if (!getCapabilitiesList().equals(other.getCapabilitiesList()))
       return false;
+    if (!getSelectorsList().equals(other.getSelectorsList()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -395,6 +448,10 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     if (getCapabilitiesCount() > 0) {
       hash = (37 * hash) + CAPABILITIES_FIELD_NUMBER;
       hash = (53 * hash) + getCapabilitiesList().hashCode();
+    }
+    if (getSelectorsCount() > 0) {
+      hash = (37 * hash) + SELECTORS_FIELD_NUMBER;
+      hash = (53 * hash) + getSelectorsList().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -503,6 +560,7 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     private void maybeForceBuilderInitialization() {
       if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
         getCapabilitiesFieldBuilder();
+        getSelectorsFieldBuilder();
       }
     }
     @java.lang.Override
@@ -537,6 +595,12 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         bitField0_ = (bitField0_ & ~0x00000001);
       } else {
         capabilitiesBuilder_.clear();
+      }
+      if (selectorsBuilder_ == null) {
+        selectors_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+      } else {
+        selectorsBuilder_.clear();
       }
       return this;
     }
@@ -597,6 +661,15 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         result.capabilities_ = capabilities_;
       } else {
         result.capabilities_ = capabilitiesBuilder_.build();
+      }
+      if (selectorsBuilder_ == null) {
+        if (((bitField0_ & 0x00000002) != 0)) {
+          selectors_ = java.util.Collections.unmodifiableList(selectors_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.selectors_ = selectors_;
+      } else {
+        result.selectors_ = selectorsBuilder_.build();
       }
       onBuilt();
       return result;
@@ -674,6 +747,31 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getCapabilitiesFieldBuilder() : null;
           } else {
             capabilitiesBuilder_.addAllMessages(other.capabilities_);
+          }
+        }
+      }
+      if (selectorsBuilder_ == null) {
+        if (!other.selectors_.isEmpty()) {
+          if (selectors_.isEmpty()) {
+            selectors_ = other.selectors_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureSelectorsIsMutable();
+            selectors_.addAll(other.selectors_);
+          }
+          onChanged();
+        }
+      } else {
+        if (!other.selectors_.isEmpty()) {
+          if (selectorsBuilder_.isEmpty()) {
+            selectorsBuilder_.dispose();
+            selectorsBuilder_ = null;
+            selectors_ = other.selectors_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+            selectorsBuilder_ =
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getSelectorsFieldBuilder() : null;
+          } else {
+            selectorsBuilder_.addAllMessages(other.selectors_);
           }
         }
       }
@@ -1385,6 +1483,229 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         capabilities_ = null;
       }
       return capabilitiesBuilder_;
+    }
+
+    private java.util.List<io.harness.delegate.TaskSelector> selectors_ = java.util.Collections.emptyList();
+    private void ensureSelectorsIsMutable() {
+      if (!((bitField0_ & 0x00000002) != 0)) {
+        selectors_ = new java.util.ArrayList<io.harness.delegate.TaskSelector>(selectors_);
+        bitField0_ |= 0x00000002;
+      }
+    }
+
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.TaskSelector,
+        io.harness.delegate.TaskSelector.Builder, io.harness.delegate.TaskSelectorOrBuilder> selectorsBuilder_;
+
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public java.util.List<io.harness.delegate.TaskSelector> getSelectorsList() {
+      if (selectorsBuilder_ == null) {
+        return java.util.Collections.unmodifiableList(selectors_);
+      } else {
+        return selectorsBuilder_.getMessageList();
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public int getSelectorsCount() {
+      if (selectorsBuilder_ == null) {
+        return selectors_.size();
+      } else {
+        return selectorsBuilder_.getCount();
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public io.harness.delegate.TaskSelector getSelectors(int index) {
+      if (selectorsBuilder_ == null) {
+        return selectors_.get(index);
+      } else {
+        return selectorsBuilder_.getMessage(index);
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder setSelectors(int index, io.harness.delegate.TaskSelector value) {
+      if (selectorsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSelectorsIsMutable();
+        selectors_.set(index, value);
+        onChanged();
+      } else {
+        selectorsBuilder_.setMessage(index, value);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder setSelectors(int index, io.harness.delegate.TaskSelector.Builder builderForValue) {
+      if (selectorsBuilder_ == null) {
+        ensureSelectorsIsMutable();
+        selectors_.set(index, builderForValue.build());
+        onChanged();
+      } else {
+        selectorsBuilder_.setMessage(index, builderForValue.build());
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder addSelectors(io.harness.delegate.TaskSelector value) {
+      if (selectorsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSelectorsIsMutable();
+        selectors_.add(value);
+        onChanged();
+      } else {
+        selectorsBuilder_.addMessage(value);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder addSelectors(int index, io.harness.delegate.TaskSelector value) {
+      if (selectorsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSelectorsIsMutable();
+        selectors_.add(index, value);
+        onChanged();
+      } else {
+        selectorsBuilder_.addMessage(index, value);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder addSelectors(io.harness.delegate.TaskSelector.Builder builderForValue) {
+      if (selectorsBuilder_ == null) {
+        ensureSelectorsIsMutable();
+        selectors_.add(builderForValue.build());
+        onChanged();
+      } else {
+        selectorsBuilder_.addMessage(builderForValue.build());
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder addSelectors(int index, io.harness.delegate.TaskSelector.Builder builderForValue) {
+      if (selectorsBuilder_ == null) {
+        ensureSelectorsIsMutable();
+        selectors_.add(index, builderForValue.build());
+        onChanged();
+      } else {
+        selectorsBuilder_.addMessage(index, builderForValue.build());
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder addAllSelectors(java.lang.Iterable<? extends io.harness.delegate.TaskSelector> values) {
+      if (selectorsBuilder_ == null) {
+        ensureSelectorsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, selectors_);
+        onChanged();
+      } else {
+        selectorsBuilder_.addAllMessages(values);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder clearSelectors() {
+      if (selectorsBuilder_ == null) {
+        selectors_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+      } else {
+        selectorsBuilder_.clear();
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public Builder removeSelectors(int index) {
+      if (selectorsBuilder_ == null) {
+        ensureSelectorsIsMutable();
+        selectors_.remove(index);
+        onChanged();
+      } else {
+        selectorsBuilder_.remove(index);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public io.harness.delegate.TaskSelector.Builder getSelectorsBuilder(int index) {
+      return getSelectorsFieldBuilder().getBuilder(index);
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public io.harness.delegate.TaskSelectorOrBuilder getSelectorsOrBuilder(int index) {
+      if (selectorsBuilder_ == null) {
+        return selectors_.get(index);
+      } else {
+        return selectorsBuilder_.getMessageOrBuilder(index);
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public java.util.List<? extends io.harness.delegate.TaskSelectorOrBuilder> getSelectorsOrBuilderList() {
+      if (selectorsBuilder_ != null) {
+        return selectorsBuilder_.getMessageOrBuilderList();
+      } else {
+        return java.util.Collections.unmodifiableList(selectors_);
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public io.harness.delegate.TaskSelector.Builder addSelectorsBuilder() {
+      return getSelectorsFieldBuilder().addBuilder(io.harness.delegate.TaskSelector.getDefaultInstance());
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public io.harness.delegate.TaskSelector.Builder addSelectorsBuilder(int index) {
+      return getSelectorsFieldBuilder().addBuilder(index, io.harness.delegate.TaskSelector.getDefaultInstance());
+    }
+    /**
+     * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+     */
+    public java.util.List<io.harness.delegate.TaskSelector.Builder> getSelectorsBuilderList() {
+      return getSelectorsFieldBuilder().getBuilderList();
+    }
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.TaskSelector,
+        io.harness.delegate.TaskSelector.Builder, io.harness.delegate.TaskSelectorOrBuilder>
+    getSelectorsFieldBuilder() {
+      if (selectorsBuilder_ == null) {
+        selectorsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.TaskSelector,
+            io.harness.delegate.TaskSelector.Builder, io.harness.delegate.TaskSelectorOrBuilder>(
+            selectors_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+        selectors_ = null;
+      }
+      return selectorsBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

@@ -32,6 +32,9 @@ public final class Task {
       .Descriptor internal_static_io_harness_delegate_TaskDetails_ExpressionsEntry_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_delegate_TaskDetails_ExpressionsEntry_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor internal_static_io_harness_delegate_TaskSelector_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_TaskSelector_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -57,8 +60,9 @@ public final class Task {
         + "_functor_token\030\006 \001(\003R\026expressionFunctorT"
         + "oken\032>\n\020ExpressionsEntry\022\020\n\003key\030\001 \001(\tR\003k"
         + "ey\022\024\n\005value\030\002 \001(\tR\005value:\0028\001B\014\n\nparamete"
-        + "rs*5\n\010TaskMode\022\024\n\020MODE_UNSPECIFIED\020\000\022\010\n\004"
-        + "SYNC\020\001\022\t\n\005ASYNC\020\002B\002P\001b\006proto3"};
+        + "rs\"*\n\014TaskSelector\022\032\n\010selector\030\001 \001(\tR\010se"
+        + "lector*5\n\010TaskMode\022\024\n\020MODE_UNSPECIFIED\020\000"
+        + "\022\010\n\004SYNC\020\001\022\t\n\005ASYNC\020\002B\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.DurationProto.getDescriptor(),
@@ -114,6 +118,13 @@ public final class Task {
             new java.lang.String[] {
                 "Key",
                 "Value",
+            });
+    internal_static_io_harness_delegate_TaskSelector_descriptor = getDescriptor().getMessageTypes().get(4);
+    internal_static_io_harness_delegate_TaskSelector_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_TaskSelector_descriptor,
+            new java.lang.String[] {
+                "Selector",
             });
     com.google.protobuf.DurationProto.getDescriptor();
   }

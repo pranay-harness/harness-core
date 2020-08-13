@@ -87,4 +87,25 @@ public interface SubmitTaskRequestOrBuilder extends
    * <code>repeated .io.harness.delegate.Capability capabilities = 5[json_name = "capabilities"];</code>
    */
   io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index);
+
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  java.util.List<io.harness.delegate.TaskSelector> getSelectorsList();
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  io.harness.delegate.TaskSelector getSelectors(int index);
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  int getSelectorsCount();
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  java.util.List<? extends io.harness.delegate.TaskSelectorOrBuilder> getSelectorsOrBuilderList();
+  /**
+   * <code>repeated .io.harness.delegate.TaskSelector selectors = 6[json_name = "selectors"];</code>
+   */
+  io.harness.delegate.TaskSelectorOrBuilder getSelectorsOrBuilder(int index);
 }
