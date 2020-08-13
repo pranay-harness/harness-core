@@ -91,7 +91,6 @@ public class EcsMetricClientTest extends CategoryTest {
 
     final List<EcsUtilizationData> utilizationMetrics = ecsMetricClient.getUtilizationMetrics(
         awsCrossAccountAttributes, startTime, endTime, cluster, services, ceCluster);
-    System.out.println(utilizationMetrics);
     assertThat(utilizationMetrics)
         .containsExactlyInAnyOrder(EcsUtilizationData.builder()
                                        .clusterArn("cluster1-arn")

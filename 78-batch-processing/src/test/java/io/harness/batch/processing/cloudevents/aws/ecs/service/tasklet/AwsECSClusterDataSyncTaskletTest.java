@@ -4,18 +4,27 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.model.Attribute;
+import com.amazonaws.services.ecs.model.ContainerInstance;
+import com.amazonaws.services.ecs.model.LaunchType;
+import com.amazonaws.services.ecs.model.Resource;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.Task;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.intfc.AwsECSClusterService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
@@ -24,6 +33,7 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.E
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
+import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.category.element.UnitTests;
@@ -39,6 +49,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
@@ -50,6 +61,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
+import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 
@@ -59,11 +71,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
-  @InjectMocks private AwsECSClusterDataSyncTasklet awsECSClusterDataSyncTasklet;
+  @Spy @InjectMocks private AwsECSClusterDataSyncTasklet awsECSClusterDataSyncTasklet;
   @Mock private CEClusterDao ceClusterDao;
   @Mock private EcsMetricClient ecsMetricClient;
   @Mock private InstanceDataDao instanceDataDao;
@@ -77,34 +91,27 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
   @Mock private AwsECSClusterService awsECSClusterService;
   @Mock private LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
 
-  @InjectMocks AwsECSClusterSyncTasklet awsECSClusterSyncTasklet;
-
   private final String REGION = "us-east-1";
   private final String ACCOUNT_ID = "accountId";
   private final String INFRA_ACCOUNT_ID = "infraAccountId";
-  private final String CLUSTER_ID = "clusterId";
   private final String SETTING_ID = "settingId";
   private final String CLUSTER_NAME = "ecs-ccm-cluster";
-  private final String PERPETUAL_TASK_ID = "perpetualTaskId";
   private final String CLUSTER_ARN = "arn:aws:ecs:us-east-2:132359207506:cluster/ecs-ccm-cluster";
   private final String AWS_ACCOUNT_ID = "awsAccountId";
   private final String AWS_ACCOUNT_NAME = "awsAccountName";
   private final String AWS_MASTER_ACCOUNT_ID = "awsMasterAccountId";
   private final String EXTERNAL_ID = "EXTERNAL_ID" + this.getClass().getSimpleName();
   private final String ROLE_ARN = "ROLE_ARN" + this.getClass().getSimpleName();
+  private final String CONTAINER_INSTANCE_ARN = "arn:aws:ecs:us-east-1:132359207506:cluster/ce-ecs-ec2-test";
+  private final String TASK_ARN = "arn:aws:ecs:us-east-1:132359207506:cluster/0fcd0a44-b82f-4f23-84ee-3ad8b40625a2";
+  private final String SERVICE_NAME = "serviceName";
+  private final String EC2_INSTANCE_ID = "i-0f0afe3d9df9b095c";
 
   private static final String accountId = "accountId";
-  private static final String accountName = "accountName";
   private static final String settingId = "settingId";
-  private static final String masterAccountId = "masterAccountId";
-  private static final String curReportName = "curReportName";
-  private static final String dataSetId = "datasetId";
-  private static final String transferJobName = "transferJobName";
   private static final Instant instant = Instant.now().truncatedTo(ChronoUnit.HOURS);
   private static final long startTime = instant.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private static final long endTime = instant.toEpochMilli();
-  private static final String scheduledQueryName = "scheduledQueryName";
-  private static final String preAggQueryName = "preAggQueryName";
 
   @Before
   public void setup() throws IOException {
@@ -217,15 +224,96 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
     assertThat(execute).isNull();
   }
 
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testUpdateContainerInstance() {
+    HashMap<String, Instance> instanceMap = new HashMap<>();
+    instanceMap.put(EC2_INSTANCE_ID, getInstance());
+
+    CECluster ceCluster = getCeCluster();
+    AwsCrossAccountAttributes awsCrossAccountAttributes = getAwsCrossAccountAttributes();
+    when(awsECSClusterDataSyncTasklet.listEc2Instances(any(), any(), any())).thenReturn(instanceMap);
+    awsECSClusterDataSyncTasklet.updateContainerInstance(
+        ACCOUNT_ID, ceCluster, awsCrossAccountAttributes, Arrays.asList(getContainerInstance()));
+
+    ArgumentCaptor<InstanceData> captor = ArgumentCaptor.forClass(InstanceData.class);
+    then(instanceDataService).should().create(captor.capture());
+    InstanceData instanceData = captor.getValue();
+    assertThat(instanceData.getInstanceId()).isEqualTo("ce-ecs-ec2-test");
+    assertThat(instanceData.getInstanceType()).isEqualTo(InstanceType.ECS_CONTAINER_INSTANCE);
+    assertThat(instanceData.getAllocatableResource())
+        .isEqualTo(io.harness.batch.processing.ccm.Resource.builder().cpuUnits(1.0).memoryMb(1024.0).build());
+    assertThat(instanceData.getUsageStartTime()).isEqualTo(instant);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testUpdateTasks() {
+    HashMap<String, String> taskArnServiceNameMap = new HashMap<>();
+    taskArnServiceNameMap.put(TASK_ARN, SERVICE_NAME);
+    CECluster ceCluster = getCeCluster();
+    when(cloudToHarnessMappingService.getHarnessServiceInfo(any()))
+        .thenReturn(Optional.of(new HarnessServiceInfo(null, null, null, null, null, null)));
+    when(instanceDataDao.fetchInstanceData(anySet())).thenReturn(singletonList(getInstanceData()));
+    awsECSClusterDataSyncTasklet.updateTasks(accountId, ceCluster, singletonList(getTask()), taskArnServiceNameMap);
+    ArgumentCaptor<InstanceData> captor = ArgumentCaptor.forClass(InstanceData.class);
+    then(instanceDataService).should().create(captor.capture());
+    InstanceData instanceData = captor.getValue();
+    assertThat(instanceData.getInstanceId()).isEqualTo("0fcd0a44-b82f-4f23-84ee-3ad8b40625a2");
+    assertThat(instanceData.getInstanceType()).isEqualTo(InstanceType.ECS_TASK_EC2);
+    assertThat(instanceData.getAllocatableResource())
+        .isEqualTo(io.harness.batch.processing.ccm.Resource.builder().cpuUnits(1.0).memoryMb(512.0).build());
+    assertThat(instanceData.getUsageStartTime()).isEqualTo(instant);
+  }
+
+  private InstanceData getInstanceData() {
+    return InstanceData.builder().build();
+  }
+
+  private Task getTask() {
+    return new Task()
+        .withTaskArn(TASK_ARN)
+        .withContainerInstanceArn(CONTAINER_INSTANCE_ARN)
+        .withClusterArn(CLUSTER_ARN)
+        .withLaunchType(LaunchType.EC2)
+        .withMemory("512")
+        .withCpu("1")
+        .withPullStartedAt(Date.from(instant));
+  }
+
+  private Instance getInstance() {
+    return new Instance().withInstanceId(EC2_INSTANCE_ID).withInstanceType("t2.micro");
+  }
+
   private CECluster getCeCluster() {
     return CECluster.builder()
         .accountId(ACCOUNT_ID)
         .clusterName("clusterName1")
+        .clusterArn(CLUSTER_ARN)
         .region("us-east-1")
         .infraAccountId(AWS_ACCOUNT_ID)
         .infraMasterAccountId(AWS_MASTER_ACCOUNT_ID)
         .parentAccountSettingId(SETTING_ID)
         .build();
+  }
+
+  private ContainerInstance getContainerInstance() {
+    return new ContainerInstance()
+        .withContainerInstanceArn(CONTAINER_INSTANCE_ARN)
+        .withEc2InstanceId(EC2_INSTANCE_ID)
+        .withRegisteredAt(Date.from(instant))
+        .withRegisteredResources(Arrays.asList(getResource("CPU", 1), getResource("MEMORY", 1024)))
+        .withAttributes(getAttribute("ecs.os-type", "linux"));
+  }
+
+  private Resource getResource(String name, int val) {
+    return new Resource().withName(name).withIntegerValue(val);
+  }
+
+  private Attribute getAttribute(String attName, String attValue) {
+    return new Attribute().withName(attName).withValue(attValue);
   }
 
   private AwsCrossAccountAttributes getAwsCrossAccountAttributes() {
