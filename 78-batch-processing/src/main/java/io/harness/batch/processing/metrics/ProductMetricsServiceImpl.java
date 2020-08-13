@@ -160,6 +160,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     if (totalClusterCost != 0) {
       overallUnallocatedCostPercentage = BigDecimal.valueOf(getTotalUnallocatedCost(accountId, start, end))
                                              .divide(BigDecimal.valueOf(totalClusterCost), 4, RoundingMode.HALF_UP)
+                                             .multiply(BigDecimal.valueOf(100))
                                              .doubleValue();
     }
     return overallUnallocatedCostPercentage;
@@ -172,6 +173,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     if (totalClusterCost != 0) {
       overallIdleCostPercentage = BigDecimal.valueOf(getTotalIdleCost(accountId, start, end))
                                       .divide(BigDecimal.valueOf(totalClusterCost), 4, RoundingMode.HALF_UP)
+                                      .multiply(BigDecimal.valueOf(100))
                                       .doubleValue();
     }
     return overallIdleCostPercentage;

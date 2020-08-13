@@ -4,6 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
+import io.harness.batch.processing.metrics.CeCloudMetricsService;
+import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -40,6 +42,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(ProductMetricsService.class).to(ProductMetricsServiceImpl.class);
     bind(CESlackWebhookService.class).to(CESlackWebhookServiceImpl.class);
     bind(BigQueryService.class).to(BigQueryServiceImpl.class);
+    bind(CeCloudMetricsService.class).to(CeCloudMetricsServiceImpl.class);
   }
 
   @Provides

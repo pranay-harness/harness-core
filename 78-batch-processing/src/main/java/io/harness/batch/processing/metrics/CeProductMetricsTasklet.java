@@ -7,6 +7,7 @@ import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.GroupMessage;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.event.handler.segment.SegmentConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -21,7 +22,7 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Singleton
@@ -42,6 +43,7 @@ public class CeProductMetricsTasklet implements Tasklet {
                           .minus(3, ChronoUnit.DAYS);
       Instant end = CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE)
                         .minus(3, ChronoUnit.DAYS);
+      logger.info("Sending CE account traits through Segment group call.");
       sendStatsToSegment(accountId, start, end);
     }
     return null;
@@ -52,7 +54,7 @@ public class CeProductMetricsTasklet implements Tasklet {
     SegmentConfig segmentConfig = mainConfiguration.getSegmentConfig();
     String writeKey = segmentConfig.getApiKey();
     Analytics analytics = Analytics.builder(writeKey).build();
-    Map<String, Object> groupTraits =
+    ImmutableMap.Builder<String, Object> groupTraitsMapBuilder =
         ImmutableMap.<String, Object>builder()
             .put("is_ce_enabled", account.isCloudCostEnabled())
             .put("company_name", account.getCompanyName())
@@ -80,10 +82,19 @@ public class CeProductMetricsTasklet implements Tasklet {
             .put("total_k8s_pods", productMetricsService.countTotalK8sPods(accountId, start, end))
 
             .put("total_ecs_clusters", productMetricsService.countTotalEcsClusters(accountId, start, end))
-            .put("total_ecs_tasks", productMetricsService.countTotalEcsTasks(accountId, start, end))
-            .build();
+            .put("total_ecs_tasks", productMetricsService.countTotalEcsTasks(accountId, start, end));
 
-    analytics.enqueue(
-        GroupMessage.builder(accountId).anonymousId(accountId).timestamp(Date.from(end)).traits(groupTraits));
+    CeLicenseInfo ceLicenseInfo =
+        Optional.ofNullable(account.getCeLicenseInfo()).orElse(CeLicenseInfo.builder().build());
+    if (ceLicenseInfo.getLicenseType() != null) {
+      groupTraitsMapBuilder.put("ce_license_type", ceLicenseInfo.getLicenseType().name());
+    }
+    groupTraitsMapBuilder.put("ce_license_expiry", ceLicenseInfo.getExpiryTime());
+
+    analytics.enqueue(GroupMessage.builder(accountId)
+                          .anonymousId(accountId)
+                          .timestamp(Date.from(end))
+                          .traits(groupTraitsMapBuilder.build()));
+    logger.info("Sent CE account traits through Segment group call.");
   }
 }

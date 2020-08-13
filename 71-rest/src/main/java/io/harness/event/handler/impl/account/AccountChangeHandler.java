@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.Utils;
 import io.harness.event.handler.impl.segment.SalesforceApiCheck;
@@ -48,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @NoArgsConstructor
 @Singleton
@@ -175,7 +177,7 @@ public class AccountChangeHandler implements EventHandler {
       name = salesforceApiCheck.getSalesforceAccountName();
     }
 
-    Map<String, Object> groupTraits =
+    ImmutableMap.Builder<String, Object> groupTraitsMapBuilder =
         ImmutableMap.<String, Object>builder()
             .put("name", name)
             .put("company_name", account.getCompanyName())
@@ -187,13 +189,18 @@ public class AccountChangeHandler implements EventHandler {
             .put("is_global", isGlobal)
             .put("user_count", count)
             .put("service_count", getCountOfServicesInAccount(account))
-            .put("usage_service_instances_current", currentUsage)
-            .build();
-    logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
+            .put("usage_service_instances_current", currentUsage);
+    CeLicenseInfo ceLicenseInfo =
+        Optional.ofNullable(account.getCeLicenseInfo()).orElse(CeLicenseInfo.builder().build());
+    if (ceLicenseInfo.getLicenseType() != null) {
+      groupTraitsMapBuilder.put("ce_license_type", ceLicenseInfo.getLicenseType().name());
+    }
+    groupTraitsMapBuilder.put("ce_license_expiry", ceLicenseInfo.getExpiryTime());
+    logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraitsMapBuilder);
 
     GroupMessage.Builder groupMessageBuilder = GroupMessage.builder(accountId)
                                                    .userId(user.getId())
-                                                   .traits(groupTraits)
+                                                   .traits(groupTraitsMapBuilder.build())
                                                    .enableIntegration(SegmentHandler.Keys.NATERO, true);
 
     segmentHelper.enqueue(groupMessageBuilder.enableIntegration(SegmentHandler.Keys.SALESFORCE, isPresentInSalesforce));
