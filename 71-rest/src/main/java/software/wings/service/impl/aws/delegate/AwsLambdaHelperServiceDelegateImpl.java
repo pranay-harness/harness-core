@@ -341,8 +341,10 @@ public class AwsLambdaHelperServiceDelegateImpl
       AwsLambdaFunctionParams functionParams, AwsLambdaExecuteWfRequest awsLambdaExecuteWfRequest,
       File workingDirectory, ExecutionLogCallback logCallback) throws IOException, ExecutionException {
     if (awsLambdaExecuteWfRequest.getArtifactStreamAttributes().getArtifactStreamType().equalsIgnoreCase(
-            ArtifactStreamType.AMAZON_S3.name())) {
-      return executeFunctionDeploymentFromS3(
+            ArtifactStreamType.AMAZON_S3.name())
+        || ArtifactStreamType.CUSTOM.name().equalsIgnoreCase(
+               awsLambdaExecuteWfRequest.getArtifactStreamAttributes().getArtifactStreamType())) {
+      return executeFunctionDeploymentFromS3OrCustomRepository(
           lambdaClient, roleArn, evaluatedAliases, serviceVariables, lambdaVpcConfig, functionParams, logCallback);
     } else {
       return executeFunctionDeploymentAfterDownloadingArtifact(lambdaClient, roleArn, evaluatedAliases,
@@ -576,9 +578,9 @@ public class AwsLambdaHelperServiceDelegateImpl
     }
   }
 
-  private AwsLambdaFunctionResult executeFunctionDeploymentFromS3(AWSLambdaClient lambdaClient, String roleArn,
-      List<String> evaluatedAliases, Map<String, String> serviceVariables, AwsLambdaVpcConfig lambdaVpcConfig,
-      AwsLambdaFunctionParams functionParams, ExecutionLogCallback logCallback) {
+  private AwsLambdaFunctionResult executeFunctionDeploymentFromS3OrCustomRepository(AWSLambdaClient lambdaClient,
+      String roleArn, List<String> evaluatedAliases, Map<String, String> serviceVariables,
+      AwsLambdaVpcConfig lambdaVpcConfig, AwsLambdaFunctionParams functionParams, ExecutionLogCallback logCallback) {
     printLambdaDetails(functionParams, roleArn, lambdaVpcConfig, evaluatedAliases, logCallback);
 
     String functionName = functionParams.getFunctionName();

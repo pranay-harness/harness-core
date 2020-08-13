@@ -62,6 +62,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.impl.AwsHelperService;
@@ -327,12 +328,15 @@ public class AwsLambdaState extends State {
     nullCheckForInvalidRequest(specification, "Missing lambda function specification in service", USER);
 
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    if (!ArtifactStreamType.CUSTOM.name().equalsIgnoreCase(artifactStreamAttributes.getArtifactStreamType())) {
+      artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
+      artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+          (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
+          context.getWorkflowExecutionId()));
+    }
+
     artifactStreamAttributes.setMetadata(artifact.getMetadata());
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
-    artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
-    artifactStreamAttributes.setArtifactServerEncryptedDataDetails(
-        secretManager.getEncryptionDetails((EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(),
-            context.getAppId(), context.getWorkflowExecutionId()));
     artifactStreamAttributes.setArtifactName(artifact.getDisplayName());
     artifactStreamAttributes.setMetadataOnly(onlyMetaForArtifactType(artifactStream));
     artifactStreamAttributes.getMetadata().put(
