@@ -50,7 +50,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.URL;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -185,11 +185,14 @@ public class PcfPluginStateTest extends WingsBaseTest {
           .value(InfraMappingSweepingOutput.builder().infraMappingId(INFRA_MAPPING_ID).build())
           .build();
 
-  private SettingAttribute pcfConfig =
-      aSettingAttribute()
-          .withValue(
-              PcfConfig.builder().endpointUrl(URL).password(PASSWORD).username(USER_NAME).accountId(ACCOUNT_ID).build())
-          .build();
+  private SettingAttribute pcfConfig = aSettingAttribute()
+                                           .withValue(PcfConfig.builder()
+                                                          .endpointUrl(URL)
+                                                          .password(PASSWORD)
+                                                          .username(USER_NAME_DECRYPTED)
+                                                          .accountId(ACCOUNT_ID)
+                                                          .build())
+                                           .build();
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
 
   private WorkflowStandardParams workflowStandardParams = pcfStateTestHelper.getWorkflowStandardParams();

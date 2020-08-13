@@ -33,10 +33,14 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class PcfConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Endpoint URL", required = true) @NotEmpty private String endpointUrl;
-  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @Attributes(title = "Username", required = true)
+  @Encrypted(fieldName = "username", isReference = true)
+  private char[] username;
   @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @Attributes(title = "Use Encrypted Username") private boolean useEncryptedUsername;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedUsername;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
   private boolean skipValidation;
 
@@ -44,13 +48,15 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.PCF.name());
   }
 
-  public PcfConfig(String endpointUrl, String username, char[] password, String accountId, String encryptedPassword,
-      boolean skipValidation) {
+  public PcfConfig(String endpointUrl, char[] username, char[] password, String accountId, boolean useEncryptedUsername,
+      String encryptedUsername, String encryptedPassword, boolean skipValidation) {
     this();
     this.endpointUrl = endpointUrl;
-    this.username = username;
+    this.username = username == null ? null : username.clone();
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;
+    this.useEncryptedUsername = useEncryptedUsername;
+    this.encryptedUsername = encryptedUsername;
     this.encryptedPassword = encryptedPassword;
     this.skipValidation = skipValidation;
   }
@@ -72,15 +78,17 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
   public static final class Yaml extends CloudProviderYaml {
     private String endpointUrl;
     private String username;
+    private String usernameSecretId;
     private String password = ENCRYPTED_VALUE_STR;
     private boolean skipValidation;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String endpointUrl, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions, boolean skipValidation) {
+    public Yaml(String type, String harnessApiVersion, String endpointUrl, String username, String usernameSecretId,
+        String password, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.endpointUrl = endpointUrl;
       this.username = username;
+      this.usernameSecretId = usernameSecretId;
       this.password = password;
       this.skipValidation = skipValidation;
     }

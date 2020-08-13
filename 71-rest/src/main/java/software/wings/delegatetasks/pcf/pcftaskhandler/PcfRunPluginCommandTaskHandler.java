@@ -98,7 +98,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
                                               .orgName(pluginCommandRequest.getOrganization())
                                               .spaceName(pluginCommandRequest.getSpace())
-                                              .userName(pcfConfig.getUsername())
+                                              .userName(String.valueOf(pcfConfig.getUsername()))
                                               .password(String.valueOf(pcfConfig.getPassword()))
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .timeOutIntervalInMins(pluginCommandRequest.getTimeoutIntervalInMin())

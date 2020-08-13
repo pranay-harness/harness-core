@@ -24,7 +24,7 @@ import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.URL;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
@@ -88,7 +88,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
   private SettingAttribute computeProvider =
       aSettingAttribute()
-          .withValue(PcfConfig.builder().accountId(ACCOUNT_ID).endpointUrl(URL).username(USER_NAME).build())
+          .withValue(PcfConfig.builder().accountId(ACCOUNT_ID).endpointUrl(URL).username(USER_NAME_DECRYPTED).build())
           .build();
 
   private ExecutionContextImpl context;

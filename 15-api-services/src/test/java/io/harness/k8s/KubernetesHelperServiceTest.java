@@ -31,7 +31,7 @@ import org.mockito.junit.MockitoRule;
 public class KubernetesHelperServiceTest extends CategoryTest {
   public static final String MASTER_URL = "http://masterUrl/";
   public static final String OC_URL = "http://masterUrl/oapi/v1/";
-  public static final String USERNAME = "username";
+  public static final char[] USERNAME = "username".toCharArray();
   char[] PASSWORD = "PASSWORD".toCharArray();
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

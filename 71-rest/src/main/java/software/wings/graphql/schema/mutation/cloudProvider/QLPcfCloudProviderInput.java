@@ -16,6 +16,7 @@ public class QLPcfCloudProviderInput {
 
   private RequestField<String> endpointUrl;
   private RequestField<String> userName;
+  private RequestField<String> userNameSecretId;
   private RequestField<String> passwordSecretId;
 
   private RequestField<Boolean> skipValidation;

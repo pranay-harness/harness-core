@@ -120,7 +120,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                                                           .masterUrl("https://" + cluster.getEndpoint() + "/")
                                                           .namespace(isNotBlank(namespace) ? namespace : "default");
     if (masterAuth.getUsername() != null) {
-      kubernetesConfigBuilder.username(masterAuth.getUsername());
+      kubernetesConfigBuilder.username(masterAuth.getUsername().toCharArray());
     }
     if (masterAuth.getPassword() != null) {
       kubernetesConfigBuilder.password(masterAuth.getPassword().toCharArray());

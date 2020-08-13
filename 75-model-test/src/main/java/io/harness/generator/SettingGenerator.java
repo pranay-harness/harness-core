@@ -255,7 +255,7 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(PcfConfig.builder()
                            .accountId(account.getUuid())
-                           .username(PCF_USERNAME)
+                           .username(PCF_USERNAME.toCharArray())
                            .endpointUrl(PCF_END_POINT)
                            .password(scmSecret.decryptToCharArray(new SecretName(PCF_KEY)))
                            .build())

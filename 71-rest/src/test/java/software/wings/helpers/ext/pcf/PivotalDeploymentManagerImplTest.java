@@ -753,7 +753,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testCheckConnectivity() throws Exception {
-    PcfConfig pcfConfig = PcfConfig.builder().password("test".toCharArray()).build();
+    PcfConfig pcfConfig = PcfConfig.builder().username("user".toCharArray()).password("test".toCharArray()).build();
     when(client.getOrganizations(any())).thenReturn(Collections.emptyList());
     String message = deploymentManager.checkConnectivity(pcfConfig, false);
     verify(client, times(1)).getOrganizations(any());

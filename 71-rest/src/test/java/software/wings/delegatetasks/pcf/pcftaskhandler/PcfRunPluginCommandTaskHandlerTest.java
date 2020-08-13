@@ -9,6 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import com.google.common.collect.ImmutableList;
 
@@ -67,7 +68,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   private PcfConfig getPcfConfig() {
-    return PcfConfig.builder().username(USERNMAE).endpointUrl(URL).password(new char[0]).build();
+    return PcfConfig.builder().username(USER_NAME_DECRYPTED).endpointUrl(URL).password(new char[0]).build();
   }
 
   @Test

@@ -1593,7 +1593,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     String clientKeyData =
         isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
     String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
-    String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() : "";
+    String username = isNotEmpty(config.getUsername()) ? "username: " + new String(config.getUsername()) : "";
     String namespace = isNotEmpty(config.getNamespace()) ? "namespace: " + config.getNamespace() : "";
     String serviceAccountTokenData =
         isNotEmpty(config.getServiceAccountToken()) ? "token: " + new String(config.getServiceAccountToken()) : "";

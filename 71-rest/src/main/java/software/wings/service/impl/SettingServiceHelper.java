@@ -54,7 +54,9 @@ import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
@@ -77,6 +79,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class SettingServiceHelper {
   private static final String REFERENCED_SECRET_ERROR_MSG = "Unable to copy encryption details";
+  private static final String USE_ENCRYPTED_VALUE_FLAG_FIELD_BASE = "useEncrypted";
   public static final Set<SettingVariableTypes> ATTRIBUTES_USING_REFERENCES = Sets.immutableEnumSet(AWS, AZURE, GCP,
       KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA, PROMETHEUS, DATA_DOG, DYNA_TRACE,
       CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ, APM_VERIFICATION, JENKINS, BAMBOO, DOCKER, NEXUS,
@@ -260,12 +263,36 @@ public class SettingServiceHelper {
     }
   }
 
+  public static List<Field> getAllEncryptedFields(SettingValue obj) {
+    if (!(obj instanceof EncryptableSetting)) {
+      return Collections.emptyList();
+    }
+
+    return EncryptionReflectUtils.getEncryptedFields(obj.getClass())
+        .stream()
+        .filter(field -> {
+          if (EncryptionReflectUtils.isSecretReference(field)) {
+            String flagFiledName = USE_ENCRYPTED_VALUE_FLAG_FIELD_BASE + StringUtils.capitalize(field.getName());
+
+            List<Field> declaredAndInheritedFields =
+                ReflectionUtils.getDeclaredAndInheritedFields(obj.getClass(), f -> f.getName().equals(flagFiledName));
+            if (isNotEmpty(declaredAndInheritedFields)) {
+              Object flagFieldValue = ReflectionUtils.getFieldValue(obj, declaredAndInheritedFields.get(0));
+              return flagFieldValue != null && (Boolean) flagFieldValue;
+            }
+          }
+
+          return true;
+        })
+        .collect(Collectors.toList());
+  }
+
   public static List<String> getAllEncryptedSecrets(SettingValue obj) {
     if (!(obj instanceof EncryptableSetting)) {
       return Collections.emptyList();
     }
 
-    List<Field> encryptedFields = EncryptionReflectUtils.getEncryptedFields(obj.getClass());
+    List<Field> encryptedFields = SettingServiceHelper.getAllEncryptedFields(obj);
     if (EmptyPredicate.isEmpty(encryptedFields)) {
       return Collections.emptyList();
     }

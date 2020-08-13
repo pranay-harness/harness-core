@@ -53,7 +53,7 @@ public class PcfCreatePcfResourceCommandTaskHandlerTest extends WingsBaseTest {
     PcfInfraMappingDataRequest mappingDataRequest =
         PcfInfraMappingDataRequest.builder()
             .pcfCommandType(CREATE_ROUTE)
-            .pcfConfig(PcfConfig.builder().password("test".toCharArray()).build())
+            .pcfConfig(PcfConfig.builder().username("test".toCharArray()).password("test".toCharArray()).build())
             .timeoutIntervalInMin(10)
             .build();
     List<EncryptedDataDetail> encryptedDataDetails = Collections.emptyList();
@@ -71,7 +71,7 @@ public class PcfCreatePcfResourceCommandTaskHandlerTest extends WingsBaseTest {
     PcfInfraMappingDataRequest mappingDataRequest =
         PcfInfraMappingDataRequest.builder()
             .pcfCommandType(CREATE_ROUTE)
-            .pcfConfig(PcfConfig.builder().password("test".toCharArray()).build())
+            .pcfConfig(PcfConfig.builder().username("test".toCharArray()).password("test".toCharArray()).build())
             .timeoutIntervalInMin(10)
             .build();
     List<EncryptedDataDetail> encryptedDataDetails = Collections.emptyList();

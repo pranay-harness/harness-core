@@ -1,13 +1,15 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import com.google.inject.Inject;
 
@@ -17,8 +19,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PcfConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PcfConfigYamlHandler;
 
 public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
@@ -31,7 +37,7 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
       + "harnessApiVersion: '1.0'\n"
       + "type: AZURE";
 
-  private Class yamlClass = PcfConfig.Yaml.class;
+  private Class yamlClass = Yaml.class;
 
   @Test
   @Owner(developers = ADWAIT)
@@ -55,6 +61,26 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
     testFailureScenario(generateSettingValueYamlConfig(pcfConfigName, settingAttributeSaved));
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testToBeanBothUsernameAndUsernameSecretId() {
+    Yaml yaml = Yaml.builder().username("username").usernameSecretId("usernameSecretId").build();
+
+    Change change = Change.Builder.aFileChange()
+                        .withAccountId("ABC")
+                        .withFilePath("Setup/Cloud Providers/test-harness.yaml")
+                        .build();
+    ChangeContext<Yaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                            .withYamlType(YamlType.CLOUD_PROVIDER)
+                                            .withYaml(yaml)
+                                            .withChange(change)
+                                            .build();
+
+    assertThatThrownBy(() -> yamlHandler.toBean(null, changeContext, null))
+        .hasMessageContaining("Cannot set both value and secret reference for username field");
+  }
+
   private SettingAttribute createPCFConfigProvider(String pcfConfigName) {
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
@@ -63,7 +89,7 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
                                     .withName(pcfConfigName)
                                     .withAccountId(ACCOUNT_ID)
                                     .withValue(PcfConfig.builder()
-                                                   .username(USER_NAME)
+                                                   .username(USER_NAME_DECRYPTED)
                                                    .endpointUrl(endpointUrl)
                                                    .password(PASSWORD)
                                                    .accountId(ACCOUNT_ID)
@@ -81,8 +107,8 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
         .invalidYamlContent(invalidYamlContent)
         .name(name)
         .configclazz(PcfConfig.class)
-        .updateMethodName("setUsername")
-        .currentFieldValue(USER_NAME)
+        .updateMethodName("setEndpointUrl")
+        .currentFieldValue(endpointUrl)
         .build();
   }
 }

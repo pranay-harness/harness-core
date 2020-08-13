@@ -13,5 +13,6 @@ import software.wings.security.annotations.Scope;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLUpdateUsernameAndPasswordAuthentication {
   private RequestField<String> userName;
+  private RequestField<String> userNameSecretId;
   private RequestField<String> passwordSecretId;
 }

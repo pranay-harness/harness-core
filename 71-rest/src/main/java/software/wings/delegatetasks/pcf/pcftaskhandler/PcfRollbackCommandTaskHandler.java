@@ -83,7 +83,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
 
       PcfRequestConfig pcfRequestConfig =
           PcfRequestConfig.builder()
-              .userName(pcfConfig.getUsername())
+              .userName(String.valueOf(pcfConfig.getUsername()))
               .password(String.valueOf(pcfConfig.getPassword()))
               .endpointUrl(pcfConfig.getEndpointUrl())
               .orgName(commandRollbackRequest.getOrganization())

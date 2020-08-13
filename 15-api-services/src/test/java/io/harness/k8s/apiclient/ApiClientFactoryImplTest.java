@@ -106,7 +106,7 @@ public class ApiClientFactoryImplTest extends CategoryTest {
   public void testGetClientWithBasicAuth() throws Exception {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
                                             .masterUrl("https://34.66.78.221")
-                                            .username("avmohan")
+                                            .username("avmohan".toCharArray())
                                             .password("test".toCharArray())
                                             .build();
 

@@ -83,7 +83,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       encryptionService.decrypt(pcfConfig, encryptedDataDetails);
 
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                              .userName(pcfConfig.getUsername())
+                                              .userName(String.valueOf(pcfConfig.getUsername()))
                                               .password(String.valueOf(pcfConfig.getPassword()))
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .orgName(pcfCommandDeployRequest.getOrganization())

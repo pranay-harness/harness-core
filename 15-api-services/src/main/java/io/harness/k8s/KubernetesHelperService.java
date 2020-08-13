@@ -178,8 +178,8 @@ public class KubernetesHelperService {
     if (isNotBlank(kubernetesConfig.getMasterUrl())) {
       configBuilder.withMasterUrl(kubernetesConfig.getMasterUrl().trim());
     }
-    if (isNotBlank(kubernetesConfig.getUsername())) {
-      configBuilder.withUsername(kubernetesConfig.getUsername().trim());
+    if (kubernetesConfig.getUsername() != null) {
+      configBuilder.withUsername(new String(kubernetesConfig.getUsername()).trim());
     }
     if (kubernetesConfig.getPassword() != null) {
       configBuilder.withPassword(new String(kubernetesConfig.getPassword()).trim());
@@ -511,7 +511,7 @@ public class KubernetesHelperService {
         kubeconfigContents = new String(Files.readAllBytes(kubeConfigFile.toPath()), StandardCharsets.UTF_8);
         Config config = Config.fromKubeconfig(null, kubeconfigContents, kubeConfigFile.getPath());
         return kubernetesConfigBuilder.masterUrl(config.getMasterUrl())
-            .username(config.getUsername())
+            .username(getCharArray(config.getUsername()))
             .password(getCharArray(config.getPassword()))
             .caCert(getCharArray(config.getCaCertData()))
             .clientCert(getCharArray(config.getClientCertData()))

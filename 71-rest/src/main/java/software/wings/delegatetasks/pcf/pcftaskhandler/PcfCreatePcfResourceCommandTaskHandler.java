@@ -52,7 +52,7 @@ public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandle
             PcfRequestConfig.builder()
                 .orgName(pcfInfraMappingDataRequest.getOrganization())
                 .spaceName(pcfInfraMappingDataRequest.getSpace())
-                .userName(pcfConfig.getUsername())
+                .userName(String.valueOf(pcfConfig.getUsername()))
                 .password(String.valueOf(pcfConfig.getPassword()))
                 .endpointUrl(pcfConfig.getEndpointUrl())
                 .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())

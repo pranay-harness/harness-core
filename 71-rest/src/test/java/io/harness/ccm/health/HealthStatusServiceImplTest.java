@@ -87,7 +87,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   public void setUp() throws Exception {
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
                                                           .masterUrl(masterUrl)
-                                                          .username(username)
+                                                          .username(username.toCharArray())
                                                           .password(password.toCharArray())
                                                           .accountId(accountId)
                                                           .ccmConfig(ccmConfig)

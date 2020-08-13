@@ -136,14 +136,22 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
   @Override
   public List<String> getCriteria() {
     if (getParameters()[0] instanceof PcfCommandTaskParameters) {
-      return singletonList(getCriteria(((PcfCommandTaskParameters) getParameters()[0]).getPcfCommandRequest()));
+      PcfCommandTaskParameters commandTaskParameters = (PcfCommandTaskParameters) getParameters()[0];
+      List<EncryptedDataDetail> encryptionDetails = commandTaskParameters.getEncryptedDataDetails();
+      return singletonList(getCriteria(commandTaskParameters.getPcfCommandRequest(), encryptionDetails));
     }
-    return singletonList(getCriteria((PcfCommandRequest) getParameters()[0]));
+
+    PcfCommandRequest pcfCommandRequest = (PcfCommandRequest) getParameters()[0];
+    List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(pcfCommandRequest);
+    return singletonList(getCriteria(pcfCommandRequest, encryptionDetails));
   }
 
   @VisibleForTesting
-  String getCriteria(PcfCommandRequest pcfCommandRequest) {
+  String getCriteria(PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptionDetails) {
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
+    if (encryptionDetails != null) {
+      encryptionService.decrypt(pcfConfig, encryptionDetails);
+    }
 
     StringBuilder criteria = new StringBuilder(256);
     if (pcfCliValidationRequired(pcfCommandRequest)) {

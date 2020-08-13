@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +40,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
@@ -55,6 +57,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.YamlHelper;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class SettingsServiceHelperTest extends WingsBaseTest {
@@ -381,6 +384,28 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
 
     settingAttribute = prepareSettingAttributeWithSecrets();
     assertThat(settingServiceHelper.getUsedSecretIds(settingAttribute)).containsExactly(PAT);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetAllEncryptedFields() {
+    // Encrypted annotated field is used to store plain text value
+    PcfConfig pcfConfig = PcfConfig.builder()
+                              .useEncryptedUsername(false)
+                              .username(RANDOM.toCharArray())
+                              .encryptedPassword(RANDOM)
+                              .build();
+
+    assertThat(SettingServiceHelper.getAllEncryptedFields(pcfConfig).stream().map(Field::getName))
+        .containsExactlyInAnyOrder("password");
+
+    // Both fields stores encrypted value
+    pcfConfig =
+        PcfConfig.builder().useEncryptedUsername(true).encryptedUsername(RANDOM).encryptedPassword(RANDOM).build();
+
+    assertThat(SettingServiceHelper.getAllEncryptedFields(pcfConfig).stream().map(Field::getName))
+        .containsExactlyInAnyOrder("username", "password");
   }
 
   private SettingAttribute prepareSettingAttributeWithoutSecrets() {

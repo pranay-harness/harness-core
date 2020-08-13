@@ -51,7 +51,7 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
                                               .timeOutIntervalInMins(5)
                                               .applicationName(pcfInstanceSyncRequest.getPcfApplicationName())
-                                              .userName(pcfConfig.getUsername())
+                                              .userName(String.valueOf(pcfConfig.getUsername()))
                                               .password(String.valueOf(pcfConfig.getPassword()))
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .orgName(pcfCommandRequest.getOrganization())

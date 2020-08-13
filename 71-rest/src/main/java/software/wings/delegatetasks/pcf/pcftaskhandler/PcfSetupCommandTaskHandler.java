@@ -92,7 +92,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
                                               .orgName(pcfCommandSetupRequest.getOrganization())
                                               .spaceName(pcfCommandSetupRequest.getSpace())
-                                              .userName(pcfConfig.getUsername())
+                                              .userName(String.valueOf(pcfConfig.getUsername()))
                                               .password(String.valueOf(pcfConfig.getPassword()))
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())

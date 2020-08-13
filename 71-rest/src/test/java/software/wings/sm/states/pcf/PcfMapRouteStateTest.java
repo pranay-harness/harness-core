@@ -52,7 +52,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.URL;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -196,11 +196,14 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   private ArtifactStream artifactStream =
       JenkinsArtifactStream.builder().appId(APP_ID).sourceName("").jobname("").artifactPaths(null).build();
 
-  private SettingAttribute pcfConfig =
-      aSettingAttribute()
-          .withValue(
-              PcfConfig.builder().endpointUrl(URL).password(PASSWORD).username(USER_NAME).accountId(ACCOUNT_ID).build())
-          .build();
+  private SettingAttribute pcfConfig = aSettingAttribute()
+                                           .withValue(PcfConfig.builder()
+                                                          .endpointUrl(URL)
+                                                          .password(PASSWORD)
+                                                          .username(USER_NAME_DECRYPTED)
+                                                          .accountId(ACCOUNT_ID)
+                                                          .build())
+                                           .build();
 
   private List<ServiceVariable> serviceVariableList =
       asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),

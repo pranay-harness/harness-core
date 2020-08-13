@@ -37,7 +37,8 @@ enum ManualClusterDetailsAuthenticationType {
 }
 
 input UsernameAndPasswordAuthentication {
-  userName: String!
+  userName: String
+  userNameSecretId: String
   passwordSecretId: String!
 }
 
@@ -91,6 +92,7 @@ input UpdateManualClusterDetails {
 
 input UpdateUsernameAndPasswordAuthentication {
   userName: String
+  userNameSecretId: String
   passwordSecretId: String
 }
 

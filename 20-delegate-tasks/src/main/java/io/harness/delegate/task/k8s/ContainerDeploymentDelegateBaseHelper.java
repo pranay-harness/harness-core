@@ -126,7 +126,7 @@ public class ContainerDeploymentDelegateBaseHelper {
       case USER_PASSWORD:
         kubernetesConfigBuilder.authType(KubernetesClusterAuthType.USER_PASSWORD);
         KubernetesUserNamePasswordDTO userNamePasswordDTO = (KubernetesUserNamePasswordDTO) authDTO.getCredentials();
-        kubernetesConfigBuilder.username(userNamePasswordDTO.getUsername());
+        kubernetesConfigBuilder.username(userNamePasswordDTO.getUsername().toCharArray());
         kubernetesConfigBuilder.password(userNamePasswordDTO.getPasswordRef().getDecryptedValue());
         kubernetesConfigBuilder.caCert(userNamePasswordDTO.getCaCertRef().getDecryptedValue());
         break;

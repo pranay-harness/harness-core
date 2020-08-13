@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.exception.WingsException.USER;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -58,7 +60,15 @@ public class K8sDataFetcherHelper {
                   case USERNAME_AND_PASSWORD:
                     configBuilder.authType(KubernetesClusterAuthType.USER_PASSWORD);
                     clusterDetails.getUsernameAndPassword().getValue().ifPresent(auth -> {
-                      auth.getUserName().getValue().ifPresent(configBuilder::username);
+                      validateUsernameFields(auth.getUserName(), auth.getUserNameSecretId(), false);
+                      auth.getUserName().getValue().map(String::toCharArray).ifPresent(username -> {
+                        configBuilder.username(username);
+                        configBuilder.useEncryptedUsername(false);
+                      });
+                      auth.getUserNameSecretId().getValue().ifPresent(usernameSecretId -> {
+                        configBuilder.encryptedUsername(usernameSecretId);
+                        configBuilder.useEncryptedUsername(true);
+                      });
                       auth.getPasswordSecretId().getValue().ifPresent(configBuilder::encryptedPassword);
                     });
                     break;
@@ -85,7 +95,7 @@ public class K8sDataFetcherHelper {
                     configBuilder.authType(KubernetesClusterAuthType.NONE);
 
                     clusterDetails.getNone().getValue().ifPresent(auth -> {
-                      auth.getUserName().getValue().ifPresent(configBuilder::username);
+                      auth.getUserName().getValue().map(String::toCharArray).ifPresent(configBuilder::username);
                       auth.getPasswordSecretId().getValue().ifPresent(configBuilder::encryptedPassword);
 
                       auth.getCaCertificateSecretId().getValue().ifPresent(configBuilder::encryptedCaCert);
@@ -165,7 +175,17 @@ public class K8sDataFetcherHelper {
                   case USERNAME_AND_PASSWORD:
                     config.setAuthType(KubernetesClusterAuthType.USER_PASSWORD);
                     clusterDetails.getUsernameAndPassword().getValue().ifPresent(auth -> {
-                      auth.getUserName().getValue().ifPresent(config::setUsername);
+                      validateUsernameFields(auth.getUserName(), auth.getUserNameSecretId(), true);
+                      auth.getUserName().getValue().map(String::toCharArray).ifPresent(username -> {
+                        config.setUsername(username);
+                        config.setEncryptedUsername(null);
+                        config.setUseEncryptedUsername(false);
+                      });
+                      auth.getUserNameSecretId().getValue().ifPresent(usernameSecretId -> {
+                        config.setUsername(null);
+                        config.setEncryptedUsername(usernameSecretId);
+                        config.setUseEncryptedUsername(true);
+                      });
                       auth.getPasswordSecretId().getValue().ifPresent(config::setEncryptedPassword);
                     });
                     break;
@@ -191,7 +211,7 @@ public class K8sDataFetcherHelper {
                   case CUSTOM:
                     config.setAuthType(KubernetesClusterAuthType.NONE);
                     clusterDetails.getNone().getValue().ifPresent(auth -> {
-                      auth.getUserName().getValue().ifPresent(config::setUsername);
+                      auth.getUserName().getValue().map(String::toCharArray).ifPresent(config::setUsername);
                       auth.getPasswordSecretId().getValue().ifPresent(config::setEncryptedPassword);
 
                       auth.getCaCertificateSecretId().getValue().ifPresent(config::setEncryptedCaCert);
@@ -239,6 +259,10 @@ public class K8sDataFetcherHelper {
   }
 
   private boolean theCloudProviderUsesSecretId(KubernetesClusterConfig finalConfig) {
+    if (finalConfig.getEncryptedUsername() != null) {
+      return true;
+    }
+
     if (finalConfig.getEncryptedPassword() != null) {
       return true;
     }
@@ -264,5 +288,16 @@ public class K8sDataFetcherHelper {
     }
 
     return false;
+  }
+
+  private void validateUsernameFields(
+      RequestField<String> userName, RequestField<String> userNameSecretId, boolean isUpdate) {
+    if (userName.getValue().isPresent() && userNameSecretId.getValue().isPresent()) {
+      throw new InvalidRequestException("Cannot set both value and secret reference for username field", USER);
+    }
+
+    if (!isUpdate && !userName.getValue().isPresent() && !userNameSecretId.getValue().isPresent()) {
+      throw new InvalidRequestException("One of fields 'userName' or 'userNameSecretId' is required", USER);
+    }
   }
 }

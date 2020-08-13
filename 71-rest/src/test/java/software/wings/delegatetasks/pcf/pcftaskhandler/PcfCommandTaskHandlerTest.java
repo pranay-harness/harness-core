@@ -23,6 +23,7 @@ import static software.wings.delegatetasks.pcf.PcfCommandTaskHelper.DELIMITER;
 import static software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType.RUNNING_COUNT;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import com.google.inject.Inject;
 
@@ -87,7 +88,6 @@ import java.util.List;
 import java.util.Set;
 
 public class PcfCommandTaskHandlerTest extends WingsBaseTest {
-  public static final String USERNMAE = "USERNMAE";
   public static final String URL = "URL";
   public static final String MANIFEST_YAML = "  applications:\n"
       + "  - name : ${APPLICATION_NAME}\n"
@@ -248,7 +248,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   private PcfConfig getPcfConfig() {
-    return PcfConfig.builder().username(USERNMAE).endpointUrl(URL).password(new char[0]).build();
+    return PcfConfig.builder().username(USER_NAME_DECRYPTED).endpointUrl(URL).password(new char[0]).build();
   }
 
   @Test

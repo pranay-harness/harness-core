@@ -43,7 +43,7 @@ public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
       pcfDeploymentManager.getOrganizations(
           PcfRequestConfig.builder()
               .orgName(pcfInfraMappingDataRequest.getOrganization())
-              .userName(pcfConfig.getUsername())
+              .userName(String.valueOf(pcfConfig.getUsername()))
               .password(String.valueOf(pcfConfig.getPassword()))
               .endpointUrl(pcfConfig.getEndpointUrl())
               .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())

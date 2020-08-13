@@ -62,7 +62,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.URL;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.beans.DelegateTask;
@@ -231,11 +231,14 @@ public class PcfSetupStateTest extends WingsBaseTest {
   private ArtifactStream artifactStream =
       JenkinsArtifactStream.builder().appId(APP_ID).sourceName("").jobname("").artifactPaths(null).build();
 
-  private SettingAttribute pcfConfig =
-      aSettingAttribute()
-          .withValue(
-              PcfConfig.builder().endpointUrl(URL).password(PASSWORD).username(USER_NAME).accountId(ACCOUNT_ID).build())
-          .build();
+  private SettingAttribute pcfConfig = aSettingAttribute()
+                                           .withValue(PcfConfig.builder()
+                                                          .endpointUrl(URL)
+                                                          .password(PASSWORD)
+                                                          .username(USER_NAME_DECRYPTED)
+                                                          .accountId(ACCOUNT_ID)
+                                                          .build())
+                                           .build();
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
   private SweepingOutputInstance sweepingOutputInstance =
@@ -367,7 +370,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME");
     assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
     assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
     assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(2);
@@ -383,7 +386,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME");
     assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
     assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
     assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(2);
@@ -403,7 +406,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("appName");
     assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
     assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
     assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(3);

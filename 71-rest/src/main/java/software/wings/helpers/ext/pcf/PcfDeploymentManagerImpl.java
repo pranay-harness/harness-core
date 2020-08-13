@@ -332,7 +332,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       getOrganizations(PcfRequestConfig.builder()
                            .endpointUrl(pcfConfig.getEndpointUrl())
-                           .userName(pcfConfig.getUsername())
+                           .userName(String.valueOf(pcfConfig.getUsername()))
                            .password(String.valueOf(pcfConfig.getPassword()))
                            .limitPcfThreads(limitPcfThreads)
                            .timeOutIntervalInMins(5)

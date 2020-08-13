@@ -157,6 +157,8 @@ public interface WingsTestConstants {
 
   String USER_NAME = "USER_NAME";
 
+  char[] USER_NAME_DECRYPTED = "USER_NAME".toCharArray();
+
   String DOMAIN = "DOMAIN";
 
   String USER_EMAIL = "user@wings.software";
