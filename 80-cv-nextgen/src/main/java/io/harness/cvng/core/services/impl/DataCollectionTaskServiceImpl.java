@@ -241,6 +241,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {
     return DataCollectionTask.builder()
         .accountId(cvConfig.getAccountId())
+        .dataCollectionWorkerId(cvConfig.getUuid())
         .cvConfigId(cvConfig.getUuid())
         .status(ExecutionStatus.QUEUED)
         .validAfter(endTime.toEpochMilli() + DATA_COLLECTION_DELAY.toMillis())

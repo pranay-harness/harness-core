@@ -184,18 +184,21 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetNextTask_orderOnGettingNextTask() {
+  public void testGetNextTask_orderOnGettingNextTask() throws InterruptedException {
     List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
     long time = clock.millis();
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
       DataCollectionTask dataCollectionTask = create();
-      dataCollectionTask.setLastUpdatedAt(time + i);
+      // dataCollectionTask.setLastUpdatedAt(time + i);
+      // TODO: find a way to set lastUpdatedAt.
+      Thread.sleep(1);
       dataCollectionTasks.add(dataCollectionTask);
       hPersistence.save(dataCollectionTask);
     }
-    dataCollectionTasks.get(0).setLastUpdatedAt(time + 11);
+    Thread.sleep(1);
+    // dataCollectionTasks.get(0).setLastUpdatedAt(time + 6);
     hPersistence.save(dataCollectionTasks.get(0));
-    for (int i = 1; i < 10; i++) {
+    for (int i = 1; i < 5; i++) {
       Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
       assertThat(nextTask.isPresent()).isTrue();
       assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTasks.get(i).getUuid());
@@ -312,6 +315,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     assertThat(nextTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(nextTask.getStartTime()).isEqualTo(dataCollectionTask.getEndTime());
     assertThat(nextTask.getEndTime()).isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES));
+    assertThat(nextTask.getDataCollectionWorkerId()).isEqualTo(cvConfigId);
     assertThat(nextTask.getValidAfter())
         .isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES).toEpochMilli()
             + DATA_COLLECTION_DELAY.toMillis());
