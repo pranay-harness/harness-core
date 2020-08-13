@@ -2,6 +2,6 @@ package(default_visibility = ["//visibility:public"])
 load("//:macros.bzl","resources")
 filegroup(
     name = "resource",
-    srcs = ["secrets.properties"],
+    srcs = ["secrets.properties", "logback-test.xml"],
 )
 resources()
