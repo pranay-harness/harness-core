@@ -1,5 +1,7 @@
 set -e
 
+set -x
+
 bazelrc=.bazelrc
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=""
