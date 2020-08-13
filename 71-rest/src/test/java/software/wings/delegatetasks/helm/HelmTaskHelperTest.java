@@ -7,13 +7,17 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -21,10 +25,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
+import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.filesystem.FileIo;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -38,7 +45,9 @@ import org.mockito.Spy;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.StartedProcess;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.HelmChartSpecification;
@@ -61,6 +70,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 public class HelmTaskHelperTest extends WingsBaseTest {
@@ -467,5 +480,160 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         "repo", "repo", "http://repo-url", " ", passwordWithWhitespaces, "chart", V3, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper)
         .executeCommand(eq("v3/helm repo add repo http://repo-url  "), anyString(), anyString(), anyLong());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlFromChart() throws Exception {
+    String valuesFileContent = "var: value";
+    String chartName = "chartName";
+    HelmChartConfigParams helmChartConfigParams =
+        HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
+    String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, valuesFileContent);
+
+    doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(
+            contains("helm/path fetch chartName --untar"), anyString(), eq("fetch chart chartName"), anyLong());
+
+    try {
+      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL);
+      assertThat(result).isEqualTo(valuesFileContent);
+    } finally {
+      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+    }
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlFromChartNoValuesYaml() throws Exception {
+    String chartName = "chartName";
+    HelmChartConfigParams helmChartConfigParams =
+        HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
+    String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, null);
+
+    doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(contains("helm/path fetch"), anyString(), eq("fetch chart chartName"), anyLong());
+
+    try {
+      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL);
+      assertThat(result).isNullOrEmpty();
+    } finally {
+      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+    }
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlFromChartPopulateChartVersion() throws Exception {
+    String chartName = "chartName";
+    String chartVersion = "1.0.0";
+    HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder().chartName(chartName).build();
+
+    doReturn("working/directory").when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
+    doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(contains("helm/path fetch"), anyString(), eq("fetch chart chartName"), anyLong());
+    doReturn(HelmChartInfo.builder().version(chartVersion).build())
+        .when(helmTaskHelper)
+        .getHelmChartInfoFromChartsYamlFile(anyString());
+
+    helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL);
+    assertThat(helmChartConfigParams.getChartVersion()).isEqualTo(chartVersion);
+  }
+
+  private String prepareChartDirectoryWithValuesFileForTest(String chartName, String valuesFileContent)
+      throws IOException {
+    String workingDirectory = Files.createTempDirectory("get-values-yaml-chart").toString();
+    Files.createDirectory(Paths.get(workingDirectory, chartName));
+    doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
+    if (valuesFileContent != null) {
+      Files.write(Paths.get(workingDirectory, chartName, "values.yaml"), valuesFileContent.getBytes());
+    }
+
+    return workingDirectory;
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testAddHelmRepo() {
+    StartedProcess chartMuseumProcess = mock(StartedProcess.class);
+    ProcessResult success = new ProcessResult(0, new ProcessOutput("output".getBytes()));
+    ProcessResult failure = new ProcessResult(1, new ProcessOutput("error".getBytes()));
+
+    assertThatCode(() -> testAddHelmRepo(chartMuseumProcess, success)).doesNotThrowAnyException();
+    assertThatThrownBy(() -> testAddHelmRepo(chartMuseumProcess, failure))
+        .isInstanceOf(HelmClientException.class)
+        .hasMessageContaining("Failed to add helm repo. Executed command");
+    assertThatThrownBy(() -> testAddHelmRepo(null, null)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  private void testAddHelmRepo(StartedProcess chartMuseumProcess, ProcessResult addRepoResult) throws Exception {
+    HelmRepoConfig helmRepoConfig = AmazonS3HelmRepoConfig.builder().bucketName("bucket").build();
+    SettingValue connector = AwsConfig.builder().encryptedSecretKey("secretKey").build();
+    String workingDir = "workingDir";
+    String basePath = "base/path";
+    String repo = "repo";
+    ChartMuseumServer museumServer = null;
+    if (chartMuseumProcess != null) {
+      museumServer = ChartMuseumServer.builder().port(8888).startedProcess(chartMuseumProcess).build();
+    }
+
+    doReturn(workingDir).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn(addRepoResult)
+        .when(helmTaskHelper)
+        .executeCommand(contains("helm repo add"), anyString(), anyString(), anyLong());
+    if (museumServer != null) {
+      doReturn(museumServer)
+          .when(chartMuseumClient)
+          .startChartMuseumServer(helmRepoConfig, connector, workingDir, basePath);
+    } else {
+      doThrow(new InvalidRequestException("Something went wrong"))
+          .when(chartMuseumClient)
+          .startChartMuseumServer(helmRepoConfig, connector, workingDir, basePath);
+    }
+
+    helmTaskHelper.addHelmRepo(helmRepoConfig, connector, repo, repo, workingDir, basePath, V2);
+    if (museumServer != null) {
+      verify(chartMuseumClient, times(1)).stopChartMuseumServer(chartMuseumProcess);
+    }
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetFilteredFiles() {
+    FileData file1 = FileData.builder().filePath("dir/file1").build();
+    FileData file2 = FileData.builder().filePath("dir/file2").build();
+    FileData file3 = FileData.builder().filePath("dir/file3").build();
+    List<FileData> emptyFiles = Collections.emptyList();
+    List<FileData> singleFile = Collections.singletonList(file1);
+    List<FileData> multipleFiles = Arrays.asList(file1, file2, file3);
+
+    assertThat(helmTaskHelper.getFilteredFiles(emptyFiles, Collections.emptyList())).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(emptyFiles, Arrays.asList("file1", "file2"))).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(singleFile, Collections.emptyList())).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(singleFile, Arrays.asList("missing1", "missing2"))).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(singleFile, Collections.singletonList("dir/file1")))
+        .containsExactlyInAnyOrder(file1);
+    assertThat(helmTaskHelper.getFilteredFiles(singleFile, Arrays.asList("dir/file1", "missing")))
+        .containsExactlyInAnyOrder(file1);
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Arrays.asList("missing1", "missing2"))).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Collections.singletonList("dir/file1")))
+        .containsExactlyInAnyOrder(file1);
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Arrays.asList("dir/file1", "dir/file2", "dir/file3")))
+        .containsExactlyInAnyOrder(file1, file2, file3);
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Arrays.asList("dir/file1", "dir/file2", "misssing")))
+        .containsExactlyInAnyOrder(file1, file2);
   }
 }

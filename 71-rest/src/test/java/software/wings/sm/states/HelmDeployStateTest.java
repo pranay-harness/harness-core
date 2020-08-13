@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -19,9 +20,11 @@ import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
@@ -32,11 +35,14 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.HELM_DEPLOY;
@@ -51,7 +57,9 @@ import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
@@ -65,12 +73,14 @@ import com.google.common.collect.Lists;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.model.HelmVersion;
@@ -90,15 +100,19 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
+import software.wings.api.HostElement;
+import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElement.Builder;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.ServiceTemplateElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -107,9 +121,12 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -119,6 +136,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.common.InfrastructureConstants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.features.api.FeatureService;
@@ -162,6 +180,8 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -237,6 +257,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private FeatureService featureService;
   @Mock private StateExecutionService stateExecutionService;
   @Mock private GitClientHelper gitClientHelper;
+  @Mock private TemplateExpressionProcessor templateExpressionProcessor;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -856,6 +877,79 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseOverallFailure() throws Exception {
+    HelmDeployState spyDeployState = spy(helmDeployState);
+    HelmValuesFetchTaskResponse response = HelmValuesFetchTaskResponse.builder().build();
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
+
+    // Rethrow instance of WingsException
+    doThrow(new HelmClientException("Client exception"))
+        .when(spyDeployState)
+        .handleAsyncInternal(context, responseDataMap);
+    assertThatThrownBy(() -> spyDeployState.handleAsyncResponse(context, responseDataMap))
+        .isInstanceOf(HelmClientException.class);
+
+    // Throw InvalidRequestException on RuntimeException
+    doThrow(new RuntimeException("Some exception got thrown"))
+        .when(spyDeployState)
+        .handleAsyncInternal(context, responseDataMap);
+    assertThatThrownBy(() -> spyDeployState.handleAsyncResponse(context, responseDataMap))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForHelmFetchTask() {
+    HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setCurrentTaskType(TaskType.HELM_VALUES_FETCH);
+    doReturn(
+        HelmChartSpecification.builder().chartName(CHART_NAME).chartUrl(CHART_URL).chartVersion(CHART_VERSION).build())
+        .when(serviceResourceService)
+        .getHelmChartSpecification(APP_ID, SERVICE_ID);
+
+    testHandleAsyncResponseForHelmFetchTaskWithValuesInGit();
+    testHandleAsyncResponseForHelmFetchTaskWithNoValuesInGit();
+  }
+
+  private void testHandleAsyncResponseForHelmFetchTaskWithValuesInGit() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    HelmValuesFetchTaskResponse response = HelmValuesFetchTaskResponse.builder()
+                                               .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                               .valuesFileContent("fileContent")
+                                               .build();
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
+
+    doReturn(appManifestMap)
+        .when(applicationManifestUtils)
+        .getOverrideApplicationManifests(context, AppManifestKind.VALUES);
+    doReturn(GitFetchFilesTaskParams.builder().build())
+        .when(applicationManifestUtils)
+        .createGitFetchFilesTaskParams(context, app, appManifestMap);
+
+    ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    doReturn("taskId").when(delegateService).queueTask(delegateTaskCaptor.capture());
+    doReturn(true).when(applicationManifestUtils).isValuesInGit(appManifestMap);
+    helmDeployState.handleAsyncResponse(context, responseDataMap);
+    assertThat(delegateTaskCaptor.getValue().getData().getTaskType()).isEqualTo(TaskType.GIT_FETCH_FILES_TASK.name());
+  }
+
+  private void testHandleAsyncResponseForHelmFetchTaskWithNoValuesInGit() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    HelmValuesFetchTaskResponse response =
+        HelmValuesFetchTaskResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
+    ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    doReturn("taskId").when(delegateService).queueTask(delegateTaskCaptor.capture());
+
+    doReturn(false).when(applicationManifestUtils).isValuesInGit(appManifestMap);
+    helmDeployState.handleAsyncResponse(context, responseDataMap);
+    assertThat(delegateTaskCaptor.getValue().getData().getTaskType()).isEqualTo(TaskType.HELM_COMMAND_TASK.name());
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHelmDeployWithCustomArtifact() {
@@ -906,7 +1000,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPriorityOrderOfValuesYamlFile() {
     Map<K8sValuesLocation, Collection<String>> k8sValuesLocationContentMap = new HashMap<>();
-    k8sValuesLocationContentMap.put(K8sValuesLocation.ServiceOverride, singletonList("ServiceOverride"));
+    k8sValuesLocationContentMap.put(ServiceOverride, singletonList("ServiceOverride"));
     k8sValuesLocationContentMap.put(K8sValuesLocation.Service, singletonList("Service"));
     k8sValuesLocationContentMap.put(K8sValuesLocation.Environment, singletonList("Environment"));
     k8sValuesLocationContentMap.put(K8sValuesLocation.EnvironmentGlobal, singletonList("EnvironmentGlobal"));
@@ -924,7 +1018,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   public void testPriorityOrderOfMultipleValuesYamlFile() {
     Map<K8sValuesLocation, Collection<String>> k8sValuesMap = new HashMap<>();
     k8sValuesMap.put(K8sValuesLocation.Service, Arrays.asList("Service1", "Service2", "Service3"));
-    k8sValuesMap.put(K8sValuesLocation.ServiceOverride, Arrays.asList("ServiceOverride1", "ServiceOverride2"));
+    k8sValuesMap.put(ServiceOverride, Arrays.asList("ServiceOverride1", "ServiceOverride2"));
     k8sValuesMap.put(K8sValuesLocation.EnvironmentGlobal, Arrays.asList("EnvironmentGlobal1", "EnvironmentGlobal2"));
     k8sValuesMap.put(K8sValuesLocation.Environment, Arrays.asList("Environment1", "Environment2"));
 
@@ -1050,7 +1144,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testExecuteGitSyncWithPopulateGitFilePathList() {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(K8sValuesLocation.ServiceOverride,
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(ServiceOverride,
         ApplicationManifest.builder()
             .storeType(StoreType.Remote)
             .gitFileConfig(GitFileConfig.builder().build())
@@ -1318,5 +1412,189 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(executionSummary, times(1)).setContainerInfoList(containerInfoListCaptor.capture());
     List<ContainerInfo> containerInfoList = containerInfoListCaptor.getValue();
     assertThat(containerInfoList.stream().map(ContainerInfo::getPodName)).containsExactlyInAnyOrder("p1", "p2");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteHelmTaskWithInvalidChartSpec() {
+    HelmChartSpecification helmChartSpec = HelmChartSpecification.builder().build();
+    doReturn(null).when(serviceResourceService).getHelmChartSpecification(anyString(), anyString());
+
+    // Missing HelmChartSpecification
+    assertThatThrownBy(() -> helmDeployState.executeHelmTask(context, ACTIVITY_ID, emptyMap(), emptyMap()))
+        .hasMessageContaining("Invalid chart specification");
+
+    doReturn(helmChartSpec).when(serviceResourceService).getHelmChartSpecification(anyString(), anyString());
+
+    // Empty chart name and missing chart url
+    helmChartSpec.setChartName("");
+    helmChartSpec.setChartUrl(null);
+    assertThatThrownBy(() -> helmDeployState.executeHelmTask(context, ACTIVITY_ID, emptyMap(), emptyMap()))
+        .hasMessageContaining("Invalid chart specification");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteHelmTaskWithTemplatizedGitConfig() throws Exception {
+    HelmChartSpecification helmChartSpec = HelmChartSpecification.builder().chartName("name").build();
+    List<TemplateExpression> expressions = singletonList(TemplateExpression.builder().fieldName("connectorId").build());
+    SettingAttribute attribute = aSettingAttribute().build();
+    helmDeployState.setGitFileConfig(GitFileConfig.builder().build());
+    helmDeployState.setTemplateExpressions(expressions);
+
+    doReturn(helmChartSpec).when(serviceResourceService).getHelmChartSpecification(anyString(), anyString());
+    doReturn(expressions.get(0)).when(templateExpressionProcessor).getTemplateExpression(expressions, "connectorId");
+    doReturn(attribute)
+        .when(templateExpressionProcessor)
+        .resolveSettingAttributeByNameOrId(context, expressions.get(0), SettingVariableTypes.GIT);
+
+    // Invalid connectorId
+    attribute.setValue(mock(SettingValue.class)); // Check is !(settingValue instanceof GitConfig)
+    assertThatThrownBy(() -> helmDeployState.executeHelmTask(context, ACTIVITY_ID, emptyMap(), emptyMap()))
+        .hasMessageContaining("Git connector not found");
+
+    // Valid connectorId
+    attribute.setValue(GitConfig.builder().build());
+    helmDeployState.executeHelmTask(context, ACTIVITY_ID, emptyMap(), emptyMap());
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(taskCaptor.capture());
+
+    HelmInstallCommandRequest request = (HelmInstallCommandRequest) taskCaptor.getValue().getData().getParameters()[0];
+    assertThat(request.getGitConfig()).isEqualTo(attribute.getValue());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlOverridesWithoutImageDetails() {
+    String yamlFileContent = "tag: ${DOCKER_IMAGE_TAG}\nimage: ${DOCKER_IMAGE_NAME}";
+    //    ImageDetails imageDetails = ImageDetails.builder().tag("Tag").name("Image").domainName("domain").build();
+    doAnswer(invocation -> {
+      Map values = invocation.getArgumentAt(1, Map.class);
+      values.put(ServiceOverride, singletonList(yamlFileContent));
+      return null;
+    })
+        .when(applicationManifestUtils)
+        .populateValuesFilesFromAppManifest(anyMap(), anyMap());
+    ContainerServiceParams serviceParams = ContainerServiceParams.builder().build();
+
+    List<String> files = helmDeployState.getValuesYamlOverrides(context, serviceParams, null, emptyMap());
+    assertThat(files.get(0)).isEqualTo("tag: ${DOCKER_IMAGE_TAG}\nimage: ${DOCKER_IMAGE_NAME}");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlOverridesWithImageDetails() {
+    String yamlFileContent = "tag: ${DOCKER_IMAGE_TAG}\nimage: ${DOCKER_IMAGE_NAME}";
+    ImageDetails imageDetails = ImageDetails.builder().tag("Tag").name("Image").domainName("domain").build();
+    doAnswer(invocation -> {
+      Map values = invocation.getArgumentAt(1, Map.class);
+      values.put(ServiceOverride, singletonList(yamlFileContent));
+      return null;
+    })
+        .when(applicationManifestUtils)
+        .populateValuesFilesFromAppManifest(anyMap(), anyMap());
+    ContainerServiceParams serviceParams = ContainerServiceParams.builder().build();
+
+    List<String> files = helmDeployState.getValuesYamlOverrides(context, serviceParams, imageDetails, emptyMap());
+    assertThat(files.get(0)).isEqualTo("tag: Tag\nimage: domain/Image");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlOverridesWithDomainAlreadyInFileContent() {
+    String yamlFileContent = "tag: ${DOCKER_IMAGE_TAG}\nimage: domain/${DOCKER_IMAGE_NAME}";
+    ImageDetails imageDetails = ImageDetails.builder().tag("Tag").name("Image").domainName("domain").build();
+    doAnswer(invocation -> {
+      Map values = invocation.getArgumentAt(1, Map.class);
+      values.put(ServiceOverride, singletonList(yamlFileContent));
+      return null;
+    })
+        .when(applicationManifestUtils)
+        .populateValuesFilesFromAppManifest(anyMap(), anyMap());
+    ContainerServiceParams serviceParams = ContainerServiceParams.builder().build();
+
+    List<String> files = helmDeployState.getValuesYamlOverrides(context, serviceParams, imageDetails, emptyMap());
+    assertThat(files.get(0)).isEqualTo("tag: Tag\nimage: domain/Image");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetPreviousReleaseVersionFromInvalidResponse() throws Exception {
+    GitConfig gitConfig = GitConfig.builder().build();
+    KubernetesClusterConfig k8sClusterConfig = KubernetesClusterConfig.builder().build();
+    doReturn(new ResponseData() {}).when(delegateService).executeTask(any(DelegateTask.class));
+
+    String helmV2ExpectedMessage = "Make sure that the helm client and tiller is installed";
+    testGetPreviousReleaseVersionInvalidResponse(HelmVersion.V2, null, mock(SettingValue.class), helmV2ExpectedMessage);
+    String helmV3ExpectedMessage = "Make sure Helm 3 is installed";
+    testGetPreviousReleaseVersionInvalidResponse(HelmVersion.V3, null, k8sClusterConfig, helmV3ExpectedMessage);
+    String gitConfigExpectedMessage = "and delegate has git connectivity";
+    testGetPreviousReleaseVersionInvalidResponse(HelmVersion.V3, gitConfig, k8sClusterConfig, gitConfigExpectedMessage);
+    String useKubernetesDelegateConfigExpectedMessage = "and correct delegate name is selected in the cloud provider";
+    k8sClusterConfig.setUseKubernetesDelegate(true);
+    testGetPreviousReleaseVersionInvalidResponse(
+        HelmVersion.V3, gitConfig, k8sClusterConfig, useKubernetesDelegateConfigExpectedMessage);
+  }
+
+  private void testGetPreviousReleaseVersionInvalidResponse(
+      HelmVersion version, GitConfig gitConfig, SettingValue settingValue, String expectedMessage) throws Exception {
+    ContainerServiceParams params =
+        ContainerServiceParams.builder().settingAttribute(aSettingAttribute().withValue(settingValue).build()).build();
+    assertThatThrownBy(()
+                           -> helmDeployState.getPreviousReleaseVersion(context, app, RELEASE_NAME, params, gitConfig,
+                               emptyList(), "", version, 0, HelmDeployStateExecutionData.builder()))
+        .hasMessageContaining(expectedMessage);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetSteadyStateTimeout() {
+    helmDeployState.setSteadyStateTimeout(999);
+    assertThat(helmDeployState.getSteadyStateTimeout()).isEqualTo(999);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateActivityWithBuildOrchestrationWorkflowType() {
+    doAnswer(invocation -> invocation.getArgumentAt(0, Activity.class)).when(activityService).save(any(Activity.class));
+    on(stateExecutionInstance).set("orchestrationWorkflowType", OrchestrationWorkflowType.BUILD);
+    Activity activity = helmDeployState.createActivity(context, emptyList());
+    assertThat(activity.getEnvironmentId()).isEqualTo(GLOBAL_ENV_ID);
+    assertThat(activity.getEnvironmentName()).isEqualTo(GLOBAL_ENV_ID);
+    assertThat(activity.getEnvironmentType()).isEqualTo(EnvironmentType.ALL);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateActivityWithInstanceElementDetails() {
+    doAnswer(invocation -> invocation.getArgumentAt(0, Activity.class)).when(activityService).save(any(Activity.class));
+    ServiceTemplateElement serviceTemplateElement =
+        ServiceTemplateElement.Builder.aServiceTemplateElement()
+            .withUuid("templateId")
+            .withName("serviceTemplateElement")
+            .withServiceElement(ServiceElement.builder().uuid("serviceId").name("serviceName").build())
+            .build();
+    InstanceElement instanceElement = Builder.anInstanceElement()
+                                          .uuid("instanceId")
+                                          .serviceTemplateElement(serviceTemplateElement)
+                                          .host(HostElement.builder().hostName(HOST_NAME).build())
+                                          .build();
+    stateExecutionInstance.getContextElements().add(instanceElement);
+    Activity activity = helmDeployState.createActivity(context, emptyList());
+    assertThat(activity.getServiceTemplateId()).isEqualTo("templateId");
+    assertThat(activity.getServiceTemplateName()).isEqualTo("serviceTemplateElement");
+    assertThat(activity.getServiceId()).isEqualTo("serviceId");
+    assertThat(activity.getServiceName()).isEqualTo("serviceName");
+    assertThat(activity.getServiceInstanceId()).isEqualTo("instanceId");
+    assertThat(activity.getHostName()).isEqualTo(HOST_NAME);
   }
 }
