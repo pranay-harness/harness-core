@@ -14,6 +14,11 @@ else
   BAZEL_ARGUMENTS="--define=ABSOLUTE_JAVABASE=${JAVA_HOME}"
 fi
 
+if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
+  local_repo=${OVERRIDE_LOCAL_M2}
+fi
+
+
 build_bazel_module() {
   module=$1
   bazel --bazelrc=${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
