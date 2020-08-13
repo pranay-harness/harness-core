@@ -66,6 +66,7 @@ git_repository(
     name = "rules_proto_grpc",
     remote = "https://github.com/wings-software/rules_proto_grpc.git",
     commit = "7508bee4e4c09edc5934098e65ef6ea4e4aa5bff",
+    shallow_since = "1590812925 -0700",
 )
 
 load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_toolchains", "rules_proto_grpc_repos")
@@ -77,6 +78,19 @@ rules_proto_grpc_repos()
 load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "java_repos")
 
 rules_proto_grpc_java_repos()
+
+load("@io_grpc_grpc_java//:repositories.bzl", "com_google_guava")
+
+com_google_guava()
+
+load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
+
+grpc_java_repositories(
+    omit_bazel_skylib = True,
+    omit_com_google_protobuf = True,
+    omit_com_google_protobuf_javalite = True,
+    omit_net_zlib = True,
+)
 
 go_repository(
     name = "co_honnef_go_tools",

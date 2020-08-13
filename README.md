@@ -128,9 +128,6 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 3. Go to `portal` directory and run
 
-    (Optional) this is needed only if there is a change in the protobuf files
-    `./scripts/jenkins/build-protos.sh`
-    
     `mvn clean install`
 
 4. If Global Search is not required:

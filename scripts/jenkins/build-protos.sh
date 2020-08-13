@@ -4,10 +4,10 @@ set -e
 
 if [ ! -z "${BAZEL_OUTPUT_BASE}" ]
 then
-  OUTPUT_BASE="--output_base=${BAZEL_OUTPUT_BASE}"
+  OUTPUT_BASE="--output_base=/tmp"
 fi
 
-bazel ${OUTPUT_BASE} build \
+bazel ${OUTPUT_BASE} build -s \
   //13-grpc-api/src/main/proto/... \
   //19-delegate-tasks-beans/src/... \
   //20-delegate-beans/src/main/proto/... \
@@ -16,10 +16,11 @@ bazel ${OUTPUT_BASE} build \
   //22-ng-delegate-service-beans/src/main/proto/... \
   //24-manager-delegate-service-beans/src/main/proto/... \
   //24-ng-manager-service-beans/src/main/proto/... \
-  //product/ci/engine/proto/...
+  //product/ci/engine/proto/... \
+  --javacopt=' -XepDisableAllChecks'
 
 cleanup() {
-  for path in "$@"
+  for path in "$@"../protobuf/build-protos.sh
   do
     rm -rf ${path}
   done

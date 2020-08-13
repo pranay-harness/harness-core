@@ -2119,7 +2119,7 @@
                 <inherited>false</inherited>
                 <executions>
                     <execution>
-                        <id>bazel info</id>
+                        <id>bazel build</id>
                         <goals>
                             <goal>exec</goal>
                         </goals>
