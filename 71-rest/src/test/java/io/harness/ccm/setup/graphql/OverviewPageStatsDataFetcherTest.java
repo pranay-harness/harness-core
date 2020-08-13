@@ -57,9 +57,9 @@ public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String UUID = "uuid_" + OverviewPageStatsDataFetcherTest.class.getSimpleName();
   private static final String GCP_PROJECT_ID = "gcpProjectId";
   private static String clusterQuery =
-      "SELECT count(*) AS count FROM BILLING_DATA WHERE accountid = 'ACCOUNT1_ID' AND clusterid IS NOT NULL AND starttime >= '%s'";
+      "SELECT count(*) AS count FROM BILLING_DATA_HOURLY WHERE accountid = 'ACCOUNT1_ID' AND clusterid IS NOT NULL AND starttime >= '%s'";
   private static String applicationQuery =
-      "SELECT count(*) AS count FROM BILLING_DATA WHERE accountid = 'ACCOUNT1_ID' AND appid IS NOT NULL AND starttime >= '%s'";
+      "SELECT count(*) AS count FROM BILLING_DATA_HOURLYa WHERE accountid = 'ACCOUNT1_ID' AND appid IS NOT NULL AND starttime >= '%s'";
 
   @Before
   public void setup() throws SQLException, InterruptedException {

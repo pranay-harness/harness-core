@@ -50,6 +50,9 @@ import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -66,6 +69,7 @@ public class BillingDataQueryBuilder {
   private static final String STANDARD_TIME_ZONE = "GMT";
   private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
   public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
+  private static final long ONE_DAY_MILLIS = 86400000;
   @Inject TagHelper tagHelper;
   @Inject K8sLabelHelper k8sLabelHelper;
   @Inject EnvironmentServiceImpl environmentService;
@@ -116,7 +120,7 @@ public class BillingDataQueryBuilder {
       decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
     }
 
-    if (!isGroupByHour(groupByTime)) {
+    if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters)) {
       selectQuery.addCustomFromTable(schema.getBillingDataTable());
     } else {
       selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
@@ -165,7 +169,11 @@ public class BillingDataQueryBuilder {
 
     decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
 
-    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    if (!shouldUseHourlyData(filters)) {
+      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    } else {
+      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+    }
 
     if (isClusterFilterPresent(filters) && !checkForAdditionalFilterInClusterDrillDown(filters)) {
       addInstanceTypeFilter(filters);
@@ -198,13 +206,17 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
+    if (!shouldUseHourlyData(filters)) {
+      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    } else {
+      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+    }
+
     if (isGroupByClusterPresent(groupBy)) {
       if (!isGroupByClusterTypePresent(groupBy)) {
         addClusterTypeGroupBy(groupBy);
       }
     }
-
-    selectQuery.addCustomFromTable(schema.getBillingDataTable());
 
     if (isValidGroupBy(groupBy)) {
       decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
@@ -279,9 +291,13 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
-    decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
+    if (!shouldUseHourlyData(filters)) {
+      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    } else {
+      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+    }
 
-    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
 
     if (isValidGroupByTime(groupByTime)) {
       decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime, groupByFields);
@@ -1166,5 +1182,27 @@ public class BillingDataQueryBuilder {
       default:
         throw new InvalidRequestException("Group by entity not supported in filter values");
     }
+  }
+
+  private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters) {
+    List<QLBillingDataFilter> validFilters =
+        filters.stream().filter(filter -> filter.getStartTime() != null).collect(Collectors.toList());
+    if (!validFilters.isEmpty()) {
+      List<QLTimeFilter> startTimeFilters =
+          validFilters.stream().map(QLBillingDataFilter::getStartTime).collect(Collectors.toList());
+      List<Number> startTimes =
+          startTimeFilters.stream().sorted().map(QLTimeFilter::getValue).collect(Collectors.toList());
+      long startTime = startTimes.get(0).longValue();
+
+      ZoneId zoneId = ZoneId.of(STANDARD_TIME_ZONE);
+      LocalDate today = LocalDate.now(zoneId);
+      ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
+      long cutoffTime = zdtStart.toEpochSecond() * 1000 - 7 * ONE_DAY_MILLIS;
+
+      if (startTime >= cutoffTime) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -128,7 +128,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
       Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);
       VMInstanceBillingData vmInstanceBillingData =
           awsCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
-      if (null != vmInstanceBillingData) {
+      if (null != vmInstanceBillingData && !Double.isNaN(vmInstanceBillingData.getComputeCost())) {
         double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / instanceActiveSeconds;
         pricingData = PricingData.builder()
                           .pricePerHour(pricePerHr)
