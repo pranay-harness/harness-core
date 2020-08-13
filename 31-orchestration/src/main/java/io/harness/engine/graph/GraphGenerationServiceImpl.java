@@ -9,7 +9,7 @@ import com.google.inject.name.Named;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cache.MongoStore;
+import io.harness.cache.SpringMongoStore;
 import io.harness.engine.GraphGenerator;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutorService;
 public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private MongoStore mongoStore;
+  @Inject private SpringMongoStore mongoStore;
   @Inject private GraphGenerator graphGenerator;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 

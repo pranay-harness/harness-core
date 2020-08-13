@@ -3,6 +3,7 @@
 12-commons/src/main/java/io/harness/expression/ExpressionEvaluatorUtils.java
 12-commons/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
 12-commons/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
+21-persistence/src/main/java/io/harness/cache/SpringCacheEntity.java
 22-timeout-engine/src/main/java/io/harness/registrars/TimeoutEngineTimeoutRegistrar.java
 22-timeout-engine/src/main/java/io/harness/registries/TimeoutEngineRegistryModule.java
 22-timeout-engine/src/main/java/io/harness/registries/timeout/TimeoutRegistry.java

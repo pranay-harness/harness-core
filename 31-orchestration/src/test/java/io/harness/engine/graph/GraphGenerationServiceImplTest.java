@@ -12,7 +12,7 @@ import com.google.inject.name.Named;
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.EmbeddedUser;
-import io.harness.cache.MongoStore;
+import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionRepository;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 public class GraphGenerationServiceImplTest extends OrchestrationTest {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionRepository nodeExecutionRepository;
-  @Inject private MongoStore mongoStore;
+  @Inject private SpringMongoStore mongoStore;
   @Mock @Named("EngineExecutorService") private ExecutorService executorService;
   @InjectMocks @Inject private GraphGenerationService graphGenerationService;
 
