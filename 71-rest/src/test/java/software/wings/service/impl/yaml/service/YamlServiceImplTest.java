@@ -157,7 +157,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldThrowInvalidYamlNameException() {
+  public void shouldThrowInvalidYamlNameExceptionWhenPhaseNameHasDots() {
     YamlPayload yamlPayload = new YamlPayload();
     yamlPayload.setYamlPayload("harnessApiVersion: '1.0'\n"
         + "type: ROLLING\n"
@@ -170,6 +170,48 @@ public class YamlServiceImplTest extends WingsBaseTest {
         + "  infraDefinitionName: K8s\n"
         + "  name: Rolling.\n");
 
+    shouldThrowInvalidYamlNameException(yamlPayload);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldThrowInvalidYamlNameExceptionWhenAmiTagNameIsEmpty() {
+    YamlPayload yamlPayload = new YamlPayload();
+    yamlPayload.setYamlPayload("harnessApiVersion: '1.0'\n"
+        + "type: AMI\n"
+        + "amiFilters:\n"
+        + "- name: ami-image-id\n"
+        + "  value: ss\n"
+        + "amiTags:\n"
+        + "- name: '         '\n"
+        + "  value: '123'\n"
+        + "region: us-east-1\n"
+        + "serverName: aws-playground\n");
+
+    shouldThrowInvalidYamlNameException(yamlPayload);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldThrowInvalidYamlNameExceptionWhenAmiFilterNameIsEmpty() {
+    YamlPayload yamlPayload = new YamlPayload();
+    yamlPayload.setYamlPayload("harnessApiVersion: '1.0'\n"
+        + "type: AMI\n"
+        + "amiFilters:\n"
+        + "- name: '   '\n"
+        + "  value: ss\n"
+        + "amiTags:\n"
+        + "- name: 'tagName'\n"
+        + "  value: '123'\n"
+        + "region: us-east-1\n"
+        + "serverName: aws-playground\n");
+
+    shouldThrowInvalidYamlNameException(yamlPayload);
+  }
+
+  private void shouldThrowInvalidYamlNameException(YamlPayload yamlPayload) {
     GitFileChange change = GitFileChange.Builder.aGitFileChange()
                                .withChangeType(ChangeType.MODIFY)
                                .withFileContent(yamlPayload.getYaml())
