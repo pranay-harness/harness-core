@@ -1,5 +1,7 @@
 package software.wings.security.saml;
 
+import static java.util.stream.Collectors.toSet;
+
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +39,22 @@ public class SamlUserGroupSync {
     List<UserGroup> userAddedToGroups = new ArrayList<>();
 
     userGroupsToSync.forEach(userGroup -> {
+      if (userGroup.getMembers() != null) {
+        logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
+            userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
+            userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
+      }
       if (userGroup.hasMember(user) && !newUserGroups.contains(userGroup.getSsoGroupId())) {
         logger.info("Removing user: {} from user group: {} in account: {}", samlUserAuthorization.getEmail(),
             userGroup.getName(), userGroup.getAccountId());
         userGroupService.removeMembers(userGroup, Collections.singletonList(user), false, true);
       } else if (!userGroup.hasMember(user) && newUserGroups.contains(userGroup.getSsoGroupId())) {
         userAddedToGroups.add(userGroup);
+        if (userGroup.getMembers() != null) {
+          logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
+              userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
+              userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
+        }
       }
     });
 
