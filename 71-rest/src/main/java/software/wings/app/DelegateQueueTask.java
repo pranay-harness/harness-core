@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.WingsException;
@@ -39,6 +40,7 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateService;
 
 import java.time.Clock;
 import java.util.HashMap;
@@ -59,6 +61,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private TimeLimiter timeLimiter;
   @Inject private AssignDelegateService assignDelegateService;
+  @Inject private DelegateService delegateService;
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
 
@@ -131,10 +134,12 @@ public class DelegateQueueTask implements Runnable {
                                      .in(taskIds)
                                      .project(ID_KEY, true)
                                      .project(DelegateTaskKeys.delegateId, true)
+                                     .project(DelegateTaskKeys.driverId, true)
                                      .project(DelegateTaskKeys.waitId, true)
                                      .project(DelegateTaskKeys.tags, true)
                                      .project(DelegateTaskKeys.accountId, true)
                                      .project(DelegateTaskKeys.data_taskType, true)
+                                     .project(DelegateTaskKeys.data_async, true)
                                      .project(DelegateTaskKeys.data_parameters, true)
                                      .asList();
       delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, identity())));
@@ -189,8 +194,15 @@ public class DelegateQueueTask implements Runnable {
               ? assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTasks.get(taskId))
               : "Unable to determine proper error as delegate task could not be deserialized.";
           logger.info("Marking task as failed - {}: {}", taskId, errorMessage);
-          waitNotifyEngine.doneWith(
-              taskWaitIds.get(taskId), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
+
+          if (delegateTasks.get(taskId) != null) {
+            delegateService.handleResponse(delegateTasks.get(taskId), null,
+                DelegateTaskResponse.builder()
+                    .accountId(delegateTasks.get(taskId).getAccountId())
+                    .responseCode(DelegateTaskResponse.ResponseCode.FAILED)
+                    .response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build())
+                    .build());
+          }
         }
       });
     }
