@@ -1,0 +1,56 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("@rules_jvm_external//:defs.bzl", "java_export")
+load("//11-commons-test:GenTestRules.bzl", "run_tests")
+
+java_library(
+    name = "maven_deps",
+    exports= [
+         "@maven//:junit_junit",
+         "@maven//:org_slf4j_slf4j_api",
+         "@maven//:org_powermock_powermock_module_junit4",
+         "@maven//:ch_qos_logback_logback_classic",
+         "@maven//:com_bettercloud_vault_java_driver",
+         "@maven//:com_google_code_findbugs_annotations",
+         "@maven//:com_google_guava_guava",
+         "@maven//:com_google_inject_guice",
+         "@maven//:commons_codec_commons_codec",
+         "@maven//:net_rcarz_jira_client",
+         "@maven//:org_apache_commons_commons_lang3",
+         "@maven//:org_assertj_assertj_core",
+         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+         "@maven//:org_jacoco_org_jacoco_agent",
+         "@maven//:org_mockito_mockito_core",
+         "@maven//:org_powermock_powermock_core",
+     ],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    deps = [
+        "maven_deps",
+        "//:lombok"
+    ],
+   resources = [
+           "//11-commons-test/src/main/resources:resource"
+       ],
+   visibility = ["//visibility:public"],
+)
+
+run_tests(
+    test_files = glob(["src/test/**/*Test.java"]),
+    srcs = glob(["src/test/**/*.java"]),
+    deps = [
+        "libmodule.jar",
+        "maven_deps",
+        "//:lombok",
+	    "@maven//:org_jacoco_org_jacoco_agent",
+    ],
+    runtime_deps =[
+        "//11-commons-test/src/main/resources:resources"
+    ]
+)
+
+
+
