@@ -100,6 +100,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
                                                         .key(artifactStreamId)
                                                         .expireAt(new Date(System.currentTimeMillis() + leaseDuration))
                                                         .leaseDuration(leaseDuration)
+                                                        .accountId(artifactStream.getAccountId())
                                                         .build());
       if (isNotEmpty(permitId)) {
         logger.info("Permit [{}] acquired for artifactStream [failedCount: {}] for [{}] minutes", permitId,
