@@ -182,6 +182,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private static final Set<YamlType> rbacDeleteYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.ENVIRONMENT);
 
   private static final int YAML_MAX_PARALLEL_COUNT = 20;
+  private static final String AMI_FILTERS = "amiFilters";
+  private static final String PHASES = "phases";
+  private static final String AMI_TAGS = "amiTags";
+  private static final String NAME = "name";
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
@@ -893,18 +897,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     // We just load the yaml to see if its well formed.
     LinkedHashMap<String, Object> load = (LinkedHashMap<String, Object>) yamlObj.load(yamlString);
-    if (load.containsKey("phases")) {
-      List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get("phases"))
-                                    .stream()
-                                    .map(map -> map.get("name"))
-                                    .collect(toList());
-
-      phaseNames.forEach(name -> {
-        if (name.contains(".")) {
-          throw new InvalidYamlNameException("Invalid phase name [" + name + "]. Dots are not permitted");
-        }
-      });
-    }
+    checkOnPhasesNamesWithDots(load);
+    checkOnEmptyAmiFiltersNames(load);
+    checkOnEmptyAmiTagNames(load);
   }
 
   /**
@@ -929,5 +924,48 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       logger.error(String.format("Error while fetching yaml content for file path %s", yamlFilePath));
     }
     return yamlForFilePath;
+  }
+
+  private void checkOnPhasesNamesWithDots(LinkedHashMap<String, Object> load) {
+    if (load.containsKey(PHASES)) {
+      List<String> phaseNames =
+          ((List<LinkedHashMap<String, String>>) load.get(PHASES)).stream().map(map -> map.get(NAME)).collect(toList());
+
+      phaseNames.forEach(name -> {
+        if (name.contains(".")) {
+          throw new InvalidYamlNameException("Invalid phase name [" + name + "]. Dots are not permitted");
+        }
+      });
+    }
+  }
+
+  private void checkOnEmptyAmiFiltersNames(LinkedHashMap<String, Object> load) {
+    if (load.containsKey(AMI_FILTERS)) {
+      List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get(AMI_FILTERS))
+                                    .stream()
+                                    .map(map -> map.get(NAME))
+                                    .collect(toList());
+
+      phaseNames.forEach(name -> {
+        if (name.trim().isEmpty()) {
+          throw new InvalidYamlNameException("Invalid amiFilter name. Empty names are not permitted");
+        }
+      });
+    }
+  }
+
+  private void checkOnEmptyAmiTagNames(LinkedHashMap<String, Object> load) {
+    if (load.containsKey(AMI_TAGS)) {
+      List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get(AMI_TAGS))
+                                    .stream()
+                                    .map(map -> map.get(NAME))
+                                    .collect(toList());
+
+      phaseNames.forEach(name -> {
+        if (name.trim().isEmpty()) {
+          throw new InvalidYamlNameException("Invalid amiTag name. Empty names are not permitted");
+        }
+      });
+    }
   }
 }
