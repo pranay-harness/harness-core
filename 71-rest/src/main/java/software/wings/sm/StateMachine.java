@@ -89,6 +89,8 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
   @FdIndex @NotNull protected String appId;
   @FdIndex private long createdAt;
 
+  @FdIndex private String accountId;
+
   @FdIndex private String originId;
 
   private Integer originVersion;
@@ -128,6 +130,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       Map<String, StateTypeDescriptor> stencilMap, boolean infraRefactor, boolean migration) {
     orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     setAppId(workflow.getAppId());
+    setAccountId(workflow.getAccountId());
     this.originId = workflow.getUuid();
     this.originVersion = originVersion;
     String errorMsg = null;
@@ -168,6 +171,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
   public StateMachine(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
     logger.debug("Pipeline received for transformation {}", pipeline.toString());
     setAppId(pipeline.getAppId());
+    setAccountId(pipeline.getAccountId());
     this.originId = pipeline.getUuid();
     try {
       transformPipeline(pipeline, stencilMap);
@@ -1070,6 +1074,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String accountId;
 
     private StateMachineBuilder() {}
 
@@ -1137,6 +1142,11 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       return this;
     }
 
+    public StateMachineBuilder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public StateMachine build() {
       StateMachine stateMachine = new StateMachine();
       stateMachine.setOriginId(originId);
@@ -1148,6 +1158,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       stateMachine.setUuid(uuid);
       stateMachine.setAppId(appId);
       stateMachine.setCreatedAt(createdAt);
+      stateMachine.setAccountId(accountId);
       return stateMachine;
     }
   }

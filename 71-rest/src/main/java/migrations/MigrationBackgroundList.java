@@ -21,6 +21,7 @@ import migrations.all.AddAccountIdToServiceCommands;
 import migrations.all.AddAccountIdToServiceInstance;
 import migrations.all.AddAccountIdToServiceTemplates;
 import migrations.all.AddAccountIdToServiceVariables;
+import migrations.all.AddAccountIdToStateMachine;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
 import migrations.all.AddAccountIdToTimeSeriesAnomaliesRecordMigration;
@@ -268,6 +269,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(156, AddAccountIdToServiceTemplates.class))
         .add(Pair.of(157, AddAccountIdToTriggerExecutions.class))
         .add(Pair.of(158, AddAccountIdToPermitCollection.class))
+        .add(Pair.of(159, AddAccountIdToStateMachine.class))
         .build();
   }
 }
