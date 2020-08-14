@@ -27,8 +27,8 @@ public class ConnectorFilterHelper {
       criteria.and(ConnectorKeys.type).is(connectorType);
     }
     if (isNotBlank(searchTerm)) {
-      criteria.orOperator(criteria.where(ConnectorKeys.name).regex(searchTerm),
-          criteria.where(IDENTIFIER_KEY).regex(searchTerm), criteria.where(TAGS_KEY).regex(searchTerm));
+      criteria.orOperator(Criteria.where(ConnectorKeys.name).regex(searchTerm),
+          Criteria.where(IDENTIFIER_KEY).regex(searchTerm), Criteria.where(TAGS_KEY).regex(searchTerm));
     }
     return criteria;
   }
