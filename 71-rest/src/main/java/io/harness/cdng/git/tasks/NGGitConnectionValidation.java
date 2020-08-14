@@ -5,10 +5,10 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandParams;
+import io.harness.delegate.git.NGGitService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +20,8 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class NGGitConnectionValidation extends AbstractDelegateValidateTask {
-  @Inject private GitClientNG gitClient;
   @Inject private SecretDecryptionService decryptionService;
+  @Inject private NGGitService gitService;
 
   public NGGitConnectionValidation(
       String delegateId, DelegateTaskPackage delegateTaskPackage, Consumer<List<DelegateConnectionResult>> consumer) {
@@ -43,7 +43,8 @@ public class NGGitConnectionValidation extends AbstractDelegateValidateTask {
     }
 
     boolean validated = true;
-    if (isNotEmpty(gitClient.validate(gitConfig))) {
+    // TODO(abhinav): add accountId
+    if (isNotEmpty(gitService.validate(gitConfig, "accountId"))) {
       validated = false;
     }
 

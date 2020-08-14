@@ -19,6 +19,7 @@ import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandRequest;
 import io.harness.delegate.beans.git.GitCommitAndPushRequest;
 import io.harness.delegate.beans.git.GitCommitAndPushResult;
+import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -36,6 +37,7 @@ import java.util.function.Consumer;
 public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClientNG gitClient;
   @Inject private SecretDecryptionService decryptionService;
+  @Inject private NGGitService gitService;
 
   public NGGitCommandTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -95,7 +97,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
 
   private ResponseData handleValidateTask(GitConfigDTO gitConfig) {
     logger.info("Processing Git command: VALIDATE");
-    String errorMessage = gitClient.validate(gitConfig);
+    String errorMessage = gitService.validate(gitConfig, getAccountId());
     if (isEmpty(errorMessage)) {
       return GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
     } else {

@@ -22,6 +22,7 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommitAndPushRequest;
 import io.harness.delegate.beans.git.GitCommitAndPushResult;
+import io.harness.delegate.git.NGGitService;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -38,6 +39,7 @@ import java.util.Collections;
 
 public class NGGitCommandTaskTest extends WingsBaseTest {
   @Mock GitClientNG gitClient;
+  @Mock NGGitService ngGitService;
   @Mock SecretDecryptionService encryptionService;
   String passwordIdentifier = "passwordIdentifier";
   String passwordReference = "acc." + passwordIdentifier;
@@ -82,7 +84,7 @@ public class NGGitCommandTaskTest extends WingsBaseTest {
                                 .encryptionDetails(Collections.emptyList())
                                 .gitCommandType(GitCommandType.VALIDATE)
                                 .build();
-    doReturn(null).when(gitClient).validate(any());
+    doReturn(null).when(ngGitService).validate(any(), any());
     doReturn(null).when(encryptionService).decrypt(any(), any());
     ResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);
