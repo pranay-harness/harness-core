@@ -217,6 +217,7 @@ public class VerificationConstants {
   public static final long MB = KB * KB;
   public static final long GB = MB * MB;
   public static final String URL_BODY_APPENDER = "__harness-body__";
+  public static final long SERVICE_GUAARD_LIMIT = 20;
   private VerificationConstants() {}
 
   public static String getProviderTypeFromStateType(StateType stateType) {

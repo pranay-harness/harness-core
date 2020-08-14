@@ -12,6 +12,7 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.MAX_NUM_ALERT_OCCURRENCES;
+import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 import static software.wings.sm.states.APMVerificationState.metricDefinitions;
 
@@ -30,6 +31,7 @@ import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
@@ -277,7 +279,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfiguration.setAppId(appId);
     cvConfiguration.setStateType(stateType);
     cvConfiguration.setUuid(generateUuid());
-    validateAlertOccurrenceCount(cvConfiguration);
     if (VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())
         && featureFlagService.isEnabled(FeatureName.LOGS_V2_247, cvConfiguration.getAccountId())) {
       LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
@@ -285,7 +286,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
 
     String dbConfiguration = saveToDatabase(cvConfiguration, createdFromYaml).getUuid();
-
     try {
       harnessMetricRegistry.recordGaugeInc(CV_META_DATA,
           new String[] {cvConfiguration.getAccountId(), cvConfiguration.getStateType().name(),
@@ -299,6 +299,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Override
   public CVConfiguration saveToDatabase(CVConfiguration cvConfiguration, boolean createdFromYaml) {
+    validateAlertOccurrenceCount(cvConfiguration);
+    validateEnabledLimit(cvConfiguration);
     try {
       saveMetricTemplate(
           cvConfiguration.getAppId(), cvConfiguration.getAccountId(), cvConfiguration, cvConfiguration.getStateType());
@@ -654,6 +656,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       StateType stateType, CVConfiguration cvConfiguration, CVConfiguration savedConfiguration) {
     logger.info("Updating CV Service Configuration {}", cvConfiguration);
     validateAlertOccurrenceCount(cvConfiguration);
+    validateEnabledLimit(cvConfiguration);
     UpdateOperations<CVConfiguration> updateOperations =
         wingsPersistence.createUpdateOperations(CVConfiguration.class)
             .set(CVConfigurationKeys.connectorId, cvConfiguration.getConnectorId())
@@ -1233,6 +1236,25 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (cvConfiguration.getNumOfOccurrencesForAlert() > MAX_NUM_ALERT_OCCURRENCES) {
       throw new DataCollectionException(
           "Invalid occurrence count for alert setup. Maximum allowed value is " + MAX_NUM_ALERT_OCCURRENCES);
+    }
+  }
+
+  private void validateEnabledLimit(CVConfiguration cvConfiguration) {
+    if (!cvConfiguration.isEnabled24x7()) {
+      return;
+    }
+
+    Account account = wingsPersistence.get(Account.class, cvConfiguration.getAccountId());
+    long serviceGuardLimit =
+        account.getServiceGuardLimit() != null ? account.getServiceGuardLimit() : SERVICE_GUAARD_LIMIT;
+    long enabledServiceGuards = wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+                                    .filter(CVConfigurationKeys.accountId, cvConfiguration.getAccountId())
+                                    .filter(CVConfigurationKeys.enabled24x7, Boolean.TRUE)
+                                    .count();
+    if (enabledServiceGuards >= serviceGuardLimit) {
+      throw new VerificationOperationException(APM_CONFIGURATION_ERROR,
+          "You have reached your limit of " + serviceGuardLimit
+              + " service guards. If you wish to add more service guards please contact harness support");
     }
   }
 }

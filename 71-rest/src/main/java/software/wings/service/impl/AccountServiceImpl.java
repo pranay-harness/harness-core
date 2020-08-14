@@ -848,6 +848,10 @@ public class AccountServiceImpl implements AccountService {
       updateOperations.set("authenticationMechanism", account.getAuthenticationMechanism());
     }
 
+    if (account.getServiceGuardLimit() != null) {
+      updateOperations.set(AccountKeys.serviceGuardLimit, account.getServiceGuardLimit());
+    }
+
     wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
