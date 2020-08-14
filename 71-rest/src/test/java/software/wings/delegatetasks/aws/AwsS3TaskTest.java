@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.NotImplementedException;
@@ -18,7 +19,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsS3ListBucketNamesRequest;
 import software.wings.service.impl.aws.model.AwsS3Request;

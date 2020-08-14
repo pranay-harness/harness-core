@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;

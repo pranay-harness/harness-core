@@ -2,7 +2,7 @@ package io.harness.cdng.k8s;
 
 import static java.util.Collections.singletonList;
 
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 

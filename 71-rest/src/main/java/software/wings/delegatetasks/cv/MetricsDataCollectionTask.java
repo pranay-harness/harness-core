@@ -5,9 +5,9 @@ import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HA
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.MetricElement;

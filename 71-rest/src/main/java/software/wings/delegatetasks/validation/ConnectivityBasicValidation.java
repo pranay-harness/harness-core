@@ -6,9 +6,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;

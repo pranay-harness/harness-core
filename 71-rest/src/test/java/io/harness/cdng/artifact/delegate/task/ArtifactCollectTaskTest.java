@@ -15,6 +15,7 @@ import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.exception.ArtifactServerException;
@@ -28,7 +29,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 
 import java.util.concurrent.TimeUnit;

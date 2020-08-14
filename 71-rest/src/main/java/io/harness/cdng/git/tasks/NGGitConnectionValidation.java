@@ -6,12 +6,12 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.cdng.gitclient.GitClientNG;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 

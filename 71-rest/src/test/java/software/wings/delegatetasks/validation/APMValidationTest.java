@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -20,7 +21,6 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.apm.APMDataCollectionInfo;

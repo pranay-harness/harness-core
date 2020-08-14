@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.managerclient.ManagerClient;
@@ -29,7 +30,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 

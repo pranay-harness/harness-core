@@ -2,8 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import com.google.common.collect.Lists;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.security.encryption.EncryptionConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 
 import java.util.List;

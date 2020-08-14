@@ -7,11 +7,11 @@ import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCS_BASE_URL;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.DelegateTaskPackage;
 
 import java.util.Arrays;
 

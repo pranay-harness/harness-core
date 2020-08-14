@@ -5,9 +5,9 @@ import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;

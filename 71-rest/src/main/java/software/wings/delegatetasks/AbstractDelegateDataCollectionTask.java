@@ -8,14 +8,15 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;

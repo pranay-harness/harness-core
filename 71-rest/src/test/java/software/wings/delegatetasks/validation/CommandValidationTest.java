@@ -5,12 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.delegatetasks.validation.CommandValidation.ALWAYS_TRUE_CRITERIA;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.command.CommandExecutionContext;
 
 import java.util.List;

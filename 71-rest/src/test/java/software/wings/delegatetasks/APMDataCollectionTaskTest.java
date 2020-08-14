@@ -16,6 +16,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.delegate.task.TaskParameters;
@@ -31,7 +32,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;

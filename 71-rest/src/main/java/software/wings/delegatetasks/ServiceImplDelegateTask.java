@@ -7,15 +7,16 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.joor.ReflectException;
-import software.wings.beans.DelegateTaskPackage;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;

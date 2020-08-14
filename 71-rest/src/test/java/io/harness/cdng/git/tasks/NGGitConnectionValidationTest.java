@@ -10,6 +10,7 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.connector.mappers.SecretRefHelper;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -26,7 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.intfc.security.EncryptionService;
 

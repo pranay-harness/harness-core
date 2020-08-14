@@ -1,7 +1,6 @@
 package io.harness.cvng.statemachine.entities;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

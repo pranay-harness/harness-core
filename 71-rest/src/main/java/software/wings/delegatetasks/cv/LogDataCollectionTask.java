@@ -5,8 +5,8 @@ import static software.wings.common.VerificationConstants.TOTAL_HITS_PER_MIN_THR
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.service.impl.analysis.LogDataCollectionInfoV2;

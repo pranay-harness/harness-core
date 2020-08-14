@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.ContainerValidationHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;

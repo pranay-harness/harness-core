@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.connectableJenkinsHttpUrl;
 
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.command.JenkinsTaskParams;
 

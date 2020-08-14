@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.connectableHttpUrl;
 
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.gcb.GcbServiceImpl;
 
 import java.util.Arrays;
