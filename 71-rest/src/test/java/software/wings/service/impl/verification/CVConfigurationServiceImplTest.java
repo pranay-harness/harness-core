@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 import static software.wings.sm.StateType.APM_VERIFICATION;
 
 import com.google.common.base.Charsets;
@@ -26,6 +27,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.limits.impl.model.StaticLimit;
@@ -40,6 +42,7 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute;
@@ -64,6 +67,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeries
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
@@ -106,13 +110,15 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Inject private AlertService alertService;
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private SettingsService settingsService;
+  @Inject private AccountService accountService;
 
   private String accountId;
   private String appId;
 
   @Before
   public void setupTest() throws Exception {
-    accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
+    accountId =
+        wingsPersistence.save(anAccount().withAccountName(generateUuid()).withCompanyName(generateUuid()).build());
     appId =
         wingsPersistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
     MockitoAnnotations.initMocks(this);
@@ -802,6 +808,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   private LogsCVConfiguration createLogsCVConfig(boolean enabled24x7) {
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setName("Config 1");
+    logsCVConfiguration.setAccountId(accountId);
     logsCVConfiguration.setAppId(generateUuid());
     logsCVConfiguration.setEnvId(generateUuid());
     logsCVConfiguration.setServiceId(generateUuid());
@@ -1225,6 +1232,46 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     wingsPersistence.delete(CVConfiguration.class, cvConfigId);
     settingsService.delete(appId, connectorId);
     assertThat(wingsPersistence.get(SettingAttribute.class, connectorId)).isNull();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void test_saveCVConfigLimitReached() {
+    for (int i = 0; i < SERVICE_GUAARD_LIMIT; i++) {
+      cvConfigurationService.saveConfiguration(
+          accountId, appId, APM_VERIFICATION, createAPMCVConfig(true, appId, accountId));
+    }
+
+    // adding new should throw error
+    assertThatThrownBy(()
+                           -> cvConfigurationService.saveConfiguration(
+                               accountId, appId, APM_VERIFICATION, createAPMCVConfig(true, appId, accountId)))
+        .isInstanceOf(VerificationOperationException.class)
+        .hasMessage(ErrorCode.APM_CONFIGURATION_ERROR.name());
+
+    // disabled service guards should be saved
+    APMCVServiceConfiguration apmcvConfigToUpdate = createAPMCVConfig(false, appId, accountId);
+    String cvConfigId =
+        cvConfigurationService.saveConfiguration(accountId, appId, APM_VERIFICATION, apmcvConfigToUpdate);
+
+    // enabling the service guard should fail
+    apmcvConfigToUpdate.setEnabled24x7(true);
+    apmcvConfigToUpdate.setUuid(cvConfigId);
+    assertThatThrownBy(() -> cvConfigurationService.updateConfiguration(apmcvConfigToUpdate, appId))
+        .isInstanceOf(VerificationOperationException.class)
+        .hasMessage(ErrorCode.APM_CONFIGURATION_ERROR.name());
+
+    // change the limit and save again
+    Account account = accountService.get(accountId);
+    account.setServiceGuardLimit(SERVICE_GUAARD_LIMIT + 2);
+    accountService.update(account);
+
+    cvConfigurationService.saveConfiguration(
+        accountId, appId, APM_VERIFICATION, createAPMCVConfig(true, appId, accountId));
+
+    // update should succeed too
+    cvConfigurationService.updateConfiguration(apmcvConfigToUpdate, appId);
   }
 
   private long waitTillAlertsSteady(long numOfExpectedAlerts) {

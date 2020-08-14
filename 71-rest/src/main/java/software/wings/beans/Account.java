@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -115,6 +116,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
 
+  @Getter @Setter private Long serviceGuardLimit = SERVICE_GUAARD_LIMIT;
   private transient Map<String, String> defaults = new HashMap<>();
   /**
    * Default mechanism is USER_PASSWORD
