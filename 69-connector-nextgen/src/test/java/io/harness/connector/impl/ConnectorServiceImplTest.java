@@ -183,7 +183,7 @@ public class ConnectorServiceImplTest extends ConnectorsBaseTest {
     createConnector(connectorIdentifier3);
     ArgumentCaptor<Page> connectorsListArgumentCaptor = ArgumentCaptor.forClass(Page.class);
     Page<ConnectorSummaryDTO> connectorSummaryDTOSList =
-        connectorService.list(null, 0, 100, accountIdentifier, null, null);
+        connectorService.list(0, 100, accountIdentifier, null, null, "connector", KUBERNETES_CLUSTER.getDisplayName());
     verify(connectorScopeHelper, times(1))
         .createConnectorSummaryListForConnectors(connectorsListArgumentCaptor.capture());
     List<Connector> connectorsList = connectorsListArgumentCaptor.getValue().toList();
