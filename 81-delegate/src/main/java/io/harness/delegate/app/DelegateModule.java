@@ -17,6 +17,8 @@ import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.cdng.gitclient.GitClientNGImpl;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
+import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRequestHandler;
 import io.harness.delegate.message.MessageService;
@@ -670,6 +672,7 @@ public class DelegateModule extends DependencyModule {
     bind(KubernetesConnectorDelegateService.class).to(KubernetesConnectorDelegateServiceImpl.class);
     bind(AzureVMSSHelperServiceDelegate.class).to(AzureVMSSHelperServiceDelegateImpl.class);
     bind(GitClientNG.class).to(GitClientNGImpl.class);
+    bind(NGGitService.class).to(NGGitServiceImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
