@@ -14,6 +14,7 @@ import io.harness.cdng.k8s.K8sCommandValidationNG;
 import io.harness.cdng.k8s.rolling.K8sTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.task.DelegateRunnableTask;

@@ -5,8 +5,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.ManifestAwareTaskParams;

@@ -1,4 +1,4 @@
-package software.wings.delegatetasks;
+package io.harness.delegate.task;
 
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
@@ -17,10 +18,6 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.delegate.exception.DelegateRetryableException;
-import io.harness.delegate.task.DataCollectionExecutorService;
-import io.harness.delegate.task.DelegateRunnableTask;
-import io.harness.delegate.task.TaskLogContext;
-import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.exception.WingsException;
@@ -28,7 +25,6 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.ExceptionLogger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.DelegateTaskPackage;
 
 import java.util.EnumSet;
 import java.util.List;

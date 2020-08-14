@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -24,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;

@@ -5,7 +5,9 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
@@ -13,8 +15,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsElbListAppElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListListenerRequest;

@@ -9,6 +9,7 @@ import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -17,6 +18,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
@@ -33,8 +35,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 
 import java.nio.file.Paths;
 import java.util.Map;

@@ -7,17 +7,17 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 
 import java.util.HashMap;

@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -17,7 +18,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;

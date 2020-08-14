@@ -7,7 +7,9 @@ import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.k8s.KubernetesContainerService;
@@ -17,7 +19,6 @@ import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;

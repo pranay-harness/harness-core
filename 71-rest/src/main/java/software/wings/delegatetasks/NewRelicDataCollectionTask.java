@@ -19,6 +19,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -27,7 +28,6 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -13,7 +14,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.SlackMessage;
 import software.wings.beans.TaskType;
 

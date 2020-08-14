@@ -3,9 +3,9 @@ package software.wings.delegatetasks.validation;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.SlackMessage;
 
 import java.net.MalformedURLException;

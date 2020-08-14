@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -112,7 +113,6 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbSetupResponse;
 import io.harness.serializer.KryoRegistrar;
-import software.wings.beans.DelegateTaskPackage;
 
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override

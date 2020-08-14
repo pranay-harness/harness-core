@@ -9,7 +9,9 @@ import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
@@ -19,8 +21,6 @@ import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;

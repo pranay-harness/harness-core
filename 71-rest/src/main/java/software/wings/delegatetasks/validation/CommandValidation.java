@@ -11,6 +11,7 @@ import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -19,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;

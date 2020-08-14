@@ -5,14 +5,14 @@ import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesRequest;

@@ -2,7 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import com.google.common.collect.Lists;
 
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 
 import java.util.List;
 import java.util.function.Consumer;

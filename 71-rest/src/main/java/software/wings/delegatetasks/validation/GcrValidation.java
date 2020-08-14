@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.Arrays;

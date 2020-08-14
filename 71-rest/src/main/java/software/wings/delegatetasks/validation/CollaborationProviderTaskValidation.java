@@ -5,7 +5,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
 

@@ -5,11 +5,11 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitConfig;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.service.intfc.security.EncryptionService;

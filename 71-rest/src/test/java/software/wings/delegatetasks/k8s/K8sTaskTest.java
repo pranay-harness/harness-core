@@ -16,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.TIMEOUT_INTERVAL;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -29,7 +30,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;

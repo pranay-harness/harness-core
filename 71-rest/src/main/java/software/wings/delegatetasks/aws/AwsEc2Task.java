@@ -5,13 +5,13 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
 import software.wings.service.impl.aws.model.AwsEc2ListRegionsResponse;

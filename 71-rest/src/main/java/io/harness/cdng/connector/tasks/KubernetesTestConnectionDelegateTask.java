@@ -3,18 +3,18 @@ package io.harness.cdng.connector.tasks;
 import com.google.inject.Inject;
 
 import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;

@@ -5,14 +5,14 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import software.wings.beans.DelegateTaskPackage;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSTaskHandler;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;

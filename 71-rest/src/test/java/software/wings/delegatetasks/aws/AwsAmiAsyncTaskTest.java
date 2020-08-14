@@ -7,6 +7,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -15,7 +16,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsAmiRequest;

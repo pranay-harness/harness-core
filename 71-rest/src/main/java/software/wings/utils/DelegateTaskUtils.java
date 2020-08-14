@@ -1,7 +1,7 @@
 package software.wings.utils;
 
 import io.harness.beans.DelegateTask;
-import software.wings.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskPackage;
 
 public class DelegateTaskUtils {
   public static DelegateTaskPackage getDelegateTaskPackage(DelegateTask task) {

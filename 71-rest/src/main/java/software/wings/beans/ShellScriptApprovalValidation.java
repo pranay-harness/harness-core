@@ -5,6 +5,7 @@ import static io.netty.util.NetUtil.LOCALHOST;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 

@@ -10,9 +10,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
@@ -22,12 +24,10 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.ScriptProcessExecutor;
-import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
 

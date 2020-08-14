@@ -7,8 +7,8 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;

@@ -14,6 +14,7 @@ import com.google.common.util.concurrent.FakeTimeLimiter;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -26,7 +27,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;

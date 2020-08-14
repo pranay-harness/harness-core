@@ -1,5 +1,6 @@
 package io.harness.managerclient;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.kryo.KryoResponse;
 import retrofit2.Call;
@@ -11,7 +12,6 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;

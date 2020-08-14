@@ -11,6 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -21,7 +22,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesRequest;
 import software.wings.service.impl.aws.model.AwsRoute53Request;

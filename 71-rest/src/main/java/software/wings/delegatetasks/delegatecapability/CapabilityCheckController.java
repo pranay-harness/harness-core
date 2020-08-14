@@ -6,12 +6,12 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 

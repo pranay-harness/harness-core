@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;

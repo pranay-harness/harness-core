@@ -11,13 +11,13 @@ import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.inject.Inject;
 
 import com.jayway.jsonpath.JsonPath;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.GcpHelperService;

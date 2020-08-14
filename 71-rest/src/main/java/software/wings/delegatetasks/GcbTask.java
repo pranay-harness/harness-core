@@ -15,7 +15,9 @@ import static software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec.RemoteFileS
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.logging.CommandExecutionStatus;
@@ -24,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Log;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.yaml.GitFetchFilesRequest;

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -20,7 +21,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitFetchFilesResult;

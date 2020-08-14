@@ -2,8 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.security.encryption.EncryptionConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.ElkConfig;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 

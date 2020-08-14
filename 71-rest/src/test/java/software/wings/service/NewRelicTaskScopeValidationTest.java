@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
@@ -29,7 +30,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;

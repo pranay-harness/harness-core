@@ -12,6 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -23,7 +24,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 

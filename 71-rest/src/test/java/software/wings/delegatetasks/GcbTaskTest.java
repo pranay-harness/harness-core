@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.logging.CommandExecutionStatus;
@@ -46,7 +47,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.yaml.GitFetchFilesResult;

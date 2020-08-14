@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.exception.WingsException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
@@ -21,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;

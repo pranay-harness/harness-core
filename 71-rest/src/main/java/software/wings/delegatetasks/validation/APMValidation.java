@@ -5,6 +5,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,6 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.apm.APMDataCollectionInfo;

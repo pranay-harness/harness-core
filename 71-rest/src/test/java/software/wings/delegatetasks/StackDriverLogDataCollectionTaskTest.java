@@ -17,6 +17,7 @@ import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.common.collect.Lists;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
@@ -29,7 +30,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.GcpHelperService;

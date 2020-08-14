@@ -10,12 +10,12 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
