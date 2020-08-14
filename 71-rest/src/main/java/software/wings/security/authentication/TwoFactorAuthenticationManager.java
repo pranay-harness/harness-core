@@ -28,6 +28,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -60,10 +61,11 @@ public class TwoFactorAuthenticationManager {
     if (user == null) {
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
     }
+    List<String> accountIds = user.getAccountIds();
 
     User loggedInUser =
         getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).authenticate(user, passcode);
-    authService.auditLogin(loggedInUser);
+    authService.auditLogin(accountIds, loggedInUser);
     return authService.generateBearerTokenForUser(user);
   }
 

@@ -326,11 +326,11 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     when(userService.verifyJWTToken(anyString(), any())).thenReturn(user);
     doReturn(mockedTotpAuthHandler).when(spyTwoFactorAuthenticationManager).getTwoFactorAuthHandler(any());
     when(mockedTotpAuthHandler.authenticate(any(), anyString())).thenReturn(user);
-    doNothing().when(authService).auditLogin(any());
+    doNothing().when(authService).auditLogin(any(), any());
 
     spyTwoFactorAuthenticationManager.authenticate(jwtToken);
 
-    verify(authService).auditLogin(any());
+    verify(authService).auditLogin(any(), any());
   }
 
   private Account getAccount(String accountType, boolean twoFactorAdminEnforced) {

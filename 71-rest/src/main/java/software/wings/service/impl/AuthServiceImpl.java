@@ -1126,11 +1126,10 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void auditLogin(User loggedInUser) {
-    if (Objects.nonNull(loggedInUser) && Objects.nonNull(loggedInUser.getAccounts())) {
-      loggedInUser.getAccounts().forEach(account
-          -> auditServiceHelper.reportForAuditingUsingAccountId(
-              account.getUuid(), null, loggedInUser, Event.Type.LOGIN));
+  public void auditLogin(List<String> accountIds, User loggedInUser) {
+    if (Objects.nonNull(loggedInUser) && Objects.nonNull(accountIds)) {
+      accountIds.forEach(accountId
+          -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, loggedInUser, Event.Type.LOGIN));
     }
   }
 

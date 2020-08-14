@@ -363,10 +363,10 @@ public class AuthenticationManagerTest extends WingsBaseTest {
         .thenReturn(new AuthenticationResponse(userToBeReturned));
     doReturn(USER_PASSWORD).when(spyAuthenticationManager).getAuthenticationMechanism(any());
     when(AUTHSERVICE.generateBearerTokenForUser(any())).thenReturn(userToBeReturned);
-    doNothing().when(AUTHSERVICE).auditLogin(any());
+    doNothing().when(AUTHSERVICE).auditLogin(any(), any());
 
     spyAuthenticationManager.defaultLogin("abcd", "abcd");
-    verify(AUTHSERVICE).auditLogin(any());
+    verify(AUTHSERVICE).auditLogin(any(), any());
   }
 
   @Test
@@ -384,10 +384,10 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     when(USER_SERVICE.verifyJWTToken(anyString(), any())).thenReturn(userToBeReturned);
     when(AUTHSERVICE.generateBearerTokenForUser(any())).thenReturn(userToBeReturned);
-    doNothing().when(AUTHSERVICE).auditLogin(any());
+    doNothing().when(AUTHSERVICE).auditLogin(any(), any());
 
     spyAuthenticationManager.ssoRedirectLogin("abcd");
 
-    verify(AUTHSERVICE).auditLogin(any());
+    verify(AUTHSERVICE).auditLogin(any(), any());
   }
 }
