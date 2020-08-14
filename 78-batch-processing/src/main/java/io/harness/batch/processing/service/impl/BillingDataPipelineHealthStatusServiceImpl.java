@@ -87,23 +87,28 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   }
 
   void updateBillingPipelineRecordsStatus(Map<String, TransferState> transferToStatusMap) {
-    List<BillingDataPipelineRecord> billingDataPipelineRecords =
-        billingDataPipelineRecordDao.listAllBillingDataPipelineRecords();
-    for (BillingDataPipelineRecord record : billingDataPipelineRecords) {
-      BillingDataPipelineRecordBuilder billingDataPipelineRecordBuilder = BillingDataPipelineRecord.builder();
-      billingDataPipelineRecordBuilder.accountId(record.getAccountId());
-      billingDataPipelineRecordBuilder.settingId(record.getSettingId());
-      billingDataPipelineRecordBuilder.dataTransferJobStatus(
-          getTransferStateStringValue(transferToStatusMap, record.getDataTransferJobName()));
-      billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(
-          getTransferStateStringValue(transferToStatusMap, record.getPreAggregatedScheduledQueryName()));
-      if (record.getCloudProvider().equals(CloudProvider.AWS.name())) {
-        billingDataPipelineRecordBuilder.awsFallbackTableScheduledQueryStatus(
-            getTransferStateStringValue(transferToStatusMap, record.getAwsFallbackTableScheduledQueryName()));
-        billingDataPipelineRecordBuilder.lastSuccessfulS3Sync(fetchLastSuccessfulS3RunInstant(record.getAccountId()));
+    billingDataPipelineRecordDao.listAllBillingDataPipelineRecords().forEach(billingDataPipelineRecord -> {
+      try {
+        BillingDataPipelineRecordBuilder billingDataPipelineRecordBuilder =
+            BillingDataPipelineRecord.builder()
+                .accountId(billingDataPipelineRecord.getAccountId())
+                .settingId(billingDataPipelineRecord.getSettingId())
+                .dataTransferJobStatus(getTransferStateStringValue(
+                    transferToStatusMap, billingDataPipelineRecord.getDataTransferJobName()))
+                .preAggregatedScheduledQueryStatus(getTransferStateStringValue(
+                    transferToStatusMap, billingDataPipelineRecord.getPreAggregatedScheduledQueryName()));
+        if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.AWS.name())) {
+          billingDataPipelineRecordBuilder
+              .awsFallbackTableScheduledQueryStatus(getTransferStateStringValue(
+                  transferToStatusMap, billingDataPipelineRecord.getAwsFallbackTableScheduledQueryName()))
+              .lastSuccessfulS3Sync(fetchLastSuccessfulS3RunInstant(billingDataPipelineRecord.getAccountId()));
+        }
+        billingDataPipelineRecordDao.upsert(billingDataPipelineRecordBuilder.build());
+      } catch (Exception e) {
+        logger.error(
+            "Failed to update the health status for the account {}", billingDataPipelineRecord.getAccountId(), e);
       }
-      billingDataPipelineRecordDao.upsert(billingDataPipelineRecordBuilder.build());
-    }
+    });
   }
 
   private Instant fetchLastSuccessfulS3RunInstant(String accountId) {

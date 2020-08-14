@@ -1,5 +1,6 @@
 package io.harness.batch.processing.dao.impl;
 
+import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,11 +12,14 @@ import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
+
+import java.time.Instant;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
@@ -29,20 +33,25 @@ public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
   private final String dataTransferJobName = "dataTransferJobName_" + this.getClass().getSimpleName();
   private final String fallBackTableName = "fallBackTableName_" + this.getClass().getSimpleName();
   private final String preAggTableName = "preAggTableName_" + this.getClass().getSimpleName();
+  private BillingDataPipelineRecord dataPipelineRecord;
+
+  @Before
+  public void setUp() {
+    dataPipelineRecord = BillingDataPipelineRecord.builder()
+                             .accountId(accountId)
+                             .accountName(accountName)
+                             .settingId(settingId)
+                             .dataSetId(dataSetId)
+                             .dataTransferJobName(dataTransferJobName)
+                             .awsFallbackTableScheduledQueryName(fallBackTableName)
+                             .preAggregatedScheduledQueryName(preAggTableName)
+                             .build();
+  }
 
   @Test
-  @Owner(developers = ROHIT)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testBillingDataPipelineRecordDao() {
-    BillingDataPipelineRecord dataPipelineRecord = BillingDataPipelineRecord.builder()
-                                                       .accountId(accountId)
-                                                       .accountName(accountName)
-                                                       .settingId(settingId)
-                                                       .dataSetId(dataSetId)
-                                                       .dataTransferJobName(dataTransferJobName)
-                                                       .awsFallbackTableScheduledQueryName(fallBackTableName)
-                                                       .preAggregatedScheduledQueryName(preAggTableName)
-                                                       .build();
+  public void shouldCreateAndGet() {
     billingDataPipelineRecordDao.create(dataPipelineRecord);
 
     BillingDataPipelineRecord billingDataPipelineRecord =
@@ -55,14 +64,20 @@ public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
 
     BillingDataPipelineRecord bySettingId = billingDataPipelineRecordDao.getBySettingId(accountId, settingId);
     assertThat(bySettingId).isEqualTo(dataPipelineRecord);
+  }
 
-    BillingDataPipelineRecord updatedBillingDataPipelineRecord = billingDataPipelineRecord;
-    updatedBillingDataPipelineRecord.setAwsFallbackTableScheduledQueryStatus(TransferState.SUCCEEDED.toString());
-    updatedBillingDataPipelineRecord.setPreAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
-    updatedBillingDataPipelineRecord.setDataTransferJobStatus(TransferState.SUCCEEDED.toString());
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldUpdateBillingDataPipelineRecordDao() {
+    billingDataPipelineRecordDao.create(dataPipelineRecord);
+    dataPipelineRecord.setAwsFallbackTableScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+    dataPipelineRecord.setPreAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+    dataPipelineRecord.setDataTransferJobStatus(TransferState.SUCCEEDED.toString());
+    dataPipelineRecord.setLastSuccessfulS3Sync(Instant.MIN);
 
     BillingDataPipelineRecord upsertedBillingDataPipelineRecord =
-        billingDataPipelineRecordDao.upsert(updatedBillingDataPipelineRecord);
+        billingDataPipelineRecordDao.upsert(dataPipelineRecord);
 
     assertThat(upsertedBillingDataPipelineRecord).isNotNull();
     assertThat(upsertedBillingDataPipelineRecord.getDataTransferJobStatus())
