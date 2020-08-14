@@ -138,6 +138,25 @@ public interface HPersistence extends HealthMonitor {
   <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks);
 
   /**
+   * Creates the query.
+   *
+   * @param <T>            the generic type
+   * @param collectionName the collection name
+   * @return               the query
+   */
+  <T extends PersistentEntity> Query<T> createQueryForCollection(String collectionName);
+
+  /**
+   * Creates the query.
+   *
+   * @param <T>              the generic type
+   * @param collectionName   the collection name
+   * @param queryChecks      the query checks
+   * @return                 the query
+   */
+  <T extends PersistentEntity> Query<T> createQueryForCollection(String collectionName, Set<QueryChecks> queryChecks);
+
+  /**
    * Creates the update operations.
    *
    * @param cls the cls

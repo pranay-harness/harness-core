@@ -26,6 +26,10 @@ service DelegateService {
   rpc CreatePerpetualTask(CreatePerpetualTaskRequest) returns (CreatePerpetualTaskResponse);
   rpc DeletePerpetualTask(DeletePerpetualTaskRequest) returns (DeletePerpetualTaskResponse);
   rpc ResetPerpetualTask(ResetPerpetualTaskRequest) returns (ResetPerpetualTaskResponse);
+
+  // This API is temporary to allow for querying objects from collections to allow for integration
+  // before the rest of the micro services are promoted
+  rpc ObtainDocument(ObtainDocumentRequest) returns (ObtainDocumentResponse);
 }
 
 message SubmitTaskRequest {
@@ -107,3 +111,25 @@ message ResetPerpetualTaskRequest {
 
 message ResetPerpetualTaskResponse {
 }
+
+// Temporary {{
+message Documents {
+  string collection_name = 1;
+  repeated string uuid = 2;
+}
+
+message ObtainDocumentRequest {
+  repeated Documents documents = 1;
+}
+
+message Document {
+  string collection_name = 1;
+  string uuid = 2;
+  bytes kryo_bytes = 3;
+}
+
+message ObtainDocumentResponse {
+  repeated Document documents = 1;
+}
+
+// }}

@@ -1,6 +1,7 @@
 package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static java.util.Arrays.asList;
@@ -32,6 +33,9 @@ import io.harness.callback.MongoDatabase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegate.Documents;
+import io.harness.delegate.ObtainDocumentRequest;
+import io.harness.delegate.ObtainDocumentResponse;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
@@ -48,6 +52,7 @@ import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.TaskClientParams;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
@@ -82,6 +87,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
   private DelegateService delegateService;
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private HPersistence persistence;
 
   private Server server;
   private Logger mockClientLogger;
@@ -103,8 +109,8 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
 
     perpetualTaskService = mock(PerpetualTaskService.class);
     delegateService = mock(DelegateService.class);
-    delegateServiceGrpcImpl =
-        new DelegateServiceGrpcImpl(delegateCallbackRegistry, perpetualTaskService, delegateService, kryoSerializer);
+    delegateServiceGrpcImpl = new DelegateServiceGrpcImpl(
+        delegateCallbackRegistry, perpetualTaskService, delegateService, kryoSerializer, persistence);
 
     server =
         InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpcImpl).build().start();
@@ -305,5 +311,18 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
     } catch (Exception e) {
       fail("Should not have thrown any exception");
     }
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testObtainDocument() {
+    String uuid = persistence.save(TestTransportEntity.builder().uuid(generateUuid()).build());
+    ObtainDocumentResponse obtainDocumentResponse = delegateServiceGrpcClient.obtainDocument(
+        ObtainDocumentRequest.newBuilder()
+            .addDocuments(Documents.newBuilder().setCollectionName("!!!testTransport").addUuid(uuid).build())
+            .build());
+
+    assertThat(obtainDocumentResponse.getDocumentsCount()).isEqualTo(1);
   }
 }
