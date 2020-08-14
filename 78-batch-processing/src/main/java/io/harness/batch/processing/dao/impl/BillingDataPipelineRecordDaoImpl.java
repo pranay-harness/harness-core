@@ -15,6 +15,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -94,7 +95,8 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
           billingDataPipelineRecord.getAwsFallbackTableScheduledQueryStatus());
     }
 
-    if (!isNull(billingDataPipelineRecord.getLastSuccessfulS3Sync())) {
+    Instant lastSuccessfulS3Sync = billingDataPipelineRecord.getLastSuccessfulS3Sync();
+    if (!isNull(lastSuccessfulS3Sync) && lastSuccessfulS3Sync.isAfter(Instant.EPOCH)) {
       updateOperations.set(
           BillingDataPipelineRecordKeys.lastSuccessfulS3Sync, billingDataPipelineRecord.getLastSuccessfulS3Sync());
     }

@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Collections;
+import java.util.HashMap;
 
 public class BillingDataPipelineHealthStatusServiceImplTest extends CategoryTest {
   @InjectMocks BillingDataPipelineHealthStatusServiceImpl billingDataPipelineHealthStatusService;
@@ -54,8 +55,8 @@ public class BillingDataPipelineHealthStatusServiceImplTest extends CategoryTest
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void updateBillingPipelineRecordsStatus() {
-    billingDataPipelineHealthStatusService.updateBillingPipelineRecordsStatus(Collections.EMPTY_MAP);
+  public void shouldUpdateBillingPipelineRecordsStatus() {
+    billingDataPipelineHealthStatusService.updateBillingPipelineRecordsStatus(new HashMap<>());
     ArgumentCaptor<BillingDataPipelineRecord> billingDataPipelineRecordArgumentCaptor =
         ArgumentCaptor.forClass(BillingDataPipelineRecord.class);
     verify(billingDataPipelineRecordDao).upsert(billingDataPipelineRecordArgumentCaptor.capture());
