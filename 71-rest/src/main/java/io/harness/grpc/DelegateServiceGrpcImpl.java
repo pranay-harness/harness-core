@@ -1,9 +1,11 @@
 package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
 
@@ -19,6 +21,10 @@ import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceImplBase;
 import io.harness.delegate.DeletePerpetualTaskRequest;
 import io.harness.delegate.DeletePerpetualTaskResponse;
+import io.harness.delegate.Document;
+import io.harness.delegate.Documents;
+import io.harness.delegate.ObtainDocumentRequest;
+import io.harness.delegate.ObtainDocumentResponse;
 import io.harness.delegate.RegisterCallbackRequest;
 import io.harness.delegate.RegisterCallbackResponse;
 import io.harness.delegate.ResetPerpetualTaskRequest;
@@ -35,12 +41,17 @@ import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextBuilder;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentEntity;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
+import org.mongodb.morphia.query.Query;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
@@ -54,14 +65,17 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
+  private HPersistence persistence;
 
   @Inject
   public DelegateServiceGrpcImpl(DelegateCallbackRegistry delegateCallbackRegistry,
-      PerpetualTaskService perpetualTaskService, DelegateService delegateService, KryoSerializer kryoSerializer) {
+      PerpetualTaskService perpetualTaskService, DelegateService delegateService, KryoSerializer kryoSerializer,
+      HPersistence persistence) {
     this.delegateCallbackRegistry = delegateCallbackRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
+    this.persistence = persistence;
   }
 
   @Override
@@ -235,6 +249,28 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
         request.getAccountId().getId(), request.getPerpetualTaskId().getId(), request.getTaskExecutionBundle());
 
     responseObserver.onNext(ResetPerpetualTaskResponse.newBuilder().build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void obtainDocument(ObtainDocumentRequest request, StreamObserver<ObtainDocumentResponse> responseObserver) {
+    ObtainDocumentResponse.Builder builder = ObtainDocumentResponse.newBuilder();
+    for (Documents documents : request.getDocumentsList()) {
+      Query<PersistentEntity> query =
+          persistence.createQueryForCollection(documents.getCollectionName(), excludeAuthority)
+              .field(SampleEntityKeys.uuid)
+              .in(documents.getUuidList());
+
+      try (HIterator<PersistentEntity> iterator = new HIterator(query.fetch())) {
+        for (PersistentEntity entity : iterator) {
+          builder.addDocuments(Document.newBuilder()
+                                   .setCollectionName(documents.getCollectionName())
+                                   .setKryoBytes(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(entity)))
+                                   .build());
+        }
+      }
+    }
+    responseObserver.onNext(builder.build());
     responseObserver.onCompleted();
   }
 }

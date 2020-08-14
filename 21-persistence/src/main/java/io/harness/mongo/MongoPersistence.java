@@ -167,6 +167,20 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
+  public <T extends PersistentEntity> Query<T> createQueryForCollection(String collectionName) {
+    Class classFromCollection = morphia.getMapper().getClassFromCollection(collectionName);
+    return createQuery(classFromCollection);
+  }
+
+  @Override
+  public <T extends PersistentEntity> Query<T> createQueryForCollection(
+      String collectionName, Set<QueryChecks> queryChecks) {
+    Query<T> query = createQueryForCollection(collectionName);
+    ((HQuery) query).setQueryChecks(queryChecks);
+    return query;
+  }
+
+  @Override
   public <T extends PersistentEntity> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
     return getDatastore(cls).createUpdateOperations(cls);
   }

@@ -17,6 +17,8 @@ import io.harness.delegate.CreatePerpetualTaskRequest;
 import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import io.harness.delegate.DeletePerpetualTaskRequest;
+import io.harness.delegate.ObtainDocumentRequest;
+import io.harness.delegate.ObtainDocumentResponse;
 import io.harness.delegate.RegisterCallbackRequest;
 import io.harness.delegate.RegisterCallbackResponse;
 import io.harness.delegate.ResetPerpetualTaskRequest;
@@ -152,5 +154,9 @@ public class DelegateServiceGrpcClient {
     RegisterCallbackResponse response = delegateServiceBlockingStub.registerCallback(
         RegisterCallbackRequest.newBuilder().setCallback(delegateCallback).build());
     return response.getCallbackToken();
+  }
+
+  public ObtainDocumentResponse obtainDocument(ObtainDocumentRequest request) {
+    return delegateServiceBlockingStub.obtainDocument(request);
   }
 }
