@@ -350,8 +350,9 @@ public class AuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
+        List<String> accountIds = user.getAccountIds();
         User loggedInUser = authService.generateBearerTokenForUser(user);
-        authService.auditLogin(loggedInUser);
+        authService.auditLogin(accountIds, loggedInUser);
         return loggedInUser;
       }
 
@@ -396,8 +397,10 @@ public class AuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
+        List<String> accountIds = user.getAccountIds();
+
         User loggedInUser = authService.generateBearerTokenForUser(user);
-        authService.auditLogin(loggedInUser);
+        authService.auditLogin(accountIds, loggedInUser);
         return loggedInUser;
       }
     } catch (Exception e) {

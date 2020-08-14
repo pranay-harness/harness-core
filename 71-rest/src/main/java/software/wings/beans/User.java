@@ -32,10 +32,12 @@ import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.security.auth.Subject;
 
 /**
@@ -416,6 +418,11 @@ public class User extends Base implements Principal {
    */
   public List<Account> getAccounts() {
     return accounts;
+  }
+
+  public List<String> getAccountIds() {
+    return isNotEmpty(accounts) ? accounts.stream().map(Account::getUuid).collect(Collectors.toList())
+                                : Collections.emptyList();
   }
 
   /**
