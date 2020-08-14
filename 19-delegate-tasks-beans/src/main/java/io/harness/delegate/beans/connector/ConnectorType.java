@@ -13,7 +13,7 @@ public enum ConnectorType {
   private final String displayName;
 
   @JsonCreator
-  public static ConnectorType fromDisplayName(@JsonProperty("type") String displayName) {
+  public static ConnectorType getConnectorType(@JsonProperty("type") String displayName) {
     for (ConnectorType connectorType : ConnectorType.values()) {
       if (connectorType.displayName.equalsIgnoreCase(displayName)) {
         return connectorType;

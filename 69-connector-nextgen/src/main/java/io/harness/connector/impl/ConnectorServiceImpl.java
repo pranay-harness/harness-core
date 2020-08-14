@@ -11,10 +11,10 @@ import com.google.inject.Singleton;
 import io.harness.connector.ConnectorFilterHelper;
 import io.harness.connector.ConnectorScopeHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
@@ -37,6 +37,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.Collections;
@@ -87,17 +88,17 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size, String accountIdentifier,
-      String orgIdentifier, String projectIdentifier) {
+  public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String searchTerm, String type) {
     Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(
-        connectorFilter, accountIdentifier, orgIdentifier, projectIdentifier);
-    Pageable pageable = getPageRequest(page, size);
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type);
+    Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, ConnectorKeys.createdAt));
     Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
     return connectorScopeHelper.createConnectorSummaryListForConnectors(connectors);
   }
 
-  private Pageable getPageRequest(int page, int size) {
-    return PageRequest.of(page, size);
+  private Pageable getPageRequest(int page, int size, Sort sort) {
+    return PageRequest.of(page, size, sort);
   }
 
   @Override

@@ -3,7 +3,6 @@ package io.harness.connector.apis.resource;
 import com.google.inject.Inject;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
@@ -62,11 +61,12 @@ public class ConnectorResource {
   @GET
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
   public ResponseDTO<Page<ConnectorSummaryDTO>> list(@QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("100") int size, ConnectorFilter connectorFilter,
+      @QueryParam("size") @DefaultValue("100") int size,
       @NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("searchTerm") String searchTerm, @QueryParam("type") String type) {
     return ResponseDTO.newResponse(
-        connectorService.list(connectorFilter, page, size, accountIdentifier, orgIdentifier, projectIdentifier));
+        connectorService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type));
   }
 
   @POST
