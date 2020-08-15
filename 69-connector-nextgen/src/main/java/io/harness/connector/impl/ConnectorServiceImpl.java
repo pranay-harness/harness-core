@@ -16,6 +16,7 @@ import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
+import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConnectivityDetailsBuilder;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
@@ -165,7 +166,9 @@ public class ConnectorServiceImpl implements ConnectorService {
       ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
       ConnectorValidationResult validationResult = connectionValidator.validate(
           connectorDTO.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
-      updateConnectivityStatusOfConnector(connectorOptional.get(), validationResult);
+      long connectivityTestedAt = System.currentTimeMillis();
+      validationResult.setTestedAt(connectivityTestedAt);
+      updateConnectivityStatusOfConnector(connectorOptional.get(), validationResult, connectivityTestedAt);
       return validationResult;
     } else {
       throw new InvalidRequestException(
@@ -197,12 +200,17 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private void updateConnectivityStatusOfConnector(
-      Connector connector, ConnectorValidationResult connectorValidationResult) {
+      Connector connector, ConnectorValidationResult connectorValidationResult, long connectivityTestedAt) {
     if (connectorValidationResult != null) {
-      connector.setStatus(ConnectorConnectivityDetails.builder()
-                              .status(connectorValidationResult.isValid() ? SUCCESS : FAILURE)
-                              .errorMessage(connectorValidationResult.getErrorMessage())
-                              .build());
+      ConnectorConnectivityDetailsBuilder connectorConnectivityDetailsBuilder =
+          ConnectorConnectivityDetails.builder()
+              .status(connectorValidationResult.isValid() ? SUCCESS : FAILURE)
+              .errorMessage(connectorValidationResult.getErrorMessage())
+              .lastTestedAt(connectivityTestedAt);
+      if (connectorValidationResult.isValid()) {
+        connectorConnectivityDetailsBuilder.lastConnectedAt(connectivityTestedAt);
+      }
+      connector.setStatus(connectorConnectivityDetailsBuilder.build());
       connectorRepository.save(connector);
     }
   }
