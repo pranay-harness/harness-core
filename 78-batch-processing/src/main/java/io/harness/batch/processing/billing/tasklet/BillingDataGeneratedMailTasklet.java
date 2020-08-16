@@ -63,17 +63,21 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
     boolean notificationSend = notificationDao.isMailSent(accountId);
     if (!notificationSend) {
       long firstEventTime = getFirstDataRecordTime(accountId);
-      long cutoffTime = getStartOfCurrentDay() - ONE_DAY_MILLIS;
+      long cutoffTime = getStartOfCurrentDay() - 4 * ONE_DAY_MILLIS;
       if (cutoffTime >= firstEventTime) {
         notificationSend = true;
         notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
+        logger.info("Old account, accountId : {} , First event time : {}", accountId, firstEventTime);
       }
     }
     if (!notificationSend) {
-      notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
       Map<String, String> clusters = getClusters(accountId);
-      List<CEUserInfo> users = getUsers(clusters);
-      sendMail(users, clusters, accountId);
+      if (!clusters.isEmpty()) {
+        List<CEUserInfo> users = getUsers(clusters);
+        sendMail(users, clusters, accountId);
+        notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
+        logger.info("Data generated mail sent, accountId : {}", accountId);
+      }
     }
     return null;
   }
