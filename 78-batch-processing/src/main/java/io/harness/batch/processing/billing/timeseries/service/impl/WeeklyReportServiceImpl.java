@@ -303,7 +303,7 @@ public class WeeklyReportServiceImpl {
         }
 
         EmailData emailData = EmailData.builder()
-                                  .to(emailIds)
+                                  .to(Collections.singletonList(emailId))
                                   .templateName("ce_weekly_report")
                                   .templateModel(templateModel)
                                   .accountId(accountId)
