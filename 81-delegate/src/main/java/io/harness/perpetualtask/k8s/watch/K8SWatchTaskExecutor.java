@@ -115,7 +115,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       } catch (ApiException ex) {
         publishError(CeExceptionMessage.newBuilder()
                          .setClusterId(watchTaskParams.getClusterId())
-                         .setMessage(format("code=[%s] %s", ex.getCode(), ex.getResponseBody()))
+                         .setMessage(format(
+                             "code=[%s] message=[%s] body=[%s]", ex.getCode(), ex.getMessage(), ex.getResponseBody()))
                          .build(),
             taskId);
       } catch (Exception ex) {

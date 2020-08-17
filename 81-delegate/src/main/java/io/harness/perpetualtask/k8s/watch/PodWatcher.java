@@ -4,6 +4,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
+import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -14,21 +15,28 @@ import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.JsonFormat.TypeRegistry;
 
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodCondition;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
+import io.kubernetes.client.informer.EventType;
+import io.kubernetes.client.informer.ResourceEventHandler;
+import io.kubernetes.client.informer.SharedInformerFactory;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1OwnerReferenceBuilder;
+import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
+import io.kubernetes.client.openapi.models.V1PodCondition;
+import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1PodStatus;
+import io.kubernetes.client.util.CallGeneratorParams;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -36,29 +44,29 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PodWatcher implements Watcher<Pod> {
+public class PodWatcher implements ResourceEventHandler<V1Pod> {
   private static final TypeRegistry TYPE_REGISTRY =
       TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
 
-  private final Watch watch;
   private final String clusterId;
   private final EventPublisher eventPublisher;
   private final Set<String> publishedPods;
-  private final KubernetesClient client;
 
   private final PodInfo podInfoPrototype;
   private final PodEvent podEventPrototype;
 
   private final K8sControllerFetcher controllerFetcher;
 
+  private static final String POD_EVENT_MSG = "Pod: {}, action: {}";
+  private static final String FAILED_PUBLISH_MSG = "Error publishing V1Pod.{} event.";
+
   @Inject
-  public PodWatcher(@Assisted KubernetesClient client, @Assisted ClusterDetails params,
-      @Assisted K8sControllerFetcher controllerFetcher, EventPublisher eventPublisher) {
+  public PodWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
+      @Assisted K8sControllerFetcher controllerFetcher, @Assisted SharedInformerFactory sharedInformerFactory,
+      EventPublisher eventPublisher) {
     this.controllerFetcher = controllerFetcher;
     logger.info(
         "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
-    this.client = client;
-    this.watch = client.pods().inAnyNamespace().watch(this);
     this.clusterId = params.getClusterId();
     this.publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
@@ -73,15 +81,64 @@ public class PodWatcher implements Watcher<Pod> {
                             .setClusterId(clusterId)
                             .setKubeSystemUid(params.getKubeSystemUid())
                             .build();
+
+    CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+    sharedInformerFactory
+        .sharedIndexInformerFor(
+            (CallGeneratorParams callGeneratorParams)
+                -> {
+              try {
+                return coreV1Api.listPodForAllNamespacesCall(null, null, null, null, null, null,
+                    callGeneratorParams.resourceVersion, callGeneratorParams.timeoutSeconds, callGeneratorParams.watch,
+                    null);
+              } catch (ApiException e) {
+                logger.error("Unknown exception occurred", e);
+                throw e;
+              }
+            },
+            V1Pod.class, V1PodList.class)
+        .addEventHandler(this);
   }
 
   @Override
-  public void eventReceived(Action action, Pod pod) {
+  public void onAdd(V1Pod pod) {
+    try {
+      logger.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.ADDED);
+
+      eventReceived(pod);
+    } catch (Exception ex) {
+      logger.error(FAILED_PUBLISH_MSG, EventType.ADDED, ex);
+    }
+  }
+
+  @Override
+  public void onUpdate(V1Pod oldPod, V1Pod pod) {
+    try {
+      logger.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.MODIFIED);
+
+      eventReceived(pod);
+    } catch (Exception ex) {
+      logger.error(FAILED_PUBLISH_MSG, EventType.MODIFIED, ex);
+    }
+  }
+
+  @Override
+  public void onDelete(V1Pod pod, boolean deletedFinalStateUnknown) {
+    try {
+      logger.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.DELETED);
+
+      eventReceived(pod);
+    } catch (Exception ex) {
+      logger.error(FAILED_PUBLISH_MSG, EventType.DELETED, ex);
+    }
+  }
+
+  public void eventReceived(V1Pod pod) {
     String uid = pod.getMetadata().getUid();
-    logger.debug("Pod Watcher received an event for pod with uid={}, action={}", uid, action);
-    PodCondition podScheduledCondition = getPodScheduledCondition(pod);
+    V1PodCondition podScheduledCondition = getPodScheduledCondition(pod);
+
     if (podScheduledCondition != null && !publishedPods.contains(uid)) {
-      Timestamp creationTimestamp = HTimestamps.parse(pod.getMetadata().getCreationTimestamp());
+      Timestamp creationTimestamp = HTimestamps.fromMillis(pod.getMetadata().getCreationTimestamp().getMillis());
 
       PodInfo podInfo =
           PodInfo.newBuilder(podInfoPrototype)
@@ -100,8 +157,8 @@ public class PodWatcher implements Watcher<Pod> {
                       .withUid(pod.getMetadata().getUid())
                       .withName(pod.getMetadata().getName())
                       .withNamespace(pod.getMetadata().getNamespace())
-                      .withOwnerReferences(pod.getMetadata()
-                                               .getOwnerReferences()
+                      .withOwnerReferences(ofNullable(pod.getMetadata().getOwnerReferences())
+                                               .orElse(Arrays.asList())
                                                .stream()
                                                .map(or
                                                    -> new V1OwnerReferenceBuilder()
@@ -120,7 +177,7 @@ public class PodWatcher implements Watcher<Pod> {
       logMessage(podInfo);
 
       eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
-      final Timestamp timestamp = HTimestamps.parse(podScheduledCondition.getLastTransitionTime());
+      final Timestamp timestamp = HTimestamps.fromMillis(podScheduledCondition.getLastTransitionTime().getMillis());
       PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_SCHEDULED)
@@ -132,8 +189,7 @@ public class PodWatcher implements Watcher<Pod> {
     }
 
     if (isPodDeleted(pod)) {
-      String deletionTimestamp = pod.getMetadata().getDeletionTimestamp();
-      Timestamp timestamp = HTimestamps.parse(deletionTimestamp);
+      Timestamp timestamp = HTimestamps.fromMillis(pod.getMetadata().getDeletionTimestamp().getMillis());
       PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_TERMINATED)
@@ -156,29 +212,18 @@ public class PodWatcher implements Watcher<Pod> {
     }
   }
 
-  private boolean isPodDeleted(Pod pod) {
+  private boolean isPodDeleted(V1Pod pod) {
     return pod.getMetadata().getDeletionTimestamp() != null && pod.getMetadata().getDeletionGracePeriodSeconds() == 0L;
   }
 
-  private boolean isPodInTerminalPhase(Pod pod) {
-    String phase = pod.getStatus().getPhase();
-    return "Succeeded".equals(phase) || "Failed".equals(phase);
+  private boolean isPodInTerminalPhase(V1Pod pod) {
+    V1PodStatus status = pod.getStatus();
+    return status != null && ("Succeeded".equals(status.getPhase()) || "Failed".equals(status.getPhase()));
   }
 
-  @Override
-  public void onClose(KubernetesClientException e) {
-    logger.info("Watcher onClose");
-    if (watch != null) {
-      watch.close();
-    }
-    if (e != null) {
-      logger.error(e.getMessage(), e);
-    }
-  }
-
-  private List<Container> getAllContainers(List<io.fabric8.kubernetes.api.model.Container> k8sContainerList) {
+  private List<Container> getAllContainers(List<V1Container> k8sContainerList) {
     List<Container> containerList = new ArrayList<>();
-    for (io.fabric8.kubernetes.api.model.Container k8sContainer : k8sContainerList) {
+    for (V1Container k8sContainer : k8sContainerList) {
       Container container = Container.newBuilder()
                                 .setName(k8sContainer.getName())
                                 .setImage(k8sContainer.getImage())
@@ -193,19 +238,22 @@ public class PodWatcher implements Watcher<Pod> {
    * Get the pod condition with type PodScheduled=true.
    * A pod occupies resource when type=PodScheduled and status=True.
    */
-  private PodCondition getPodScheduledCondition(Pod pod) {
-    return pod.getStatus()
-        .getConditions()
-        .stream()
-        .filter(c -> "PodScheduled".equals(c.getType()) && "True".equals(c.getStatus()))
-        .findFirst()
-        .orElse(null);
+  private V1PodCondition getPodScheduledCondition(V1Pod pod) {
+    V1PodStatus podStatus = pod.getStatus();
+    if (podStatus != null && podStatus.getConditions() != null) {
+      return podStatus.getConditions()
+          .stream()
+          .filter(c -> "PodScheduled".equals(c.getType()) && "True".equals(c.getStatus()))
+          .findFirst()
+          .orElse(null);
+    }
+    return null;
   }
 
   private static void logMessage(Message message) {
     if (logger.isDebugEnabled()) {
       try {
-        logger.debug(JsonFormat.printer().usingTypeRegistry(TYPE_REGISTRY).print(message));
+        logger.info(JsonFormat.printer().usingTypeRegistry(TYPE_REGISTRY).print(message));
       } catch (InvalidProtocolBufferException e) {
         logger.error(e.getMessage());
       }

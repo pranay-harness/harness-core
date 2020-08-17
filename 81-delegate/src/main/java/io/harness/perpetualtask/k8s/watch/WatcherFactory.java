@@ -1,10 +1,12 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
+import io.kubernetes.client.informer.SharedInformerFactory;
+import io.kubernetes.client.openapi.ApiClient;
 
 public interface WatcherFactory {
-  PodWatcher createPodWatcher(KubernetesClient client, ClusterDetails params, K8sControllerFetcher controllerFetcher);
-  NodeWatcher createNodeWatcher(KubernetesClient client, ClusterDetails params);
-  ClusterEventWatcher createClusterEventWatcher(KubernetesClient client, ClusterDetails params);
+  PodWatcher createPodWatcher(ApiClient apiClient, ClusterDetails params, K8sControllerFetcher controllerFetcher,
+      SharedInformerFactory sharedInformerFactory);
+  NodeWatcher createNodeWatcher(
+      ApiClient apiClient, ClusterDetails params, SharedInformerFactory sharedInformerFactory);
 }
