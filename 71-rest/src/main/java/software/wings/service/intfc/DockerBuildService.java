@@ -34,6 +34,6 @@ public interface DockerBuildService extends BuildService<DockerConfig> {
 
   @Override
   @DelegateTaskType(TaskType.DOCKER_GET_LABELS)
-  List<Map<String, String>> getLabels(
-      String imageName, List<String> buildNos, DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails);
+  List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails);
 }

@@ -19,6 +19,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.BuildDetails.BuildDetailsMetadataKeys;
@@ -27,6 +28,7 @@ import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,5 +107,12 @@ public class EcrServiceImpl implements EcrService {
     } while (describeRepositoriesRequest.getNextToken() != null);
 
     return repoNames;
+  }
+
+  @Override
+  public List<Map<String, String>> getLabels(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      ArtifactStreamAttributes artifactStreamAttributes, List<String> tags) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
+    return Collections.singletonList(awsHelperService.fetchLabels(awsConfig, artifactStreamAttributes, tags));
   }
 }

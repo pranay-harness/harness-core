@@ -281,8 +281,8 @@ public interface BuildService<T> {
     return jobNames;
   }
 
-  default List<Map<String, String>> getLabels(
-      String imageName, List<String> buildNos, T dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
+  default List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
+      T dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     throw new UnsupportedOperationException();
   }
 

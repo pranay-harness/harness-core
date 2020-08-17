@@ -14,6 +14,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -100,9 +101,12 @@ import com.amazonaws.services.ec2.model.TagDescription;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.AmazonECRException;
+import com.amazonaws.services.ecr.model.BatchGetImageRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
+import com.amazonaws.services.ecr.model.Image;
+import com.amazonaws.services.ecr.model.ImageIdentifier;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
 import com.amazonaws.services.ecr.model.ListImagesResult;
 import com.amazonaws.services.ecs.AmazonECSClient;
@@ -170,6 +174,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -184,6 +189,7 @@ import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.amazons3.AWSTemporaryCredentialsRestClient;
@@ -193,6 +199,7 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1595,5 +1602,31 @@ public class AwsHelperService {
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot get the temporary credentials", e);
     }
+  }
+
+  public Map<String, String> fetchLabels(
+      AwsConfig awsConfig, ArtifactStreamAttributes artifactStreamAttributes, List<String> tags) {
+    AmazonECRClient ecrClient = getAmazonEcrClient(awsConfig, artifactStreamAttributes.getRegion());
+    return tags.stream()
+        .map(tag
+            -> ecrClient.batchGetImage(
+                new BatchGetImageRequest()
+                    .withRepositoryName(artifactStreamAttributes.getImageName())
+                    .withImageIds(new ImageIdentifier().withImageTag(tag))
+                    .withAcceptedMediaTypes("application/vnd.docker.distribution.manifest.v1+json")))
+        .flatMap(batchGetImageResult -> batchGetImageResult.getImages().stream())
+        .map(Image::getImageManifest)
+        .flatMap(imageManifest
+            -> ((List<Map<String, Object>>) JsonUtils.asObject(imageManifest, HashMap.class).get("history"))
+                   .stream()
+                   .flatMap(history
+                       -> ((Map<String, Object>) (JsonUtils.asObject(
+                               (String) history.get("v1Compatibility"), HashMap.class)))
+                              .entrySet()
+                              .stream()))
+        .filter(entry -> entry.getKey().equals("config"))
+        .flatMap(config
+            -> ((Map<String, String>) ((Map<String, Object>) config.getValue()).get("Labels")).entrySet().stream())
+        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 }
