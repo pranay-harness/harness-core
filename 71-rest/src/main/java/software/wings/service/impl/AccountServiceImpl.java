@@ -654,9 +654,9 @@ public class AccountServiceImpl implements AccountService {
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
     if (isEmpty(techStacks)) {
-      updateOperations.unset("techStacks");
+      updateOperations.unset(AccountKeys.techStacks);
     } else {
-      updateOperations.set("techStacks", techStacks);
+      updateOperations.set(AccountKeys.techStacks, techStacks);
     }
     wingsPersistence.update(accountInDB, updateOperations);
     dbCache.invalidate(Account.class, accountId);

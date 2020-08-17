@@ -47,6 +47,7 @@ public class UpdateUserGroupPermissionsDataFetcher
     if (userGroupService.get(mutationContext.getAccountId(), parameters.getUserGroupId()) == null) {
       throw new InvalidRequestException("No userGroup Exists with id " + parameters.getUserGroupId());
     }
+
     final UserGroup userGroup = updateUserGroupPermissions(parameters, mutationContext.getAccountId());
     QLGroupPermissions permissions = userGroupPermissionsController.populateUserGroupPermissions(userGroup);
     return QLUpdateUserGroupPermissionsPayload.builder()

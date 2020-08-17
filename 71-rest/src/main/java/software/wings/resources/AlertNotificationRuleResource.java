@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -8,7 +10,6 @@ import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestBody;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.NotificationRulesStatus;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -33,7 +34,7 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.SETTING)
-@AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@AuthRule(permissionType = MANAGE_ALERT_NOTIFICATION_RULES)
 public class AlertNotificationRuleResource {
   @Inject private AlertNotificationRuleService alertNotificationRuleService;
   @Inject private NotificationRulesStatusService rulesStatusService;

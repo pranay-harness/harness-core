@@ -81,12 +81,11 @@ public class AccessManagementUtils {
 
   public static void runAllGetTests(Account account, String bearerToken, String userId, String password,
       int expectedStatusCodeForUsersAndGroups, int expectedStatusGroupForOthers) {
-    final String READ_ONLY_USER = userId;
     final String IP_WHITELIST_VAL = "0.0.0.0";
     String apiKeyName = generateUuid();
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), userId).getUser();
     UserGroup userGroup = UserGroupUtils.getUserGroup(account, bearerToken, "Account Administrator");
     List<String> userIdsToAdd = new ArrayList<>();
     userIdsToAdd.add(readOnlyUser.getUuid());
@@ -98,15 +97,7 @@ public class AccessManagementUtils {
     apiKeyEntry.setName(apiKeyName);
     apiKeyEntry.setAccountId(account.getUuid());
     ApiKeyEntry postedEntry = ApiKeysRestUtils.createApiKey(account.getUuid(), bearerToken, apiKeyEntry);
-    //    LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(account.getUuid());
-    //    logger.info("LDAP setting addition in progress");
-    //    assertThat(
-    //        SSORestUtils.addLdapSettings(account.getUuid(), bearerToken, ldapSettings) ==
-    //        HttpStatus.SC_BAD_REQUEST).isFalse();
-    //    logger.info("LDAP added successfully");
-    //    Object ssoConfig = SSORestUtils.getAccessManagementSettings(account.getUuid(), bearerToken);
-    //    assertThat(ssoConfig).isNotNull();
-    //    logger.info("LDAP added successfully");
+
     Whitelist ipToWhiteList = new Whitelist();
     ipToWhiteList.setAccountId(account.getUuid());
     ipToWhiteList.setFilter(IP_WHITELIST_VAL);
@@ -116,10 +107,10 @@ public class AccessManagementUtils {
     logger.info("Adding the IP to be whitelisted");
     Whitelist ipAdded = IPWhitelistingRestUtils.addWhiteListing(account.getUuid(), bearerToken, ipToWhiteList);
     assertThat(ipAdded).isNotNull();
-    logger.info("IPWhitelisting verification suucessful");
+    logger.info("IPWhitelisting verification successful");
 
     logger.info("Logging in as a ReadOnly user");
-    String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
+    String roBearerToken = Setup.getAuthToken(userId, password);
     assertThat(readOnlyUser).isNotNull();
     logger.info("Designated user's Bearer Token issued");
 
@@ -198,14 +189,13 @@ public class AccessManagementUtils {
 
   public static void amNoPermissionToPostForIPWhitelisting(
       Account account, String bearerToken, String userId, String password, int expectedOutcome) {
-    final String READ_ONLY_USER = userId;
     final String IP_WHITELIST_VAL = "0.0.0.0";
     logger.info("Starting with the ReadOnly Test");
 
-    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
+    User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), userId).getUser();
 
     logger.info("Logging in as a ReadOnly user");
-    String roBearerToken = Setup.getAuthToken(READ_ONLY_USER, password);
+    String roBearerToken = Setup.getAuthToken(userId, password);
 
     logger.info("Attempting to create IP whitelisting entry without permissions");
     Whitelist ipToWhiteList = new Whitelist();

@@ -9,8 +9,24 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATE_PROFILES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELISTING;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
@@ -18,6 +34,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.TAG_MAN
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
+import static software.wings.security.PermissionAttribute.PermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 
 import com.google.inject.Inject;
@@ -108,7 +125,12 @@ public class UserGroupPermissionTest extends GraphQLTest {
 
   private Set<PermissionType> createAccountPermissions() {
     List<PermissionType> permissionTypeList = Arrays.asList(APPLICATION_CREATE_DELETE, USER_PERMISSION_READ,
-        USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT, ACCOUNT_MANAGEMENT, AUDIT_VIEWER, TAG_MANAGEMENT);
+        USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT, ACCOUNT_MANAGEMENT, AUDIT_VIEWER, TAG_MANAGEMENT, CE_ADMIN,
+        CE_VIEWER, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
+        MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
+        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS,
+        VIEW_USER_AND_USER_GROUPS_AND_API_KEYS, MANAGE_IP_WHITELISTING, MANAGE_DEPLOYMENT_FREEZES,
+        MANAGE_PIPELINE_GOVERNANCE_STANDARDS);
     return new HashSet<>(permissionTypeList);
   }
 
@@ -127,7 +149,12 @@ MANAGE_USERS_AND_GROUPS,
 MANAGE_TEMPLATE_LIBRARY,
 ADMINISTER_OTHER_ACCOUNT_FUNCTIONS,
 VIEW_AUDITS,
-MANAGE_TAGS
+MANAGE_TAGS, ADMINISTER_CE,
+  VIEW_CE, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
+        MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
+        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS,
+        VIEW_USER_AND_USER_GROUPS_AND_API_KEYS, MANAGE_IP_WHITELISTING, MANAGE_DEPLOYMENT_FREEZES,
+        MANAGE_PIPELINE_GOVERNANCE_STANDARDS
 ]
 }
 }

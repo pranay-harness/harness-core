@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
 import com.google.inject.Inject;
 
@@ -22,7 +24,6 @@ import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -54,7 +55,7 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.SSO)
 @Slf4j
-@AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@AuthRule(permissionType = MANAGE_AUTHENTICATION_SETTINGS)
 public class SSOResource {
   private SSOService ssoService;
   private SamlClientService samlClientService;
@@ -201,7 +202,7 @@ public class SSOResource {
   @GET
   @Path("access-management/{accountId}")
   @Timed
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
   public RestResponse<SSOConfig> getAccountAccessManagementSettings(@PathParam("accountId") String accountId) {
     return new RestResponse<>(ssoService.getAccountAccessManagementSettings(accountId));
