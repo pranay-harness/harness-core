@@ -14,6 +14,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -69,6 +71,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
@@ -205,5 +208,14 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   public void testGetTimeoutMillis() {
     check.setTimeoutMillis(10);
     assertThat(check.getTimeoutMillis()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAbortEvent() {
+    EcsSteadyStateCheck ecsSteadyStateCheck = spy(check);
+    ecsSteadyStateCheck.handleAbortEvent(mock(ExecutionContextImpl.class));
+    verify(ecsSteadyStateCheck, times(1)).handleAbortEvent(any(ExecutionContext.class));
   }
 }

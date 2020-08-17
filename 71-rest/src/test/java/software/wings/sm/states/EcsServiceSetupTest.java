@@ -13,6 +13,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -70,6 +72,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
@@ -261,5 +264,14 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     doReturn(null).when(mockEcsStateHelper).getTimeout(35792);
     state.setServiceSteadyStateTimeout(35792);
     assertThat(state.getTimeoutMillis()).isNull();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAbortEvent() {
+    EcsServiceSetup ecsServiceSetup = spy(new EcsServiceSetup("test"));
+    ecsServiceSetup.handleAbortEvent(mock(ExecutionContextImpl.class));
+    verify(ecsServiceSetup, times(1)).handleAbortEvent(any(ExecutionContext.class));
   }
 }
