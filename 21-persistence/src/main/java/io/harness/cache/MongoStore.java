@@ -85,7 +85,6 @@ public class MongoStore implements DistributedStore {
     upsertInternal(entity, ttl, downgrade, null);
   }
 
-  @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade, String accountId) {
     upsertInternal(entity, ttl, downgrade, accountId);
   }
