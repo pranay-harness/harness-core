@@ -92,6 +92,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.Trigger;
@@ -101,7 +102,6 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.pipeline.PipelineServiceHelper;
-import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
@@ -190,12 +190,13 @@ public class PipelineServiceImpl implements PipelineService {
     }
     if (previousExecutionsCount != null && previousExecutionsCount > 0) {
       for (Pipeline pipeline : pipelines) {
-        PageRequest<WorkflowExecution> innerPageRequest = aPageRequest()
-                                                              .withLimit(previousExecutionsCount.toString())
-                                                              .addFilter("workflowId", EQ, pipeline.getUuid())
-                                                              .addFilter("appId", EQ, pipeline.getAppId())
-                                                              .build();
-        PipelineResumeUtils.addLatestPipelineResumeFilter(innerPageRequest);
+        PageRequest<WorkflowExecution> innerPageRequest =
+            aPageRequest()
+                .withLimit(previousExecutionsCount.toString())
+                .addFilter(WorkflowExecutionKeys.appId, EQ, pipeline.getAppId())
+                .addFilter(WorkflowExecutionKeys.workflowId, EQ, pipeline.getUuid())
+                .addFilter(WorkflowExecutionKeys.cdPageCandidate, EQ, Boolean.TRUE)
+                .build();
         try {
           List<WorkflowExecution> workflowExecutions =
               workflowExecutionService.listExecutions(innerPageRequest, false, false, false, false).getResponse();
