@@ -31,7 +31,7 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateSta
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
-import software.wings.service.impl.yaml.GitClientHelper;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -46,7 +46,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Create Stack";
   @Inject private transient AppService appService;
   @Inject private transient GitUtilsManager gitUtilsManager;
-  @Inject private GitClientHelper gitClientHelper;
+  @Inject private GitConfigHelperService gitConfigHelperService;
 
   public CloudFormationCreateStackState(String name) {
     super(name, StateType.CLOUD_FORMATION_CREATE_STACK.name());
@@ -89,7 +89,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         gitConfig.setBranch(branch);
       }
       gitConfig.setReference(provisioner.getGitFileConfig().getCommitId());
-      gitClientHelper.updateRepoUrl(gitConfig, provisioner.getGitFileConfig().getRepoName());
+      gitConfigHelperService.convertToRepoGitConfig(gitConfig, provisioner.getGitFileConfig().getRepoName());
 
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT)
           .gitFileConfig(provisioner.getGitFileConfig())

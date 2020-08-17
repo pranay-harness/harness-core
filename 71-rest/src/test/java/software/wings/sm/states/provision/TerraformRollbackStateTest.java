@@ -59,7 +59,7 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.yaml.GitClientHelper;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -90,7 +90,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock private GitUtilsManager gitUtilsManager;
   @Mock private SecretManager secretManager;
   @Mock private DelegateService delegateService;
-  @Mock private GitClientHelper gitClientHelper;
+  @Mock private GitConfigHelperService gitConfigHelperService;
   @InjectMocks TerraformRollbackState terraformRollbackState = new TerraformRollbackState("Rollback Terraform Test");
 
   @Before
@@ -230,7 +230,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo(ACTIVITY_ID);
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
         .isEqualTo(ACTIVITY_ID);
-    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
   }
 
   @Test

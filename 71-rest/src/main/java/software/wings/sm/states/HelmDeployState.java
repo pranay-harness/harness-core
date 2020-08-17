@@ -119,7 +119,6 @@ import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
-import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -193,7 +192,6 @@ public class HelmDeployState extends State {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private LogService logService;
   @Inject private SweepingOutputService sweepingOutputService;
-  @Inject private GitClientHelper gitClientHelper;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -764,7 +762,7 @@ public class HelmDeployState extends State {
               gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
           GitConfig sourceRepoGitConfig =
               settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
-          gitClientHelper.updateRepoUrl(sourceRepoGitConfig, sourceRepoGitFileConfig.getRepoName());
+          gitConfigHelperService.convertToRepoGitConfig(sourceRepoGitConfig, sourceRepoGitFileConfig.getRepoName());
 
           gitConfigHelperService.renderGitConfig(context, sourceRepoGitConfig);
           repoConfig = K8sDelegateManifestConfig.builder()
@@ -854,7 +852,7 @@ public class HelmDeployState extends State {
       } else {
         gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
       }
-      gitClientHelper.updateRepoUrl(gitConfig, gitFileConfig.getRepoName());
+      gitConfigHelperService.convertToRepoGitConfig(gitConfig, gitFileConfig.getRepoName());
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 

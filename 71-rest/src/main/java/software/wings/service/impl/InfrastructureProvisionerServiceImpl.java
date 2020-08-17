@@ -91,7 +91,6 @@ import software.wings.infra.ProvisionerAware;
 import software.wings.prune.PruneEvent;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
-import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -144,7 +143,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private AppService appService;
   @Inject YamlPushService yamlPushService;
   @Inject private DelegateService delegateService;
-  @Inject private GitClientHelper gitClientHelper;
   @Inject private SecretManager secretManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject FileService fileService;
@@ -339,7 +337,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
       if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
         GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
-        gitClientHelper.updateRepoUrl(gitConfig, terraformInfrastructureProvisioner.getRepoName());
+        gitConfigHelperService.convertToRepoGitConfig(gitConfig, terraformInfrastructureProvisioner.getRepoName());
         detailsBuilder.repository(gitConfig.getRepoUrl());
       }
     } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
@@ -785,7 +783,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
     gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
-    gitClientHelper.updateRepoUrl(gitConfig, repoName);
+    gitConfigHelperService.convertToRepoGitConfig(gitConfig, repoName);
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
@@ -853,7 +851,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
-    gitClientHelper.updateRepoUrl(gitConfig, terraformInfrastructureProvisioner.getRepoName());
+    gitConfigHelperService.convertToRepoGitConfig(gitConfig, terraformInfrastructureProvisioner.getRepoName());
 
     DelegateTask delegateTask =
         DelegateTask.builder()

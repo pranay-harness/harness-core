@@ -62,7 +62,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandE
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
-import software.wings.service.impl.yaml.GitClientHelper;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -89,7 +89,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ActivityService activityService;
-  @Spy private GitClientHelper gitClientHelper;
+  @Spy private GitConfigHelperService gitConfigHelperService;
 
   @InjectMocks private CloudFormationCreateStackState state = new CloudFormationCreateStackState("stateName");
 
