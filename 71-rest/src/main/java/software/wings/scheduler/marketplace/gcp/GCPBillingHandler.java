@@ -13,9 +13,11 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
 import software.wings.beans.marketplace.gcp.GCPBillingJobEntity.GCPBillingJobEntityKeys;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.marketplace.gcp.GCPMarketPlaceService;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
   private static final int POOL_SIZE = 5;
 
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject GCPMarketPlaceService gcpMarketPlaceService;
   @Inject private MorphiaPersistenceProvider<GCPBillingJobEntity> persistenceProvider;
@@ -45,6 +48,7 @@ public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
             .executorService(executor)
             .semaphore(semaphore)
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .redistribute(true)
             .persistenceProvider(persistenceProvider)

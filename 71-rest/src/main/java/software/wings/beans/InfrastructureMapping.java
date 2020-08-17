@@ -20,6 +20,7 @@ import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
 import lombok.Data;
@@ -62,7 +63,7 @@ import javax.annotation.Nullable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
 public abstract class InfrastructureMapping
-    extends Base implements EncryptableSetting, PersistentRegularIterable, NameAccess {
+    extends Base implements EncryptableSetting, PersistentRegularIterable, NameAccess, AccountAccess {
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
   public static final String PROVISIONER_ID_KEY = "provisionerId";

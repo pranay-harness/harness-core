@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.User;
+import software.wings.processingcontrollers.NotificationProcessingController;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserService;
 
@@ -27,10 +28,17 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
   @Inject private EmailDispatcher emailDispatcher;
   @Inject private SlackMessageDispatcher slackMessageDispatcher;
   @Inject private UserService userService;
+  @Inject private NotificationProcessingController notificationProcessingController;
 
   @Override
   public void dispatch(List<Notification> notifications, NotificationGroup notificationGroup) {
     if (isEmpty(notifications) || null == notificationGroup) {
+      return;
+    }
+
+    if (!notificationProcessingController.canProcessAccount(notificationGroup.getAccountId())) {
+      log.info("Notification Group's {} account {} is disabled. Notifications cannot be dispatched",
+          notificationGroup.getUuid(), notificationGroup.getAccountId());
       return;
     }
 

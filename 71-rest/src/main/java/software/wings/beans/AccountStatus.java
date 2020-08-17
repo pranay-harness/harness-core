@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 public interface AccountStatus {
   String ACTIVE = "ACTIVE";
   String EXPIRED = "EXPIRED";
+  String MARKED_FOR_DELETION = "MARKED-FOR-DELETION";
   String DELETED = "DELETED";
   String INACTIVE = "INACTIVE";
 
@@ -23,6 +24,7 @@ public interface AccountStatus {
     switch (StringUtils.upperCase(status)) {
       case ACTIVE:
       case EXPIRED:
+      case MARKED_FOR_DELETION:
       case DELETED:
       case INACTIVE:
         return true;

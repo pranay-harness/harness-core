@@ -141,6 +141,7 @@ import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.jre.JreConfig;
 import software.wings.licensing.LicenseService;
+import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
@@ -200,6 +201,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ConfigurationController configurationController;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private DelegateProcessingController delegateProcessingController;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -635,6 +637,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
     when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+    when(delegateProcessingController.canProcessAccount(accountId)).thenReturn(true);
 
     DelegateRegisterResponse registerResponse = delegateService.register(delegate);
     Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
@@ -728,6 +731,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+    when(delegateProcessingController.canProcessAccount(accountId)).thenReturn(true);
 
     delegate = delegateService.add(delegate);
     delegateService.register(delegate);
@@ -917,6 +921,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+    when(delegateProcessingController.canProcessAccount(accountId)).thenReturn(false);
 
     delegate = delegateService.add(delegate);
     when(licenseService.isAccountDeleted(accountId)).thenReturn(true);
@@ -973,6 +978,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                               .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                               .build())
                                     .build();
+    when(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).thenReturn(true);
     delegateService.queueTask(delegateTask);
     assertThat(
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
@@ -2190,9 +2196,10 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Answer<Boolean> answer = invocation -> {
       wingsPersistence.save(delegate);
-      return true;
+      return false;
     };
-    doAnswer(answer).when(licenseService).isAccountDeleted(anyString());
+    doAnswer(answer).when(delegateProcessingController).canProcessAccount(anyString());
+    when(licenseService.isAccountDeleted(anyString())).thenReturn(true);
 
     Delegate result = delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate);
 

@@ -116,7 +116,8 @@ public class InstanceStatsCollectorJob implements Job {
     if (AccountStatus.ACTIVE.equals(licenseInfo.getAccountStatus())) {
       return false;
     } else if (AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())
-        || AccountStatus.INACTIVE.equals(licenseInfo.getAccountStatus())) {
+        || AccountStatus.INACTIVE.equals(licenseInfo.getAccountStatus())
+        || AccountStatus.MARKED_FOR_DELETION.equals(licenseInfo.getAccountStatus())) {
       return true;
     } else if (AccountStatus.EXPIRED.equals(licenseInfo.getAccountStatus())
         && System.currentTimeMillis() > (licenseInfo.getExpiryTime() + TWO_MONTH_IN_MILLIS)) {

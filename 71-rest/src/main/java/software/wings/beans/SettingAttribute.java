@@ -66,6 +66,7 @@ import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
@@ -120,7 +121,7 @@ import javax.validation.Valid;
 @FieldNameConstants(innerTypeName = "SettingAttributeKeys")
 @Entity(value = "settingAttributes")
 @HarnessEntity(exportable = true)
-public class SettingAttribute extends Base implements NameAccess, PersistentRegularIterable {
+public class SettingAttribute extends Base implements NameAccess, PersistentRegularIterable, AccountAccess {
   public static final String CATEGORY_KEY = "category";
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";

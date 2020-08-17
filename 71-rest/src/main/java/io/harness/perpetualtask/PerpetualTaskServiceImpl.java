@@ -129,6 +129,25 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
+  public boolean pauseTask(String accountId, String taskId) {
+    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
+      logger.info("Pausing the perpetual task");
+      return perpetualTaskRecordDao.pauseTask(accountId, taskId);
+    }
+  }
+
+  @Override
+  public boolean resumeTask(String accountId, String taskId) {
+    return resetTask(accountId, taskId, null);
+  }
+
+  @Override
+  public boolean deleteAllTasksForAccount(String accountId) {
+    return perpetualTaskRecordDao.removeAllTasksForAccount(accountId);
+  }
+
+  @Override
   public List<PerpetualTaskAssignDetails> listAssignedTasks(String delegateId) {
     String accountId = DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current());
 
@@ -141,6 +160,11 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                    .setLastContextUpdated(HTimestamps.fromMillis(task.getClientContext().getLastContextUpdated()))
                    .build())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<PerpetualTaskRecord> listAllTasksForAccount(String accountId) {
+    return perpetualTaskRecordDao.listAllPerpetualTasksForAccount(accountId);
   }
 
   @Override

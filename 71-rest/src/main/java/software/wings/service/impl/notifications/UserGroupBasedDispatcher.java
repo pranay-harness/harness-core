@@ -55,7 +55,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       return;
     }
 
-    if (!notificationProcessingController.shouldProcessAccount(userGroup.getAccountId())) {
+    if (!notificationProcessingController.canProcessAccount(userGroup.getAccountId())) {
       log.info("User Group's {} account {} is disabled. Notifications cannot be dispatched", userGroup.getUuid(),
           userGroup.getAccountId());
       return;

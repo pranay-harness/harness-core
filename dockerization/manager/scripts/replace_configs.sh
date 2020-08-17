@@ -642,6 +642,17 @@ if [[ "" != "$BUGSNAG_API_KEY" ]]; then
   yq write -i $CONFIG_FILE bugsnagApiKey "$BUGSNAG_API_KEY"
 fi
 
+if [[ "" != "$ACCOUNT_LICENSE_CHECK_JOB_FREQUENCY" ]]; then
+  yq write -i $CONFIG_FILE jobsFrequencyConfig.accountLicenseCheckJobFrequencyInMinutes "$ACCOUNT_LICENSE_CHECK_JOB_FREQUENCY"
+fi
+
+if [[ "" != "$ACCOUNT_BACKGROUND_JOB_FREQUENCY" ]]; then
+  yq write -i $CONFIG_FILE jobsFrequencyConfig.accountBackgroundJobFrequencyInMinutes "$ACCOUNT_BACKGROUND_JOB_FREQUENCY"
+fi
+
+if [[ "" != "$ACCOUNT_DELETION_JOB_FREQUENCY" ]]; then
+  yq write -i $CONFIG_FILE jobsFrequencyConfig.accountDeletionJobFrequencyInMinutes "$ACCOUNT_DELETION_JOB_FREQUENCY"
+fi
 
 if [[ "" != "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.managerToCommandLibraryServiceSecret "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET"

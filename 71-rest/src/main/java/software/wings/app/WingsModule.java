@@ -119,6 +119,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import software.wings.DataStorageMode;
+import software.wings.backgroundjobs.AccountBackgroundJobService;
+import software.wings.backgroundjobs.AccountBackgroundJobServiceImpl;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
@@ -725,6 +727,12 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Provides
   @Singleton
+  public JobsFrequencyConfig jobsFrequencyConfig() {
+    return configuration.getJobsFrequencyConfig();
+  }
+
+  @Provides
+  @Singleton
   public CdnStorageUrlGenerator cdnStorageUrlGenerator() {
     String clusterType = System.getenv("CLUSTER_TYPE");
     boolean isFreeCluster = StringUtils.equals(clusterType, "freemium");
@@ -813,6 +821,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(InfrastructureProvisionerService.class).to(InfrastructureProvisionerServiceImpl.class);
     bind(ResourceConstraintService.class).to(ResourceConstraintServiceImpl.class);
     bind(LicenseService.class).to(LicenseServiceImpl.class);
+    bind(AccountBackgroundJobService.class).to(AccountBackgroundJobServiceImpl.class);
     bind(LicenseProvider.class).to(DatabaseLicenseProviderImpl.class);
     bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
     bind(InstanaService.class).to(InstanaServiceImpl.class);

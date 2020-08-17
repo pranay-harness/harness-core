@@ -154,6 +154,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   private CommandLibraryServiceConfig commandLibraryServiceConfig = CommandLibraryServiceConfig.builder().build();
   @JsonProperty(value = "bugsnagApiKey") private String bugsnagApiKey;
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
+  @JsonProperty(value = "jobsFrequencyConfig") private JobsFrequencyConfig jobsFrequencyConfig;
   @JsonProperty("organizationManagerClient") private OrganizationManagerClientConfig organizationManagerClientConfig;
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
 

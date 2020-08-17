@@ -220,7 +220,8 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     doNothing()
         .when(newRelicService)
         .validateAPMConfig(any(SettingAttribute.class), any(APMValidateCollectorConfig.class));
-    String accountId = generateUuid();
+    Account account = getAccount(AccountType.PAID);
+    String accountId = wingsPersistence.save(account);
     String appId = generateUuid();
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     apmVerificationConfig.setSettingType(SettingVariableTypes.APM_VERIFICATION);

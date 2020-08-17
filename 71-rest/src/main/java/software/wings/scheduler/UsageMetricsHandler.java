@@ -15,16 +15,18 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountLevelEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
+import software.wings.service.intfc.AccountService;
 
 @Slf4j
 public class UsageMetricsHandler implements Handler<Account> {
   @Inject private UsageMetricsService usageMetricsService;
-
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<Account> persistenceProvider;
 
@@ -39,6 +41,7 @@ public class UsageMetricsHandler implements Handler<Account> {
             .acceptableNoAlertDelay(ofMinutes(30))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
+            .entityProcessController(new AccountLevelEntityProcessController(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

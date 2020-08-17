@@ -14,11 +14,13 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.VaultService;
 
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerConfig> {
+  @Inject private AccountService accountService;
   @Inject private VaultService vaultService;
   @Inject private AlertService alertService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
@@ -45,6 +48,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .targetInterval(ofSeconds(31))
             .acceptableNoAlertDelay(ofSeconds(62))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query -> query.field(SecretManagerConfigKeys.encryptionType).equal(EncryptionType.VAULT))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)

@@ -25,6 +25,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Permit;
@@ -33,6 +34,7 @@ import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.PermitService;
 
@@ -47,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
 
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private PermitService permitService;
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
@@ -67,6 +70,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
             .executorService(instrumentedExecutorService)
             .semaphore(new Semaphore(25))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

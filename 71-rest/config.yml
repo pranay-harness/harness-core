@@ -60,6 +60,11 @@ fileStorageMode: MONGO
 clusterName: ""
 bugsnagApiKey: ""
 
+jobsFrequencyConfig:
+  accountLicenseCheckJobFrequencyInMinutes: 240
+  accountBackgroundJobFrequencyInMinutes: 240
+  accountDeletionJobFrequencyInMinutes: 240
+
 ceSetUpConfig:
   awsAccountId: 108817434118
   awsAccessKey: awsAccessKeyPlaceHolder

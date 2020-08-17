@@ -19,12 +19,14 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ApprovalPollingJobEntity.ApprovalPollingJobEntityKeys;
 import software.wings.scheduler.ShellScriptApprovalService;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
@@ -32,6 +34,7 @@ import software.wings.service.intfc.servicenow.ServiceNowService;
 @OwnedBy(CDC)
 @Slf4j
 public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity> {
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private JiraHelperService jiraHelperService;
   @Inject private ServiceNowService serviceNowService;
@@ -50,6 +53,7 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(1))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

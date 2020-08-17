@@ -1,8 +1,13 @@
-package software.wings.service;
+package software.wings.licensing;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.service.intfc.instance.licensing.InstanceLimitProvider.DEFAULT_SI_USAGE_LIMITS;
@@ -25,20 +30,26 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.licensing.LicenseService;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 10/11/16.
  */
 public class LicenseServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private AccountService accountService;
-  @InjectMocks @Inject private LicenseService licenseService;
+  @InjectMocks @Inject private LicenseServiceImpl licenseService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private static final long oneDayTimeDiff = 86400000L;
+  private static final String ACCOUNT_KEY = "ACCOUNT_KEY";
+  private static final String TRIAL_EXPIRATION_DAY_0_TEMPLATE = "trial_expiration_day0";
+  private static final String TRIAL_EXPIRATION_DAY_29_TEMPLATE = "trial_expiration_day29";
+  private static final String TRIAL_EXPIRATION_DAY_30_TEMPLATE = "trial_expiration_day30";
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -53,7 +64,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     thrown.expect(WingsException.class);
     thrown.expectMessage("Invalid / Null license info");
     accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build(),
+        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey(ACCOUNT_KEY).build(),
         false);
   }
 
@@ -68,7 +79,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -93,7 +104,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -115,7 +126,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -140,7 +151,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -163,7 +174,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -194,7 +205,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -218,7 +229,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -247,7 +258,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -277,7 +288,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
@@ -306,7 +317,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account accountFromDB = accountService.save(anAccount()
                                                     .withCompanyName(HARNESS_NAME)
                                                     .withAccountName(HARNESS_NAME)
-                                                    .withAccountKey("ACCOUNT_KEY")
+                                                    .withAccountKey(ACCOUNT_KEY)
                                                     .withLicenseInfo(licenseInfo)
                                                     .build(),
         false);
@@ -337,7 +348,7 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account accountFromDB = accountService.save(anAccount()
                                                     .withCompanyName(HARNESS_NAME)
                                                     .withAccountName(HARNESS_NAME)
-                                                    .withAccountKey("ACCOUNT_KEY")
+                                                    .withAccountKey(ACCOUNT_KEY)
                                                     .withLicenseInfo(licenseInfo)
                                                     .build(),
         false);
@@ -399,15 +410,111 @@ public class LicenseServiceTest extends WingsBaseTest {
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
                                               .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAccountKey(ACCOUNT_KEY)
                                               .withLicenseInfo(licenseInfo)
                                               .build(),
         false);
 
-    Thread.sleep(2000);
+    TimeUnit.SECONDS.sleep(2);
     licenseService.checkForLicenseExpiry(account);
     Account accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void getEmailTemplateNameForTrialAccountExpiration() {
+    long currentTime = System.currentTimeMillis();
+    long expiryTime = currentTime + 1000;
+    long oneDayAfterExpiry = expiryTime + oneDayTimeDiff;
+    long twoDaysAfterExpiry = expiryTime + (2 * oneDayTimeDiff);
+    long twentyNineDaysAfterExpiry = expiryTime + (29 * oneDayTimeDiff);
+    long thirtyDaysAfterExpiry = expiryTime + (30 * oneDayTimeDiff);
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
+    licenseInfo.setExpiryTime(expiryTime);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey(ACCOUNT_KEY)
+                                              .withLicenseInfo(licenseInfo)
+                                              .withLastLicenseExpiryReminderSentAt(expiryTime - oneDayTimeDiff)
+                                              .build(),
+        false);
+    assertThat(licenseService.getEmailTemplateName(account, oneDayAfterExpiry, expiryTime))
+        .isEqualTo(TRIAL_EXPIRATION_DAY_0_TEMPLATE);
+    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), oneDayAfterExpiry);
+    account = accountService.get(account.getUuid());
+    assertThat(licenseService.getEmailTemplateName(account, oneDayAfterExpiry + 10000, expiryTime)).isNull();
+    assertThat(licenseService.getEmailTemplateName(account, twoDaysAfterExpiry, expiryTime)).isNull();
+    assertThat(licenseService.getEmailTemplateName(account, twentyNineDaysAfterExpiry, expiryTime))
+        .isEqualTo(TRIAL_EXPIRATION_DAY_29_TEMPLATE);
+    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), twentyNineDaysAfterExpiry);
+    account = accountService.get(account.getUuid());
+    assertThat(licenseService.getEmailTemplateName(account, twentyNineDaysAfterExpiry + 10000, expiryTime)).isNull();
+    assertThat(licenseService.getEmailTemplateName(account, thirtyDaysAfterExpiry, expiryTime))
+        .isEqualTo(TRIAL_EXPIRATION_DAY_30_TEMPLATE);
+    licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), thirtyDaysAfterExpiry);
+    account = accountService.get(account.getUuid());
+    assertThat(licenseService.getEmailTemplateName(account, thirtyDaysAfterExpiry + 10000, expiryTime)).isNull();
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void shouldHandleTrialAccountExpiration() throws InterruptedException {
+    long currentTime = System.currentTimeMillis();
+    long expiryTime = currentTime + 1000;
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setExpiryTime(expiryTime);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey(ACCOUNT_KEY)
+                                              .withLicenseInfo(licenseInfo)
+                                              .build(),
+        false);
+    TimeUnit.SECONDS.sleep(2);
+    LicenseServiceImpl licenseServiceSpy = spy(licenseService);
+    doReturn(true).when(licenseServiceSpy).sendEmailToAccountAdmin(any(), anyString());
+    licenseServiceSpy.checkForLicenseExpiry(account);
+    account = accountService.get(account.getUuid());
+    long lastLicenseExpiryReminderSentAtUpdatedValue = account.getLastLicenseExpiryReminderSentAt();
+    assertThat(lastLicenseExpiryReminderSentAtUpdatedValue)
+        .isBetween(System.currentTimeMillis() - 10000, System.currentTimeMillis() + 10000);
+    assertThat(account.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void shouldUpdateAccountStatusAfterThirtyDaysOfExpiry() {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey(ACCOUNT_KEY)
+                                              .withLicenseInfo(licenseInfo)
+                                              .build(),
+        false);
+    LicenseServiceImpl licenseServiceSpy = spy(licenseService);
+    doReturn(true).when(licenseServiceSpy).sendEmailToAccountAdmin(any(), anyString());
+    long currentTime = System.currentTimeMillis();
+    licenseServiceSpy.handleTrialAccountExpiration(account, currentTime - 30 * oneDayTimeDiff);
+    Account accountFromDB = accountService.get(account.getUuid());
+    long lastLicenseExpiryReminderSentAtUpdatedValue = accountFromDB.getLastLicenseExpiryReminderSentAt();
+    assertThat(lastLicenseExpiryReminderSentAtUpdatedValue)
+        .isBetween(System.currentTimeMillis() - 10000, System.currentTimeMillis() + 10000);
+    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.MARKED_FOR_DELETION);
   }
 
   private String getEncryptedString(LicenseInfo licenseInfo) {

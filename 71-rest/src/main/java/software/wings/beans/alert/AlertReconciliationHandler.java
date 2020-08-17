@@ -12,10 +12,12 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
@@ -30,6 +32,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
 
   @Inject private HPersistence persistence;
   @Inject private MorphiaPersistenceProvider<Alert> persistenceProvider;
+  @Inject private AccountService accountService;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -41,6 +44,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
             .targetInterval(ofMinutes(10))
             .acceptableNoAlertDelay(ofMinutes(5))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
                 -> query.filter(AlertKeys.alertReconciliation_needed, Boolean.TRUE)
                        .field(AlertKeys.status)

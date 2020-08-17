@@ -18,12 +18,14 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactCleanupService;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -34,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
 
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject @Named("AsyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceAsync;
   @Inject ArtifactCollectionUtils artifactCollectionUtils;
@@ -50,6 +53,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
             .executorService(artifactCollectionExecutor)
             .semaphore(new Semaphore(5))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
                 -> query.field(ArtifactStreamKeys.artifactStreamType)
                        .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),

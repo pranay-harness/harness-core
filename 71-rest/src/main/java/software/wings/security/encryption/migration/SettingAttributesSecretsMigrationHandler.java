@@ -27,6 +27,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -39,6 +40,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue;
 
@@ -50,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Singleton
 public class SettingAttributesSecretsMigrationHandler implements Handler<SettingAttribute> {
+  @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private FeatureFlagService featureFlagService;
@@ -69,6 +72,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
             .targetInterval(ofMinutes(30))
             .acceptableNoAlertDelay(ofHours(1))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(this ::createQuery)
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)

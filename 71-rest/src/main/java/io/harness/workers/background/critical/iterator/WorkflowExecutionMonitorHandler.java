@@ -24,6 +24,7 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -32,6 +33,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
@@ -46,6 +48,7 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 @Slf4j
 public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecution> {
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionInterruptManager executionInterruptManager;
@@ -71,6 +74,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
             .targetInterval(Duration.ofMinutes(1))
             .acceptableNoAlertDelay(Duration.ofSeconds(30))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(SchedulingType.REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

@@ -15,6 +15,7 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,6 +29,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.service.intfc.AccountService;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -38,13 +40,17 @@ import java.util.concurrent.TimeUnit;
 public class ArtifactCleanupHandlerTest extends WingsBaseTest {
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @InjectMocks @Inject ArtifactCleanupHandler artifactCleanupHandler;
+  @Inject private AccountService accountService;
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
+    AccountStatusBasedEntityProcessController<ArtifactStream> accountStatusBasedEntityProcessController =
+        new AccountStatusBasedEntityProcessController<>(accountService);
     // setup mock
     when(persistenceIteratorFactory.createIterator(any(), any()))
         .thenReturn(MongoPersistenceIterator.<ArtifactStream, MorphiaFilterExpander<ArtifactStream>>builder()
+                        .entityProcessController(accountStatusBasedEntityProcessController)
                         .filterExpander(query
                             -> query.field(ArtifactStreamKeys.artifactStreamType)
                                    .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),

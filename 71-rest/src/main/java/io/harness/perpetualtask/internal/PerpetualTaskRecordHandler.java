@@ -33,7 +33,9 @@ import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
@@ -60,6 +62,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
   @Inject private transient AlertService alertService;
+  @Inject private AccountService accountService;
 
   PersistenceIterator<PerpetualTaskRecord> iterator;
 
@@ -78,7 +81,12 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
-            .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))
+            .filterExpander(query
+                -> query.field(PerpetualTaskRecordKeys.delegateId)
+                       .equal("")
+                       .field(PerpetualTaskRecordKeys.state)
+                       .notEqual(PerpetualTaskState.TASK_PAUSED.name()))
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

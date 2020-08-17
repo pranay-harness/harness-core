@@ -22,6 +22,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.DelayLogContext;
 import io.harness.mongo.EntityLogContext;
+import io.harness.mongo.EntityProcessController;
 import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.mongo.iterator.filter.FilterExpander;
 import io.harness.mongo.iterator.provider.PersistenceProvider;
@@ -61,6 +62,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
   private ExecutorService executorService;
   private Semaphore semaphore;
   private boolean redistribute;
+  private EntityProcessController<T> entityProcessController;
   @Getter private SchedulingType schedulingType;
 
   private long movingAvg(long current, long sample) {
@@ -121,7 +123,8 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
           semaphore.release();
         }
 
-        if (entity != null) {
+        if (entity != null
+            && (entityProcessController == null || entityProcessController.shouldProcessEntity(entity))) {
           // Make sure that if the object is updated we reset the scheduler for it
           if (schedulingType != REGULAR) {
             Long nextIteration = entity.obtainNextIteration(fieldName);

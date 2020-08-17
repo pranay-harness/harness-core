@@ -23,6 +23,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
@@ -55,6 +57,7 @@ import javax.validation.constraints.NotNull;
 public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<EncryptedData> {
   static final int BATCH_SIZE = 100;
   public static final int MAX_RETRY_COUNT = 3;
+  private AccountService accountService;
   WingsPersistence wingsPersistence;
   FeatureFlagService featureFlagService;
   PersistenceIteratorFactory persistenceIteratorFactory;
@@ -67,11 +70,12 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
   MorphiaPersistenceProvider<EncryptedData> persistenceProvider;
 
   @Inject
-  public EncryptedDataAwsToGcpKmsMigrationHandler(WingsPersistence wingsPersistence,
+  public EncryptedDataAwsToGcpKmsMigrationHandler(AccountService accountService, WingsPersistence wingsPersistence,
       FeatureFlagService featureFlagService, PersistenceIteratorFactory persistenceIteratorFactory,
       KmsService kmsService, GlobalEncryptDecryptClient globalEncryptDecryptClient,
       GcpSecretsManagerService gcpSecretsManagerService, FileService fileService,
       MorphiaPersistenceProvider<EncryptedData> persistenceProvider) {
+    this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
     this.featureFlagService = featureFlagService;
     this.persistenceIteratorFactory = persistenceIteratorFactory;
@@ -138,6 +142,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
             .targetInterval(ofHours(20))
             .acceptableNoAlertDelay(ofHours(40))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(filterExpander)
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)

@@ -21,6 +21,8 @@ public interface FeatureFlagService {
 
   FeatureFlag updateFeatureFlagForAccount(String featureName, String accountId, boolean enabled);
 
+  void removeAccountReferenceFromAllFeatureFlags(String accountId);
+
   Optional<FeatureFlag> getFeatureFlag(FeatureName featureName);
 
   void enableGlobally(FeatureName featureName);

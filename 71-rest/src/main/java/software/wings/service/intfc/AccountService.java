@@ -46,6 +46,8 @@ public interface AccountService {
 
   boolean delete(String accountId);
 
+  void deleteAccount(String accountId);
+
   boolean deleteExportableAccountData(String accountId);
 
   boolean getTwoFactorEnforceInfo(String accountId);
@@ -171,6 +173,10 @@ public interface AccountService {
   void validateAccount(Account account);
 
   boolean updatePovFlag(String accountId, boolean isPov);
+
+  boolean updateAccountStatus(String accountId, String accountStatus);
+
+  boolean canProcessAccount(String accountId, long allowedNumberOfDaysSinceExpiry);
 
   Optional<String> getCeAccountType(String accountId);
 }

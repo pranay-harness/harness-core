@@ -109,6 +109,8 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long workflowDataCollectionIteration;
   @FdIndex private Long usageMetricsTaskIteration;
   @FdIndex private Long licenseExpiryCheckIteration;
+  @FdIndex private Long accountBackgroundJobCheckIteration;
+  @FdIndex private Long accountDeletionIteration;
   @FdIndex private Long gitSyncExpiryCheckIteration;
   @FdIndex private Long secretManagerValidationIterator;
   @FdIndex private Long ceLicenseExpiryIteration;
@@ -381,6 +383,16 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.accountBackgroundJobCheckIteration.equals(fieldName)) {
+      this.accountBackgroundJobCheckIteration = nextIteration;
+      return;
+    }
+
+    else if (AccountKeys.accountDeletionIteration.equals(fieldName)) {
+      this.accountDeletionIteration = nextIteration;
+      return;
+    }
+
     else if (AccountKeys.gitSyncExpiryCheckIteration.equals(fieldName)) {
       this.gitSyncExpiryCheckIteration = nextIteration;
       return;
@@ -414,6 +426,14 @@ public class Account extends Base implements PersistentRegularIterable {
 
     else if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
       return this.licenseExpiryCheckIteration;
+    }
+
+    else if (AccountKeys.accountBackgroundJobCheckIteration.equals(fieldName)) {
+      return this.accountBackgroundJobCheckIteration;
+    }
+
+    else if (AccountKeys.accountDeletionIteration.equals(fieldName)) {
+      return this.accountDeletionIteration;
     }
 
     else if (AccountKeys.gitSyncExpiryCheckIteration.equals(fieldName)) {
@@ -647,6 +667,8 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String uuid = "uuid";
     public static final String name = "name";
     public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
+    public static final String accountBackgroundJobCheckIteration = "accountBackgroundJobCheckIteration";
+    public static final String accountDeletionIteration = "accountDeletionIteration";
     public static final String subdomainUrl = "subdomainUrl";
     public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
