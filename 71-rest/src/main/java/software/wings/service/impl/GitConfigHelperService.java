@@ -29,6 +29,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
@@ -37,8 +38,8 @@ import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
-import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -57,7 +58,7 @@ public class GitConfigHelperService {
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SecretManager secretManager;
   @Inject private SettingValidationService settingValidationService;
-  @Inject private GitClientHelper gitClientHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public void validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (gitConfig.isKeyAuth()) {
@@ -85,11 +86,18 @@ public class GitConfigHelperService {
       }
     }
 
-    // Cannot throw exception here as validation is being called at many places and gitConfig.repoName is transient.
-    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && isEmpty(gitConfig.getRepoName())) {
-      return;
+    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT) {
+      if (!featureFlagService.isEnabled(FeatureName.GIT_ACCOUNT_SUPPORT, gitConfig.getAccountId())) {
+        throw new InvalidRequestException("Account level git connector is not enabled", USER);
+      }
+
+      // Cannot throw exception here as validation is being called at many places and gitConfig.repoName is transient.
+      if (isEmpty(gitConfig.getRepoName())) {
+        return;
+      }
     }
-    gitClientHelper.updateRepoUrl(gitConfig, gitConfig.getRepoName());
+
+    convertToRepoGitConfig(gitConfig, gitConfig.getRepoName());
 
     try {
       ResponseData notifyResponseData = delegateService.executeTask(
@@ -132,6 +140,7 @@ public class GitConfigHelperService {
   /**
    * If GitConfig has keyAuth enabled, and fetch SshKeySettingAttribute using sshSettingId
    * and set it into gitConfig.
+   *
    * @param gitConfig
    */
   public void setSshKeySettingAttributeIfNeeded(GitConfig gitConfig) {

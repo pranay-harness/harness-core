@@ -264,9 +264,4 @@ public class GitClientHelper {
       return gitConfig.getRepoUrl();
     }
   }
-
-  public void updateRepoUrl(GitConfig gitConfig, String repoName) {
-    gitConfig.setRepoName(repoName);
-    gitConfig.setRepoUrl(fetchCompleteUrl(gitConfig, repoName));
-  }
 }

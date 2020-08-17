@@ -161,7 +161,6 @@ import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
-import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -256,7 +255,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private FeatureService featureService;
   @Mock private StateExecutionService stateExecutionService;
-  @Mock private GitClientHelper gitClientHelper;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
@@ -546,7 +544,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getChartName()).isEqualTo(null);
     assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(null);
     verify(delegateService).queueTask(any());
-    verify(gitClientHelper).updateRepoUrl(any(GitConfig.class), anyString());
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
   }
 
   @Test()

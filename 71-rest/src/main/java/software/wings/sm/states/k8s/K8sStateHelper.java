@@ -114,10 +114,10 @@ import software.wings.helpers.ext.kustomize.KustomizeHelper;
 import software.wings.helpers.ext.openshift.OpenShiftManagerService;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
-import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -185,7 +185,7 @@ public class K8sStateHelper {
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private InstanceService instanceService;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private GitClientHelper gitClientHelper;
+  @Inject private GitConfigHelperService gitConfigHelperService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 
@@ -272,7 +272,7 @@ public class K8sStateHelper {
         gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
     GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
     notNullCheck("Git config not found", gitConfig);
-    gitClientHelper.updateRepoUrl(gitConfig, gitFileConfig.getRepoName());
+    gitConfigHelperService.convertToRepoGitConfig(gitConfig, gitFileConfig.getRepoName());
 
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), context.getWorkflowExecutionId());

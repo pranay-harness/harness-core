@@ -91,7 +91,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandR
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -129,7 +128,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock AppService appService;
   @Mock GitFileConfigHelperService gitFileConfigHelperService;
   @Mock GitUtilsManager gitUtilsManager;
-  @Mock GitClientHelper gitClientHelper;
+  @Mock GitConfigHelperService gitConfigHelperService;
   @Mock DelegateService delegateService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
@@ -775,8 +774,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     List<NameValuePair> expectedVariables = singletonList(NameValuePair.builder().build());
     doNothing()
-        .when(gitClientHelper)
-        .updateRepoUrl(gitConfigArgumentCaptor.capture(), repoNameArgumentCaptor.capture());
+        .when(gitConfigHelperService)
+        .convertToRepoGitConfig(gitConfigArgumentCaptor.capture(), repoNameArgumentCaptor.capture());
     TerraformInputVariablesTaskResponse response =
         TerraformInputVariablesTaskResponse.builder()
             .terraformExecutionData(TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
