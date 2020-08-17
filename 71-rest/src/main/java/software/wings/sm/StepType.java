@@ -420,7 +420,7 @@ public enum StepType {
       asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN)),
   K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, WorkflowConstants.K8S_DEPLOYMENT_ROLLING, asList(KUBERNETES),
       asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
-      asList(PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK), asList(ROLLING, CANARY, MULTI_SERVICE)),
   K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
       asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), asList(PhaseType.ROLLBACK)),
