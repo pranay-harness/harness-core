@@ -1,5 +1,7 @@
 package io.harness.secretmanagerclient.dto;
 
+import static io.harness.secretmanagerclient.SecretType.SecretText;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -21,7 +23,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SecretTextDTO extends SecretDTO {
-  @SecretTypeAllowedValues(allowedValues = {SecretType.SecretText}, message = "Invalid value of type")
+  @SecretTypeAllowedValues(allowedValues = {SecretText}, message = "Invalid value of type")
   @NotNull
   private SecretType type;
   @JsonIgnore private SettingVariableTypes settingVariableType;

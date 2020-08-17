@@ -1,5 +1,6 @@
 package io.harness.gitsync;
 
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableSet;
@@ -8,6 +9,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.connector.services.ConnectorService;
@@ -50,7 +52,9 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(ManagerDelegateServiceDriver.class).toInstance(mock(ManagerDelegateServiceDriver.class));
-        bind(ConnectorService.class).toInstance(mock(ConnectorService.class));
+        bind(ConnectorService.class)
+            .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
+            .toInstance(mock(ConnectorService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
       }
     });

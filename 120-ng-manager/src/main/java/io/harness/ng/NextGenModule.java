@@ -20,6 +20,7 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.ConnectorModule;
+import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.executionplan.ExecutionPlanModule;
@@ -64,6 +65,8 @@ import javax.validation.ValidatorFactory;
 
 @Slf4j
 public class NextGenModule extends DependencyModule {
+  public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
+  public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
   private final NextGenConfiguration appConfig;
 
   public NextGenModule(NextGenConfiguration appConfig) {
@@ -185,6 +188,10 @@ public class NextGenModule extends DependencyModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
+    bind(ConnectorService.class).annotatedWith(Names.named(CONNECTOR_DECORATOR_SERVICE)).to(ConnectorServiceImpl.class);
+    bind(ConnectorService.class)
+        .annotatedWith(Names.named(SECRET_MANAGER_CONNECTOR_SERVICE))
+        .to(SecretManagerConnectorServiceImpl.class);
   }
 
   private ValidatorFactory getValidatorFactory() {

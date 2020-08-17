@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 @ToString(exclude = {"authToken", "secretId"})
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class VaultConfigUpdateDTO extends NGSecretManagerConfigUpdateDTO {
+public class VaultConfigUpdateDTO extends SecretManagerConfigUpdateDTO {
   private String authToken;
   private String basePath;
   private String vaultUrl;

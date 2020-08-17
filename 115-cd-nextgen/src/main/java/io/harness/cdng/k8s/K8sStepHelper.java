@@ -1,9 +1,12 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.common.AmbianceHelper;
@@ -16,8 +19,10 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
@@ -38,13 +43,15 @@ import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig.K8sClusterConfigBuilder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 
 @Singleton
 public class K8sStepHelper {
-  @Inject private ConnectorService connectorService;
+  @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
 
   String getReleaseName(Infrastructure infrastructure) {
@@ -165,6 +172,28 @@ public class K8sStepHelper {
     }
   }
 
+  private List<EncryptedDataDetail> getEncryptionDataDetails(
+      @Nonnull ConnectorDTO connectorDTO, @Nonnull NGAccess ngAccess) {
+    switch (connectorDTO.getConnectorType()) {
+      case KUBERNETES_CLUSTER:
+        KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
+        if (connectorConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+          KubernetesClusterDetailsDTO clusterDetailsDTO = (KubernetesClusterDetailsDTO) connectorConfig.getConfig();
+
+          KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
+          return secretManagerClientService.getEncryptionDetails(ngAccess, authCredentialDTO);
+        } else {
+          return Collections.emptyList();
+        }
+      case APP_DYNAMICS:
+      case SPLUNK:
+      case GIT:
+      default:
+        throw new UnsupportedOperationException(
+            format("Unsupported connector type : [%s]", connectorDTO.getConnectorType()));
+    }
+  }
+
   public K8sInfraDelegateConfig getK8sInfraDelegateConfig(Infrastructure infrastructure, Ambiance ambiance) {
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
@@ -174,8 +203,7 @@ public class K8sStepHelper {
         return DirectK8sInfraDelegateConfig.builder()
             .namespace(k8SDirectInfrastructure.getNamespace())
             .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
-            .encryptionDataDetails(
-                connectorService.getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
             .build();
 
       default:

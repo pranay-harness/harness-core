@@ -11,8 +11,8 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -75,7 +75,7 @@ public class NGSecretManagerResource {
   @ApiOperation(value = "Update secret manager", nickname = "updateSecretManager")
   public ResponseDTO<SecretManagerConfigDTO> update(@PathParam(IDENTIFIER_KEY) String identifier,
       @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier, NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
+      @QueryParam(PROJECT_KEY) String projectIdentifier, SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
     return ResponseDTO.newResponse(ngSecretManagerService.updateSecretManager(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, secretManagerConfigUpdateDTO));
   }

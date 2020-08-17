@@ -4,7 +4,9 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
 import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PAGE_KEY;
 import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
+import static io.harness.secretmanagerclient.NGConstants.SIZE_KEY;
 
 import com.google.inject.Inject;
 
@@ -47,8 +49,6 @@ import javax.ws.rs.QueryParam;
 public class SecretsResourceNG {
   private final NgManagerServiceDriver ngManagerServiceDriver;
   private final NGSecretService ngSecretService;
-  public static final String LIMIT_KEY = "limit";
-  public static final String OFFSET_KEY = "offset";
 
   @Inject
   public SecretsResourceNG(NgManagerServiceDriver ngManagerServiceDriver, NGSecretService ngSecretService) {
@@ -79,8 +79,8 @@ public class SecretsResourceNG {
   public RestResponse<PageResponse<EncryptedDataDTO>> listSecrets(
       @QueryParam(ACCOUNT_KEY) final String accountIdentifier, @QueryParam(ORG_KEY) final String orgIdentifier,
       @QueryParam(PROJECT_KEY) final String projectIdentifier,
-      @QueryParam(LIMIT_KEY) @DefaultValue("100") final String limit,
-      @QueryParam(OFFSET_KEY) @DefaultValue("0") final String offset, @QueryParam("searchTerm") final String searchTerm,
+      @QueryParam(PAGE_KEY) @DefaultValue("0") final String page,
+      @QueryParam(SIZE_KEY) @DefaultValue("100") final String size, @QueryParam("searchTerm") final String searchTerm,
       @QueryParam("type") final SettingVariableTypes type) {
     PageResponse<EncryptedData> encryptedDataPageResponse;
     if (!StringUtils.isEmpty(searchTerm)) {
@@ -91,7 +91,7 @@ public class SecretsResourceNG {
       return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
     }
     encryptedDataPageResponse =
-        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, type, limit, offset);
+        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, type, page, size);
     return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
   }
 

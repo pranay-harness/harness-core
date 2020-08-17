@@ -1,6 +1,7 @@
 package io.harness.connector.apis.resource;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
@@ -10,8 +11,6 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 
@@ -33,9 +32,13 @@ import javax.ws.rs.QueryParam;
 @Path("accounts/{accountIdentifier}/connectors")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class ConnectorResource {
-  private ConnectorService connectorService;
+  private final ConnectorService connectorService;
+
+  @Inject
+  public ConnectorResource(@Named("connectorDecoratorService") ConnectorService connectorService) {
+    this.connectorService = connectorService;
+  }
 
   @GET
   @Path("{connectorIdentifier}")

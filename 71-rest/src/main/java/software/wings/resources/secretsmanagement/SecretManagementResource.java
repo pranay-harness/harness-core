@@ -1,6 +1,8 @@
 package software.wings.resources.secretsmanagement;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.exception.WingsException.SRE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
@@ -13,7 +15,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.UuidAware;
@@ -22,6 +23,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +38,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -72,11 +75,12 @@ import javax.ws.rs.core.MediaType;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(SETTING)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class SecretManagementResource {
-  @Inject private SecretManager secretManager;
-  @Inject private UsageRestrictionsService usageRestrictionsService;
-  @Inject private MainConfiguration configuration;
+  private final SecretManager secretManager;
+  private final UsageRestrictionsService usageRestrictionsService;
+  private final MainConfiguration configuration;
 
   @GET
   @Path("/usage")
@@ -287,7 +291,8 @@ public class SecretManagementResource {
       return new RestResponse<>(
           secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details, false));
     } catch (IllegalAccessException e) {
-      throw new WingsException(e);
+      logger.error("Illegal access exception while trying to get secrets", e);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, SRE);
     }
   }
 
@@ -301,7 +306,8 @@ public class SecretManagementResource {
       pageRequest.addFilter("accountId", Operator.EQ, accountId);
       return new RestResponse<>(secretManager.listSecretsMappedToAccount(accountId, pageRequest, details));
     } catch (IllegalAccessException e) {
-      throw new WingsException(e);
+      logger.error("Illegal access exception while trying to get secrets", e);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, SRE);
     }
   }
 

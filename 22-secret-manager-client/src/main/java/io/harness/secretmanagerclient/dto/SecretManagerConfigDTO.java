@@ -1,8 +1,9 @@
 package io.harness.secretmanagerclient.dto;
 
+import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Getter;
@@ -23,14 +24,14 @@ import java.util.List;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class SecretManagerConfigDTO {
-  private String uuid;
   private String name;
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
   private List<String> tags;
   private String identifier;
+  private String description;
+
   private EncryptionType encryptionType;
   private boolean isDefault;
-  private String description;
 }

@@ -15,6 +15,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
+import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -70,8 +71,6 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
 
   private long renewedAt;
 
-  public enum AccessType { APP_ROLE, TOKEN }
-
   @JsonIgnore
   @SchemaIgnore
   @Override
@@ -109,7 +108,6 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
   @Override
   public SecretManagerConfigDTO toDTO() {
     VaultConfigDTO ngVaultConfigDTO = VaultConfigDTO.builder()
-                                          .uuid(getUuid())
                                           .encryptionType(getEncryptionType())
                                           .name(getName())
                                           .isDefault(isDefault())

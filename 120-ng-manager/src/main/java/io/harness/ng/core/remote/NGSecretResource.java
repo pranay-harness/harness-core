@@ -2,11 +2,14 @@ package io.harness.ng.core.remote;
 
 import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
 import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PAGE_KEY;
 import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
+import static io.harness.secretmanagerclient.NGConstants.SIZE_KEY;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.NGPageResponse;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -23,12 +26,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
 import software.wings.security.encryption.EncryptedData;
 
-import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -58,25 +61,37 @@ public class NGSecretResource {
   }
 
   @POST
+  @Path("/yaml")
   @Consumes({"application/yaml"})
-  @ApiOperation(value = "Create a secret text", nickname = "postSecretTextViaYaml")
+  @ApiOperation(value = "Create a secret text via yaml", nickname = "postSecretTextViaYaml")
   public ResponseDTO<EncryptedDataDTO> createViaYaml(@Valid SecretTextDTO dto) {
     return ResponseDTO.newResponse(toDTO(ngSecretService.create(dto, true)));
   }
 
   @GET
   @ApiOperation(value = "Get secrets for an account", nickname = "listSecrets")
-  public ResponseDTO<List<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier,
+  public ResponseDTO<NGPageResponse<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @QueryParam("type") SecretType secretType, @QueryParam("searchTerm") String searchTerm) {
-    List<EncryptedData> secrets =
-        ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm);
-    return ResponseDTO.newResponse(secrets.stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList()));
+      @QueryParam("type") SecretType secretType, @QueryParam("searchTerm") String searchTerm,
+      @QueryParam(PAGE_KEY) @DefaultValue("0") int page, @QueryParam(SIZE_KEY) @DefaultValue("100") int size) {
+    NGPageResponse<EncryptedData> secrets =
+        ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size);
+    NGPageResponse<EncryptedDataDTO> encryptedDataDTOPageResponse = NGPageResponse.<EncryptedDataDTO>builder()
+                                                                        .empty(secrets.isEmpty())
+                                                                        .pageNumber(secrets.getPageNumber())
+                                                                        .size(secrets.getSize())
+                                                                        .totalElements(secrets.getTotalElements())
+                                                                        .totalPages(secrets.getTotalPages())
+                                                                        .build();
+    encryptedDataDTOPageResponse.setContent(
+        secrets.getContent().stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList()));
+
+    return ResponseDTO.newResponse(encryptedDataDTOPageResponse);
   }
 
   @GET
   @Path("{identifier}")
-  @ApiOperation(value = "Gets secret", nickname = "getSecretText")
+  @ApiOperation(value = "Gets secret", nickname = "getSecret")
   public ResponseDTO<EncryptedDataDTO> get(@PathParam("identifier") @NotEmpty String identifier,
       @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier) {
@@ -94,9 +109,9 @@ public class NGSecretResource {
   }
 
   @PUT
-  @Path("{identifier}")
+  @Path("{identifier}/yaml")
   @Consumes({"application/yaml"})
-  @ApiOperation(value = "Update a secret text", nickname = "putSecretTextViaYaml")
+  @ApiOperation(value = "Update a secret text via yaml", nickname = "putSecretTextViaYaml")
   public ResponseDTO<Boolean> updateSecretViaYaml(
       @PathParam("identifier") @NotEmpty String identifier, @Valid SecretTextDTO dto) {
     return ResponseDTO.newResponse(ngSecretService.update(dto, true));

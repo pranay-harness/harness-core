@@ -8,7 +8,8 @@ public enum ConnectorType {
   KUBERNETES_CLUSTER("K8sCluster"),
   GIT("Git"),
   SPLUNK("Splunk"),
-  APP_DYNAMICS("AppDynamics");
+  APP_DYNAMICS("AppDynamics"),
+  VAULT("Vault");
 
   private final String displayName;
 
