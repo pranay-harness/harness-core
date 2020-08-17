@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
@@ -54,8 +55,8 @@ public class OnCustomWebhookTriggerFunctionalTest extends AbstractFunctionalTest
     }
 
     service = serviceGenerator.ensureK8sTest(seed, owners, "k8s-service");
-    Workflow workflow =
-        workflowUtils.createBuildWorkflow("GraphQLAPI-test-", application.getAppId(), new ArrayList<>());
+    Workflow workflow = workflowUtils.createBuildWorkflow(
+        "GraphQLAPI-test-" + System.currentTimeMillis(), application.getAppId(), new ArrayList<>());
     savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
     assertThat(savedWorkflow).isNotNull();
@@ -120,8 +121,7 @@ public class OnCustomWebhookTriggerFunctionalTest extends AbstractFunctionalTest
     assertThat(action.get("workflowName")).isEqualTo(savedWorkflow.getName());
 
     List<Map<String, Object>> artifactSelections = (List<Map<String, Object>>) action.get("artifactSelections");
-    assertThat((String) artifactSelections.get(0).get("serviceId")).isEqualTo(service.getUuid());
-    assertThat((String) artifactSelections.get(0).get("serviceName")).isEqualTo(service.getName());
+    assertThat(EmptyPredicate.isEmpty(artifactSelections)).isTrue();
 
     // DELETE
     mutation = getGraphQLQueryForTriggerDeletion(clientMutationId, application.getAppId(), triggerId);
@@ -156,8 +156,6 @@ artifactSelections: {
 artifactFilter: "filter",
 artifactSelectionType: FROM_PAYLOAD_SOURCE,
 artifactSourceId: "%s",
-workflowId: "%s",
-regex: false,
 serviceId: "%s",
 }
 }

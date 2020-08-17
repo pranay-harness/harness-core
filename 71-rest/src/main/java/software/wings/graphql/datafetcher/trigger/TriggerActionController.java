@@ -145,8 +145,10 @@ public class TriggerActionController {
     return triggerAction;
   }
 
-  List<ArtifactSelection> resolveArtifactSelections(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
-    if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null) {
+  List<ArtifactSelection> resolveArtifactSelections(
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, List<String> artifactNeededServiceIds) {
+    if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null
+        || EmptyPredicate.isEmpty(artifactNeededServiceIds)) {
       return new ArrayList<>();
     }
 
