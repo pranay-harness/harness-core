@@ -31,6 +31,15 @@ public class BillingCalculationService {
   public BillingData getInstanceBillingAmount(
       InstanceData instanceData, UtilizationData utilizationData, Instant startTime, Instant endTime) {
     double instanceActiveSeconds = getInstanceActiveSeconds(instanceData, startTime, endTime);
+    if (instanceActiveSeconds == 0) {
+      return new BillingData(BillingAmountBreakup.builder()
+                                 .billingAmount(BigDecimal.ZERO)
+                                 .memoryBillingAmount(BigDecimal.ZERO)
+                                 .cpuBillingAmount(BigDecimal.ZERO)
+                                 .build(),
+          new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
+          new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), 0, 0, 0, 0, PricingSource.PUBLIC_API);
+    }
     InstancePricingStrategy instancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(instanceData.getInstanceType());
 
