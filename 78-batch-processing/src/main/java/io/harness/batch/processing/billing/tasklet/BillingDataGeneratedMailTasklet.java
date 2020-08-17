@@ -60,6 +60,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+    logger.info("Running BillingDataGeneratedMailTasklet for accountId : {}", accountId);
     boolean notificationSend = notificationDao.isMailSent(accountId);
     if (!notificationSend) {
       long firstEventTime = getFirstDataRecordTime(accountId);
@@ -74,9 +75,13 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
       Map<String, String> clusters = getClusters(accountId);
       if (!clusters.isEmpty()) {
         List<CEUserInfo> users = getUsers(clusters);
-        sendMail(users, clusters, accountId);
-        notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
-        logger.info("Data generated mail sent, accountId : {}", accountId);
+        if (!users.isEmpty()) {
+          sendMail(users, clusters, accountId);
+          notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
+          logger.info("Data generated mail sent, accountId : {}", accountId);
+        } else {
+          logger.info("No users found in BillingDataGeneratedMailTasklet, accountId : {}", accountId);
+        }
       }
     }
     return null;
