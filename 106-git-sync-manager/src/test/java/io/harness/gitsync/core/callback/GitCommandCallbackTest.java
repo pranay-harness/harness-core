@@ -22,6 +22,7 @@ import io.harness.delegate.beans.git.GitCommitAndPushResult;
 import io.harness.delegate.beans.git.GitCommitResult;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eraro.ErrorCode;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.CommonsMapper;
 import io.harness.gitsync.common.beans.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
@@ -159,10 +160,8 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testNotifyForGitCommitAndPush() {
-    io.harness.delegate.beans.git.GitFileChange gitFileChange =
-        io.harness.delegate.beans.git.GitFileChange.builder()
-            .changeType(io.harness.delegate.beans.git.GitFileChange.ChangeType.ADD)
-            .build();
+    io.harness.git.model.GitFileChange gitFileChange =
+        io.harness.git.model.GitFileChange.builder().changeType(ChangeType.ADD).build();
     String commitId = "commitId";
     GitCommitResult gitCommitResult = GitCommitResult.builder().commitId(commitId).build();
     String yamlChangeSetId = "yamlChangeSetId";

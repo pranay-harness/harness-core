@@ -1,11 +1,11 @@
 package io.harness.cdng.gitclient;
 
-import static io.harness.delegate.beans.git.GitFileChange.ChangeType.ADD;
-import static io.harness.delegate.beans.git.GitFileChange.ChangeType.DELETE;
-import static io.harness.delegate.beans.git.GitFileChange.ChangeType.MODIFY;
 import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.git.model.ChangeType.ADD;
+import static io.harness.git.model.ChangeType.DELETE;
+import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -16,10 +16,10 @@ import com.google.inject.Singleton;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
-import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.exception.GeneralException;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.model.ChangeType;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -108,7 +108,7 @@ public class GitClientHelperNG {
     return commitMessage.substring(0, Math.min(commitMessage.length(), 500));
   }
 
-  public GitFileChange.ChangeType getChangeType(DiffEntry.ChangeType gitDiffChangeType) {
+  public ChangeType getChangeType(DiffEntry.ChangeType gitDiffChangeType) {
     switch (gitDiffChangeType) {
       case ADD:
         return ADD;

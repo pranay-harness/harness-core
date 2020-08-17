@@ -110,8 +110,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   private TaskData getTaskDataForCommitAndPush(YamlChangeSet yamlChangeSet, GitFileChange gitFileChange,
       YamlGitConfigDTO yamlGitConfig, GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier,
       String projectIdentifier) {
-    io.harness.delegate.beans.git.GitFileChange gitFileChangeDelegate =
-        CommonsMapper.toDelegateGitFileChange(gitFileChange);
+    io.harness.git.model.GitFileChange gitFileChangeDelegate = CommonsMapper.toDelegateGitFileChange(gitFileChange);
     GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountIdentifier)
@@ -131,7 +130,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private GitCommandParams buildGitCommandParamsForCommitAndPush(YamlGitConfigDTO yamlGitConfig, GitConfigDTO gitConfig,
-      String yamlChangeSetIds, io.harness.delegate.beans.git.GitFileChange gitFileChangeDelegate,
+      String yamlChangeSetIds, io.harness.git.model.GitFileChange gitFileChangeDelegate,
       List<EncryptedDataDetail> encryptedDataDetailList) {
     return GitCommandParams.builder()
         .encryptionDetails(encryptedDataDetailList)

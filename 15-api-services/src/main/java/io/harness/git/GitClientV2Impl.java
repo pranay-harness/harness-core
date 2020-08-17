@@ -4,16 +4,21 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.git.model.Constants.GIT_YAML_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
+import static io.harness.git.model.DiffResult.diffResultBuilder;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -22,39 +27,50 @@ import io.harness.filesystem.FileIo;
 import io.harness.git.model.AuthInfo;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.DiffRequest;
+import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
 import io.harness.git.model.FetchFilesBwCommitsRequest;
 import io.harness.git.model.FetchFilesByPathRequest;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
+import io.harness.git.model.GitFileChange;
 import io.harness.git.model.JgitSshAuthRequest;
-import io.harness.git.model.UsernamePasswordAuthRequest;
-import io.harness.git.model.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.CreateBranchCommand;
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LsRemoteCommand;
+import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevSort;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -164,12 +180,12 @@ public class GitClientV2Impl implements GitClientV2 {
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(request)))) {
       try {
         if (isNotEmpty(request.getBranch())) {
-          Ref ref = git.checkout()
-                        .setCreateBranch(true)
-                        .setName(request.getBranch())
-                        .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
-                        .setStartPoint("origin/" + request.getBranch())
-                        .call();
+          git.checkout()
+              .setCreateBranch(true)
+              .setName(request.getBranch())
+              .setUpstreamMode(SetupUpstreamMode.TRACK)
+              .setStartPoint("origin/" + request.getBranch())
+              .call();
         }
 
       } catch (RefAlreadyExistsException refExIgnored) {
@@ -241,7 +257,150 @@ public class GitClientV2Impl implements GitClientV2 {
   }
 
   @Override
-  public void diff(DiffRequest request) {}
+  public DiffResult diff(DiffRequest request) {
+    String startCommitIdStr = request.getLastProcessedCommitId();
+    final String endCommitIdStr = StringUtils.defaultIfEmpty(request.getEndCommitId(), "HEAD");
+
+    ensureRepoLocallyClonedAndUpdated(request);
+
+    DiffResult diffResult = diffResultBuilder()
+                                .branch(request.getBranch())
+                                .repoName(request.getRepoUrl())
+                                .accountId(request.getAccountId())
+                                .build();
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(request)))) {
+      git.checkout().setName(request.getBranch()).call();
+      performGitPull(request, git);
+      Repository repository = git.getRepository();
+
+      ObjectId endCommitId = requireNonNull(repository.resolve(endCommitIdStr));
+      diffResult.setCommitId(endCommitId.getName());
+
+      // Find oldest commit
+      if (startCommitIdStr == null) {
+        try (RevWalk revWalk = new RevWalk(repository)) {
+          RevCommit headRevCommit = revWalk.parseCommit(endCommitId);
+          revWalk.sort(RevSort.REVERSE);
+          revWalk.markStart(headRevCommit);
+          RevCommit firstCommit = revWalk.next();
+          startCommitIdStr = firstCommit.getName();
+        }
+      }
+      logger.info(GIT_YAML_LOG_PREFIX + "startCommitIdStr =[{}], endCommitIdStr=[{}], endCommitId.name=[{}]",
+          startCommitIdStr, endCommitIdStr, endCommitId.name());
+
+      ObjectId endCommitTreeId = repository.resolve(endCommitIdStr + "^{tree}");
+      ObjectId startCommitTreeId = repository.resolve(startCommitIdStr + "^{tree}");
+
+      // ensure endCommitTreeId is after start commit
+      final boolean commitsInOrder = ensureCommitOrdering(startCommitIdStr, endCommitIdStr, repository);
+      if (!commitsInOrder) {
+        throw new YamlException(String.format("Git diff failed. End Commit [%s] should be after start commit [%s]",
+                                    endCommitIdStr, startCommitIdStr),
+            ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER, ADMIN_SRE);
+      }
+
+      diffResult.setCommitTimeMs(getCommitTimeMs(endCommitIdStr, repository));
+      diffResult.setCommitMessage(getCommitMessage(endCommitIdStr, repository));
+
+      try (ObjectReader reader = repository.newObjectReader()) {
+        CanonicalTreeParser startTreeIter = new CanonicalTreeParser();
+        startTreeIter.reset(reader, startCommitTreeId);
+        CanonicalTreeParser endTreeIter = new CanonicalTreeParser();
+        endTreeIter.reset(reader, endCommitTreeId);
+
+        List<DiffEntry> diffs = git.diff().setNewTree(endTreeIter).setOldTree(startTreeIter).call();
+        addToGitDiffResult(diffs, diffResult, endCommitId, request.getAccountId(), repository,
+            request.isExcludeFilesOutsideSetupFolder(), diffResult.getCommitTimeMs(),
+            getTruncatedCommitMessage(diffResult.getCommitMessage()));
+      }
+
+    } catch (IOException | GitAPIException ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
+      throw new YamlException("Error in getting commit diff", ADMIN_SRE);
+    }
+    return diffResult;
+  }
+
+  @VisibleForTesting
+  void performGitPull(DiffRequest request, Git git) throws GitAPIException {
+    ((PullCommand) (getAuthConfiguredCommand(git.pull(), request))).call();
+  }
+
+  private String getTruncatedCommitMessage(String commitMessage) {
+    if (isBlank(commitMessage)) {
+      return commitMessage;
+    }
+    return commitMessage.substring(0, Math.min(commitMessage.length(), 500));
+  }
+
+  @VisibleForTesting
+  void addToGitDiffResult(List<DiffEntry> diffs, DiffResult diffResult, ObjectId headCommitId, String accountId,
+      Repository repository, boolean excludeFilesOutsideSetupFolder, Long commitTimeMs, String commitMessage)
+      throws IOException {
+    logger.info(GIT_YAML_LOG_PREFIX + "Diff Entries: {}", diffs);
+    ArrayList<GitFileChange> gitFileChanges = new ArrayList<>();
+    for (DiffEntry entry : diffs) {
+      String content = null;
+      String filePath;
+      ObjectId objectId;
+      if (entry.getChangeType() == DiffEntry.ChangeType.DELETE) {
+        filePath = entry.getOldPath();
+        // we still want to collect content for deleted file, as it will be needed to decide yamlhandlerSubType in
+        // many cases. so getting oldObjectId
+        objectId = entry.getOldId().toObjectId();
+      } else {
+        filePath = entry.getNewPath();
+        objectId = entry.getNewId().toObjectId();
+      }
+
+      if (excludeFilesOutsideSetupFolder && filePath != null && !filePath.startsWith("SETUP_FOLDER")) {
+        logger.info("Excluding file [{}] ", filePath);
+        continue;
+      }
+
+      ObjectLoader loader = repository.open(objectId);
+      content = new String(loader.getBytes(), StandardCharsets.UTF_8);
+      GitFileChange gitFileChange = GitFileChange.builder()
+                                        .commitId(headCommitId.getName())
+                                        .changeType(gitClientHelper.getChangeType(entry.getChangeType()))
+                                        .filePath(filePath)
+                                        .fileContent(content)
+                                        .objectId(objectId.name())
+                                        .accountId(accountId)
+                                        .commitTimeMs(commitTimeMs)
+                                        .commitMessage(commitMessage)
+                                        .build();
+
+      gitFileChanges.add(gitFileChange);
+    }
+    diffResult.setGitFileChanges(gitFileChanges);
+  }
+
+  private Long getCommitTimeMs(String endCommitIdStr, Repository repository) throws IOException {
+    try (RevWalk revWalk = new RevWalk(repository)) {
+      final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
+      return endCommit != null ? endCommit.getCommitTime() * 1000L : null;
+    }
+  }
+
+  private String getCommitMessage(String endCommitIdStr, Repository repository) throws IOException {
+    try (RevWalk revWalk = new RevWalk(repository)) {
+      final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
+      return endCommit != null ? endCommit.getFullMessage() : null;
+    }
+  }
+
+  @VisibleForTesting
+  boolean ensureCommitOrdering(String startCommitIdStr, String endCommitIdStr, Repository repository)
+      throws IOException {
+    try (RevWalk revWalk = new RevWalk(repository)) {
+      final RevCommit startCommit = revWalk.parseCommit(repository.resolve(startCommitIdStr));
+      final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
+      return endCommit.getCommitTime() >= startCommit.getCommitTime();
+    }
+  }
 
   @Override
   public void commitAndPush(CommitAndPushRequest request) {}
@@ -433,7 +592,7 @@ public class GitClientV2Impl implements GitClientV2 {
                                             .setCreateBranch(true)
                                             .setStartPoint("origin/" + request.getBranch())
                                             .setForce(true)
-                                            .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
+                                            .setUpstreamMode(SetupUpstreamMode.TRACK)
                                             .setName(request.getBranch());
 
       setPathsForCheckout(request.getFilePaths(), checkoutCommand);

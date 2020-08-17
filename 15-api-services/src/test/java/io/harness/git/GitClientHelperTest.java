@@ -1,10 +1,10 @@
 package io.harness.git;
 
-import static io.harness.git.model.Constants.GIT_DEFAULT_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_HELM_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_TERRAFORM_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_TRIGGER_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_YAML_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_TERRAFORM_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_TRIGGER_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.YOGESH;

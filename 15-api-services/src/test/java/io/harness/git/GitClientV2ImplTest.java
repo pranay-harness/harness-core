@@ -1,7 +1,9 @@
 package io.harness.git;
 
+import static io.harness.git.model.DiffRequest.diffRequestBuilder;
 import static io.harness.git.model.DownloadFilesRequest.downloadFilesRequestBuilder;
 import static io.harness.git.model.FetchFilesByPathRequest.fetchFilesByPathRequestBuilder;
+import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,13 +17,15 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
+import io.harness.git.model.DiffRequest;
+import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
 import io.harness.git.model.FetchFilesByPathRequest;
 import io.harness.git.model.GitBaseRequest;
-import io.harness.git.model.UsernamePasswordAuthRequest;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,13 +42,14 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
-public class GitClientImplTest extends CategoryTest {
+public class GitClientV2ImplTest extends CategoryTest {
   private static final String USERNAME = "USERNAME";
   private static final String PASSWORD = "PASSWORD";
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -193,7 +198,8 @@ public class GitClientImplTest extends CategoryTest {
     gitClient.fetchFilesByPath(request);
   }
 
-  private void executeCommand(String command) {
+  private String executeCommand(String command) {
+    final String[] returnString = new String[1];
     try {
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .timeout(30, TimeUnit.SECONDS)
@@ -202,7 +208,7 @@ public class GitClientImplTest extends CategoryTest {
                                             .redirectOutput(new LogOutputStream() {
                                               @Override
                                               protected void processLine(String line) {
-                                                logger.info(line);
+                                                returnString[0] = line;
                                               }
                                             });
 
@@ -212,6 +218,7 @@ public class GitClientImplTest extends CategoryTest {
     } catch (InterruptedException | TimeoutException | IOException ex) {
       fail("Should not reach here.");
     }
+    return Arrays.toString(returnString);
   }
 
   private void addRemote(String repoPath) {
@@ -245,5 +252,42 @@ public class GitClientImplTest extends CategoryTest {
                          .toString();
 
     executeCommand(command);
+  }
+
+  private String addGitCommit(String filename) {
+    String command = new StringBuilder(128)
+                         .append("cd " + repoPath + ";")
+                         .append("touch " + filename + ";")
+                         .append("git add " + filename + ";")
+                         .append("git commit -m 'commit" + filename + " ';")
+                         .append("git push origin master;")
+                         .append("git remote update;")
+                         .append("git fetch;")
+                         .toString();
+    return executeCommand(command);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testDiff() throws GitAPIException, IOException {
+    final DiffRequest diffRequest = diffRequestBuilder()
+                                        .accountId("accountId")
+                                        .branch("master")
+                                        .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                                        .build();
+    doNothing().when(gitClient).ensureRepoLocallyClonedAndUpdated(diffRequest);
+    doReturn(repoPath).when(gitClientHelper).getRepoDirectory(diffRequest);
+    doNothing().when(gitClient).performGitPull(any(), any());
+
+    addRemote(repoPath);
+    addGitCommit("2.txt");
+    addGitCommit("3.txt");
+    final DiffResult diffResult = gitClient.diff(diffRequest);
+
+    assertThat(diffResult).isNotNull();
+    assertThat(diffResult.getCommitTimeMs()).isNotNull();
+    assertThat(diffResult.getGitFileChanges().size()).isEqualTo(2);
+    assertThat(diffResult.getAccountId()).isNotNull();
   }
 }

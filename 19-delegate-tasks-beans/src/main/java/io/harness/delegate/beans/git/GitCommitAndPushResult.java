@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.git;
 
+import io.harness.git.model.GitFileChange;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

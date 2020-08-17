@@ -1,5 +1,6 @@
-package io.harness.git.model;
+package io.harness.git;
 
+import io.harness.git.model.AuthRequest;
 import lombok.Builder;
 import lombok.Getter;
 
