@@ -77,6 +77,7 @@ public class StateExecutionInstance
   @FdIndex private long createdAt;
   private long lastUpdatedAt;
 
+  @FdIndex private String accountId;
   private String childStateMachineId;
   private String displayName;
   private String stateName;
@@ -227,6 +228,7 @@ public class StateExecutionInstance
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private Long stateTimeout;
+    private String accountId;
 
     private Builder() {}
 
@@ -409,6 +411,11 @@ public class StateExecutionInstance
       return this;
     }
 
+    public Builder accountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder but() {
       return aStateExecutionInstance()
           .stateName(stateName)
@@ -437,7 +444,8 @@ public class StateExecutionInstance
           .uuid(uuid)
           .appId(appId)
           .createdAt(createdAt)
-          .lastUpdatedAt(lastUpdatedAt);
+          .lastUpdatedAt(lastUpdatedAt)
+          .accountId(accountId);
     }
 
     public StateExecutionInstance build() {
@@ -472,6 +480,7 @@ public class StateExecutionInstance
       stateExecutionInstance.setCreatedAt(createdAt);
       stateExecutionInstance.setLastUpdatedAt(lastUpdatedAt);
       stateExecutionInstance.setStateTimeout(stateTimeout);
+      stateExecutionInstance.setAccountId(accountId);
       return stateExecutionInstance;
     }
   }
