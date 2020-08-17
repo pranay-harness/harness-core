@@ -83,7 +83,10 @@ public class TriggerController {
     triggerBuilder.name(qlCreateOrUpdateTriggerInput.getName().trim());
     triggerBuilder.appId(qlCreateOrUpdateTriggerInput.getApplicationId());
     triggerBuilder.description(qlCreateOrUpdateTriggerInput.getDescription());
+
+    // EntityId not empty is validated in validateTrigger
     triggerBuilder.workflowId(qlCreateOrUpdateTriggerInput.getAction().getEntityId());
+
     triggerBuilder.workflowType(triggerActionController.resolveWorkflowType(qlCreateOrUpdateTriggerInput));
 
     Boolean excludeHostsWithSameArtifact = qlCreateOrUpdateTriggerInput.getAction().getExcludeHostsWithSameArtifact();
@@ -110,8 +113,8 @@ public class TriggerController {
         resolvedWorkflowVariables =
             triggerActionController.validateAndResolveWorkflowVariables(variables, workflow, envId);
         triggerBuilder.workflowVariables(resolvedWorkflowVariables);
-        validateWorkflowArtifactSourceServiceIds(
-            resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections(), workflow);
+        validateAndSetArtifactSelectionsWorkflow(
+            resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput, workflow, triggerBuilder);
         break;
       case PIPELINE:
         String pipelineId = qlCreateOrUpdateTriggerInput.getAction().getEntityId();
@@ -125,13 +128,12 @@ public class TriggerController {
         resolvedWorkflowVariables =
             triggerActionController.validateAndResolvePipelineVariables(variables, pipeline, envId);
         triggerBuilder.workflowVariables(resolvedWorkflowVariables);
-        validatePipelineArtifactSourceServiceIds(
-            resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections(), pipeline);
+        validateAndSetArtifactSelectionsPipeline(
+            resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput, pipeline, triggerBuilder);
         break;
       default:
     }
 
-    triggerBuilder.artifactSelections(triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput));
     triggerBuilder.condition(triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput));
 
     return triggerBuilder.build();
@@ -220,26 +222,34 @@ public class TriggerController {
     }
   }
 
-  void validateWorkflowArtifactSourceServiceIds(
-      Map<String, String> variables, List<QLArtifactSelectionInput> artifactSelections, Workflow workflow) {
-    /* Fetch the deployment data to find out the required entity types */
+  void validateAndSetArtifactSelectionsWorkflow(Map<String, String> variables,
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, Workflow workflow, TriggerBuilder triggerBuilder) {
+    /* Fetch the deployment data to find out the required artifacts */
+    List<QLArtifactSelectionInput> artifactSelections =
+        qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections();
     DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
         workflow.getAppId(), workflow, variables, null, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
 
     List<String> artifactNeededServiceIds =
         deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
     validateArtifactSelections(artifactSelections, artifactNeededServiceIds);
+    triggerBuilder.artifactSelections(
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, artifactNeededServiceIds));
   }
 
-  void validatePipelineArtifactSourceServiceIds(
-      Map<String, String> variables, List<QLArtifactSelectionInput> artifactSelections, Pipeline pipeline) {
+  void validateAndSetArtifactSelectionsPipeline(Map<String, String> variables,
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, Pipeline pipeline, TriggerBuilder triggerBuilder) {
     /* Fetch the deployment data to find out the required entity types */
+    List<QLArtifactSelectionInput> artifactSelections =
+        qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections();
     DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
         pipeline.getAppId(), pipeline.getUuid(), variables, null, null, false, null);
 
     List<String> artifactNeededServiceIds =
         deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
     validateArtifactSelections(artifactSelections, artifactNeededServiceIds);
+    triggerBuilder.artifactSelections(
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, artifactNeededServiceIds));
   }
 
   private void validateArtifactSelections(

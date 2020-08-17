@@ -32,6 +32,7 @@ import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerBuilder;
 import software.wings.graphql.datafetcher.execution.PipelineExecutionController;
 import software.wings.graphql.datafetcher.execution.WorkflowExecutionController;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
@@ -278,10 +279,10 @@ public class TriggerControllerTest extends CategoryTest {
 
     when(triggerActionController.validateAndResolveWorkflowVariables(anyList(), any(Workflow.class), anyString()))
         .thenReturn(workflowVariables);
-    doNothing()
-        .when(triggerController)
-        .validateWorkflowArtifactSourceServiceIds(anyMap(), anyList(), any(Workflow.class));
-    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
+    //    doNothing()
+    //        .when(triggerController)
+    //        .validateAndSetArtifactSelectionsWorkflow(anyMap(), anyList(), any(Workflow.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class), anyList()))
         .thenReturn(artifactSelections);
     when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(artifactTriggerCondition);
@@ -297,8 +298,10 @@ public class TriggerControllerTest extends CategoryTest {
     verify(triggerActionController, times(1))
         .validateAndResolveWorkflowVariables(anyList(), any(Workflow.class), anyString());
     verify(triggerController, times(1))
-        .validateWorkflowArtifactSourceServiceIds(anyMap(), anyList(), any(Workflow.class));
-    verify(triggerActionController, times(1)).resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class));
+        .validateAndSetArtifactSelectionsWorkflow(
+            anyMap(), any(QLCreateOrUpdateTriggerInput.class), any(Workflow.class), any(TriggerBuilder.class));
+    verify(triggerActionController, times(1))
+        .resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class), anyList());
     verify(triggerConditionController, times(1)).resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class));
 
     assertThat(trigger).isNotNull();
@@ -379,10 +382,10 @@ public class TriggerControllerTest extends CategoryTest {
 
     when(triggerActionController.validateAndResolvePipelineVariables(anyList(), any(Pipeline.class), anyString()))
         .thenReturn(workflowVariables);
-    doNothing()
-        .when(triggerController)
-        .validatePipelineArtifactSourceServiceIds(anyMap(), anyList(), any(Pipeline.class));
-    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
+    //    doNothing()
+    //        .when(triggerController)
+    //        .validateAndSetArtifactSelectionsPipeline(anyMap(), anyList(), any(Pipeline.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class), anyList()))
         .thenReturn(artifactSelections);
     when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(artifactTriggerCondition);
@@ -399,8 +402,10 @@ public class TriggerControllerTest extends CategoryTest {
     verify(triggerActionController, times(1))
         .validateAndResolvePipelineVariables(anyList(), any(Pipeline.class), anyString());
     verify(triggerController, times(1))
-        .validatePipelineArtifactSourceServiceIds(anyMap(), anyList(), any(Pipeline.class));
-    verify(triggerActionController, times(1)).resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class));
+        .validateAndSetArtifactSelectionsPipeline(
+            anyMap(), any(QLCreateOrUpdateTriggerInput.class), any(Pipeline.class), any(TriggerBuilder.class));
+    verify(triggerActionController, times(1))
+        .resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class), anyList());
     verify(triggerConditionController, times(1)).resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class));
     verify(authService, times(1)).checkIfUserAllowedToDeployPipelineToEnv(anyString(), anyString());
 
@@ -483,8 +488,9 @@ public class TriggerControllerTest extends CategoryTest {
         .thenReturn(workflowVariables);
     doNothing()
         .when(triggerController)
-        .validatePipelineArtifactSourceServiceIds(anyMap(), anyList(), any(Pipeline.class));
-    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
+        .validateAndSetArtifactSelectionsPipeline(
+            anyMap(), any(QLCreateOrUpdateTriggerInput.class), any(Pipeline.class), any(TriggerBuilder.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class), anyList()))
         .thenReturn(artifactSelectionList);
     when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(triggerCondition);
@@ -551,8 +557,9 @@ public class TriggerControllerTest extends CategoryTest {
         .thenReturn(workflowVariables);
     doNothing()
         .when(triggerController)
-        .validateWorkflowArtifactSourceServiceIds(anyMap(), anyList(), any(Workflow.class));
-    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
+        .validateAndSetArtifactSelectionsWorkflow(
+            anyMap(), any(QLCreateOrUpdateTriggerInput.class), any(Workflow.class), any(TriggerBuilder.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class), anyList()))
         .thenReturn(artifactSelectionList);
     when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(triggerCondition);

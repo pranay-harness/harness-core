@@ -38,6 +38,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -494,13 +495,14 @@ public class TriggerActionControllerTest extends CategoryTest {
     QLArtifactSelectionInput qlArtifactSelectionInput =
         QLArtifactSelectionInput.builder()
             .artifactSelectionType(QLArtifactSelectionType.FROM_TRIGGERING_ARTIFACT)
+            .serviceId("S1")
             .build();
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
-    triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput);
+    triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -520,7 +522,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(null);
 
-    triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput);
+    triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"));
   }
 
   @Test
@@ -532,8 +534,8 @@ public class TriggerActionControllerTest extends CategoryTest {
             .action(QLTriggerActionInput.builder().artifactSelections(null).build())
             .build();
 
-    List<ArtifactSelection> artifactSelections =
-        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput);
+    List<ArtifactSelection> artifactSelections = triggerActionController.resolveArtifactSelections(
+        qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"));
 
     assertThat(artifactSelections).isEmpty();
   }
@@ -566,7 +568,8 @@ public class TriggerActionControllerTest extends CategoryTest {
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.ARTIFACT_SOURCE);
@@ -607,7 +610,8 @@ public class TriggerActionControllerTest extends CategoryTest {
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.PIPELINE_SOURCE);
@@ -647,7 +651,8 @@ public class TriggerActionControllerTest extends CategoryTest {
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.LAST_COLLECTED);
@@ -688,7 +693,8 @@ public class TriggerActionControllerTest extends CategoryTest {
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.WEBHOOK_VARIABLE);
@@ -728,7 +734,8 @@ public class TriggerActionControllerTest extends CategoryTest {
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.LAST_DEPLOYED);
@@ -768,7 +775,8 @@ public class TriggerActionControllerTest extends CategoryTest {
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.LAST_DEPLOYED);
