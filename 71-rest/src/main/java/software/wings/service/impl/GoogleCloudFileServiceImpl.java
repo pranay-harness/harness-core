@@ -465,7 +465,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
                                           .filter(GcsFileMetadataKeys.entityId, entityId)
                                           .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
-                                          .filter("qualifier", qualifier)
+                                          .filter("others.qualifier", qualifier)
                                           .order(Sort.descending(GcsFileMetadataKeys.createdAt))
                                           .get();
 
