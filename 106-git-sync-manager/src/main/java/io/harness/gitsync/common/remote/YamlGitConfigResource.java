@@ -51,7 +51,7 @@ public class YamlGitConfigResource {
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("identifier") @NotEmpty String identifier, @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
     YamlGitConfigDTO yamlGitConfigDTO =
-        yamlGitConfigService.getByIdentifier(projectId, organizationId, accountId, identifier);
+        yamlGitConfigService.getByFolderIdentifier(projectId, organizationId, accountId, identifier);
     if (yamlGitConfigDTO != null) {
       YamlGitConfigDTO yamlGitConfigDTOUpdated = yamlGitConfigService.update(
           applyUpdateToYamlGitConfigDTO(yamlGitConfigDTO, toYamlGitConfigDTO(updateGitSyncConfigDTO)));

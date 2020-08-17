@@ -13,7 +13,8 @@ import javax.validation.Valid;
 public interface YamlGitConfigService {
   Optional<GitConfigDTO> getGitConfig(YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName);
 
-  YamlGitConfigDTO getByIdentifier(String projectIdentifier, String orgIdentifier, String accountId, String identifier);
+  YamlGitConfigDTO getByFolderIdentifier(
+      String projectIdentifier, String orgIdentifier, String accountId, String identifier);
 
   Optional<YamlGitConfigDTO.RootFolder> getDefault(String projectIdentifier, String orgIdentifier, String accountId);
 

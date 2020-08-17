@@ -73,7 +73,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
-  public YamlGitConfigDTO getByIdentifier(
+  public YamlGitConfigDTO getByFolderIdentifier(
       String projectIdentifier, String orgIdentifier, String accountId, String identifier) {
     Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
     // assuming identifier = uuid.

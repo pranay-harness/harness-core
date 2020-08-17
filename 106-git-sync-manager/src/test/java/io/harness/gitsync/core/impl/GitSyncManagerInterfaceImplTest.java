@@ -53,13 +53,13 @@ public class GitSyncManagerInterfaceImplTest extends GitSyncBaseTest {
   public void testProcessHarnessToGit() {
     YamlGitConfigDTO.RootFolder rootFolder =
         YamlGitConfigDTO.RootFolder.builder().enabled(true).identifier("abcd").rootFolder(FOLDER_NAME).build();
-    doReturn(YamlGitConfigDTO.builder()
-                 .accountId(ACCOUNT_ID)
-                 .rootFolders(Arrays.asList(rootFolder))
-                 .defaultRootFolder(rootFolder)
-                 .build())
-        .when(yamlGitConfigService)
-        .getByFolderIdentifierAndIsEnabled(any(), any(), any(), any());
+    final YamlGitConfigDTO yamlGitConfigDTO = YamlGitConfigDTO.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .rootFolders(Arrays.asList(rootFolder))
+                                                  .defaultRootFolder(rootFolder)
+                                                  .build();
+    doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByFolderIdentifierAndIsEnabled(any(), any(), any(), any());
+    doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByFolderIdentifier(any(), any(), any(), any());
     doReturn(Optional.of(rootFolder)).when(yamlGitConfigService).getDefault(null, null, ACCOUNT_ID);
 
     String yamlChangeSetId = gitSyncManagerInterface.processHarnessToGit(

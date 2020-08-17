@@ -38,8 +38,12 @@ public class GitFileLocation implements PersistentEntity, UuidAware, CreatedAtAw
                                         UpdatedByAware, AccountAccess, ProjectAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
   private String yamlGitFolderConfigId;
+  private String gitConnectorId;
+  private String branch;
+  private String repo;
   private String entityGitPath;
   private String entityIdentifier;
+  private String entityName;
   private String entityRootFolderName;
   private String entityRootFolderId;
   private String entityIdentifierFQN;

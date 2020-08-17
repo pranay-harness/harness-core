@@ -89,8 +89,11 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
       String accountId, String orgId, String projectId, String entityType, String entityIdentifier) {
     Optional<YamlGitConfigDTO.RootFolder> defaultRootFolder =
         yamlGitConfigService.getDefault(projectId, orgId, accountId);
+
     return defaultRootFolder
         .map(rootFolder -> {
+          YamlGitConfigDTO yamlGitConfig =
+              yamlGitConfigService.getByFolderIdentifier(projectId, orgId, accountId, rootFolder.getIdentifier());
           return gitFileLocationRepository.save(GitFileLocation.builder()
                                                     .accountId(accountId)
                                                     .entityIdentifier(entityIdentifier)
@@ -104,6 +107,10 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
                                                     .entityRootFolderId(rootFolder.getIdentifier())
                                                     .entityGitPath(GitFileLocationHelper.getEntityPath(
                                                         rootFolder.getRootFolder(), entityType, entityIdentifier))
+                                                    .branch(yamlGitConfig.getBranch())
+                                                    .repo(yamlGitConfig.getRepo())
+                                                    .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                                                    .scope(yamlGitConfig.getScope())
                                                     .build());
         })
         .orElseThrow(() -> new InvalidRequestException("No git sync configured for given scope"));
