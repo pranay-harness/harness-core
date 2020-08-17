@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -34,6 +35,9 @@ import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelega
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.BG_VERSION;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.NAME_TAG;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_TRAFFIC_SHIFT_WEIGHT;
 import static software.wings.service.impl.aws.model.AwsConstants.MAX_TRAFFIC_SHIFT_WEIGHT;
 import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
@@ -86,6 +90,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
@@ -1069,5 +1074,33 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     existingInstancesForOlderASG = awsAmiHelperServiceDelegate.fetchExistingInstancesForOlderASG(
         AwsConfig.builder().build(), emptyList(), awsAmiServiceDeployRequest, mockCallback);
     assertThat(existingInstancesForOlderASG.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetAsgRunningCountDataWithNullAutoscalingGroup() {
+    AutoScalingGroup autoScalingGroup = null;
+    AwsAsgGetRunningCountData asgRunningCountData =
+        awsAmiHelperServiceDelegate.getAsgRunningCountData(autoScalingGroup);
+    assertThat(asgRunningCountData.getAsgDesired()).isEqualTo(DEFAULT_AMI_ASG_DESIRED_INSTANCES);
+    assertThat(asgRunningCountData.getAsgMax()).isEqualTo(DEFAULT_AMI_ASG_MAX_INSTANCES);
+    assertThat(asgRunningCountData.getAsgName()).isEqualTo(DEFAULT_AMI_ASG_NAME);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetAsgRunningCountDataNotNullAutoscalingGroup() {
+    AutoScalingGroup autoScalingGroup = new AutoScalingGroup()
+                                            .withAutoScalingGroupName("autoScalingGroup")
+                                            .withMaxSize(5)
+                                            .withMinSize(2)
+                                            .withDesiredCapacity(3);
+    AwsAsgGetRunningCountData asgRunningCountData =
+        awsAmiHelperServiceDelegate.getAsgRunningCountData(autoScalingGroup);
+    assertThat(asgRunningCountData.getAsgDesired()).isEqualTo(3);
+    assertThat(asgRunningCountData.getAsgMax()).isEqualTo(5);
+    assertThat(asgRunningCountData.getAsgName()).isEqualTo("autoScalingGroup");
   }
 }

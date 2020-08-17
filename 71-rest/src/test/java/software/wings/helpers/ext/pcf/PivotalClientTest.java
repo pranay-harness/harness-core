@@ -55,6 +55,7 @@ import org.cloudfoundry.doppler.MessageType;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationEnvironments;
+import org.cloudfoundry.operations.applications.ApplicationManifest;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
 import org.cloudfoundry.operations.applications.LogsRequest;
@@ -100,8 +101,10 @@ import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1611,5 +1614,33 @@ public class PivotalClientTest extends WingsBaseTest {
       verify(wrapper.getCloudFoundryOperations().routes()).create(createRouteRequestArgumentCaptor.capture());
       assertThat(createRouteRequestArgumentCaptor.getValue()).isEqualTo(createRouteRequest);
     }
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testaddRouteMapsToManifestRoutesArePresent() throws Exception {
+    PcfClientImpl client = spy(new PcfClientImpl());
+
+    List<String> routes = Arrays.asList("qa.harness.io/api", "app.harness.io");
+    List<org.cloudfoundry.operations.applications.Route> routesList =
+        routes.stream()
+            .map(routeMap -> org.cloudfoundry.operations.applications.Route.builder().route(routeMap).build())
+            .collect(toList());
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
+                                            .timeOutIntervalInMins(1)
+                                            .orgName("org")
+                                            .applicationName("app")
+                                            .routeMaps(routes)
+                                            .build();
+    ApplicationManifest.Builder builder = ApplicationManifest.builder();
+    builder.name("builder");
+
+    Method method = PcfClientImpl.class.getDeclaredMethod(
+        "addRouteMapsToManifest", PcfRequestConfig.class, ApplicationManifest.Builder.class);
+    method.setAccessible(true);
+    method.invoke(client, pcfRequestConfig, builder);
+    ApplicationManifest applicationManifest = builder.build();
+    assertThat(applicationManifest.getRoutes()).isEqualTo(routesList);
   }
 }
