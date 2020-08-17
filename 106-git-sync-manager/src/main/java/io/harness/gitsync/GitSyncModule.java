@@ -4,7 +4,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
+import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetServiceImpl;
@@ -46,6 +48,7 @@ public class GitSyncModule extends AbstractModule {
     bind(GitCommitService.class).to(GitCommitServiceImpl.class);
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
+    bind(GitEntityService.class).to(GitEntityServiceImpl.class);
 
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
