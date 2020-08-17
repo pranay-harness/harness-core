@@ -65,6 +65,7 @@ public class BudgetServiceImpl implements BudgetService {
   private String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
   private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
       "Error in creating budget. The budget amount should be positive and less than 100 million dollars.";
+  private String BUDGET_NAME_EXISTS_EXCEPTION = "Error in creating budget. Budget with given name already exists";
 
   private static final long CACHE_SIZE = 10000;
   private static final int MAX_RETRY = 3;
@@ -355,6 +356,10 @@ public class BudgetServiceImpl implements BudgetService {
     }
     if (budget.getBudgetAmount() < 0 || budget.getBudgetAmount() > BUDGET_AMOUNT_UPPER_LIMIT) {
       throw new InvalidRequestException(BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION);
+    }
+    List<Budget> existingBudgets = budgetDao.list(budget.getAccountId(), budget.getName());
+    if (!existingBudgets.isEmpty()) {
+      throw new InvalidRequestException(BUDGET_NAME_EXISTS_EXCEPTION);
     }
     int maxBudgetsAllowed = ceBudgetFeature.getMaxUsageAllowedForAccount(budget.getAccountId());
     int currentBudgetCount = getBudgetCount(budget.getAccountId());

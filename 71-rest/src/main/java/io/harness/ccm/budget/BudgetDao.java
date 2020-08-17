@@ -32,6 +32,15 @@ public class BudgetDao {
     return query.asList(new FindOptions().skip(startIndex).limit(count));
   }
 
+  public List<Budget> list(String accountId, String budgetName) {
+    Query<Budget> query = persistence.createQuery(Budget.class)
+                              .field(BudgetKeys.accountId)
+                              .equal(accountId)
+                              .field(BudgetKeys.name)
+                              .equal(budgetName);
+    return query.asList();
+  }
+
   public void update(String budgetId, Budget budget) {
     Query query = persistence.createQuery(Budget.class).field(BudgetKeys.uuid).equal(budgetId);
     UpdateOperations<Budget> updateOperations = persistence.createUpdateOperations(Budget.class)
