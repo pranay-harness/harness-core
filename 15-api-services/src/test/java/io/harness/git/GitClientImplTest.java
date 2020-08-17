@@ -1,16 +1,22 @@
 package io.harness.git;
 
+import static io.harness.git.model.DownloadFilesRequest.downloadFilesRequestBuilder;
+import static io.harness.git.model.FetchFilesByPathRequest.fetchFilesByPathRequestBuilder;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.YamlException;
+import io.harness.git.model.DownloadFilesRequest;
+import io.harness.git.model.FetchFilesByPathRequest;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.UsernamePasswordAuthRequest;
 import io.harness.rule.Owner;
@@ -32,6 +38,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -92,6 +99,100 @@ public class GitClientImplTest extends CategoryTest {
     gitClient.ensureRepoLocallyClonedAndUpdated(request);
   }
 
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testDownloadFiles_Branch() throws Exception {
+    DownloadFilesRequest request = downloadFilesRequestBuilder()
+                                       .repoUrl(repoPath)
+                                       .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                                       .branch("master")
+                                       .connectorId("CONNECTOR_ID")
+                                       .accountId("ACCOUNT_ID")
+                                       .destinationDirectory("./")
+                                       .build();
+    assertThatThrownBy(() -> gitClient.downloadFiles(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("FilePaths can not be empty");
+    request.setFilePaths(Collections.singletonList("./"));
+    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
+    doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
+    doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
+    addRemote(repoPath);
+    gitClient.downloadFiles(request);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testDownloadFiles_Commit() throws Exception {
+    DownloadFilesRequest request = downloadFilesRequestBuilder()
+                                       .repoUrl(repoPath)
+                                       .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                                       .commitId("t1")
+                                       .connectorId("CONNECTOR_ID")
+                                       .accountId("ACCOUNT_ID")
+                                       .destinationDirectory("./")
+                                       .build();
+    assertThatThrownBy(() -> gitClient.downloadFiles(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("FilePaths can not be empty");
+    request.setFilePaths(Collections.singletonList("./"));
+    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
+    doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
+    doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
+    addRemote(repoPath);
+    gitClient.downloadFiles(request);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testDownloadFiles_Clone() throws Exception {
+    DownloadFilesRequest request = downloadFilesRequestBuilder()
+                                       .repoUrl(repoPath)
+                                       .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                                       .branch("master")
+                                       .connectorId("CONNECTOR_ID")
+                                       .accountId("ACCOUNT_ID")
+                                       .destinationDirectory("./")
+                                       .build();
+    assertThatThrownBy(() -> gitClient.downloadFiles(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("FilePaths can not be empty");
+    request.setFilePaths(Collections.singletonList("./"));
+    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
+    doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
+    doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
+
+    assertThatThrownBy(() -> gitClient.downloadFiles(request)).isInstanceOf(YamlException.class);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testFetchFilesByPath() throws Exception {
+    FetchFilesByPathRequest request =
+        fetchFilesByPathRequestBuilder()
+            .repoUrl(repoPath)
+            .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+            .branch("master")
+            .connectorId("CONNECTOR_ID")
+            .accountId("ACCOUNT_ID")
+            .build();
+    assertThatThrownBy(() -> gitClient.fetchFilesByPath(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("FilePaths can not be empty");
+    request.setFilePaths(Collections.singletonList("./"));
+    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
+    doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
+    doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
+
+    assertThatThrownBy(() -> gitClient.fetchFilesByPath(request)).isInstanceOf(YamlException.class);
+    addRemote(repoPath);
+    gitClient.fetchFilesByPath(request);
+  }
+
   private void executeCommand(String command) {
     try {
       ProcessExecutor processExecutor = new ProcessExecutor()
@@ -124,6 +225,8 @@ public class GitClientImplTest extends CategoryTest {
                            .append("git add 1.txt;")
                            .append("git commit -m 'commit1';")
                            .append("git push origin master;")
+                           .append("git tag t1;")
+                           .append("git push origin t1;")
                            .append("git remote update;")
                            .append("git fetch;")
                            .toString();

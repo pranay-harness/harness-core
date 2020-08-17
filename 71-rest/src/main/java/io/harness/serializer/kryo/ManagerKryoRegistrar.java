@@ -406,7 +406,6 @@ import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.beans.yaml.GitFile;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPullResult;
@@ -1124,7 +1123,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GitFetchFilesFromMultipleRepoResult.class, 5615);
     kryo.register(GitFetchFilesRequest.class, 5470);
     kryo.register(GitFetchFilesResult.class, 5471);
-    kryo.register(GitFile.class, 5574);
     kryo.register(GitFileChange.class, 5197);
     kryo.register(GitFilesBetweenCommitsRequest.class, 5558);
     kryo.register(GitPullResult.class, 5209);

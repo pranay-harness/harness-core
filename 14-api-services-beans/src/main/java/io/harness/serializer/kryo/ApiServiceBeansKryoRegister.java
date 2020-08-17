@@ -49,6 +49,7 @@ import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.git.model.GitFile;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.k8s.model.HelmVersion;
@@ -150,6 +151,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(InstanceDetails.AZURE_VMSS.class, 1416);
 
     kryo.register(SettingVariableTypes.class, 5131);
+
+    kryo.register(GitFile.class, 5574);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
     kryo.register(HelmVersion.class, 7303);
     kryo.register(KubernetesClusterAuthType.class, 7317);
