@@ -61,7 +61,6 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
         getAccount(), bearerToken, RBAC_USER, email, password, HttpStatus.SC_BAD_REQUEST);
   }
 
-  @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
@@ -84,7 +83,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForIPWhitelisting() {
     AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
-        getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_OK);
+        getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test

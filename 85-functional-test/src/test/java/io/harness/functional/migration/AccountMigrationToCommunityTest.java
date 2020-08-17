@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTest {
-  @Test
   @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)
   public void testMigrateAlreadyCompliantTrialAccountToCommunity() {

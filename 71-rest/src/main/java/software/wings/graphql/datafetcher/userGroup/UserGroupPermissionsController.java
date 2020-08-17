@@ -36,7 +36,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATE_PROFILES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELISTING;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
@@ -177,8 +177,8 @@ public class UserGroupPermissionsController {
         return MANAGE_SECRET_MANAGERS;
       case MANAGE_AUTHENTICATION_SETTINGS:
         return MANAGE_AUTHENTICATION_SETTINGS;
-      case MANAGE_IP_WHITELIST:
-        return MANAGE_IP_WHITELIST;
+      case MANAGE_IP_WHITELISTING:
+        return MANAGE_IP_WHITELISTING;
       case MANAGE_DEPLOYMENT_FREEZES:
         return MANAGE_DEPLOYMENT_FREEZES;
       case MANAGE_PIPELINE_GOVERNANCE_STANDARDS:
@@ -389,7 +389,7 @@ public class UserGroupPermissionsController {
         .build();
   }
 
-  // Populate the AccountPermission entity
+  // Populate the AppPermission entity
   Set<AppPermission> populateUserGroupAppPermissionEntity(QLUserGroupPermissions permissions) {
     if (permissions == null) {
       return Collections.emptySet();
@@ -403,6 +403,14 @@ public class UserGroupPermissionsController {
     return userGroupAppPermissions;
   }
 
+  private void addAccountManagementPermission(Set<QLAccountPermissionType> qlAccountPermissionTypes) {
+    if (qlAccountPermissionTypes.contains(ADMINISTER_OTHER_ACCOUNT_FUNCTIONS)) {
+      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_APPLICATION_STACKS);
+      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_ALERT_NOTIFICATION_RULES);
+      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_AUTHENTICATION_SETTINGS);
+      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_IP_WHITELISTING);
+    }
+  }
   // Populate the AccountPermission entity
   AccountPermissions populateUserGroupAccountPermissionEntity(QLUserGroupPermissions permissions) {
     if (permissions == null || permissions.getAccountPermissions() == null) {
@@ -419,6 +427,7 @@ public class UserGroupPermissionsController {
       throw new InvalidRequestException(
           "The permission MANAGE_USERS_AND_GROUPS cannot be set without setting READ_USERS_AND_GROUPS");
     }
+    addAccountManagementPermission(accountPermissionsInput);
     Set<PermissionType> accountPermissions =
         accountPermissionsInput.stream().map(this ::mapAccountPermissions).collect(Collectors.toSet());
     return AccountPermissions.builder().permissions(accountPermissions).build();
@@ -456,8 +465,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
       case MANAGE_DEPLOYMENT_FREEZES:
         return QLAccountPermissionType.MANAGE_DEPLOYMENT_FREEZES;
-      case MANAGE_IP_WHITELIST:
-        return QLAccountPermissionType.MANAGE_IP_WHITELIST;
+      case MANAGE_IP_WHITELISTING:
+        return QLAccountPermissionType.MANAGE_IP_WHITELISTING;
       case MANAGE_AUTHENTICATION_SETTINGS:
         return QLAccountPermissionType.MANAGE_AUTHENTICATION_SETTINGS;
       case MANAGE_SECRET_MANAGERS:

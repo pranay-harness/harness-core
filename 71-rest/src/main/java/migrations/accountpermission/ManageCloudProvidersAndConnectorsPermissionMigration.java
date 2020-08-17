@@ -1,6 +1,5 @@
-package migrations;
+package migrations.accountpermission;
 
-import migrations.accountpermission.AbstractAccountManagementPermissionMigration;
 import software.wings.security.PermissionAttribute;
 
 import java.util.HashSet;

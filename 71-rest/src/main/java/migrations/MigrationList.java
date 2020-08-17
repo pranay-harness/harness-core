@@ -4,6 +4,10 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.accountpermission.AlertNotificationAccountPermissionMigration;
+import migrations.accountpermission.ManageAuthenticationSettingsPermissionMigration;
+import migrations.accountpermission.ManageCloudProvidersAndConnectorsPermissionMigration;
+import migrations.accountpermission.ManageIPWhitelistPermissionMigration;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
@@ -364,6 +368,9 @@ public class MigrationList {
         .add(Pair.of(325, ManageCloudProvidersAndConnectorsPermissionMigration.class))
         .add(Pair.of(326, SecretManagerPermissionMigration.class))
         .add(Pair.of(327, ManageSecretsMigration.class))
+        .add(Pair.of(328, ManageIPWhitelistPermissionMigration.class))
+        .add(Pair.of(329, AlertNotificationAccountPermissionMigration.class))
+        .add(Pair.of(330, ManageAuthenticationSettingsPermissionMigration.class))
         .build();
   }
 }
