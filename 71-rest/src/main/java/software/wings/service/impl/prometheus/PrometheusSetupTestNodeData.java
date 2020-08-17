@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.sm.StateType;
@@ -25,7 +24,7 @@ public class PrometheusSetupTestNodeData extends SetupTestNodeData {
 
   @Builder
   public PrometheusSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
-      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
+      Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       List<TimeSeries> timeSeriesToAnalyze, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.PROMETHEUS, fromTime, toTime);

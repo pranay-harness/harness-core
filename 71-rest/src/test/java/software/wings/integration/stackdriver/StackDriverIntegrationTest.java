@@ -26,6 +26,7 @@ import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
 import software.wings.sm.StateType;
@@ -152,22 +153,25 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
         .toTime(System.currentTimeMillis() / 1000)
         .fromTime((System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)) / 1000)
         .instanceElement(
-            anInstanceElement()
-                .uuid("8cec1e1b0d16")
-                .displayName("8cec1e1b0d16")
-                .hostName("testHost")
-                .dockerId("8cec1e1b0d16")
-                .host(HostElement.builder()
-                          .uuid("8cec1e1b0d16")
-                          .hostName("testHost")
-                          .ip("1.1.1.1")
-                          .instanceId(null)
-                          .publicDns(null)
-                          .ec2Instance(null)
-                          .build())
-                .serviceTemplateElement(aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
-                .podName("testHost")
-                .workloadName("testHost")
+            SetupTestNodeData.Instance.builder()
+                .instance(anInstanceElement()
+                              .uuid("8cec1e1b0d16")
+                              .displayName("8cec1e1b0d16")
+                              .hostName("testHost")
+                              .dockerId("8cec1e1b0d16")
+                              .host(HostElement.builder()
+                                        .uuid("8cec1e1b0d16")
+                                        .hostName("testHost")
+                                        .ip("1.1.1.1")
+                                        .instanceId(null)
+                                        .publicDns(null)
+                                        .ec2Instance(null)
+                                        .build())
+                              .serviceTemplateElement(
+                                  aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
+                              .podName("testHost")
+                              .workloadName("testHost")
+                              .build())
                 .build())
         .workflowId(workflowId)
         .build();

@@ -38,6 +38,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
@@ -280,7 +281,10 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                   .hostExpression("${host.hostName}")
                   .workflowId(workflowId)
                   .instanceElement(
-                      anInstanceElement().host(HostElement.builder().hostName(node.getName()).build()).build())
+                      SetupTestNodeData.Instance.builder()
+                          .instance(
+                              anInstanceElement().host(HostElement.builder().hostName(node.getName()).build()).build())
+                          .build())
                   .build();
           try {
             target = client.target(API_BASE + "/appdynamics/node-data?accountId=" + accountId);

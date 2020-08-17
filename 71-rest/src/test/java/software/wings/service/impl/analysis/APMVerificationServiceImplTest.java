@@ -181,7 +181,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .metrics("docker.mem.rss")
             .fromTime(Timestamp.currentMinuteBoundary())
             .toTime(Timestamp.currentMinuteBoundary())
-            .instanceElement(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+            .instanceElement(
+                SetupTestNodeData.Instance.builder()
+                    .instance(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+                    .build())
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();
@@ -220,7 +223,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .metrics("docker.mem.rss")
             .fromTime(Timestamp.currentMinuteBoundary())
             .toTime(Timestamp.currentMinuteBoundary())
-            .instanceElement(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+            .instanceElement(
+                SetupTestNodeData.Instance.builder()
+                    .instance(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+                    .build())
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();
@@ -259,7 +265,10 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
             .metrics("docker.mem.rss")
             .fromTime(Timestamp.currentMinuteBoundary())
             .toTime(Timestamp.currentMinuteBoundary())
-            .instanceElement(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+            .instanceElement(
+                SetupTestNodeData.Instance.builder()
+                    .instance(InstanceElement.Builder.anInstanceElement().hostName("sampleHostname").build())
+                    .build())
             .stateType(StateType.DATA_DOG)
             .guid(generateUuid())
             .build();

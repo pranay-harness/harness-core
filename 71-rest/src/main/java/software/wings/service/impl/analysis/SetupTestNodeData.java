@@ -4,8 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.deployment.InstanceDetails;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import software.wings.api.InstanceElement;
 import software.wings.sm.StateType;
 
@@ -23,7 +26,7 @@ public class SetupTestNodeData {
   @NotNull private String settingId;
   private String instanceName;
   @JsonProperty private boolean isServiceLevel;
-  private InstanceElement instanceElement;
+  private Instance instanceElement;
   private String hostExpression;
   private String workflowId;
   private String guid;
@@ -32,7 +35,7 @@ public class SetupTestNodeData {
   private long fromTime = toTime - TimeUnit.MINUTES.toMillis(20) / TimeUnit.SECONDS.toMillis(1);
 
   public SetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
-      InstanceElement instanceElement, String hostExpression, String workflowId, String guid, StateType stateType,
+      Instance instanceElement, String hostExpression, String workflowId, String guid, StateType stateType,
       long fromTime, long toTime) {
     this.appId = appId;
     this.settingId = settingId;
@@ -45,5 +48,11 @@ public class SetupTestNodeData {
     this.stateType = stateType;
     this.toTime = toTime;
     this.fromTime = fromTime;
+  }
+  @Value
+  @Builder
+  public static class Instance {
+    InstanceDetails instanceDetails;
+    InstanceElement instance;
   }
 }

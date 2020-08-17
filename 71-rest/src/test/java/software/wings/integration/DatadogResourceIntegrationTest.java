@@ -28,6 +28,7 @@ import software.wings.api.HostElement;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.WorkflowExecution;
+import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
@@ -209,22 +210,25 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
 
     if (isWorkflowConfig) {
       dataDogSetupTestNodeData.setInstanceElement(
-          anInstanceElement()
-              .uuid("8cec1e1b0d16")
-              .displayName("8cec1e1b0d16")
-              .hostName("testHost")
-              .dockerId("8cec1e1b0d16")
-              .host(HostElement.builder()
-                        .uuid("8cec1e1b0d16")
-                        .hostName("testHost")
-                        .ip("1.1.1.1")
-                        .instanceId(null)
-                        .publicDns(null)
-                        .ec2Instance(null)
-                        .build())
-              .serviceTemplateElement(aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
-              .podName("testHost")
-              .workloadName("testHost")
+          SetupTestNodeData.Instance.builder()
+              .instance(
+                  anInstanceElement()
+                      .uuid("8cec1e1b0d16")
+                      .displayName("8cec1e1b0d16")
+                      .hostName("testHost")
+                      .dockerId("8cec1e1b0d16")
+                      .host(HostElement.builder()
+                                .uuid("8cec1e1b0d16")
+                                .hostName("testHost")
+                                .ip("1.1.1.1")
+                                .instanceId(null)
+                                .publicDns(null)
+                                .ec2Instance(null)
+                                .build())
+                      .serviceTemplateElement(aServiceTemplateElement().withUuid("8cec1e1b0d16").withName(null).build())
+                      .podName("testHost")
+                      .workloadName("testHost")
+                      .build())
               .build());
       if (stateType == StateType.DATA_DOG) {
         dataDogSetupTestNodeData.setMetrics("docker.cpu.usage,docker.mem.rss");
