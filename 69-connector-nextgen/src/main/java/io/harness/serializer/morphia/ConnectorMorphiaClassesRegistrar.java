@@ -13,6 +13,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
+import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -24,6 +25,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(Connector.class);
     set.add(KubernetesClusterConfig.class);
     set.add(GitConfig.class);
+    set.add(VaultConnector.class);
     set.add(AppDynamicsConnector.class);
     set.add(SplunkConnector.class);
   }

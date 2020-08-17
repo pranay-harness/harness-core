@@ -1,5 +1,6 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.gitsync.common.ScopeHelper.getScope;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfig;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId;
@@ -8,6 +9,7 @@ import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitFold
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.amazonaws.services.eks.model.InvalidRequestException;
 import io.harness.connector.apis.dto.ConnectorDTO;
@@ -23,7 +25,6 @@ import io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig.YamlGi
 import io.harness.gitsync.common.helper.YamlGitConfigDTOComparator;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,12 +37,20 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final YamlGitConfigRepository yamlGitConfigRepository;
   private final YamlGitFolderConfigRepository yamlGitConfigFolderRepository;
   private final ConnectorService connectorService;
+
+  @Inject
+  public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
+      YamlGitFolderConfigRepository yamlGitConfigFolderRepository,
+      @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService) {
+    this.yamlGitConfigRepository = yamlGitConfigRepository;
+    this.yamlGitConfigFolderRepository = yamlGitConfigFolderRepository;
+    this.connectorService = connectorService;
+  }
 
   @Override
   public List<YamlGitConfigDTO> get(String projectIdentifier, String orgIdentifier, String accountId) {

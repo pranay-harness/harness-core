@@ -1,13 +1,13 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
+import static io.harness.secretmanagerclient.utils.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
 
   @Override
   public SecretManagerConfigDTO updateSecretManager(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
+      String projectIdentifier, String identifier, SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
     return getResponse(secretManagerClient.updateSecretManager(
         identifier, accountIdentifier, orgIdentifier, projectIdentifier, secretManagerConfigUpdateDTO));
   }

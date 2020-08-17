@@ -22,17 +22,10 @@ import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -41,23 +34,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 @Singleton
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
-public class ConnectorServiceImpl implements ConnectorService {
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
+public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
   private final ConnectorFilterHelper connectorFilterHelper;
   private ConnectorScopeHelper connectorScopeHelper;
-
-  @Inject private Map<String, ConnectionValidator> connectionValidatorMap;
-  @Inject private SecretManagerClientService secretManagerClientService;
+  private Map<String, ConnectionValidator> connectionValidatorMap;
+  private SecretManagerClientService secretManagerClientService;
 
   @Override
   public Optional<ConnectorDTO> get(
@@ -173,29 +162,6 @@ public class ConnectorServiceImpl implements ConnectorService {
     } else {
       throw new InvalidRequestException(
           createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
-    }
-  }
-
-  @Override
-  public List<EncryptedDataDetail> getEncryptionDataDetails(
-      @Nonnull ConnectorDTO connectorDTO, @Nonnull NGAccess ngAccess) {
-    switch (connectorDTO.getConnectorType()) {
-      case KUBERNETES_CLUSTER:
-        KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
-        if (connectorConfig.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-          KubernetesClusterDetailsDTO clusterDetailsDTO = (KubernetesClusterDetailsDTO) connectorConfig.getConfig();
-
-          KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
-          return secretManagerClientService.getEncryptionDetails(ngAccess, authCredentialDTO);
-        } else {
-          return Collections.emptyList();
-        }
-      case APP_DYNAMICS:
-      case SPLUNK:
-      case GIT:
-      default:
-        throw new UnsupportedOperationException(
-            format("Unsupported connector type : [%s]", connectorDTO.getConnectorType()));
     }
   }
 

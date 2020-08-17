@@ -14,7 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
-import io.harness.connector.impl.ConnectorServiceImpl;
+import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
@@ -35,7 +35,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class ConnectorResourceTest extends CategoryTest {
-  @Mock private ConnectorServiceImpl connectorService;
+  @Mock private ConnectorService connectorService;
   @InjectMocks private ConnectorResource connectorResource;
   ConnectorDTO connectorDTO;
   ConnectorRequestDTO randomConnectorRequestDTO;

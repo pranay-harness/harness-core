@@ -47,8 +47,7 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
   @Override
   public SecretManagerConfigDTO toDTO() {
     NGSecretManagerMetadata ngMetadata = getNgMetadata();
-    LocalConfigDTO localConfigDTO =
-        LocalConfigDTO.builder().uuid(getUuid()).encryptionType(getEncryptionType()).build();
+    LocalConfigDTO localConfigDTO = LocalConfigDTO.builder().encryptionType(getEncryptionType()).build();
     if (ngMetadata != null) {
       localConfigDTO.setAccountIdentifier(ngMetadata.getAccountIdentifier());
       localConfigDTO.setOrgIdentifier(ngMetadata.getOrgIdentifier());

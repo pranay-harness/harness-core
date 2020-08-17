@@ -94,7 +94,8 @@ public class NGSecretFileResource {
   }
 
   @POST
-  @ApiOperation(value = "Create a secret file", nickname = "postSecretFileViaYaml")
+  @Path("/yaml")
+  @ApiOperation(value = "Create a secret file via yaml", nickname = "postSecretFileViaYaml")
   @Consumes({"application/yaml"})
   public ResponseDTO<EncryptedDataDTO> createViaYaml(@Valid SecretFileDTO dto) {
     return ResponseDTO.newResponse(toDTO(ngSecretFileService.create(dto, null)));
@@ -104,9 +105,9 @@ public class NGSecretFileResource {
   @Path("{identifier}")
   @ApiOperation(value = "Update a secret file", nickname = "putSecretFile")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<Boolean> update(@NotNull @FormDataParam(FILE_KEY) InputStream uploadedInputStream,
-      @FormDataParam(TAGS_KEY) String tagsString, @NotNull @FormDataParam(NAME_KEY) String name,
-      @NotNull @FormDataParam(ACCOUNT_KEY) String account,
+  public ResponseDTO<Boolean> update(@PathParam("identifier") @NotEmpty String pathIdentifier,
+      @NotNull @FormDataParam(FILE_KEY) InputStream uploadedInputStream, @FormDataParam(TAGS_KEY) String tagsString,
+      @NotNull @FormDataParam(NAME_KEY) String name, @NotNull @FormDataParam(ACCOUNT_KEY) String account,
       @NotNull @SecretTypeAllowedValues(allowedValues = {SecretFile}) @FormDataParam(TYPE_KEY) SecretType secretType,
       @FormDataParam(ORG_KEY) String org, @FormDataParam(PROJECT_KEY) String project,
       @NotNull @FormDataParam(SECRET_MANAGER_KEY) String secretManager,
@@ -132,11 +133,11 @@ public class NGSecretFileResource {
   }
 
   @PUT
-  @Path("{identifier}")
-  @ApiOperation(value = "Update a secret file", nickname = "putSecretFileViaYaml")
+  @Path("{identifier}/yaml")
+  @ApiOperation(value = "Update a secret file via yaml", nickname = "putSecretFileViaYaml")
   @Consumes({"application/yaml"})
   public ResponseDTO<Boolean> updateSecretFileViaYaml(
-      @PathParam("identifier") @NotEmpty String identifier, @Valid SecretFileDTO dto) {
+      @PathParam(IDENTIFIER_KEY) @NotEmpty String identifier, @Valid SecretFileDTO dto) {
     return ResponseDTO.newResponse(ngSecretFileService.update(dto, null));
   }
 }

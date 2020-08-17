@@ -1,8 +1,8 @@
 package software.wings.resources.secretsmanagement.mappers;
 
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
 import io.harness.security.encryption.EncryptionType;
@@ -37,7 +37,6 @@ public class SecretManagerConfigMapper {
                                                .tags(vaultConfigDTO.getTags())
                                                .build();
       vaultConfig.setNgMetadata(ngMetadata);
-      vaultConfig.setUuid(vaultConfigDTO.getUuid());
       vaultConfig.setAccountId(vaultConfigDTO.getAccountIdentifier());
       vaultConfig.setEncryptionType(vaultConfigDTO.getEncryptionType());
       vaultConfig.setDefault(vaultConfigDTO.isDefault());
@@ -47,7 +46,7 @@ public class SecretManagerConfigMapper {
   }
 
   public static SecretManagerConfig applyUpdate(
-      SecretManagerConfig secretManagerConfig, NGSecretManagerConfigUpdateDTO dto) {
+      SecretManagerConfig secretManagerConfig, SecretManagerConfigUpdateDTO dto) {
     if (dto.getEncryptionType() == EncryptionType.VAULT) {
       VaultConfigUpdateDTO vaultConfigDTO = (VaultConfigUpdateDTO) dto;
       VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;

@@ -2,13 +2,15 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
-import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
+import static io.harness.secretmanagerclient.utils.RestClientUtils.getResponse;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.NGPageResponse;
+import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.secretmanagerclient.SecretType;
@@ -23,7 +25,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
 import software.wings.security.encryption.EncryptedData;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -40,12 +41,28 @@ public class NGSecretServiceImpl implements NGSecretService {
         getResponse(secretManagerClient.getSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
   }
 
+  private NGPageResponse<EncryptedData> getNGPageResponseFromPageResponse(PageResponse<EncryptedDataDTO> pageResponse) {
+    NGPageResponse<EncryptedData> encryptedDataPageResponse =
+        NGPageResponse.<EncryptedData>builder()
+            .pageNumber(pageResponse.getCurrentPage())
+            .empty(pageResponse.isEmpty())
+            .size(pageResponse.size())
+            .totalElements(pageResponse.getTotal())
+            .content(pageResponse.getResponse().stream().map(EncryptedDataMapper::fromDTO).collect(Collectors.toList()))
+            .build();
+    if (encryptedDataPageResponse.getTotalElements() > 0 && encryptedDataPageResponse.getSize() > 0) {
+      encryptedDataPageResponse.setTotalPages(
+          (int) Math.ceil((double) encryptedDataPageResponse.getTotalElements() / encryptedDataPageResponse.getSize()));
+    }
+    return encryptedDataPageResponse;
+  }
+
   @Override
-  public List<EncryptedData> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      SecretType secretType, String searchTerm) {
-    List<EncryptedDataDTO> encryptedDataDTOs = getResponse(
-        secretManagerClient.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm));
-    return encryptedDataDTOs.stream().map(EncryptedDataMapper::fromDTO).collect(Collectors.toList());
+  public NGPageResponse<EncryptedData> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      SecretType secretType, String searchTerm, int page, int size) {
+    PageResponse<EncryptedDataDTO> pageResponse = getResponse(secretManagerClient.listSecrets(
+        accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size));
+    return getNGPageResponseFromPageResponse(pageResponse);
   }
 
   @Override

@@ -34,7 +34,7 @@ import java.util.Optional;
 public class SplunkConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
-  @InjectMocks ConnectorServiceImpl connectorService;
+  @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
   String password = "password";

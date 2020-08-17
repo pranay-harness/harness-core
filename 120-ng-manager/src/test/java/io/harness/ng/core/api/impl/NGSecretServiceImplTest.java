@@ -1,11 +1,11 @@
 package io.harness.ng.core.api.impl;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.apache.http.HttpStatus.SC_BAD_GATEWAY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -14,11 +14,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.UnexpectedException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
-import io.harness.secretmanagerclient.exception.SecretManagementClientException;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
@@ -94,14 +94,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.getSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    boolean exceptionThrown = false;
     try {
       ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
-    } catch (SecretManagementClientException sme) {
-      exceptionThrown = true;
-      assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here");
+    } catch (Exception exception) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 
   @Test
@@ -112,14 +110,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.getSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
-    boolean exceptionThrown = false;
     try {
       ngSecretService.get(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
-    } catch (SecretManagementClientException sme) {
-      exceptionThrown = true;
-      assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here");
+    } catch (Exception exception) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 
   @Test
@@ -166,14 +162,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.createSecret(any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    boolean exceptionThrown = false;
     try {
       ngSecretService.create(randomSecretText, false);
-    } catch (SecretManagementClientException ex) {
-      exceptionThrown = true;
-      assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here");
+    } catch (Exception ex) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 
   @Test
@@ -186,14 +180,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.createSecret(any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
-    boolean exceptionThrown = false;
     try {
       ngSecretService.create(randomSecretText, false);
-    } catch (SecretManagementClientException ex) {
-      exceptionThrown = true;
-      assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here");
+    } catch (UnexpectedException ex) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 
   @Test
@@ -244,14 +236,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(restResponseCall.execute()).thenReturn(response);
     doReturn(EncryptedDataMapper.fromDTO(dto)).when(spyNGSecretService).get(any(), any(), any(), any());
 
-    boolean exceptionThrown = false;
     try {
       spyNGSecretService.update(dto, false);
-    } catch (SecretManagementClientException ex) {
-      exceptionThrown = true;
-      assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here");
+    } catch (Exception ex) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 
   @Test
@@ -265,14 +255,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(restResponseCall.execute()).thenThrow(new IOException());
     doReturn(EncryptedDataMapper.fromDTO(dto)).when(spyNGSecretService).get(any(), any(), any(), any());
 
-    boolean exceptionThrown = false;
     try {
       spyNGSecretService.update(dto, false);
-    } catch (SecretManagementClientException ex) {
-      exceptionThrown = true;
-      assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here");
+    } catch (Exception ex) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 
   @Test
@@ -316,14 +304,12 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.deleteSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    boolean exceptionThrown = false;
     try {
       ngSecretService.delete(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
-    } catch (SecretManagementClientException ex) {
-      exceptionThrown = true;
-      assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here.");
+    } catch (Exception ex) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 
   @Test
@@ -335,13 +321,11 @@ public class NGSecretServiceImplTest extends CategoryTest {
     when(secretManagerClient.deleteSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
-    boolean exceptionThrown = false;
     try {
       ngSecretService.delete(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
-    } catch (SecretManagementClientException ex) {
-      exceptionThrown = true;
-      assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
+      fail("Execution should not reach here");
+    } catch (Exception ex) {
+      // not required
     }
-    assertThat(exceptionThrown).isTrue();
   }
 }

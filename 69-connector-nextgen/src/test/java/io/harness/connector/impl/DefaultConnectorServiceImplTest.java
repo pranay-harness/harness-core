@@ -56,12 +56,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class ConnectorServiceImplTest extends ConnectorsBaseTest {
+public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
   @Mock ConnectorRepository connectorRepository;
   @Mock ConnectorScopeHelper connectorScopeHelper = Mockito.mock(ConnectorScopeHelper.class);
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
-  @Inject @InjectMocks ConnectorServiceImpl connectorService;
+  @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
   String cacertIdentifier = "cacertIdentifier";

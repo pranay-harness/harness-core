@@ -17,7 +17,7 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "encryptionType",
     visible = true)
 @JsonSubTypes({ @JsonSubTypes.Type(name = "VAULT", value = VaultConfigUpdateDTO.class) })
-public class NGSecretManagerConfigUpdateDTO {
+public class SecretManagerConfigUpdateDTO {
   private List<String> tags;
   private EncryptionType encryptionType;
   private boolean isDefault;

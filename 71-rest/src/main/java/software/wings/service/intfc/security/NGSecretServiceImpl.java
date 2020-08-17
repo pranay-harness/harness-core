@@ -122,7 +122,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
   @Override
   public PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, SettingVariableTypes type, String limit, String offset) {
+      String projectIdentifier, SettingVariableTypes type, String page, String size) {
     PageRequest<EncryptedData> pageRequest = new PageRequest<>();
     pageRequest.addFilter(ACCOUNT_IDENTIFIER_KEY, EQ, accountIdentifier);
     pageRequest.addFilter(ORG_IDENTIFIER_KEY, EQ, orgIdentifier);
@@ -130,8 +130,8 @@ public class NGSecretServiceImpl implements NGSecretService {
     if (Optional.ofNullable(type).isPresent()) {
       pageRequest.addFilter(EncryptedDataKeys.type, EQ, type);
     }
-    pageRequest.setLimit(limit);
-    pageRequest.setOffset(offset);
+    pageRequest.setLimit(size);
+    pageRequest.setOffset(page);
     return wingsPersistence.query(EncryptedData.class, pageRequest);
   }
 

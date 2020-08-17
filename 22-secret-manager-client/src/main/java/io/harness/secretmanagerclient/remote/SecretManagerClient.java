@@ -5,15 +5,17 @@ import static io.harness.secretmanagerclient.NGConstants.FILE_KEY;
 import static io.harness.secretmanagerclient.NGConstants.FILE_METADATA_KEY;
 import static io.harness.secretmanagerclient.NGConstants.IDENTIFIER_KEY;
 import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
+import static io.harness.secretmanagerclient.NGConstants.PAGE_KEY;
 import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
+import static io.harness.secretmanagerclient.NGConstants.SIZE_KEY;
 
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -68,7 +70,8 @@ public interface SecretManagerClient {
   @GET(SECRETS_API)
   Call<RestResponse<PageResponse<EncryptedDataDTO>>> listSecrets(@Query(value = ACCOUNT_KEY) String accountIdentifier,
       @Query(ORG_KEY) String orgIdentifier, @Query(PROJECT_KEY) String projectIdentifier,
-      @Query("type") SecretType secretType, @Query("searchTerm") String searchTerm);
+      @Query("type") SecretType secretType, @Query("searchTerm") String searchTerm, @Query(PAGE_KEY) int page,
+      @Query(SIZE_KEY) int size);
 
   // update secret
   @PUT(SECRETS_API + "/{identifier}")
@@ -92,13 +95,17 @@ public interface SecretManagerClient {
 
   // create secret manager
   @POST(SECRET_MANAGERS_API)
+  @KryoRequest
+  @KryoResponse
   Call<RestResponse<SecretManagerConfigDTO>> createSecretManager(@Body SecretManagerConfigDTO secretManagerConfig);
 
   // update secret manager
   @PUT(SECRET_MANAGERS_API + "/{identifier}")
+  @KryoResponse
+  @KryoRequest
   Call<RestResponse<SecretManagerConfigDTO>> updateSecretManager(@Path("identifier") String identifier,
       @Query(ACCOUNT_KEY) String accountIdentifier, @Query(ORG_KEY) String orgIdentifier,
-      @Query(PROJECT_KEY) String projectIdentifier, @Body NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO);
+      @Query(PROJECT_KEY) String projectIdentifier, @Body SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO);
 
   // list secret managers
   @GET(SECRET_MANAGERS_API)

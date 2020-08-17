@@ -3,6 +3,8 @@ package io.harness.secretmanagerclient;
 public class NGConstants {
   private NGConstants() {}
 
+  public static final String PAGE_KEY = "page";
+  public static final String SIZE_KEY = "size";
   public static final String ACCOUNT_KEY = "account";
   public static final String ORG_KEY = "org";
   public static final String PROJECT_KEY = "project";
