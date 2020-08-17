@@ -421,7 +421,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         persistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.uuid, cloudProviderId);
     SettingAttribute cloudProvider = cloudProviderQuery.get();
 
-    if (cloudProvider != null) {
+    if (cloudProvider != null && cloudProvider.getCreatedBy() != null) {
       return CEUserInfo.builder()
           .name(cloudProvider.getCreatedBy().getName())
           .email(cloudProvider.getCreatedBy().getEmail())
