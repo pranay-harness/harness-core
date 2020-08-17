@@ -137,7 +137,9 @@ public class ExecutionResource {
 
     // No need to show child executions unless includeIndirectExecutions is true
     if (!includeIndirectExecutions) {
-      pageRequest.addFilter("pipelineExecutionId", Operator.NOT_EXISTS);
+      pageRequest.addFilter(WorkflowExecutionKeys.cdPageCandidate, Operator.EQ, Boolean.TRUE);
+    } else {
+      PipelineResumeUtils.addLatestPipelineResumeFilter(pageRequest);
     }
 
     if (isNotBlank(orchestrationId)) {
@@ -154,7 +156,6 @@ public class ExecutionResource {
         -> pageRequest.addFilter(WorkflowExecutionKeys.startTs, GE,
             EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
-    PipelineResumeUtils.addLatestPipelineResumeFilter(pageRequest);
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
 
