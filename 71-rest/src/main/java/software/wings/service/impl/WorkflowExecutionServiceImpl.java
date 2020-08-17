@@ -947,7 +947,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private WorkflowTree calculateTree(String appId, String workflowExecutionId) {
+  private WorkflowTree calculateTree(String appId, String workflowExecutionId, String accountId) {
     Map<String, StateExecutionInstance> allInstancesIdMap =
         stateExecutionService.executionStatesMap(appId, workflowExecutionId);
     Long lastUpdate = allInstancesIdMap.values()
@@ -972,7 +972,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowTreeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap));
 
     WorkflowTree cacheTree = workflowTreeBuilder.build();
-    executorService.submit(() -> { mongoStore.upsert(cacheTree, ofDays(30)); });
+
+    executorService.submit(() -> { mongoStore.upsert(cacheTree, ofDays(30), false, accountId); });
     return cacheTree;
   }
 
@@ -1016,7 +1017,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       if (upToDate || tree == null || tree.isWasInvalidated()
           || tree.getLastUpdatedAt() < (System.currentTimeMillis() - 5000)) {
-        tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid());
+        tree =
+            calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid(), workflowExecution.getAccountId());
       }
 
       if (includeStatus && tree.getOverrideStatus() != null) {
@@ -4575,7 +4577,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                         .params(tree.getParams())
                                         .graph(tree.getGraph())
                                         .build();
-      executorService.submit(() -> mongoStore.upsert(downgradedTree, ofMinutes(1), true));
+
+      String accountId = workflowExecution.getAccountId();
+      executorService.submit(() -> mongoStore.upsert(downgradedTree, ofMinutes(1), true, accountId));
     }
   }
 }

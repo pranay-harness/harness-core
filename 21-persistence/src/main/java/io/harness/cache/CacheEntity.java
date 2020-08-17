@@ -2,6 +2,7 @@ package io.harness.cache;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.PersistentEntity;
@@ -27,4 +28,5 @@ public class CacheEntity implements PersistentEntity {
   byte[] entity;
 
   @FdTtlIndex Date validUntil;
+  @FdIndex String accountId;
 }

@@ -1,6 +1,8 @@
 package io.harness.cache;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -10,7 +12,6 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
 import io.harness.cache.CacheEntity.CacheEntityKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.govern.IgnoreThrowable;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
@@ -33,7 +34,7 @@ public class MongoStore implements DistributedStore {
   @Inject private KryoSerializer kryoSerializer;
 
   String canonicalKey(long algorithmId, long structureHash, String key, List<String> params) {
-    if (EmptyPredicate.isEmpty(params)) {
+    if (isEmpty(params)) {
       return format("%s/%d/%d/%d", key, version, algorithmId, structureHash);
     }
     return format("%s/%d/%d/%d%d", key, version, algorithmId, structureHash, Objects.hash(params.toArray()));
@@ -76,15 +77,20 @@ public class MongoStore implements DistributedStore {
 
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl) {
-    upsertInternal(entity, ttl, false);
+    upsertInternal(entity, ttl, false, null);
   }
 
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade) {
-    upsertInternal(entity, ttl, downgrade);
+    upsertInternal(entity, ttl, downgrade, null);
   }
 
-  private <T extends Distributable> void upsertInternal(T entity, Duration ttl, boolean downgrade) {
+  @Override
+  public <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade, String accountId) {
+    upsertInternal(entity, ttl, downgrade, accountId);
+  }
+
+  private <T extends Distributable> void upsertInternal(T entity, Duration ttl, boolean downgrade, String accountId) {
     final String canonicalKey =
         canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key(), entity.parameters());
     Long contextValue =
@@ -96,6 +102,9 @@ public class MongoStore implements DistributedStore {
       updateOperations.set(CacheEntityKeys.canonicalKey, canonicalKey);
       updateOperations.set(CacheEntityKeys.entity, kryoSerializer.asDeflatedBytes(entity));
       updateOperations.set(CacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
+      if (isNotEmpty(accountId)) {
+        updateOperations.set(CacheEntityKeys.accountId, accountId);
+      }
 
       final Query<CacheEntity> query =
           hPersistence.createQuery(CacheEntity.class).filter(CacheEntityKeys.canonicalKey, canonicalKey);
