@@ -17,9 +17,11 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ResourceConstraintService;
 
 @Slf4j
@@ -28,6 +30,7 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
   private static final int poolSize = 10;
   private static final int scheduleIntervalSeconds = 60;
 
+  @Inject private AccountService accountService;
   @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<ResourceConstraintInstance> persistenceProvider;
@@ -49,6 +52,7 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
             .acceptableNoAlertDelay(ofSeconds(30))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

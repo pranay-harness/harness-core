@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
@@ -7,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.FeatureName.ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS;
 import static software.wings.beans.FeatureName.CV_DEMO;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
+import static software.wings.beans.FeatureName.SEARCH_REQUEST;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -169,5 +172,34 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
     FeatureFlag updatedFeatureFlag = featureFlagService.updateFeatureFlagForAccount(featureName.name(), "abcde", false);
     assertThat(updatedFeatureFlag).isNotNull();
     assertThat(updatedFeatureFlag.getAccountIds()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testRemoveAccountReferenceFromAllFeatureFlags() {
+    FeatureName featureName1 = CV_DEMO;
+    FeatureName featureName2 = SEARCH_REQUEST;
+    FeatureFlag featureFlag1 = FeatureFlag.builder()
+                                   .name(featureName1.name())
+                                   .enabled(false)
+                                   .accountIds(Sets.newHashSet(ACCOUNT_ID, "abc", "def", "ghi"))
+                                   .obsolete(false)
+                                   .build();
+    FeatureFlag featureFlag2 = FeatureFlag.builder()
+                                   .name(featureName2.name())
+                                   .enabled(false)
+                                   .accountIds(Sets.newHashSet(ACCOUNT_ID, "jkl", "mno", "pqr"))
+                                   .obsolete(false)
+                                   .build();
+    wingsPersistence.save(featureFlag1);
+    wingsPersistence.save(featureFlag2);
+    featureFlagService.removeAccountReferenceFromAllFeatureFlags(ACCOUNT_ID);
+    FeatureFlag updatedFeatureFlag1 = featureFlagService.getFeatureFlag(featureName1).get();
+    assertThat(updatedFeatureFlag1).isNotNull();
+    assertThat(updatedFeatureFlag1.getAccountIds()).containsExactlyInAnyOrder("abc", "def", "ghi");
+    FeatureFlag updatedFeatureFlag2 = featureFlagService.getFeatureFlag(featureName2).get();
+    assertThat(updatedFeatureFlag2).isNotNull();
+    assertThat(updatedFeatureFlag2.getAccountIds()).containsExactlyInAnyOrder("jkl", "mno", "pqr");
   }
 }

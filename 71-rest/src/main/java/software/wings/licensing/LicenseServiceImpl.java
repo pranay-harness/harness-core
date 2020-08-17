@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,6 +25,8 @@ import software.wings.beans.DefaultSalesContacts;
 import software.wings.beans.DefaultSalesContacts.AccountTypeDefault;
 import software.wings.beans.License;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
@@ -31,6 +34,8 @@ import software.wings.service.impl.AccountDao;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -43,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -57,14 +63,22 @@ public class LicenseServiceImpl implements LicenseService {
   private static final String EMAIL_BODY_ACCOUNT_EXPIRED = "Customer License has Expired";
   private static final String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
 
+  private static final String TRIAL_EXPIRATION_DAY_0_TEMPLATE = "trial_expiration_day0";
+  private static final String TRIAL_EXPIRATION_DAY_4_TEMPLATE = "trial_expiration_day4";
+  private static final String TRIAL_EXPIRATION_DAY_23_TEMPLATE = "trial_expiration_day23";
+  private static final String TRIAL_EXPIRATION_DAY_29_TEMPLATE = "trial_expiration_day29";
+  private static final String TRIAL_EXPIRATION_DAY_30_TEMPLATE = "trial_expiration_day30";
+
   private final AccountService accountService;
-  private final AccountDao accountDao;
   private final WingsPersistence wingsPersistence;
   private final GenericDbCache dbCache;
   private final ExecutorService executorService;
   private final LicenseProvider licenseProvider;
   private final EmailNotificationService emailNotificationService;
   private final EventPublishHelper eventPublishHelper;
+  private final UserService userService;
+  private final UserGroupService userGroupService;
+  private final AccountDao accountDao;
   private List<String> trialDefaultContacts;
   private List<String> paidDefaultContacts;
 
@@ -72,7 +86,7 @@ public class LicenseServiceImpl implements LicenseService {
   public LicenseServiceImpl(AccountService accountService, AccountDao accountDao, WingsPersistence wingsPersistence,
       GenericDbCache dbCache, ExecutorService executorService, LicenseProvider licenseProvider,
       EmailNotificationService emailNotificationService, EventPublishHelper eventPublishHelper,
-      MainConfiguration mainConfiguration) {
+      MainConfiguration mainConfiguration, UserService userService, UserGroupService userGroupService) {
     this.accountService = accountService;
     this.accountDao = accountDao;
     this.wingsPersistence = wingsPersistence;
@@ -81,6 +95,8 @@ public class LicenseServiceImpl implements LicenseService {
     this.licenseProvider = licenseProvider;
     this.emailNotificationService = emailNotificationService;
     this.eventPublishHelper = eventPublishHelper;
+    this.userService = userService;
+    this.userGroupService = userGroupService;
 
     DefaultSalesContacts defaultSalesContacts = mainConfiguration.getDefaultSalesContacts();
     if (defaultSalesContacts != null && defaultSalesContacts.isEnabled()) {
@@ -139,14 +155,74 @@ public class LicenseServiceImpl implements LicenseService {
                 EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
           }
         }
-      } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
-        expireLicense(account.getUuid(), licenseInfo);
-        sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED, EMAIL_BODY_ACCOUNT_EXPIRED,
-            accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
+      } else {
+        if (AccountStatus.ACTIVE.equals(accountStatus)) {
+          expireLicense(account.getUuid(), licenseInfo);
+          sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED, EMAIL_BODY_ACCOUNT_EXPIRED,
+              accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
+        }
+        if (accountType.equals(AccountType.TRIAL) && !AccountStatus.DELETED.equals(accountStatus)) {
+          handleTrialAccountExpiration(account, expiryTime);
+        }
       }
     } catch (Exception e) {
       logger.warn("Failed to check license info", e);
     }
+  }
+
+  @VisibleForTesting
+  void handleTrialAccountExpiration(Account account, long expiryTime) {
+    String templateName = getEmailTemplateName(account, System.currentTimeMillis(), expiryTime);
+    if (templateName != null) {
+      logger.info("Sending trial account expiration email with template name {} to account {}", templateName,
+          account.getUuid());
+      boolean emailSent = sendEmailToAccountAdmin(account.getUuid(), templateName);
+      if (emailSent) {
+        updateLastLicenseExpiryReminderSentAt(account.getUuid(), System.currentTimeMillis());
+      } else {
+        logger.warn("Couldn't send trial expiration email to customer for account {}", account.getUuid());
+      }
+    }
+    long expiredSinceDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - expiryTime);
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    if (expiredSinceDays >= 30 && !AccountStatus.MARKED_FOR_DELETION.equals(licenseInfo.getAccountStatus())) {
+      updateAccountStatusToMarkedForDeletion(account);
+    }
+  }
+
+  private void updateAccountStatusToMarkedForDeletion(Account account) {
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.MARKED_FOR_DELETION);
+    updateAccountLicense(account.getUuid(), licenseInfo);
+  }
+
+  @VisibleForTesting
+  String getEmailTemplateName(Account account, long currentTime, long expiryTime) {
+    long lastLicenseExpiryReminderSentAt = account.getLastLicenseExpiryReminderSentAt();
+    long expiredSinceDays = TimeUnit.MILLISECONDS.toDays(currentTime - expiryTime);
+    long lastReminderSentSinceDays = TimeUnit.MILLISECONDS.toDays(currentTime - lastLicenseExpiryReminderSentAt);
+    String templateName = null;
+
+    if (lastReminderSentSinceDays > 0) {
+      if (expiredSinceDays <= 1) {
+        templateName = TRIAL_EXPIRATION_DAY_0_TEMPLATE;
+      } else if (expiredSinceDays == 4) {
+        templateName = TRIAL_EXPIRATION_DAY_4_TEMPLATE;
+      } else if (expiredSinceDays == 23) {
+        templateName = TRIAL_EXPIRATION_DAY_23_TEMPLATE;
+      } else if (expiredSinceDays == 29) {
+        templateName = TRIAL_EXPIRATION_DAY_29_TEMPLATE;
+      } else if (expiredSinceDays == 30) {
+        templateName = TRIAL_EXPIRATION_DAY_30_TEMPLATE;
+      }
+    }
+    return templateName;
+  }
+
+  @VisibleForTesting
+  void updateLastLicenseExpiryReminderSentAt(String accountId, long time) {
+    wingsPersistence.updateField(Account.class, accountId, AccountKeys.lastLicenseExpiryReminderSentAt, time);
+    dbCache.invalidate(Account.class, accountId);
   }
 
   private List<String> getEmailIds(String emailIdsStr) {
@@ -205,6 +281,37 @@ public class LicenseServiceImpl implements LicenseService {
     }
   }
 
+  /**
+   * Send email to the members of account's admin user group. If email is sent successfully to any one member of the
+   * group, then return true.
+   * @param accountId
+   * @param templateName
+   * @return
+   */
+  @VisibleForTesting
+  boolean sendEmailToAccountAdmin(String accountId, String templateName) {
+    UserGroup adminUserGroup = userGroupService.getAdminUserGroup(accountId);
+    boolean emailSent = false;
+
+    for (String memberId : adminUserGroup.getMemberIds()) {
+      User user = userService.get(memberId);
+      String name = !user.getName().isEmpty() ? user.getName() : "there";
+      Map<String, String> templateModel = new HashMap<>();
+      templateModel.put("name", name);
+      EmailData emailData = EmailData.builder()
+                                .to(Arrays.asList(user.getEmail()))
+                                .templateName(templateName)
+                                .templateModel(templateModel)
+                                .accountId(accountId)
+                                .build();
+      emailData.setCc(Collections.emptyList());
+      emailData.setRetries(3);
+      emailSent = emailSent || emailNotificationService.send(emailData);
+    }
+    logger.info("Trial account expiration email with template name {} sent successfully {}", templateName, emailSent);
+    return emailSent;
+  }
+
   @Override
   public boolean updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo) {
     Account accountInDB = accountService.get(accountId);
@@ -228,7 +335,6 @@ public class LicenseServiceImpl implements LicenseService {
     dbCache.invalidate(Account.class, accountId);
     Account updatedAccount = wingsPersistence.get(Account.class, accountId);
     LicenseUtils.decryptLicenseInfo(updatedAccount, false);
-    //    refreshUsersForAccountUpdate(updatedAccount);
 
     eventPublishHelper.publishLicenseChangeEvent(accountId, oldAccountType, licenseInfo.getAccountType());
     return true;
@@ -281,7 +387,6 @@ public class LicenseServiceImpl implements LicenseService {
     dbCache.invalidate(Account.class, accountId);
     Account updatedAccount = wingsPersistence.get(Account.class, accountId);
     LicenseUtils.decryptLicenseInfo(updatedAccount, false);
-    //    refreshUsersForAccountUpdate(updatedAccount);
     return updatedAccount;
   }
 
@@ -357,7 +462,8 @@ public class LicenseServiceImpl implements LicenseService {
       return false;
     }
 
-    if (AccountStatus.EXPIRED.equals(accountStatus) || AccountStatus.DELETED.equals(accountStatus)) {
+    if (AccountStatus.EXPIRED.equals(accountStatus) || AccountStatus.DELETED.equals(accountStatus)
+        || AccountStatus.MARKED_FOR_DELETION.equals(accountStatus)) {
       return true;
     }
 

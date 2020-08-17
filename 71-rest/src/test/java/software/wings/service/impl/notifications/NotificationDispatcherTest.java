@@ -59,7 +59,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
-  public void testNotificationGroupBasedDispatcher() {
+  public void testNotificationGroupBasedDispatcher() throws IllegalAccessException {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
     List<String> slackChannels = Lists.newArrayList("#some-channel");
 
@@ -86,6 +86,11 @@ public class NotificationDispatcherTest extends WingsBaseTest {
                                                .notificationTemplateVariables(ImmutableMap.of("WORKFLOW_NAME",
                                                    WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "DATE", "DATE"))
                                                .build();
+
+    NotificationProcessingController notificationProcessingController = mock(NotificationProcessingController.class);
+    when(notificationProcessingController.canProcessAccount(anyString())).thenReturn(true);
+    FieldUtils.writeField(
+        notificationGroupDispatcher, "notificationProcessingController", notificationProcessingController, true);
 
     List<Notification> notifications = Collections.singletonList(notification);
     notificationGroupDispatcher.dispatch(notifications, notificationGroup);
@@ -124,7 +129,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
                                                .build();
 
     NotificationProcessingController notificationProcessingController = mock(NotificationProcessingController.class);
-    when(notificationProcessingController.shouldProcessAccount(anyString())).thenReturn(true);
+    when(notificationProcessingController.canProcessAccount(anyString())).thenReturn(true);
     FieldUtils.writeField(
         userGroupNotificationDispatcher, "notificationProcessingController", notificationProcessingController, true);
     List<Notification> notifications = Collections.singletonList(notification);

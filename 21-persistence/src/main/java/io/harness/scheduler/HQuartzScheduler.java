@@ -25,9 +25,14 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.GroupMatcher;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class HQuartzScheduler implements PersistentScheduler, MaintenanceListener {
@@ -266,6 +271,40 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
   }
 
   @Override
+  public boolean pauseJob(String jobName, String groupName) {
+    if (null == scheduler) {
+      return true;
+    }
+
+    if (null != groupName && null != jobName) {
+      try {
+        scheduler.pauseJob(new JobKey(jobName, groupName));
+        return true;
+      } catch (SchedulerException ex) {
+        logger.error("Couldn't pause quartz job [{} {}] ", groupName, jobName, ex);
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean resumeJob(String jobName, String groupName) {
+    if (null == scheduler) {
+      return true;
+    }
+
+    if (null != groupName && jobName != null) {
+      try {
+        scheduler.resumeJob(new JobKey(jobName, groupName));
+        return true;
+      } catch (SchedulerException ex) {
+        logger.error("Couldn't resume quartz job [{} {}] ", groupName, jobName, ex);
+      }
+    }
+    return false;
+  }
+
+  @Override
   public Date rescheduleJob(TriggerKey triggerKey, Trigger newTrigger) {
     try {
       return scheduler.rescheduleJob(triggerKey, newTrigger);
@@ -292,6 +331,27 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
   }
 
   @Override
+  public void pauseAllQuartzJobsForAccount(String accountId) throws SchedulerException {
+    for (JobKey jobKey : getAllJobKeysForAccount(accountId)) {
+      pauseJob(jobKey.getName(), jobKey.getGroup());
+    }
+  }
+
+  @Override
+  public void resumeAllQuartzJobsForAccount(String accountId) throws SchedulerException {
+    for (JobKey jobKey : getAllJobKeysForAccount(accountId)) {
+      resumeJob(jobKey.getName(), jobKey.getGroup());
+    }
+  }
+
+  @Override
+  public void deleteAllQuartzJobsForAccount(String accountId) throws SchedulerException {
+    for (JobKey jobKey : getAllJobKeysForAccount(accountId)) {
+      deleteJob(jobKey.getName(), jobKey.getGroup());
+    }
+  }
+
+  @Override
   public void onShutdown() {
     // do nothing
   }
@@ -315,6 +375,52 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       } catch (SchedulerException e) {
         logger.error("Error starting scheduler.", e);
       }
+    }
+  }
+
+  /**
+   * Gets all JobKeys matching an accountId
+   * @param accountId given accountId
+   * @return List of JobKeys
+   * @throws SchedulerException when scheduler fails to get group names
+   */
+  public List<JobKey> getAllJobKeysForAccount(String accountId) throws SchedulerException {
+    if (null != scheduler) {
+      List<String> groupNames = scheduler.getJobGroupNames();
+      return groupNames.stream()
+          .flatMap(this ::jobKeysFromGroupName)
+          .filter(jobKey -> accountId.equals(accountIdFromJobKey(jobKey)))
+          .collect(Collectors.toList());
+    }
+    return Collections.emptyList();
+  }
+
+  /**
+   * Returns a Stream of JobKeys extracted from groupName by the scheduler
+   * @param groupName groupName of Job
+   * @return JobKey contains details of Job in a dataMap
+   */
+  private Stream<JobKey> jobKeysFromGroupName(String groupName) {
+    GroupMatcher<JobKey> matcher = GroupMatcher.jobGroupEquals(groupName);
+    try {
+      return scheduler.getJobKeys(matcher).stream();
+    } catch (SchedulerException e) {
+      logger.error("Couldn't get JobKeys for group name {}", groupName, e);
+      return Stream.empty();
+    }
+  }
+
+  /**
+   * Returns accountId value of Job, which is stored in jobDataMap of JobDetail
+   * @param jobKey used to retrieve job instance
+   * @return accountId associated with job else returns null
+   */
+  private String accountIdFromJobKey(JobKey jobKey) {
+    try {
+      return scheduler.getJobDetail(jobKey).getJobDataMap().getString("accountId");
+    } catch (SchedulerException e) {
+      logger.error("Couldn't get accountId for JobDetail associated with JobKey {}", jobKey, e);
+      return null;
     }
   }
 }

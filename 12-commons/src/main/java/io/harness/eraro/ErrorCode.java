@@ -384,6 +384,8 @@ public enum ErrorCode {
 
   PASSWORD_STRENGTH_CHECK_FAILED,
 
+  ACCOUNT_DISABLED,
+
   INVALID_ACCOUNT_PERMISSION("Invalid account permission"),
 
   PAGERDUTY_ERROR,

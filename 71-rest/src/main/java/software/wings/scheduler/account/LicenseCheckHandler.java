@@ -13,6 +13,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.app.JobsFrequencyConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.licensing.LicenseService;
@@ -26,6 +27,7 @@ import software.wings.licensing.LicenseService;
 public class LicenseCheckHandler implements Handler<Account> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private LicenseService licenseService;
+  @Inject private JobsFrequencyConfig jobsFrequencyConfig;
   @Inject private MorphiaPersistenceProvider<Account> persistenceProvider;
 
   public void registerIterators() {
@@ -35,7 +37,7 @@ public class LicenseCheckHandler implements Handler<Account> {
         MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
             .clazz(Account.class)
             .fieldName(AccountKeys.licenseExpiryCheckIteration)
-            .targetInterval(ofMinutes(30))
+            .targetInterval(ofMinutes(jobsFrequencyConfig.getAccountLicenseCheckJobFrequencyInMinutes()))
             .acceptableNoAlertDelay(ofMinutes(60))
             .acceptableExecutionTime(ofSeconds(15))
             .handler(this)

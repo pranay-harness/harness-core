@@ -16,11 +16,13 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.service.impl.InfraMappingLogContext;
 import software.wings.service.impl.instance.InstanceHelper;
+import software.wings.service.intfc.AccountService;
 
 /**
  * Handler class that syncs all the instances of an inframapping.
@@ -28,6 +30,7 @@ import software.wings.service.impl.instance.InstanceHelper;
 
 @Slf4j
 public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private InstanceHelper instanceHelper;
   @Inject private MorphiaPersistenceProvider<InfrastructureMapping> persistenceProvider;
@@ -43,6 +46,7 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
             .acceptableNoAlertDelay(ofMinutes(10))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

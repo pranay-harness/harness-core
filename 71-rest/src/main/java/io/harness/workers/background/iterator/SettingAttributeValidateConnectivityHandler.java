@@ -17,11 +17,13 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.service.impl.SettingValidationService;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -29,6 +31,7 @@ import java.time.Duration;
 
 @Slf4j
 public class SettingAttributeValidateConnectivityHandler implements Handler<SettingAttribute> {
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
@@ -48,6 +51,7 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
             .targetInterval(ofMinutes(15))
             .acceptableNoAlertDelay(ofMinutes(10))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
                 -> query.field(SettingAttributeKeys.valueType)
                        .in(asList(SettingVariableTypes.AWS.name(), SettingVariableTypes.GCP.name(),

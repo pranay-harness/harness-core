@@ -21,7 +21,9 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.service.intfc.AccountService;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -30,6 +32,7 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
   private static final int REASSIGNMENT_INTERVAL_MINUTES = 30;
   private static final int ACCEPTABLE_DELAY_MINUTES = 10;
 
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private ExportExecutionsService exportExecutionsService;
   @Inject private ExportExecutionsNotificationHelper exportExecutionsNotificationHelper;
@@ -49,6 +52,7 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
             .targetInterval(ofMinutes(REASSIGNMENT_INTERVAL_MINUTES))
             .acceptableNoAlertDelay(ofMinutes(ACCEPTABLE_DELAY_MINUTES))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query -> query.field(ExportExecutionsRequestKeys.status).equal(Status.QUEUED))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)

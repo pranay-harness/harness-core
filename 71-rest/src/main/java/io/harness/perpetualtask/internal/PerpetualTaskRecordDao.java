@@ -6,12 +6,14 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.dl.WingsPersistence;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,6 +64,23 @@ public class PerpetualTaskRecordDao {
     return update.getUpdatedCount() > 0;
   }
 
+  public boolean pauseTask(String accountId, String taskId) {
+    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
+                                           .filter(PerpetualTaskRecordKeys.accountId, accountId)
+                                           .filter(PerpetualTaskRecordKeys.uuid, taskId);
+
+    UpdateOperations<PerpetualTaskRecord> updateOperations =
+        persistence.createUpdateOperations(PerpetualTaskRecord.class)
+            .set(PerpetualTaskRecordKeys.delegateId, "")
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_PAUSED)
+            .unset(PerpetualTaskRecordKeys.assignerIterations);
+
+    updateOperations.unset(PerpetualTaskRecordKeys.task_parameters);
+
+    UpdateResults update = persistence.update(query, updateOperations);
+    return update.getUpdatedCount() > 0;
+  }
+
   public String save(PerpetualTaskRecord record) {
     return persistence.save(record);
   }
@@ -75,6 +94,12 @@ public class PerpetualTaskRecordDao {
     return persistence.delete(query);
   }
 
+  public boolean removeAllTasksForAccount(String accountId) {
+    Query<PerpetualTaskRecord> query =
+        persistence.createQuery(PerpetualTaskRecord.class).field(PerpetualTaskRecordKeys.accountId).equal(accountId);
+    return persistence.delete(query);
+  }
+
   public List<PerpetualTaskRecord> listAssignedTasks(String delegateId, String accountId) {
     return persistence.createQuery(PerpetualTaskRecord.class)
         .field(PerpetualTaskRecordKeys.accountId)
@@ -84,6 +109,20 @@ public class PerpetualTaskRecordDao {
         .project(PerpetualTaskRecordKeys.uuid, true)
         .project(PerpetualTaskRecordKeys.client_context_last_updated, true)
         .asList();
+  }
+
+  public List<PerpetualTaskRecord> listAllPerpetualTasksForAccount(String accountId) {
+    List<PerpetualTaskRecord> perpetualTaskRecords = new ArrayList<>();
+
+    Query<PerpetualTaskRecord> query =
+        persistence.createQuery(PerpetualTaskRecord.class).field(PerpetualTaskRecordKeys.accountId).equal(accountId);
+    try (HIterator<PerpetualTaskRecord> tasksIterator = new HIterator<>(query.fetch())) {
+      while (tasksIterator.hasNext()) {
+        perpetualTaskRecords.add(tasksIterator.next());
+      }
+    }
+
+    return perpetualTaskRecords;
   }
 
   public PerpetualTaskRecord getTask(String taskId) {

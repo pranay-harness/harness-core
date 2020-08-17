@@ -12,7 +12,15 @@ public interface PerpetualTaskService {
 
   boolean deleteTask(String accountId, String taskId);
 
+  boolean pauseTask(String accountId, String taskId);
+
+  boolean resumeTask(String accountId, String taskId);
+
+  boolean deleteAllTasksForAccount(String accountId);
+
   List<PerpetualTaskAssignDetails> listAssignedTasks(String delegateId);
+
+  List<PerpetualTaskRecord> listAllTasksForAccount(String accountId);
 
   PerpetualTaskRecord getTaskRecord(String taskId);
 

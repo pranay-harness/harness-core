@@ -15,14 +15,17 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import software.wings.audit.AuditRecord;
 import software.wings.audit.AuditRecord.AuditRecordKeys;
 import software.wings.audit.EntityAuditRecord;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
 
 import java.util.List;
 
 public class EntityAuditRecordHandler implements Handler<AuditRecord> {
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private AuditService auditService;
   @Inject private MorphiaPersistenceProvider<AuditRecord> persistenceProvider;
@@ -37,6 +40,7 @@ public class EntityAuditRecordHandler implements Handler<AuditRecord> {
             .targetInterval(ofMinutes(30))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

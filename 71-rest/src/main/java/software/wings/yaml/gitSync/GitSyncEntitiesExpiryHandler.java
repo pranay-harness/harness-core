@@ -18,6 +18,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.workers.background.AccountLevelEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.FindOptions;
@@ -28,6 +29,7 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.GitFileActivitySummary.GitFileActivitySummaryKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject private AccountService accountService;
   @Inject private GitSyncService gitSyncService;
   @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
@@ -68,6 +71,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
             .acceptableNoAlertDelay(ofMinutes(120))
             .acceptableExecutionTime(ofMinutes(5))
             .handler(this)
+            .entityProcessController(new AccountLevelEntityProcessController(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

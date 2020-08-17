@@ -82,6 +82,7 @@ import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.IndexMigratorModule;
+import software.wings.app.JobsFrequencyConfig;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -253,6 +254,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     MarketPlaceConfig marketPlaceConfig =
         MarketPlaceConfig.builder().azureMarketplaceAccessKey("qwertyu").azureMarketplaceSecretKey("qwertyu").build();
     configuration.setMarketPlaceConfig(marketPlaceConfig);
+
+    JobsFrequencyConfig jobsFrequencyConfig = JobsFrequencyConfig.builder().build();
+    configuration.setJobsFrequencyConfig(jobsFrequencyConfig);
 
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getBackgroundSchedulerConfig().setAutoStart("true");

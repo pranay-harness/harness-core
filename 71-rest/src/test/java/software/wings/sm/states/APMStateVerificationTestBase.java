@@ -30,6 +30,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
+import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
@@ -136,8 +137,11 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
 
     Broadcaster broadcaster = mock(Broadcaster.class);
     when(broadcaster.broadcast(anyObject())).thenReturn(null);
+    DelegateProcessingController delegateProcessingController = mock(DelegateProcessingController.class);
+    when(delegateProcessingController.canProcessAccount(anyString())).thenReturn(true);
     when(broadcasterFactory.lookup(anyObject(), anyBoolean())).thenReturn(broadcaster);
     FieldUtils.writeField(delegateService, "broadcasterFactory", broadcasterFactory, true);
+    FieldUtils.writeField(delegateService, "delegateProcessingController", delegateProcessingController, true);
     FieldUtils.writeField(continuousVerificationService, "authService", mockAuthService, true);
     // Setup authService for continuousVerificationService
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {

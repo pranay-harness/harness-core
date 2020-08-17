@@ -481,8 +481,8 @@ public class User extends Base implements Principal {
 
   @JsonIgnore
   public String getDefaultAccountCandidate() {
-    final List<String> accountStatusesOrderedByPriority =
-        Arrays.asList(AccountStatus.ACTIVE, AccountStatus.EXPIRED, AccountStatus.INACTIVE, AccountStatus.DELETED);
+    final List<String> accountStatusesOrderedByPriority = Arrays.asList(AccountStatus.ACTIVE, AccountStatus.EXPIRED,
+        AccountStatus.INACTIVE, AccountStatus.MARKED_FOR_DELETION, AccountStatus.DELETED);
     final List<String> accountTypesOrderedByPriority =
         Arrays.asList(AccountType.PAID, AccountType.ESSENTIALS, AccountType.TRIAL, AccountType.COMMUNITY);
 

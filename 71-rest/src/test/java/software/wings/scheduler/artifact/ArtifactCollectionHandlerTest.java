@@ -25,6 +25,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +41,7 @@ import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.PermitService;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -56,6 +58,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   @Mock private PermitService permitService;
   @Mock private HarnessMetricRegistry harnessMetricRegistry;
   @InjectMocks @Inject private ArtifactCollectionHandler artifactCollectionHandler;
+  @Inject private AccountService accountService;
 
   @Test
   @Owner(developers = ANSHUL)
@@ -90,9 +93,13 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
+    AccountStatusBasedEntityProcessController<ArtifactStream> accountStatusBasedEntityProcessController =
+        new AccountStatusBasedEntityProcessController<>(accountService);
     // setup mock
     when(persistenceIteratorFactory.createIterator(any(), any()))
-        .thenReturn(MongoPersistenceIterator.<ArtifactStream, MorphiaFilterExpander<ArtifactStream>>builder().build());
+        .thenReturn(MongoPersistenceIterator.<ArtifactStream, MorphiaFilterExpander<ArtifactStream>>builder()
+                        .entityProcessController(accountStatusBasedEntityProcessController)
+                        .build());
 
     MetricRegistry metricRegistry = mock(MetricRegistry.class);
     when(harnessMetricRegistry.getThreadPoolMetricRegistry()).thenReturn(metricRegistry);

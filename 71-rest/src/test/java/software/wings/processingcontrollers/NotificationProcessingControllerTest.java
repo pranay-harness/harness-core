@@ -2,7 +2,6 @@ package software.wings.processingcontrollers;
 
 import static io.harness.rule.OwnerRule.MEHUL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -12,18 +11,16 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.service.intfc.AccountService;
+import software.wings.dl.WingsPersistence;
 
 public class NotificationProcessingControllerTest extends WingsBaseTest {
-  @InjectMocks @Inject private NotificationProcessingController notificationProcessingController;
-  @Mock private AccountService accountService;
+  @Inject private NotificationProcessingController notificationProcessingController;
+  @Inject private WingsPersistence wingsPersistence;
 
   private static final long ONE_DAY_TIME_DIFF = 86400000L;
   private static final long ONE_DAY_EXPIRY = System.currentTimeMillis() + ONE_DAY_TIME_DIFF;
@@ -44,8 +41,8 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
   public void shouldProcessActiveAccount() {
     Account account =
         anAccount().withUuid(ACCOUNT_ID).withLicenseInfo(getLicenseInfo(AccountStatus.ACTIVE, ONE_DAY_EXPIRY)).build();
-    when(accountService.getFromCacheWithFallback(ACCOUNT_ID)).thenReturn(account);
-    assertThat(notificationProcessingController.shouldProcessAccount(ACCOUNT_ID)).isTrue();
+    wingsPersistence.save(account);
+    assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isTrue();
   }
 
   @Test
@@ -56,8 +53,8 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withLicenseInfo(getLicenseInfo(AccountStatus.INACTIVE, ONE_DAY_EXPIRY))
                           .build();
-    when(accountService.getFromCacheWithFallback(ACCOUNT_ID)).thenReturn(account);
-    assertThat(notificationProcessingController.shouldProcessAccount(ACCOUNT_ID)).isFalse();
+    wingsPersistence.save(account);
+    assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isFalse();
   }
 
   @Test
@@ -66,8 +63,8 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
   public void shouldNotProcessDeletedAccount() {
     Account account =
         anAccount().withUuid(ACCOUNT_ID).withLicenseInfo(getLicenseInfo(AccountStatus.DELETED, ONE_DAY_EXPIRY)).build();
-    when(accountService.getFromCacheWithFallback(ACCOUNT_ID)).thenReturn(account);
-    assertThat(notificationProcessingController.shouldProcessAccount(ACCOUNT_ID)).isFalse();
+    wingsPersistence.save(account);
+    assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isFalse();
   }
 
   @Test
@@ -78,8 +75,8 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withLicenseInfo(getLicenseInfo(AccountStatus.EXPIRED, System.currentTimeMillis()))
                           .build();
-    when(accountService.getFromCacheWithFallback(ACCOUNT_ID)).thenReturn(account);
-    assertThat(notificationProcessingController.shouldProcessAccount(ACCOUNT_ID)).isTrue();
+    wingsPersistence.save(account);
+    assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isTrue();
   }
 
   @Test
@@ -90,7 +87,7 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withLicenseInfo(getLicenseInfo(AccountStatus.EXPIRED, FOUR_DAYS_BEFORE_CURRENT_TIME))
                           .build();
-    when(accountService.getFromCacheWithFallback(ACCOUNT_ID)).thenReturn(account);
-    assertThat(notificationProcessingController.shouldProcessAccount(ACCOUNT_ID)).isFalse();
+    wingsPersistence.save(account);
+    assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isFalse();
   }
 }

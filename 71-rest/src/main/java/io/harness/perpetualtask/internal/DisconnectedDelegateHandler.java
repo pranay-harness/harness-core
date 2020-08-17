@@ -15,14 +15,17 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Delegate;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 
 @Slf4j
 public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord> {
   private static final long ITERATOR_INTERVAL_MINUTE = 5;
 
+  @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private DelegateService delegateService;
@@ -42,6 +45,7 @@ public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord>
             .targetInterval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

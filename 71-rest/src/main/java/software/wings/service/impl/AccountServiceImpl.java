@@ -12,7 +12,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.utils.Misc.generateSecretKey;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.reflect.Modifier.isAbstract;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -40,7 +39,6 @@ import com.google.inject.name.Named;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
-import io.harness.annotation.HarnessEntity;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -67,9 +65,7 @@ import io.harness.network.Http;
 import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.observer.Subject;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
-import io.harness.persistence.AccountAccess;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.PersistentEntity;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.version.VersionInfoManager;
@@ -83,7 +79,6 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -95,7 +90,6 @@ import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
-import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
@@ -112,19 +106,18 @@ import software.wings.beans.TechStack;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.GovernanceFeature;
+import software.wings.helpers.ext.account.DeleteAccountHelper;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
@@ -156,7 +149,6 @@ import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
-import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
@@ -206,16 +198,6 @@ public class AccountServiceImpl implements AccountService {
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
-  private static final String ACCOUNT_ID = "accountId";
-  private static final String APP_ID = "appId";
-  private static final String SOFTWARE_WINGS = "software.wings";
-  private static final String IO_HARNESS = "io.harness";
-
-  private static Set<Class<? extends PersistentEntity>> separateDeletionEntities =
-      new HashSet<>(Arrays.asList(Account.class, User.class, SSOSettings.class));
-
-  @Inject ServiceClassLocator serviceClassLocator;
-  @Inject private AccountDao accountDao;
 
   @Inject protected AuthService authService;
   @Inject protected HarnessCacheManager harnessCacheManager;
@@ -248,7 +230,9 @@ public class AccountServiceImpl implements AccountService {
   @Inject private Morphia morphia;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private DeleteAccountHelper deleteAccountHelper;
   @Inject private OrganizationManagerClient organizationManagerClient;
+  @Inject private AccountDao accountDao;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -358,6 +342,25 @@ public class AccountServiceImpl implements AccountService {
 
     logger.info("Failed to set isPovAccount to {} for accountId = {} ", isPov, accountId);
     return false;
+  }
+
+  @Override
+  public boolean updateAccountStatus(String accountId, String accountStatus) {
+    Account account = getFromCacheWithFallback(accountId);
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    licenseInfo.setAccountStatus(accountStatus);
+    return licenseService.updateAccountLicense(accountId, licenseInfo);
+  }
+
+  @Override
+  public boolean canProcessAccount(String accountId, long allowedNumberOfDaysSinceExpiry) {
+    Account account = getFromCacheWithFallback(accountId);
+    String accountStatus = account.getLicenseInfo().getAccountStatus();
+    if (AccountStatus.EXPIRED.equals(accountStatus)) {
+      long numberOfDaysSinceExpiry = account.getNumberOfDaysSinceExpiry(System.currentTimeMillis());
+      return allowedNumberOfDaysSinceExpiry > numberOfDaysSinceExpiry;
+    }
+    return AccountStatus.ACTIVE.equals(accountStatus);
   }
 
   private void createDefaultAccountEntities(Account account) {
@@ -477,7 +480,7 @@ public class AccountServiceImpl implements AccountService {
     Account account = dbCache.get(Account.class, accountId);
     if (account == null) {
       // Some false nulls have been observed. Verify by querying directly from db.
-      account = wingsPersistence.get(Account.class, accountId);
+      account = get(accountId);
     }
     return account;
   }
@@ -492,106 +495,23 @@ public class AccountServiceImpl implements AccountService {
 
     dbCache.invalidate(Account.class, accountId);
     deleteQuartzJobs(accountId);
-    deleteAllEntities(accountId);
+    List<String> entitiesRemainingForDeletion = deleteAccountHelper.deleteAllEntities(accountId);
+    logger.info("Could not delete {} collections for account {}", entitiesRemainingForDeletion, accountId);
     logger.info("Successfully deleted account {}", accountId);
     return wingsPersistence.delete(account);
   }
 
-  private void deleteAllEntities(String accountId) {
-    deleteApplicationAccessEntities(accountId);
-    deleteAccountAccessEntities(accountId);
-    deleteOwnedByAccountEntities(accountId);
-  }
-
-  private void deleteOwnedByAccountEntities(String accountId) {
-    List<OwnedByAccount> services = serviceClassLocator.descendingServicesForInterface(OwnedByAccount.class);
-    services.forEach(service -> service.deleteByAccountId(accountId));
-  }
-
-  private void deleteApplicationAccessEntities(String accountId) {
-    Reflections reflections = new Reflections(SOFTWARE_WINGS, IO_HARNESS);
-    Set<Class<? extends ApplicationAccess>> applicationAccessEntities =
-        reflections.getSubTypesOf(ApplicationAccess.class);
-    for (Class entity : applicationAccessEntities) {
-      if (!isAbstract(entity.getModifiers()) && !entity.isAssignableFrom(Application.class)) {
-        deleteAppLevelDocuments(accountId, entity);
-      }
-    }
-  }
-
-  private void deleteAccountAccessEntities(String accountId) {
-    Reflections reflections = new Reflections(SOFTWARE_WINGS, IO_HARNESS);
-    Set<Class<? extends AccountAccess>> accountAccessEntities = reflections.getSubTypesOf(AccountAccess.class);
-    for (Class entity : accountAccessEntities) {
-      if (!isAbstract(entity.getModifiers())) {
-        logger.info("Deleting account level entity {}", entity.getName());
-        wingsPersistence.delete(
-            wingsPersistence.createQuery(entity, excludeAuthority).filter(ApplicationKeys.accountId, accountId));
-      }
-    }
-  }
-
-  private boolean isAnnotatedExportable(Class<? extends PersistentEntity> clazz) {
-    HarnessEntity harnessEntity = clazz.getAnnotation(HarnessEntity.class);
-    return harnessEntity != null && harnessEntity.exportable();
-  }
-
-  private Set<Class<? extends PersistentEntity>> findExportableEntityTypes() {
-    Set<Class<? extends PersistentEntity>> toBeExported = new HashSet<>();
-
-    morphia.getMapper().getMappedClasses().forEach(mc -> {
-      Class<? extends PersistentEntity> clazz = (Class<? extends PersistentEntity>) mc.getClazz();
-      if (mc.getEntityAnnotation() != null && isAnnotatedExportable(clazz)
-          && !separateDeletionEntities.contains(clazz)) {
-        // Find out non-abstract classes with both 'Entity' and 'HarnessEntity' annotation.
-        logger.info("Collection '{}' is exportable", clazz.getName());
-        toBeExported.add(clazz);
-      }
-    });
-    return toBeExported;
-  }
-
-  private void deleteAppLevelDocuments(String accountId, Class<? extends PersistentEntity> entry) {
-    try (HIterator<Application> applicationsInAccount = new HIterator<>(
-             wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).fetch())) {
-      while (applicationsInAccount.hasNext()) {
-        Application application = applicationsInAccount.next();
-        logger.info("Deleting app level documents from collection {} and count of app level records deleted are {}",
-            entry.getName(), wingsPersistence.createQuery(entry).filter(APP_ID, application.getUuid()).count());
-        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(APP_ID, application.getUuid()));
-      }
-    } catch (Exception e) {
-      logger.error("Issue while deleting app level documents for this collection {}", entry.getName(), e);
+  @Override
+  public void deleteAccount(String accountId) {
+    String accountStatus = getAccountStatus(accountId);
+    if (AccountStatus.MARKED_FOR_DELETION.equals(accountStatus)) {
+      deleteAccountHelper.handleMarkedForDeletion(accountId);
     }
   }
 
   @Override
   public boolean deleteExportableAccountData(String accountId) {
-    logger.info("Deleting exportable data for account {}", accountId);
-    if (get(accountId) == null) {
-      throw new InvalidRequestException("The account to be deleted doesn't exist");
-    }
-
-    Set<Class<? extends PersistentEntity>> toBeExported = findExportableEntityTypes();
-    logger.info("The exportable entities are {}", toBeExported);
-
-    toBeExported.forEach(entry -> {
-      try {
-        deleteAppLevelDocuments(accountId, entry);
-        logger.info(
-            "Deleting account level documents from collection {} and count of account level records deleted are {}",
-            entry.getName(), wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId).count());
-        wingsPersistence.delete(wingsPersistence.createQuery(entry).filter(ACCOUNT_ID, accountId));
-      } catch (Exception e) {
-        logger.error("Issue while deleting account level documents this collection {}", entry.getName(), e);
-      }
-    });
-    List<User> users = userService.getUsersOfAccount(accountId);
-    if (!users.isEmpty()) {
-      users.forEach(user -> userService.delete(accountId, user.getUuid()));
-    }
-    ssoSettingService.deleteByAccountId(accountId);
-    return wingsPersistence.delete(Account.class, accountId);
+    return deleteAccountHelper.deleteExportableAccountData(accountId);
   }
 
   @Override
