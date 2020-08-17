@@ -2,8 +2,10 @@ package io.harness.ccm.budget;
 
 import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.SANDESH;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -23,6 +25,7 @@ import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
 import io.harness.ccm.budget.entities.BudgetType;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.ccm.budget.entities.EnvironmentType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -54,7 +57,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
@@ -193,6 +198,15 @@ public class BudgetServiceImplTest extends CategoryTest {
     assertThat(argument.getValue().getAlertThresholds()[0].getAlertsSent()).isEqualTo(1);
   }
 
+  @Test
+  @Owner(developers = SANDESH)
+  @Category(UnitTests.class)
+  public void shouldStopSavingSameBudgetTwice() {
+    List<Budget> availableBudgets = new ArrayList<>();
+    availableBudgets.add(budget);
+    when(budgetDao.list(budget.getAccountId(), budget.getName())).thenReturn(availableBudgets);
+    assertThatThrownBy(() -> { budgetService.create(budget); }).isInstanceOf(InvalidRequestException.class);
+  }
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
