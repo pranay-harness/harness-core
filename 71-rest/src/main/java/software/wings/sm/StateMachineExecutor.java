@@ -293,6 +293,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("stateName", stateExecutionInstance.getStateName());
 
     stateExecutionInstance.setAppId(stateMachine.getAppId());
+    stateExecutionInstance.setAccountId(stateMachine.getAccountId());
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (state == null && stateExecutionInstance.isParentLoopedState()) {
