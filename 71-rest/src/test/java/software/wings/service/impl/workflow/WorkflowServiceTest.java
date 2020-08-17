@@ -4626,9 +4626,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
         .contains(tuple(WorkflowStepType.KUBERNETES.name(), WorkflowStepType.KUBERNETES.getDisplayName(),
-            asList(K8S_BLUE_GREEN_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(),
-                KUBERNETES_SWAP_SERVICE_SELECTORS.name(), K8S_TRAFFIC_SPLIT.name(), K8S_SCALE.name(), K8S_DELETE.name(),
-                K8S_APPLY.name())));
+            asList(K8S_BLUE_GREEN_DEPLOY.name(), KUBERNETES_SWAP_SERVICE_SELECTORS.name(), K8S_TRAFFIC_SPLIT.name(),
+                K8S_SCALE.name(), K8S_DELETE.name(), K8S_APPLY.name())));
     validateCommonCategories(workflowCategorySteps, true, false);
 
     assertThat(workflowCategorySteps.getCategories())
