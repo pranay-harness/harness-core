@@ -16,4 +16,7 @@ public interface DistributedStore {
 
   //  Inserts or updates the cache for entity with downgrade option
   <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade);
+
+  //  Inserts or updates the cache for entity with downgrade option and with accountId
+  <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade, String accountId);
 }

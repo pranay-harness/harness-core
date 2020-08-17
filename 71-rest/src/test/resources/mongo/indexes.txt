@@ -96,6 +96,7 @@ batchJobInterval {"name": "accountId_batchJobType", "unique": true} {"accountId"
 batchJobScheduledData {"name": "accountId_batchJobType_endAt", "background": true} {"accountId": 1, "batchJobType": 1, "endAt": -1}
 budgets {"name": "accountId_1", "background": true} {"accountId": 1}
 budgets {"name": "alertIteration_1", "background": true} {"alertIteration": 1}
+cache {"name": "accountId_1", "background": true} {"accountId": 1}
 cache {"name": "commutativeIdx", "unique": true} {"_id": 1, "contextValue": 1}
 cache {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 cacheEntities {"name": "createdAt_1", "background": true} {"createdAt": 1}
