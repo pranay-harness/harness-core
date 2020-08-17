@@ -26,11 +26,25 @@ public class K8sResourceStandardizer {
     return Quantity.fromString(cpu).getNumber();
   }
 
+  public long getCpuNano(Quantity cpu) {
+    if (cpu == null || cpu.getNumber() == null) {
+      return 0L;
+    }
+    return cpu.getNumber().multiply(SCALE_TO_NANO).longValue();
+  }
+
   // Standardize memory as bytes
   public long getMemoryByte(String mem) {
     if (isEmpty(mem)) {
       return 0L;
     }
     return Quantity.fromString(mem).getNumber().longValue();
+  }
+
+  public long getMemoryByte(Quantity mem) {
+    if (mem == null || mem.getNumber() == null) {
+      return 0L;
+    }
+    return mem.getNumber().longValue();
   }
 }

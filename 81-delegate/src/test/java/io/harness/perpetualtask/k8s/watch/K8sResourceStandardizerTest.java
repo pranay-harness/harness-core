@@ -1,6 +1,9 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.UTSAV;
+import static io.kubernetes.client.custom.Quantity.Format.BINARY_SI;
+import static io.kubernetes.client.custom.Quantity.Format.DECIMAL_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -8,12 +11,19 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.kubernetes.client.custom.Quantity;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.math.BigDecimal;
+
 public class K8sResourceStandardizerTest extends CategoryTest {
+  BigDecimal bigvalue = new BigDecimal(123L);
+  Quantity memBinary = new Quantity(bigvalue, BINARY_SI);
+  Quantity memDecimal = new Quantity(bigvalue, DECIMAL_SI);
+
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
@@ -84,10 +94,10 @@ public class K8sResourceStandardizerTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testNullOrEmptyValues() throws Exception {
-    assertThat(K8sResourceStandardizer.getCpuNano("")).isEqualTo(0);
-    assertThat(K8sResourceStandardizer.getCpuNano(null)).isEqualTo(0);
-    assertThat(K8sResourceStandardizer.getMemoryByte("")).isEqualTo(0);
-    assertThat(K8sResourceStandardizer.getMemoryByte(null)).isEqualTo(0);
+    assertThat(K8sResourceStandardizer.getCpuNano("")).isZero();
+    assertThat(K8sResourceStandardizer.getCpuNano((String) null)).isZero();
+    assertThat(K8sResourceStandardizer.getMemoryByte("")).isZero();
+    assertThat(K8sResourceStandardizer.getMemoryByte((String) null)).isZero();
   }
 
   @Test
@@ -96,5 +106,25 @@ public class K8sResourceStandardizerTest extends CategoryTest {
   public void testCpuCore() throws Exception {
     assertThat(K8sResourceStandardizer.getCpuCores("250000000n").doubleValue()).isEqualTo(0.25);
     assertThat(K8sResourceStandardizer.getCpuCores("1250000000n").doubleValue()).isEqualTo(1.25);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetMemoryByteByQuantity() {
+    Long longValue = K8sResourceStandardizer.getMemoryByte(memBinary);
+
+    assertThat(longValue).isEqualTo(bigvalue.longValue());
+    assertThat(K8sResourceStandardizer.getMemoryByte((Quantity) null)).isZero();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetCpuNanoByQuantity() {
+    Long longValue = K8sResourceStandardizer.getCpuNano(memDecimal);
+
+    assertThat(longValue).isEqualTo(bigvalue.longValue() * 1_000_000_000L);
+    assertThat(K8sResourceStandardizer.getCpuNano((Quantity) null)).isZero();
   }
 }
