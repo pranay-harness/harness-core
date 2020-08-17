@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CommonsMapper {
-  public static GitFileChange toCoreGitFileChange(io.harness.delegate.beans.git.GitFileChange gitFileChange) {
+  public static GitFileChange toCoreGitFileChange(io.harness.git.model.GitFileChange gitFileChange) {
     return GitFileChange.builder()
         .rootPathId(gitFileChange.getRootPathId())
         .rootPath(gitFileChange.getRootPath())
@@ -19,7 +19,6 @@ public class CommonsMapper {
         .oldFilePath(gitFileChange.getOldFilePath())
         .filePath(gitFileChange.getFilePath())
         .fileContent(gitFileChange.getFileContent())
-        .yamlGitConfig(gitFileChange.getYamlGitConfig())
         .commitTimeMs(gitFileChange.getCommitTimeMs())
         .accountId(gitFileChange.getAccountId())
         .commitId(gitFileChange.getCommitId())
@@ -33,8 +32,8 @@ public class CommonsMapper {
         .build();
   }
 
-  public static io.harness.delegate.beans.git.GitFileChange toDelegateGitFileChange(GitFileChange gitFileChange) {
-    return io.harness.delegate.beans.git.GitFileChange.builder()
+  public static io.harness.git.model.GitFileChange toDelegateGitFileChange(GitFileChange gitFileChange) {
+    return io.harness.git.model.GitFileChange.builder()
         .accountId(gitFileChange.getAccountId())
         .changeFromAnotherCommit(gitFileChange.isChangeFromAnotherCommit())
         .changeType(castChangeTypeToDelegateChangeType(gitFileChange.getChangeType()))
@@ -51,26 +50,23 @@ public class CommonsMapper {
         .rootPath(gitFileChange.getRootPath())
         .rootPathId(gitFileChange.getRootPathId())
         .syncFromGit(gitFileChange.isSyncFromGit())
-        .yamlGitConfig(gitFileChange.getYamlGitConfig())
         .build();
   }
 
-  private static io.harness.delegate.beans.git.GitFileChange.ChangeType castChangeTypeToDelegateChangeType(
-      ChangeType changeType) {
+  private static io.harness.git.model.ChangeType castChangeTypeToDelegateChangeType(ChangeType changeType) {
     switch (changeType) {
       case DELETE:
-        return io.harness.delegate.beans.git.GitFileChange.ChangeType.DELETE;
+        return io.harness.git.model.ChangeType.DELETE;
       case MODIFY:
-        return io.harness.delegate.beans.git.GitFileChange.ChangeType.MODIFY;
+        return io.harness.git.model.ChangeType.MODIFY;
       case ADD:
-        return io.harness.delegate.beans.git.GitFileChange.ChangeType.ADD;
+        return io.harness.git.model.ChangeType.ADD;
       default:
         throw new InvalidRequestException("Invalid changetype");
     }
   }
 
-  private static ChangeType castChangeTypeToGitSyncChangeType(
-      io.harness.delegate.beans.git.GitFileChange.ChangeType changeType) {
+  private static ChangeType castChangeTypeToGitSyncChangeType(io.harness.git.model.ChangeType changeType) {
     switch (changeType) {
       case DELETE:
         return DELETE;

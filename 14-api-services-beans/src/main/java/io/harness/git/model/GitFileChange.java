@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.git;
+package io.harness.git.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class GitFileChange {
   private String filePath;
   private String fileContent;
@@ -25,7 +25,4 @@ public class GitFileChange {
   private Long processingCommitTimeMs;
   private String commitMessage;
   private String processingCommitMessage;
-  private transient YamlGitConfigDTO yamlGitConfig;
-
-  public enum ChangeType { ADD, MODIFY, DELETE }
 }

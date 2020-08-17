@@ -6,18 +6,22 @@ import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static io.harness.git.model.Constants.GIT_DEFAULT_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_HELM_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_REPO_BASE_DIR;
-import static io.harness.git.model.Constants.GIT_TERRAFORM_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_TRIGGER_LOG_PREFIX;
-import static io.harness.git.model.Constants.GIT_YAML_LOG_PREFIX;
-import static io.harness.git.model.Constants.REPOSITORY;
-import static io.harness.git.model.Constants.REPOSITORY_GIT_FILE_DOWNLOADS;
-import static io.harness.git.model.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_ACCOUNT;
-import static io.harness.git.model.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_BASE;
-import static io.harness.git.model.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_REPO_BASE_DIR;
-import static io.harness.git.model.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR;
+import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_REPO_BASE_DIR;
+import static io.harness.git.Constants.GIT_TERRAFORM_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_TRIGGER_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
+import static io.harness.git.Constants.REPOSITORY;
+import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS;
+import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_ACCOUNT;
+import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_BASE;
+import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_REPO_BASE_DIR;
+import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR;
+import static io.harness.git.model.ChangeType.ADD;
+import static io.harness.git.model.ChangeType.DELETE;
+import static io.harness.git.model.ChangeType.MODIFY;
+import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
@@ -32,11 +36,13 @@ import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.NonPersistentLockException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
 
@@ -226,7 +232,23 @@ public class GitClientHelper {
       byte[] messageDigest = md.digest(input.getBytes());
       return encodeHexString(messageDigest);
     } catch (Exception e) {
-      throw new YamlException(String.format("Error while calculating hash for input [%s].", input), e, ADMIN_SRE);
+      throw new YamlException(format("Error while calculating hash for input [%s].", input), e, ADMIN_SRE);
     }
+  }
+
+  public ChangeType getChangeType(DiffEntry.ChangeType gitDiffChangeType) {
+    switch (gitDiffChangeType) {
+      case ADD:
+        return ADD;
+      case MODIFY:
+        return MODIFY;
+      case DELETE:
+        return DELETE;
+      case RENAME:
+        return RENAME;
+      default:
+        unhandled(gitDiffChangeType);
+    }
+    return null;
   }
 }

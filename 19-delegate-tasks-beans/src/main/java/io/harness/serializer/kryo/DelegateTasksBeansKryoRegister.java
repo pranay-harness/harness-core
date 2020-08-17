@@ -55,7 +55,6 @@ import io.harness.delegate.beans.git.GitCommandResult;
 import io.harness.delegate.beans.git.GitCommitAndPushRequest;
 import io.harness.delegate.beans.git.GitCommitAndPushResult;
 import io.harness.delegate.beans.git.GitCommitResult;
-import io.harness.delegate.beans.git.GitFileChange;
 import io.harness.delegate.beans.git.GitPushResult;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -169,8 +168,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitCommitResult.class, 19093);
     kryo.register(GitConfigDTO.class, 19060);
     kryo.register(GitConnectionType.class, 19068);
-    kryo.register(GitFileChange.ChangeType.class, 19094);
-    kryo.register(GitFileChange.class, 19088);
     kryo.register(GitHTTPAuthenticationDTO.class, 19064);
     kryo.register(GitPushResult.class, 19092);
     kryo.register(GitPushResult.RefUpdate.class, 19097);

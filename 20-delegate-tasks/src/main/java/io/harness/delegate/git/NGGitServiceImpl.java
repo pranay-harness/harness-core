@@ -8,9 +8,9 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
+import io.harness.git.UsernamePasswordAuthRequest;
 import io.harness.git.model.AuthRequest;
 import io.harness.git.model.GitBaseRequest;
-import io.harness.git.model.UsernamePasswordAuthRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 

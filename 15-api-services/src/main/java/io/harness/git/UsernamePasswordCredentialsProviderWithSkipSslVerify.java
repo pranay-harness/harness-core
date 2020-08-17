@@ -1,4 +1,4 @@
-package io.harness.git.model;
+package io.harness.git;
 
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.CredentialItem;
