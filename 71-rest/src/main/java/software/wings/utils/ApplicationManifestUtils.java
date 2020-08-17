@@ -25,6 +25,7 @@ import com.google.inject.Singleton;
 
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.GitFile;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.PhaseElement;
@@ -46,7 +47,6 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.ContainerServiceParams;

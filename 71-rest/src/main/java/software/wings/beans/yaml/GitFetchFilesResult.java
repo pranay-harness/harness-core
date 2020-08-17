@@ -2,6 +2,7 @@ package software.wings.beans.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.git.model.GitFile;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

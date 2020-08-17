@@ -10,10 +10,15 @@ import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.GitClientException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
+import io.harness.filesystem.FileIo;
 import io.harness.git.model.AuthInfo;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.DiffRequest;
@@ -21,12 +26,14 @@ import io.harness.git.model.DownloadFilesRequest;
 import io.harness.git.model.FetchFilesBwCommitsRequest;
 import io.harness.git.model.FetchFilesByPathRequest;
 import io.harness.git.model.GitBaseRequest;
+import io.harness.git.model.GitFile;
 import io.harness.git.model.JgitSshAuthRequest;
 import io.harness.git.model.UsernamePasswordAuthRequest;
 import io.harness.git.model.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.FetchCommand;
@@ -41,13 +48,21 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @Singleton
 @Slf4j
@@ -232,13 +247,284 @@ public class GitClientV2Impl implements GitClientV2 {
   public void commitAndPush(CommitAndPushRequest request) {}
 
   @Override
-  public void fetchFilesByPath(FetchFilesByPathRequest request) {}
-
-  @Override
   public void fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request) {}
 
   @Override
-  public void downloadFiles(DownloadFilesRequest request) {}
+  public List<GitFile> fetchFilesByPath(FetchFilesByPathRequest request) {
+    cleanup(request);
+    validateRequiredArgs(request);
+
+    synchronized (gitClientHelper.getLockObject(request.getConnectorId())) {
+      try {
+        checkoutFiles(request);
+        List<GitFile> gitFiles = getFilteredGitFiles(request);
+        resetWorkingDir(request);
+
+        if (isNotEmpty(gitFiles)) {
+          gitFiles.forEach(gitFile -> logger.info("File fetched : " + gitFile.getFilePath()));
+        }
+        return gitFiles;
+
+      } catch (WingsException e) {
+        throw e;
+      } catch (Exception e) {
+        logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", e);
+        throw new YamlException(new StringBuilder()
+                                    .append("Failed while fetching files ")
+                                    .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
+                                    .append(request.useBranch() ? request.getBranch() : request.getCommitId())
+                                    .append(", FilePaths: ")
+                                    .append(request.getFilePaths())
+                                    .toString(),
+            USER);
+      }
+    }
+  }
+
+  @VisibleForTesting
+  public List<GitFile> getFilteredGitFiles(FetchFilesByPathRequest request) {
+    List<GitFile> gitFiles = new ArrayList<>();
+
+    String repoPath = gitClientHelper.getFileDownloadRepoDirectory(request);
+    request.getFilePaths().forEach(filePath -> {
+      try {
+        Path repoFilePath = Paths.get(repoPath + "/" + filePath);
+        Stream<Path> paths = request.isRecursive() ? Files.walk(repoFilePath) : Files.walk(repoFilePath, 1);
+        paths.filter(Files::isRegularFile)
+            .filter(path -> !path.toString().contains(".git"))
+            .filter(matchingFilesExtensions(request.getFileExtensions()))
+            .forEach(path -> gitClientHelper.addFiles(gitFiles, path, repoPath));
+      } catch (Exception e) {
+        resetWorkingDir(request);
+
+        // GitFetchFilesTask relies on the exception cause whether to fail the deployment or not.
+        // If the exception is being changed, make sure that the throwable cause is added to the new exception
+        // Unit test testGetFilteredGitFilesNoFileFoundException makes sure that the original exception is not swallowed
+        throw new GitClientException(new StringBuilder("Unable to checkout files for filePath [")
+                                         .append(filePath)
+                                         .append("]")
+                                         .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
+                                         .append(request.useBranch() ? request.getBranch() : request.getCommitId())
+                                         .toString(),
+            USER, e);
+      }
+    });
+
+    return gitFiles;
+  }
+
+  private Predicate<Path> matchingFilesExtensions(List<String> fileExtensions) {
+    return path -> {
+      if (isEmpty(fileExtensions)) {
+        return true;
+      } else {
+        for (String fileExtension : fileExtensions) {
+          if (path.toString().endsWith(fileExtension)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    };
+  }
+
+  @Override
+  public void downloadFiles(DownloadFilesRequest request) {
+    cleanup(request);
+    validateRequiredArgs(request);
+
+    synchronized (gitClientHelper.getLockObject(request.getConnectorId())) {
+      try {
+        checkoutFiles(request);
+        String repoPath = gitClientHelper.getFileDownloadRepoDirectory(request);
+
+        FileIo.createDirectoryIfDoesNotExist(request.getDestinationDirectory());
+        FileIo.waitForDirectoryToBeAccessibleOutOfProcess(request.getDestinationDirectory(), 10);
+
+        File destinationDir = new File(request.getDestinationDirectory());
+
+        for (String filePath : request.getFilePaths()) {
+          File sourceDir = new File(Paths.get(repoPath + "/" + filePath).toString());
+          if (sourceDir.isFile()) {
+            FileUtils.copyFile(sourceDir, Paths.get(request.getDestinationDirectory(), filePath).toFile());
+          } else {
+            FileUtils.copyDirectory(sourceDir, destinationDir);
+          }
+        }
+
+        resetWorkingDir(request);
+      } catch (WingsException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new YamlException(new StringBuilder()
+                                    .append("Failed while fetching files ")
+                                    .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
+                                    .append(request.useBranch() ? request.getBranch() : request.getCommitId())
+                                    .append(", FilePaths: ")
+                                    .append(request.getFilePaths())
+                                    .append(". Reason: ")
+                                    .append(e.getMessage())
+                                    .toString(),
+            e, USER);
+      }
+    }
+  }
+
+  private void resetWorkingDir(GitBaseRequest request) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(request)))) {
+      logger.info("Resetting repo");
+      ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetCommand.ResetType.HARD);
+      resetCommand.call();
+      logger.info("Resetting repo completed successfully");
+    } catch (Exception ex) {
+      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
+      throw new YamlException("Error in resetting repo", USER);
+    }
+  }
+
+  private void checkoutFiles(FetchFilesByPathRequest request) {
+    synchronized (gitClientHelper.getLockObject(request.getConnectorId())) {
+      logger.info(new StringBuilder(128)
+                      .append(" Processing Git command: FETCH_FILES ")
+                      .append("Account: ")
+                      .append(request.getAccountId())
+                      .append(", repo: ")
+                      .append(request.getRepoUrl())
+                      .append(request.useBranch() ? ", Branch: " : ", CommitId: ")
+                      .append(request.useBranch() ? request.getBranch() : request.getCommitId())
+                      .append(", filePaths: ")
+                      .append(request.getFilePaths())
+                      .toString());
+
+      gitClientHelper.createDirStructureForFileDownload(request);
+
+      // clone repo locally without checkout
+      cloneRepoForFilePathCheckout(request);
+
+      // if useBranch is set, use it to checkout latest, else checkout given commitId
+      if (request.useBranch()) {
+        checkoutBranchForPath(request);
+      } else {
+        checkoutGivenCommitForPath(request);
+      }
+    }
+  }
+
+  private void checkoutGivenCommitForPath(FetchFilesByPathRequest request) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(request)))) {
+      logger.info("Checking out commitId: " + request.getCommitId());
+      CheckoutCommand checkoutCommand = git.checkout().setStartPoint(request.getCommitId()).setCreateBranch(false);
+
+      setPathsForCheckout(request.getFilePaths(), checkoutCommand);
+      checkoutCommand.call();
+      logger.info("Successfully Checked out commitId: " + request.getCommitId());
+    } catch (Exception ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
+      throw new YamlException("Error in checking out commit id " + request.getCommitId(), USER);
+    }
+  }
+
+  private void checkoutBranchForPath(FetchFilesByPathRequest request) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(request)))) {
+      logger.info("Checking out Branch: " + request.getBranch());
+      CheckoutCommand checkoutCommand = git.checkout()
+                                            .setCreateBranch(true)
+                                            .setStartPoint("origin/" + request.getBranch())
+                                            .setForce(true)
+                                            .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
+                                            .setName(request.getBranch());
+
+      setPathsForCheckout(request.getFilePaths(), checkoutCommand);
+      checkoutCommand.call();
+      logger.info("Successfully Checked out Branch: " + request.getBranch());
+    } catch (Exception ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
+      throw new YamlException("Error in checking out Branch " + request.getBranch(), USER);
+    }
+  }
+
+  private void setPathsForCheckout(List<String> filePaths, CheckoutCommand checkoutCommand) {
+    if (filePaths.size() == 1 && filePaths.get(0).equals("")) {
+      checkoutCommand.setAllPaths(true);
+    } else {
+      filePaths.forEach(checkoutCommand::addPath);
+    }
+  }
+
+  /**
+   * Ensure repo locally cloned. This is called before performing any git operation with remote
+   * @param request
+   */
+  private synchronized void cloneRepoForFilePathCheckout(GitBaseRequest request) {
+    logger.info(new StringBuilder(64)
+                    .append(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()))
+                    .append("Cloning repo without checkout for file fetch op, for GitConfig: ")
+                    .append(request.toString())
+                    .toString());
+
+    boolean exceptionOccured = false;
+    File repoDir = new File(gitClientHelper.getFileDownloadRepoDirectory(request));
+    // If repo already exists, update references
+    if (repoDir.exists()) {
+      // Check URL change (ssh, https) and update in .git/config
+      updateRemoteOriginInConfig(request.getRepoUrl(), repoDir);
+
+      try (Git git = Git.open(repoDir)) {
+        // update ref with latest commits on remote
+        FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), request)))
+                                      .setRemoveDeletedRefs(true)
+                                      .setTagOpt(TagOpt.FETCH_TAGS)
+                                      .call(); // fetch all remote references
+
+        logger.info(new StringBuilder()
+                        .append(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()))
+                        .append("result fetched: ")
+                        .append(fetchResult.toString())
+                        .toString());
+
+        return;
+      } catch (Exception ex) {
+        exceptionOccured = true;
+        if (ex instanceof IOException) {
+          logger.warn(gitClientHelper.getGitLogMessagePrefix(request.getRepoType())
+                  + "Repo doesn't exist locally [repo: {}], {} ",
+              request.getRepoUrl(), ex);
+          logger.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Do a fresh clone");
+        } else {
+          logger.info(
+              gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Hard reset failed for branch [{}]",
+              request.getBranch());
+          logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+          gitClientHelper.checkIfGitConnectivityIssue(ex);
+        }
+      } finally {
+        if (exceptionOccured) {
+          gitClientHelper.releaseLock(request, gitClientHelper.getFileDownloadRepoDirectory(request));
+        }
+      }
+    }
+
+    clone(request, gitClientHelper.getFileDownloadRepoDirectory(request), true);
+  }
+
+  /**
+   * FilePath cant empty as well as (Branch and commitId both cant be empty)
+   *
+   * @param request Download request
+   * @throws InvalidRequestException for required args with message
+   */
+  private void validateRequiredArgs(FetchFilesByPathRequest request) {
+    if (isEmpty(request.getFilePaths())) {
+      throw new InvalidRequestException("FilePaths can not be empty", USER);
+    }
+
+    if (isEmpty(request.getBranch()) && isEmpty(request.getCommitId())) {
+      throw new InvalidRequestException("No refs provided to checkout", USER);
+    }
+  }
 
   private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitBaseRequest gitBaseRequest) {
     if (gitBaseRequest.getAuthRequest().getAuthType() == AuthInfo.AuthType.HTTP_PASSWORD) {

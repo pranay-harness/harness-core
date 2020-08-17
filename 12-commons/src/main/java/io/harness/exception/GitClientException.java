@@ -10,4 +10,9 @@ public class GitClientException extends WingsException {
     super(message, cause, ErrorCode.GIT_ERROR, Level.ERROR, reportTargets, null);
     super.getParams().put("message", message);
   }
+
+  public GitClientException(String message, EnumSet<ReportTarget> reportTarget) {
+    super(message, null, ErrorCode.GIT_ERROR, Level.ERROR, reportTarget, null);
+    super.getParams().put("message", message);
+  }
 }

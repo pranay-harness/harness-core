@@ -1,4 +1,4 @@
-package software.wings.beans.yaml;
+package io.harness.git.model;
 
 import lombok.Builder;
 import lombok.Data;

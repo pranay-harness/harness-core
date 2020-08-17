@@ -25,6 +25,7 @@ import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.model.GitFile;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -36,7 +37,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFile;
 
 import java.io.File;
 import java.io.IOException;

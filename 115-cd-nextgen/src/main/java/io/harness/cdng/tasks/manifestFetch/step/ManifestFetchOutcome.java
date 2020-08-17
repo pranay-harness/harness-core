@@ -1,10 +1,10 @@
 package io.harness.cdng.tasks.manifestFetch.step;
 
 import io.harness.data.Outcome;
+import io.harness.git.model.GitFile;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
-import software.wings.beans.yaml.GitFile;
 
 import java.io.Serializable;
 import java.util.List;
