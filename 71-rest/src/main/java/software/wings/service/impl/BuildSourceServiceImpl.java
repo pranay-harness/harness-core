@@ -11,6 +11,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
@@ -301,7 +302,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     String artifactStreamId = artifactStream.getUuid();
     String settingId = artifactStream.getSettingId();
     // Collect labels for only DOCKER.
-    if (!DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+    if (!DOCKER.name().equals(artifactStream.getArtifactStreamType())
+        && !ECR.name().equals(artifactStream.getArtifactStreamType())) {
       return Collections.emptyList();
     }
 
@@ -322,7 +324,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
 
     return getBuildService(settingAttribute, appId)
-        .getLabels(artifactStreamAttributes.getImageName(), buildNos, settingValue, encryptedDataDetails);
+        .getLabels(artifactStreamAttributes, buildNos, settingValue, encryptedDataDetails);
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {

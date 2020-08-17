@@ -44,4 +44,9 @@ public interface EcrBuildService extends BuildService<AwsConfig> {
   @DelegateTaskType(TaskType.ECR_GET_ARTIFACT_PATHS)
   List<String> getArtifactPaths(
       String region, String groupId, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
+
+  @Override
+  @DelegateTaskType(TaskType.ECR_GET_LABELS)
+  List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
 }

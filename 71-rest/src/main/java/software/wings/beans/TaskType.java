@@ -177,6 +177,7 @@ public enum TaskType {
   ECR_GET_PLANS(TaskGroup.ECR, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   ECR_GET_ARTIFACT_PATHS(TaskGroup.ECR, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   ECR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ECR, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
+  ECR_GET_LABELS(TaskGroup.ECR, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   GCR_GET_BUILDS(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
   GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
   GCR_GET_PLANS(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),

@@ -19,6 +19,7 @@ import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.EcrBuildService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 @Singleton
 public class EcrBuildServiceImpl implements EcrBuildService {
   @Inject private EcrService ecrService;
+  @Inject private EncryptionService encryptionService;
+  @Inject private AwsHelperService awsHelperService;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
@@ -108,5 +111,11 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   public List<String> getArtifactPathsByStreamType(
       AwsConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
     throw new InvalidRequestException("Operation not supported by ECR Build Service", WingsException.USER);
+  }
+
+  @Override
+  public List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    return ecrService.getLabels(awsConfig, encryptionDetails, artifactStreamAttributes, buildNos);
   }
 }

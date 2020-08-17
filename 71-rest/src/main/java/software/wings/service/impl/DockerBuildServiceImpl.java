@@ -124,10 +124,10 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   }
 
   @Override
-  public List<Map<String, String>> getLabels(
-      String imageName, List<String> buildNos, DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
+  public List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(dockerConfig, encryptionDetails);
-    return dockerRegistryService.getLabels(
-        DockerConfigToInternalMapper.toDockerInternalConfig(dockerConfig), imageName, buildNos);
+    return dockerRegistryService.getLabels(DockerConfigToInternalMapper.toDockerInternalConfig(dockerConfig),
+        artifactStreamAttributes.getImageName(), buildNos);
   }
 }
