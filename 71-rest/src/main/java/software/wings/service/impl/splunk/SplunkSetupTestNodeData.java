@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.StateType;
 
@@ -25,8 +24,8 @@ public class SplunkSetupTestNodeData extends SetupTestNodeData {
 
   @Builder
   public SplunkSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
-      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      String query, String hostNameField, String guid, boolean isAdvancedQuery) {
+      Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime, String query,
+      String hostNameField, String guid, boolean isAdvancedQuery) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.SPLUNKV2, fromTime, toTime);
     this.query = query;

@@ -68,6 +68,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
+import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.MetricUtilHelper;
@@ -256,7 +257,10 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
             .workflowId(workflowId)
             .toTime(toTime)
             .fromTime(toTime - TimeUnit.MINUTES.toMillis(120))
-            .instanceElement(anInstanceElement().host(HostElement.builder().hostName(node.getHost()).build()).build())
+            .instanceElement(
+                SetupTestNodeData.Instance.builder()
+                    .instance(anInstanceElement().host(HostElement.builder().hostName(node.getHost()).build()).build())
+                    .build())
             .build();
 
     target = client.target(API_BASE + "/newrelic/node-data?settingId=" + newRelicConfigId + "&accountId=" + accountId);

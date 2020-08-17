@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.StateType;
 
@@ -25,7 +24,7 @@ public class BugsnagSetupTestData extends SetupTestNodeData {
 
   @Builder
   public BugsnagSetupTestData(String appId, String settingId, String instanceName, boolean isServiceLevel,
-      InstanceElement instanceElement, String hostExpression, String workflowId, String guid, StateType stateType,
+      Instance instanceElement, String hostExpression, String workflowId, String guid, StateType stateType,
       long fromTime, long toTime, String orgId, String projectId, String releaseStage, String query,
       boolean browserApplication) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid, stateType,

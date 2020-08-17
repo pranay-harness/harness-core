@@ -9,6 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
@@ -21,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
-import software.wings.api.InstanceElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -30,6 +30,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.APMDelegateService;
+import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.MLServiceUtils;
@@ -150,7 +151,9 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
                 .url(
                     "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_cpu_usage_seconds_total{container_name=\"harness-example\",pod_name=\"$hostName\"}")
                 .build()))
-        .instanceElement(InstanceElement.Builder.anInstanceElement().hostName("dummyHostName").build())
+        .instanceElement(SetupTestNodeData.Instance.builder()
+                             .instance(anInstanceElement().hostName("dummyHostName").build())
+                             .build())
         .settingId(settingId)
         .build();
   }

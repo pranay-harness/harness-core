@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.StateType;
 
@@ -22,9 +21,8 @@ public class InstanaSetupTestNodeData extends SetupTestNodeData {
   private List<InstanaTagFilter> tagFilters;
   @Builder
   private InstanaSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
-      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      String guid, InstanaInfraParams infraParams, InstanaApplicationParams applicationParams,
-      List<InstanaTagFilter> tagFilters) {
+      Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime, String guid,
+      InstanaInfraParams infraParams, InstanaApplicationParams applicationParams, List<InstanaTagFilter> tagFilters) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.INSTANA, fromTime, toTime);
     this.infraParams = infraParams;

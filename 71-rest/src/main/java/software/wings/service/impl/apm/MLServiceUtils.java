@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -16,6 +17,8 @@ import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.StateExecutionContext;
+import software.wings.sm.StateExecutionContext.StateExecutionContextBuilder;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
@@ -62,12 +65,24 @@ public class MLServiceUtils {
             .order(Sort.descending(StateExecutionInstanceKeys.createdAt))
             .get();
     ExecutionContext executionContext = executionContextFactory.createExecutionContext(stateExecutionInstance, null);
+    StateExecutionContextBuilder contextBuilder = StateExecutionContext.builder();
+
+    if (nodeData.getInstanceElement().getInstanceDetails() != null) {
+      StateExecutionData stateExecutionData = new StateExecutionData();
+      stateExecutionData.setTemplateVariable(
+          ImmutableMap.<String, Object>builder()
+              .put("instanceDetails", nodeData.getInstanceElement().getInstanceDetails())
+              .build());
+      contextBuilder = contextBuilder.stateExecutionData(stateExecutionData);
+    }
+    if (nodeData.getInstanceElement().getInstance() != null) {
+      contextBuilder = contextBuilder.contextElements(Lists.newArrayList(nodeData.getInstanceElement().getInstance()));
+    }
+
     String hostName = isEmpty(nodeData.getHostExpression())
         ? nodeData.getInstanceName()
-        : executionContext.renderExpression(nodeData.getHostExpression(),
-              StateExecutionContext.builder()
-                  .contextElements(Lists.newArrayList(nodeData.getInstanceElement()))
-                  .build());
+        : executionContext.renderExpression(nodeData.getHostExpression(), contextBuilder.build());
+
     logger.info("rendered host is {}", hostName);
     return hostName;
   }

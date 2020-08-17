@@ -27,6 +27,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.WorkflowExecution;
+import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
@@ -107,27 +108,30 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
         .settingId(elkSettingId)
         .instanceName("testHost")
         .instanceElement(
-            anInstanceElement()
-                .uuid("8cec1e1b0d16")
-                .displayName("8cec1e1b0d16")
-                .hostName("testHost")
-                .dockerId("8cec1e1b0d16")
-                .host(HostElement.builder()
-                          .uuid("8cec1e1b0d16")
-                          .hostName("testHost")
-                          .ip("1.1.1.1")
-                          .instanceId(null)
-                          .publicDns(null)
-                          .ec2Instance(null)
-                          .build())
-                .serviceTemplateElement(
-                    aServiceTemplateElement()
-                        .withUuid("8cec1e1b0d16")
-                        .withName(null)
-                        .withServiceElement(ServiceElement.builder().uuid(generateUuid()).name(generateUuid()).build())
-                        .build())
-                .podName("testHost")
-                .workloadName("testHost")
+            SetupTestNodeData.Instance.builder()
+                .instance(anInstanceElement()
+                              .uuid("8cec1e1b0d16")
+                              .displayName("8cec1e1b0d16")
+                              .hostName("testHost")
+                              .dockerId("8cec1e1b0d16")
+                              .host(HostElement.builder()
+                                        .uuid("8cec1e1b0d16")
+                                        .hostName("testHost")
+                                        .ip("1.1.1.1")
+                                        .instanceId(null)
+                                        .publicDns(null)
+                                        .ec2Instance(null)
+                                        .build())
+                              .serviceTemplateElement(
+                                  aServiceTemplateElement()
+                                      .withUuid("8cec1e1b0d16")
+                                      .withName(null)
+                                      .withServiceElement(
+                                          ServiceElement.builder().uuid(generateUuid()).name(generateUuid()).build())
+                                      .build())
+                              .podName("testHost")
+                              .workloadName("testHost")
+                              .build())
                 .build())
         .hostExpression("${host.hostName}")
         .toTime(toTime)

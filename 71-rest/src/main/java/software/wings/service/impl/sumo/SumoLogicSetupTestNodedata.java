@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.StateType;
 
@@ -22,8 +21,8 @@ public class SumoLogicSetupTestNodedata extends SetupTestNodeData {
 
   @Builder
   SumoLogicSetupTestNodedata(String appId, String settingId, String instanceName, boolean isServiceLevel,
-      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
-      String query, String hostNameField, String guid) {
+      Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime, String query,
+      String hostNameField, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
         StateType.SUMO, fromTime, toTime);
     this.query = query;

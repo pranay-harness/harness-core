@@ -1763,5 +1763,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureVMSSSetupContextElement.class, 7467);
     kryo.register(AzureVMSSSetupStateExecutionData.class, 7468);
     kryo.register(AzureVMSSSetupExecutionSummary.class, 7469);
+    kryo.register(SetupTestNodeData.Instance.class, 7470);
   }
 }
