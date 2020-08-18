@@ -12,6 +12,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
@@ -22,6 +24,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.infra.InfraDefinitionDetail;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
+import software.wings.infra.ListInfraDefinitionParams;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -46,6 +50,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 
 @Api("infrastructure-definitions")
 @Path("infrastructure-definitions")
@@ -62,6 +67,21 @@ public class InfrastructureDefinitionResource {
   public RestResponse<PageResponse<InfrastructureDefinition>> list(
       @BeanParam PageRequest<InfrastructureDefinition> pageRequest) {
     return new RestResponse<>(infrastructureDefinitionService.list(pageRequest));
+  }
+
+  @POST
+  @Path("list")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<PageResponse<InfrastructureDefinition>> listPost(
+      @Context PageRequest pageRequest, ListInfraDefinitionParams listInfraDefinitionParams) {
+    if (EmptyPredicate.isNotEmpty(listInfraDefinitionParams.getDeploymentTypeFromMetaData())) {
+      pageRequest.addFilter(InfrastructureDefinitionKeys.deploymentType, SearchFilter.Operator.IN,
+          listInfraDefinitionParams.getDeploymentTypeFromMetaData().toArray());
+    }
+    return new RestResponse<>(
+        infrastructureDefinitionService.list(pageRequest, listInfraDefinitionParams.getServiceIds()));
   }
 
   @GET

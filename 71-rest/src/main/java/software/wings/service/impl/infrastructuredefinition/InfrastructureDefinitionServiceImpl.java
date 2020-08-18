@@ -260,11 +260,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
-  public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
+  public PageResponse<InfrastructureDefinition> list(
+      PageRequest<InfrastructureDefinition> pageRequest, List<String> serviceIds) {
     if (pageRequest.getUriInfo() != null) {
-      if (pageRequest.getUriInfo().getQueryParameters().containsKey("serviceId")) {
-        applyServiceFilter(pageRequest);
-      }
+      // If serviceId is already sent as part of pageRequest, the serviceIds passed as argument is ignored
+      applyServiceFilter(pageRequest, serviceIds);
 
       if (pageRequest.getUriInfo().getQueryParameters().containsKey("deploymentTypeFromMetadata")) {
         List<String> deploymentTypes = pageRequest.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata");
@@ -274,8 +274,19 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
   }
 
+  @Override
+  public PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest) {
+    if (pageRequest.getUriInfo() != null && pageRequest.getUriInfo().getQueryParameters().containsKey("serviceId")) {
+      return list(pageRequest, pageRequest.getUriInfo().getQueryParameters().get("serviceId"));
+    }
+    return list(pageRequest, new ArrayList<>());
+  }
+
   @VisibleForTesting
-  public void applyServiceFilter(PageRequest<InfrastructureDefinition> pageRequest) {
+  public void applyServiceFilter(PageRequest<InfrastructureDefinition> pageRequest, List<String> serviceIds) {
+    if (isEmpty(serviceIds)) {
+      return;
+    }
     if (!pageRequest.getUriInfo().getQueryParameters().containsKey("appId")) {
       throw new InvalidRequestException("AppId is mandatory for service-based filtering");
     }
@@ -284,7 +295,6 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       throw new InvalidRequestException("More than 1 app not supported for listing infra definitions");
     }
     String appId = appIds.get(0);
-    List<String> serviceIds = pageRequest.getUriInfo().getQueryParameters().get("serviceId");
     List<String> serviceNames = new ArrayList<>();
     EnumSet<DeploymentType> deploymentType = EnumSet.noneOf(DeploymentType.class);
     List<String> serviceIdsInScope = new ArrayList<>();

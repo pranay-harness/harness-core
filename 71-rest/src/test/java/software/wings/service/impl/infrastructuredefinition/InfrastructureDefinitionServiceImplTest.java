@@ -642,13 +642,13 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     PageRequest<InfrastructureDefinition> pageRequest = new PageRequest<>();
     pageRequest.setUriInfo(uriInfo);
 
-    assertThatThrownBy(() -> infrastructureDefinitionService.applyServiceFilter(pageRequest));
+    assertThatThrownBy(
+        () -> infrastructureDefinitionService.applyServiceFilter(pageRequest, Collections.singletonList("s1")));
 
-    queryParams.put("serviceId", Collections.singletonList("s1"));
     queryParams.put("appId", Collections.singletonList("app1"));
     Service service = Service.builder().deploymentType(DeploymentType.SSH).build();
     when(serviceResourceService.get(anyString(), anyString())).thenReturn(service);
-    infrastructureDefinitionService.applyServiceFilter(pageRequest);
+    infrastructureDefinitionService.applyServiceFilter(pageRequest, Collections.singletonList("s1"));
     assertThat(pageRequest.getFilters().size() == 2).isTrue();
   }
 
