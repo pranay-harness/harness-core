@@ -60,6 +60,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   private final WinRmSessionConfig config;
   protected DelegateFileManager delegateFileManager;
   private boolean disableCommandEncoding;
+  private String powershell = "Powershell ";
   private static final int SPLITLISTOFCOMMANDSBY = 20;
 
   DefaultWinRmExecutor(DelegateLogService logService, DelegateFileManager delegateFileManager,
@@ -68,6 +69,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     this.delegateFileManager = delegateFileManager;
     this.config = config;
     this.disableCommandEncoding = disableCommandEncoding;
+
+    if (this.config.isUseNoProfile()) {
+      powershell = "Powershell -NoProfile ";
+    }
   }
 
   @Override
@@ -280,8 +285,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     try (StringWriter outputAccumulator = new StringWriter(1024)) {
       if (disableCommandEncoding) {
         command = format(
-            "Powershell Invoke-Command -command {$FILE_PATH=[System.Environment]::ExpandEnvironmentVariables(\\\"%s\\\") ;  Remove-Item -Path $FILE_PATH}",
-            file);
+            "%s Invoke-Command -command {$FILE_PATH=[System.Environment]::ExpandEnvironmentVariables(\\\"%s\\\") ;  Remove-Item -Path $FILE_PATH}",
+            powershell, file);
         session.executeCommandString(command, outputAccumulator, outputAccumulator);
       } else {
         session.executeCommandString(psWrappedCommandWithEncoding(command), outputAccumulator, outputAccumulator);
@@ -309,9 +314,9 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     command = command.replaceAll("\"", "`\\\\\"");
 
     // write commands to a file and then execute the file
-    String appendPSInvokeCommandtoCommandString =
-        "Powershell Invoke-Command -command {[IO.File]::AppendAllText(\\\"%s\\\", \\\"%s\\\" ) }";
-
+    String appendPSInvokeCommandtoCommandString;
+    appendPSInvokeCommandtoCommandString =
+        powershell + " Invoke-Command -command {[IO.File]::AppendAllText(\\\"%s\\\", \\\"%s\\\" ) }";
     // Split the command at newline character
     List<String> listofCommands = Arrays.asList(command.split("\n"));
 
@@ -327,8 +332,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       commandList.add(format(appendPSInvokeCommandtoCommandString, psScriptFile, commandString + "`r`n"));
     }
     // last command to run the script we just built - This will execute our command.
-    commandList.add(format("Powershell -f \"%s\" ", psScriptFile));
-
+    commandList.add(format("%s -f \"%s\" ", powershell, psScriptFile));
     return Lists.partition(commandList, SPLITLISTOFCOMMANDSBY);
   }
 
@@ -338,13 +342,14 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
    * @return powershell command string that will convert that command from base64 to UTF8 string on windows host and
    * then run it on cmd.
    */
-  private String psWrappedCommandWithEncoding(String command) {
+  @VisibleForTesting
+  String psWrappedCommandWithEncoding(String command) {
     command = "$ErrorActionPreference=\"Stop\"\n" + command;
     String base64Command = encodeBase64String(command.getBytes(StandardCharsets.UTF_8));
     String wrappedCommand = format(
         "$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\\\"%s\\\")); Invoke-Expression $decoded",
         base64Command);
-    return format("Powershell Invoke-Command -command {%s}", wrappedCommand);
+    return format("%s Invoke-Command -command {%s}", powershell, wrappedCommand);
   }
 
   private void saveExecutionLog(String line, LogLevel level) {

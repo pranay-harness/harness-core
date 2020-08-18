@@ -133,6 +133,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
         .workingDirectory(workingDirectory)
         .environment(getResolvedEnvironmentVariables())
+        .useNoProfile(winrmConnectionAttributes.isUseNoProfile())
         .build();
   }
 

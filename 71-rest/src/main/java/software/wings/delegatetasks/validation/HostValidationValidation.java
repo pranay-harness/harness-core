@@ -99,6 +99,7 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
                     .keyTabFilePath(connectionAttributes.getKeyTabFilePath())
                     .workingDirectory(WINDOWS_HOME_DIR)
                     .environment(Collections.emptyMap())
+                    .useNoProfile(connectionAttributes.isUseNoProfile())
                     .build();
 
             logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(),

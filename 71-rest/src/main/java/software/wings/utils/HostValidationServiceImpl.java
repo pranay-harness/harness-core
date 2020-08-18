@@ -139,6 +139,7 @@ public class HostValidationServiceImpl implements HostValidationService {
                  .keyTabFilePath(connectionAttributes.getKeyTabFilePath())
                  .workingDirectory(WINDOWS_HOME_DIR)
                  .environment(Collections.emptyMap())
+                 .useNoProfile(connectionAttributes.isUseNoProfile())
                  .build();
 
     try (WinRmSession ignore = new WinRmSession(config, new NoopExecutionCallback())) {

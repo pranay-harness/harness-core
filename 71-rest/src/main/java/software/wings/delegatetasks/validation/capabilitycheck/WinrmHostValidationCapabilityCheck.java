@@ -72,6 +72,7 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
         .keyTabFilePath(winrmConnectionAttributes.getKeyTabFilePath())
         .workingDirectory(WINDOWS_HOME_DIR)
         .environment(envVariables == null ? Collections.emptyMap() : envVariables)
+        .useNoProfile(winrmConnectionAttributes.isUseNoProfile())
         .build();
   }
 

@@ -35,6 +35,7 @@ public class WinRmSessionConfig implements EncryptableSetting {
   private String workingDirectory;
   private final Map<String, String> environment;
   @Builder.Default private Integer timeout = (int) TimeUnit.MINUTES.toMillis(30);
+  private boolean useNoProfile;
 
   @SchemaIgnore private String encryptedPassword;
 
