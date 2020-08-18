@@ -3,6 +3,7 @@ package io.harness.secretmanagerclient.dto;
 import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.security.encryption.EncryptionType;
@@ -33,5 +34,5 @@ public abstract class SecretManagerConfigDTO {
   private String description;
 
   private EncryptionType encryptionType;
-  private boolean isDefault;
+  @JsonProperty("default") private boolean isDefault;
 }

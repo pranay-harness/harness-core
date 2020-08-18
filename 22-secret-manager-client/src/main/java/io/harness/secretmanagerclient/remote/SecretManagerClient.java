@@ -12,7 +12,6 @@ import static io.harness.secretmanagerclient.NGConstants.SIZE_KEY;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
-import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
@@ -32,6 +31,7 @@ import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 
@@ -70,7 +70,7 @@ public interface SecretManagerClient {
   @GET(SECRETS_API)
   Call<RestResponse<PageResponse<EncryptedDataDTO>>> listSecrets(@Query(value = ACCOUNT_KEY) String accountIdentifier,
       @Query(ORG_KEY) String orgIdentifier, @Query(PROJECT_KEY) String projectIdentifier,
-      @Query("type") SecretType secretType, @Query("searchTerm") String searchTerm, @Query(PAGE_KEY) int page,
+      @Query("type") SettingVariableTypes secretType, @Query("searchTerm") String searchTerm, @Query(PAGE_KEY) int page,
       @Query(SIZE_KEY) int size);
 
   // update secret
