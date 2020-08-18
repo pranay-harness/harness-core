@@ -29,6 +29,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -44,8 +45,9 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "InfrastructureDefinitionKeys")
 @Entity(value = "infrastructureDefinitions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class InfrastructureDefinition implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware,
-                                                 CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+public class InfrastructureDefinition
+    implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
+               ApplicationAccess, CustomDeploymentTypeAware {
   @Id private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore private long createdAt;
@@ -62,6 +64,13 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
   private boolean sample;
   @FdIndex private String accountId;
 
+  /*
+  Support for Custom Deployment
+   */
+  private String deploymentTypeTemplateId;
+  private String deploymentTypeTemplateVersion;
+  private transient String customDeploymentName;
+
   @JsonIgnore
   public InfrastructureMapping getInfraMapping() {
     InfrastructureMapping infrastructureMapping = infrastructure.getInfraMapping();
@@ -71,6 +80,8 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
     infrastructureMapping.setDeploymentType(deploymentType.name());
     infrastructureMapping.setComputeProviderType(cloudProviderType.name());
     infrastructureMapping.setProvisionerId(provisionerId);
+    infrastructureMapping.setDeploymentTypeTemplateVersion(getDeploymentTypeTemplateVersion());
+    infrastructureMapping.setCustomDeploymentTemplateId(deploymentTypeTemplateId);
     return infrastructureMapping;
   }
 
@@ -83,7 +94,14 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
         .infrastructure(getInfrastructure())
         .scopedToServices(getScopedToServices())
         .accountId(getAccountId())
+        .deploymentTypeTemplateId(deploymentTypeTemplateId)
+        .customDeploymentName(customDeploymentName)
         .build();
+  }
+
+  @Override
+  public void setDeploymentTypeName(String theCustomDeploymentName) {
+    customDeploymentName = theCustomDeploymentName;
   }
 
   /**
@@ -100,16 +118,25 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
     private List<String> scopedServices;
     private String provisioner;
 
+    /*
+     Support for Custom Deployment
+      */
+    private String deploymentTypeTemplateUri;
+    private String deploymentTypeTemplateVersion;
+
     @Builder
     public Yaml(String type, String harnessApiVersion, CloudProviderType cloudProviderType,
         DeploymentType deploymentType, List<CloudProviderInfrastructureYaml> infrastructure,
-        List<String> scopedServices, String provisioner) {
+        List<String> scopedServices, String provisioner, String deploymentTypeTemplateUri,
+        String deploymentTypeTemplateVersion) {
       super(type, harnessApiVersion);
       setCloudProviderType(cloudProviderType);
       setDeploymentType(deploymentType);
       setInfrastructure(infrastructure);
       setScopedServices(scopedServices);
       setProvisioner(provisioner);
+      setDeploymentTypeTemplateUri(deploymentTypeTemplateUri);
+      setDeploymentTypeTemplateVersion(deploymentTypeTemplateVersion);
     }
   }
 }

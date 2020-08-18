@@ -773,7 +773,9 @@
 71-rest/src/main/java/software/wings/service/impl/workflow/creation/MultiPhaseWorkflowCreator.java
 71-rest/src/main/java/software/wings/service/impl/workflow/creation/SinglePhaseWorkflowCreator.java
 71-rest/src/main/java/software/wings/service/impl/workflow/creation/WorkflowCreator.java
-71-rest/src/main/java/software/wings/service/impl/workflow/creation/WorkflowCreatorFactory.java
+71-rest/src/main/java/software/wings/service/impl/workflow/creation/abstractfactories/AbstractWorkflowFactory.java
+71-rest/src/main/java/software/wings/service/impl/workflow/creation/abstractfactories/GeneralWorkflowFactory.java
+71-rest/src/main/java/software/wings/service/impl/workflow/creation/abstractfactories/K8sV2WorkflowFactory.java
 71-rest/src/main/java/software/wings/service/impl/workflow/creation/helpers/K8BlueGreenWorkflowPhaseHelper.java
 71-rest/src/main/java/software/wings/service/impl/workflow/creation/helpers/K8CanaryWorkflowPhaseHelper.java
 71-rest/src/main/java/software/wings/service/impl/workflow/creation/helpers/K8RollingWorkflowPhaseHelper.java

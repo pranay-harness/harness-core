@@ -14,6 +14,8 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
+import software.wings.common.TemplateConstants;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = EXTERNAL_PROPERTY)
 @JsonSubTypes({
@@ -21,6 +23,7 @@ import software.wings.beans.template.command.SshCommandTemplate;
   , @JsonSubTypes.Type(value = HttpTemplate.class, name = HTTP),
       @JsonSubTypes.Type(value = ShellScriptTemplate.class, name = SHELL_SCRIPT),
       @JsonSubTypes.Type(value = ArtifactSourceTemplate.class, name = ARTIFACT_SOURCE),
-      @JsonSubTypes.Type(value = PcfCommandTemplate.class, name = PCF_PLUGIN)
+      @JsonSubTypes.Type(value = PcfCommandTemplate.class, name = PCF_PLUGIN),
+      @JsonSubTypes.Type(value = CustomDeploymentTypeTemplate.class, name = TemplateConstants.CUSTOM_DEPLOYMENT_TYPE)
 })
 public interface BaseTemplate {}

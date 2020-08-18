@@ -318,7 +318,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   private void checkScopedService(DeploymentType deploymentType, Service knownService) {
     final String appId = knownService.getAppId();
 
-    List<String> scopedServices = serviceResourceService.listByDeploymentType(appId, deploymentType.toString())
+    List<String> scopedServices = serviceResourceService.listByDeploymentType(appId, deploymentType.toString(), null)
                                       .stream()
                                       .map(Service::getUuid)
                                       .collect(Collectors.toList());

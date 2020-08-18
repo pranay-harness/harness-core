@@ -22,7 +22,8 @@ public enum DeploymentType {
   AMI("AMI"),
   WINRM("Windows Remote Management (WinRM)"),
   PCF("Pivotal Cloud Foundry"),
-  AZURE_VMSS("Azure Virtual Machine Image");
+  AZURE_VMSS("Azure Virtual Machine Image"),
+  CUSTOM("Custom");
 
   private String displayName;
 
@@ -47,5 +48,8 @@ public enum DeploymentType {
           .put(AMI, Collections.singletonList(ArtifactType.AMI))
           .put(WINRM, Arrays.asList(ArtifactType.IIS, ArtifactType.IIS_APP, ArtifactType.IIS_VirtualDirectory))
           .put(PCF, Collections.singletonList(ArtifactType.PCF))
+          .put(CUSTOM,
+              Arrays.asList(ArtifactType.DOCKER, ArtifactType.JAR, ArtifactType.WAR, ArtifactType.RPM,
+                  ArtifactType.OTHER, ArtifactType.TAR, ArtifactType.ZIP))
           .build();
 }

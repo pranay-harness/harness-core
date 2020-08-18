@@ -36,6 +36,7 @@ import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -63,7 +64,8 @@ import java.util.Set;
 @FieldNameConstants(innerTypeName = "ServiceKeys")
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Service extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
+public class Service
+    extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
   @Trimmed(message = "Service Name should not contain leading and trailing spaces")
   @EntityName
@@ -100,6 +102,9 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
 
   private transient List<HarnessTagLink> tagLinks;
 
+  private String deploymentTypeTemplateId;
+  private transient String customDeploymentName;
+
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, Set<String> keywords, String entityYamlPath, String name, String description,
@@ -107,7 +112,8 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
       long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
-      List<String> artifactStreamIds, boolean sample, boolean isPcfV2, HelmVersion helmVersion) {
+      List<String> artifactStreamIds, boolean sample, boolean isPcfV2, HelmVersion helmVersion,
+      String deploymentTypeTemplateId, String customDeploymentName) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -131,6 +137,8 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
     this.artifactStreamIds = artifactStreamIds;
     this.sample = sample;
     this.helmVersion = helmVersion;
+    this.deploymentTypeTemplateId = deploymentTypeTemplateId;
+    this.customDeploymentName = customDeploymentName;
   }
 
   // TODO: check what to do with artifactStreamIds and artifactStreamBindings
@@ -148,6 +156,8 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
         .isK8sV2(isK8sV2)
         .isPcfV2(isPcfV2)
         .helmVersion(helmVersion)
+        .deploymentTypeTemplateId(deploymentTypeTemplateId)
+        .customDeploymentName(customDeploymentName)
         .build();
   }
 
@@ -159,6 +169,11 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
       keywords.add(artifactType.name());
     }
     return keywords;
+  }
+
+  @Override
+  public void setDeploymentTypeName(String theCustomDeploymentName) {
+    customDeploymentName = theCustomDeploymentName;
   }
 
   @Data
@@ -173,9 +188,16 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
     private String helmVersion;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
+    /*
+     Support for Custom Deployment
+      */
+    private String deploymentTypeTemplateUri;
+    private String deploymentTypeTemplateVersion;
+
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
-        String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables, String helmVersion) {
+        String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables, String helmVersion,
+        String deploymentTypeTemplateUri, String deploymentTypeTemplateVersion) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
@@ -184,6 +206,8 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
       this.helmVersion = helmVersion;
+      this.deploymentTypeTemplateUri = deploymentTypeTemplateUri;
+      this.deploymentTypeTemplateVersion = deploymentTypeTemplateVersion;
     }
   }
 

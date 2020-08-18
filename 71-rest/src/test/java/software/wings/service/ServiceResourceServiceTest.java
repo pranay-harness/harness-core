@@ -215,6 +215,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.Stencil;
@@ -283,6 +284,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private CustomDeploymentTypeService customDeploymentTypeService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 

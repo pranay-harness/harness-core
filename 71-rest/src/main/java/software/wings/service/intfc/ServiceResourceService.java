@@ -8,6 +8,7 @@ import io.harness.beans.PageResponse;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
@@ -540,7 +541,7 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   List<Service> listByArtifactStreamId(String artifactStreamId);
 
-  List<Service> listByDeploymentType(String appId, String deploymentType);
+  List<Service> listByDeploymentType(String appId, String deploymentType, String deploymentTypeTemplateId);
 
   void setPcfV2ServiceFromAppManifestIfRequired(
       ApplicationManifest applicationManifest, AppManifestSource appManifestSource);
@@ -552,4 +553,9 @@ public interface ServiceResourceService extends OwnedByApplication {
   HelmVersion getHelmVersionWithDefault(String appId, String serviceId);
 
   Service updateServiceWithHelmVersion(Service service);
+
+  boolean isCustomDeploymentType(Service service);
+
+  List<Service> listByCustomDeploymentTypeId(
+      @NotBlank String accountId, @Nonnull List<String> deploymentTemplateIds, int limit);
 }

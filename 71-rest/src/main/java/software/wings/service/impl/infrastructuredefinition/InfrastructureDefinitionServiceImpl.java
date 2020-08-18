@@ -2,6 +2,8 @@ package software.wings.service.impl.infrastructuredefinition;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
+import static io.harness.data.structure.CollectionUtils.collectionToStream;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ADMIN;
@@ -31,6 +33,7 @@ import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.AZURE_VMSS;
+import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -66,7 +69,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -118,12 +120,15 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
+import software.wings.beans.Variable;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.InfrastructureConstants;
 import software.wings.dl.WingsPersistence;
@@ -139,6 +144,7 @@ import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.CloudProviderInfrastructure;
+import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
@@ -182,6 +188,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
@@ -240,6 +247,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureDefinitionHelper infrastructureDefinitionHelper;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
 
   @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
@@ -255,6 +263,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.KUBERNETES_CLUSTER, EnumSet.of(HELM, KUBERNETES));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.PCF, EnumSet.of(PCF));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.PHYSICAL_DATA_CENTER, EnumSet.of(SSH, WINRM));
+    supportedCloudProviderDeploymentTypes.put(CloudProviderType.CUSTOM, EnumSet.of(CUSTOM));
   }
 
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -271,7 +280,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         pageRequest.addFilter(InfrastructureDefinitionKeys.deploymentType, Operator.IN, deploymentTypes.toArray());
       }
     }
-    return wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
+    final PageResponse<InfrastructureDefinition> response =
+        wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
+    if (isNotEmpty(response.getResponse())) {
+      customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(
+          response.getResponse(), response.getResponse().get(0).getAccountId());
+    }
+    return response;
   }
 
   @Override
@@ -298,6 +313,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     List<String> serviceNames = new ArrayList<>();
     EnumSet<DeploymentType> deploymentType = EnumSet.noneOf(DeploymentType.class);
     List<String> serviceIdsInScope = new ArrayList<>();
+    Set<String> customDeploymentTemplateIds = new HashSet<>();
     for (String serviceId : serviceIds) {
       if (isEmpty(serviceId) || ExpressionEvaluator.matchesVariablePattern(serviceId)) {
         continue;
@@ -310,18 +326,25 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         // get deployment type array from filter
         deploymentType.add(service.getDeploymentType());
         serviceNames.add(service.getName());
+        if (isNotBlank(service.getDeploymentTypeTemplateId())) {
+          customDeploymentTemplateIds.add(service.getDeploymentTypeTemplateId());
+        }
       }
       serviceIdsInScope.add(serviceId);
     }
 
     if (isNotEmpty(deploymentType)) {
-      if (deploymentType.size() > 1) {
+      if (deploymentType.size() > 1 || customDeploymentTemplateIds.size() > 1) {
         throw new InvalidRequestException(
             "Cannot load infra for different deployment type services " + serviceNames, USER);
       }
       if (isEmpty(pageRequest.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata"))) {
         pageRequest.addFilter(
             InfrastructureDefinitionKeys.deploymentType, Operator.EQ, deploymentType.iterator().next().name());
+      }
+      if (isNotEmpty(customDeploymentTemplateIds)) {
+        pageRequest.addFilter(InfrastructureDefinitionKeys.deploymentTypeTemplateId, Operator.EQ,
+            customDeploymentTemplateIds.iterator().next());
       }
     }
 
@@ -370,6 +393,21 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
+  public List<InfrastructureDefinition> listByCustomDeploymentTypeIds(
+      String accountId, List<String> deploymentTemplateIds, int limit) {
+    return wingsPersistence.createQuery(InfrastructureDefinition.class)
+        .field(InfrastructureDefinitionKeys.accountId)
+        .equal(accountId)
+        .field(InfrastructureDefinitionKeys.deploymentTypeTemplateId)
+        .in(deploymentTemplateIds)
+        .project(InfrastructureDefinitionKeys.uuid, true)
+        .project(InfrastructureDefinitionKeys.appId, true)
+        .project(InfrastructureDefinitionKeys.envId, true)
+        .project(InfrastructureDefinitionKeys.name, true)
+        .asList(new FindOptions().limit(limit));
+  }
+
+  @Override
   public PageResponse<InfraDefinitionDetail> listInfraDefinitionDetail(
       PageRequest<InfrastructureDefinition> pageRequest, String appId, String envId) {
     PageResponse<InfrastructureDefinition> infrastructureDefinitionPageResponse = list(pageRequest);
@@ -402,7 +440,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     setMissingValues(infrastructureDefinition);
 
     if (!migration && !skipValidation) {
-      validateInfraDefinition(infrastructureDefinition);
+      validateAndPrepareInfraDefinition(infrastructureDefinition);
     }
     String uuid;
     try {
@@ -426,7 +464,41 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     } catch (Exception e) {
       logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+
     return infrastructureDefinition;
+  }
+
+  @VisibleForTesting
+  void validateInfraVariables(List<Variable> templateVariables, List<NameValuePair> infraVariables) {
+    final SetView<String> difference =
+        Sets.difference(collectionToStream(infraVariables).map(NameValuePair::getName).collect(Collectors.toSet()),
+            collectionToStream(templateVariables).map(Variable::getName).collect(Collectors.toSet()));
+    if (isNotEmpty(difference)) {
+      throw new InvalidRequestException(
+          format(
+              "Following variables are present in the infrastructure definition but not in the deployment template %s",
+              difference),
+          USER);
+    }
+  }
+
+  @VisibleForTesting
+  List<NameValuePair> filterNonOverridenVariables(
+      List<Variable> templateVariables, List<NameValuePair> infraVariables) {
+    if (isEmpty(infraVariables)) {
+      return new ArrayList<>();
+    }
+    final List<NameValuePair> variables = new ArrayList<>(infraVariables);
+    final Set<NameValuePair> deploymentTemplateVariableValues =
+        collectionToStream(templateVariables)
+            .map(v -> NameValuePair.builder().value(v.getValue()).name(v.getName()).build())
+            .collect(Collectors.toSet());
+    variables.removeIf(v
+        -> deploymentTemplateVariableValues.contains(
+            NameValuePair.builder().name(v.getName()).value(v.getValue()).build()));
+    return variables;
   }
 
   @VisibleForTesting
@@ -448,7 +520,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @VisibleForTesting
-  public void validateInfraDefinition(@Valid InfrastructureDefinition infraDefinition) {
+  public void validateAndPrepareInfraDefinition(@Valid InfrastructureDefinition infraDefinition) {
     validateCloudProviderAndDeploymentType(infraDefinition.getCloudProviderType(), infraDefinition.getDeploymentType());
     if (infraDefinition.getDeploymentType() == DeploymentType.SSH
         && infraDefinition.getInfrastructure() instanceof SshBasedInfrastructure) {
@@ -459,6 +531,16 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         && infraDefinition.getInfrastructure() instanceof WinRmBasedInfrastructure) {
       notEmptyCheck("Connection Attributes can't be empty",
           ((WinRmBasedInfrastructure) infraDefinition.getInfrastructure()).getWinRmConnectionAttributes());
+    }
+    if (infraDefinition.getDeploymentType() == CUSTOM) {
+      notEmptyCheck("Deployment Template Must Be Present", infraDefinition.getDeploymentTypeTemplateId());
+      final CustomDeploymentTypeDTO customDeploymentTypeDTO =
+          customDeploymentTypeService.get(infraDefinition.getAccountId(), infraDefinition.getDeploymentTypeTemplateId(),
+              infraDefinition.getDeploymentTypeTemplateVersion());
+      final CustomInfrastructure infra = (CustomInfrastructure) infraDefinition.getInfrastructure();
+      validateInfraVariables(customDeploymentTypeDTO.getInfraVariables(), infra.getInfraVariables());
+      infra.setInfraVariables(
+          filterNonOverridenVariables(customDeploymentTypeDTO.getInfraVariables(), infra.getInfraVariables()));
     }
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();
@@ -604,14 +686,17 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public InfrastructureDefinition get(String appId, String infraDefinitionId) {
-    return wingsPersistence.getWithAppId(InfrastructureDefinition.class, appId, infraDefinitionId);
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.getWithAppId(InfrastructureDefinition.class, appId, infraDefinitionId);
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
   }
 
   @Override
   public InfrastructureDefinition update(InfrastructureDefinition infrastructureDefinition) {
     String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
     setMissingValues(infrastructureDefinition);
-    validateInfraDefinition(infrastructureDefinition);
+    validateAndPrepareInfraDefinition(infrastructureDefinition);
     InfrastructureDefinition savedInfraDefinition =
         get(infrastructureDefinition.getAppId(), infrastructureDefinition.getUuid());
     if (savedInfraDefinition == null) {
@@ -637,6 +722,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     } catch (Exception e) {
       logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+
     return infrastructureDefinition;
   }
 
@@ -696,6 +784,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     deploymentCloudProviderOptions.put(PCF, asList(SettingVariableTypes.PCF));
     deploymentCloudProviderOptions.put(SPOTINST, asList(SettingVariableTypes.SPOT_INST));
     deploymentCloudProviderOptions.put(AZURE_VMSS, asList(SettingVariableTypes.AZURE));
+    deploymentCloudProviderOptions.put(CUSTOM, emptyList());
 
     return deploymentCloudProviderOptions;
   }
@@ -859,11 +948,15 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public InfrastructureDefinition getInfraDefByName(String appId, String envId, String infraDefName) {
-    return wingsPersistence.createQuery(InfrastructureDefinition.class)
-        .filter(InfrastructureDefinitionKeys.appId, appId)
-        .filter(InfrastructureDefinitionKeys.envId, envId)
-        .filter(InfrastructureDefinitionKeys.name, infraDefName)
-        .get();
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .filter(InfrastructureDefinitionKeys.appId, appId)
+            .filter(InfrastructureDefinitionKeys.envId, envId)
+            .filter(InfrastructureDefinitionKeys.name, infraDefName)
+            .get();
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
   }
 
   private void validateInputs(String appId, String serviceId, String infraDefinitionId) {
@@ -1431,7 +1524,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
             .project(InfrastructureDefinitionKeys.infrastructure, true)
             .asList();
     List<String> infraDefinitionNames = new ArrayList<>();
-    for (InfrastructureDefinition infrastructureDefinition : CollectionUtils.emptyIfNull(infrastructureDefinitions)) {
+    for (InfrastructureDefinition infrastructureDefinition : emptyIfNull(infrastructureDefinitions)) {
       InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
       if (infrastructure instanceof SshBasedInfrastructure) {
         if (attributeId.equals(((SshBasedInfrastructure) infrastructure).getHostConnectionAttrs())) {

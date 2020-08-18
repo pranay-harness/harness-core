@@ -22,8 +22,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
+import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -31,6 +34,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
@@ -45,6 +49,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -70,14 +75,16 @@ import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ResourceLookupService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.WingsTestConstants;
+import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
@@ -95,7 +102,14 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @InjectMocks private ServiceResourceServiceImpl mockedServiceResourceService;
   @InjectMocks @Inject private EntityVersionService entityVersionService;
   @Mock private ResourceLookupService resourceLookupService;
+  @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   private ServiceResourceServiceImpl spyServiceResourceService = spy(new ServiceResourceServiceImpl());
+
+  @Before
+  public void setUp() throws Exception {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+  }
 
   @Test
   @Owner(developers = YOGESH)
@@ -381,6 +395,56 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     SearchFilter searchFilter2 = (SearchFilter) pageRequest.getFilters().get(1).getFieldValues()[1];
     assertThat(searchFilter1.getOp()).isEqualTo(EQ);
     assertThat(searchFilter2.getOp()).isEqualTo(NOT_EXISTS);
+    assertThat(pageRequest.getFilters().stream().map(SearchFilter::getFieldName).collect(Collectors.toSet()))
+        .doesNotContain(ServiceKeys.deploymentTypeTemplateId);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testListServiceWithInfraDefFilterNoScopingCustomDeployment() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    PageRequest<Service> pageRequest = new PageRequest<>();
+    pageRequest.setUriInfo(uriInfo);
+
+    queryParams.put("infraDefinitionId", Collections.singletonList("infra1"));
+    pageRequest.addFilter("appId", EQ, Collections.singletonList("app1").toArray());
+    when(appService.getAccountIdByAppId("app1")).thenReturn(ACCOUNT_ID);
+    InfrastructureDefinition customInfraDef = InfrastructureDefinition.builder()
+                                                  .uuid("infra1")
+                                                  .name("ssh")
+                                                  .deploymentType(CUSTOM)
+                                                  .appId(APP_ID)
+                                                  .deploymentTypeTemplateId(TEMPLATE_ID)
+                                                  .customDeploymentName("my-deployment")
+                                                  .build();
+    when(infrastructureDefinitionService.get("app1", "infra1")).thenReturn(customInfraDef);
+
+    PageResponse<Service> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Collections.EMPTY_LIST);
+    when(resourceLookupService.listWithTagFilters(pageRequest, null, EntityType.SERVICE, false))
+        .thenReturn(pageResponse);
+
+    mockedServiceResourceService.list(pageRequest, false, false, false, null);
+    assertThat(pageRequest.getFilters()).isNotEmpty();
+    assertThat(pageRequest.getFilters().size()).isEqualTo(3);
+    assertThat(pageRequest.getFilters().get(1).getFieldName()).isEqualTo("deploymentType");
+    assertThat(pageRequest.getFilters().get(1).getOp()).isEqualTo(OR);
+    SearchFilter searchFilter1 = (SearchFilter) pageRequest.getFilters().get(1).getFieldValues()[0];
+    SearchFilter searchFilter2 = (SearchFilter) pageRequest.getFilters().get(1).getFieldValues()[1];
+    assertThat(searchFilter1.getOp()).isEqualTo(EQ);
+    assertThat(searchFilter2.getOp()).isEqualTo(NOT_EXISTS);
+    assertThat(pageRequest.getFilters()
+                   .stream()
+                   .filter(f -> ServiceKeys.deploymentTypeTemplateId.equals(f.getFieldName()))
+                   .collect(Collectors.toList()))
+        .containsExactly(SearchFilter.builder()
+                             .fieldName(ServiceKeys.deploymentTypeTemplateId)
+                             .op(EQ)
+                             .fieldValues(new Object[] {TEMPLATE_ID})
+                             .build());
   }
 
   @Test
@@ -416,6 +480,10 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     assertThat(pageRequest.getFilters().get(1).getFieldName()).isEqualTo("_id");
     assertThat(pageRequest.getFilters().get(1).getOp()).isEqualTo(IN);
     assertThat(pageRequest.getFilters().get(1).getFieldValues()).containsExactly("s1");
+    assertThat(pageResponse.getFilters().stream().map(SearchFilter::getFieldName).collect(Collectors.toSet()))
+        .doesNotContain(ServiceKeys.deploymentTypeTemplateId);
+    assertThat(pageRequest.getFilters().stream().map(SearchFilter::getFieldName).collect(Collectors.toSet()))
+        .doesNotContain(ServiceKeys.deploymentType);
   }
 
   @Test
@@ -499,7 +567,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, ACCOUNT_ID)).thenReturn(true);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
-        .thenReturn(new WingsTestConstants.MockChecker(true, ActionType.CREATE_SERVICE));
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(applicationManifestService.create(any()))
         .thenReturn(ApplicationManifest.builder().storeType(StoreType.Local).build());
 
@@ -529,7 +597,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, ACCOUNT_ID)).thenReturn(true);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
-        .thenReturn(new WingsTestConstants.MockChecker(true, ActionType.CREATE_SERVICE));
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
 
     Service k8sService = Service.builder()
                              .name(SERVICE_NAME)
@@ -576,5 +644,61 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     } catch (InvalidRequestException ex) {
       assertThat(ex.getMessage()).isEqualTo("Setting helm version is supported only for kubernetes deployment type");
     }
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testSaveCustomDeploymentTypeService() {
+    Service service = Service.builder()
+                          .name("custom-service")
+                          .appId(APP_ID)
+                          .deploymentType(CUSTOM)
+                          .deploymentTypeTemplateId(TEMPLATE_ID)
+                          .build();
+    serviceResourceService.save(service);
+
+    verify(customDeploymentTypeService, times(1)).putCustomDeploymentTypeNameIfApplicable(service);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testListByDeploymentType() {
+    wingsPersistence.save(Service.builder().uuid("1").appId(APP_ID).deploymentType(SSH).build());
+    wingsPersistence.save(Service.builder().uuid("2").appId(APP_ID).deploymentType(KUBERNETES).build());
+    wingsPersistence.save(Service.builder().uuid("3").appId(APP_ID).artifactType(ArtifactType.JAR).build());
+    wingsPersistence.save(Service.builder().uuid("4").appId(APP_ID).artifactType(ArtifactType.AWS_CODEDEPLOY).build());
+    wingsPersistence.save(
+        Service.builder().uuid("5").appId(APP_ID).deploymentType(CUSTOM).deploymentTypeTemplateId(TEMPLATE_ID).build());
+    assertThat(serviceResourceService.listByDeploymentType(APP_ID, SSH.name(), null)
+                   .stream()
+                   .map(Service::getUuid)
+                   .collect(Collectors.toList()))
+        .containsExactly("1", "3");
+
+    assertThat(serviceResourceService.listByDeploymentType(APP_ID, CUSTOM.name(), TEMPLATE_ID)
+                   .stream()
+                   .map(Service::getUuid)
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("3", "5");
+    asList("1", "2", "3", "4", "5").forEach(id -> wingsPersistence.delete(Service.class, id));
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testUpdateCustomDeploymentTypeService() {
+    Service service = Service.builder()
+                          .name("custom-service")
+                          .appId(APP_ID)
+                          .uuid(SERVICE_ID)
+                          .deploymentType(CUSTOM)
+                          .deploymentTypeTemplateId(TEMPLATE_ID)
+                          .build();
+    wingsPersistence.save(service);
+    serviceResourceService.update(service);
+
+    verify(customDeploymentTypeService, times(1)).putCustomDeploymentTypeNameIfApplicable(service);
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.yaml.templatelibrary;
 
 import static software.wings.common.TemplateConstants.ARTIFACT_SOURCE;
+import static software.wings.common.TemplateConstants.CUSTOM_DEPLOYMENT_TYPE;
 import static software.wings.common.TemplateConstants.HTTP;
 import static software.wings.common.TemplateConstants.PCF_PLUGIN;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
@@ -31,7 +32,8 @@ import java.util.List;
   @Type(value = ShellScriptTemplateYaml.class, name = SHELL_SCRIPT)
   , @Type(value = CommandTemplateYaml.class, name = SSH), @Type(value = HttpTemplateYaml.class, name = HTTP),
       @Type(value = ArtifactSourceTemplateYaml.class, name = ARTIFACT_SOURCE),
-      @Type(value = PcfCommandTemplateYaml.class, name = PCF_PLUGIN)
+      @Type(value = PcfCommandTemplateYaml.class, name = PCF_PLUGIN),
+      @Type(value = CustomDeploymentTypeTemplateYaml.class, name = CUSTOM_DEPLOYMENT_TYPE)
 })
 public abstract class TemplateLibraryYaml extends BaseEntityYaml {
   private String description;

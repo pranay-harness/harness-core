@@ -43,7 +43,6 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
-  private static final String PROVISIONER_OUTPUT_PATH_KEY = "PROVISIONER_OUTPUT_PATH";
   @Inject private DelegateLogService logService;
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private EncryptionService encryptionService;
@@ -65,12 +64,12 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
       ShellScriptProvisionParameters parameters = (ShellScriptProvisionParameters) taskParameters;
       String outputPath = getOutputPath(parameters.getWorkflowExecutionId());
       saveExecutionLog(parameters,
-          "\"" + PROVISIONER_OUTPUT_PATH_KEY + "\" has been initialized to \"" + outputPath + "\"",
+          "\"" + parameters.getOutputPathKey() + "\" has been initialized to \"" + outputPath + "\"",
           CommandExecutionStatus.RUNNING);
 
       HashMap<String, String> variablesMap =
           getCombinedVariablesMap(parameters.getTextVariables(), parameters.getEncryptedVariables());
-      variablesMap.put(PROVISIONER_OUTPUT_PATH_KEY, outputPath);
+      variablesMap.put(parameters.getOutputPathKey(), outputPath);
 
       outputFile = createNewFile(outputPath);
 

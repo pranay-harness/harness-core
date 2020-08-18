@@ -84,6 +84,7 @@ import software.wings.api.HttpStateExecutionData;
 import software.wings.api.InfraNodeRequest;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.InstanceFetchStateExecutionSummary;
 import software.wings.api.JenkinsExecutionData;
 import software.wings.api.KubernetesSteadyStateCheckExecutionData;
 import software.wings.api.KubernetesSteadyStateCheckExecutionSummary;
@@ -127,6 +128,7 @@ import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
+import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
@@ -1766,5 +1768,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureVMSSSetupStateExecutionData.class, 7468);
     kryo.register(AzureVMSSSetupExecutionSummary.class, 7469);
     kryo.register(SetupTestNodeData.Instance.class, 7470);
+    kryo.register(InstanceFetchStateExecutionData.class, 7471);
+    kryo.register(InstanceFetchStateExecutionSummary.class, 7472);
   }
 }

@@ -17,6 +17,7 @@ import static software.wings.sm.states.KubernetesSteadyStateCheck.KUBERNETES_STE
 import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME;
 import static software.wings.sm.states.azure.AzureVMSSDeployState.AZURE_VMSS_DEPLOY_COMMAND_NAME;
 import static software.wings.sm.states.azure.AzureVMSSSetupState.AZURE_VMSS_SETUP_COMMAND_NAME;
+import static software.wings.sm.states.customdeployment.InstanceFetchState.FETCH_INSTANCE_COMMAND_UNIT;
 import static software.wings.sm.states.pcf.MapRouteState.PCF_MAP_ROUTE_COMMAND;
 import static software.wings.sm.states.pcf.PcfDeployState.PCF_RESIZE_COMMAND;
 import static software.wings.sm.states.pcf.PcfPluginState.PCF_PLUGIN_COMMAND;
@@ -76,7 +77,8 @@ public class CommandUnitDetails {
     AWS_ECS_SERVICE_ROLLBACK_DAEMON(ECS_DAEMON_SERVICE_ROLLBACK_COMMAND),
     AWS_ECS_SERVICE_DEPLOY(ECS_SERVICE_DEPLOY),
     AZURE_VMSS_SETUP(AZURE_VMSS_SETUP_COMMAND_NAME),
-    AZURE_VMSS_DEPLOY(AZURE_VMSS_DEPLOY_COMMAND_NAME);
+    AZURE_VMSS_DEPLOY(AZURE_VMSS_DEPLOY_COMMAND_NAME),
+    CUSTOM_DEPLOYMENT_FETCH_INSTANCES(FETCH_INSTANCE_COMMAND_UNIT);
 
     private String name;
 

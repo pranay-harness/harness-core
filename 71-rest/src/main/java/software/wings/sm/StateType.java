@@ -184,6 +184,7 @@ import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
+import software.wings.sm.states.customdeployment.InstanceFetchState;
 import software.wings.sm.states.k8s.K8sApplyState;
 import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
 import software.wings.sm.states.k8s.K8sCanaryDeploy;
@@ -755,7 +756,12 @@ public enum StateType implements StateTypeDescriptor {
   K8S_APPLY(K8sApplyState.class, KUBERNETES, 5, K8S_APPLY_STATE,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
-      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS);
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  CUSTOM_DEPLOYMENT_FETCH_INSTANCES(InstanceFetchState.class, OTHERS, 5, WorkflowServiceHelper.FETCH_INSTANCES,
+      Lists.newArrayList(InfrastructureMappingType.CUSTOM), asList(PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS);
+
   private static final String PCF_MAP_ROUTE_NAME = "Map Route";
   private static final String PCF_UNMAP_ROUTE_NAME = "Unmap Route";
   private static final String ROLLBACK_ECS_SETUP = "Rollback ECS Setup";

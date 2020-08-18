@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import lombok.NoArgsConstructor;
+import software.wings.beans.InfrastructureType;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
@@ -27,6 +28,7 @@ import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureKubernetesService;
 import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.CodeDeployInfrastructure;
+import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.PcfInfraStructure;
@@ -50,6 +52,7 @@ import software.wings.yaml.BaseYamlWithType;
       @JsonSubTypes.Type(value = PhysicalInfra.Yaml.class, name = PHYSICAL_INFRA),
       @JsonSubTypes.Type(value = PhysicalInfraWinrm.Yaml.class, name = PHYSICAL_INFRA_WINRM),
       @JsonSubTypes.Type(value = AzureVMSSInfra.Yaml.class, name = AZURE_VMSS),
+      @JsonSubTypes.Type(value = CustomInfrastructure.Yaml.class, name = InfrastructureType.CUSTOM_INFRASTRUCTURE)
 })
 public abstract class CloudProviderInfrastructureYaml extends BaseYamlWithType {
   public CloudProviderInfrastructureYaml(String type) {

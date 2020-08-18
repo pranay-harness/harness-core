@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Created by rsingh on 6/1/18.
@@ -113,5 +114,15 @@ public class CollectionUtils {
 
   public <T> T overrideOperator(T left, T right) {
     return right;
+  }
+
+  /**
+   * Null safe way of getting a stream for a collection
+   *
+   * @param collection collection to obtain stream over
+   * @return stream over the collection if not null, else Stream.empty()
+   */
+  public static <T> Stream<T> collectionToStream(Collection<T> collection) {
+    return Optional.ofNullable(collection).map(Collection::stream).orElse(Stream.empty());
   }
 }

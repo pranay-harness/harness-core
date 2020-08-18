@@ -799,9 +799,11 @@ public class ServiceResource {
   @Path("forDeployment")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<Service>> getServices(
-      @QueryParam("appId") String appId, @NotEmpty @QueryParam("deploymentType") String deploymentType) {
-    return new RestResponse<>(serviceResourceService.listByDeploymentType(appId, deploymentType));
+  public RestResponse<List<Service>> getServices(@QueryParam("appId") String appId,
+      @NotEmpty @QueryParam("deploymentType") String deploymentType,
+      @QueryParam("deploymentTypeTemplateId") String deploymentTypeTemplateId) {
+    return new RestResponse<>(
+        serviceResourceService.listByDeploymentType(appId, deploymentType, deploymentTypeTemplateId));
   }
 
   @PUT

@@ -21,6 +21,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
+import static software.wings.beans.InfrastructureType.CUSTOM_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
@@ -68,6 +69,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInf
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureKubernetesServiceYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureVMSSInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.CustomInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetesEngineYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.PcfInfraStructureYamlHandler;
@@ -158,6 +160,7 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Sum
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.ArtifactSourceTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.CustomDeploymentTypeTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.HttpTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.PcfCommandTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.ShellScriptTemplateYamlHandler;
@@ -297,6 +300,8 @@ public class YamlModule extends CommandLibrarySharedModule {
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PHYSICAL_INFRA_WINRM)
         .to(PhysicalInfraWinrmYamlHandler.class);
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(AZURE_VMSS).to(AzureVMSSInfraYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(CUSTOM_INFRASTRUCTURE)
+        .to(CustomInfrastructureYamlHandler.class);
 
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);
@@ -460,5 +465,7 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(ArtifactSourceTemplateYamlHandler.class);
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.PCF_PLUGIN)
         .to(PcfCommandTemplateYamlHandler.class);
+    templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.CUSTOM_DEPLOYMENT_TYPE)
+        .to(CustomDeploymentTypeTemplateYamlHandler.class);
   }
 }

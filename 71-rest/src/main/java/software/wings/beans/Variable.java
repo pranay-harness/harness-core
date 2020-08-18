@@ -73,6 +73,20 @@ public class Variable {
         .build();
   }
 
+  public VariableBuilder but() {
+    return aVariable()
+        .name(name)
+        .value(value)
+        .type(type)
+        .description(description)
+        .mandatory(mandatory)
+        .fixed(fixed)
+        .metadata(isNotEmpty(metadata) ? new HashMap<>(metadata) : new HashMap<>())
+        .allowedValues(allowedValues)
+        .allowedList(allowedList)
+        .allowMultipleValues(allowMultipleValues);
+  }
+
   public EntityType obtainEntityType() {
     if (metadata == null) {
       return null;

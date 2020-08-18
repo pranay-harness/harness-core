@@ -7,6 +7,7 @@ import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.spotinst.model.ElastiGroup;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
@@ -32,15 +33,26 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
       PageRequest<InfrastructureDefinition> pageRequest, List<String> serviceIds);
 
   PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest);
+
   PageResponse<InfrastructureDefinition> list(@NotEmpty String appId, @NotEmpty String envId, String serviceId);
+
+  List<InfrastructureDefinition> listByCustomDeploymentTypeIds(
+      @NotBlank String accountId, @NotNull List<String> deploymentTemplateIds, int limit);
+
   PageResponse<InfraDefinitionDetail> listInfraDefinitionDetail(
       PageRequest<InfrastructureDefinition> pageRequest, @NotEmpty String appId, @NotEmpty String envId);
+
   InfrastructureDefinition save(@Valid InfrastructureDefinition infrastructureDefinition, boolean migration);
+
   InfrastructureDefinition save(
       @Valid InfrastructureDefinition infrastructureDefinition, boolean migration, boolean skipValidation);
+
   InfrastructureDefinition get(String appId, String infraDefinitionId);
+
   InfrastructureDefinition update(@Valid InfrastructureDefinition infrastructureDefinition);
+
   void delete(String appId, String infraDefinitionId);
+
   void deleteByYamlGit(String appid, String infraDefinitionId);
 
   Map<DeploymentType, List<SettingVariableTypes>> getDeploymentTypeCloudProviderOptions();
@@ -113,10 +125,13 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
       String appId, List<String> envIds, List<String> projections);
 
   List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(String appId, String infraDefinitionId);
+
   List<AwsLoadBalancerDetails> listNetworkLoadBalancerDetails(String appId, String infraDefinitionId);
 
   List<ElastiGroup> listElastiGroups(String appId, String computeProviderId);
+
   String getElastigroupJson(String appId, String computeProviderId, String elastigroupId);
+
   SpotinstElastigroupRunningCountData getElastigroupRunningCountData(
       String appId, String infraDefinitionId, String elastigroupNameExpression, String serviceId, boolean blueGreen);
 

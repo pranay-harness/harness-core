@@ -364,6 +364,7 @@ import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerIm
 import software.wings.service.impl.ci.CIDelegateTaskHelperService;
 import software.wings.service.impl.ci.CIDelegateTaskHelperServiceImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
+import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
 import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
@@ -573,6 +574,7 @@ import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
@@ -1129,6 +1131,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(ScalyrService.class).to(ScalyrServiceImpl.class);
     bind(ApmVerificationService.class).to(ApmVerificationServiceImpl.class);
     bind(GitClientNG.class).to(GitClientNGImpl.class);
+    bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
 
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);

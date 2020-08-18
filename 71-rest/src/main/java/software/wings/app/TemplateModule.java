@@ -6,6 +6,7 @@ import com.google.inject.multibindings.MapBinder;
 import software.wings.beans.template.TemplateType;
 import software.wings.service.impl.template.AbstractTemplateProcessor;
 import software.wings.service.impl.template.ArtifactSourceTemplateProcessor;
+import software.wings.service.impl.template.CustomDeploymentTypeProcessor;
 import software.wings.service.impl.template.HttpTemplateProcessor;
 import software.wings.service.impl.template.ImportedTemplateServiceImpl;
 import software.wings.service.impl.template.PcfCommandTemplateProcessor;
@@ -37,5 +38,7 @@ public class TemplateModule extends AbstractModule {
     templateServiceBinder.addBinding(TemplateType.SHELL_SCRIPT.name()).to(ShellScriptTemplateProcessor.class);
     templateServiceBinder.addBinding(TemplateType.ARTIFACT_SOURCE.name()).to(ArtifactSourceTemplateProcessor.class);
     templateServiceBinder.addBinding(TemplateType.PCF_PLUGIN.name()).to(PcfCommandTemplateProcessor.class);
+    templateServiceBinder.addBinding(TemplateType.CUSTOM_DEPLOYMENT_TYPE.name())
+        .to(CustomDeploymentTypeProcessor.class);
   }
 }

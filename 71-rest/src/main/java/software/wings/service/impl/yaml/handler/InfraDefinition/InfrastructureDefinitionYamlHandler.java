@@ -26,6 +26,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +40,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private CustomDeploymentTypeService customDeploymentTypeService;
 
   @Override
   public Yaml toYaml(InfrastructureDefinition bean, String appId) {
@@ -53,6 +55,12 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
       scopedToServiceNames.add(getServiceName(appId, serviceId));
     }
 
+    String deploymentTypeTemplateUri = null;
+    if (isNotEmpty(bean.getDeploymentTypeTemplateId())) {
+      deploymentTypeTemplateUri =
+          customDeploymentTypeService.fetchDeploymentTemplateUri(bean.getDeploymentTypeTemplateId());
+    }
+
     return Yaml.builder()
         .type(YamlType.INFRA_DEFINITION.name())
         .harnessApiVersion(getHarnessApiVersion())
@@ -61,6 +69,8 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
         .deploymentType(bean.getDeploymentType())
         .cloudProviderType(bean.getCloudProviderType())
         .provisioner(provisionerName)
+        .deploymentTypeTemplateUri(deploymentTypeTemplateUri)
+        .deploymentTypeTemplateVersion(bean.getDeploymentTypeTemplateVersion())
         .build();
   }
 
@@ -96,6 +106,11 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
       scopedToServicesId.add(getServiceId(appId, serviceName));
     }
     String infraDefinitionName = yamlHelper.getInfraDefinitionNameByAppIdYamlPath(yamlFilePath);
+    if (isNotEmpty(yaml.getDeploymentTypeTemplateUri())) {
+      bean.setDeploymentTypeTemplateId(customDeploymentTypeService.fetchDeploymentTemplateIdFromUri(
+          changeContext.getChange().getAccountId(), yaml.getDeploymentTypeTemplateUri()));
+      bean.setDeploymentTypeTemplateVersion(yaml.getDeploymentTypeTemplateVersion());
+    }
 
     // name is set for the case when infra definition is created on the git side since yaml does
     // not have a name field

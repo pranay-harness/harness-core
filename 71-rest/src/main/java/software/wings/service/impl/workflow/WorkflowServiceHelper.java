@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AZURE_VMSS;
+import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -42,6 +43,7 @@ import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
@@ -142,6 +144,7 @@ import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.service.impl.aws.model.AwsConstants;
+import software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
@@ -304,6 +307,7 @@ public class WorkflowServiceHelper {
   public static final String TEMPLATIZED_SECRET_MANAGER = "Templatized Secret Manager";
   public static final String NEW_RELIC_DEPLOYMENT_MARKER = "New Relic Deployment Marker";
   public static final String COMMAND_NAME = "Command";
+  public static final String FETCH_INSTANCES = "Fetch Instances";
 
   private static final String COLLECT_ARTIFACT_PHASE_STEP_NAME = "Collect Artifact";
   private static final String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
@@ -2721,6 +2725,8 @@ public class WorkflowServiceHelper {
       } else {
         generateNewWorkflowPhaseStepsForPCF(appId, workflowPhase, !serviceRepeat);
       }
+    } else if (deploymentType == CUSTOM) {
+      generateNewWorkflowPhaseStepsForCustomDeploymentType(appId, workflowPhase);
     } else if (deploymentType == AZURE_VMSS) {
       if (featureFlagService.isEnabled(FeatureName.AZURE_VMSS, accountId)) {
         generateNewWorkflowPhaseStepsForAzureVMSS(appId, workflowPhase, orchestrationWorkflowType, !serviceRepeat);
@@ -2809,9 +2815,18 @@ public class WorkflowServiceHelper {
       }
     } else if (deploymentType == AZURE_VMSS) {
       return generateRollbackWorkflowPhaseForAzureVMSS(workflowPhase);
+    } else if (deploymentType == CUSTOM) {
+      return generateRollbackWorkflowPhaseForCustomDeployment(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForCustomDeployment(WorkflowPhase workflowPhase) {
+    final List<PhaseStep> phaseSteps = new ArrayList<>();
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.ROLLBACK_SERVICE).build());
+    phaseSteps.forEach(step -> step.setRollback(true));
+    return rollbackWorkflow(workflowPhase).phaseSteps(phaseSteps).build();
   }
 
   private WorkflowPhase generateRollbackBgPhaseForSpotinstBg(
@@ -2830,6 +2845,14 @@ public class WorkflowServiceHelper {
     } else {
       return generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
     }
+  }
+
+  private void generateNewWorkflowPhaseStepsForCustomDeploymentType(String appId, WorkflowPhase workflowPhase) {
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.DEPLOY).build());
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.VERIFY_SERVICE).build());
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build());
   }
 
   public void generateNewWorkflowPhaseStepsForArtifactCollection(WorkflowPhase workflowPhase) {
@@ -2972,5 +2995,12 @@ public class WorkflowServiceHelper {
     if (!phase.checkServiceTemplatized() && phase.getServiceId() == null) {
       throw new InvalidRequestException("Service Cannot be Empty for name :" + serviceName);
     }
+  }
+
+  public AbstractWorkflowFactory.Category getCategory(String appId, String serviceId) {
+    if (isNotBlank(serviceId) && isK8sV2Service(appId, serviceId)) {
+      return AbstractWorkflowFactory.Category.K8S_V2;
+    }
+    return AbstractWorkflowFactory.Category.GENERAL;
   }
 }
