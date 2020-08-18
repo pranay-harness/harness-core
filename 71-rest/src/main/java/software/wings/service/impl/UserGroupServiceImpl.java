@@ -573,7 +573,6 @@ public class UserGroupServiceImpl implements UserGroupService {
       return;
     }
     Set<PermissionType> newAccountPermissions = new HashSet<>();
-
     for (PermissionType permission : userGroup.getAccountPermissions().getPermissions()) {
       if (ACCOUNT_MANAGEMENT.equals(permission)) {
         newAccountPermissions.add(MANAGE_IP_WHITELISTING);

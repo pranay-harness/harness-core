@@ -83,7 +83,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForIPWhitelisting() {
     AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
-        getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, RBAC_USER, "default", HttpStatus.SC_OK);
   }
 
   @Test
