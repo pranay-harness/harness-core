@@ -1,17 +1,14 @@
 package software.wings.sm.states.provision;
 
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.TERRAFORM_STATE;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -41,6 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
@@ -168,19 +166,43 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
     verify(sweepingOutputService, times(1)).find(any(SweepingOutputInquiry.class));
+
+    // we didn't find a result in sweeping output
+    when(sweepingOutputService.find(any(SweepingOutputInquiry.class))).thenReturn(null);
+    executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    verify(infrastructureProvisionerService, times(2)).get(APP_ID, PROVISIONER_ID);
+    verify(sweepingOutputService, times(2)).find(any(SweepingOutputInquiry.class));
   }
 
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testExecuteInternal() {
+    setUp("sourceRepoBranch", true, WORKFLOW_EXECUTION_ID);
+    ExecutionResponse executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
+    verifyResponse(
+        executionResponse, "sourceRepoBranch", true, 1, TerraformProvisionParameters.TerraformCommand.DESTROY);
+
+    // no variables, no backend configs, no source repo branch
+    setUp(null, false, WORKFLOW_EXECUTION_ID);
+    executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
+    verifyResponse(executionResponse, null, false, 2, TerraformProvisionParameters.TerraformCommand.DESTROY);
+
+    // Inheriting terraform execution from last successful terraform execution
+    setUp("sourceRepoBranch", true, null);
+    executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
+    verifyResponse(executionResponse, "sourceRepoBranch", true, 3, TerraformProvisionParameters.TerraformCommand.APPLY);
+  }
+
+  private void setUp(String sourceRepoBranch, boolean setVarsAndBackendConfigs, String workflowExecutionId) {
     terraformRollbackState.setWorkspace(WORKSPACE);
-    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+    when(executionContext.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
     when(executionContext.getAppId()).thenReturn(APP_ID);
     terraformRollbackState.setProvisionerId(PROVISIONER_ID);
     TerraformInfrastructureProvisioner terraformInfrastructureProvisioner = TerraformInfrastructureProvisioner.builder()
                                                                                 .name("Terraform Provisioner")
-                                                                                .sourceRepoBranch("sourceRepoBranch")
+                                                                                .sourceRepoBranch(sourceRepoBranch)
                                                                                 .build();
     when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
     when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
@@ -197,13 +219,14 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     when(query.filter(anyString(), any(Object.class))).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
 
-    TerraformConfig terraformConfig = TerraformConfig.builder()
-                                          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                          .sourceRepoSettingId("sourceRepoSettingsId")
-                                          .sourceRepoReference("sourceRepoReference")
-                                          .backendConfigs(getTerraformBackendConfigs())
-                                          .variables(getTerraformVariables())
-                                          .build();
+    TerraformConfig terraformConfig =
+        TerraformConfig.builder()
+            .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+            .sourceRepoSettingId("sourceRepoSettingsId")
+            .sourceRepoReference("sourceRepoReference")
+            .backendConfigs(setVarsAndBackendConfigs ? getTerraformBackendConfigs() : null)
+            .variables(setVarsAndBackendConfigs ? getTerraformVariables() : null)
+            .build();
 
     MorphiaIterator<TerraformConfig, TerraformConfig> morphiaIterator = mock(MorphiaIterator.class);
     DBCursor dbCursor = mock(DBCursor.class);
@@ -216,21 +239,35 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     when(gitUtilsManager.getGitConfig(anyString())).thenReturn(GitConfig.builder().build());
     when(infrastructureProvisionerService.getManagerExecutionCallback(anyString(), anyString(), anyString()))
         .thenReturn(mock(ManagerExecutionLogCallback.class));
-    ExecutionResponse executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
+  }
 
-    verify(fileService, times(1))
-        .getLatestFileId(String.format("%s-%s-%s", PROVISIONER_ID, UUID, WORKSPACE), TERRAFORM_STATE);
-    verify(wingsPersistence, times(1)).createQuery(TerraformConfig.class);
-    verify(gitUtilsManager, times(1)).getGitConfig("sourceRepoSettingsId");
-    verify(infrastructureProvisionerService, times(1)).extractTextVariables(anyList(), any(ExecutionContext.class));
-    verify(infrastructureProvisionerService, times(2)).extractEncryptedTextVariables(anyList(), eq(APP_ID));
-    verify(infrastructureProvisionerService, times(1)).extractUnresolvedTextVariables(anyList());
-    verify(secretManager, times(1)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());
-    verify(delegateService, times(1)).queueTask(any(DelegateTask.class));
+  private void verifyResponse(ExecutionResponse executionResponse, String branch, boolean checkVarsAndBackendConfigs,
+      int i, TerraformProvisionParameters.TerraformCommand command) {
+    verify(wingsPersistence, times(i)).createQuery(TerraformConfig.class);
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo(ACTIVITY_ID);
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
         .isEqualTo(ACTIVITY_ID);
-    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(i)).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask.getData().getParameters().length).isEqualTo(1);
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) delegateTask.getData().getParameters()[0];
+    assertThat(parameters.getSourceRepoSettingId()).isEqualTo("sourceRepoSettingsId");
+    assertThat(parameters.getCommand()).isEqualTo(command);
+    if (checkVarsAndBackendConfigs) {
+      assertThat(parameters.getVariables()).containsOnlyKeys("vpc_id", "region");
+      assertThat(parameters.getEncryptedVariables()).containsOnlyKeys("access_key", "secret_key");
+      assertThat(parameters.getEncryptedBackendConfigs()).containsOnlyKeys("access_token");
+      assertThat(parameters.getBackendConfigs()).containsOnlyKeys("bucket", "key");
+    } else {
+      assertThat(parameters.getVariables()).isNull();
+      assertThat(parameters.getEncryptedVariables()).isNull();
+      assertThat(parameters.getBackendConfigs()).isNull();
+      assertThat(parameters.getEncryptedBackendConfigs()).isNull();
+    }
+    GitConfig gitConfig = parameters.getSourceRepo();
+    assertThat(gitConfig.getBranch()).isEqualTo(branch);
   }
 
   @Test
@@ -239,6 +276,9 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   public void testHandleAsyncResponseApply() {
     when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
     when(executionContext.getAppId()).thenReturn(APP_ID);
+    Environment environment = new Environment();
+    environment.setUuid(UUID);
+    when(executionContext.getEnv()).thenReturn(environment);
     terraformRollbackState.setProvisionerId(PROVISIONER_ID);
     TerraformInfrastructureProvisioner terraformInfrastructureProvisioner = TerraformInfrastructureProvisioner.builder()
                                                                                 .name("Terraform Provisioner")
@@ -253,14 +293,29 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
             .commandExecuted(TerraformProvisionParameters.TerraformCommand.APPLY)
             .build();
     response.put("activityId", terraformExecutionData);
-    ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
 
+    ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
+    verifyResponse(executionResponse, 1);
     verify(fileService, times(1))
         .updateParentEntityIdAndVersion(any(Class.class), anyString(), anyInt(), anyString(), anyMap(),
             any(DelegateAgentFileService.FileBucket.class));
-    verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
-    verify(wingsPersistence, times(1)).save(any(TerraformConfig.class));
+
+    // no state file
+    terraformExecutionData.setStateFileId(null);
+    executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
+    verifyResponse(executionResponse, 2);
+  }
+
+  private void verifyResponse(ExecutionResponse executionResponse, int i) {
+    verify(infrastructureProvisionerService, times(i)).get(APP_ID, PROVISIONER_ID);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    ArgumentCaptor<TerraformConfig> captor = ArgumentCaptor.forClass(TerraformConfig.class);
+    verify(wingsPersistence, times(i)).save(captor.capture());
+    TerraformConfig terraformConfig = captor.getValue();
+    assertThat(terraformConfig).isNotNull();
+    assertThat(terraformConfig.getWorkflowExecutionId()).isEqualTo(WORKFLOW_EXECUTION_ID);
+    assertThat(terraformConfig.getEntityId()).isEqualTo(String.format("%s-%s", PROVISIONER_ID, UUID));
   }
 
   @Test
