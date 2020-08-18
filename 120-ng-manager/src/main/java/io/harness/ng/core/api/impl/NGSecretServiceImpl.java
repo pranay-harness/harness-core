@@ -51,7 +51,7 @@ public class NGSecretServiceImpl implements NGSecretService {
             .content(pageResponse.getResponse().stream().map(EncryptedDataMapper::fromDTO).collect(Collectors.toList()))
             .build();
     if (encryptedDataPageResponse.getItemCount() > 0 && encryptedDataPageResponse.getPageSize() > 0) {
-      encryptedDataPageResponse.setTotalPages(
+      encryptedDataPageResponse.setPageCount(
           (int) Math.ceil((double) encryptedDataPageResponse.getItemCount() / encryptedDataPageResponse.getPageSize()));
     }
     return encryptedDataPageResponse;

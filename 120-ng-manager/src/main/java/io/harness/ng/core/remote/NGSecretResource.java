@@ -81,7 +81,7 @@ public class NGSecretResource {
                                                                         .pageIndex(secrets.getPageIndex())
                                                                         .pageSize(secrets.getPageSize())
                                                                         .itemCount(secrets.getItemCount())
-                                                                        .totalPages(secrets.getTotalPages())
+                                                                        .pageCount(secrets.getPageCount())
                                                                         .build();
     encryptedDataDTOPageResponse.setContent(
         secrets.getContent().stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList()));
