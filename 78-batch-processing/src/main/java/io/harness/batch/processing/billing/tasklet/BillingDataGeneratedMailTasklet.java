@@ -16,8 +16,11 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.net.URISyntaxException;
@@ -32,9 +35,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
@@ -48,11 +54,10 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
 
   private static final int MAX_RETRY_COUNT = 3;
   private static final long ONE_DAY_MILLIS = 86400000;
-  private static final String CE_EXPLORER_URL = "/account/%s/continuous-efficiency/cluster/insights";
+  private static final String CE_EXPLORER_URL = "/account/%s/continuous-efficiency/overview";
   private static final String FIRST_RECORD_TIME_QUERY =
       "SELECT STARTTIME FROM billing_data WHERE ACCOUNTID = '%s' ORDER BY STARTTIME ASC LIMIT 1;";
-  private static final String CE_CLUSTER_URL =
-      "/account/%s/continuous-efficiency/cluster/insights?aggregationType=DAY&chartType=column&clusterList=%s&currentView=TOTAL_COST&groupBy=Cluster&isFilterOn=true&showOthers=false&showUnallocated=false&utilizationAggregationType=Average";
+  private static final String CE_CLUSTER_URL = "/account/%s/continuous-efficiency/cluster/insights?clusterList=%s";
   private static final String GET_CLUSTERS_QUERY =
       "SELECT CLUSTERID, CLUSTERNAME FROM billing_data_hourly WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND CLUSTERID IS NOT NULL GROUP BY CLUSTERID, CLUSTERNAME;";
 
@@ -74,7 +79,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
     if (!notificationSend) {
       Map<String, String> clusters = getClusters(accountId);
       if (!clusters.isEmpty()) {
-        List<CEUserInfo> users = getUsers(clusters);
+        List<CEUserInfo> users = getUsers(accountId);
         if (!users.isEmpty()) {
           sendMail(users, clusters, accountId);
           notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
@@ -116,35 +121,35 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
     return clusters;
   }
 
-  // To obtain users who enabled given clusters, returns a map of user email to list of clusters that he enabled
-  private List<CEUserInfo> getUsers(Map<String, String> clusters) {
-    Map<String, CEUserInfo> users = new HashMap<>();
-    clusters.keySet().forEach(clusterId -> {
-      CEUserInfo userInfo = cloudToHarnessMappingService.getUserForCluster(clusterId);
-      if (userInfo != null) {
-        String email = userInfo.getEmail();
-        if (!users.containsKey(email)) {
-          users.put(email,
-              CEUserInfo.builder().email(email).name(userInfo.getName()).clustersEnabled(new ArrayList<>()).build());
-        }
-        users.get(email).getClustersEnabled().add(clusterId);
-      }
-    });
+  // To obtain users who have CE_ADMIN permissions
+  private List<CEUserInfo> getUsers(String accountId) {
+    List<CEUserInfo> users = new ArrayList<>();
+    List<UserGroup> userGroups = cloudToHarnessMappingService.listUserGroupsForAccount(accountId);
+    List<UserGroup> ceAdminUserGroups =
+        userGroups.stream()
+            .filter(userGroup -> userGroup.getAccountPermissions().getPermissions().contains(PermissionType.CE_ADMIN))
+            .collect(Collectors.toList());
+    Set<String> userIds = new HashSet<>();
+    ceAdminUserGroups.forEach(userGroup -> userIds.addAll(userGroup.getMemberIds()));
 
-    return new ArrayList<>(users.values());
+    userIds.forEach(id -> {
+      User user = cloudToHarnessMappingService.getUser(id);
+      users.add(CEUserInfo.builder().name(user.getName()).email(user.getEmail()).build());
+    });
+    return users;
   }
 
   private void sendMail(List<CEUserInfo> users, Map<String, String> clusters, String accountId) {
+    Map<String, String> templateModel = new HashMap<>();
+    templateModel.put("CLUSTERS", getClusterLinks(clusters, clusters.keySet(), accountId));
+    try {
+      templateModel.put(
+          "EXPLORER_URL", emailNotificationService.buildAbsoluteUrl(String.format(CE_EXPLORER_URL, accountId)));
+    } catch (URISyntaxException e) {
+      logger.error("Can't build explorer url : ", e);
+    }
     users.forEach(user -> {
-      Map<String, String> templateModel = new HashMap<>();
       templateModel.put("USER", user.getName());
-      templateModel.put("CLUSTERS", getClusterLinks(clusters, user.getClustersEnabled(), accountId));
-      try {
-        templateModel.put(
-            "EXPLORER_URL", emailNotificationService.buildAbsoluteUrl(String.format(CE_EXPLORER_URL, accountId)));
-      } catch (URISyntaxException e) {
-        logger.error("Can't build explorer url : ", e);
-      }
       EmailData emailData = EmailData.builder()
                                 .to(Collections.singletonList(user.getEmail()))
                                 .templateName("ce_cluster_data_generated")
@@ -157,7 +162,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
     });
   }
 
-  private String getClusterLinks(Map<String, String> clusterToClusterName, List<String> clusters, String accountId) {
+  private String getClusterLinks(Map<String, String> clusterToClusterName, Set<String> clusters, String accountId) {
     StringJoiner joiner = new StringJoiner(", ");
     String htmlLinkTag =
         "<a href=\"%s\" target=\"_blank\" style=\"text-decoration: none;\"><span style=\"color: #00ade4\">%s</span></a>";

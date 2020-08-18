@@ -75,7 +75,7 @@ public enum QLAccountPermissionType implements QLEnum {
   /**
    * Manage IP Whitelist
    */
-  MANAGE_IP_WHITELISTING,
+  MANAGE_IP_WHITELIST,
 
   /**
    * Manage Deployment Freezes

@@ -465,6 +465,8 @@ public class PermissionAttribute {
     /**
      * Manage IP Whitelist
      */
+    MANAGE_IP_WHITELIST,
+
     MANAGE_IP_WHITELISTING,
 
     /**

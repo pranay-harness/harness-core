@@ -448,4 +448,14 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
 
     return account;
   }
+
+  @Override
+  public List<UserGroup> listUserGroupsForAccount(String accountId) {
+    List<UserGroup> userGroups = new ArrayList<>();
+    for (UserGroup userGroup :
+        wingsPersistence.createQuery(UserGroup.class).filter(UserGroupKeys.accountId, accountId).fetch()) {
+      userGroups.add(userGroup);
+    }
+    return userGroups;
+  }
 }
