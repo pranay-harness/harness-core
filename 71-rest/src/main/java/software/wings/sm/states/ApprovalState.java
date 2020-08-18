@@ -573,10 +573,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .stateExecutionData(executionData));
     }
 
-    executionData.setApprovalField(servicenowApprovalParams.getApprovalField());
-    executionData.setApprovalValue(servicenowApprovalParams.getApprovalValue());
-    executionData.setRejectionField(servicenowApprovalParams.getRejectionField());
-    executionData.setRejectionValue(servicenowApprovalParams.getRejectionValue());
     executionData.setSnowApproval(servicenowApprovalParams.getApproval());
     executionData.setSnowRejection(servicenowApprovalParams.getRejection());
 
@@ -589,45 +585,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       executionData.setCurrentStatus(serviceNowExecutionData.getCurrentState());
       executionData.setTicketType(servicenowApprovalParams.getTicketType());
 
-      Map<String, String> currentStatus = serviceNowExecutionData.getCurrentStatus();
-
-      if (executionData.getSnowApproval() != null && executionData.getSnowApproval().satisfied(currentStatus)) {
-        if (servicenowApprovalParams.withinChangeWindow(currentStatus)) {
-          return respondWithStatus(context, executionData, null,
-              ExecutionResponse.builder()
-                  .executionStatus(SUCCESS)
-                  .errorMessage("Approval provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
-                  .stateExecutionData(executionData));
-        }
-        executionData.setTimeoutMillis(Integer.MAX_VALUE);
-        executionData.setWaitingForChangeWindow(true);
-        executionData.setErrorMsg(
-            "Approved but waiting for Change Window (" + serviceNowExecutionData.getMessage() + " )");
-      }
-
-      if (executionData.getSnowRejection() != null && executionData.getSnowRejection().satisfied(currentStatus)) {
-        return respondWithStatus(context, executionData, null,
-            ExecutionResponse.builder()
-                .executionStatus(REJECTED)
-                .errorMessage("Rejection provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
-                .stateExecutionData(executionData));
-      }
-
-      if (serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getApprovalValue())) {
-        return respondWithStatus(context, executionData, null,
-            ExecutionResponse.builder()
-                .executionStatus(SUCCESS)
-                .errorMessage("Approval provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
-                .stateExecutionData(executionData));
-      }
-
-      if (servicenowApprovalParams.getRejectionValue() != null
-          && serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getRejectionValue())) {
-        return respondWithStatus(context, executionData, null,
-            ExecutionResponse.builder()
-                .executionStatus(REJECTED)
-                .errorMessage("Rejection provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
-                .stateExecutionData(executionData));
+      ExecutionResponse executionResponse =
+          checkForSnowApprovalOrRejection(executionData, servicenowApprovalParams, serviceNowExecutionData, context);
+      if (executionResponse != null) {
+        return executionResponse;
       }
 
     } catch (WingsException we) {
@@ -643,19 +604,19 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .errorMessage(errorMessage)
               .stateExecutionData(executionData));
     }
+    return createApprovalPollingJob(context, executionData, approvalId, servicenowApprovalParams, app);
+  }
 
+  private ExecutionResponse createApprovalPollingJob(ExecutionContext context, ApprovalStateExecutionData executionData,
+      String approvalId, ServiceNowApprovalParams servicenowApprovalParams, Application app) {
     // Create a cron job which polls ServiceNow for approval status
     logger.info("IssueId = {} while creating ServiceNow polling Job", servicenowApprovalParams.getIssueNumber());
     ApprovalPollingJobEntity approvalPollingJobEntity =
         ApprovalPollingJobEntity.builder()
             .accountId(app.getAccountId())
             .appId(app.getAppId())
-            .approvalField(servicenowApprovalParams.getApprovalField())
             .approval(servicenowApprovalParams.getApproval())
             .rejection(servicenowApprovalParams.getRejection())
-            .rejectionField(servicenowApprovalParams.getRejectionField())
-            .approvalValue(servicenowApprovalParams.getApprovalValue())
-            .rejectionValue(servicenowApprovalParams.getRejectionValue())
             .changeWindowPresent(servicenowApprovalParams.isChangeWindowPresent())
             .changeWindowStartField(servicenowApprovalParams.getChangeWindowStartField())
             .changeWindowEndField(servicenowApprovalParams.getChangeWindowEndField())
@@ -686,6 +647,44 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .errorMessage("Failed to schedule Approval" + e.getMessage())
               .stateExecutionData(executionData));
     }
+  }
+
+  @Nullable
+  private ExecutionResponse checkForSnowApprovalOrRejection(ApprovalStateExecutionData executionData,
+      ServiceNowApprovalParams servicenowApprovalParams, ServiceNowExecutionData serviceNowExecutionData,
+      ExecutionContext context) {
+    Map<String, String> currentStatus = serviceNowExecutionData.getCurrentStatus();
+
+    if (executionData.getSnowApproval() == null || isEmpty(executionData.getSnowApproval().fetchConditions())) {
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Approval criteria empty in service now approval state")
+              .stateExecutionData(executionData));
+    }
+
+    if (executionData.getSnowApproval().satisfied(currentStatus)) {
+      if (servicenowApprovalParams.withinChangeWindow(currentStatus)) {
+        return respondWithStatus(context, executionData, null,
+            ExecutionResponse.builder()
+                .executionStatus(SUCCESS)
+                .errorMessage("Approval provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
+                .stateExecutionData(executionData));
+      }
+      executionData.setTimeoutMillis(Integer.MAX_VALUE);
+      executionData.setWaitingForChangeWindow(true);
+      executionData.setErrorMsg(
+          "Approved but waiting for Change Window (" + serviceNowExecutionData.getMessage() + " )");
+    }
+
+    if (executionData.getSnowRejection() != null && executionData.getSnowRejection().satisfied(currentStatus)) {
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(REJECTED)
+              .errorMessage("Rejection provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
+              .stateExecutionData(executionData));
+    }
+    return null;
   }
 
   private ExecutionResponse executeUserGroupApproval(List<String> userGroups, String accountId,

@@ -27,7 +27,6 @@ public interface ServiceNowService {
       String appId, ServiceNowFieldType typeFilter);
   ServiceNowExecutionData getIssueUrl(String appId, String accountId, ServiceNowApprovalParams approvalParams);
 
-  Map<String, String> getIssueStatus(ServiceNowApprovalParams approvalParams, String accountId, String appId);
   ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity entity);
 
   void handleServiceNowPolling(ApprovalPollingJobEntity entity);

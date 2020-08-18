@@ -6,8 +6,6 @@ import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ServiceNowException;
@@ -21,7 +19,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateExecutionInstance;
@@ -31,7 +28,6 @@ import software.wings.sm.states.ApprovalState;
 @UtilityClass
 @Slf4j
 public class ApprovalUtils {
-  @Inject private WingsPersistence wingsPersistence;
   private static void approveWorkflow(WorkflowExecutionService workflowExecutionService,
       StateExecutionService stateExecutionService, WaitNotifyEngine waitNotifyEngine, Action action, String approvalId,
       String appId, String workflowExecutionId, ExecutionStatus approvalStatus, String currentStatus,
@@ -70,7 +66,7 @@ public class ApprovalUtils {
   }
 
   private static void failWorkflow(StateExecutionService stateExecutionService, WaitNotifyEngine waitNotifyEngine,
-      String workflowExecutionId, String stateExecutionInstanceId, String errorMesage,
+      String workflowExecutionId, String stateExecutionInstanceId, String errorMessage,
       ApprovalStateExecutionData approvalData) {
     String approvalId = approvalData.getApprovalId();
     String appId = approvalData.getAppId();
@@ -95,7 +91,7 @@ public class ApprovalUtils {
     executionData.setStatus(ExecutionStatus.FAILED);
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(approvalData.getCurrentStatus());
-    executionData.setErrorMsg("ServiceNow approval failed: " + errorMesage + " ticket: ");
+    executionData.setErrorMsg("Jira/ServiceNow approval failed: " + errorMessage + " ticket: ");
 
     logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     waitNotifyEngine.doneWith(approvalId, executionData);
@@ -122,10 +118,12 @@ public class ApprovalUtils {
             stateExecutionInstance.getDisplayName());
     if (approvalData.isWaitingForChangeWindow()) {
       executionData.setWaitingForChangeWindow(true);
-      stateExecutionInstance.setExpiryTs(Long.MAX_VALUE);
       executionData.setTimeoutMillis(Integer.MAX_VALUE);
       executionData.setErrorMsg("Approved but waiting for Change window ( " + message + " )");
-      stateExecutionService.updateStateExecutionInstance(stateExecutionInstance);
+      if (stateExecutionInstance.getExpiryTs() != Long.MAX_VALUE) {
+        stateExecutionInstance.setExpiryTs(Long.MAX_VALUE);
+        stateExecutionService.updateStateExecutionInstance(stateExecutionInstance);
+      }
     }
     if (executionData.getCurrentStatus() != null && executionData.getCurrentStatus().equalsIgnoreCase(currentStatus)) {
       return;
