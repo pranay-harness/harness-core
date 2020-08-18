@@ -2,6 +2,8 @@ package io.harness.ng.core;
 
 import com.google.inject.AbstractModule;
 
+import io.harness.ng.core.entityReference.impl.EntityReferenceServiceImpl;
+import io.harness.ng.core.entityReference.service.EntityReferenceService;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ng.core.environment.services.impl.EnvironmentServiceImpl;
 import io.harness.ng.core.service.services.ServiceEntityService;
@@ -24,5 +26,6 @@ public class NGCoreModule extends AbstractModule {
     super.configure();
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
     bind(ServiceEntityService.class).to(ServiceEntityServiceImpl.class);
+    bind(EntityReferenceService.class).to(EntityReferenceServiceImpl.class);
   }
 }

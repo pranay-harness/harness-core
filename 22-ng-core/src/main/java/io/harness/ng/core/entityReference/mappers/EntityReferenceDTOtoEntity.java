@@ -14,6 +14,8 @@ public class EntityReferenceDTOtoEntity {
         .referredByEntityType(entityReferenceDTO.getReferredByEntityType().toString())
         .referredEntityFQN(entityReferenceDTO.getReferredEntityFQN())
         .referredEntityType(entityReferenceDTO.getReferredEntityType().toString())
+        .referredEntityName(entityReferenceDTO.getReferredEntityName())
+        .referredByEntityName(entityReferenceDTO.getReferredByEntityName())
         .build();
   }
 }
