@@ -30,14 +30,18 @@ public class EntityReferenceToDTOTest extends CategoryTest {
     String accountIdentifier = "accountIdentifier";
     String referredByEntityFQN = "account/pipelineIdentifier";
     ReferenceEntityType referredByEntityType = ReferenceEntityType.PIPELINE;
+    String referredByEntityName = "Pipeline 1";
     String referredEntityFQN = "account/org1/connectorIdnentifier";
     ReferenceEntityType referredEntityType = ReferenceEntityType.CONNECTOR;
+    String referredEntityName = "Connector 1";
     EntityReference entityReference = EntityReference.builder()
                                           .accountIdentifier(accountIdentifier)
                                           .referredByEntityFQN(referredByEntityFQN)
                                           .referredByEntityType(referredByEntityType.toString())
                                           .referredEntityFQN(referredEntityFQN)
                                           .referredEntityType(referredEntityType.toString())
+                                          .referredEntityName(referredEntityName)
+                                          .referredByEntityName(referredByEntityName)
                                           .build();
     EntityReferenceDTO entityReferenceDTO = entityReferenceToDTO.createEntityReferenceDTO(entityReference);
     assertThat(entityReferenceDTO).isNotNull();
@@ -46,5 +50,7 @@ public class EntityReferenceToDTOTest extends CategoryTest {
     assertThat(entityReferenceDTO.getReferredEntityFQN()).isEqualTo(referredEntityFQN);
     assertThat(entityReferenceDTO.getReferredByEntityType()).isEqualTo(referredByEntityType);
     assertThat(entityReferenceDTO.getReferredEntityType()).isEqualTo(referredEntityType);
+    assertThat(entityReference.getReferredByEntityName()).isEqualTo(referredByEntityName);
+    assertThat(entityReference.getReferredEntityName()).isEqualTo(referredEntityName);
   }
 }

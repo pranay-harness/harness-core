@@ -18,4 +18,5 @@ public class EntityReferenceDTO {
   @NotNull ReferenceEntityType referredByEntityType;
   String referredByEntityName;
   // todo @deepak: Add the support for setup usage
+  Long createdAt;
 }

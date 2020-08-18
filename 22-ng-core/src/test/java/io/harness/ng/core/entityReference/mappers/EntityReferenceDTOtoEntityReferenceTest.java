@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class EntityReferenceDTOtoEntityTest extends CategoryTest {
+public class EntityReferenceDTOtoEntityReferenceTest extends CategoryTest {
   @InjectMocks EntityReferenceDTOtoEntity entityReferenceDTOtoEntity;
 
   @Before
@@ -30,8 +30,10 @@ public class EntityReferenceDTOtoEntityTest extends CategoryTest {
     String accountIdentifier = "accountIdentifier";
     String referredByEntityFQN = "account/pipelineIdentifier";
     ReferenceEntityType referredByEntityType = ReferenceEntityType.PIPELINE;
+    String referredByEntityName = "Pipeline 1";
     String referredEntityFQN = "account/org1/connectorIdnentifier";
     ReferenceEntityType referredEntityType = ReferenceEntityType.CONNECTOR;
+    String referredEntityName = "Connector 1";
 
     EntityReferenceDTO entityReferenceDTO = EntityReferenceDTO.builder()
                                                 .accountIdentifier(accountIdentifier)
@@ -39,6 +41,8 @@ public class EntityReferenceDTOtoEntityTest extends CategoryTest {
                                                 .referredByEntityType(referredByEntityType)
                                                 .referredEntityFQN(referredEntityFQN)
                                                 .referredEntityType(referredEntityType)
+                                                .referredEntityName(referredEntityName)
+                                                .referredByEntityName(referredByEntityName)
                                                 .build();
     EntityReference entityReference = entityReferenceDTOtoEntity.toEntityReference(entityReferenceDTO);
     assertThat(entityReference).isNotNull();
@@ -47,5 +51,7 @@ public class EntityReferenceDTOtoEntityTest extends CategoryTest {
     assertThat(entityReference.getReferredEntityFQN()).isEqualTo(referredEntityFQN);
     assertThat(entityReference.getReferredByEntityType()).isEqualTo(referredByEntityType.toString());
     assertThat(entityReference.getReferredEntityType()).isEqualTo(referredEntityType.toString());
+    assertThat(entityReference.getReferredByEntityName()).isEqualTo(referredByEntityName);
+    assertThat(entityReference.getReferredEntityName()).isEqualTo(referredEntityName);
   }
 }
