@@ -45,8 +45,10 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.util.Arrays;
@@ -61,6 +63,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock ServiceResourceService serviceResourceService;
   @Mock AppService appService;
   @Mock ServiceVariableService serviceVariableService;
+  @Mock CustomDeploymentTypeService customDeploymentTypeService;
   @InjectMocks @Inject private ServiceYamlHandler serviceYamlHandler;
 
   private Service service;
@@ -82,6 +85,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
                   .accountId(ACCOUNT_ID)
                   .artifactType(ArtifactType.DOCKER)
                   .serviceVariables(Arrays.asList(enc_1, enc_2, var_1))
+                  .deploymentTypeTemplateId(WingsTestConstants.TEMPLATE_ID)
                   .build();
     when(secretManager.getEncryptedYamlRef(enc_1)).thenReturn("safeharness:some-secret");
     when(secretManager.getEncryptedYamlRef(enc_2)).thenReturn("amazonkms:other-secret");
@@ -100,6 +104,10 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
     when(yamlHelper.extractEncryptedRecordId(eq("amazonkms:other-secret"), anyString())).thenReturn("other-secret");
     when(serviceVariableService.update(any(), anyBoolean()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, ServiceVariable.class));
+    when(customDeploymentTypeService.fetchDeploymentTemplateUri(WingsTestConstants.TEMPLATE_ID))
+        .thenReturn("template-uri");
+    when(customDeploymentTypeService.fetchDeploymentTemplateIdFromUri(anyString(), eq("template-uri")))
+        .thenReturn(WingsTestConstants.TEMPLATE_ID);
   }
 
   @Test
@@ -110,6 +118,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
     final List<String> varNames =
         yaml.getConfigVariables().stream().map(NameValuePair.Yaml::getValue).collect(Collectors.toList());
     assertThat(varNames).containsExactlyInAnyOrder("safeharness:some-secret", "amazonkms:other-secret", "var");
+    assertThat(yaml.getDeploymentTypeTemplateUri()).isEqualTo("template-uri");
   }
 
   @Test
@@ -124,6 +133,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
     assertThat(
         captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("some-secret", "other-secret", "var");
+    assertThat(fromYaml.getDeploymentTypeTemplateId()).isEqualTo(WingsTestConstants.TEMPLATE_ID);
   }
 
   @Test

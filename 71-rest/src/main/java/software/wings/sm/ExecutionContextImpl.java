@@ -44,6 +44,7 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.data.SweepingOutput;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
@@ -79,6 +80,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.CustomInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -93,8 +95,10 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ArtifactLabelEvaluator;
@@ -124,6 +128,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -178,6 +183,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient StateExecutionService stateExecutionService;
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private transient KryoSerializer kryoSerializer;
+  @Inject private transient CustomDeploymentTypeService customDeploymentTypeService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -1214,7 +1220,33 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       builder.helm(Helm.builder()
                        .shortId(infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z'))
                        .build());
+    } else if (DeploymentType.CUSTOM.name().equals(phaseElement.getDeploymentType())) {
+      final CustomDeploymentTypeDTO customDeploymentTypeDTO = customDeploymentTypeService.get(
+          infrastructureMapping.getAccountId(), infrastructureMapping.getCustomDeploymentTemplateId(),
+          infrastructureMapping.getDeploymentTypeTemplateVersion());
+      final Map<String, String> infraVariables = applyOverrides(customDeploymentTypeDTO.getInfraVariables(),
+          ((CustomInfrastructureMapping) infrastructureMapping).getInfraVariables());
+      builder.custom(InfraMappingElement.Custom.builder().vars(infraVariables).build());
     }
+  }
+
+  private Map<String, String> applyOverrides(List<Variable> sourceVariables, List<NameValuePair> overrideVariables) {
+    final Map<String, String> overrideValues =
+        CollectionUtils.collectionToStream(overrideVariables)
+            .collect(HashMap::new, (m, v) -> m.put(v.getName(), v.getValue()), HashMap::putAll);
+    // Not using Collectors here because it throws if value is null
+    // https://stackoverflow.com/questions/24630963/java-8-nullpointerexception-in-collectors-tomap
+    return CollectionUtils.collectionToStream(sourceVariables)
+        .map(variable -> overrideVariable(overrideValues, variable))
+        .filter(variable -> variable.getValue() != null)
+        .collect(Collectors.toMap(Variable::getName, Variable::getValue));
+  }
+
+  private Variable overrideVariable(Map<String, String> overrideValues, Variable variable) {
+    if (overrideValues.containsKey(variable.getName())) {
+      return variable.but().value(overrideValues.get(variable.getName())).build();
+    }
+    return variable;
   }
 
   private CloudProvider generateCloudProviderElement(InfrastructureMapping infrastructureMapping) {

@@ -5,9 +5,12 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.Sets;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.Test;
@@ -18,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CollectionUtilsTest extends CategoryTest {
   private final List<DummyPerson> personCollection =
@@ -90,6 +94,16 @@ public class CollectionUtilsTest extends CategoryTest {
     assertThat(CollectionUtils.nullIfEmptyMap(null)).isNull();
     assertThat(CollectionUtils.nullIfEmptyMap(Collections.emptyMap())).isNull();
     assertThat(CollectionUtils.nullIfEmptyMap(Collections.singletonMap("k", "v"))).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void testCollectionToStream() {
+    assertThat(CollectionUtils.collectionToStream(null).collect(Collectors.toList())).isEmpty();
+    assertThat(CollectionUtils.collectionToStream(Collections.emptyList()).collect(Collectors.toList())).isEmpty();
+    assertThat(CollectionUtils.collectionToStream(Sets.newHashSet("get", "ship", "done")).collect(Collectors.toSet()))
+        .containsExactlyInAnyOrder("get", "ship", "done");
   }
 
   @Test

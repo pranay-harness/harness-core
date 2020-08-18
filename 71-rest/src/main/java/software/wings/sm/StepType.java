@@ -195,6 +195,7 @@ import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
+import software.wings.sm.states.customdeployment.InstanceFetchState;
 import software.wings.sm.states.k8s.K8sApplyState;
 import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
 import software.wings.sm.states.k8s.K8sCanaryDeploy;
@@ -600,6 +601,9 @@ public enum StepType {
   TEMPLATIZED_SECRET_MANAGER(TemplatizedSecretManagerState.class, WorkflowServiceHelper.TEMPLATIZED_SECRET_MANAGER,
       asList(UTILITY), asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+
+  CUSTOM_DEPLOYMENT_FETCH_INSTANCES(InstanceFetchState.class, WorkflowServiceHelper.FETCH_INSTANCES, asList(UTILITY),
+      asList(PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.CUSTOM), asList(PhaseType.values())),
 
   // Command
   COMMAND(CommandState.class, COMMAND_NAME, asList(WorkflowStepType.SERVICE_COMMAND), asList(PhaseStepType.values()),

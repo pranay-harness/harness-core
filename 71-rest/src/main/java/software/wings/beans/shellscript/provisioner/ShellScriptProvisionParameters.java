@@ -31,6 +31,11 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
   private String activityId;
   private String commandUnit;
 
+  /*
+  Name of the variable which contains the file path
+   */
+  private String outputPathKey;
+
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();

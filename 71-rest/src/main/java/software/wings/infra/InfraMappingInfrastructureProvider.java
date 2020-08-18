@@ -8,6 +8,7 @@ import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 import static software.wings.beans.InfrastructureType.CODE_DEPLOY;
+import static software.wings.beans.InfrastructureType.CUSTOM_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
@@ -36,7 +37,8 @@ import java.util.Set;
       @JsonSubTypes.Type(value = GoogleKubernetesEngine.class, name = GCP_KUBERNETES_ENGINE),
       @JsonSubTypes.Type(value = PcfInfraStructure.class, name = PCF_INFRASTRUCTURE),
       @JsonSubTypes.Type(value = PhysicalInfra.class, name = PHYSICAL_INFRA),
-      @JsonSubTypes.Type(value = PhysicalInfraWinrm.class, name = PHYSICAL_INFRA_WINRM)
+      @JsonSubTypes.Type(value = PhysicalInfraWinrm.class, name = PHYSICAL_INFRA_WINRM),
+      @JsonSubTypes.Type(value = CustomInfrastructure.class, name = CUSTOM_INFRASTRUCTURE)
 })
 public interface InfraMappingInfrastructureProvider extends CloudProviderInfrastructure {
   @JsonIgnore InfrastructureMapping getInfraMapping();

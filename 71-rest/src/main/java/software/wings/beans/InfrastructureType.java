@@ -22,4 +22,5 @@ public class InfrastructureType {
   public static final String AZURE_KUBERNETES = "AZURE_KUBERNETES";
   public static final String AZURE_VMSS = "AZURE_VMSS";
   public static final String PDC = "PDC";
+  public static final String CUSTOM_INFRASTRUCTURE = "CUSTOM";
 }

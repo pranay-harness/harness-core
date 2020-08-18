@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -38,6 +39,7 @@ import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 import static software.wings.infra.InfraDefinitionTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.infra.InfraDefinitionTestConstants.INFRA_DEFINITION_NAME;
@@ -78,10 +80,13 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
 import software.wings.beans.Event;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.Variable;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
@@ -93,6 +98,7 @@ import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureK
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
+import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
@@ -112,6 +118,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
 
@@ -139,6 +146,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
   @Mock private EventPublishHelper eventPublishHelper;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private CustomDeploymentTypeService customDeploymentTypeService;
 
   @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
@@ -684,44 +692,44 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   public void testValidateInfraDefinition() {
     InfrastructureDefinition valid = null;
     valid = getValidInfra(PHYSICAL_INFRA, false);
-    infrastructureDefinitionService.validateInfraDefinition(valid);
+    infrastructureDefinitionService.validateAndPrepareInfraDefinition(valid);
     verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition inValid_phy = valid.cloneForUpdate();
     inValid_phy.setDeploymentType(DeploymentType.HELM);
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> infrastructureDefinitionService.validateInfraDefinition(inValid_phy));
+        .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(inValid_phy));
 
     valid = getValidInfra(PHYSICAL_INFRA, true);
     InfrastructureDefinition inValid_phy_prov = valid.cloneForUpdate();
     for (String key : ImmutableList.of(PhysicalInfra.hostname, PhysicalInfra.hostArrayPath)) {
       ((PhysicalInfra) inValid_phy_prov.getInfrastructure()).getExpressions().put(key, EMPTY);
       assertThatExceptionOfType(InvalidRequestException.class)
-          .isThrownBy(() -> infrastructureDefinitionService.validateInfraDefinition(inValid_phy_prov));
+          .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(inValid_phy_prov));
       ((PhysicalInfra) inValid_phy_prov.getInfrastructure()).getExpressions().put(key, "default");
     }
 
     valid = getValidInfra(PHYSICAL_INFRA_WINRM, false);
-    infrastructureDefinitionService.validateInfraDefinition(valid);
+    infrastructureDefinitionService.validateAndPrepareInfraDefinition(valid);
     verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition inValid_phy_winrm = valid.cloneForUpdate();
     inValid_phy_winrm.setDeploymentType(DeploymentType.HELM);
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> infrastructureDefinitionService.validateInfraDefinition(inValid_phy_winrm));
+        .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(inValid_phy_winrm));
 
     valid = getValidInfra(GCP_KUBERNETES_ENGINE, true);
-    infrastructureDefinitionService.validateInfraDefinition(valid);
+    infrastructureDefinitionService.validateAndPrepareInfraDefinition(valid);
     verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition inValid_gcpK8s = valid.cloneForUpdate();
     InfrastructureDefinition invalid_gcp_k8s_prov = valid.cloneForUpdate();
     for (String key : ImmutableList.of(GoogleKubernetesEngineKeys.clusterName, GoogleKubernetesEngineKeys.namespace)) {
       ((GoogleKubernetesEngine) invalid_gcp_k8s_prov.getInfrastructure()).getExpressions().put(key, EMPTY);
       assertThatExceptionOfType(InvalidRequestException.class)
-          .isThrownBy(() -> infrastructureDefinitionService.validateInfraDefinition(invalid_gcp_k8s_prov));
+          .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(invalid_gcp_k8s_prov));
       ((GoogleKubernetesEngine) invalid_gcp_k8s_prov.getInfrastructure()).getExpressions().put(key, "default");
     }
 
     valid = getValidInfra(AWS_ECS, true);
-    infrastructureDefinitionService.validateInfraDefinition(valid);
+    infrastructureDefinitionService.validateAndPrepareInfraDefinition(valid);
     verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition invalid_awsEcs = valid.cloneForUpdate();
     for (String key : ImmutableList.<String>of(AwsEcsInfrastructureKeys.region, AwsEcsInfrastructureKeys.clusterName,
@@ -729,12 +737,12 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
              AwsEcsInfrastructureKeys.securityGroupIds, AwsEcsInfrastructureKeys.subnetIds)) {
       ((AwsEcsInfrastructure) invalid_awsEcs.getInfrastructure()).getExpressions().put(key, EMPTY);
       assertThatExceptionOfType(InvalidRequestException.class)
-          .isThrownBy(() -> infrastructureDefinitionService.validateInfraDefinition(invalid_awsEcs));
+          .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(invalid_awsEcs));
       ((AwsEcsInfrastructure) invalid_awsEcs.getInfrastructure()).getExpressions().put(key, "default");
     }
     ((AwsEcsInfrastructure) invalid_awsEcs.getInfrastructure()).setLaunchType(EMPTY);
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> infrastructureDefinitionService.validateInfraDefinition(invalid_awsEcs));
+        .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(invalid_awsEcs));
   }
 
   private InfrastructureDefinition getValidInfra(@NotNull String type, boolean withProvisioner) {
@@ -902,7 +910,8 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
 
     infrastructureDefinitionService.save(infraDef, false, true);
-    verify(infrastructureDefinitionService, times(0)).validateInfraDefinition(any(InfrastructureDefinition.class));
+    verify(infrastructureDefinitionService, times(0))
+        .validateAndPrepareInfraDefinition(any(InfrastructureDefinition.class));
   }
 
   @Test
@@ -1308,5 +1317,132 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     assertThat(pageRequest.getFilters().get(0).getFieldValues().length).isEqualTo(2);
     assertThat(pageRequest.getFilters().get(0).getFieldValues()[0]).isEqualTo("SSH");
     assertThat(pageRequest.getFilters().get(0).getFieldValues()[1]).isEqualTo("KUBERNETES");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void saveCustomInfrastructure() {
+    CustomInfrastructure customInfrastructure =
+        CustomInfrastructure.builder()
+            .customDeploymentName("weblogic")
+            .infraVariables(asList(NameValuePair.builder().name("key").value("foo").build()))
+            .build();
+
+    InfrastructureDefinition infraDefinition = InfrastructureDefinition.builder()
+                                                   .infrastructure(customInfrastructure)
+                                                   .name("infra")
+                                                   .deploymentType(DeploymentType.CUSTOM)
+                                                   .cloudProviderType(CloudProviderType.CUSTOM)
+                                                   .build();
+    infrastructureDefinitionService.save(infraDefinition, true);
+
+    verify(customDeploymentTypeService, times(1)).putCustomDeploymentTypeNameIfApplicable(infraDefinition);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void updateCustomInfrastructure() {
+    CustomInfrastructure customInfrastructure =
+        CustomInfrastructure.builder()
+            .customDeploymentName("weblogic")
+            .infraVariables(asList(NameValuePair.builder().name("key").value("foo").build()))
+            .build();
+
+    InfrastructureDefinition infraDefinition = InfrastructureDefinition.builder()
+                                                   .infrastructure(customInfrastructure)
+                                                   .name("infra")
+                                                   .deploymentType(DeploymentType.CUSTOM)
+                                                   .deploymentTypeTemplateId("id")
+                                                   .cloudProviderType(CloudProviderType.CUSTOM)
+                                                   .build();
+    doReturn(infraDefinition)
+        .when(wingsPersistence)
+        .getWithAppId(eq(InfrastructureDefinition.class), anyString(), anyString());
+    doReturn(CustomDeploymentTypeDTO.builder()
+                 .name("weblogic")
+                 .infraVariables(asList(aVariable().name("key").build()))
+                 .build())
+        .when(customDeploymentTypeService)
+        .get(anyString(), anyString(), anyString());
+    infrastructureDefinitionService.update(infraDefinition);
+
+    verify(customDeploymentTypeService, atLeastOnce()).putCustomDeploymentTypeNameIfApplicable(infraDefinition);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testValidateInfraVariables() {
+    final List<Variable> templateVariables =
+        Arrays.asList(aVariable().name("var1").build(), aVariable().name("var2").value("val2").build(),
+            aVariable().name("val3").value("val3").description("desc3").build());
+
+    // overriding var1
+    infrastructureDefinitionService.validateInfraVariables(templateVariables,
+        asList(NameValuePair.builder().name("var1").value("val1").build(),
+            NameValuePair.builder().name("var2").value("val2").build()));
+
+    // overriding var1,var2 and var3
+    infrastructureDefinitionService.validateInfraVariables(templateVariables,
+        asList(NameValuePair.builder().name("var1").value("val1").build(),
+            NameValuePair.builder().name("var2").value(null).build(),
+            NameValuePair.builder().name("val3").value("newVal3").build()));
+
+    infrastructureDefinitionService.validateInfraVariables(templateVariables, null);
+    infrastructureDefinitionService.validateInfraVariables(templateVariables, emptyList());
+    infrastructureDefinitionService.validateInfraVariables(null, null);
+    infrastructureDefinitionService.validateInfraVariables(emptyList(), null);
+
+    //    Variable abc not present in the template
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(()
+                        -> infrastructureDefinitionService.validateInfraVariables(templateVariables,
+                            asList(NameValuePair.builder().name("var1").value("val1").build(),
+                                NameValuePair.builder().name("abc").build())));
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(()
+                        -> infrastructureDefinitionService.validateInfraVariables(
+                            templateVariables, asList(NameValuePair.builder().name("abc").build())));
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testFilterNonOverridenVariables() {
+    final List<Variable> templateVariables =
+        Arrays.asList(aVariable().name("var1").build(), aVariable().name("var2").value("val2").build(),
+            aVariable().name("var3").value("val3").description("desc3").build());
+
+    List<NameValuePair> infraVariables;
+    infraVariables = infrastructureDefinitionService.filterNonOverridenVariables(templateVariables,
+        asList(NameValuePair.builder().name("var1").value("val1").build(),
+            NameValuePair.builder().name("var2").value("val2").build()));
+    assertThat(infraVariables).containsExactly(NameValuePair.builder().name("var1").value("val1").build());
+
+    infraVariables = infrastructureDefinitionService.filterNonOverridenVariables(templateVariables,
+        asList(NameValuePair.builder().name("var1").value("val1").build(),
+            NameValuePair.builder().name("var3").value("val3").build()));
+    assertThat(infraVariables).containsExactly(NameValuePair.builder().name("var1").value("val1").build());
+
+    infraVariables = infrastructureDefinitionService.filterNonOverridenVariables(templateVariables,
+        asList(NameValuePair.builder().name("var1").value("val1").build(),
+            NameValuePair.builder().name("var2").value("val2_").build()));
+    assertThat(infraVariables)
+        .containsExactlyInAnyOrder(NameValuePair.builder().name("var1").value("val1").build(),
+            NameValuePair.builder().name("var2").value("val2_").build());
+
+    infraVariables = infrastructureDefinitionService.filterNonOverridenVariables(templateVariables,
+        asList(NameValuePair.builder().name("var1").build(), NameValuePair.builder().name("var2").value("val2").build(),
+            NameValuePair.builder().name("var3").value("val3").build()));
+    assertThat(infraVariables).isEmpty();
+
+    infraVariables = infrastructureDefinitionService.filterNonOverridenVariables(templateVariables, emptyList());
+    assertThat(infraVariables).isEmpty();
+
+    infraVariables = infrastructureDefinitionService.filterNonOverridenVariables(templateVariables, null);
+    assertThat(infraVariables).isEmpty();
   }
 }

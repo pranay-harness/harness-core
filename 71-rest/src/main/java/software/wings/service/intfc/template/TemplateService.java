@@ -18,6 +18,7 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -101,4 +102,8 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   String getYamlOfTemplate(String templateId, Long version);
 
   String getYamlOfTemplate(String templateId, String version);
+
+  List<Template> getTemplatesByType(@Nonnull String accountId, String appId, @Nonnull TemplateType templateType);
+
+  List<Template> batchGet(List<String> templateUuids, String accountId);
 }

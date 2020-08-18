@@ -9,7 +9,8 @@ public enum TemplateType {
   PIPELINE("Pipeline"),
   SHELL_SCRIPT("Shell Script"),
   ARTIFACT_SOURCE("Artifact Source"),
-  PCF_PLUGIN("PCF Command");
+  PCF_PLUGIN("PCF Command"),
+  CUSTOM_DEPLOYMENT_TYPE("Custom Deployment Type");
 
   String displayName;
 

@@ -79,7 +79,10 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM)),
 
   AZURE_VMSS(AzureVMSSInfrastructureMapping.class, "AZURE_VMSS", StencilCategory.OTHERS, 12,
-      Lists.newArrayList(DeploymentType.AZURE_VMSS));
+      Lists.newArrayList(DeploymentType.AZURE_VMSS)),
+
+  CUSTOM(CustomInfrastructureMapping.class, "CUSTOM", StencilCategory.OTHERS, 12,
+      Lists.newArrayList(DeploymentType.CUSTOM));
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

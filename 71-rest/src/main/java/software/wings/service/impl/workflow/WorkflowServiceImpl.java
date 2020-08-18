@@ -195,7 +195,8 @@ import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.workflow.creation.WorkflowCreator;
-import software.wings.service.impl.workflow.creation.WorkflowCreatorFactory;
+import software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory;
+import software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory.Category;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -354,7 +355,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
-  @Inject private WorkflowCreatorFactory workflowCreatorFactory;
+  @Inject private AbstractWorkflowFactory abstractWorkflowFactory;
 
   /**
    * {@inheritDoc}
@@ -878,10 +879,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<String> linkedArtifactStreamIds = new ArrayList<>();
 
     if (orchestrationWorkflow != null) {
-      boolean isV2ServicePresent = StringUtils.isNotEmpty(workflow.getServiceId())
-          && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflow.getServiceId());
-      WorkflowCreator workflowCreator = workflowCreatorFactory.getWorkflowCreatorFactory(
-          orchestrationWorkflow.getOrchestrationWorkflowType(), isV2ServicePresent);
+      Category category = workflowServiceHelper.getCategory(workflow.getAppId(), workflow.getServiceId());
+      WorkflowCreator workflowCreator = abstractWorkflowFactory.getWorkflowCreatorFactory(category).getWorkflowCreator(
+          orchestrationWorkflow.getOrchestrationWorkflowType());
       workflow = workflowCreator.createWorkflow(workflow);
       if (isEmpty(orchestrationWorkflow.getNotificationRules())) {
         createDefaultNotificationRule(workflow);
@@ -1498,11 +1498,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     workflowPhase.setStatefulSet(isStatefulSet(appId, workflowPhase.getServiceId()));
 
-    boolean isV2ServicePresent = StringUtils.isNotEmpty(workflowPhase.getServiceId())
-        && workflowServiceHelper.isK8sV2Service(workflow.getAppId(), workflowPhase.getServiceId());
-
-    WorkflowCreator workflowCreator = workflowCreatorFactory.getWorkflowCreatorFactory(
-        orchestrationWorkflow.getOrchestrationWorkflowType(), isV2ServicePresent);
+    Category category = workflowServiceHelper.getCategory(workflow.getAppId(), workflow.getServiceId());
+    WorkflowCreator workflowCreator = abstractWorkflowFactory.getWorkflowCreatorFactory(category).getWorkflowCreator(
+        orchestrationWorkflow.getOrchestrationWorkflowType());
 
     workflowCreator.attachWorkflowPhase(workflow, workflowPhase);
 

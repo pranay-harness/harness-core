@@ -488,6 +488,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case SPOTINST_LISTENER_UPDATE:
       case PROVISION_INFRASTRUCTURE:
       case ROLLBACK_PROVISION_INFRASTRUCTURE:
+      case CUSTOM_DEPLOYMENT_PHASE_STEP:
       case STAGE_EXECUTION:
         noop();
         break;

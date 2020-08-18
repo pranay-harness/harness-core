@@ -25,9 +25,11 @@ import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -98,6 +100,9 @@ public abstract class InfrastructureMapping
   private Map<String, Object> blueprints;
   private String infrastructureDefinitionId;
   private boolean sample;
+
+  @Getter @Setter private String customDeploymentTemplateId;
+  @Getter @Setter private String deploymentTypeTemplateVersion;
 
   /**
    * Instantiates a new Infrastructure mapping.

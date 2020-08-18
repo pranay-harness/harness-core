@@ -66,6 +66,7 @@ import java.util.concurrent.TimeUnit;
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
   private static final int TIMEOUT_IN_MINUTES = 20;
   private static final String COMMAND_UNIT = "Shell Script Provision";
+  private static final String PROVISIONER_OUTPUT_PATH_KEY = "PROVISIONER_OUTPUT_PATH";
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
@@ -99,6 +100,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
             .entityId(infrastructureProvisionerService.getEntityId(
                 provisionerId, Objects.requireNonNull(((ExecutionContextImpl) context).getEnv()).getUuid()))
             .workflowExecutionId(context.getWorkflowExecutionId())
+            .outputPathKey(PROVISIONER_OUTPUT_PATH_KEY)
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()

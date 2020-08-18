@@ -34,6 +34,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -92,6 +93,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -192,6 +194,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.service.intfc.template.TemplateService;
@@ -319,6 +322,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private CustomDeploymentTypeService customDeploymentTypeService;
 
   /**
    * {@inheritDoc}
@@ -331,6 +335,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         applyInfraBasedFilters(request);
       }
 
+      // Todo(yogesh): Add Filter for DeploymentTypeTemplateId
       if (request.getUriInfo().getQueryParameters().containsKey("deploymentTypeFromMetadata")) {
         List<String> deploymentTypes = request.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata");
         EnumSet<DeploymentType> deploymentTypesSet = EnumSet.noneOf(DeploymentType.class);
@@ -348,6 +353,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (withBuildSource) {
       setArtifactStreams(services);
       setArtifactStreamBindings(services);
+    }
+
+    if (isNotEmpty(pageResponse.getResponse())) {
+      customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(
+          pageResponse.getResponse(), pageResponse.getResponse().get(0).getAccountId());
     }
     return pageResponse;
   }
@@ -370,6 +380,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     EnumSet<DeploymentType> deploymentType = EnumSet.noneOf(DeploymentType.class);
+    Set<String> customDeploymentTypeTemplateIds = new HashSet<>();
     List<Set<String>> scopedServicesList = new ArrayList<>();
     List<String> infraNames = new ArrayList<>();
     for (String infraId : infraIds) {
@@ -382,6 +393,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         throw new InvalidRequestException(format("No Infrastructure Definition exists for id : [%s]", infraId), USER);
       }
       deploymentType.add(infra.getDeploymentType());
+      if (isNotBlank(infra.getDeploymentTypeTemplateId())) {
+        customDeploymentTypeTemplateIds.add(infra.getDeploymentTypeTemplateId());
+      }
       if (isNotEmpty(infra.getScopedToServices())) {
         scopedServicesList.add(Sets.newHashSet(infra.getScopedToServices()));
         infraNames.add(infra.getName());
@@ -405,6 +419,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isNotEmpty(deploymentType)
         && !request.getUriInfo().getQueryParameters().containsKey("deploymentTypeFromMetadata")) {
       addDeploymentTypeFilter(request, deploymentType);
+    }
+    addDeploymentTypeTemplateIdFilter(request, customDeploymentTypeTemplateIds);
+  }
+
+  private void addDeploymentTypeTemplateIdFilter(
+      PageRequest<Service> request, Set<String> customDeploymentTypeTemplateIds) {
+    if (customDeploymentTypeTemplateIds.size() == 1) {
+      request.addFilter(ServiceKeys.deploymentTypeTemplateId, EQ, customDeploymentTypeTemplateIds.iterator().next());
     }
   }
 
@@ -487,6 +509,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         eventPublishHelper.publishAccountEvent(
             accountId, AccountEvent.builder().accountEventType(AccountEventType.SERVICE_CREATED).build(), true, true);
       }
+
+      customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(savedService);
       return savedService;
     });
   }
@@ -896,6 +920,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     yamlPushService.pushYamlChangeSet(
         accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), isRename);
 
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(updatedService);
     return updatedService;
   }
 
@@ -967,7 +992,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service get(String serviceId) {
-    return wingsPersistence.get(Service.class, serviceId);
+    final Service service = wingsPersistence.get(Service.class, serviceId);
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(service);
+    return service;
   }
 
   @Override
@@ -1011,6 +1038,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       if (withDetails) {
         setServiceDetails(service, appId);
       }
+      customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(service);
     }
     return service;
   }
@@ -1018,8 +1046,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service get(String appId, String serviceId, boolean includeDetails) {
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
-    if (service != null && includeDetails) {
-      setServiceDetails(service, appId);
+    if (service != null) {
+      if (includeDetails) {
+        setServiceDetails(service, appId);
+      }
+      customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(service);
     }
     return service;
   }
@@ -1039,6 +1070,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     service.setServiceVariables(
         serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), OBTAIN_VALUE));
     service.setServiceCommands(getServiceCommands(appId, service.getUuid()));
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(service);
   }
 
   private void setArtifactStreamBindings(List<Service> services) {
@@ -2960,11 +2993,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public List<Service> listByDeploymentType(String appId, String deploymentType) {
+  public List<Service> listByDeploymentType(String appId, String deploymentType, String deploymentTypeTemplateId) {
     List<ArtifactType> supportedArtifactTypes =
         DeploymentType.supportedArtifactTypes.get(DeploymentType.valueOf(deploymentType));
     Query<Service> query = wingsPersistence.createQuery(Service.class).field(ServiceKeys.appId).equal(appId);
-    query.or(query.criteria(ServiceKeys.deploymentType).equal(deploymentType),
+    final CriteriaContainerImpl deploymentTypeCriteria =
+        query.criteria(ServiceKeys.deploymentType).equal(deploymentType);
+    if (isNotBlank(deploymentTypeTemplateId)) {
+      deploymentTypeCriteria.and(query.criteria(ServiceKeys.deploymentTypeTemplateId).equal(deploymentTypeTemplateId));
+    }
+    query.or(deploymentTypeCriteria,
         query.and(query.criteria(ServiceKeys.deploymentType).equal(null),
             query.criteria(ServiceKeys.artifactType).in(supportedArtifactTypes)));
     return query.asList();
@@ -3002,5 +3040,23 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), false);
 
     return updatedService;
+  }
+
+  @Override
+  public boolean isCustomDeploymentType(Service service) {
+    return service != null && service.getDeploymentType() == CUSTOM;
+  }
+
+  @Override
+  public List<Service> listByCustomDeploymentTypeId(String accountId, List<String> deploymentTemplateIds, int limit) {
+    return wingsPersistence.createQuery(Service.class)
+        .field(ServiceKeys.accountId)
+        .equal(accountId)
+        .field(ServiceKeys.deploymentTypeTemplateId)
+        .in(deploymentTemplateIds)
+        .project(ServiceKeys.uuid, true)
+        .project(ServiceKeys.name, true)
+        .project(ServiceKeys.appId, true)
+        .asList(new FindOptions().limit(limit));
   }
 }

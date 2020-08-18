@@ -26,7 +26,6 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -59,9 +58,6 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
       (ShellScriptProvisionTask) TaskType.SHELL_SCRIPT_PROVISION_TASK.getDelegateRunnableTask(
           DelegateTaskPackage.builder().delegateId("delegateid").data(TaskData.builder().build()).build(),
           notifyResponseData -> {}, () -> true);
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -141,6 +137,7 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
                                                         .accountId(ACCOUNT_ID)
                                                         .appId(APP_ID)
                                                         .activityId(ACTIVITY_ID)
+                                                        .outputPathKey("PROVISIONER_OUTPUT_PATH")
                                                         .build();
 
     ShellExecutorFactory shellExecutorFactory = new ShellExecutorFactory();

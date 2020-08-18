@@ -30,6 +30,7 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_META;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -67,10 +68,12 @@ import org.mockito.Mockito;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InfraMappingElement.CloudProvider;
+import software.wings.api.InfraMappingElement.InfraMappingElementBuilder;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -83,14 +86,19 @@ import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
+import software.wings.beans.CustomInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -101,6 +109,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingVariableTypes;
@@ -131,6 +140,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
 
   @Before
@@ -1033,5 +1043,109 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     InfraMappingElement infraMappingElement = context.fetchInfraMappingElement();
     CloudProvider cloudProvider = infraMappingElement.getCloudProvider();
     assertThat(cloudProvider.getName()).isEqualTo("gcp-name");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void populateInfraMappingElementForCustomInfra() {
+    testIfVariablesNull();
+    testIfVariablesEmpty();
+    testIfNoOverrideInInfra();
+    testIfOverridenInInfra();
+  }
+
+  private void testIfOverridenInInfra() {
+    final PhaseElement phaseElement = PhaseElement.builder().deploymentType(DeploymentType.CUSTOM.name()).build();
+    final ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+    final List<Variable> templateVariables = asList(
+        aVariable().name("a1").value("b1").description("variable named a1").build(), aVariable().name("a2").build(),
+        aVariable().name("a3").value("").build(), aVariable().name("a4").value("b4").description("variable b4").build(),
+        aVariable().name("a5").value("b5").build(), aVariable().name("a6").value("b6").build(),
+        aVariable().name("a7").value("b7").build());
+    final List<NameValuePair> infraVariables = asList(NameValuePair.builder().name("a1").value("b11").build(),
+        NameValuePair.builder().name("a2").value("b22").build(), NameValuePair.builder().name("a5").build(),
+        NameValuePair.builder().name("a6").value("").build(), NameValuePair.builder().name("a7").value("b7").build());
+
+    on(context).set("customDeploymentTypeService", customDeploymentTypeService);
+    doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
+    doReturn(CustomDeploymentTypeDTO.builder().infraVariables(templateVariables).build())
+        .when(customDeploymentTypeService)
+        .get(anyString(), anyString(), anyString());
+    InfraMappingElementBuilder builder = InfraMappingElement.builder();
+
+    InfrastructureMapping infra = CustomInfrastructureMapping.builder().infraVariables(infraVariables).build();
+    infra.setCustomDeploymentTemplateId(WingsTestConstants.TEMPLATE_ID);
+
+    context.populateDeploymentSpecificInfoInInfraMappingElement(infra, phaseElement, builder);
+
+    assertThat(builder.build().getCustom().getVars().get("a1")).isEqualTo("b11");
+    assertThat(builder.build().getCustom().getVars().get("a2")).isEqualTo("b22");
+    assertThat(builder.build().getCustom().getVars().get("a3")).isEmpty();
+    assertThat(builder.build().getCustom().getVars().get("a4")).isEqualTo("b4");
+    assertThat(builder.build().getCustom().getVars().get("a5")).isNull();
+    assertThat(builder.build().getCustom().getVars().get("a6")).isEmpty();
+    assertThat(builder.build().getCustom().getVars().get("a7")).isEqualTo("b7");
+  }
+
+  private void testIfNoOverrideInInfra() {
+    final PhaseElement phaseElement = PhaseElement.builder().deploymentType(DeploymentType.CUSTOM.name()).build();
+    final ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+    final List<Variable> templateVariables = asList(aVariable().name("a1").value("b1").build(),
+        aVariable().name("a2").build(), aVariable().name("a3").value("").build());
+
+    on(context).set("customDeploymentTypeService", customDeploymentTypeService);
+    doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
+    doReturn(CustomDeploymentTypeDTO.builder().infraVariables(templateVariables).build())
+        .when(customDeploymentTypeService)
+        .get(anyString(), anyString(), anyString());
+    InfraMappingElementBuilder builder = InfraMappingElement.builder();
+
+    InfrastructureMapping infra = CustomInfrastructureMapping.builder().infraVariables(emptyList()).build();
+    infra.setCustomDeploymentTemplateId(WingsTestConstants.TEMPLATE_ID);
+
+    context.populateDeploymentSpecificInfoInInfraMappingElement(infra, phaseElement, builder);
+
+    assertThat(builder.build().getCustom().getVars().get("a1")).isEqualTo("b1");
+    assertThat(builder.build().getCustom().getVars().get("a2")).isNull();
+    assertThat(builder.build().getCustom().getVars().get("a3")).isEmpty();
+  }
+
+  private void testIfVariablesEmpty() {
+    final PhaseElement phaseElement = PhaseElement.builder().deploymentType(DeploymentType.CUSTOM.name()).build();
+    final ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+
+    on(context).set("customDeploymentTypeService", customDeploymentTypeService);
+    doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
+    doReturn(CustomDeploymentTypeDTO.builder().infraVariables(emptyList()).build())
+        .when(customDeploymentTypeService)
+        .get(anyString(), anyString(), anyString());
+    InfraMappingElementBuilder builder = InfraMappingElement.builder();
+
+    InfrastructureMapping infra = CustomInfrastructureMapping.builder().infraVariables(emptyList()).build();
+    infra.setCustomDeploymentTemplateId(WingsTestConstants.TEMPLATE_ID);
+
+    context.populateDeploymentSpecificInfoInInfraMappingElement(infra, phaseElement, builder);
+
+    assertThat(builder.build().getCustom().getVars()).isEmpty();
+  }
+
+  private void testIfVariablesNull() {
+    final PhaseElement phaseElement = PhaseElement.builder().deploymentType(DeploymentType.CUSTOM.name()).build();
+    final ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+
+    on(context).set("customDeploymentTypeService", customDeploymentTypeService);
+    doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
+    doReturn(CustomDeploymentTypeDTO.builder().build())
+        .when(customDeploymentTypeService)
+        .get(anyString(), anyString(), anyString());
+    InfraMappingElementBuilder builder = InfraMappingElement.builder();
+
+    InfrastructureMapping infra = CustomInfrastructureMapping.builder().infraVariables(null).build();
+    infra.setCustomDeploymentTemplateId(WingsTestConstants.TEMPLATE_ID);
+
+    context.populateDeploymentSpecificInfoInInfraMappingElement(infra, phaseElement, builder);
+
+    assertThat(builder.build().getCustom().getVars()).isEmpty();
   }
 }

@@ -25,6 +25,7 @@ import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateNameForImportedCommands;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
 import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
+import static software.wings.beans.template.TemplateType.CUSTOM_DEPLOYMENT_TYPE;
 import static software.wings.beans.template.TemplateType.HTTP;
 import static software.wings.beans.template.TemplateType.PCF_PLUGIN;
 import static software.wings.beans.template.TemplateType.SHELL_SCRIPT;
@@ -56,6 +57,7 @@ import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
@@ -696,7 +698,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .get();
 
     TemplateType templateType = TemplateType.valueOf(template.getType());
-    if (templateHelper.templatesLinked(templateType, Collections.singletonList(templateUuid))) {
+    if (templateHelper.templatesLinked(accountId, templateType, Collections.singletonList(templateUuid))) {
       throw templateLinkedException(String.format("Template : [%s] couldn't be deleted", template.getName()),
           templateType, mappedEntities(templateType));
     }
@@ -760,8 +762,9 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public boolean deleteByFolder(TemplateFolder templateFolder) {
+    final String accountId = templateFolder.getAccountId();
     List<Key<Template>> templateKeys = wingsPersistence.createQuery(Template.class)
-                                           .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                           .filter(Template.ACCOUNT_ID_KEY, accountId)
                                            .field(FOLDER_PATH_ID_KEY)
                                            .contains(templateFolder.getUuid())
                                            .asKeyList();
@@ -772,43 +775,45 @@ public class TemplateServiceImpl implements TemplateService {
       logger.info("No templates under the folder {}", templateFolder.getName());
       return true;
     }
-    final List<Template> templates = batchGet(templateUuids, templateFolder.getAccountId());
+    final List<Template> templates = batchGet(templateUuids, accountId);
 
     logger.info("To be deleted linked template uuids {}", templateUuids);
     // Since the template folder will be deleted only if all the folder inside it are deleted. Hence validating linkage
     // beforehand. Verify if Service Commands contains the given ids
     String errorMessage = String.format("Template Folder : [%s] couldn't be deleted", templateFolder.getName());
 
-    if (templateHelper.templatesLinked(SSH, templateUuids)) {
+    if (templateHelper.templatesLinked(accountId, SSH, templateUuids)) {
       throw templateLinkedException(errorMessage, SSH, mappedEntities(SSH));
     }
-    if (templateHelper.templatesLinked(HTTP, templateUuids)) {
+    if (templateHelper.templatesLinked(accountId, HTTP, templateUuids)) {
       throw templateLinkedException(errorMessage, HTTP, mappedEntities(HTTP));
     }
-    if (templateHelper.templatesLinked(SHELL_SCRIPT, templateUuids)) {
+    if (templateHelper.templatesLinked(accountId, SHELL_SCRIPT, templateUuids)) {
       throw templateLinkedException(errorMessage, SHELL_SCRIPT, mappedEntities(SHELL_SCRIPT));
     }
-    if (templateHelper.templatesLinked(ARTIFACT_SOURCE, templateUuids)) {
+    if (templateHelper.templatesLinked(accountId, ARTIFACT_SOURCE, templateUuids)) {
       throw templateLinkedException(errorMessage, ARTIFACT_SOURCE, mappedEntities(ARTIFACT_SOURCE));
     }
-    if (templateHelper.templatesLinked(PCF_PLUGIN, templateUuids)) {
+    if (templateHelper.templatesLinked(accountId, PCF_PLUGIN, templateUuids)) {
       throw templateLinkedException(errorMessage, PCF_PLUGIN, mappedEntities(PCF_PLUGIN));
     }
+    if (templateHelper.templatesLinked(accountId, CUSTOM_DEPLOYMENT_TYPE, templateUuids)) {
+      throw templateLinkedException(errorMessage, CUSTOM_DEPLOYMENT_TYPE, mappedEntities(CUSTOM_DEPLOYMENT_TYPE));
+    }
     // Delete templates
-    boolean templateDeleted =
-        wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
-                                    .filter(Template.ACCOUNT_ID_KEY, templateFolder.getAccountId())
-                                    .field(Template.ID_KEY)
-                                    .in(templateUuids));
+    boolean templateDeleted = wingsPersistence.delete(wingsPersistence.createQuery(Template.class)
+                                                          .filter(Template.ACCOUNT_ID_KEY, accountId)
+                                                          .field(Template.ID_KEY)
+                                                          .in(templateUuids));
 
     if (templateDeleted) {
       wingsPersistence.delete(wingsPersistence.createQuery(VersionedTemplate.class)
-                                  .filter(VersionedTemplate.ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                  .filter(VersionedTemplate.ACCOUNT_ID_KEY, accountId)
                                   .field(TEMPLATE_ID_KEY)
                                   .in(templateUuids));
 
       wingsPersistence.delete(wingsPersistence.createQuery(TemplateVersion.class)
-                                  .filter(TemplateVersion.ACCOUNT_ID_KEY, templateFolder.getAccountId())
+                                  .filter(TemplateVersion.ACCOUNT_ID_KEY, accountId)
                                   .field(TEMPLATE_UUID_KEY)
                                   .in(templateUuids));
 
@@ -829,7 +834,8 @@ public class TemplateServiceImpl implements TemplateService {
     return templateDeleted;
   }
 
-  private List<Template> batchGet(List<String> templateUuids, String accountId) {
+  @Override
+  public List<Template> batchGet(List<String> templateUuids, String accountId) {
     return wingsPersistence.createQuery(Template.class)
         .filter(Template.ACCOUNT_ID_KEY, accountId)
         .field(Template.ID_KEY)
@@ -1361,5 +1367,20 @@ public class TemplateServiceImpl implements TemplateService {
     BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, template.getType());
     BaseYaml yaml = yamlHandler.toYaml(template, template.getAppId());
     return YamlHelper.toYamlString(yaml);
+  }
+
+  @Override
+  public List<Template> getTemplatesByType(String accountId, String appId, TemplateType templateType) {
+    final Query<Template> query = wingsPersistence.createQuery(Template.class)
+                                      .field(TemplateKeys.accountId)
+                                      .equal(accountId)
+                                      .field(TemplateKeys.type)
+                                      .equal(templateType.toString());
+    if (StringUtils.isNotBlank(appId)) {
+      query.field(TemplateKeys.appId).equal(appId);
+    }
+    final List<Template> templates = query.asList();
+    templates.forEach(template -> setDetailsOfTemplate(template, null));
+    return templates;
   }
 }

@@ -28,6 +28,7 @@ import static software.wings.api.CloudProviderType.AWS;
 import static software.wings.api.CloudProviderType.GCP;
 import static software.wings.api.CloudProviderType.PHYSICAL_DATA_CENTER;
 import static software.wings.api.DeploymentType.AMI;
+import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -47,7 +48,11 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.beans.container.EcsServiceSpecification.ECS_REPLICA_SCHEDULING_STRATEGY;
 import static software.wings.beans.workflow.StepSkipStrategy.Scope.ALL_STEPS;
 import static software.wings.beans.workflow.StepSkipStrategy.Scope.SPECIFIC_STEPS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_DAEMON_SCHEDULING_STRATEGY;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_SERVICE;
+import static software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory.Category.GENERAL;
+import static software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory.Category.K8S_V2;
 import static software.wings.sm.StateType.AZURE_VMSS_ROLLBACK;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
@@ -1450,5 +1455,47 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         assertThat(phaseStep.getSteps().get(0).getType()).isEqualTo(expectedNames.get(index));
       }
     }
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGenerateNewPhaseStepsForCustomDeployment() {
+    WorkflowPhase workflowPhase = aWorkflowPhase().deploymentType(CUSTOM).build();
+    workflowServiceHelper.generateNewWorkflowPhaseSteps(APP_ID, ENV_ID, workflowPhase, false, BASIC, null);
+
+    assertThat(workflowPhase.getPhaseSteps()).hasSize(3);
+    assertThat(workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toSet()))
+        .containsExactly(PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP);
+    assertThat(workflowPhase.getPhaseSteps().stream().map(PhaseStep::getName).collect(Collectors.toList()))
+        .containsExactly(DEPLOY, WorkflowServiceHelper.VERIFY_SERVICE, WorkflowServiceHelper.WRAP_UP);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGenerateRollBackPhaseStepsForCustomDeployment() {
+    final WorkflowPhase workflowPhase = workflowServiceHelper.generateRollbackWorkflowPhase(
+        APP_ID, aWorkflowPhase().deploymentType(CUSTOM).build(), false, BASIC, null);
+
+    assertThat(workflowPhase.getPhaseSteps()).hasSize(1);
+    assertThat(workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList()))
+        .containsExactly(PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP);
+    assertThat(workflowPhase.getPhaseSteps().stream().map(PhaseStep::getName).collect(Collectors.toList()))
+        .containsExactly(ROLLBACK_SERVICE);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetCategory() {
+    assertThat(workflowServiceHelper.getCategory(null, null)).isEqualTo(GENERAL);
+    assertThat(workflowServiceHelper.getCategory(null, "")).isEqualTo(GENERAL);
+
+    doReturn(Service.builder().isK8sV2(true).build()).when(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+    assertThat(workflowServiceHelper.getCategory(APP_ID, SERVICE_ID)).isEqualTo(K8S_V2);
+
+    doReturn(Service.builder().build()).when(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+    assertThat(workflowServiceHelper.getCategory(APP_ID, SERVICE_ID)).isEqualTo(GENERAL);
   }
 }

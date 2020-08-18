@@ -20,7 +20,7 @@ public class TemplateHelperTest extends TemplateBaseTestHelper {
   @Category(UnitTests.class)
   public void test_mappedEntity() {
     final List<TemplateType> supportedTemplateTypes = Arrays.asList(TemplateType.HTTP, TemplateType.SHELL_SCRIPT,
-        TemplateType.ARTIFACT_SOURCE, TemplateType.SSH, TemplateType.PCF_PLUGIN);
+        TemplateType.ARTIFACT_SOURCE, TemplateType.SSH, TemplateType.PCF_PLUGIN, TemplateType.CUSTOM_DEPLOYMENT_TYPE);
     for (TemplateType supportedTemplateType : supportedTemplateTypes) {
       assertThat(TemplateHelper.mappedEntities(supportedTemplateType)).isNotNull();
     }

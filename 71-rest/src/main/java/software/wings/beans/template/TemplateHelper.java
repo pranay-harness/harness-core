@@ -8,6 +8,7 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.SECRETS_MANAGER;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -33,6 +34,7 @@ import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
@@ -45,9 +47,12 @@ import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.service.impl.command.CommandHelper;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +66,8 @@ import java.util.stream.Collectors;
 @Singleton
 public class TemplateHelper {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   public List<Class<? extends PersistentEntity>> lookupEntityClass(TemplateType templateType) {
     switch (templateType) {
@@ -73,6 +80,8 @@ public class TemplateHelper {
         return Collections.singletonList(Workflow.class);
       case ARTIFACT_SOURCE:
         return Collections.singletonList(ArtifactStream.class);
+      case CUSTOM_DEPLOYMENT_TYPE:
+        return Collections.emptyList();
       default:
         unhandled(templateType);
     }
@@ -90,12 +99,35 @@ public class TemplateHelper {
         return Collections.singletonList(WORKFLOW);
       case ARTIFACT_SOURCE:
         return Collections.singletonList(ARTIFACT_STREAM);
+      case CUSTOM_DEPLOYMENT_TYPE:
+        return Arrays.asList(SERVICE, INFRASTRUCTURE_DEFINITION);
       default:
         throw new InvalidArgumentsException(String.format("TemplateType [%s] is not supported", templateType), null);
     }
   }
 
-  public boolean templatesLinked(TemplateType templateType, List<String> templateUuids) {
+  private boolean serviceLinked(String accountId, TemplateType templateType, List<String> templateUuids) {
+    if (TemplateType.CUSTOM_DEPLOYMENT_TYPE == templateType) {
+      final List<Service> services = serviceResourceService.listByCustomDeploymentTypeId(accountId, templateUuids, 1);
+      if (isNotEmpty(services)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean infraDefinitionLinked(String accountId, TemplateType templateType, List<String> templateUuids) {
+    if (TemplateType.CUSTOM_DEPLOYMENT_TYPE == templateType) {
+      final List<InfrastructureDefinition> infraDefs =
+          infrastructureDefinitionService.listByCustomDeploymentTypeIds(accountId, templateUuids, 1);
+      if (isNotEmpty(infraDefs)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean templatesLinked(String accountId, TemplateType templateType, List<String> templateUuids) {
     if (isEmpty(templateUuids)) {
       return false;
     }
@@ -129,7 +161,10 @@ public class TemplateHelper {
       return templatesOfType != 0 && (linkedTemplates != 0 || templatesReferencedInOtherTemplates != 0);
     }
 
-    return templatesOfType != 0 && linkedTemplates != 0;
+    final boolean serviceLinked = serviceLinked(accountId, templateType, templateUuids);
+    final boolean infraDefinitionLinked = infraDefinitionLinked(accountId, templateType, templateUuids);
+
+    return (templatesOfType != 0 && linkedTemplates != 0) || serviceLinked || infraDefinitionLinked;
   }
 
   private String lookupLinkedTemplateField(TemplateType templateType, Class<? extends PersistentEntity> lookUpClass) {

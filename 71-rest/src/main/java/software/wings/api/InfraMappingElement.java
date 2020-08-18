@@ -3,12 +3,15 @@ package software.wings.api;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 @Builder
 public class InfraMappingElement {
   private Pcf pcf;
   private Kubernetes kubernetes;
   private Helm helm;
+  private Custom custom;
   private String name;
   private String infraId;
   private CloudProvider cloudProvider;
@@ -41,5 +44,11 @@ public class InfraMappingElement {
   @Builder
   public static class CloudProvider {
     private String name;
+  }
+
+  @Data
+  @Builder
+  public static class Custom {
+    private final Map<String, String> vars;
   }
 }

@@ -44,6 +44,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
@@ -72,6 +73,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   @Inject FeatureFlagService featureFlagService;
   @Inject ArtifactVariableYamlHelper artifactVariableYamlHelper;
   @Inject ServiceVariableYamlHelper serviceVariableYamlHelper;
+  @Inject private CustomDeploymentTypeService customDeploymentTypeService;
 
   @Override
   public Yaml toYaml(Service service, String appId) {
@@ -91,7 +93,10 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .configVariables(nameValuePairList)
                                   .applicationStack(applicationStack)
                                   .helmVersion(helmVersion);
-
+    if (isNotBlank(service.getDeploymentTypeTemplateId())) {
+      yamlBuilder.deploymentTypeTemplateUri(
+          customDeploymentTypeService.fetchDeploymentTemplateUri(service.getDeploymentTypeTemplateId()));
+    }
     Yaml yaml = yamlBuilder.build();
     updateYamlWithAdditionalInfo(service, appId, yaml);
 
@@ -152,6 +157,11 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     currentService.setName(serviceName);
     currentService.setDescription(yaml.getDescription());
     currentService.setConfigMapYaml(yaml.getConfigMapYaml());
+
+    if (isNotBlank(yaml.getDeploymentTypeTemplateUri())) {
+      currentService.setDeploymentTypeTemplateId(
+          customDeploymentTypeService.fetchDeploymentTemplateIdFromUri(accountId, yaml.getDeploymentTypeTemplateUri()));
+    }
 
     String applicationStack = yaml.getApplicationStack();
     if (isNotBlank(applicationStack)) {

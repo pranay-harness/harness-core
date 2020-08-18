@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -52,6 +53,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInf
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureKubernetesServiceYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureVMSSInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfrastructureYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.CustomInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetesEngineYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.InfrastructureDefinitionYamlHandler;
@@ -65,6 +67,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.File;
@@ -81,6 +84,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Mock private CustomDeploymentTypeService customDeploymentTypeService;
 
   @InjectMocks @Inject private InfrastructureDefinitionYamlHandler handler;
   @InjectMocks @Inject private AwsLambdaInfrastructureYamlHandler awsLambdaInfrastructureYamlHandler;
@@ -96,6 +100,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   @InjectMocks @Inject private PhysicalInfraYamlHandler physicalInfraYamlHandler;
   @InjectMocks @Inject private PhysicalInfraWinrmYamlHandler physicalInfraWinrmYamlHandler;
   @InjectMocks @Inject private AzureVMSSInfraYamlHandler azureVMSSInfraYamlHandler;
+  @InjectMocks @Inject private CustomInfrastructureYamlHandler customInfrastructureYamlHandler;
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Environments/"
       + "ENV_NAME/Infrastructure Definitions/infra-def.yaml";
@@ -124,6 +129,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     private static final String PHYSICAL_INFRA_WINRM = "physical_infra_winrm.yaml";
     private static final String PHYSICAL_INFRA_PROVISIONER = "physicalInfra_provisioner.yaml";
     private static final String DIRECT_KUBERNETES_PROVISIONER = "direct_kubernetes_provisioner.yaml";
+    private static final String CUSTOM_INFRA = "custom_infra.yaml";
   }
   private ArgumentCaptor<InfrastructureDefinition> captor = ArgumentCaptor.forClass(InfrastructureDefinition.class);
 
@@ -286,6 +292,21 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(azureVMSSInfraYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(validYamlInfraStructureFiles.AZURE_VMSS, InfrastructureType.AZURE_VMSS, DeploymentType.AZURE_VMSS,
         CloudProviderType.AZURE);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testCRUDAndGet_CustomInfra() throws IOException {
+    doReturn("Harness/My-Deployment-Types/My-Webshphere")
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplateUri("templateId");
+    doReturn("templateId")
+        .when(customDeploymentTypeService)
+        .fetchDeploymentTemplateIdFromUri(anyString(), eq("Harness/My-Deployment-Types/My-Webshphere"));
+    doReturn(customInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(validYamlInfraStructureFiles.CUSTOM_INFRA, InfrastructureType.CUSTOM_INFRASTRUCTURE, DeploymentType.CUSTOM,
+        CloudProviderType.CUSTOM);
   }
 
   private void testCRUD(String yamlFileName, String cloudProviderInfrastructureType, DeploymentType deploymentType,
