@@ -1,6 +1,7 @@
 package io.harness.git;
 
 import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.DiffRequest;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
@@ -18,8 +19,11 @@ public interface GitClientV2 {
 
   DiffResult diff(DiffRequest request);
 
-  void commitAndPush(CommitAndPushRequest request);
+  CommitAndPushResult commitAndPush(CommitAndPushRequest request);
+
   List<GitFile> fetchFilesByPath(FetchFilesByPathRequest request);
+
   void fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request);
+
   void downloadFiles(DownloadFilesRequest request);
 }

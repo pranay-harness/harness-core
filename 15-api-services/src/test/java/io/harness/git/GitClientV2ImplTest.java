@@ -1,10 +1,16 @@
 package io.harness.git;
 
+import static io.harness.git.model.ChangeType.ADD;
+import static io.harness.git.model.ChangeType.DELETE;
+import static io.harness.git.model.ChangeType.RENAME;
+import static io.harness.git.model.CommitAndPushRequest.commitAndPushRequestBuilder;
 import static io.harness.git.model.DiffRequest.diffRequestBuilder;
 import static io.harness.git.model.DownloadFilesRequest.downloadFilesRequestBuilder;
 import static io.harness.git.model.FetchFilesByPathRequest.fetchFilesByPathRequestBuilder;
+import static io.harness.git.model.PushResultGit.pushResultBuilder;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
@@ -17,15 +23,23 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
+import io.harness.git.model.CommitResult;
 import io.harness.git.model.DiffRequest;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
 import io.harness.git.model.FetchFilesByPathRequest;
 import io.harness.git.model.GitBaseRequest;
+import io.harness.git.model.GitFileChange;
+import io.harness.git.model.PushResultGit;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,11 +56,16 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class GitClientV2ImplTest extends CategoryTest {
@@ -289,5 +308,154 @@ public class GitClientV2ImplTest extends CategoryTest {
     assertThat(diffResult.getCommitTimeMs()).isNotNull();
     assertThat(diffResult.getGitFileChanges().size()).isEqualTo(2);
     assertThat(diffResult.getAccountId()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testApplyChangeSetOnFileSystem() throws Exception {
+    CommitAndPushRequest gitCommitAndPushRequest =
+        commitAndPushRequestBuilder().gitFileChanges(getSampleGitFileChanges()).build();
+
+    List<String> filesToAdd = new ArrayList<>();
+
+    String repoPath = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
+    File rootDirectory = new File(repoPath);
+    FileUtils.cleanDirectory(rootDirectory);
+    createLocalRepo(repoPath);
+    Git git = Git.open(rootDirectory);
+    // should not delete since files they are not tracked
+    gitClient.applyChangeSetOnFileSystem(repoPath, gitCommitAndPushRequest, filesToAdd, git);
+
+    Status status = git.status().call();
+    assertThat(status.getAdded()).hasSize(0);
+    assertThat(status.getRemoved()).hasSize(0);
+    assertThat(status.getUntracked()).isNotEmpty();
+
+    gitClient.applyGitAddCommand(gitCommitAndPushRequest, filesToAdd, git);
+    filesToAdd.clear();
+
+    status = git.status().call();
+    assertThat(status.getAdded().stream().map(filePath -> Paths.get(filePath).getFileName().toString()))
+        .containsExactlyInAnyOrderElementsOf(
+            gitCommitAndPushRequest.getGitFileChanges()
+                .stream()
+                .filter(gfc -> ADD == gfc.getChangeType())
+                .map(gitFileChange -> Paths.get(gitFileChange.getFilePath()).getFileName().toString())
+                .collect(Collectors.toSet()));
+
+    // should delete the required files
+    gitClient.applyChangeSetOnFileSystem(repoPath, gitCommitAndPushRequest, filesToAdd, git);
+
+    status = git.status().call();
+    assertThat(status.getRemoved()).isEmpty();
+    assertThat(status.getAdded().stream().map(filePath -> Paths.get(filePath).getFileName().toString()))
+        .doesNotContainAnyElementsOf(
+            gitCommitAndPushRequest.getGitFileChanges()
+                .stream()
+                .filter(gfc -> DELETE == gfc.getChangeType())
+                .map(gitFileChange -> Paths.get(gitFileChange.getFilePath()).getFileName().toString())
+                .collect(Collectors.toSet()));
+
+    doGitCommit(git);
+
+    // Test Rename
+    Path anyExistingFile = Files.list(Paths.get(repoPath)).findFirst().orElse(null);
+    assertThat(anyExistingFile).isNotNull();
+    String anyExistingFileName = anyExistingFile.getFileName().toString();
+    String newFileName = anyExistingFileName + "-new";
+    GitFileChange renameGitFileChange =
+        GitFileChange.builder().changeType(RENAME).oldFilePath(anyExistingFileName).filePath(newFileName).build();
+    gitCommitAndPushRequest.setGitFileChanges(asList(renameGitFileChange));
+
+    gitClient.applyChangeSetOnFileSystem(repoPath, gitCommitAndPushRequest, filesToAdd, git);
+
+    gitClient.applyGitAddCommand(gitCommitAndPushRequest, filesToAdd, git);
+    filesToAdd.clear();
+    status = git.status().call();
+    assertThat(status.getAdded()).containsExactly(newFileName);
+    assertThat(status.getRemoved()).containsExactly(anyExistingFileName);
+
+    // CleanUp
+    FileUtils.deleteQuietly(rootDirectory);
+  }
+
+  private void doGitCommit(Git git) throws Exception {
+    RevCommit revCommit = git.commit().setCommitter("dummy", "dummy@Dummy").setAll(true).setMessage("dummy").call();
+  }
+
+  private List<GitFileChange> getSampleGitFileChanges() {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+      gitFileChanges.add(GitFileChange.builder()
+                             .changeType(ADD)
+                             .filePath(i + ".txt")
+                             .fileContent(i + " " + System.currentTimeMillis())
+                             .build());
+    }
+    for (int i = 0; i < 10; i += 3) {
+      gitFileChanges.add(GitFileChange.builder().changeType(DELETE).filePath(i + ".txt").build());
+    }
+    logger.info(gitFileChanges.toString());
+    return gitFileChanges;
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testCommit() {
+    final CommitAndPushRequest commitAndPushRequest =
+        commitAndPushRequestBuilder().gitFileChanges(getSampleGitFileChanges()).build();
+    doNothing().when(gitClient).ensureRepoLocallyClonedAndUpdated(commitAndPushRequest);
+    doReturn(repoPath).when(gitClientHelper).getRepoDirectory(commitAndPushRequest);
+    final CommitResult commit = gitClient.commit(commitAndPushRequest);
+    git.rm();
+    assertThat(commit).isNotNull();
+    assertThat(commit.getCommitId()).isNotNull();
+    assertThat(commit.getCommitMessage()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testCommitAndPush() throws Exception {
+    doNothing().when(gitClient).updateRemoteOriginInConfig(any(), any());
+    List<GitFileChange> gitFileChanges = getSampleGitFileChanges();
+    CommitAndPushRequest gitCommitAndPushRequest = commitAndPushRequestBuilder().gitFileChanges(gitFileChanges).build();
+
+    PushResultGit toBeReturned = pushResultBuilder().refUpdate(PushResultGit.RefUpdate.builder().build()).build();
+    addRemote(repoPath);
+    doNothing().when(gitClient).ensureRepoLocallyClonedAndUpdated(gitCommitAndPushRequest);
+    doReturn(repoPath).when(gitClientHelper).getRepoDirectory(gitCommitAndPushRequest);
+    doReturn(toBeReturned).when(gitClient).push(gitCommitAndPushRequest);
+    git.rm();
+    final CommitAndPushResult commitAndPushResult = gitClient.commitAndPush(gitCommitAndPushRequest);
+    assertThat(commitAndPushResult).isNotNull();
+    assertThat(commitAndPushResult.getFilesCommittedToGit()).isNotNull();
+    assertThat(commitAndPushResult.getGitCommitResult()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testPush() {
+    doNothing().when(gitClient).updateRemoteOriginInConfig(any(), any());
+
+    GitFileChange gitFileChange = GitFileChange.builder().changeType(ADD).filePath(repoPath + "/1.txt").build();
+    CommitAndPushRequest gitCommitAndPushRequest =
+        commitAndPushRequestBuilder()
+            .gitFileChanges(Collections.singletonList(gitFileChange))
+            .accountId("accountId")
+            .branch("master")
+            .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+            .build();
+    doNothing().when(gitClient).ensureRepoLocallyClonedAndUpdated(gitCommitAndPushRequest);
+    doReturn(repoPath).when(gitClientHelper).getRepoDirectory(gitCommitAndPushRequest);
+    addRemote(repoPath);
+    git.rm();
+    final PushResultGit pushResultGit = gitClient.push(gitCommitAndPushRequest);
+    assertThat(pushResultGit).isNotNull();
+    assertThat(pushResultGit.getRefUpdate()).isNotNull();
+    assertThat(pushResultGit.getRefUpdate().getExpectedOldObjectId()).isNotNull();
   }
 }
