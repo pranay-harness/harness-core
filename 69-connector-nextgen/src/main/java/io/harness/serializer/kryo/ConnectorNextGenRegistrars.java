@@ -1,14 +1,8 @@
-package io.harness.serializer.morphia;
+package io.harness.serializer.kryo;
 
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.kryo.ApiServiceBeansKryoRegister;
-import io.harness.serializer.kryo.DelegateTasksBeansKryoRegister;
-import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
-import io.harness.serializer.kryo.NGCoreKryoRegistrar;
-import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
-import io.harness.serializer.kryo.SecretManagerClientKryoRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

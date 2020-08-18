@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.appdynamics;
 
+import io.harness.cvng.beans.appd.AppDynamicsTier;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -38,6 +39,9 @@ public interface AppdynamicsRestClient {
   Call<Set<AppdynamicsTier>> listTiers(
       @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
 
+  @GET("rest/applications/{appdynamicsAppId}/tiers?output=json")
+  Call<Set<AppDynamicsTier>> listTiersNg(
+      @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
   /**
    * Lists all the nodes of a tier and application in appdynamics
    *

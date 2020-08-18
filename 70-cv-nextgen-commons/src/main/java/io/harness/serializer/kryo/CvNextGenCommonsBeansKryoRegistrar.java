@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
@@ -14,6 +15,8 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.models.VerificationType;
 import io.harness.serializer.KryoRegistrar;
 
@@ -36,5 +39,8 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(MetricPackDTO.class, 9016);
     kryo.register(SplunkValidationResponse.class, 9017);
     kryo.register(SplunkValidationResponse.SampleLog.class, 9018);
+    kryo.register(DataCollectionConnectorBundle.class, 9019);
+    kryo.register(AppDynamicsApplication.class, 9020);
+    kryo.register(AppDynamicsTier.class, 9021);
   }
 }

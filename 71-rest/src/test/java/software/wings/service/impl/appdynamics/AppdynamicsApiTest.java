@@ -30,9 +30,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
+import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.task.DataCollectionExecutorService;
+import io.harness.encryption.SecretRefData;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
@@ -82,6 +86,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptionService encryptionService;
+  @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private RequestExecutor requestExecutor;
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -95,6 +100,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   public void setup() throws IllegalAccessException {
     delegateService = spy(new AppdynamicsDelegateServiceImpl());
     doReturn(appdynamicsRestClient).when(delegateService).getAppdynamicsRestClient(any(AppDynamicsConfig.class));
+    doReturn(appdynamicsRestClient).when(delegateService).getAppdynamicsRestClient(any(AppDynamicsConnectorDTO.class));
     when(delegateProxyFactory.get(eq(AppdynamicsDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(delegateService);
     doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
@@ -102,6 +108,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     FieldUtils.writeField(appdynamicsService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(appdynamicsResource, "appdynamicsService", appdynamicsService, true);
     FieldUtils.writeField(delegateService, "encryptionService", encryptionService, true);
+    FieldUtils.writeField(delegateService, "secretDecryptionService", secretDecryptionService, true);
     FieldUtils.writeField(delegateService, "delegateLogService", delegateLogService, true);
     FieldUtils.writeField(delegateService, "requestExecutor", requestExecutor, true);
     FieldUtils.writeField(delegateService, "dataCollectionService", dataCollectionService, true);
@@ -344,8 +351,20 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         AppdynamicsApiTest.class.getResource("/appdynamics/app-dynamics-metric-packs-list.yaml"), Charsets.UTF_8);
     final List<MetricPackDTO> metricPacks = yamlUtils.read(metricPackYaml, new TypeReference<List<MetricPackDTO>>() {});
 
-    final Set<AppdynamicsValidationResponse> metricPacksData = appdynamicsService.getMetricPackData(
-        accountId, generateUuid(), saveAppdynamicsConfig(), 100, 200, generateUuid(), metricPacks);
+    final Set<AppdynamicsValidationResponse> metricPacksData =
+        appdynamicsService.getMetricPackData(accountId, generateUuid(), 100, 200, generateUuid(),
+            AppdynamicsMetricPackDataValidationRequest.builder()
+                .connector(AppDynamicsConnectorDTO.builder()
+                               .controllerUrl("https://www.google.com")
+                               .accountname(generateUuid())
+                               .username(generateUuid())
+                               .passwordRef(SecretRefData.builder()
+                                                .identifier(generateUuid())
+                                                .decryptedValue(generateUuid().toCharArray())
+                                                .build())
+                               .build())
+                .metricPacks(metricPacks)
+                .build());
     assertThat(metricPacksData.size()).isEqualTo(metricPacks.size());
     metricPacksData.forEach(metricPackData -> {
       if (metricPackData.getMetricPackName().equals(PERFORMANCE_PACK_IDENTIFIER)) {

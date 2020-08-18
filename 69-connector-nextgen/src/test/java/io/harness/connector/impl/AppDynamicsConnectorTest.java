@@ -13,6 +13,8 @@ import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsCo
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   ConnectorDTO connectorDTO;
   AppDynamicsConnector connector;
   String accountIdentifier = "accountIdentifier";
+  String secretIdentifier = "secretIdentifier";
   @Rule public ExpectedException expectedEx = ExpectedException.none();
 
   @Before
@@ -57,18 +60,20 @@ public class AppDynamicsConnectorTest extends CategoryTest {
                     .accountId(accountIdentifier)
                     .accountname(accountName)
                     .controllerUrl(controllerUrl)
-                    .passwordReference(password)
+                    .passwordRef(password)
                     .build();
     connector.setType(APP_DYNAMICS);
     connector.setIdentifier(identifier);
     connector.setName(name);
+
+    SecretRefData secretRefData = SecretRefData.builder().identifier(secretIdentifier).scope(Scope.ACCOUNT).build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
                                                           .username(userName)
                                                           .accountId(accountIdentifier)
                                                           .accountname(accountName)
                                                           .controllerUrl(controllerUrl)
-                                                          .passwordReference(password)
+                                                          .passwordRef(secretRefData)
                                                           .build();
 
     connectorRequestDTO = ConnectorRequestDTO.builder()
@@ -120,7 +125,9 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = (AppDynamicsConnectorDTO) connectorDTOOutput.getConnectorConfig();
     assertThat(appDynamicsConnectorDTO).isNotNull();
     assertThat(appDynamicsConnectorDTO.getUsername()).isEqualTo(userName);
-    assertThat(appDynamicsConnectorDTO.getPasswordReference()).isEqualTo(password);
+    assertThat(appDynamicsConnectorDTO.getPasswordRef()).isNotNull();
+    assertThat(appDynamicsConnectorDTO.getPasswordRef().getIdentifier()).isEqualTo(secretIdentifier);
+    assertThat(appDynamicsConnectorDTO.getPasswordRef().getScope()).isEqualTo(Scope.ACCOUNT);
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(accountName);
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(controllerUrl);
     assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(accountIdentifier);

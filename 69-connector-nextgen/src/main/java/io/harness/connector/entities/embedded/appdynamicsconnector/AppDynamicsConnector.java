@@ -17,8 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class AppDynamicsConnector extends Connector {
   private String username;
   private String accountname;
-  private char[] password;
-  private String passwordReference;
+  private String passwordRef;
   private String controllerUrl;
   private String accountId;
 }

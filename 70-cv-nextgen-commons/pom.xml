@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>66-cv-nextgen-commons</artifactId>
+    <artifactId>70-cv-nextgen-commons</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -25,6 +25,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>24-common-entities</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>69-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

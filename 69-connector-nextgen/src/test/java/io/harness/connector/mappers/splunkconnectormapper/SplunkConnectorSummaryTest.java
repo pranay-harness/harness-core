@@ -33,7 +33,7 @@ public class SplunkConnectorSummaryTest extends CategoryTest {
 
     SplunkConnector splunkConnector = SplunkConnector.builder()
                                           .username(username)
-                                          .passwordReference(encryptedPassword)
+                                          .passwordRef(encryptedPassword)
                                           .splunkUrl(splunkUrl)
                                           .accountId(accountId)
                                           .build();

@@ -28,14 +28,14 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateAppDynamicsConnectorDTO() {
     String username = "username";
-    String encryptedPassword = "encryptedPassword";
+    String passwordRef = "passwordRef";
     String accountname = "accountname";
     String controllerUrl = "controllerUrl";
     String accountId = "accountId";
 
     AppDynamicsConnector appDynamicsConnector = AppDynamicsConnector.builder()
                                                     .username(username)
-                                                    .passwordReference(encryptedPassword)
+                                                    .passwordRef(passwordRef)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
                                                     .accountId(accountId)
@@ -44,7 +44,9 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
     assertThat(appDynamicsConnectorDTO).isNotNull();
     assertThat(appDynamicsConnectorDTO.getUsername()).isEqualTo(appDynamicsConnector.getUsername());
-    assertThat(appDynamicsConnectorDTO.getPasswordReference()).isEqualTo(appDynamicsConnector.getPasswordReference());
+    assertThat(appDynamicsConnectorDTO.getPasswordRef()).isNotNull();
+    assertThat(appDynamicsConnectorDTO.getPasswordRef().getIdentifier())
+        .isEqualTo(appDynamicsConnector.getPasswordRef());
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl());
     assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(appDynamicsConnector.getAccountId());

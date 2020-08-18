@@ -9,7 +9,10 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
@@ -91,10 +94,32 @@ public class AppdynamicsResource {
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
       @QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("connectorId") @NotNull String connectorId, @QueryParam("appdAppId") @NotNull long appdAppId,
-      @QueryParam("appdTierId") @NotNull long appdTierId, @QueryParam("requestGuid") @NotNull String requestGuid,
-      @NotNull @Valid @Body List<MetricPackDTO> metricPacks) {
+      @QueryParam("appdAppId") @NotNull long appdAppId, @QueryParam("appdTierId") @NotNull long appdTierId,
+      @QueryParam("requestGuid") @NotNull String requestGuid,
+      @NotNull @Valid @Body AppdynamicsMetricPackDataValidationRequest validationRequest) {
     return new RestResponse<>(appdynamicsService.getMetricPackData(
-        accountId, projectIdentifier, connectorId, appdAppId, appdTierId, requestGuid, metricPacks));
+        accountId, projectIdentifier, appdAppId, appdTierId, requestGuid, validationRequest));
+  }
+
+  @POST
+  @Path("/applications-ng")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @ExposeInternalException(withStackTrace = true)
+  public RestResponse<List<AppDynamicsApplication>> getAllApplications(
+      @QueryParam("accountId") String accountId, AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
+    return new RestResponse<>(appdynamicsService.getApplications(appDynamicsConnectorDTO));
+  }
+
+  @POST
+  @Path("/tiers-ng")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @ExposeInternalException(withStackTrace = true)
+  public RestResponse<Set<AppDynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
+      @QueryParam("appDynamicsAppId") Long appDynamicsAppId, AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
+    return new RestResponse<>(appdynamicsService.getTiers(appDynamicsAppId, appDynamicsConnectorDTO));
   }
 }

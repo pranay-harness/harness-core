@@ -7,6 +7,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +33,10 @@ public class SplunkDTOToEntityTest extends CategoryTest {
     String splunkUrl = "splunkUrl";
     String accountId = "accountId";
 
+    SecretRefData secretRefData = SecretRefData.builder().identifier(encryptedPassword).scope(Scope.ACCOUNT).build();
     SplunkConnectorDTO splunkConnectorDTO = SplunkConnectorDTO.builder()
                                                 .username(username)
-                                                .passwordReference(encryptedPassword)
+                                                .passwordRef(secretRefData)
                                                 .splunkUrl(splunkUrl)
                                                 .accountId(accountId)
                                                 .build();
@@ -41,7 +44,9 @@ public class SplunkDTOToEntityTest extends CategoryTest {
     SplunkConnector splunkConnector = splunkDTOToEntity.toConnectorEntity(splunkConnectorDTO);
     assertThat(splunkConnector).isNotNull();
     assertThat(splunkConnector.getUsername()).isEqualTo(splunkConnectorDTO.getUsername());
-    assertThat(splunkConnector.getPasswordReference()).isEqualTo(splunkConnectorDTO.getPasswordReference());
+    assertThat(splunkConnector.getPasswordRef()).isNotNull();
+    assertThat(splunkConnector.getPasswordRef())
+        .isEqualTo("acc." + splunkConnectorDTO.getPasswordRef().getIdentifier());
     assertThat(splunkConnector.getSplunkUrl()).isEqualTo(splunkConnectorDTO.getSplunkUrl());
     assertThat(splunkConnector.getAccountId()).isEqualTo(splunkConnectorDTO.getAccountId());
   }

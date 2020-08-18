@@ -1,8 +1,8 @@
 package io.harness.cvng.perpetualtask;
 
-import java.util.Map;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 
 public interface CVDataCollectionTaskService {
-  String create(String accountId, Map<String, String> params);
+  String create(String accountId, DataCollectionConnectorBundle bundle);
   void delete(String accountId, String taskId);
 }

@@ -802,17 +802,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>66-cv-nextgen-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>68-cd-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>69-connector-nextgen</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>70-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

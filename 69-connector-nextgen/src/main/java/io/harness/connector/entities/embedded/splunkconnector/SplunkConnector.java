@@ -16,8 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.splunkconnector.SplunkConnector")
 public class SplunkConnector extends Connector {
   private String username;
-  private char[] password;
-  private String passwordReference;
+  private String passwordRef;
   private String splunkUrl;
   private String accountId;
 }
