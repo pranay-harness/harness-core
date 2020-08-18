@@ -69,6 +69,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
@@ -425,7 +426,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query -> query.filter(AnalysisContextKeys.cvTasksCreated, false))
-            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceRequiredProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
