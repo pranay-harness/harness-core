@@ -7,6 +7,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -17,6 +18,8 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.beans.DelegateProfileScopingRule.DelegateProfileScopingRuleKeys;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -122,8 +125,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
 
     List<String> taskSelectors = extractSelectors(task);
+    boolean canAssign = canAssignDelegateScopes(batch, delegate, task)
+        && canAssignDelegateProfileScopes(delegate, task.getSetupAbstractions())
+        && canAssignSelectors(batch, delegate, taskSelectors);
 
-    boolean canAssign = canAssignScopes(batch, delegate, task) && canAssignSelectors(batch, delegate, taskSelectors);
     if (canAssign) {
       delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
     }
@@ -151,24 +156,64 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   @Override
   public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId,
-      String envId, String infraMappingId, TaskGroup taskGroup, List<String> tags) {
+      String envId, String infraMappingId, TaskGroup taskGroup, List<String> tags,
+      Map<String, String> taskSetupAbstractions) {
     Delegate delegate = delegateService.get(accountId, delegateId, false);
     if (delegate == null) {
       return false;
     }
-    return canAssignScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
-        && canAssignSelectors(batch, delegate, tags);
+    return canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
+        && canAssignDelegateProfileScopes(delegate, taskSetupAbstractions) && canAssignSelectors(batch, delegate, tags);
   }
 
-  private boolean canAssignScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {
+  private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {
     TaskGroup taskGroup =
         isNotBlank(task.getData().getTaskType()) ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup() : null;
-    return canAssignScopes(
+    return canAssignDelegateScopes(
         batch, delegate, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(), taskGroup);
   }
 
-  private boolean canAssignScopes(BatchDelegateSelectionLog batch, Delegate delegate, String appId, String envId,
-      String infraMappingId, TaskGroup taskGroup) {
+  @VisibleForTesting
+  protected boolean canAssignDelegateProfileScopes(Delegate delegate, Map<String, String> taskSetupAbstractions) {
+    if (isEmpty(taskSetupAbstractions)) {
+      logger.warn(
+          "No setup abstractions have been passed in from delegate task. Considering this delegate profile matched");
+      return true;
+    }
+
+    List<DelegateProfileScopingRule> delegateProfileScopingRules =
+        wingsPersistence.createQuery(DelegateProfileScopingRule.class)
+            .filter(DelegateProfileScopingRuleKeys.accountId, delegate.getAccountId())
+            .filter(DelegateProfileScopingRuleKeys.delegateProfileId, delegate.getDelegateProfileId())
+            .asList();
+
+    if (isEmpty(delegateProfileScopingRules)) {
+      // selectionlogs here - matched-no scoping rules found for profile xxx
+      return true;
+    }
+
+    for (DelegateProfileScopingRule scopingRule : delegateProfileScopingRules) {
+      boolean scopingRuleMatched = true;
+      for (Map.Entry<String, String> setupAbstraction : taskSetupAbstractions.entrySet()) {
+        Set<String> entityIds = scopingRule.getScopingEntities().get(setupAbstraction.getKey());
+        if (isNotEmpty(entityIds) && !entityIds.contains(setupAbstraction.getValue())) {
+          scopingRuleMatched = false;
+          break;
+        }
+      }
+
+      if (scopingRuleMatched) {
+        // selectionlogs here - matched-scope name yyyy from profile xxxx
+        return true;
+      }
+    }
+
+    // selectionlogs here - not matched-no matching rules found for profile xxxx
+    return false;
+  }
+
+  private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, String appId,
+      String envId, String infraMappingId, TaskGroup taskGroup) {
     List<DelegateScope> includeScopes = new ArrayList<>();
 
     if (isNotEmpty(delegate.getIncludeScopes())) {
@@ -458,7 +503,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateId, false);
           if (delegate != null) {
             msg.append(" ===> ").append(delegate.getHostName()).append(": ");
-            boolean canAssignScope = canAssignScopes(null, delegate, delegateTask);
+            boolean canAssignScope = canAssignDelegateScopes(null, delegate, delegateTask);
             boolean canAssignTags = canAssignSelectors(null, delegate, delegateTask.getTags());
             if (!canAssignScope) {
               msg.append("Not in scope");

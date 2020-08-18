@@ -40,7 +40,9 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
@@ -69,7 +71,6 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
-import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
@@ -79,15 +80,14 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Created by brett on 7/26/17
- */
 public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private DelegateService delegateService;
@@ -95,7 +95,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
 
-  @Inject @InjectMocks private AssignDelegateService assignDelegateService;
+  @Inject @InjectMocks private AssignDelegateServiceImpl assignDelegateService;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
@@ -114,7 +114,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Value
   @Builder
-  public static class ScopeTestData {
+  public static class DelegateScopeTestData {
     List<DelegateScope> excludeScopes;
     List<DelegateScope> includeScopes;
     boolean assignable;
@@ -125,17 +125,17 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void assignByScopes() {
-    List<ScopeTestData> tests =
-        ImmutableList.<ScopeTestData>builder()
-            .add(ScopeTestData.builder()
+  public void testAssignByDelegateScopes() {
+    List<DelegateScopeTestData> tests =
+        ImmutableList.<DelegateScopeTestData>builder()
+            .add(DelegateScopeTestData.builder()
                      .excludeScopes(emptyList())
                      .includeScopes(emptyList())
                      .assignable(true)
                      .numOfNoIncludeScopeMatchedInvocations(0)
                      .numOfExcludeScopeMatchedInvocations(0)
                      .build())
-            .add(ScopeTestData.builder()
+            .add(DelegateScopeTestData.builder()
                      .excludeScopes(emptyList())
                      .includeScopes(
                          ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
@@ -143,7 +143,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .numOfNoIncludeScopeMatchedInvocations(0)
                      .numOfExcludeScopeMatchedInvocations(0)
                      .build())
-            .add(ScopeTestData.builder()
+            .add(DelegateScopeTestData.builder()
                      .excludeScopes(
                          ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                      .includeScopes(
@@ -152,7 +152,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .numOfNoIncludeScopeMatchedInvocations(0)
                      .numOfExcludeScopeMatchedInvocations(0)
                      .build())
-            .add(ScopeTestData.builder()
+            .add(DelegateScopeTestData.builder()
                      .excludeScopes(
                          ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
                      .includeScopes(
@@ -161,7 +161,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .numOfNoIncludeScopeMatchedInvocations(0)
                      .numOfExcludeScopeMatchedInvocations(1)
                      .build())
-            .add(ScopeTestData.builder()
+            .add(DelegateScopeTestData.builder()
                      .excludeScopes(
                          ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                      .includeScopes(emptyList())
@@ -169,7 +169,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .numOfNoIncludeScopeMatchedInvocations(0)
                      .numOfExcludeScopeMatchedInvocations(1)
                      .build())
-            .add(ScopeTestData.builder()
+            .add(DelegateScopeTestData.builder()
                      .excludeScopes(
                          ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
                      .includeScopes(emptyList())
@@ -177,7 +177,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .numOfNoIncludeScopeMatchedInvocations(0)
                      .numOfExcludeScopeMatchedInvocations(2)
                      .build())
-            .add(ScopeTestData.builder()
+            .add(DelegateScopeTestData.builder()
                      .excludeScopes(emptyList())
                      .includeScopes(
                          ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
@@ -196,7 +196,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
 
-    for (ScopeTestData test : tests) {
+    for (DelegateScopeTestData test : tests) {
       Delegate delegate =
           delegateBuilder.includeScopes(test.getIncludeScopes()).excludeScopes(test.getExcludeScopes()).build();
       when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
@@ -210,6 +210,155 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
           .logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfExcludeScopeMatchedInvocations()))
           .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
+    }
+  }
+
+  @Value
+  @Builder
+  public static class DelegateProfileScopeTestData {
+    Delegate delegate;
+    DelegateTask task;
+    List<DelegateProfileScopingRule> scopingRules;
+    boolean assignable;
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testAssignByDelegateProfileScopes() {
+    String accountId = generateUuid();
+
+    Map<String, Set<String>> scopingRulesMap1 = new HashMap<>();
+    scopingRulesMap1.put("k1", new HashSet<>(singletonList("yy")));
+
+    Map<String, Set<String>> scopingRulesMap2 = new HashMap<>();
+    scopingRulesMap2.put("k2", new HashSet<>(singletonList("yy")));
+
+    Map<String, Set<String>> scopingRulesMap3 = new HashMap<>();
+    scopingRulesMap3.put("k1", new HashSet<>(Arrays.asList("v11", "v12", "v13")));
+    scopingRulesMap3.put("k2", new HashSet<>(Arrays.asList("v21", "v22")));
+    scopingRulesMap3.put("k3", new HashSet<>(singletonList("v31")));
+
+    Map<String, Set<String>> scopingRulesMap4 = new HashMap<>();
+    scopingRulesMap4.put("k1", emptySet());
+
+    List<DelegateProfileScopeTestData> tests =
+        ImmutableList.<DelegateProfileScopeTestData>builder()
+            .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder().accountId(accountId).uuid(generateUuid()).build())
+                     .task(DelegateTask.builder()
+                               .accountId(accountId)
+                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .build())
+                     .scopingRules(null)
+                     .assignable(true)
+                     .build())
+            .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .delegateProfileId(generateUuid())
+                                   .build())
+                     .task(DelegateTask.builder()
+                               .accountId(accountId)
+                               .setupAbstraction("k1", "v1")
+                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .build())
+                     .scopingRules(null)
+                     .assignable(true)
+                     .build())
+            .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .delegateProfileId(generateUuid())
+                                   .build())
+                     .task(DelegateTask.builder()
+                               .accountId(accountId)
+                               .setupAbstraction("k0", "v0")
+                               .setupAbstraction("k1", "v1")
+                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .build())
+                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
+                                                     .accountId(accountId)
+                                                     .scopingEntities(scopingRulesMap1)
+                                                     .build()))
+                     .assignable(false)
+                     .build())
+            .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .delegateProfileId(generateUuid())
+                                   .build())
+                     .task(DelegateTask.builder()
+                               .accountId(accountId)
+                               .setupAbstraction("k1", "v1")
+                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .build())
+                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
+                                                     .accountId(accountId)
+                                                     .scopingEntities(scopingRulesMap2)
+                                                     .build()))
+                     .assignable(true)
+                     .build())
+            .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .delegateProfileId(generateUuid())
+                                   .build())
+                     .task(DelegateTask.builder()
+                               .accountId(accountId)
+                               .setupAbstraction("k1", "v13")
+                               .setupAbstraction("k2", "v22")
+                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .build())
+                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
+                                                     .accountId(accountId)
+                                                     .scopingEntities(scopingRulesMap2)
+                                                     .build(),
+                         DelegateProfileScopingRule.builder()
+                             .accountId(accountId)
+                             .scopingEntities(scopingRulesMap3)
+                             .build()))
+                     .assignable(true)
+                     .build())
+            .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .delegateProfileId(generateUuid())
+                                   .build())
+                     .task(DelegateTask.builder()
+                               .accountId(accountId)
+                               .setupAbstraction("k1", "v13")
+                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .build())
+                     .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
+                                                     .accountId(accountId)
+                                                     .scopingEntities(scopingRulesMap4)
+                                                     .build()))
+                     .assignable(true)
+                     .build())
+            .build();
+
+    for (DelegateProfileScopeTestData test : tests) {
+      when(delegateService.get(accountId, test.getDelegate().getUuid(), false)).thenReturn(test.getDelegate());
+
+      if (EmptyPredicate.isNotEmpty(test.getScopingRules())) {
+        wingsPersistence.save(test.getScopingRules()
+                                  .stream()
+                                  .map(scopingRule -> {
+                                    scopingRule.setDelegateProfileId(test.getDelegate().getDelegateProfileId());
+                                    return scopingRule;
+                                  })
+                                  .collect(Collectors.toList()));
+      }
+
+      BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(test.getTask().getUuid()).build();
+      assertThat(assignDelegateService.canAssign(batch, test.getDelegate().getUuid(), test.getTask()))
+          .isEqualTo(test.isAssignable());
     }
   }
 
