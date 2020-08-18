@@ -4,6 +4,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.IVAN;
@@ -38,6 +39,7 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
@@ -335,10 +337,37 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
 
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(APP_ID, workflowPhase, true);
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(APP_ID, workflowPhase, true, false);
     verifyPhase(workflowPhase,
         asList(new String[] {ECS_BG_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name(), null, ECS_LISTENER_UPDATE.name()}),
         5);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testGenerateNewWorkflowPhaseStepsForECS_BG_addProvisionStep() {
+    doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
+        .when(serviceResourceService)
+        .getWithDetails(anyString(), anyString());
+
+    EcsServiceSpecification specification = EcsServiceSpecification.builder().build();
+    specification.setServiceSpecJson(null);
+    specification.setSchedulingStrategy(ECS_REPLICA_SCHEDULING_STRATEGY);
+    doReturn(specification).when(serviceResourceService).getEcsServiceSpecification(anyString(), anyString());
+
+    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreen(APP_ID, workflowPhase, true, true);
+    verifyPhase(workflowPhase,
+        asList(new String[] {
+            null, ECS_BG_SERVICE_SETUP.name(), ECS_SERVICE_DEPLOY.name(), null, ECS_LISTENER_UPDATE.name()}),
+        6);
+    List<PhaseStepType> phaseStepTypes =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypes)
+        .containsExactly(PhaseStepType.PROVISION_INFRASTRUCTURE, PhaseStepType.CONTAINER_SETUP,
+            PhaseStepType.CONTAINER_DEPLOY, VERIFY_SERVICE, ECS_UPDATE_LISTENER_BG, WRAP_UP);
   }
 
   @Test
@@ -1113,7 +1142,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     // mock
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(ecsService);
 
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(APP_ID, workflowPhase, true);
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(APP_ID, workflowPhase, true, false);
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
