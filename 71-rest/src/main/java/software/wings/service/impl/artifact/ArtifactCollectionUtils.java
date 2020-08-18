@@ -498,6 +498,10 @@ public class ArtifactCollectionUtils {
             .accountId(customArtifactStream.getAccountId())
             .appId(customArtifactStream.getAppId())
             .mode(CASCADING)
+            .twoPhaseEnabled(featureFlagService.isEnabled(
+                FeatureName.TWO_PHASE_SECRET_DECRYPTION, customArtifactStream.getAccountId()))
+            .threePhaseEnabled(featureFlagService.isEnabled(
+                FeatureName.THREE_PHASE_SECRET_DECRYPTION, customArtifactStream.getAccountId()))
             .build());
 
     // Find the FETCH VERSION Script from artifact stream

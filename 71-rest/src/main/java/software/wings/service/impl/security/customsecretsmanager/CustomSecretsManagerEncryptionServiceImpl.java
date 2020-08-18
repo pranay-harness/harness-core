@@ -7,10 +7,12 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecordData;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.FeatureName;
 import software.wings.expression.SecretFunctor;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -25,15 +27,18 @@ public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsM
   private SecretManager secretManager;
   private ManagerDecryptionService managerDecryptionService;
   private ExpressionEvaluator expressionEvaluator;
+  private FeatureFlagService featureFlagService;
 
   @Inject
   public CustomSecretsManagerEncryptionServiceImpl(
       CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper, SecretManager secretManager,
-      ManagerDecryptionService managerDecryptionService, ExpressionEvaluator expressionEvaluator) {
+      ManagerDecryptionService managerDecryptionService, ExpressionEvaluator expressionEvaluator,
+      FeatureFlagService featureFlagService) {
     this.customSecretsManagerConnectorHelper = customSecretsManagerConnectorHelper;
     this.secretManager = secretManager;
     this.managerDecryptionService = managerDecryptionService;
     this.expressionEvaluator = expressionEvaluator;
+    this.featureFlagService = featureFlagService;
   }
 
   public EncryptedDataDetail buildEncryptedDataDetail(
@@ -81,6 +86,8 @@ public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsM
             .managerDecryptionService(managerDecryptionService)
             .secretManager(secretManager)
             .accountId(accountId)
+            .twoPhaseEnabled(featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, accountId))
+            .threePhaseEnabled(featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, accountId))
             .build());
     return expressionEvaluator.substitute(script, context);
   }

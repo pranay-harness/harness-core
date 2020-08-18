@@ -17,6 +17,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
@@ -100,6 +101,7 @@ public class DeploymentSummary extends Base {
   private K8sDeploymentKey k8sDeploymentKey;
   private SpotinstAmiDeploymentKey spotinstAmiDeploymentKey;
   private AwsLambdaDeploymentKey awsLambdaDeploymentKey;
+  private CustomDeploymentKey customDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,

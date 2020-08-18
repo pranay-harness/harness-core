@@ -1805,6 +1805,8 @@ public class DelegateServiceImpl implements DelegateService {
                 .managerDecryptionService(managerDecryptionService)
                 .secretManager(secretManager)
                 .accountId(accountId)
+                .twoPhaseEnabled(featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, accountId))
+                .threePhaseEnabled(featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, accountId))
                 .build());
         String scriptContent = evaluator.substitute(profile.getStartupScript(), context);
         return DelegateProfileParams.builder()

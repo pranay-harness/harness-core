@@ -7,6 +7,7 @@ import static io.harness.beans.SearchFilter.Operator.LT;
 import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.SortOrder.OrderType.ASC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.util.Arrays.asList;
 
@@ -27,6 +28,8 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey.CustomDeploymentFieldKeys;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
@@ -159,6 +162,12 @@ public class DeploymentServiceImpl implements DeploymentService {
       query.filter("awsLambdaDeploymentKey.functionName", awsLambdaDeploymentKey.getFunctionName());
       query.filter("awsLambdaDeploymentKey.version", awsLambdaDeploymentKey.getVersion());
       return awsLambdaDeploymentKey;
+    } else if (deploymentSummary.getCustomDeploymentKey() != null) {
+      CustomDeploymentKey customDeploymentKey = deploymentSummary.getCustomDeploymentKey();
+      query.filter(
+          join(".", DeploymentSummaryKeys.customDeploymentKey, CustomDeploymentFieldKeys.instanceFetchScriptHash),
+          customDeploymentKey.getInstanceFetchScriptHash());
+      return customDeploymentKey;
     } else {
       String msg = "Either AMI, CodeDeploy, container or pcf deployment key needs to be set";
       logger.error(msg);

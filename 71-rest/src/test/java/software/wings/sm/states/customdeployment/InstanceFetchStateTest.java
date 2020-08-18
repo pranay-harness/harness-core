@@ -139,6 +139,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void handleAsyncResponse() {
     doReturn(InstanceFetchStateExecutionData.builder()
+                 .activityId(ACTIVITY_ID)
                  .hostObjectArrayPath("Instances")
                  .hostAttributes(ImmutableMap.of("hostname", "ip"))
                  .build())
@@ -203,6 +204,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void handleAsyncResponseFailure() {
     doReturn(InstanceFetchStateExecutionData.builder()
+                 .activityId(ACTIVITY_ID)
                  .hostObjectArrayPath("Instances")
                  .hostAttributes(ImmutableMap.of("hostname", "ip"))
                  .build())
@@ -233,7 +235,9 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                                                         .build();
     String output = readFile("Instances.json");
 
-    final List<InstanceElement> instanceElements = state.mapJsonToInstanceElements(executionData, output);
+    final List<InstanceElement> instanceElements =
+        InstanceElementMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+            executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper);
 
     assertThat(instanceElements).hasSize(2);
     assertThat(instanceElements.stream().map(InstanceElement::getHostName).collect(Collectors.toList()))

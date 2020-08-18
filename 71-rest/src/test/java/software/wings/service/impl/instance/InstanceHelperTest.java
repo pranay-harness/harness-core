@@ -168,6 +168,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private AzureInstanceHandler azureInstanceHandler;
   @InjectMocks @Inject private SpotinstAmiInstanceHandler spotinstAmiInstanceHandler;
   @InjectMocks @Inject private AwsLambdaInstanceHandler awsLambdaInstanceHandler;
+  @InjectMocks @Inject private CustomDeploymentInstanceHandler customDeploymentInstanceHandler;
 
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
@@ -890,7 +891,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testManualSyncSuccess() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
         awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler,
-        azureInstanceHandler, spotinstAmiInstanceHandler, awsLambdaInstanceHandler));
+        azureInstanceHandler, spotinstAmiInstanceHandler, awsLambdaInstanceHandler, customDeploymentInstanceHandler));
     FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
@@ -951,7 +952,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testManualSyncFailure() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
         awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler,
-        azureInstanceHandler, spotinstAmiInstanceHandler, awsLambdaInstanceHandler));
+        azureInstanceHandler, spotinstAmiInstanceHandler, awsLambdaInstanceHandler, customDeploymentInstanceHandler));
     FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
