@@ -11,6 +11,7 @@ import org.springframework.batch.core.Job;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -31,7 +32,7 @@ public enum BatchJobType {
   INSTANCE_BILLING(750, 1, ChronoUnit.DAYS, Arrays.asList(ECS_UTILIZATION, K8S_UTILIZATION), IN_CLUSTER),
   ACTUAL_IDLE_COST_BILLING(800, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER),
   UNALLOCATED_BILLING(850, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER),
-  K8S_WORKLOAD_RECOMMENDATION(875, 1, ChronoUnit.DAYS, Arrays.asList(K8S_EVENT, INSTANCE_BILLING), IN_CLUSTER),
+  K8S_WORKLOAD_RECOMMENDATION(875, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_EVENT), IN_CLUSTER),
   CE_SEGMENT_CALL(900, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING, UNALLOCATED_BILLING), OTHERS);
 
   // Specifies order in which the jobs are to be run

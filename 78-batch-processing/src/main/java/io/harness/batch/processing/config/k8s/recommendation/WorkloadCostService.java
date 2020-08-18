@@ -23,10 +23,20 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 @Service
 public class WorkloadCostService {
+  /**
+   *  1,6-accountId
+   *  2,7-clusterId
+   *  3,8-namespace
+   *  4,9-workloadtype
+   *  5,10-workloadname
+   *  11 - startInclusive
+   */
   @VisibleForTesting
-  static final String WORKLOAD_COST_QUERY = "SELECT SUM(CPUBILLINGAMOUNT), SUM(MEMORYBILLINGAMOUNT)"
+  static final String LAST_AVAILABLE_DAY_COST = "SELECT SUM(CPUBILLINGAMOUNT), SUM(MEMORYBILLINGAMOUNT)"
       + "FROM BILLING_DATA WHERE INSTANCETYPE = 'K8S_POD' AND ACCOUNTID = ? AND CLUSTERID = ? AND NAMESPACE = ? "
-      + "AND WORKLOADTYPE = ? AND WORKLOADNAME = ? AND STARTTIME >= ? AND STARTTIME < ?";
+      + "AND WORKLOADTYPE = ? AND WORKLOADNAME = ? AND STARTTIME = "
+      + "(SELECT MAX(STARTTIME) FROM BILLING_DATA WHERE INSTANCETYPE = 'K8S_POD' AND ACCOUNTID = ? AND CLUSTERID = ? "
+      + "AND NAMESPACE = ? AND WORKLOADTYPE = ? AND WORKLOADNAME = ? AND STARTTIME >= ?)";
 
   private final TimeScaleDBService timeScaleDBService;
 
@@ -46,24 +56,25 @@ public class WorkloadCostService {
   }
 
   /**
-   * Get actual cost incurred by this workload, in a given period (truncated to days)
+   * Get actual cost incurred by this workload, in the last day for which cost is available.
    */
-  public Cost getActualCost(ResourceId workloadId, Instant begin, Instant end) {
+  public Cost getLastAvailableDayCost(ResourceId workloadId, Instant startInclusive) {
     checkState(timeScaleDBService.isValid());
-    checkArgument(isTruncatedToDay(begin));
-    checkArgument(isTruncatedToDay(end));
+    checkArgument(isTruncatedToDay(startInclusive));
     for (int retryCount = 0; retryCount < 5; retryCount++) {
       try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(WORKLOAD_COST_QUERY)) {
+           PreparedStatement statement = connection.prepareStatement(LAST_AVAILABLE_DAY_COST)) {
         statement.setString(1, workloadId.getAccountId());
         statement.setString(2, workloadId.getClusterId());
         statement.setString(3, workloadId.getNamespace());
         statement.setString(4, workloadId.getKind());
         statement.setString(5, workloadId.getName());
-        Timestamp beginTs = new Timestamp(begin.toEpochMilli());
-        statement.setTimestamp(6, beginTs);
-        Timestamp endTs = new Timestamp(end.toEpochMilli());
-        statement.setTimestamp(7, endTs);
+        statement.setString(6, workloadId.getAccountId());
+        statement.setString(7, workloadId.getClusterId());
+        statement.setString(8, workloadId.getNamespace());
+        statement.setString(9, workloadId.getKind());
+        statement.setString(10, workloadId.getName());
+        statement.setTimestamp(11, new Timestamp(startInclusive.toEpochMilli()));
         try (val resultSet = statement.executeQuery()) {
           if (resultSet.next()) {
             BigDecimal cpuCost = resultSet.getBigDecimal(1);
