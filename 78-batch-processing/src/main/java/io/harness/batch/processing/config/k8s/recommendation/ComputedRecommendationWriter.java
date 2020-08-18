@@ -35,14 +35,12 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
   private final WorkloadRecommendationDao workloadRecommendationDao;
   private final WorkloadCostService workloadCostService;
   private final Instant jobStartDate;
-  private final Instant jobEndDate;
 
   ComputedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
-      WorkloadCostService workloadCostService, Instant jobStartDate, Instant jobEndDate) {
+      WorkloadCostService workloadCostService, Instant jobStartDate) {
     this.workloadRecommendationDao = workloadRecommendationDao;
     this.workloadCostService = workloadCostService;
     this.jobStartDate = jobStartDate;
-    this.jobEndDate = jobEndDate;
   }
 
   @Override
@@ -83,7 +81,8 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
         }
       }
       recommendation.setNumDays(minNumDays == Integer.MAX_VALUE ? 0 : minNumDays);
-      Cost lastDayCost = workloadCostService.getActualCost(workloadId, jobStartDate, jobEndDate);
+      Instant startInclusive = jobStartDate.minus(Duration.ofDays(7));
+      Cost lastDayCost = workloadCostService.getLastAvailableDayCost(workloadId, startInclusive);
       if (lastDayCost != null) {
         BigDecimal monthlySavings = estimateMonthlySavings(containerRecommendations, lastDayCost);
         recommendation.setEstimatedSavings(monthlySavings);

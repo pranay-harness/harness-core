@@ -51,16 +51,19 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
       K8sWorkloadRecommendation recommendation = workloadToRecommendation.computeIfAbsent(
           workloadId, workloadRecommendationDao::fetchRecommendationForWorkload);
 
+      // Update the current fields, without removing the pre-existing guaranteed & burstable fields.
       Map<String, ContainerRecommendation> existingRecommendations = recommendation.getContainerRecommendations();
       Map<String, ContainerRecommendation> updatedRecommendations =
           containerCurrentResources.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
               currentResources
               -> ContainerRecommendation.builder()
                      .current(currentResources.getValue())
-                     .guaranteed(Optional.ofNullable(existingRecommendations.get(currentResources.getKey()))
+                     .guaranteed(Optional.ofNullable(existingRecommendations)
+                                     .map(crMap -> crMap.get(currentResources.getKey()))
                                      .map(ContainerRecommendation::getGuaranteed)
                                      .orElse(null))
-                     .burstable(Optional.ofNullable(existingRecommendations.get(currentResources.getKey()))
+                     .burstable(Optional.ofNullable(existingRecommendations)
+                                    .map(crMap -> crMap.get(currentResources.getKey()))
                                     .map(ContainerRecommendation::getBurstable)
                                     .orElse(null))
                      .build()));

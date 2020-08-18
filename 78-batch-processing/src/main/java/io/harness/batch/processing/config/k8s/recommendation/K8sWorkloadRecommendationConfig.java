@@ -108,11 +108,9 @@ public class K8sWorkloadRecommendationConfig {
   @Bean
   @StepScope
   public ComputedRecommendationWriter computedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
-      WorkloadCostService workloadCostService, @Value("#{jobParameters[startDate]}") Long startDateMillis,
-      @Value("#{jobParameters[endDate]}") Long endDateMillis) {
+      WorkloadCostService workloadCostService, @Value("#{jobParameters[startDate]}") Long startDateMillis) {
     Instant jobStartDate = Instant.ofEpochMilli(startDateMillis);
-    Instant jobEndDate = Instant.ofEpochMilli(endDateMillis);
-    return new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, jobStartDate, jobEndDate);
+    return new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, jobStartDate);
   }
 
   @Bean

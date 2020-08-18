@@ -39,7 +39,6 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   public static final String WORKLOAD_TYPE = "WORKLOAD_TYPE";
 
   public static final Instant JOB_START_DATE = Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(1));
-  public static final Instant JOB_END_DATE = JOB_START_DATE.plus(Duration.ofDays(1));
 
   private ComputedRecommendationWriter computedRecommendationWriter;
 
@@ -53,7 +52,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     workloadCostService = mock(WorkloadCostService.class);
     workloadRecommendationDao = mock(WorkloadRecommendationDao.class);
     computedRecommendationWriter =
-        new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, JOB_START_DATE, JOB_END_DATE);
+        new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, JOB_START_DATE);
     captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
   }
 
@@ -276,14 +275,14 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                                      .version(1)
                                      .build())
                              .build());
-    when(workloadCostService.getActualCost(eq(ResourceId.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .clusterId(CLUSTER_ID)
-                                                   .namespace(NAMESPACE)
-                                                   .kind(WORKLOAD_TYPE)
-                                                   .name(WORKLOAD_NAME)
-                                                   .build()),
-             eq(JOB_START_DATE), eq(JOB_END_DATE)))
+    when(workloadCostService.getLastAvailableDayCost(eq(ResourceId.builder()
+                                                             .accountId(ACCOUNT_ID)
+                                                             .clusterId(CLUSTER_ID)
+                                                             .namespace(NAMESPACE)
+                                                             .kind(WORKLOAD_TYPE)
+                                                             .name(WORKLOAD_NAME)
+                                                             .build()),
+             eq(JOB_START_DATE.minus(Duration.ofDays(7)))))
         .thenReturn(WorkloadCostService.Cost.builder()
                         .cpu(BigDecimal.valueOf(3.422))
                         .memory(BigDecimal.valueOf(4.234))
@@ -392,16 +391,14 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                                      .version(1)
                                      .build())
                              .build());
-    Instant lastDayEnd = JOB_START_DATE.truncatedTo(ChronoUnit.DAYS);
-    Instant lastDayBegin = lastDayEnd.minus(Duration.ofDays(1));
-    when(workloadCostService.getActualCost(eq(ResourceId.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .clusterId(CLUSTER_ID)
-                                                   .namespace(NAMESPACE)
-                                                   .kind(WORKLOAD_TYPE)
-                                                   .name(WORKLOAD_NAME)
-                                                   .build()),
-             eq(lastDayBegin), eq(lastDayEnd)))
+    when(workloadCostService.getLastAvailableDayCost(eq(ResourceId.builder()
+                                                             .accountId(ACCOUNT_ID)
+                                                             .clusterId(CLUSTER_ID)
+                                                             .namespace(NAMESPACE)
+                                                             .kind(WORKLOAD_TYPE)
+                                                             .name(WORKLOAD_NAME)
+                                                             .build()),
+             eq(JOB_START_DATE.minus(Duration.ofDays(7)))))
         .thenReturn(null);
 
     computedRecommendationWriter.write(recommendations);
