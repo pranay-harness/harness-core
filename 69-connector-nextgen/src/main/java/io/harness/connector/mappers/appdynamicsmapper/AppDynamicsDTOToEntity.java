@@ -4,6 +4,7 @@ import com.google.inject.Singleton;
 
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
+import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 
 @Singleton
@@ -13,8 +14,7 @@ public class AppDynamicsDTOToEntity implements ConnectorDTOToEntityMapper<AppDyn
     return AppDynamicsConnector.builder()
         .username(connectorDTO.getUsername())
         .accountname(connectorDTO.getAccountname())
-        .password(connectorDTO.getPassword())
-        .passwordReference(connectorDTO.getPasswordReference())
+        .passwordRef(SecretRefHelper.getSecretConfigString(connectorDTO.getPasswordRef()))
         .controllerUrl(connectorDTO.getControllerUrl())
         .accountId(connectorDTO.getAccountId())
         .build();

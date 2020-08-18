@@ -9,7 +9,11 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -44,7 +48,18 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     Map<String, String> params = new HashMap<>();
     params.put("cvConfigId", cvConfigId);
     params.put("connectorId", connectorId);
-    String taskId = dataCollectionTaskService.create(accountId, params);
+
+    SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
+    AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
+                                                          .accountId(accountId)
+                                                          .accountname("accountName")
+                                                          .username("username")
+                                                          .controllerUrl("controllerUrl")
+                                                          .passwordRef(secretRefData)
+                                                          .build();
+    DataCollectionConnectorBundle bundle =
+        DataCollectionConnectorBundle.builder().params(params).connectorConfigDTO(appDynamicsConnectorDTO).build();
+    String taskId = dataCollectionTaskService.create(accountId, bundle);
     assertThat(taskId).isNotNull();
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
     PerpetualTaskClientContext perpetualTaskClientContext = perpetualTaskRecord.getClientContext();
@@ -65,7 +80,17 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     Map<String, String> params = new HashMap<>();
     params.put("cvConfigId", cvConfigId);
     params.put("connectorId", connectorId);
-    String taskId = dataCollectionTaskService.create(accountId, params);
+    SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
+    AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
+                                                          .accountId(accountId)
+                                                          .accountname("accountName")
+                                                          .username("username")
+                                                          .controllerUrl("controllerUrl")
+                                                          .passwordRef(secretRefData)
+                                                          .build();
+    DataCollectionConnectorBundle bundle =
+        DataCollectionConnectorBundle.builder().params(params).connectorConfigDTO(appDynamicsConnectorDTO).build();
+    String taskId = dataCollectionTaskService.create(accountId, bundle);
     assertThat(taskId).isNotNull();
     dataCollectionTaskService.delete(accountId, "some-other-id");
     assertThat(perpetualTaskService.getTaskRecord(taskId)).isNotNull();

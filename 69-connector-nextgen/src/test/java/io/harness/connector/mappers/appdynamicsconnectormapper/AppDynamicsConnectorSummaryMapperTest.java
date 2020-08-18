@@ -35,7 +35,7 @@ public class AppDynamicsConnectorSummaryMapperTest extends CategoryTest {
 
     AppDynamicsConnector appDynamicsConnector = AppDynamicsConnector.builder()
                                                     .username(username)
-                                                    .passwordReference(encryptedPassword)
+                                                    .passwordRef(encryptedPassword)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
                                                     .accountId(accountId)

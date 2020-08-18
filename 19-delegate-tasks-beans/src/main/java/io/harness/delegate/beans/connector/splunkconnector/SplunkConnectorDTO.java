@@ -2,8 +2,10 @@ package io.harness.delegate.beans.connector.splunkconnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.encryption.Encrypted;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,8 +13,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.settings.SettingVariableTypes;
+
+import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -22,15 +24,9 @@ import software.wings.settings.SettingVariableTypes;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName("Splunk")
-public class SplunkConnectorDTO extends ConnectorConfigDTO implements EncryptableSetting {
+public class SplunkConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity {
   String splunkUrl;
   String username;
-  @Encrypted(fieldName = "passwordReference", isReference = true) char[] password;
-  String passwordReference;
-  String accountId;
-
-  @Override
-  public SettingVariableTypes getSettingType() {
-    return SettingVariableTypes.SPLUNK;
-  }
+  @NotNull String accountId;
+  @NotNull @SecretReference SecretRefData passwordRef;
 }

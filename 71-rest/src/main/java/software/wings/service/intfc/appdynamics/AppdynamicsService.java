@@ -1,7 +1,10 @@
 package software.wings.service.intfc.appdynamics;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
@@ -18,12 +21,13 @@ import javax.validation.constraints.NotNull;
 public interface AppdynamicsService {
   List<NewRelicApplication> getApplications(@NotNull String settingId);
   List<NewRelicApplication> getApplications(@NotNull String settingId, String appId, String workflowExecutionId);
+  List<AppDynamicsApplication> getApplications(@NotNull AppDynamicsConnectorDTO appDynamicsConnector);
 
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId);
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog);
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, String appId, String workflowExecutionId,
       ThirdPartyApiCallLog apiCallLog);
-
+  Set<AppDynamicsTier> getTiers(long appDynamicsAppId, @NotNull AppDynamicsConnectorDTO appDynamicsConnectorDTO);
   /**
    * Api to fetch metric data for given node.
    * @param appdynamicsSetupTestNodeData
@@ -45,6 +49,6 @@ public interface AppdynamicsService {
   String getTierByName(String analysisServerConfigId, String applicationId, String tierName, String appId,
       String workflowExecutionId, ThirdPartyApiCallLog apiCallLog);
 
-  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier, String connectorId,
-      long appdAppId, long appdTierId, String requestGuid, List<MetricPackDTO> metricPacks);
+  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier, long appdAppId,
+      long appdTierId, String requestGuid, AppdynamicsMetricPackDataValidationRequest validationRequest);
 }

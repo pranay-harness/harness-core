@@ -13,6 +13,8 @@ import io.harness.cvng.analysis.services.impl.LogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.services.api.AppDynamicsService;
@@ -136,6 +138,7 @@ public class CVServiceModule extends AbstractModule {
       bind(AnomalyService.class).to(AnomalyServiceImpl.class);
       bind(LogRecordService.class).to(LogRecordServiceImpl.class);
       bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
+      bind(NextGenService.class).to(NextGenServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

@@ -8,6 +8,5 @@ import java.util.Optional;
 public interface NextGenService {
   ConnectorDTO create(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier);
 
-  Optional<ConnectorDTO> get(
-      String accountIdentifier, String connectorIdentifier, String orgIdentifier, String projectIdentifier);
+  Optional<ConnectorDTO> get(String accountIdentifier, String connectorIdentifier);
 }

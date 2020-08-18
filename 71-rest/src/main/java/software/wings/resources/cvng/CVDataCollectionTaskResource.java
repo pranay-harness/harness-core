@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -14,7 +15,6 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.http.Body;
 
-import java.util.Map;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -34,8 +34,9 @@ public class CVDataCollectionTaskResource {
   @Path("create-task")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> createTask(@QueryParam("accountId") String accountId, @Body Map<String, String> params) {
-    return new RestResponse<>(dataCollectionTaskService.create(accountId, params));
+  public RestResponse<String> createTask(
+      @QueryParam("accountId") String accountId, @Body DataCollectionConnectorBundle bundle) {
+    return new RestResponse<>(dataCollectionTaskService.create(accountId, bundle));
   }
 
   @DELETE

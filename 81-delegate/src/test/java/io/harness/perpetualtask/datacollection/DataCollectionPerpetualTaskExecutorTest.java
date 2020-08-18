@@ -28,12 +28,16 @@ import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.service.TimeSeriesDataStoreService;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
 import org.apache.commons.codec.binary.Base64;
@@ -48,8 +52,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.AppDynamicsConfig;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -61,10 +63,10 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private DataCollectionPerpetualTaskExecutor dataCollector = new DataCollectionPerpetualTaskExecutor();
   @Mock private TimeSeriesDataStoreService timeSeriesDataStoreService;
-  @Mock private EncryptionService encryptionService;
+  @Mock private SecretDecryptionService secretDecryptionService;
   @Mock private DataCollectionDSLService dataCollectionDSLService;
   @Mock private CVNextGenServiceClient cvNextGenServiceClient;
-  private AppDynamicsConfig appDynamicsConfig;
+  private AppDynamicsConnectorDTO appDynamicsConnectorDTO;
   private String accountId;
   private String cvConfigId;
   private DataCollectionTaskDTO dataCollectionTaskDTO;
@@ -80,14 +82,20 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
     accountId = generateUuid();
     cvConfigId = generateUuid();
 
-    appDynamicsConfig = AppDynamicsConfig.builder()
-                            .controllerUrl(generateUuid())
-                            .username(generateUuid())
-                            .password(generateUuid().toCharArray())
-                            .build();
-    appDynamicsConfig.setDecrypted(true);
+    SecretRefData secretRefData = SecretRefData.builder()
+                                      .scope(Scope.ACCOUNT)
+                                      .identifier("secret")
+                                      .decryptedValue(generateUuid().toCharArray())
+                                      .build();
+    appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
+                                  .accountId(accountId)
+                                  .accountname(generateUuid())
+                                  .username(generateUuid())
+                                  .controllerUrl(generateUuid())
+                                  .passwordRef(secretRefData)
+                                  .build();
 
-    FieldUtils.writeField(dataCollector, "encryptionService", encryptionService, true);
+    FieldUtils.writeField(dataCollector, "secretDecryptionService", secretDecryptionService, true);
     FieldUtils.writeField(dataCollector, "timeSeriesDataStoreService", timeSeriesDataStoreService, true);
     FieldUtils.writeField(dataCollector, "dataCollectionDSLService", dataCollectionDSLService, true);
     FieldUtils.writeField(dataCollector, "cvNextGenServiceClient", cvNextGenServiceClient, true);
@@ -120,9 +128,10 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
                     MetricDefinitionDTO.builder().name(generateUuid()).path("path2").included(false).build(),
                     MetricDefinitionDTO.builder().name(generateUuid()).path("path3").included(true).build()))
             .build());
+
     dataCollectionInfo.setDataCollectionDsl(dataCollectionDsl);
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
-                                                    .settingValue(appDynamicsConfig)
+                                                    .connectorConfigDTO(appDynamicsConnectorDTO)
                                                     .encryptedDataDetails(Lists.newArrayList())
                                                     .build();
     ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
@@ -166,14 +175,15 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
     assertThat(dsl).isNotEmpty();
     assertThat(dslCaptor.getValue()).isEqualTo(dsl);
     RuntimeParameters runtimeParameters = runtimeParams.getValue();
-    assertThat(runtimeParameters.getBaseUrl()).isEqualTo(appDynamicsConfig.getControllerUrl() + "/");
+    assertThat(runtimeParameters.getBaseUrl()).isEqualTo(appDynamicsConnectorDTO.getControllerUrl() + "/");
     assertThat(runtimeParameters.getCommonHeaders().size()).isEqualTo(1);
     assertThat(runtimeParameters.getCommonHeaders().get("Authorization"))
         .isEqualTo("Basic "
             + Base64.encodeBase64String(
                   String
-                      .format("%s@%s:%s", appDynamicsConfig.getUsername(), appDynamicsConfig.getAccountname(),
-                          new String(appDynamicsConfig.getPassword()))
+                      .format("%s@%s:%s", appDynamicsConnectorDTO.getUsername(),
+                          appDynamicsConnectorDTO.getAccountname(),
+                          new String(appDynamicsConnectorDTO.getPasswordRef().getDecryptedValue()))
                       .getBytes(StandardCharsets.UTF_8)));
     Map<String, Object> otherEnvVariables = runtimeParameters.getOtherEnvVariables();
     assertThat(otherEnvVariables.size()).isEqualTo(3);

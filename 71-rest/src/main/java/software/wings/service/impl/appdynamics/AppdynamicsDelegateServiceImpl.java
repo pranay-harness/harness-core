@@ -16,10 +16,14 @@ import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsMetricValu
 import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsValidationResponseBuilder;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
+import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import retrofit2.Call;
@@ -64,6 +68,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   public static final String EXTERNAL_CALLS = "External Calls";
   public static final String INDIVIDUAL_NODES = "Individual Nodes";
   @Inject private EncryptionService encryptionService;
+  @Inject private SecretDecryptionService secretDecryptionService;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;
@@ -87,6 +92,29 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
+  public List<AppDynamicsApplication> getApplications(
+      AppDynamicsConnectorDTO appDynamicsConnector, List<EncryptedDataDetail> encryptionDetails) {
+    final Call<List<NewRelicApplication>> request =
+        getAppdynamicsRestClient(appDynamicsConnector)
+            .listAllApplications(getHeaderWithCredentials(appDynamicsConnector, encryptionDetails));
+    List<NewRelicApplication> newRelicApplications = requestExecutor.executeRequest(request);
+
+    if (isNotEmpty(newRelicApplications)) {
+      newRelicApplications = newRelicApplications.stream()
+                                 .filter(application -> isNotEmpty(application.getName()))
+                                 .sorted(Comparator.comparing(NewRelicApplication::getName))
+                                 .collect(Collectors.toList());
+    }
+    return newRelicApplications.stream()
+        .map(newRelicApplication
+            -> AppDynamicsApplication.builder()
+                   .id(newRelicApplication.getId())
+                   .name(newRelicApplication.getName())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog thirdPartyApiCallLog) {
     Preconditions.checkNotNull(thirdPartyApiCallLog);
@@ -97,6 +125,16 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     apiCallLog.setTitle("Fetching tiers for application " + appdynamicsAppId);
     final Set<AppdynamicsTier> response = requestExecutor.executeRequest(apiCallLog, request);
     response.forEach(tier -> tier.setExternalTiers(new HashSet<>()));
+    return new HashSet<>(response);
+  }
+
+  @Override
+  public Set<AppDynamicsTier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector,
+      List<EncryptedDataDetail> encryptedDataDetails, long appDynamicsAppId) {
+    final Call<Set<AppDynamicsTier>> request =
+        getAppdynamicsRestClient(appDynamicsConnector)
+            .listTiersNg(getHeaderWithCredentials(appDynamicsConnector, encryptedDataDetails), appDynamicsAppId);
+    final Set<AppDynamicsTier> response = requestExecutor.executeRequest(request);
     return new HashSet<>(response);
   }
 
@@ -227,6 +265,18 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     return tiers.get(0);
   }
 
+  private AppdynamicsTier getAppdynamicsTier(AppDynamicsConnectorDTO appDynamicsConnectorDTO, long appdynamicsAppId,
+      long tierId, List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
+    Preconditions.checkNotNull(apiCallLog);
+    apiCallLog.setTitle("Fetching tiers from " + appDynamicsConnectorDTO.getControllerUrl());
+    final Call<List<AppdynamicsTier>> tierDetail =
+        getAppdynamicsRestClient(appDynamicsConnectorDTO)
+            .getTierDetails(
+                getHeaderWithCredentials(appDynamicsConnectorDTO, encryptionDetails), appdynamicsAppId, tierId);
+    List<AppdynamicsTier> tiers = requestExecutor.executeRequest(apiCallLog, tierDetail);
+    return tiers.get(0);
+  }
+
   private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
       AppdynamicsMetric appdynamicsMetric, String parentMetricPath, boolean includeExternal,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
@@ -348,11 +398,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConfig appDynamicsConfig,
+  public Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConnectorDTO appDynamicsConnectorDTO,
       List<EncryptedDataDetail> encryptionDetails, long appdAppId, long appdTierId, String requestGuid,
       List<MetricPackDTO> metricPacks, Instant startTime, Instant endTime) {
-    final AppdynamicsTier appdynamicsTier = getAppdynamicsTier(appDynamicsConfig, appdAppId, appdTierId,
-        encryptionDetails, createApiCallLog(appDynamicsConfig.getAccountId(), NO_STATE_EXECUTION_ID));
+    final AppdynamicsTier appdynamicsTier = getAppdynamicsTier(appDynamicsConnectorDTO, appdAppId, appdTierId,
+        encryptionDetails, createApiCallLog(appDynamicsConnectorDTO.getAccountId(), NO_STATE_EXECUTION_ID));
     Preconditions.checkNotNull(appdynamicsTier, "No tier found with id {} for app {}", appdTierId, appdAppId);
 
     Set<AppdynamicsValidationResponse> appdynamicsValidationResponses = new HashSet<>();
@@ -368,12 +418,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             String metricPath = metricDefinition.getValidationPath().replaceAll(
                 CVNextGenConstants.APPD_TIER_ID_PLACEHOLDER, appdynamicsTier.getName());
             Call<List<AppdynamicsMetricData>> metriDataRequest =
-                getAppdynamicsRestClient(appDynamicsConfig)
-                    .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdAppId,
-                        metricPath, startTime.toEpochMilli(), endTime.toEpochMilli(), true);
+                getAppdynamicsRestClient(appDynamicsConnectorDTO)
+                    .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConnectorDTO, encryptionDetails),
+                        appdAppId, metricPath, startTime.toEpochMilli(), endTime.toEpochMilli(), true);
             try {
               List<AppdynamicsMetricData> appdynamicsMetricData = requestExecutor.executeRequest(
-                  ThirdPartyApiCallLog.createApiCallLog(appDynamicsConfig.getAccountId(),
+                  ThirdPartyApiCallLog.createApiCallLog(appDynamicsConnectorDTO.getAccountId(),
                       metricPackName + ":" + metricDefinition.getName() + ":" + requestGuid),
                   metriDataRequest);
 
@@ -437,6 +487,16 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     return retrofit.create(AppdynamicsRestClient.class);
   }
 
+  AppdynamicsRestClient getAppdynamicsRestClient(AppDynamicsConnectorDTO appDynamicsConnector) {
+    final Retrofit retrofit = new Retrofit.Builder()
+                                  .baseUrl(appDynamicsConnector.getControllerUrl().endsWith("/")
+                                          ? appDynamicsConnector.getControllerUrl()
+                                          : appDynamicsConnector.getControllerUrl() + "/")
+                                  .addConverterFactory(JacksonConverterFactory.create())
+                                  .client(getUnsafeHttpClient(appDynamicsConnector.getControllerUrl()))
+                                  .build();
+    return retrofit.create(AppdynamicsRestClient.class);
+  }
   private String getHeaderWithCredentials(
       AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(appDynamicsConfig, encryptionDetails);
@@ -445,6 +505,17 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
               String
                   .format("%s@%s:%s", appDynamicsConfig.getUsername(), appDynamicsConfig.getAccountname(),
                       new String(appDynamicsConfig.getPassword()))
+                  .getBytes(StandardCharsets.UTF_8));
+  }
+
+  private String getHeaderWithCredentials(
+      AppDynamicsConnectorDTO appDynamicsConnector, List<EncryptedDataDetail> encryptionDetails) {
+    secretDecryptionService.decrypt(appDynamicsConnector, encryptionDetails);
+    return "Basic "
+        + Base64.encodeBase64String(
+              String
+                  .format("%s@%s:%s", appDynamicsConnector.getUsername(), appDynamicsConnector.getAccountname(),
+                      new String(appDynamicsConnector.getPasswordRef().getDecryptedValue()))
                   .getBytes(StandardCharsets.UTF_8));
   }
 }

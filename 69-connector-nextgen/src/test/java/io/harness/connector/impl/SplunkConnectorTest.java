@@ -13,6 +13,7 @@ import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class SplunkConnectorTest extends CategoryTest {
   String userName = "userName";
   String password = "password";
   String identifier = "identifier";
+  String secretIdentifier = "secretIdentifier";
   String name = "name";
   String splunkUrl = "https://xwz.com";
   ConnectorRequestDTO connectorRequestDTO;
@@ -55,18 +57,19 @@ public class SplunkConnectorTest extends CategoryTest {
                     .username(userName)
                     .accountId(accountIdentifier)
                     .splunkUrl(splunkUrl)
-                    .passwordReference(password)
+                    .passwordRef(password)
                     .build();
 
     connector.setType(SPLUNK);
     connector.setIdentifier(identifier);
     connector.setName(name);
 
+    SecretRefData secretRefData = SecretRefData.builder().identifier(secretIdentifier).build();
     SplunkConnectorDTO splunkConnectorDTO = SplunkConnectorDTO.builder()
                                                 .username(userName)
                                                 .accountId(accountIdentifier)
                                                 .splunkUrl(splunkUrl)
-                                                .passwordReference(password)
+                                                .passwordRef(secretRefData)
                                                 .build();
 
     connectorRequestDTO = ConnectorRequestDTO.builder()
@@ -107,7 +110,8 @@ public class SplunkConnectorTest extends CategoryTest {
     SplunkConnectorDTO splunkConnectorDTO = (SplunkConnectorDTO) connectorDTOOutput.getConnectorConfig();
     assertThat(splunkConnectorDTO).isNotNull();
     assertThat(splunkConnectorDTO.getUsername()).isEqualTo(userName);
-    assertThat(splunkConnectorDTO.getPasswordReference()).isEqualTo(password);
+    assertThat(splunkConnectorDTO.getPasswordRef()).isNotNull();
+    assertThat(splunkConnectorDTO.getPasswordRef().getIdentifier()).isEqualTo(secretIdentifier);
     assertThat(splunkConnectorDTO.getSplunkUrl()).isEqualTo(splunkUrl);
     assertThat(splunkConnectorDTO.getAccountId()).isEqualTo(accountIdentifier);
   }

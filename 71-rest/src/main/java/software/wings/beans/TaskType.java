@@ -90,6 +90,7 @@ import software.wings.delegatetasks.spotinst.SpotInstTask;
 import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AcrValidation;
 import software.wings.delegatetasks.validation.AlwaysTrueValidation;
+import software.wings.delegatetasks.validation.AppDynamicsNGValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.AwsConnectionValidation;
@@ -235,7 +236,9 @@ public enum TaskType {
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(
       TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_GET_APP_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
+  APPDYNAMICS_GET_APP_TASK_NG(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppDynamicsNGValidation.class),
   APPDYNAMICS_GET_TIER_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
+  APPDYNAMICS_GET_TIER_TASK_NG(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppDynamicsNGValidation.class),
   APPDYNAMICS_GET_TIER_MAP(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_COLLECT_METRIC_DATA(
       TaskGroup.APPDYNAMICS, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
@@ -244,7 +247,7 @@ public enum TaskType {
   APPDYNAMICS_COLLECT_24_7_METRIC_DATA(
       TaskGroup.GUARD_24x7, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_METRIC_DATA_FOR_NODE(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
-  APPDYNAMICS_METRIC_PACK_DATA(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
+  APPDYNAMICS_METRIC_PACK_DATA(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppDynamicsNGValidation.class),
   INSTANA_GET_INFRA_METRICS(TaskGroup.INSTANA, ServiceImplDelegateTask.class, InstanaValidation.class),
   INSTANA_GET_TRACE_METRICS(TaskGroup.INSTANA, ServiceImplDelegateTask.class, InstanaValidation.class),
   INSTANA_COLLECT_METRIC_DATA(TaskGroup.INSTANA, MetricsDataCollectionTask.class, DataCollectionValidator.class),

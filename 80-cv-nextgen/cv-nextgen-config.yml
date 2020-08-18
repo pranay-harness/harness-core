@@ -51,7 +51,7 @@ mongo:
   indexManagerMode: AUTO
 
 secretManagerClient:
-  baseUrl: http://localhost:7457
+  baseUrl: http://localhost:3457
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 

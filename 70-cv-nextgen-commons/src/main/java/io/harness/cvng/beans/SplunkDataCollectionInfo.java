@@ -1,6 +1,7 @@
 package io.harness.cvng.beans;
 
 import io.harness.cvng.models.VerificationType;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,5 +28,21 @@ public class SplunkDataCollectionInfo extends DataCollectionInfo {
     // in case of too many logs.
     map.put("maxCount", 10000);
     return map;
+  }
+
+  // TODO: implement these methods
+  @Override
+  public String getBaseUrl(ConnectorConfigDTO connectorConfigDTO) {
+    return null;
+  }
+
+  @Override
+  public Map<String, String> collectionHeaders(ConnectorConfigDTO connectorConfigDTO) {
+    return null;
+  }
+
+  @Override
+  public Map<String, String> collectionParams(ConnectorConfigDTO connectorConfigDTO) {
+    return null;
   }
 }

@@ -7,29 +7,21 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
 import io.harness.beans.DelegateTask;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
-  @Inject private SettingsService settingsService;
-  @Inject private SecretManager secretManager;
   @Inject private KryoSerializer kryoSerializer;
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -38,18 +30,16 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
     String accountId = clientParams.get("accountId");
     String cvConfigId = clientParams.get("cvConfigId");
     String verificationTaskId = clientParams.get("verificationTaskId");
-    String connectorId = clientParams.get("connectorId");
     String dataCollectionWorkerId = clientParams.get("dataCollectionWorkerId");
 
-    SettingAttribute settingAttribute = settingsService.get(connectorId);
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    if (settingAttribute.getValue() instanceof EncryptableSetting) {
-      encryptedDataDetails = secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue());
-    }
+    DataCollectionConnectorBundle bundle =
+        (DataCollectionConnectorBundle) kryoSerializer.asObject(clientContext.getExecutionBundle());
+
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
-                                                    .settingValue(settingAttribute.getValue())
-                                                    .encryptedDataDetails(encryptedDataDetails)
+                                                    .connectorConfigDTO(bundle.getConnectorConfigDTO())
+                                                    .encryptedDataDetails(bundle.getDetails())
                                                     .build();
+
     ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
     DataCollectionPerpetualTaskParams.Builder params = DataCollectionPerpetualTaskParams.newBuilder()
                                                            .setAccountId(accountId)

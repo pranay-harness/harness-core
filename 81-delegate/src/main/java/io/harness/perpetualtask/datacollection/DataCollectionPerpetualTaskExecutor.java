@@ -6,7 +6,7 @@ import static io.harness.cvng.beans.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.cvng.beans.Connector;
+import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
@@ -15,6 +15,7 @@ import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.datacollection.entity.TimeSeriesRecord;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.service.LogRecordDataStoreService;
 import io.harness.delegate.service.TimeSeriesDataStoreService;
 import io.harness.grpc.utils.AnyUtils;
@@ -23,14 +24,12 @@ import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.settings.SettingValue;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -40,7 +39,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
-  @Inject private EncryptionService encryptionService;
+  @Inject private SecretDecryptionService secretDecryptionService;
 
   @Inject private DelegateLogService delegateLogService;
   @Inject private TimeSeriesDataStoreService timeSeriesDataStoreService;
@@ -61,11 +60,10 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
     logger.info("DataCollectionInfo {} ", cvDataCollectionInfo);
     DataCollectionTaskDTO dataCollectionTask;
-    SettingValue settingValue = cvDataCollectionInfo.getSettingValue();
-    if (settingValue instanceof EncryptableSetting) {
-      encryptionService.decrypt((EncryptableSetting) settingValue, cvDataCollectionInfo.getEncryptedDataDetails());
-    }
-    Connector connector = (Connector) settingValue;
+    secretDecryptionService.decrypt(cvDataCollectionInfo.getConnectorConfigDTO() instanceof DecryptableEntity
+            ? (DecryptableEntity) cvDataCollectionInfo.getConnectorConfigDTO()
+            : null,
+        cvDataCollectionInfo.getEncryptedDataDetails());
     dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
     try {
       // TODO: What happens if this task takes more time then the schedule?
@@ -76,7 +74,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           break;
         } else {
           logger.info("Next task to process: ", dataCollectionTask);
-          run(taskParams, connector, dataCollectionTask);
+          run(taskParams, cvDataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
         }
       }
     } catch (IOException e) {
@@ -100,34 +98,36 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         .getResource();
   }
 
-  private void run(DataCollectionPerpetualTaskParams taskParams, Connector connector,
+  private void run(DataCollectionPerpetualTaskParams taskParams, ConnectorConfigDTO connectorConfigDTO,
       DataCollectionTaskDTO dataCollectionTask) throws IOException {
     try {
       final String cvConfigId = dataCollectionTask.getCvConfigId();
       DataCollectionInfo dataCollectionInfo = dataCollectionTask.getDataCollectionInfo();
-      final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
-                                                      .baseUrl(connector.getBaseUrl())
-                                                      .commonHeaders(connector.collectionHeaders())
-                                                      .commonOptions(connector.collectionParams())
-                                                      .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
-                                                      .endTime(dataCollectionTask.getEndTime())
-                                                      .startTime(dataCollectionTask.getStartTime())
-                                                      .build();
+      final RuntimeParameters runtimeParameters =
+          RuntimeParameters.builder()
+              .baseUrl(dataCollectionTask.getDataCollectionInfo().getBaseUrl(connectorConfigDTO))
+              .commonHeaders(dataCollectionTask.getDataCollectionInfo().collectionHeaders(connectorConfigDTO))
+              .commonOptions(dataCollectionTask.getDataCollectionInfo().collectionParams(connectorConfigDTO))
+              .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
+              .endTime(dataCollectionTask.getEndTime())
+              .startTime(dataCollectionTask.getStartTime())
+              .build();
       switch (dataCollectionInfo.getVerificationType()) {
         case TIME_SERIES:
           List<TimeSeriesRecord> timeSeriesRecords = (List<TimeSeriesRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
-                  connector.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
-          timeSeriesDataStoreService.saveTimeSeriesDataRecords(connector.getAccountId(), cvConfigId, timeSeriesRecords);
+                  dataCollectionTask.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
+          timeSeriesDataStoreService.saveTimeSeriesDataRecords(
+              dataCollectionTask.getAccountId(), cvConfigId, timeSeriesRecords);
           break;
         case LOG:
           List<LogDataRecord> logDataRecords = (List<LogDataRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
-                  connector.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
+                  dataCollectionTask.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
           // TODO: merge these 2 IDs into a single concepts and use it everywhere in the data collection using models.
-          logRecordDataStoreService.save(connector.getAccountId(), dataCollectionTask.getCvConfigId(),
+          logRecordDataStoreService.save(dataCollectionTask.getAccountId(), dataCollectionTask.getCvConfigId(),
               dataCollectionTask.getVerificationTaskId(), logDataRecords);
           break;
         default:

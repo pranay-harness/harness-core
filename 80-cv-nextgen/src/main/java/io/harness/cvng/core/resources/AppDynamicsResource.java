@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.rest.RestResponse;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -39,5 +42,25 @@ public class AppDynamicsResource {
       @NotNull @Valid @Body List<MetricPack> metricPacks) {
     return new RestResponse<>(appDynamicsService.getMetricPackData(
         accountId, projectIdentifier, connectorId, appdAppId, appdTierId, requestGuid, metricPacks));
+  }
+
+  @GET
+  @Path("/applications")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AppDynamicsApplication>> getAllApplications(
+      @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("connectorId") final String connectorId) {
+    return new RestResponse<>(appDynamicsService.getApplications(accountId, connectorId));
+  }
+
+  @GET
+  @Path("/tiers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<AppDynamicsTier>> getAllTiers(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("connectorId") final String connectorId,
+      @NotNull @QueryParam("appDynamicsAppId") long appdynamicsAppId) {
+    return new RestResponse<>(appDynamicsService.getTiers(accountId, connectorId, appdynamicsAppId));
   }
 }

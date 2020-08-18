@@ -1,15 +1,15 @@
 package io.harness.cvng.perpetualtask;
 
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.settings.SettingValue;
 
 import java.util.List;
 
 @Value
 @Builder
 public class CVDataCollectionInfo {
-  SettingValue settingValue;
+  ConnectorConfigDTO connectorConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
 }

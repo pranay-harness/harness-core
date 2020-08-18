@@ -7,9 +7,13 @@ import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEAR
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION_RESPONSE_PATH;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
+import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -19,7 +23,6 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.container.ContainerRequestContext;
 
@@ -29,7 +32,7 @@ public interface VerificationManagerClient {
       @Query("featureName") String featureName, @Query("accountId") String accountId);
 
   @POST(CV_DATA_COLLECTION_PATH + "/create-task")
-  Call<RestResponse<String>> create(@Query("accountId") String accountId, @Body Map<String, String> params);
+  Call<RestResponse<String>> create(@Query("accountId") String accountId, @Body DataCollectionConnectorBundle bundle);
 
   @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
   Call<RestResponse<Void>> deleteDataCollectionTask(
@@ -51,7 +54,14 @@ public interface VerificationManagerClient {
 
   Call<RestResponse<Set<AppdynamicsValidationResponse>>>
   getAppDynamicsMetricData(@Query("accountId") String accountId, @Query("projectIdentifier") String projectIdentifier,
-      @Query("connectorId") String connectorId, @Query("appdAppId") long appdAppId,
-      @Query("appdTierId") long appdTierId, @Query("requestGuid") String requestGuid,
-      @Body List<MetricPackDTO> metricPacks);
+      @Query("appdAppId") long appdAppId, @Query("appdTierId") long appdTierId,
+      @Query("requestGuid") String requestGuid, @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
+
+  @POST("appdynamics/applications-ng")
+  Call<RestResponse<List<AppDynamicsApplication>>> getAppDynamicsApplications(
+      @Query("accountId") String accountId, @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
+
+  @POST("appdynamics/tiers-ng")
+  Call<RestResponse<Set<AppDynamicsTier>>> getTiers(@Query("accountId") String accountId,
+      @Query("appDynamicsAppId") long appDynamicsAppId, @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
 }
