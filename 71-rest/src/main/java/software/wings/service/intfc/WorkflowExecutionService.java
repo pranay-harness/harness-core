@@ -119,8 +119,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowVariablesMetadata fetchWorkflowVariables(
       String appId, ExecutionArgs executionArgs, String workflowExecutionId);
 
-  DeploymentMetadata fetchDeploymentMetadata(
-      String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact, String workflowExecutionId);
+  DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact,
+      String workflowExecutionId, boolean withLastDeployedInfo);
 
   DeploymentMetadata fetchDeploymentMetadata(@NotEmpty String appId, @NotNull ExecutionArgs executionArgs);
 

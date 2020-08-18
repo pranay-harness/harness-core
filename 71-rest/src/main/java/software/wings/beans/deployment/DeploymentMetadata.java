@@ -20,5 +20,5 @@ public class DeploymentMetadata {
   private List<DeploymentType> deploymentTypes = new ArrayList<>();
   private List<ArtifactVariable> artifactVariables = new ArrayList<>();
 
-  public enum Include { ENVIRONMENT, ARTIFACT_SERVICE, DEPLOYMENT_TYPE }
+  public enum Include { ENVIRONMENT, ARTIFACT_SERVICE, DEPLOYMENT_TYPE, LAST_DEPLOYED_ARTIFACT }
 }

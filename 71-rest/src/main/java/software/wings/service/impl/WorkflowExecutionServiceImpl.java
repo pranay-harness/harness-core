@@ -65,6 +65,10 @@ import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
+import static software.wings.beans.deployment.DeploymentMetadata.Include;
+import static software.wings.beans.deployment.DeploymentMetadata.Include.ARTIFACT_SERVICE;
+import static software.wings.beans.deployment.DeploymentMetadata.Include.DEPLOYMENT_TYPE;
+import static software.wings.beans.deployment.DeploymentMetadata.Include.ENVIRONMENT;
 import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummary;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
@@ -2643,22 +2647,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public DeploymentMetadata fetchDeploymentMetadata(
-      String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact, String workflowExecutionId) {
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs,
+      boolean withDefaultArtifact, String workflowExecutionId, boolean withLastDeployedInfo) {
     notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
     WorkflowExecution workflowExecution = null;
     if (withDefaultArtifact && workflowExecutionId != null) {
       workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     }
 
+    Include[] includes =
+        withLastDeployedInfo ? Include.values() : new Include[] {ENVIRONMENT, ARTIFACT_SERVICE, DEPLOYMENT_TYPE};
     DeploymentMetadata finalDeploymentMetadata;
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
-      finalDeploymentMetadata = workflowService.fetchDeploymentMetadata(
-          appId, workflow, executionArgs.getWorkflowVariables(), null, null, withDefaultArtifact, workflowExecution);
+      finalDeploymentMetadata = workflowService.fetchDeploymentMetadata(appId, workflow,
+          executionArgs.getWorkflowVariables(), null, null, withDefaultArtifact, workflowExecution, includes);
     } else {
       finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, executionArgs.getPipelineId(),
-          executionArgs.getWorkflowVariables(), null, null, withDefaultArtifact, workflowExecution);
+          executionArgs.getWorkflowVariables(), null, null, withDefaultArtifact, workflowExecution, includes);
     }
 
     if (finalDeploymentMetadata != null) {
@@ -2672,7 +2678,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs) {
-    return fetchDeploymentMetadata(appId, executionArgs, false, null);
+    return fetchDeploymentMetadata(appId, executionArgs, false, null, false);
   }
 
   @Override
