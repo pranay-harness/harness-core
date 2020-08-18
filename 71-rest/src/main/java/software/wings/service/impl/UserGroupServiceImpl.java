@@ -569,22 +569,22 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void addAccountManagementPermissions(UserGroup userGroup) {
-    if (isEmpty(userGroup.getAppPermissions())) {
+    if (userGroup.getAccountPermissions() == null || isEmpty(userGroup.getAccountPermissions().getPermissions())) {
       return;
     }
-    AccountPermissions accountPermissions = userGroup.getAccountPermissions();
-    Set<PermissionType> newAccountPermissions = userGroup.getAccountPermissions().getPermissions();
+    Set<PermissionType> newAccountPermissions = new HashSet<>();
 
-    for (PermissionType permission : accountPermissions.getPermissions()) {
+    for (PermissionType permission : userGroup.getAccountPermissions().getPermissions()) {
       if (ACCOUNT_MANAGEMENT.equals(permission)) {
         newAccountPermissions.add(MANAGE_IP_WHITELISTING);
         newAccountPermissions.add(MANAGE_AUTHENTICATION_SETTINGS);
         newAccountPermissions.add(MANAGE_APPLICATION_STACKS);
         newAccountPermissions.add(MANAGE_ALERT_NOTIFICATION_RULES);
       }
+      newAccountPermissions.add(permission);
     }
 
-    if (!newAccountPermissions.equals(accountPermissions.getPermissions())) {
+    if (!newAccountPermissions.equals(userGroup.getAccountPermissions().getPermissions())) {
       userGroup.setAccountPermissions(AccountPermissions.builder().permissions(newAccountPermissions).build());
     }
   }
