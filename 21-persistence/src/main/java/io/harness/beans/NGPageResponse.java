@@ -14,9 +14,9 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NGPageResponse<T> {
   long totalPages;
-  long totalElements;
-  long size;
+  long itemCount;
+  long pageSize;
   List<T> content;
-  long pageNumber;
+  long pageIndex;
   boolean empty;
 }

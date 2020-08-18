@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
@@ -21,6 +22,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.utils.PageTestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,7 +31,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -108,11 +109,12 @@ public class ConnectorResourceTest extends CategoryTest {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
     String searchTerm = "searchTerm";
-    final Page<ConnectorSummaryDTO> page = new PageImpl<>(Arrays.asList(ConnectorSummaryDTO.builder().build()));
+    final Page<ConnectorSummaryDTO> page =
+        PageTestUtils.getPage(Arrays.asList(ConnectorSummaryDTO.builder().build()), 1);
     when(connectorService.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
              KUBERNETES_CLUSTER.getDisplayName()))
         .thenReturn(page);
-    ResponseDTO<Page<ConnectorSummaryDTO>> connectorSummaryListResponse = connectorResource.list(
+    ResponseDTO<NGPageResponse<ConnectorSummaryDTO>> connectorSummaryListResponse = connectorResource.list(
         100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, KUBERNETES_CLUSTER.getDisplayName());
     Mockito.verify(connectorService, times(1))
         .list(eq(100), eq(0), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(searchTerm),

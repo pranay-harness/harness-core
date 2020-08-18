@@ -20,9 +20,9 @@ import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.io.harness.ng.utils.PageTestUtils;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.rule.Owner;
+import io.harness.utils.PageTestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -154,7 +154,7 @@ public class OrganizationResourceTest extends CategoryTest {
         .thenReturn(PageTestUtils.getPage(orgList, 1));
 
     assertFalse(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().isEmpty());
-    assertThat(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().getTotalElements())
+    assertThat(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().getItemCount())
         .isEqualTo(1);
 
     orgList.add(createOrganization(accountIdentifier));
@@ -165,7 +165,7 @@ public class OrganizationResourceTest extends CategoryTest {
     NGPageResponse<OrganizationDTO> organizationList =
         organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData();
 
-    assertThat(organizationList.getTotalElements()).isEqualTo(2);
+    assertThat(organizationList.getItemCount()).isEqualTo(2);
     assertThat(organizationList.getContent()).isNotNull();
     assertThat(organizationList.getContent().size()).isEqualTo(2);
   }

@@ -1,8 +1,11 @@
 package io.harness.connector.apis.resource;
 
+import static io.harness.utils.PageUtils.getNGPageResponse;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.beans.NGPageResponse;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
@@ -12,7 +15,6 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.springframework.data.domain.Page;
 
 import java.util.Optional;
 import javax.validation.Valid;
@@ -63,13 +65,13 @@ public class ConnectorResource {
 
   @GET
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
-  public ResponseDTO<Page<ConnectorSummaryDTO>> list(@QueryParam("page") @DefaultValue("0") int page,
+  public ResponseDTO<NGPageResponse<ConnectorSummaryDTO>> list(@QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("100") int size,
       @NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("searchTerm") String searchTerm, @QueryParam("type") String type) {
-    return ResponseDTO.newResponse(
-        connectorService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type));
+    return ResponseDTO.newResponse(getNGPageResponse(
+        connectorService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type)));
   }
 
   @POST

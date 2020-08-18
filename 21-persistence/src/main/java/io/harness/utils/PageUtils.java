@@ -3,6 +3,7 @@ package io.harness.utils;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.beans.NGPageResponse;
+import io.harness.beans.PageResponse;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,10 +40,21 @@ public class PageUtils {
   public <T> NGPageResponse<T> getNGPageResponse(Page<T> page) {
     return NGPageResponse.<T>builder()
         .totalPages(page.getTotalPages())
-        .totalElements(page.getTotalElements())
+        .itemCount(page.getTotalElements())
         .content(page.getContent())
-        .size(page.getSize())
-        .pageNumber(page.getPageable().getPageNumber())
+        .pageSize(page.getSize())
+        .pageIndex(page.getPageable().getPageNumber())
+        .empty(page.isEmpty())
+        .build();
+  }
+
+  public <T> NGPageResponse<T> getNGPageResponse(PageResponse<T> page) {
+    return NGPageResponse.<T>builder()
+        .totalPages((page.getPageSize() == 0) ? 0 : (page.getTotal() + page.getPageSize() - 1) / page.getPageSize())
+        .itemCount(page.getTotal())
+        .content(page.getResponse())
+        .pageSize(page.getPageSize())
+        .pageIndex(page.getCurrentPage())
         .empty(page.isEmpty())
         .build();
   }

@@ -22,10 +22,10 @@ import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.UpdateProjectDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.io.harness.ng.utils.PageTestUtils;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
+import io.harness.utils.PageTestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -112,7 +112,7 @@ public class ProjectResourceTest extends CategoryTest {
     NGPageResponse<ProjectDTO> projectDTOs =
         projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOs);
-    assertEquals("Count of DTOs should match", 2, projectDTOs.getTotalElements());
+    assertEquals("Count of DTOs should match", 2, projectDTOs.getItemCount());
     assertNotNull("Page contents should not be null", projectDTOs.getContent());
 
     List<ProjectDTO> returnedDTOs = projectDTOs.getContent();
@@ -146,7 +146,7 @@ public class ProjectResourceTest extends CategoryTest {
     final NGPageResponse<ProjectDTO> projectDTOS =
         projectResource.listProjectsForOrganization(firstOrgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
-    assertEquals("Count of DTOs should match", firstProjectList.size(), projectDTOS.getTotalElements());
+    assertEquals("Count of DTOs should match", firstProjectList.size(), projectDTOS.getItemCount());
     assertNotNull("Page contents should not be null", projectDTOS.getContent());
 
     List<ProjectDTO> returnedDTOs = projectDTOS.getContent();
