@@ -933,6 +933,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
               .adoptDelegateDecryption(adoptDelegateDecryption)
               .expressionFunctorToken(
                   stateExecutionContext == null ? 0 : stateExecutionContext.getExpressionFunctorToken())
+              .twoPhaseEnabled(
+                  featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, app.getAccountId()))
+              .threePhaseEnabled(
+                  featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, app.getAccountId()))
               .build());
     }
     return contextMap;

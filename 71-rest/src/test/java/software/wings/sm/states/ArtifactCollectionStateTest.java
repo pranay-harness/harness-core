@@ -143,6 +143,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     artifactCollectionState.setArtifactStreamId(ARTIFACT_STREAM_ID);
     FieldUtils.writeField(executionContext, "variableProcessor", variableProcessor, true);
     FieldUtils.writeField(executionContext, "evaluator", expressionEvaluator, true);
+    FieldUtils.writeField(executionContext, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(workflowStandardParams, "appService", appService, true);
     FieldUtils.writeField(workflowStandardParams, "configuration", configuration, true);
     FieldUtils.writeField(workflowStandardParams, "accountService", accountService, true);
