@@ -78,9 +78,9 @@ public class NGSecretResource {
         ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size);
     NGPageResponse<EncryptedDataDTO> encryptedDataDTOPageResponse = NGPageResponse.<EncryptedDataDTO>builder()
                                                                         .empty(secrets.isEmpty())
-                                                                        .pageNumber(secrets.getPageNumber())
-                                                                        .size(secrets.getSize())
-                                                                        .totalElements(secrets.getTotalElements())
+                                                                        .pageIndex(secrets.getPageIndex())
+                                                                        .pageSize(secrets.getPageSize())
+                                                                        .itemCount(secrets.getItemCount())
                                                                         .totalPages(secrets.getTotalPages())
                                                                         .build();
     encryptedDataDTOPageResponse.setContent(

@@ -44,15 +44,15 @@ public class NGSecretServiceImpl implements NGSecretService {
   private NGPageResponse<EncryptedData> getNGPageResponseFromPageResponse(PageResponse<EncryptedDataDTO> pageResponse) {
     NGPageResponse<EncryptedData> encryptedDataPageResponse =
         NGPageResponse.<EncryptedData>builder()
-            .pageNumber(pageResponse.getCurrentPage())
+            .pageIndex(pageResponse.getCurrentPage())
             .empty(pageResponse.isEmpty())
-            .size(pageResponse.size())
-            .totalElements(pageResponse.getTotal())
+            .pageSize(pageResponse.size())
+            .itemCount(pageResponse.getTotal())
             .content(pageResponse.getResponse().stream().map(EncryptedDataMapper::fromDTO).collect(Collectors.toList()))
             .build();
-    if (encryptedDataPageResponse.getTotalElements() > 0 && encryptedDataPageResponse.getSize() > 0) {
+    if (encryptedDataPageResponse.getItemCount() > 0 && encryptedDataPageResponse.getPageSize() > 0) {
       encryptedDataPageResponse.setTotalPages(
-          (int) Math.ceil((double) encryptedDataPageResponse.getTotalElements() / encryptedDataPageResponse.getSize()));
+          (int) Math.ceil((double) encryptedDataPageResponse.getItemCount() / encryptedDataPageResponse.getPageSize()));
     }
     return encryptedDataPageResponse;
   }

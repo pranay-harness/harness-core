@@ -17,10 +17,10 @@ import io.harness.ng.ModuleType;
 import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.io.harness.ng.utils.PageTestUtils;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
+import io.harness.utils.PageTestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,7 +72,7 @@ public class AccountProjectResourceTest extends CategoryTest {
     final NGPageResponse<ProjectDTO> allProjectDTOS =
         accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, null, null, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", allProjectDTOS);
-    assertEquals("Count of DTOs should match", projectList.size(), allProjectDTOS.getTotalElements());
+    assertEquals("Count of DTOs should match", projectList.size(), allProjectDTOS.getItemCount());
     assertNotNull("Page contents should not be null", allProjectDTOS.getContent());
 
     List<ProjectDTO> returnedDTOs = allProjectDTOS.getContent();

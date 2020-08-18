@@ -1,4 +1,4 @@
-package io.harness.ng.core.io.harness.ng.utils;
+package io.harness.utils;
 
 import lombok.experimental.UtilityClass;
 import org.springframework.data.domain.Page;
