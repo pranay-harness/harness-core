@@ -39,7 +39,6 @@ import migrations.all.AddAccountidToTimeSeriesMLScores;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
 import migrations.all.AddCeFullTrialLicenseToCurrentAccounts;
-import migrations.all.AddCommitTimeToGitSyncError;
 import migrations.all.AddHarnessOwnedToResourceConstraint;
 import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
@@ -207,7 +206,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(93, K8sStatesTimeoutMigration.class))
         .add(Pair.of(94, BaseMigration.class))
         .add(Pair.of(95, GitSyncErrorGitDetailsMigration.class))
-        .add(Pair.of(96, AddCommitTimeToGitSyncError.class))
+        .add(Pair.of(96, BaseMigration.class))
         .add(Pair.of(97, BaseMigration.class))
         .add(Pair.of(98, BaseMigration.class))
         .add(Pair.of(99, BaseMigration.class))
