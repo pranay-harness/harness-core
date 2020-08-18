@@ -16,6 +16,7 @@ import software.wings.beans.Base;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AzureVMSSDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
@@ -102,6 +103,7 @@ public class DeploymentSummary extends Base {
   private SpotinstAmiDeploymentKey spotinstAmiDeploymentKey;
   private AwsLambdaDeploymentKey awsLambdaDeploymentKey;
   private CustomDeploymentKey customDeploymentKey;
+  private AzureVMSSDeploymentKey azureVMSSDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
@@ -112,7 +114,8 @@ public class DeploymentSummary extends Base {
       String deployedByName, long deployedAt, DeploymentInfo deploymentInfo, PcfDeploymentKey pcfDeploymentKey,
       AwsAmiDeploymentKey awsAmiDeploymentKey, AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey,
       ContainerDeploymentKey containerDeploymentKey, SpotinstAmiDeploymentKey spotinstAmiDeploymentKey,
-      AwsLambdaDeploymentKey awsLambdaDeploymentKey, K8sDeploymentKey k8sDeploymentKey) {
+      AwsLambdaDeploymentKey awsLambdaDeploymentKey, K8sDeploymentKey k8sDeploymentKey,
+      AzureVMSSDeploymentKey azureVMSSDeploymentKey) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.infraMappingId = infraMappingId;
@@ -138,6 +141,7 @@ public class DeploymentSummary extends Base {
     this.spotinstAmiDeploymentKey = spotinstAmiDeploymentKey;
     this.awsLambdaDeploymentKey = awsLambdaDeploymentKey;
     this.k8sDeploymentKey = k8sDeploymentKey;
+    this.azureVMSSDeploymentKey = azureVMSSDeploymentKey;
   }
 
   public static final class DeploymentSummaryKeys {

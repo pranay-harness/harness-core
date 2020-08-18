@@ -1,5 +1,6 @@
 package software.wings.service.intfc.azure.manager;
 
+import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -57,4 +58,7 @@ public interface AzureVMSSHelperServiceManager {
    */
   VirtualMachineScaleSetData getVirtualMachineScaleSet(AzureConfig azureConfig, String subscriptionId,
       String resourceGroupName, String vmssId, List<EncryptedDataDetail> encryptionDetails, String appId);
+
+  List<AzureVMData> listVMSSVirtualMachines(AzureConfig azureConfig, String subscriptionId, String resourceGroupName,
+      String vmssId, List<EncryptedDataDetail> encryptionDetails, String appId);
 }

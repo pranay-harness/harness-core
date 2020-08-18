@@ -11,6 +11,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.DelegateTask;
@@ -21,11 +22,13 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListResourceGroupsNamesParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListSubscriptionsParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListVMDataParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListVirtualMachineScaleSetsParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSGetVirtualMachineScaleSetResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListResourceGroupsNamesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListSubscriptionsResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListVMDataResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListVirtualMachineScaleSetsResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
@@ -90,6 +93,19 @@ public class AzureVMSSHelperServiceManagerImpl implements AzureVMSSHelperService
         azureConfig, encryptionDetails, appId);
 
     return ((AzureVMSSGetVirtualMachineScaleSetResponse) response).getVirtualMachineScaleSet();
+  }
+
+  @Override
+  public List<AzureVMData> listVMSSVirtualMachines(AzureConfig azureConfig, String subscriptionId,
+      String resourceGroupName, String vmssId, List<EncryptedDataDetail> encryptionDetails, String appId) {
+    AzureVMSSTaskResponse response = executeTask(azureConfig.getAccountId(),
+        AzureVMSSListVMDataParameters.builder()
+            .subscriptionId(subscriptionId)
+            .resourceGroupName(resourceGroupName)
+            .vmssId(vmssId)
+            .build(),
+        azureConfig, encryptionDetails, appId);
+    return ((AzureVMSSListVMDataResponse) response).getVmData();
   }
 
   private AzureVMSSTaskResponse executeTask(String accountId, AzureVMSSTaskParameters parameters,

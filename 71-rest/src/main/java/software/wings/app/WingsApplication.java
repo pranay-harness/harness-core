@@ -101,6 +101,7 @@ import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.example.SamplePerpetualTaskServiceClient;
 import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.AwsSshPerpetualTaskServiceClient;
+import io.harness.perpetualtask.instancesync.AzureVMSSInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
@@ -556,6 +557,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(AwsCodeDeployInstanceSyncPerpetualTaskClient.class));
     clientRegistry.registerClient(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC,
         injector.getInstance(SpotinstAmiInstanceSyncPerpetualTaskClient.class));
+    clientRegistry.registerClient(PerpetualTaskType.AZURE_VMSS_INSTANCE_SYNC,
+        injector.getInstance(AzureVMSSInstanceSyncPerpetualTaskClient.class));
     clientRegistry.registerClient(PerpetualTaskType.CONTAINER_INSTANCE_SYNC,
         injector.getInstance(ContainerInstanceSyncPerpetualTaskClient.class));
     clientRegistry.registerClient(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC,

@@ -14,6 +14,7 @@ public final class PerpetualTaskType {
   public static final String AWS_LAMBDA_INSTANCE_SYNC = "AWS_LAMBDA_INSTANCE_SYNC";
   public static final String CUSTOM_DEPLOYMENT_INSTANCE_SYNC = "CUSTOM_DEPLOYMENT_INSTANCE_SYNC";
   public static final String DATA_COLLECTION_TASK = "DATA_COLLECTION_TASK";
+  public static final String AZURE_VMSS_INSTANCE_SYNC = "AZURE_VMSS_INSTANCE_SYNC";
 
   private PerpetualTaskType() {}
 }

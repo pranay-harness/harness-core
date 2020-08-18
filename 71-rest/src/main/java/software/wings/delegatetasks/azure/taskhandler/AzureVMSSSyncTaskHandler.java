@@ -121,6 +121,9 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
                                     .build();
         break;
       }
+      case AZURE_VMSS_LIST_VM_DATA: {
+        return null;
+      }
       default: {
         throw new InvalidRequestException(format("Unrecognized object of class: [%s] while executing sync task",
             azureVMSSTaskParameters.getCommandType().name()));

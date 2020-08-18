@@ -27,6 +27,7 @@ import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AzureVMSSDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey.CustomDeploymentFieldKeys;
@@ -168,6 +169,10 @@ public class DeploymentServiceImpl implements DeploymentService {
           join(".", DeploymentSummaryKeys.customDeploymentKey, CustomDeploymentFieldKeys.instanceFetchScriptHash),
           customDeploymentKey.getInstanceFetchScriptHash());
       return customDeploymentKey;
+    } else if (deploymentSummary.getAzureVMSSDeploymentKey() != null) {
+      AzureVMSSDeploymentKey azureVMSSDeploymentKey = deploymentSummary.getAzureVMSSDeploymentKey();
+      query.filter("azureVMSSDeploymentKey.vmssId", azureVMSSDeploymentKey.getVmssId());
+      return azureVMSSDeploymentKey;
     } else {
       String msg = "Either AMI, CodeDeploy, container or pcf deployment key needs to be set";
       logger.error(msg);

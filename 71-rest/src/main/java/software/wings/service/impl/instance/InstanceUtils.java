@@ -42,6 +42,8 @@ public class InstanceUtils {
       instanceType = InstanceType.EC2_CLOUD_INSTANCE;
     } else if (InfrastructureMappingType.PCF_PCF.name().equals(infraMappingType)) {
       instanceType = InstanceType.PCF_INSTANCE;
+    } else if (InfrastructureMappingType.AZURE_VMSS.name().equals(infraMappingType)) {
+      instanceType = InstanceType.AZURE_VMSS_INSTANCE;
     } else {
       String msg = "Unsupported infraMapping type:" + infraMappingType;
       logger.error(msg);
