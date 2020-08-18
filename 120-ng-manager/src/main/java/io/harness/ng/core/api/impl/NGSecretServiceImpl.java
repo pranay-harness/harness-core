@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
+import static io.harness.secretmanagerclient.SecretType.toSettingVariableType;
 import static io.harness.secretmanagerclient.utils.RestClientUtils.getResponse;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;
 
@@ -60,8 +61,8 @@ public class NGSecretServiceImpl implements NGSecretService {
   @Override
   public NGPageResponse<EncryptedData> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       SecretType secretType, String searchTerm, int page, int size) {
-    PageResponse<EncryptedDataDTO> pageResponse = getResponse(secretManagerClient.listSecrets(
-        accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size));
+    PageResponse<EncryptedDataDTO> pageResponse = getResponse(secretManagerClient.listSecrets(accountIdentifier,
+        orgIdentifier, projectIdentifier, toSettingVariableType(secretType), searchTerm, page, size));
     return getNGPageResponseFromPageResponse(pageResponse);
   }
 

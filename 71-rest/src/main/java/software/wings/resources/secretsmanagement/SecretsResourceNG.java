@@ -61,6 +61,7 @@ public class SecretsResourceNG {
         encryptedDataPageResponse.getResponse().stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList());
     PageResponse<EncryptedDataDTO> dtoPageResponse = new PageResponse<>();
     dtoPageResponse.setResponse(dtoList);
+    dtoPageResponse.setPageSize(encryptedDataPageResponse.getPageSize());
     dtoPageResponse.setTotal(encryptedDataPageResponse.getTotal());
     dtoPageResponse.setLimit(encryptedDataPageResponse.getLimit());
     dtoPageResponse.setOffset(encryptedDataPageResponse.getOffset());

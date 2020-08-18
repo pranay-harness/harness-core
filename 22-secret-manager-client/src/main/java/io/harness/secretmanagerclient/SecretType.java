@@ -7,6 +7,9 @@ public enum SecretType {
   SecretText;
 
   public static SettingVariableTypes toSettingVariableType(SecretType secretType) {
+    if (secretType == null) {
+      return null;
+    }
     if (secretType == SecretType.SecretFile) {
       return SettingVariableTypes.CONFIG_FILE;
     } else if (secretType == SecretType.SecretText) {
