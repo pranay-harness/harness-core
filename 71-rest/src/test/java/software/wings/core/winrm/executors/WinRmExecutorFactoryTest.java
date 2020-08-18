@@ -12,12 +12,13 @@ import org.mockito.Mock;
 
 public class WinRmExecutorFactoryTest extends CategoryTest {
   @Mock WinRmExecutorFactory winRmExecutorFactory = new WinRmExecutorFactory();
-  @Mock WinRmSessionConfig winRmSessionConfig;
+  WinRmSessionConfig winRmSessionConfig;
 
   @Test
   @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldGetWinRmExecutor() {
+    winRmSessionConfig = WinRmSessionConfig.builder().build();
     assertThat(winRmExecutorFactory.getExecutor(winRmSessionConfig, false))
         .isNotNull()
         .isInstanceOf(WinRmExecutor.class);

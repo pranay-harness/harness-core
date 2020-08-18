@@ -133,6 +133,7 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
                                                 .useSSL(false)
                                                 .skipCertChecks(false)
                                                 .workingDirectory(null)
+                                                .useNoProfile(false)
                                                 .build();
 
     when(winRmExecutorFactory.getExecutor(winRmSessionConfig, false)).thenReturn(winRmExecutor);
@@ -175,6 +176,7 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
                                                 .useSSL(false)
                                                 .skipCertChecks(false)
                                                 .workingDirectory(null)
+                                                .useNoProfile(false)
                                                 .build();
 
     when(winRmExecutorFactory.getExecutor(winRmSessionConfig, false)).thenReturn(winRmExecutor);
@@ -217,6 +219,7 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
                                                 .useSSL(false)
                                                 .skipCertChecks(false)
                                                 .workingDirectory(null)
+                                                .useNoProfile(false)
                                                 .build();
     CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
                                                           .timeout(0)
@@ -288,6 +291,7 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
                                                 .useSSL(false)
                                                 .skipCertChecks(false)
                                                 .workingDirectory(null)
+                                                .useNoProfile(false)
                                                 .build();
     CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
                                                           .timeout(0)
@@ -336,6 +340,7 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
                                                 .useSSL(false)
                                                 .skipCertChecks(false)
                                                 .workingDirectory(null)
+                                                .useNoProfile(false)
                                                 .build();
     CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
                                                           .timeout(0)
@@ -383,6 +388,7 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
                                                 .useSSL(false)
                                                 .skipCertChecks(false)
                                                 .workingDirectory(null)
+                                                .useNoProfile(false)
                                                 .build();
     CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
                                                           .timeout(0)

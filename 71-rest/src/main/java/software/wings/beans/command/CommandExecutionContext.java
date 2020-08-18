@@ -187,6 +187,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         .environment(envVariables == null ? Collections.emptyMap() : envVariables)
         .useKeyTab(winrmConnectionAttributes.isUseKeyTab())
         .keyTabFilePath(winrmConnectionAttributes.getKeyTabFilePath())
+        .useNoProfile(winrmConnectionAttributes.isUseNoProfile())
         .build();
   }
 
