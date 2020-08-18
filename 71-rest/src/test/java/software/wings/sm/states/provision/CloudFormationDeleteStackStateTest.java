@@ -57,6 +57,7 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateSt
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
@@ -75,6 +76,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ActivityService activityService;
+  @Mock private SettingsService settingsService;
 
   @InjectMocks private CloudFormationDeleteStackState state = new CloudFormationDeleteStackState("stateName");
 
@@ -118,15 +120,28 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
 
     state.setTemplateExpressions(Arrays.asList(templateExpression));
     ExecutionResponse executionResponse = state.executeInternal(mockContext, ACTIVITY_ID);
+    verifyDelegate(executionResponse, true, 1);
 
+    // no tags in awsConfig
+    settingAttribute.setValue(AwsConfig.builder().build());
+    when(templateExpressionProcessor.getTemplateExpression(eq(Arrays.asList(templateExpression)), eq("awsConfigId")))
+        .thenReturn(null);
+    when(settingsService.get(anyString())).thenReturn(settingAttribute);
+    executionResponse = state.executeInternal(mockContext, ACTIVITY_ID);
+    verifyDelegate(executionResponse, false, 2);
+  }
+
+  private void verifyDelegate(ExecutionResponse executionResponse, boolean checkTags, int i) {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
+    verify(delegateService, times(i)).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(delegateTask.getTags()).isNotEmpty();
-    assertThat(delegateTask.getTags().get(0)).isEqualTo(TAG_NAME);
+    if (checkTags) {
+      assertThat(delegateTask.getTags()).isNotEmpty();
+      assertThat(delegateTask.getTags().get(0)).isEqualTo(TAG_NAME);
+    }
     assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
     assertThat(delegateTask.getData().getParameters()).isNotNull();
     assertThat(delegateTask.getData().getParameters().length).isEqualTo(2);
