@@ -30,7 +30,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELISTING;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
@@ -575,7 +575,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     Set<PermissionType> newAccountPermissions = new HashSet<>();
     for (PermissionType permission : userGroup.getAccountPermissions().getPermissions()) {
       if (ACCOUNT_MANAGEMENT.equals(permission)) {
-        newAccountPermissions.add(MANAGE_IP_WHITELISTING);
+        newAccountPermissions.add(MANAGE_IP_WHITELIST);
         newAccountPermissions.add(MANAGE_AUTHENTICATION_SETTINGS);
         newAccountPermissions.add(MANAGE_APPLICATION_STACKS);
         newAccountPermissions.add(MANAGE_ALERT_NOTIFICATION_RULES);

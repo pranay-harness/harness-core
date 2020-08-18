@@ -11,7 +11,6 @@ import io.harness.batch.processing.billing.tasklet.dao.intfc.DataGeneratedNotifi
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -29,7 +28,11 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.test.context.ActiveProfiles;
+import software.wings.beans.User;
+import software.wings.beans.security.AccountPermissions;
+import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.sql.Connection;
@@ -37,6 +40,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Collections;
 
 @ActiveProfiles("test")
 @RunWith(MockitoJUnitRunner.class)
@@ -88,8 +92,16 @@ public class BillingDataGeneratedMailTaskletTest extends CategoryTest {
 
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
     when(notificationDao.isMailSent(ACCOUNT_ID)).thenReturn(true);
-    when(cloudToHarnessMappingService.getUserForCluster("CLUSTERID"))
-        .thenReturn(CEUserInfo.builder().name("user").email("user@harness.io").build());
+    when(cloudToHarnessMappingService.listUserGroupsForAccount(ACCOUNT_ID))
+        .thenReturn(Collections.singletonList(
+            UserGroup.builder()
+                .accountId(ACCOUNT_ID)
+                .accountPermissions(
+                    AccountPermissions.builder().permissions(Collections.singleton(PermissionType.CE_ADMIN)).build())
+                .memberIds(Collections.singletonList("USERID"))
+                .build()));
+    when(cloudToHarnessMappingService.getUser("USERID"))
+        .thenReturn(User.Builder.anUser().name("name").email("email").uuid("USERID").build());
     RepeatStatus repeatStatus = tasklet.execute(null, chunkContext);
     assertThat(repeatStatus).isNull();
 

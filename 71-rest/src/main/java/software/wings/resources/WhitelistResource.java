@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELISTING;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 import static software.wings.security.PermissionAttribute.ResourceType.WHITE_LIST;
 
 import com.google.inject.Inject;
@@ -42,7 +42,7 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(WHITE_LIST)
-@AuthRule(permissionType = MANAGE_IP_WHITELISTING)
+@AuthRule(permissionType = MANAGE_IP_WHITELIST)
 public class WhitelistResource {
   private WhitelistService whitelistService;
 
