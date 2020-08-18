@@ -6,6 +6,7 @@ import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by brett on 7/20/17
@@ -14,7 +15,7 @@ public interface AssignDelegateService {
   boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task);
 
   boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId, String envId,
-      String infraMappingId, TaskGroup taskGroup, List<String> tags);
+      String infraMappingId, TaskGroup taskGroup, List<String> tags, Map<String, String> taskSetupAbstractions);
 
   boolean isWhitelisted(DelegateTask task, String delegateId);
 
