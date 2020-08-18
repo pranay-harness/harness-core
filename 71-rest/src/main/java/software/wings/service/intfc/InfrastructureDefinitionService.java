@@ -28,6 +28,9 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public interface InfrastructureDefinitionService extends OwnedByEnvironment {
+  PageResponse<InfrastructureDefinition> list(
+      PageRequest<InfrastructureDefinition> pageRequest, List<String> serviceIds);
+
   PageResponse<InfrastructureDefinition> list(PageRequest<InfrastructureDefinition> pageRequest);
   PageResponse<InfrastructureDefinition> list(@NotEmpty String appId, @NotEmpty String envId, String serviceId);
   PageResponse<InfraDefinitionDetail> listInfraDefinitionDetail(
