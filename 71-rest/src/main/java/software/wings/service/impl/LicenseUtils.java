@@ -163,9 +163,6 @@ public class LicenseUtils {
         currentLicenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
       } else if (newLicenseInfo.getExpiryTime() > 0
           && newLicenseInfo.getExpiryTime() != currentLicenseInfo.getExpiryTime()) {
-        if (newLicenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
-          throw new InvalidRequestException("Expiry time less than current time. Cannot proceed with update", USER);
-        }
         currentLicenseInfo.setExpiryTime(newLicenseInfo.getExpiryTime());
       } else {
         if (resetExpiryTime > 0) {

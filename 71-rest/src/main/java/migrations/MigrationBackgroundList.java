@@ -57,7 +57,6 @@ import migrations.all.DeleteInvalidServiceGuardConfigs;
 import migrations.all.DeleteOrphanNotificationGroups;
 import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
-import migrations.all.DeletedAccountStatusMigration;
 import migrations.all.DisableServiceGuardsWithDeletedConnectorsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
@@ -271,8 +270,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(157, AddAccountIdToTriggerExecutions.class))
         .add(Pair.of(158, AddAccountIdToPermitCollection.class))
         .add(Pair.of(159, AddAccountIdToStateMachine.class))
-        .add(Pair.of(160, DeletedAccountStatusMigration.class))
-        .add(Pair.of(161, RemoveDeprecatedFieldsFromHarnessUserGroup.class))
+        .add(Pair.of(160, RemoveDeprecatedFieldsFromHarnessUserGroup.class))
         .build();
   }
 }

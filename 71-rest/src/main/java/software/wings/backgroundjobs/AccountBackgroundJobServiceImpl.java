@@ -8,11 +8,9 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.quartz.SchedulerException;
 import software.wings.beans.AccountStatus;
 import software.wings.processingcontrollers.DelegateProcessingController;
-import software.wings.scheduler.DelegateDeletionJob;
 import software.wings.service.intfc.AccountService;
 
 import java.util.List;
@@ -30,7 +28,6 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
     if (!AccountStatus.DELETED.equals(accountStatus)) {
       managePerpetualTasks(accountId);
       manageQuartzJobs(accountId);
-      manageDelegates(accountId);
     }
   }
 
@@ -53,13 +50,6 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
       }
     } catch (SchedulerException ex) {
       logger.error("Exception occurred at manageQuartzJobs() for account {}", accountId, ex);
-    }
-  }
-
-  private void manageDelegates(String accountId) {
-    if (!delegateProcessingController.canProcessAccount(accountId)) {
-      // Trigger Delegate Deletion Job
-      DelegateDeletionJob.addWithDelay(persistentScheduler, accountId, StringUtils.EMPTY, 30);
     }
   }
 

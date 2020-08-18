@@ -161,39 +161,10 @@ public class LicenseServiceImpl implements LicenseService {
           sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED, EMAIL_BODY_ACCOUNT_EXPIRED,
               accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
         }
-        if (accountType.equals(AccountType.TRIAL) && !AccountStatus.DELETED.equals(accountStatus)) {
-          handleTrialAccountExpiration(account, expiryTime);
-        }
       }
     } catch (Exception e) {
       logger.warn("Failed to check license info", e);
     }
-  }
-
-  @VisibleForTesting
-  void handleTrialAccountExpiration(Account account, long expiryTime) {
-    String templateName = getEmailTemplateName(account, System.currentTimeMillis(), expiryTime);
-    if (templateName != null) {
-      logger.info("Sending trial account expiration email with template name {} to account {}", templateName,
-          account.getUuid());
-      boolean emailSent = sendEmailToAccountAdmin(account.getUuid(), templateName);
-      if (emailSent) {
-        updateLastLicenseExpiryReminderSentAt(account.getUuid(), System.currentTimeMillis());
-      } else {
-        logger.warn("Couldn't send trial expiration email to customer for account {}", account.getUuid());
-      }
-    }
-    long expiredSinceDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - expiryTime);
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    if (expiredSinceDays >= 30 && !AccountStatus.MARKED_FOR_DELETION.equals(licenseInfo.getAccountStatus())) {
-      updateAccountStatusToMarkedForDeletion(account);
-    }
-  }
-
-  private void updateAccountStatusToMarkedForDeletion(Account account) {
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    licenseInfo.setAccountStatus(AccountStatus.MARKED_FOR_DELETION);
-    updateAccountLicense(account.getUuid(), licenseInfo);
   }
 
   @VisibleForTesting

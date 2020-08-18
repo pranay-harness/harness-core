@@ -2155,7 +2155,7 @@ public class UserServiceImpl implements UserService {
         return;
       }
 
-      if (user.getDefaultAccountId().equals(accountId)) {
+      if (user.getDefaultAccountId() != null && user.getDefaultAccountId().equals(accountId)) {
         setNewDefaultAccountId(user);
       }
 
@@ -2176,9 +2176,10 @@ public class UserServiceImpl implements UserService {
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                             .set(UserKeys.roles, user.getRoles())
                                             .set(UserKeys.accounts, user.getAccounts())
-                                            .set(UserKeys.pendingAccounts, user.getPendingAccounts())
-                                            .set(UserKeys.defaultAccountId, user.getDefaultAccountId());
-
+                                            .set(UserKeys.pendingAccounts, user.getPendingAccounts());
+      if (user.getDefaultAccountId() != null) {
+        updateOp.set(UserKeys.defaultAccountId, user.getDefaultAccountId());
+      }
       Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
       wingsPersistence.update(updateQuery, updateOp);
 
