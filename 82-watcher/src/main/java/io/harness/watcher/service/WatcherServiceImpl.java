@@ -918,6 +918,13 @@ public class WatcherServiceImpl implements WatcherService {
     logger.info("Downloading delegate jar version {}", version);
     File destination = new File(version + "/delegate.jar");
     if (destination.exists()) {
+      if (destination.lastModified() > System.currentTimeMillis() - Duration.ofHours(1).toMillis()) {
+        logger.warn(
+            "Skipping repetitive download of delegate jar for version {}. Same delegate jar version can be downloaded one hour after the previous download.",
+            version);
+        return;
+      }
+
       logger.info("Replacing delegate jar version {}", version);
       FileUtils.forceDelete(destination);
     }
