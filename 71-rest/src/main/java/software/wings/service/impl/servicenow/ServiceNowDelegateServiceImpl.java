@@ -368,24 +368,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
     return ServiceNowExecutionData.builder()
         .issueUrl(issueUrl)
-        .currentState(issueObj.get("state").get("display_value").asText())
+        .message("Approval and Rejection criteria empty in Approval State")
         .build();
-  }
-
-  @Override
-  public String getIssueFieldStatus(ServiceNowTaskParameters taskParameters, String field) {
-    JsonNode issueObj = getIssue(taskParameters);
-    return issueObj.get(field).get("display_value").asText();
-  }
-
-  @Override
-  public Map<String, String> getIssueStatus(
-      ServiceNowTaskParameters taskParameters, Set<String> criteriaFields, Set<String> timeFields) {
-    JsonNode issueObj = getIssue(taskParameters);
-    Map<String, String> issueStatus = getIssueValues(issueObj, timeFields);
-    issueStatus.putAll(criteriaFields.stream().collect(
-        Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText())));
-    return issueStatus;
   }
 
   // For fields we need values instead of display values
@@ -402,7 +386,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
           .map(field -> StringUtils.capitalize(field) + " is " + issueObj.get(field).get("display_value").asText())
           .collect(Collectors.joining(",\n"));
     }
-    return issueObj.get("state").get("display_value").asText();
+    return null;
   }
 
   public static void handleResponse(Response<?> response, String message) throws IOException {

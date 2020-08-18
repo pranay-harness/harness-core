@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
@@ -142,7 +141,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
     putNotNull(executionDetails, "triggeredBy",
         ExecutionDataValue.builder().displayName("Triggered By").value(triggeredBy).build());
 
-    if (EmptyPredicate.isNotEmpty(approvalField) && EmptyPredicate.isNotEmpty(approvalValue)) {
+    if (isNotEmpty(approvalField) && isNotEmpty(approvalValue)) {
       putNotNull(executionDetails, "approvalCriteria",
           ExecutionDataValue.builder()
               .displayName("Approval Criteria")
@@ -156,7 +155,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
           ExecutionDataValue.builder().displayName("Approval Criteria").value(snowApproval.conditionsString()).build());
     }
 
-    if (EmptyPredicate.isNotEmpty(currentStatus)) {
+    if (isNotEmpty(currentStatus)) {
       String statusString = approvalStateType == ApprovalStateType.SERVICENOW
           ? currentStatus
           : StringUtils.capitalize(approvalField) + " is equal to '" + StringUtils.capitalize(currentStatus) + "'";
@@ -164,7 +163,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
           ExecutionDataValue.builder().displayName("Current value").value(statusString).build());
     }
 
-    if (EmptyPredicate.isNotEmpty(rejectionField) && EmptyPredicate.isNotEmpty(rejectionValue)) {
+    if (isNotEmpty(rejectionField) && isNotEmpty(rejectionValue)) {
       putNotNull(executionDetails, "rejectionCriteria",
           ExecutionDataValue.builder()
               .displayName("Rejection Criteria")
@@ -174,11 +173,11 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
     }
 
     if (snowRejection != null) {
-      putNotNull(executionDetails, "rejectionCriteria",
-          ExecutionDataValue.builder()
-              .displayName("Rejection Criteria")
-              .value(snowRejection.conditionsString())
-              .build());
+      String rejectionMessage = snowRejection.conditionsString();
+      if (isNotEmpty(rejectionMessage)) {
+        executionDetails.put("rejectionCriteria",
+            ExecutionDataValue.builder().displayName("Rejection Criteria").value(rejectionMessage).build());
+      }
     }
 
     if (approvedBy != null) {

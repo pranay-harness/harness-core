@@ -28,11 +28,7 @@ public interface ServiceNowDelegateService {
   List<ServiceNowMetaDTO> getAdditionalFields(ServiceNowTaskParameters taskParameters);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
   ServiceNowExecutionData getIssueUrl(ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams);
-  @DelegateTaskType(TaskType.SERVICENOW_SYNC)
-  String getIssueFieldStatus(ServiceNowTaskParameters taskParameters, String field);
-  @DelegateTaskType(TaskType.SERVICENOW_SYNC)
-  Map<String, String> getIssueStatus(
-      ServiceNowTaskParameters taskParameters, Set<String> criteriaFields, Set<String> timeFields);
+
   // For fields we need values instead of display values
   Map<String, String> getIssueValues(JsonNode issueObj, Set<String> timeFields);
 }

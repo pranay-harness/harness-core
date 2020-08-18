@@ -33,10 +33,6 @@ import java.util.TimeZone;
 @Slf4j
 public class ServiceNowApprovalParams {
   private String snowConnectorId;
-  private String approvalField;
-  private String approvalValue;
-  private String rejectionField;
-  private String rejectionValue;
   private String issueNumber;
   private ServiceNowTicketType ticketType;
   private Criteria approval;
