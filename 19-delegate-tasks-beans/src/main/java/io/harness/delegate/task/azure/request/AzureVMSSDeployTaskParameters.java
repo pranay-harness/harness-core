@@ -2,6 +2,7 @@ package io.harness.delegate.task.azure.request;
 
 import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_DEPLOY;
 
+import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,15 +21,19 @@ public class AzureVMSSDeployTaskParameters extends AzureVMSSTaskParameters {
   private int minInstances;
   private int maxInstances;
   private int desiredInstances;
+  private String subscriptionId;
+  private String resourceGroupName;
   private boolean rollback;
   private List<String> baseScalingPolicyJSONs;
+  private AzureVMSSPreDeploymentData preDeploymentData;
 
   @Builder
   public AzureVMSSDeployTaskParameters(String appId, String accountId, String activityId, String commandName,
       Integer timeoutIntervalInMin, AzureVMSSTaskType commandType, boolean resizeNewFirst,
       String newVirtualMachineScaleSetName, String oldVirtualMachineScaleSetName, Integer newDesiredCount,
       Integer oldDesiredCount, Integer autoScalingSteadyStateVMSSTimeout, int minInstances, int maxInstances,
-      int desiredInstances, boolean rollback, List<String> baseScalingPolicyJSONs) {
+      int desiredInstances, boolean rollback, List<String> baseScalingPolicyJSONs, String subscriptionId,
+      String resourceGroupName, AzureVMSSPreDeploymentData preDeploymentData) {
     super(appId, accountId, activityId, commandName, timeoutIntervalInMin, AZURE_VMSS_DEPLOY);
     this.resizeNewFirst = resizeNewFirst;
     this.newVirtualMachineScaleSetName = newVirtualMachineScaleSetName;
@@ -39,7 +44,10 @@ public class AzureVMSSDeployTaskParameters extends AzureVMSSTaskParameters {
     this.minInstances = minInstances;
     this.maxInstances = maxInstances;
     this.desiredInstances = desiredInstances;
+    this.subscriptionId = subscriptionId;
+    this.resourceGroupName = resourceGroupName;
     this.rollback = rollback;
     this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
+    this.preDeploymentData = preDeploymentData;
   }
 }

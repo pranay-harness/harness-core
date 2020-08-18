@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +34,6 @@ public class AzureVMSSSetupContextElement implements ContextElement {
   private int oldDesiredCount;
   private int desiredInstances;
   private int minInstances;
-  private List<String> oldVMSSNames;
   private boolean isBlueGreen;
   private String infraMappingId;
   private ResizeStrategy resizeStrategy;

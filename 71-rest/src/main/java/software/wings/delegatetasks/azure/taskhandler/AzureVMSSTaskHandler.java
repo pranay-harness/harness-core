@@ -1,12 +1,13 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static java.lang.String.format;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
@@ -16,12 +17,15 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
 import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 @Slf4j
 public abstract class AzureVMSSTaskHandler {
   @Inject protected AzureVMSSHelperServiceDelegate azureVMSSHelperServiceDelegate;
+  @Inject protected AzureAutoScaleSettingsHelperServiceDelegate azureAutoScaleSettingsHelperServiceDelegate;
   @Inject protected DelegateLogService delegateLogService;
+  @Inject protected TimeLimiter timeLimiter;
 
   public AzureVMSSTaskExecutionResponse executeTask(
       AzureVMSSTaskParameters azureVMSSTaskParameters, AzureConfig azureConfig) {

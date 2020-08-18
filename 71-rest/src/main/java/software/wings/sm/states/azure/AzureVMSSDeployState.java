@@ -150,8 +150,8 @@ public class AzureVMSSDeployState extends State {
     AzureVMSSDeployStateExecutionData azureVMSSDeployStateExecutionData = buildAzureVMSSDeployStateExecutionData(
         azureVMSSSetupContextElement, activity, newDesiredCount, oldDesiredCount);
 
-    AzureVMSSTaskParameters azureVmssTaskParameters =
-        buildAzureVMSSTaskParameters(app, activityId, azureVMSSSetupContextElement, newDesiredCount, oldDesiredCount);
+    AzureVMSSTaskParameters azureVmssTaskParameters = buildAzureVMSSTaskParameters(app, activityId,
+        azureVMSSInfrastructureMapping, azureVMSSSetupContextElement, newDesiredCount, oldDesiredCount);
 
     AzureVMSSCommandRequest commandRequest =
         buildAzureVMSSCommandRequest(azureConfig, azureEncryptionDetails, azureVmssTaskParameters);
@@ -229,6 +229,7 @@ public class AzureVMSSDeployState extends State {
   }
 
   private AzureVMSSTaskParameters buildAzureVMSSTaskParameters(Application app, String activityId,
+      AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping,
       AzureVMSSSetupContextElement azureVMSSSetupContextElement, int newDesiredCount, int oldDesiredCount) {
     String accountId = app.getAccountId();
     String appId = app.getAppId();
@@ -247,7 +248,10 @@ public class AzureVMSSDeployState extends State {
         .minInstances(azureVMSSSetupContextElement.getMinInstances())
         .maxInstances(azureVMSSSetupContextElement.getMaxInstances())
         .desiredInstances(azureVMSSSetupContextElement.getDesiredInstances())
+        .resourceGroupName(azureVMSSInfrastructureMapping.getResourceGroupName())
+        .subscriptionId(azureVMSSInfrastructureMapping.getSubscriptionId())
         .rollback(isRollback())
+        .preDeploymentData(azureVMSSSetupContextElement.getPreDeploymentData())
         .build();
   }
 

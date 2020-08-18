@@ -37,6 +37,7 @@ import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegat
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class AzureVMSSSyncTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
@@ -120,9 +121,9 @@ public class AzureVMSSSyncTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testGetVirtualMachineScaleSets() throws Exception {
-    doReturn(virtualMachineScaleSet)
+    doReturn(Optional.of(virtualMachineScaleSet))
         .when(mockAzureVMSSHelperServiceDelegate)
-        .getVirtualMachineScaleSetsByName(any(), anyString(), anyString(), any());
+        .getVirtualMachineScaleSetByName(any(), anyString(), anyString(), any());
 
     PagedList<VirtualMachineScaleSetVM> pageList = getPageList();
     pageList.add(virtualMachineScaleSetVM);

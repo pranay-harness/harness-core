@@ -1,12 +1,13 @@
 package software.wings.service.impl.azure.delegate;
 
+import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
+import static io.harness.azure.model.AzureConstants.NAME_TAG;
+import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.doNothing;
@@ -16,7 +17,6 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
@@ -42,6 +42,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -51,7 +52,10 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureHelperService.class, Http.class, TimeLimiter.class})
@@ -133,10 +137,10 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     AzureConfig azureConfig =
         AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
-    VirtualMachineScaleSet response = azureVMSSHelperServiceDelegateImpl.getVirtualMachineScaleSetsById(
+    Optional<VirtualMachineScaleSet> response = azureVMSSHelperServiceDelegateImpl.getVirtualMachineScaleSetsById(
         azureConfig, "subscriptionId", "virtualMachineSetId");
 
-    assertThat(response).isNotNull();
+    response.ifPresent(scaleSet -> assertThat(scaleSet).isNotNull());
   }
 
   @Test
@@ -155,10 +159,10 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     AzureConfig azureConfig =
         AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
-    VirtualMachineScaleSet response = azureVMSSHelperServiceDelegateImpl.getVirtualMachineScaleSetsByName(
+    Optional<VirtualMachineScaleSet> response = azureVMSSHelperServiceDelegateImpl.getVirtualMachineScaleSetByName(
         azureConfig, "subscriptionId", "resourceGroupName", "virtualMachineScaleSetName");
 
-    assertThat(response).isNotNull();
+    response.ifPresent(vmm -> assertThat(vmm).isNotNull());
   }
 
   @Test
@@ -232,7 +236,7 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testcheckIfAllVmssInstancesAreInRunningState() throws Exception {
+  public void testCheckIfAllVMSSInstancesAreInRunningState() throws Exception {
     when(authenticated.withSubscription("subscriptionId")).thenReturn(azure);
 
     VirtualMachineScaleSets virtualMachineScaleSets = mock(VirtualMachineScaleSets.class);
@@ -252,33 +256,37 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     AzureConfig azureConfig =
         AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
-    assertThat(azureVMSSHelperServiceDelegateImpl.checkIfAllVmssInstancesAreInRunningState(
-                   azureConfig, "subscriptionId", "virtualMachineSetId"))
+    assertThat(azureVMSSHelperServiceDelegateImpl.checkIsRequiredNumberOfVMInstances(
+                   azureConfig, "subscriptionId", "virtualMachineSetId", 0))
         .isTrue();
     assertThat(virtualMachineScaleSet.virtualMachines().list()).isNotNull();
     verify(azure, times(1)).virtualMachineScaleSets();
   }
 
   @Test
-  @Owner(developers = TATHAGAT)
+  @Owner(developers = IVAN)
   @Category(UnitTests.class)
-  public void testwaitForAllVmssInstancesToBeReady() throws Exception {
-    AzureVMSSHelperServiceDelegateImpl azureVMSSHelperServiceDelegate = spy(AzureVMSSHelperServiceDelegateImpl.class);
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-    doReturn(true).when(azureVMSSHelperServiceDelegate).checkIfAllVmssInstancesAreInRunningState(any(), any(), any());
+  public void testGetTagsForNewVMSS() throws Exception {
+    VirtualMachineScaleSet virtualMachineScaleSet = Mockito.mock(VirtualMachineScaleSet.class);
+    Mockito.when(virtualMachineScaleSet.tags()).thenReturn(new HashMap<String, String>() {
+      {
+        put(HARNESS_AUTOSCALING_GROUP_TAG_NAME, "infraMappingId__15");
+        put("tag_name_1", "tag_value_1");
+        put("tag_name_2", "tag_value_2");
+      }
+    });
 
-    azureVMSSHelperServiceDelegate.waitForAllVmssInstancesToBeReady(
-        azureConfig, "subscriptionId", "virtualMacineScalesetId", 1);
-    verify(azureVMSSHelperServiceDelegate).checkIfAllVmssInstancesAreInRunningState(any(), any(), any());
+    int harnessRevision = 6;
+    boolean isBlueGreen = false;
+    Map<String, String> result = azureVMSSHelperServiceDelegateImpl.getTagsForNewVMSS(
+        virtualMachineScaleSet, "infraMappingId", harnessRevision, "newVirtualMachineScaleSetName", isBlueGreen);
 
-    doReturn(false).when(azureVMSSHelperServiceDelegate).checkIfAllVmssInstancesAreInRunningState(any(), any(), any());
-    try {
-      azureVMSSHelperServiceDelegate.waitForAllVmssInstancesToBeReady(
-          azureConfig, "subscriptionId", "virtualMacineScalesetId", 1);
-    } catch (Exception e) {
-      assertThat(e instanceof UncheckedTimeoutException).isTrue();
-    }
+    assertThat(result).isNotNull();
+    assertThat(result.get("tag_name_1")).isEqualTo("tag_value_1");
+    assertThat(result.get("tag_name_2")).isEqualTo("tag_value_2");
+    assertThat(result.get(HARNESS_AUTOSCALING_GROUP_TAG_NAME)).isEqualTo("infraMappingId__6");
+    assertThat(result.get(NAME_TAG)).isEqualTo("newVirtualMachineScaleSetName");
+    assertThat(result.get(VMSS_CREATED_TIME_STAMP_TAG_NAME)).isNotNull();
   }
 
   @NotNull
