@@ -402,9 +402,10 @@ public class ExecutionResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<DeploymentMetadata> getDeploymentMetadata(@QueryParam("appId") String appId,
       @QueryParam("withDefaultArtifact") boolean withDefaultArtifact,
-      @QueryParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
+      @QueryParam("workflowExecutionId") String workflowExecutionId,
+      @QueryParam("withLastDeployedInfo") boolean withLastDeployedInfo, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadata(
-        appId, executionArgs, withDefaultArtifact, workflowExecutionId));
+        appId, executionArgs, withDefaultArtifact, workflowExecutionId, withLastDeployedInfo));
   }
 
   /**

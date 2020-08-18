@@ -405,8 +405,8 @@ public class WorkflowExecutionController {
         Map<String, String> variableValues =
             validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables, false);
 
-        DeploymentMetadata finalDeploymentMetadata =
-            workflowService.fetchDeploymentMetadata(appId, workflow, variableValues, null, null, false, null);
+        DeploymentMetadata finalDeploymentMetadata = workflowService.fetchDeploymentMetadata(
+            appId, workflow, variableValues, null, null, false, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
         if (finalDeploymentMetadata != null) {
           List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
           if (isNotEmpty(artifactNeededServiceIds)) {

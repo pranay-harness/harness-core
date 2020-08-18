@@ -82,6 +82,7 @@ import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -94,6 +95,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.beans.WorkflowType;
 import io.harness.data.parser.CsvParser;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExplanationException;
@@ -143,6 +145,8 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.LastDeployedArtifactInformation;
+import software.wings.beans.LastDeployedArtifactInformation.LastDeployedArtifactInformationBuilder;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -228,6 +232,7 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachine.StateMachineKeys;
@@ -2117,14 +2122,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         fetchArtifactNeededServiceIds(appId, workflow, workflowVariables, artifactRequiredServiceIds);
         if (isNotEmpty(artifactRequiredServiceIds)) {
           for (String serviceId : artifactRequiredServiceIds) {
-            artifactVariables.add(
-                ArtifactVariable.builder()
-                    .type(VariableType.ARTIFACT)
-                    .name(DEFAULT_ARTIFACT_VARIABLE_NAME)
-                    .entityType(SERVICE)
-                    .entityId(serviceId)
-                    .allowedList(artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId))
-                    .build());
+            List<String> allowedArtifactStreams =
+                artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId);
+            artifactVariables.add(ArtifactVariable.builder()
+                                      .type(VariableType.ARTIFACT)
+                                      .name(DEFAULT_ARTIFACT_VARIABLE_NAME)
+                                      .entityType(SERVICE)
+                                      .entityId(serviceId)
+                                      .allowedList(allowedArtifactStreams)
+                                      .lastDeployedArtifactInfo(includeList.contains(Include.LAST_DEPLOYED_ARTIFACT)
+                                              ? fetchLastDeployedArtifact(workflow, allowedArtifactStreams, serviceId)
+                                              : null)
+                                      .build());
           }
         }
       }
@@ -2157,6 +2166,71 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return deploymentMetadataBuilder.build();
+  }
+
+  @VisibleForTesting
+  public LastDeployedArtifactInformation fetchLastDeployedArtifact(
+      Workflow workflow, List<String> allowedArtifactStreams, String serviceId) {
+    WorkflowExecution lastWorkflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                  .filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())
+                                                  .filter(WorkflowExecutionKeys.appId, workflow.getAppId())
+                                                  .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
+                                                  .filter(WorkflowExecutionKeys.status, SUCCESS)
+                                                  .order(Sort.descending(WorkflowExecutionKeys.createdAt))
+                                                  .get();
+
+    if (lastWorkflowExecution != null) {
+      List<Artifact> lastArtifacts = lastWorkflowExecution.getArtifacts();
+
+      if (isNotEmpty(lastArtifacts)) {
+        return populateLastDeployedArtifactInfo(
+            lastArtifacts, allowedArtifactStreams, lastWorkflowExecution, serviceId);
+      }
+    }
+    return null;
+  }
+
+  private LastDeployedArtifactInformation populateLastDeployedArtifactInfo(List<Artifact> lastArtifacts,
+      List<String> allowedArtifactStreams, WorkflowExecution lastWorkflowExecution, String serviceId) {
+    Optional<Artifact> requiredArtifact =
+        lastArtifacts.stream()
+            .filter(artifact -> allowedArtifactStreams.contains(artifact.getArtifactStreamId()))
+            .findFirst();
+    if (isArtifactPresentInStream(requiredArtifact, serviceId, lastWorkflowExecution.getAppId())) {
+      LastDeployedArtifactInformationBuilder lastDeployedArtifactInfoBuilder =
+          LastDeployedArtifactInformation.builder()
+              .artifact(requiredArtifact.get())
+              .executionStartTime(lastWorkflowExecution.getStartTs());
+      if (lastWorkflowExecution.getPipelineExecutionId() != null) {
+        PipelineSummary pipelineSummary = lastWorkflowExecution.getPipelineSummary();
+        lastDeployedArtifactInfoBuilder = lastDeployedArtifactInfoBuilder.executionEntityType(WorkflowType.PIPELINE)
+                                              .executionId(lastWorkflowExecution.getPipelineExecutionId());
+        if (pipelineSummary != null) {
+          lastDeployedArtifactInfoBuilder =
+              lastDeployedArtifactInfoBuilder
+                  .executionEntityId(lastWorkflowExecution.getPipelineSummary().getPipelineId())
+                  .executionEntityName(lastWorkflowExecution.getPipelineSummary().getPipelineName());
+        }
+      } else {
+        lastDeployedArtifactInfoBuilder =
+            lastDeployedArtifactInfoBuilder.executionEntityType(WorkflowType.ORCHESTRATION)
+                .executionId(lastWorkflowExecution.getUuid())
+                .executionEntityId(lastWorkflowExecution.getWorkflowId())
+                .executionEntityName(lastWorkflowExecution.getName())
+                .envId(lastWorkflowExecution.getEnvId());
+      }
+      return lastDeployedArtifactInfoBuilder.build();
+    }
+    return null;
+  }
+
+  private boolean isArtifactPresentInStream(Optional<Artifact> requiredArtifact, String serviceId, String appId) {
+    if (requiredArtifact.isPresent()) {
+      List<Artifact> presentArtifacts = artifactService.listArtifactsForService(appId, serviceId, new PageRequest<>());
+      return presentArtifacts.stream().anyMatch(
+          artifact -> requiredArtifact.get().getUuid().equals(artifact.getUuid()));
+    }
+    return false;
   }
 
   @Override

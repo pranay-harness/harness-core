@@ -25,13 +25,15 @@ public class ArtifactVariable extends Variable {
   private List<String> workflowIds;
   private String uiDisplayName;
   private ArtifactStreamMetadata artifactStreamMetadata;
+  private LastDeployedArtifactInformation lastDeployedArtifactInfo;
 
   @Builder
   public ArtifactVariable(String name, String description, boolean mandatory, String value, boolean fixed,
       String allowedValues, List<String> allowedList, Map<String, Object> metadata, VariableType type,
       EntityType entityType, String entityId, List<ArtifactVariable> overriddenArtifactVariables,
       List<ArtifactStreamSummary> artifactStreamSummaries, Map<String, List<String>> displayInfo,
-      List<String> workflowIds, String uiDisplayName, ArtifactStreamMetadata artifactStreamMetadata) {
+      List<String> workflowIds, String uiDisplayName, ArtifactStreamMetadata artifactStreamMetadata,
+      LastDeployedArtifactInformation lastDeployedArtifactInfo) {
     super(name, description, mandatory, value, fixed, allowedValues, allowedList, metadata, type);
     this.entityType = entityType;
     this.entityId = entityId;
@@ -41,6 +43,7 @@ public class ArtifactVariable extends Variable {
     this.workflowIds = workflowIds;
     this.uiDisplayName = uiDisplayName;
     this.artifactStreamMetadata = artifactStreamMetadata;
+    this.lastDeployedArtifactInfo = lastDeployedArtifactInfo;
   }
 
   public String fetchAssociatedService() {

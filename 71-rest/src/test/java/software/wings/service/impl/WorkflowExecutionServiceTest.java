@@ -33,6 +33,9 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.deployment.DeploymentMetadata.Include.ARTIFACT_SERVICE;
+import static software.wings.beans.deployment.DeploymentMetadata.Include.DEPLOYMENT_TYPE;
+import static software.wings.beans.deployment.DeploymentMetadata.Include.ENVIRONMENT;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
@@ -778,11 +781,13 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
             .artifactVariables(singletonList(ArtifactVariable.builder().name("art1").build()))
             .artifactRequiredServiceIds(singletonList(SERVICE_ID))
             .build();
+    DeploymentMetadata.Include[] includes =
+        new DeploymentMetadata.Include[] {ENVIRONMENT, ARTIFACT_SERVICE, DEPLOYMENT_TYPE};
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    when(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null, false, null))
+    when(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null, false, null, includes))
         .thenReturn(deploymentMetadata);
-    when(pipelineService.fetchDeploymentMetadata(
-             APP_ID, executionArgs.getPipelineId(), executionArgs.getWorkflowVariables(), null, null, false, null))
+    when(pipelineService.fetchDeploymentMetadata(APP_ID, executionArgs.getPipelineId(),
+             executionArgs.getWorkflowVariables(), null, null, false, null, includes))
         .thenReturn(deploymentMetadata);
     DeploymentMetadata finalDeploymentMetadata =
         workflowExecutionService.fetchDeploymentMetadata(APP_ID, executionArgs);
