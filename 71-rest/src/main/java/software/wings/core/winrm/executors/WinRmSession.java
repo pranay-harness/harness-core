@@ -11,6 +11,8 @@ import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import io.harness.delegate.configuration.InstallUtils;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
@@ -166,9 +168,12 @@ public class WinRmSession implements AutoCloseable {
   }
 
   private String getUserPrincipal(String username, String domain) {
-    if (username.contains("@")) {
-      return username;
+    if (username == null || domain == null) {
+      throw new InvalidRequestException("Username or domain cannot be null", WingsException.USER);
     }
-    return format("%s@%s", username, domain);
+    if (username.contains("@")) {
+      username = username.substring(0, username.indexOf('@'));
+    }
+    return format("%s@%s", username, domain.toUpperCase());
   }
 }

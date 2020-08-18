@@ -20,7 +20,7 @@ public class PyWinrmArgs {
   private boolean serverCertValidation;
 
   public String getArgs(String commandFilePath) {
-    return format("-e %s -u %s -s %s -env '%s' -w '%s' -t %s -cfile %s", hostname, username, serverCertValidation,
-        environmentMap, workingDir, timeout, commandFilePath);
+    return format("-e '%s' -u '%s' -s '%s' -env '%s' -w '%s' -t '%s' -cfile '%s'", hostname, username,
+        serverCertValidation, environmentMap, workingDir, timeout, commandFilePath);
   }
 }
