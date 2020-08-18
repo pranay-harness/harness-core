@@ -4,10 +4,6 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.service.intfc.instance.licensing.InstanceLimitProvider.DEFAULT_SI_USAGE_LIMITS;
@@ -460,61 +456,6 @@ public class LicenseServiceTest extends WingsBaseTest {
     licenseService.updateLastLicenseExpiryReminderSentAt(account.getUuid(), thirtyDaysAfterExpiry);
     account = accountService.get(account.getUuid());
     assertThat(licenseService.getEmailTemplateName(account, thirtyDaysAfterExpiry + 10000, expiryTime)).isNull();
-  }
-
-  @Test
-  @Owner(developers = MEHUL)
-  @Category(UnitTests.class)
-  public void shouldHandleTrialAccountExpiration() throws InterruptedException {
-    long currentTime = System.currentTimeMillis();
-    long expiryTime = currentTime + 1000;
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setExpiryTime(expiryTime);
-
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName(HARNESS_NAME)
-                                              .withAccountName(HARNESS_NAME)
-                                              .withAccountKey(ACCOUNT_KEY)
-                                              .withLicenseInfo(licenseInfo)
-                                              .build(),
-        false);
-    TimeUnit.SECONDS.sleep(2);
-    LicenseServiceImpl licenseServiceSpy = spy(licenseService);
-    doReturn(true).when(licenseServiceSpy).sendEmailToAccountAdmin(any(), anyString());
-    licenseServiceSpy.checkForLicenseExpiry(account);
-    account = accountService.get(account.getUuid());
-    long lastLicenseExpiryReminderSentAtUpdatedValue = account.getLastLicenseExpiryReminderSentAt();
-    assertThat(lastLicenseExpiryReminderSentAtUpdatedValue)
-        .isBetween(System.currentTimeMillis() - 10000, System.currentTimeMillis() + 10000);
-    assertThat(account.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
-  }
-
-  @Test
-  @Owner(developers = MEHUL)
-  @Category(UnitTests.class)
-  public void shouldUpdateAccountStatusAfterThirtyDaysOfExpiry() {
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName(HARNESS_NAME)
-                                              .withAccountName(HARNESS_NAME)
-                                              .withAccountKey(ACCOUNT_KEY)
-                                              .withLicenseInfo(licenseInfo)
-                                              .build(),
-        false);
-    LicenseServiceImpl licenseServiceSpy = spy(licenseService);
-    doReturn(true).when(licenseServiceSpy).sendEmailToAccountAdmin(any(), anyString());
-    long currentTime = System.currentTimeMillis();
-    licenseServiceSpy.handleTrialAccountExpiration(account, currentTime - 30 * oneDayTimeDiff);
-    Account accountFromDB = accountService.get(account.getUuid());
-    long lastLicenseExpiryReminderSentAtUpdatedValue = accountFromDB.getLastLicenseExpiryReminderSentAt();
-    assertThat(lastLicenseExpiryReminderSentAtUpdatedValue)
-        .isBetween(System.currentTimeMillis() - 10000, System.currentTimeMillis() + 10000);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.MARKED_FOR_DELETION);
   }
 
   private String getEncryptedString(LicenseInfo licenseInfo) {
