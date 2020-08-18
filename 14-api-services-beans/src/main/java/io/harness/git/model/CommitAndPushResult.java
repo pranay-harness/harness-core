@@ -13,7 +13,7 @@ public class CommitAndPushResult extends GitBaseResult {
   private PushResultGit gitPushResult;
   private List<GitFileChange> filesCommittedToGit;
 
-  @Builder(builderMethodName = "commitAndPushResultBuilder")
+  @Builder
   public CommitAndPushResult(String accountId, CommitResult gitCommitResult, PushResultGit gitPushResult,
       List<GitFileChange> filesCommittedToGit) {
     super(accountId);

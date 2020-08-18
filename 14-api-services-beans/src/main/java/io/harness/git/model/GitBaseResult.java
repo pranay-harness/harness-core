@@ -1,10 +1,10 @@
 package io.harness.git.model;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@Builder
+@AllArgsConstructor
 public class GitBaseResult {
   private String accountId;
 }

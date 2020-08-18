@@ -11,7 +11,7 @@ public class CommitResult extends GitBaseResult {
   private int commitTime;
   private String commitMessage;
 
-  @Builder(builderMethodName = "commitResultBuilder")
+  @Builder
   public CommitResult(String accountId, String commitId, int commitTime, String commitMessage) {
     super(accountId);
     this.commitId = commitId;

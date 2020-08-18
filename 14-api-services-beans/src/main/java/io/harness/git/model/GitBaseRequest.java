@@ -3,12 +3,10 @@ package io.harness.git.model;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import lombok.ToString;
 
-@Getter
-@Setter
+@Data
 @Builder
 @ToString(exclude = {"authRequest"})
 public class GitBaseRequest {

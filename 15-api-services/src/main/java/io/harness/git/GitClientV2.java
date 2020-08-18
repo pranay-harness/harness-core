@@ -7,23 +7,21 @@ import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
 import io.harness.git.model.FetchFilesBwCommitsRequest;
 import io.harness.git.model.FetchFilesByPathRequest;
+import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitBaseRequest;
-import io.harness.git.model.GitFile;
-
-import java.util.List;
 
 public interface GitClientV2 {
   void ensureRepoLocallyClonedAndUpdated(GitBaseRequest request);
 
   String validate(GitBaseRequest request);
 
+  FetchFilesResult fetchFilesByPath(FetchFilesByPathRequest request);
+
   DiffResult diff(DiffRequest request);
 
   CommitAndPushResult commitAndPush(CommitAndPushRequest request);
 
-  List<GitFile> fetchFilesByPath(FetchFilesByPathRequest request);
-
-  void fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request);
+  FetchFilesResult fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request);
 
   void downloadFiles(DownloadFilesRequest request);
 }

@@ -1,11 +1,13 @@
 package io.harness.git;
 
+import static io.harness.exception.WingsException.SRE;
 import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.git.model.CommitAndPushRequest.commitAndPushRequestBuilder;
 import static io.harness.git.model.DiffRequest.diffRequestBuilder;
 import static io.harness.git.model.DownloadFilesRequest.downloadFilesRequestBuilder;
+import static io.harness.git.model.FetchFilesBwCommitsRequest.fetchFilesBwCommitsRequestBuilder;
 import static io.harness.git.model.FetchFilesByPathRequest.fetchFilesByPathRequestBuilder;
 import static io.harness.git.model.PushResultGit.pushResultBuilder;
 import static io.harness.rule.OwnerRule.ABHINAV;
@@ -17,10 +19,12 @@ import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
+import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
 import io.harness.git.model.CommitAndPushRequest;
@@ -29,7 +33,9 @@ import io.harness.git.model.CommitResult;
 import io.harness.git.model.DiffRequest;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
+import io.harness.git.model.FetchFilesBwCommitsRequest;
 import io.harness.git.model.FetchFilesByPathRequest;
+import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFileChange;
 import io.harness.git.model.PushResultGit;
@@ -166,6 +172,7 @@ public class GitClientV2ImplTest extends CategoryTest {
     doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
     doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
     addRemote(repoPath);
+    addGitTag(repoPath, "t1");
     gitClient.downloadFiles(request);
   }
 
@@ -217,6 +224,47 @@ public class GitClientV2ImplTest extends CategoryTest {
     gitClient.fetchFilesByPath(request);
   }
 
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testFetchFilesBetweenCommits() throws Exception {
+    FetchFilesBwCommitsRequest request =
+        fetchFilesBwCommitsRequestBuilder()
+            .repoUrl(repoPath)
+            .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+            .branch("master")
+            .connectorId("CONNECTOR_ID")
+            .accountId("ACCOUNT_ID")
+            .build();
+
+    assertThatThrownBy(() -> gitClient.fetchFilesBetweenCommits(request))
+        .isInstanceOf(YamlException.class)
+        .hasMessageContaining("Old commit id can not be empty");
+
+    request.setOldCommitId("t1");
+
+    assertThatThrownBy(() -> gitClient.fetchFilesBetweenCommits(request))
+        .isInstanceOf(YamlException.class)
+        .hasMessageContaining("New commit id can not be empty");
+
+    request.setNewCommitId("t2");
+    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
+
+    doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
+    doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
+
+    assertThatThrownBy(() -> gitClient.fetchFilesBetweenCommits(request)).isInstanceOf(YamlException.class);
+
+    addRemote(repoPath);
+    addGitTag(repoPath, "t1");
+    addGitTag(repoPath, "t2");
+    FetchFilesResult fetchFilesResult = gitClient.fetchFilesBetweenCommits(request);
+    assertThat(fetchFilesResult).isNotNull();
+    assertThat(fetchFilesResult.getCommitResult().getCommitId()).isEqualTo("t2");
+    assertThat(fetchFilesResult.getFiles().size()).isEqualTo(1);
+    assertThat(fetchFilesResult.getFiles().get(0).getFilePath()).isEqualTo("t2");
+  }
+
   private String executeCommand(String command) {
     final String[] returnString = new String[1];
     try {
@@ -247,12 +295,32 @@ public class GitClientV2ImplTest extends CategoryTest {
       String command = new StringBuilder(128)
                            .append("cd " + repoPath + ";")
                            .append("git remote add origin " + remoteRepo + ";")
-                           .append("touch 1.txt;")
-                           .append("git add 1.txt;")
-                           .append("git commit -m 'commit1';")
+                           .append("touch base.txt;")
+                           .append("git add base.txt;")
+                           .append("git commit -m 'commit base';")
                            .append("git push origin master;")
-                           .append("git tag t1;")
-                           .append("git push origin t1;")
+                           .append("git tag base;")
+                           .append("git push origin base;")
+                           .append("git remote update;")
+                           .append("git fetch;")
+                           .toString();
+
+      executeCommand(command);
+    } catch (Exception e) {
+      fail("Should not reach here.");
+    }
+  }
+
+  private void addGitTag(String repoPath, String tag) {
+    try {
+      String command = new StringBuilder(128)
+                           .append("cd " + repoPath + ";")
+                           .append("touch " + tag + ";")
+                           .append("git add " + tag + ";")
+                           .append("git commit -m 'commit " + tag + "';")
+                           .append("git push origin master;")
+                           .append("git tag " + tag + ";")
+                           .append("git push origin " + tag + ";")
                            .append("git remote update;")
                            .append("git fetch;")
                            .toString();
@@ -457,5 +525,28 @@ public class GitClientV2ImplTest extends CategoryTest {
     assertThat(pushResultGit).isNotNull();
     assertThat(pushResultGit.getRefUpdate()).isNotNull();
     assertThat(pushResultGit.getRefUpdate().getExpectedOldObjectId()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testFetchFilesBetweenCommits_Exceptions() throws Exception {
+    FetchFilesBwCommitsRequest request =
+        fetchFilesBwCommitsRequestBuilder()
+            .repoUrl(repoPath)
+            .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+            .branch("master")
+            .connectorId("CONNECTOR_ID")
+            .accountId("ACCOUNT_ID")
+            .build();
+
+    request.setOldCommitId("t1");
+    request.setNewCommitId("t2");
+
+    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
+    doThrow(new GitClientException("m1", SRE)).when(gitClientHelper).createDirStructureForFileDownload(any());
+    assertThatThrownBy(() -> gitClient.fetchFilesBetweenCommits(request))
+        .isInstanceOf(GitClientException.class)
+        .hasMessageContaining("m1");
   }
 }
