@@ -1099,11 +1099,14 @@ public class WorkflowServiceHelper {
   }
 
   public void generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(
-      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired, boolean isDynamicInfrastructure) {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+    if (isDynamicInfrastructure) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, PROVISION_INFRASTRUCTURE).build());
+    }
     if (serviceSetupRequired) {
       Map<String, Object> setupProperties = newHashMap();
       setupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
@@ -1137,11 +1140,15 @@ public class WorkflowServiceHelper {
   }
 
   public void generateNewWorkflowPhaseStepsForECSBlueGreen(
-      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired, boolean isDynamicInfrastructure) {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    if (isDynamicInfrastructure) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, PROVISION_INFRASTRUCTURE).build());
+    }
 
     if (serviceSetupRequired) {
       Map<String, Object> defaultSetupProperties = newHashMap();
@@ -2683,9 +2690,10 @@ public class WorkflowServiceHelper {
     if (deploymentType == ECS) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         if (creationFlags != null && creationFlags.isEcsBgDnsType()) {
-          generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(appId, workflowPhase, !serviceRepeat);
+          generateNewWorkflowPhaseStepsForECSBlueGreenRoute53(
+              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
         } else {
-          generateNewWorkflowPhaseStepsForECSBlueGreen(appId, workflowPhase, !serviceRepeat);
+          generateNewWorkflowPhaseStepsForECSBlueGreen(appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
         }
       } else {
         generateNewWorkflowPhaseStepsForECS(appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
