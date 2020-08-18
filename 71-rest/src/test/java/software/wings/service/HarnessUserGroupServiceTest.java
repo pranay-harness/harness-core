@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -25,11 +24,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -74,8 +71,6 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
                                             .uuid(harnessUserGroupId1)
                                             .description(description1)
                                             .name(harnessUserGroupName1)
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .applyToAllAccounts(true)
                                             .memberIds(Sets.newHashSet(memberId1))
                                             .build();
     HarnessUserGroup savedHarnessUserGroup = harnessUserGroupService.save(harnessUserGroup);
@@ -96,19 +91,14 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
                                              .uuid(harnessUserGroupId1)
                                              .description(description1)
                                              .name(harnessUserGroupName1)
-                                             .actions(Sets.newHashSet(Action.READ))
-                                             .applyToAllAccounts(true)
                                              .memberIds(Sets.newHashSet(memberId1))
                                              .build();
     HarnessUserGroup savedHarnessUserGroup1 = harnessUserGroupService.save(harnessUserGroup1);
 
     HarnessUserGroup harnessUserGroup2 = HarnessUserGroup.builder()
-                                             .accountIds(Sets.newHashSet(accountId1))
                                              .uuid(harnessUserGroupId2)
                                              .description(description2)
                                              .name(harnessUserGroupName2)
-                                             .actions(Sets.newHashSet(Action.UPDATE))
-                                             .applyToAllAccounts(false)
                                              .memberIds(Sets.newHashSet(memberId1))
                                              .build();
     HarnessUserGroup savedHarnessUserGroup2 = harnessUserGroupService.save(harnessUserGroup2);
@@ -129,8 +119,6 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
                                             .uuid(harnessUserGroupId1)
                                             .description(description1)
                                             .name(harnessUserGroupName1)
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .applyToAllAccounts(true)
                                             .memberIds(Sets.newHashSet(memberId1))
                                             .build();
     HarnessUserGroup savedHarnessUserGroup = harnessUserGroupService.save(harnessUserGroup);
@@ -149,102 +137,14 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testUpdateAccounts() {
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
-                                            .uuid(harnessUserGroupId1)
-                                            .description(description1)
-                                            .name(harnessUserGroupName1)
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .applyToAllAccounts(true)
-                                            .memberIds(Sets.newHashSet(memberId1))
-                                            .build();
-    HarnessUserGroup savedHarnessUserGroup = harnessUserGroupService.save(harnessUserGroup);
-    compare(harnessUserGroup, savedHarnessUserGroup);
-
-    HarnessUserGroup harnessUserGroupFromGet = harnessUserGroupService.get(harnessUserGroupId1);
-    compare(savedHarnessUserGroup, harnessUserGroupFromGet);
-    Set<String> accountIds = Sets.newHashSet(accountId1, accountId2);
-    harnessUserGroupFromGet.setAccountIds(accountIds);
-    harnessUserGroupFromGet.setApplyToAllAccounts(false);
-
-    HarnessUserGroup updatedHarnessUserGroup = harnessUserGroupService.updateAccounts(harnessUserGroupId1, accountIds);
-    harnessUserGroupFromGet = harnessUserGroupService.get(harnessUserGroupId1);
-    compare(harnessUserGroupFromGet, updatedHarnessUserGroup);
-  }
-
-  @Test
-  @Owner(developers = RAMA)
-  @Category(UnitTests.class)
-  public void testAllowedActions() {
-    HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
-                                             .uuid(harnessUserGroupId1)
-                                             .description(description1)
-                                             .name(harnessUserGroupName1)
-                                             .actions(Sets.newHashSet(Action.READ))
-                                             .applyToAllAccounts(true)
-                                             .memberIds(Sets.newHashSet(memberId1))
-                                             .build();
-    harnessUserGroupService.save(harnessUserGroup1);
-
-    HarnessUserGroup harnessUserGroup2 = HarnessUserGroup.builder()
-                                             .accountIds(Sets.newHashSet(accountId1))
-                                             .uuid(harnessUserGroupId2)
-                                             .description(description2)
-                                             .name(harnessUserGroupName2)
-                                             .actions(Sets.newHashSet(Action.UPDATE))
-                                             .applyToAllAccounts(false)
-                                             .memberIds(Sets.newHashSet(memberId2))
-                                             .build();
-    harnessUserGroupService.save(harnessUserGroup2);
-
-    Set<Action> actionSet = harnessUserGroupService.listAllowedUserActionsForAccount(accountId1, memberId1);
-    assertThat(actionSet).isNotNull();
-    assertThat(actionSet).size().isEqualTo(1);
-    assertThat(actionSet).containsExactly(Action.READ);
-  }
-
-  @Test
-  @Owner(developers = RAMA)
-  @Category(UnitTests.class)
-  public void testSupportAccountsForUser() {
-    HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
-                                             .uuid(harnessUserGroupId1)
-                                             .description(description1)
-                                             .name(harnessUserGroupName1)
-                                             .actions(Sets.newHashSet(Action.READ))
-                                             .applyToAllAccounts(true)
-                                             .memberIds(Sets.newHashSet(memberId1))
-                                             .build();
-    harnessUserGroupService.save(harnessUserGroup1);
-
-    HarnessUserGroup harnessUserGroup2 = HarnessUserGroup.builder()
-                                             .accountIds(Sets.newHashSet(accountId1))
-                                             .uuid(harnessUserGroupId2)
-                                             .description(description2)
-                                             .name(harnessUserGroupName2)
-                                             .actions(Sets.newHashSet(Action.UPDATE))
-                                             .applyToAllAccounts(false)
-                                             .memberIds(Sets.newHashSet(memberId2))
-                                             .build();
-    harnessUserGroupService.save(harnessUserGroup2);
-    Account account1 = Builder.anAccount().withUuid(accountId1).build();
-    Account account2 = Builder.anAccount().withUuid(accountId2).build();
-    List<Account> accounts = Arrays.asList(account1, account2);
-
-    // Scenario 1
-    when(accountService.listAccounts(anySet())).thenReturn(accounts);
-    List<Account> result = harnessUserGroupService.listAllowedSupportAccountsForUser(memberId1, Sets.newHashSet());
-    assertThat(result).isNotNull();
-    assertThat(result).size().isEqualTo(2);
-    assertThat(result).containsExactlyInAnyOrder(accounts.toArray(new Account[0]));
-
-    // Scenario 2
-    when(accountService.listAccounts(anySet())).thenReturn(Lists.newArrayList(account2));
-    when(accountService.list(any())).thenReturn(Lists.newArrayList(account2));
-    result = harnessUserGroupService.listAllowedSupportAccountsForUser(memberId2, Sets.newHashSet());
+  public void testListAllowedSupportAccounts() {
+    Account account1 = Builder.anAccount().withUuid(accountId1).withHarnessGroupAccessAllowed(true).build();
+    when(accountService.getAccountsWithDisabledHarnessUserGroupAccess()).thenReturn(Sets.newHashSet(accountId2));
+    when(accountService.listAccounts(any())).thenReturn(Lists.newArrayList(account1));
+    List<Account> result = harnessUserGroupService.listAllowedSupportAccounts(Sets.newHashSet());
     assertThat(result).isNotNull();
     assertThat(result).size().isEqualTo(1);
-    assertThat(result).containsExactlyInAnyOrder(account2);
+    assertThat(result).containsExactlyInAnyOrder(account1);
   }
 
   @Test
@@ -255,8 +155,6 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
                                             .uuid(harnessUserGroupId1)
                                             .description(description1)
                                             .name(harnessUserGroupName1)
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .applyToAllAccounts(true)
                                             .memberIds(Sets.newHashSet(memberId1))
                                             .build();
     harnessUserGroupService.save(harnessUserGroup);
@@ -272,9 +170,6 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
     assertThat(rhs.getUuid()).isEqualTo(lhs.getUuid());
     assertThat(rhs.getName()).isEqualTo(lhs.getName());
     assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
-    assertThat(rhs.isApplyToAllAccounts()).isEqualTo(lhs.isApplyToAllAccounts());
-    assertThat(rhs.getAccountIds()).isEqualTo(lhs.getAccountIds());
     assertThat(rhs.getMemberIds()).isEqualTo(lhs.getMemberIds());
-    assertThat(rhs.getActions()).isEqualTo(lhs.getActions());
   }
 }

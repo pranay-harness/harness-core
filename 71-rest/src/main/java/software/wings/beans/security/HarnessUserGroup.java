@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
-import software.wings.security.PermissionAttribute.Action;
 
 import java.util.Set;
 
@@ -31,21 +30,14 @@ import java.util.Set;
 public class HarnessUserGroup extends Base {
   @NotEmpty private String name;
   private String description;
-  private Set<Action> actions;
-  private boolean applyToAllAccounts;
   @FdIndex private Set<String> memberIds;
-  private Set<String> accountIds;
 
   @Builder
   public HarnessUserGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath, String name, String description, Set<Action> actions,
-      boolean applyToAllAccounts, Set<String> memberIds, Set<String> accountIds) {
+      long lastUpdatedAt, String entityYamlPath, String name, String description, Set<String> memberIds) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
-    this.actions = actions;
-    this.applyToAllAccounts = applyToAllAccounts;
     this.memberIds = memberIds;
-    this.accountIds = accountIds;
   }
 }

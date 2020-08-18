@@ -21,6 +21,7 @@ accounts {"name": "appId_1", "background": true} {"appId": 1}
 accounts {"name": "ceLicenseExpiryIteration_1", "background": true} {"ceLicenseExpiryIteration": 1}
 accounts {"name": "createdAt_1", "background": true} {"createdAt": 1}
 accounts {"name": "gitSyncExpiryCheckIteration_1", "background": true} {"gitSyncExpiryCheckIteration": 1}
+accounts {"name": "isHarnessSupportAccessAllowed_1", "background": true} {"isHarnessSupportAccessAllowed": 1}
 accounts {"name": "licenseExpiryCheckIteration_1", "background": true} {"licenseExpiryCheckIteration": 1}
 accounts {"name": "next_iteration_license_info2", "background": true} {"licenseExpiryCheckIteration": 1, "encryptedLicenseInfo": 1}
 accounts {"name": "secretManagerValidationIterator_1", "background": true} {"secretManagerValidationIterator": 1}

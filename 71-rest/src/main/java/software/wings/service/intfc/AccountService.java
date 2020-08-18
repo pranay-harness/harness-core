@@ -179,4 +179,6 @@ public interface AccountService {
   boolean canProcessAccount(String accountId, long allowedNumberOfDaysSinceExpiry);
 
   Optional<String> getCeAccountType(String accountId);
+
+  Set<String> getAccountsWithDisabledHarnessUserGroupAccess();
 }

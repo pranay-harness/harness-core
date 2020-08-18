@@ -888,6 +888,16 @@ public class AccountServiceImpl implements AccountService {
         .asList();
   }
 
+  public Set<String> getAccountsWithDisabledHarnessUserGroupAccess() {
+    return wingsPersistence.createQuery(Account.class, excludeAuthority)
+        .project(ID_KEY, true)
+        .filter(AccountKeys.isHarnessSupportAccessAllowed, Boolean.FALSE)
+        .asList()
+        .stream()
+        .map(Account::getUuid)
+        .collect(Collectors.toSet());
+  }
+
   @Override
   public PageResponse<Account> getAccounts(PageRequest pageRequest) {
     PageResponse<Account> responses = wingsPersistence.query(Account.class, pageRequest, excludeAuthority);

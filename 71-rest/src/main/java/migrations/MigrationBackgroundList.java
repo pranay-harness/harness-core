@@ -80,6 +80,7 @@ import migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.NoOpMigration;
 import migrations.all.RemoveDeletedAppIdsFromUserGroups;
+import migrations.all.RemoveDeprecatedFieldsFromHarnessUserGroup;
 import migrations.all.RemoveDuplicateUserGroupNameMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.ScheduleSegmentPublishJob;
@@ -271,6 +272,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(158, AddAccountIdToPermitCollection.class))
         .add(Pair.of(159, AddAccountIdToStateMachine.class))
         .add(Pair.of(160, DeletedAccountStatusMigration.class))
+        .add(Pair.of(161, RemoveDeprecatedFieldsFromHarnessUserGroup.class))
         .build();
   }
 }
