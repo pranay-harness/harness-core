@@ -254,11 +254,7 @@ public class KmsTest extends WingsBaseTest {
     UserThreadLocal.set(user);
 
     // Add current user to harness user group so that save-global-kms operation can succeed
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
-                                            .applyToAllAccounts(true)
-                                            .memberIds(Sets.newHashSet(userId))
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .build();
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder().memberIds(Sets.newHashSet(userId)).build();
     harnessUserGroupService.save(harnessUserGroup);
   }
 

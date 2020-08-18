@@ -50,7 +50,6 @@ import software.wings.beans.security.HarnessUserGroup;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.JWT_CATEGORY;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
@@ -599,11 +598,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
     User user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, "admin@harness.io").get();
 
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
-                                            .applyToAllAccounts(true)
-                                            .memberIds(Sets.newHashSet(user.getUuid()))
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .build();
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder().memberIds(Sets.newHashSet(user.getUuid())).build();
     wingsPersistence.save(harnessUserGroup);
 
     Account account = Account.Builder.anAccount()

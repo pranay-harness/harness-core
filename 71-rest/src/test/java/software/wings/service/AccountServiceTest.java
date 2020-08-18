@@ -17,6 +17,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -1151,5 +1152,47 @@ public class AccountServiceTest extends WingsBaseTest {
   public void testUpdatePovFlag_WhenAccountNotPresent() {
     boolean updatePovFlag = accountService.updatePovFlag(accountId, false);
     assertThat(updatePovFlag).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void testGetAccountsWithDisabledHarnessUserGroupAccess() {
+    Account account1 = anAccount()
+                           .withCompanyName("CompanyName 1")
+                           .withAccountName("Account Name 1")
+                           .withLicenseInfo(getLicenseInfo())
+                           .withUuid("111")
+                           .withHarnessGroupAccessAllowed(true)
+                           .build();
+
+    wingsPersistence.save(account1);
+
+    Account account2 = anAccount()
+                           .withCompanyName("CompanyName 2")
+                           .withAccountName("Account Name 2")
+                           .withLicenseInfo(getLicenseInfo())
+                           .withUuid("222")
+                           .withHarnessGroupAccessAllowed(false)
+                           .build();
+
+    wingsPersistence.save(account2);
+
+    // account without isHarnessSupportAccessAllowed flag
+    Account account3 = anAccount()
+                           .withCompanyName("CompanyName 3")
+                           .withAccountName("Account Name 3")
+                           .withLicenseInfo(getLicenseInfo())
+                           .withUuid("333")
+                           .build();
+
+    wingsPersistence.save(account3);
+
+    Set<String> restrictedAccounts = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
+
+    assertThat(restrictedAccounts.size()).isEqualTo(2);
+    assertThat(restrictedAccounts.contains("222")).isTrue();
+    assertThat(restrictedAccounts.contains("333")).isTrue();
+    assertThat(restrictedAccounts.contains("111")).isFalse();
   }
 }

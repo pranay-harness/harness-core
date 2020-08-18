@@ -142,7 +142,8 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
     when(requestContext.getMethod()).thenReturn("GET");
     mockUriInfo(PATH, uriInfo);
-    when(harnessUserGroupService.listAllowedUserActionsForAccount(ACCOUNT_ID, USER_ID)).thenReturn(actions);
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     authRuleFilter.filter(requestContext);
@@ -207,7 +208,8 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
     when(requestContext.getMethod()).thenReturn(method);
     mockUriInfo(url, uriInfo);
-    when(harnessUserGroupService.listAllowedUserActionsForAccount(ACCOUNT_ID, USER_ID)).thenReturn(actions);
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     if (exception) {

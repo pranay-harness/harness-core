@@ -239,9 +239,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
       }
 
-      Set<Action> actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
-
-      if (isEmpty(actions)) {
+      if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
         throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
       }
       harnessSupportUser = true;

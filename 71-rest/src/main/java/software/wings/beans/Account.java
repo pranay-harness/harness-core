@@ -104,6 +104,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private boolean oauthEnabled;
 
+  @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed;
+
   @FdIndex private Long serviceGuardDataCollectionIteration;
   @FdIndex private Long serviceGuardDataAnalysisIteration;
   @FdIndex private Long workflowDataCollectionIteration;
@@ -474,6 +476,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean cloudCostEnabled;
     private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
+    private boolean isHarnessSupportAccessAllowed;
 
     private Builder() {}
 
@@ -591,6 +594,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withHarnessGroupAccessAllowed(boolean isAllowed) {
+      this.isHarnessSupportAccessAllowed = isAllowed;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -639,6 +647,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setCloudCostEnabled(cloudCostEnabled);
       account.setCeAutoCollectK8sEvents(ceK8sEventCollectionEnabled);
       account.setSubdomainUrl(subdomainUrl);
+      account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       return account;
     }
   }
@@ -673,5 +682,6 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";
+    public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
   }
 }

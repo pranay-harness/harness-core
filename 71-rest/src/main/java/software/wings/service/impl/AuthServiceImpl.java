@@ -702,8 +702,8 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private Optional<UserGroup> getHarnessUserGroupsByAccountId(String accountId, User user) {
-    Set<Action> actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
-    if (isEmpty(actions)) {
+    if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+        || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
       return Optional.empty();
     }
     AppPermission appPermission =

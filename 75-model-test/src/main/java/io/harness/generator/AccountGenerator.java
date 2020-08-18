@@ -40,7 +40,6 @@ import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -307,12 +306,8 @@ public class AccountGenerator {
   }
 
   public void addUserToHarnessUserGroup(User user) {
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
-                                            .actions(Sets.newHashSet(Action.READ))
-                                            .applyToAllAccounts(true)
-                                            .memberIds(Sets.newHashSet(user.getUuid()))
-                                            .name("harnessUserGroup")
-                                            .build();
+    HarnessUserGroup harnessUserGroup =
+        HarnessUserGroup.builder().memberIds(Sets.newHashSet(user.getUuid())).name("harnessUserGroup").build();
     harnessUserGroupService.save(harnessUserGroup);
   }
 

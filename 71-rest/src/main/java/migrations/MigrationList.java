@@ -15,6 +15,7 @@ import migrations.all.AddCEPermissionToAllUserGroups;
 import migrations.all.AddDisabledFieldMigration;
 import migrations.all.AddDuplicateFieldToCVFeedbacks;
 import migrations.all.AddHarnessCommandLibraryToAccount;
+import migrations.all.AddHarnessGroupAccessFlagToAccount;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import migrations.all.AddLoginSettingsToAccountMigration;
@@ -372,6 +373,7 @@ public class MigrationList {
         .add(Pair.of(329, AlertNotificationAccountPermissionMigration.class))
         .add(Pair.of(330, ManageAuthenticationSettingsPermissionMigration.class))
         .add(Pair.of(331, BaseMigration.class))
+        .add(Pair.of(332, AddHarnessGroupAccessFlagToAccount.class))
         .build();
   }
 }

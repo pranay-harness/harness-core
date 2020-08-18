@@ -2220,8 +2220,7 @@ public class UserServiceImpl implements UserService {
 
     if (harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
       Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
-      List<Account> accountList =
-          harnessUserGroupService.listAllowedSupportAccountsForUser(user.getUuid(), excludeAccounts);
+      List<Account> accountList = harnessUserGroupService.listAllowedSupportAccounts(excludeAccounts);
       user.setSupportAccounts(accountList);
     }
   }

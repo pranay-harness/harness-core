@@ -5,7 +5,6 @@ import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.security.PermissionAttribute.Action;
 
 import java.util.List;
 import java.util.Set;
@@ -30,9 +29,7 @@ public interface HarnessUserGroupService {
    */
   PageResponse<HarnessUserGroup> list(PageRequest<HarnessUserGroup> req);
 
-  Set<Action> listAllowedUserActionsForAccount(@NotEmpty String accountId, String userId);
-
-  List<Account> listAllowedSupportAccountsForUser(String userId, Set<String> excludeAccountIds);
+  List<Account> listAllowedSupportAccounts(Set<String> excludeAccountIds);
 
   /**
    * Find by uuid.
@@ -41,15 +38,6 @@ public interface HarnessUserGroupService {
    * @return the harnessPermissions
    */
   HarnessUserGroup get(@NotEmpty String uuid);
-
-  /**
-   * Update Overview.
-   *
-   * @param uuid the harness permissions id
-   * @param accountIds the accountIds
-   * @return the userGroup
-   */
-  HarnessUserGroup updateAccounts(@NotEmpty String uuid, Set<String> accountIds);
 
   /**
    * Update Overview.
@@ -68,4 +56,6 @@ public interface HarnessUserGroupService {
   boolean isHarnessSupportUser(String userId);
 
   boolean delete(@NotEmpty String uuid);
+
+  boolean isHarnessSupportEnabledForAccount(String accountId);
 }
