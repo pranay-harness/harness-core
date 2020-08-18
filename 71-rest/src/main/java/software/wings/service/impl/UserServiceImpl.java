@@ -102,6 +102,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
+import org.mongodb.morphia.query.CriteriaContainer;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -2955,11 +2956,23 @@ public class UserServiceImpl implements UserService {
 
   @VisibleForTesting
   Query<User> getSearchUserQuery(String accountId, String searchTerm) {
-    Query<User> searchUsersQuery = wingsPersistence.createQuery(User.class, excludeAuthority);
-    searchUsersQuery.criteria(UserKeys.accounts).hasThisOne(accountId);
-    searchUsersQuery.or(searchUsersQuery.criteria(UserKeys.name).startsWithIgnoreCase(quote(searchTerm)),
-        searchUsersQuery.criteria(UserKeys.email).startsWithIgnoreCase(quote(searchTerm)));
-    return searchUsersQuery;
+    Query<User> query = wingsPersistence.createQuery(User.class, excludeAuthority);
+
+    CriteriaContainer nameCriterion = query.and(
+        getSearchCriterion(query, UserKeys.name, searchTerm), query.criteria(UserKeys.accounts).hasThisOne(accountId));
+
+    CriteriaContainer emailCriterion = query.and(
+        getSearchCriterion(query, UserKeys.email, searchTerm), query.criteria(UserKeys.accounts).hasThisOne(accountId));
+
+    CriteriaContainer emailCriterionForPendingUsers = query.and(getSearchCriterion(query, UserKeys.email, searchTerm),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+
+    query.or(nameCriterion, emailCriterion, emailCriterionForPendingUsers);
+    return query;
+  }
+
+  private CriteriaContainer getSearchCriterion(Query<?> query, String fieldName, String searchTerm) {
+    return query.criteria(fieldName).startsWithIgnoreCase(quote(searchTerm));
   }
 
   @Override
