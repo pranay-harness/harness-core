@@ -1,0 +1,130 @@
+package io.harness.perpetualtask;
+
+import static io.harness.network.SafeHttpCall.execute;
+import static java.util.Collections.emptyList;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+
+import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.shell.ScriptType;
+import io.harness.exception.ExceptionUtils;
+import io.harness.grpc.utils.AnyUtils;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.managerclient.DelegateAgentManagerClient;
+import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.server.Response;
+import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.core.local.executors.ShellExecutorConfig;
+import software.wings.core.local.executors.ShellExecutorFactory;
+import software.wings.core.ssh.executors.ScriptProcessExecutor;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.Instant;
+
+@Slf4j
+public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecutor {
+  @Inject private ShellExecutorFactory shellExecutorFactory;
+  @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
+
+  @Override
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
+    logger.info("Running the Custom Deployment InstanceSync perpetual task executor for task id: {}", taskId);
+
+    final CustomDeploymentInstanceSyncTaskParams taskParams =
+        AnyUtils.unpack(params.getCustomizedParams(), CustomDeploymentInstanceSyncTaskParams.class);
+
+    final ShellScriptProvisionExecutionData response = executeScript(taskParams, taskId.getId());
+    response.setStatus(response.getExecutionStatus());
+
+    try {
+      execute(
+          delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), taskParams.getAccountId(), response));
+    } catch (Exception e) {
+      logger.error(String.format("Failed to publish instance sync result for custom deployment. PerpetualTaskId [%s]",
+                       taskId.getId()),
+          e);
+    }
+
+    return getPerpetualTaskResponse(response);
+  }
+
+  private PerpetualTaskResponse getPerpetualTaskResponse(ShellScriptProvisionExecutionData response) {
+    final PerpetualTaskState taskState;
+    final String message;
+    if (ExecutionStatus.FAILED == response.getExecutionStatus()) {
+      taskState = PerpetualTaskState.TASK_RUN_FAILED;
+      message = response.getErrorMsg();
+    } else {
+      taskState = PerpetualTaskState.TASK_RUN_SUCCEEDED;
+      message = PerpetualTaskState.TASK_RUN_SUCCEEDED.name();
+    }
+
+    return PerpetualTaskResponse.builder()
+        .responseCode(Response.SC_OK)
+        .perpetualTaskState(taskState)
+        .responseMessage(message)
+        .build();
+  }
+
+  private ShellScriptProvisionExecutionData executeScript(
+      CustomDeploymentInstanceSyncTaskParams taskParams, String taskId) {
+    ShellScriptProvisionExecutionData response = null;
+    String outputPath = null;
+    try {
+      outputPath = Files.createTempFile("customDeployment", "InstanceSync.json").toString();
+      final ShellExecutorConfig shellExecutorConfig =
+          ShellExecutorConfig.builder()
+              .accountId(taskParams.getAccountId())
+              .appId(taskParams.getAppId())
+              .environment(ImmutableMap.of(taskParams.getOutputPathKey(), outputPath))
+              .scriptType(ScriptType.BASH)
+              .executionId(taskId)
+              .build();
+
+      final ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
+      final CommandExecutionResult commandExecutionResult =
+          executor.executeCommandString(taskParams.getScript(), emptyList());
+
+      if (CommandExecutionStatus.SUCCESS == commandExecutionResult.getStatus()) {
+        return ShellScriptProvisionExecutionData.builder()
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .output(new String(Files.readAllBytes(Paths.get(outputPath)), StandardCharsets.UTF_8))
+            .build();
+      } else {
+        return ShellScriptProvisionExecutionData.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMsg(commandExecutionResult.getErrorMessage())
+            .build();
+      }
+    } catch (Exception ex) {
+      return ShellScriptProvisionExecutionData.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMsg(ExceptionUtils.getMessage(ex))
+          .build();
+    } finally {
+      deleteSilently(outputPath);
+    }
+  }
+
+  private void deleteSilently(String path) {
+    if (path != null) {
+      try {
+        Files.deleteIfExists(Paths.get(path));
+      } catch (IOException e) {
+        logger.error("Failed to delete file " + path, e);
+      }
+    }
+  }
+
+  @Override
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
+    return false;
+  }
+}

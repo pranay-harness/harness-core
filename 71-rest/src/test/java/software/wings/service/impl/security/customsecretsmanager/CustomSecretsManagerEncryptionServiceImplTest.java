@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -35,6 +36,7 @@ public class CustomSecretsManagerEncryptionServiceImplTest extends CategoryTest 
   @Mock private SecretManager secretManager;
   @Mock private ManagerDecryptionService managerDecryptionService;
   @Mock private ExpressionEvaluator expressionEvaluator;
+  @Mock private FeatureFlagService featureFlagService;
   @Inject @InjectMocks private CustomSecretsManagerEncryptionServiceImpl customSecretsManagerEncryptionService;
 
   @Before

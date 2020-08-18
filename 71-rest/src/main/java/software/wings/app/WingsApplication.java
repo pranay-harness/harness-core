@@ -91,6 +91,7 @@ import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.CustomDeploymentInstanceSyncClient;
 import io.harness.perpetualtask.ForwardingPerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
@@ -562,6 +563,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(AwsLambdaInstanceSyncPerpetualTaskClient.class));
     clientRegistry.registerClient(
         PerpetualTaskType.DATA_COLLECTION_TASK, injector.getInstance(DataCollectionPerpetualTaskServiceClient.class));
+    clientRegistry.registerClient(PerpetualTaskType.CUSTOM_DEPLOYMENT_INSTANCE_SYNC,
+        injector.getInstance(CustomDeploymentInstanceSyncClient.class));
   }
 
   private void registerRemotePerpetualTaskServiceClients(Injector injector) {

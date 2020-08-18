@@ -16,4 +16,9 @@ public class ManagerPreviewExpressionEvaluator extends ExpressionEvaluator {
     secretManagerFunctor = new SecretManagerPreviewFunctor();
     addFunctor(SecretManagerFunctorInterface.FUNCTOR_NAME, secretManagerFunctor);
   }
+
+  public ManagerPreviewExpressionEvaluator(String formatter) {
+    secretManagerFunctor = new SecretManagerPreviewFunctor(formatter);
+    addFunctor(SecretManagerFunctorInterface.FUNCTOR_NAME, secretManagerFunctor);
+  }
 }

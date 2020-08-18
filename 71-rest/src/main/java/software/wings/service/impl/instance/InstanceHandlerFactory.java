@@ -26,13 +26,15 @@ public class InstanceHandlerFactory {
   private AzureInstanceHandler azureInstanceHandler;
   private SpotinstAmiInstanceHandler spotinstAmiInstanceHandler;
   private AwsLambdaInstanceHandler awsLambdaInstanceHandler;
+  private CustomDeploymentInstanceHandler customDeploymentInstanceHandler;
 
   @Inject
   public InstanceHandlerFactory(ContainerInstanceHandler containerInstanceHandler,
       AwsInstanceHandler awsInstanceHandler, AwsAmiInstanceHandler awsAmiInstanceHandler,
       AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler, PcfInstanceHandler pcfInstanceHandler,
       AzureInstanceHandler azureInstanceHandler, SpotinstAmiInstanceHandler spotinstAmiInstanceHandler,
-      AwsLambdaInstanceHandler awsLambdaInstanceHandler) {
+      AwsLambdaInstanceHandler awsLambdaInstanceHandler,
+      CustomDeploymentInstanceHandler customDeploymentInstanceHandler) {
     this.containerInstanceHandler = containerInstanceHandler;
     this.awsInstanceHandler = awsInstanceHandler;
     this.awsAmiInstanceHandler = awsAmiInstanceHandler;
@@ -41,6 +43,7 @@ public class InstanceHandlerFactory {
     this.azureInstanceHandler = azureInstanceHandler;
     this.spotinstAmiInstanceHandler = spotinstAmiInstanceHandler;
     this.awsLambdaInstanceHandler = awsLambdaInstanceHandler;
+    this.customDeploymentInstanceHandler = customDeploymentInstanceHandler;
   }
 
   private boolean isAmiSpotinstInfraMappingType(InfrastructureMapping infraMapping) {
@@ -79,6 +82,8 @@ public class InstanceHandlerFactory {
       case PHYSICAL_DATA_CENTER_SSH:
       case PHYSICAL_DATA_CENTER_WINRM:
         return null;
+      case CUSTOM:
+        return customDeploymentInstanceHandler;
       default:
         throw new UnexpectedException("No handler defined for infra mapping type: " + infraMappingType);
     }
@@ -87,6 +92,6 @@ public class InstanceHandlerFactory {
   public Set<InstanceHandler> getAllInstanceHandlers() {
     return Sets.newHashSet(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
         awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler, spotinstAmiInstanceHandler,
-        awsLambdaInstanceHandler);
+        awsLambdaInstanceHandler, customDeploymentInstanceHandler);
   }
 }

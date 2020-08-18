@@ -5,19 +5,16 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static java.util.Collections.singletonList;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.jayway.jsonpath.InvalidJsonException;
 import io.harness.beans.DelegateTask;
 import io.harness.data.algorithm.HashGenerator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.serializer.JsonUtils;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,6 +33,7 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.FetchInstancesCommandUnit;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -50,16 +48,16 @@ import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 @Slf4j
 public class InstanceFetchState extends State {
   public static final String OUTPUT_PATH_KEY = "INSTANCE_OUTPUT_PATH";
   public static final String FETCH_INSTANCE_COMMAND_UNIT = "Fetch Instances";
-  private static final String hostname = "hostname";
 
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
@@ -67,6 +65,15 @@ public class InstanceFetchState extends State {
   @Inject private ActivityHelperService activityHelperService;
 
   @Getter @Setter @DefaultValue("10") String stateTimeoutInMinutes;
+
+  static Function<String, InstanceElement> instanceElementMapper = hostName
+      -> anInstanceElement()
+             .uuid(UUIDGenerator.generateUuid())
+             .hostName(hostName)
+             .displayName(hostName)
+             .newInstance(true)
+             .build();
+  ;
 
   public InstanceFetchState(String name) {
     super(name, StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES.name());
@@ -96,12 +103,15 @@ public class InstanceFetchState extends State {
         accountId, infrastructureMapping.getCustomDeploymentTemplateId(),
         infrastructureMapping.getDeploymentTypeTemplateVersion());
 
+    String safeRenderedScriptString = getRenderedScriptExceptSecrets(
+        deploymentTypeTemplate.getFetchInstanceScript(), infraMappingElement.getCustom().getVars());
+
     ShellScriptProvisionParameters taskParameters =
         ShellScriptProvisionParameters.builder()
             .accountId(accountId)
             .appId(appId)
             .activityId(activityId)
-            .scriptBody(deploymentTypeTemplate.getFetchInstanceScript())
+            .scriptBody(safeRenderedScriptString)
             .textVariables(infraMappingElement.getCustom().getVars())
             .commandUnit(CommandUnitDetails.CommandUnitType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName())
             .outputPathKey(OUTPUT_PATH_KEY)
@@ -124,11 +134,12 @@ public class InstanceFetchState extends State {
                                               .build())
                                     .build();
 
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     renderDelegateTask(context, delegateTask,
         StateExecutionContext.builder()
             .stateExecutionData(context.getStateExecutionData())
             .adoptDelegateDecryption(true)
-            .expressionFunctorToken(HashGenerator.generateIntegerHash())
+            .expressionFunctorToken(expressionFunctorToken)
             .build());
 
     delegateService.queueTask(delegateTask);
@@ -142,6 +153,7 @@ public class InstanceFetchState extends State {
                                 .activityId(activityId)
                                 .hostObjectArrayPath(deploymentTypeTemplate.getHostObjectArrayPath())
                                 .hostAttributes(deploymentTypeTemplate.getHostAttributes())
+                                .instanceFetchScript(safeRenderedScriptString)
                                 .build())
         .build();
   }
@@ -169,7 +181,6 @@ public class InstanceFetchState extends State {
     ShellScriptProvisionExecutionData executionData = (ShellScriptProvisionExecutionData) responseEntry.getValue();
 
     final InstanceFetchStateExecutionData stateExecutionData = context.getStateExecutionData();
-    stateExecutionData.setActivityId(responseEntry.getKey());
     stateExecutionData.setStatus(executionData.getExecutionStatus());
 
     List<InstanceElement> instanceElements = new ArrayList<>();
@@ -183,10 +194,12 @@ public class InstanceFetchState extends State {
     } else if (SUCCESS == executionData.getExecutionStatus()) {
       String output = executionData.getOutput();
       try {
-        instanceElements = mapJsonToInstanceElements(stateExecutionData, output);
+        instanceElements = InstanceElementMapperUtils.mapJsonToInstanceElements(stateExecutionData.getHostAttributes(),
+            stateExecutionData.getHostObjectArrayPath(), output, instanceElementMapper);
       } catch (Exception ex) {
         return handleException(ex, "Error occurred while mapping script output Json to instances");
       }
+      stateExecutionData.setScriptOutput(output);
     }
 
     // TODO(YOGESH): Save Instance Details
@@ -203,19 +216,6 @@ public class InstanceFetchState extends State {
         .build();
   }
 
-  @VisibleForTesting
-  List<InstanceElement> mapJsonToInstanceElements(InstanceFetchStateExecutionData stateExecutionData, String output) {
-    List<InstanceElement> instanceElements = new ArrayList<>();
-    List<Map<String, Object>> instanceList = JsonUtils.jsonPath(output, stateExecutionData.getHostObjectArrayPath());
-    if (EmptyPredicate.isNotEmpty(instanceList)) {
-      instanceElements =
-          instanceList.stream()
-              .map(instanceMap -> instanceElementMapper(stateExecutionData.getHostAttributes(), instanceMap))
-              .collect(Collectors.toList());
-    }
-    return instanceElements;
-  }
-
   private ExecutionResponse handleException(Throwable t, String defaultErrorMessage) {
     final ExecutionResponseBuilder responseBuilder = ExecutionResponse.builder().executionStatus(FAILED);
     StringBuilder errorMessage = new StringBuilder("Reason: ");
@@ -230,22 +230,18 @@ public class InstanceFetchState extends State {
     return responseBuilder.errorMessage(errorMessage.toString()).build();
   }
 
-  private InstanceElement instanceElementMapper(Map<String, String> hostAttributes, Map<String, Object> hostMapping) {
-    String hostNameKey = hostAttributes.get(hostname);
-    String hostName = (String) hostMapping.get(hostNameKey);
-    return anInstanceElement()
-        .uuid(UUIDGenerator.generateUuid())
-        .hostName(hostName)
-        .displayName(hostName)
-        .newInstance(true)
-        .build();
-  }
-
   private String createAndSaveActivity(ExecutionContext executionContext) {
     List<CommandUnit> commandUnits = singletonList(new FetchInstancesCommandUnit(FETCH_INSTANCE_COMMAND_UNIT));
     return activityHelperService
         .createAndSaveActivity(executionContext, Activity.Type.Command, getName(),
             CommandUnitDetails.CommandUnitType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName(), commandUnits)
         .getUuid();
+  }
+
+  private String getRenderedScriptExceptSecrets(String script, Map<String, String> contextMap) {
+    ManagerPreviewExpressionEvaluator previewExpressionEvaluator =
+        new ManagerPreviewExpressionEvaluator("${secrets.getValue(\"%s\")}");
+    return (String) previewExpressionEvaluator.substitute(
+        script, Collections.<String, Object>unmodifiableMap(contextMap));
   }
 }

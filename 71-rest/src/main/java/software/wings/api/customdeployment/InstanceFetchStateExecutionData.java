@@ -14,7 +14,9 @@ import java.util.Map;
 public class InstanceFetchStateExecutionData extends StateExecutionData implements Outcome {
   private String activityId;
   private String hostObjectArrayPath;
+  private String instanceFetchScript;
   private Map<String, String> hostAttributes;
+  private String scriptOutput;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -37,6 +39,10 @@ public class InstanceFetchStateExecutionData extends StateExecutionData implemen
 
   @Override
   public InstanceFetchStateExecutionSummary getStepExecutionSummary() {
-    return InstanceFetchStateExecutionSummary.builder().activityId(activityId).build();
+    return InstanceFetchStateExecutionSummary.builder()
+        .activityId(activityId)
+        .instanceFetchScript(instanceFetchScript)
+        .scriptOutput(scriptOutput)
+        .build();
   }
 }

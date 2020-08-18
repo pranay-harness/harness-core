@@ -10,7 +10,6 @@ import io.harness.expression.LateBindingMap;
 import io.harness.expression.SecretString;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.FeatureFlagService;
@@ -36,10 +35,12 @@ public class SecretFunctor extends LateBindingMap {
   private boolean adoptDelegateDecryption;
   private int expressionFunctorToken;
 
+  private boolean twoPhaseEnabled;
+  private boolean threePhaseEnabled;
+
   public Object getValue(String secretName) {
     if (adoptDelegateDecryption && featureFlagService != null) {
-      if (featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, accountId)
-          || featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, accountId)) {
+      if (twoPhaseEnabled || threePhaseEnabled) {
         return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
       }
     }

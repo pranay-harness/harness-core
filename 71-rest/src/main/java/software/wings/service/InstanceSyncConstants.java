@@ -5,6 +5,7 @@ public final class InstanceSyncConstants {
 
   public static final String HARNESS_ACCOUNT_ID = "accountId";
   public static final String HARNESS_APPLICATION_ID = "applicationId";
+  public static final String HARNESS_ENV_ID = "environmentId";
   public static final String INFRASTRUCTURE_MAPPING_ID = "infrastructureMappingId";
   public static final String NAMESPACE = "namespace";
   public static final String RELEASE_NAME = "releaseName";

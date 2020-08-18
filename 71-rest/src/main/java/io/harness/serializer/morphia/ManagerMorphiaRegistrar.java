@@ -67,6 +67,7 @@ import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.CustomDeploymentTypeInfo;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.DeploymentTimeSeriesEvent;
@@ -1634,6 +1635,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.customdeployment.InstanceFetchState", InstanceFetchState.class);
     w.put("api.customdeployment.InstanceFetchStateExecutionData", InstanceFetchStateExecutionData.class);
     w.put("api.InstanceFetchStateExecutionSummary", InstanceFetchStateExecutionSummary.class);
+    w.put("api.CustomDeploymentTypeInfo", CustomDeploymentTypeInfo.class);
     w.put("beans.command.FetchInstancesCommandUnit", FetchInstancesCommandUnit.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);

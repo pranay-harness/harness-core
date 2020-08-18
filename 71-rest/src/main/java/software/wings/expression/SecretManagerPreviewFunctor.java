@@ -7,8 +7,18 @@ import io.harness.expression.ExpressionFunctor;
 
 @OwnedBy(CDC)
 public class SecretManagerPreviewFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
+  private String formatter;
+
+  public SecretManagerPreviewFunctor() {
+    this.formatter = "<<<%s>>>";
+  }
+
+  public SecretManagerPreviewFunctor(String formatter) {
+    this.formatter = formatter;
+  }
+
   @Override
   public Object obtain(String secretName, int token) {
-    return "<<<" + secretName + ">>>";
+    return String.format(formatter, secretName);
   }
 }
