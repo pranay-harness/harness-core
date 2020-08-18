@@ -134,14 +134,10 @@ public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
       + "    - Non-Production Support\n"
       + "    variables: null\n"
       + "    stageName: STAGE 2\n"
-      + "    pipelineStageElementId: sbAge5a4SQWMJyPnBil89w\n"
-      + "    disable: false\n"
       + "    templateExpressions: null\n"
       + "    timeoutMillis: 86400000\n"
-      + "    pipelineStageParallelIndex: 1\n"
       + "    approvalStateType: USER_GROUP\n"
       + "    sweepingOutputName: ''\n"
-      + "    pipelineId: VPNAFmeAT-OBxnIGKn4Ckw\n"
       + "  skipCondition:\n"
       + "    type: DO_NOT_SKIP";
 
@@ -156,8 +152,6 @@ public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
       + "    userGroups: null\n"
       + "    variables: null\n"
       + "    stageName: STAGE 2\n"
-      + "    pipelineStageElementId: sbAge5a4SQWMJyPnBil89w\n"
-      + "    disable: false\n"
       + "    templateExpressions:\n"
       + "    - expression: ${User_Group}\n"
       + "      expressionAllowed: true\n"
@@ -167,10 +161,8 @@ public class PipelineYamlHandlerUserGroupTest extends BaseYamlHandlerTest {
       + "        relatedField: ''\n"
       + "        entityType: USER_GROUP\n"
       + "    timeoutMillis: 86400000\n"
-      + "    pipelineStageParallelIndex: 1\n"
       + "    approvalStateType: USER_GROUP\n"
       + "    sweepingOutputName: ''\n"
-      + "    pipelineId: VPNAFmeAT-OBxnIGKn4Ckw\n"
       + "  skipCondition:\n"
       + "    type: DO_NOT_SKIP";
 

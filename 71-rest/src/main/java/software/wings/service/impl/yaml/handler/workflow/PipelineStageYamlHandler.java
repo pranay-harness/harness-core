@@ -11,6 +11,7 @@ import static software.wings.beans.PipelineStage.Yaml;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,6 +44,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +69,12 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   @Inject UserGroupService userGroupService;
   @Inject AppService appService;
 
-  private PipelineStage toBean(ChangeContext<Yaml> context) {
+  private static final List<String> irrelevantApprovalStateFields =
+      Arrays.asList(ApprovalStateKeys.disableAssertion, ApprovalStateKeys.disable, EnvStateKeys.pipelineId,
+          EnvStateKeys.pipelineStageElementId, EnvStateKeys.pipelineStageParallelIndex);
+
+  @VisibleForTesting
+  public PipelineStage toBean(ChangeContext<Yaml> context) {
     Yaml yaml = context.getYaml();
     Change change = context.getChange();
 
@@ -93,46 +100,10 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     boolean skipAlways = pipelineStageElement.checkDisableAssertion();
     Map<String, Object> properties = new HashMap<>();
     Map<String, String> workflowVariablesPse = new LinkedHashMap<>();
-    Workflow workflow;
-    if (!yaml.getType().equals(StateType.APPROVAL.name())) {
-      workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
-      notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, USER);
-      properties.put("workflowId", workflow.getUuid());
-
-      String envId = resolveEnvironmentId(yaml, appId, properties, workflow);
-      List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-      if (isNotEmpty(yaml.getWorkflowVariables()) && isNotEmpty(workflowVariables)) {
-        for (WorkflowVariable variable : yaml.getWorkflowVariables()) {
-          String variableName = variable.getName();
-          Variable variableOrg =
-              workflowVariables.stream().filter(t -> t.getName().equals(variableName)).findFirst().orElse(null);
-          if (variableOrg == null) {
-            continue;
-          }
-          String entityType = variable.getEntityType();
-          String variableValue = variable.getValue();
-          String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
-              change.getAccountId(), envId, appId, entityType, variableValue, skipAlways, variableOrg);
-          if (workflowVariableValueForBean != null) {
-            workflowVariablesPse.put(variableName, workflowVariableValueForBean);
-          }
-        }
-      }
-      logger.info("The pipeline env stage properties for appId {} wrokflowId {} are {}", appId, workflow.getUuid(),
-          String.valueOf(properties));
-    } else if (StateType.APPROVAL.name().equals(yaml.getType())) {
-      Map<String, Object> yamlProperties = yaml.getProperties();
-
-      if (yamlProperties != null) {
-        yamlProperties.forEach((name, value) -> {
-          if (!shouldBeIgnored(name)) {
-            properties.put(name,
-                ("userGroups".equals(name))
-                    ? getUserGroupUuids((List<String>) value, appService.getAccountIdByAppId(appId), yamlProperties)
-                    : value);
-          }
-        });
-      }
+    if (!StateType.APPROVAL.name().equals(yaml.getType())) {
+      generateBeanForEnvStage(yaml, change, appId, skipAlways, properties, workflowVariablesPse);
+    } else {
+      generateBeanForApprovalStage(yaml, appId, properties);
     }
 
     pipelineStageElement = PipelineStageElement.builder()
@@ -146,6 +117,51 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     stage.setPipelineStageElements(Lists.newArrayList(pipelineStageElement));
     return stage;
+  }
+
+  private void generateBeanForApprovalStage(Yaml yaml, String appId, Map<String, Object> properties) {
+    Map<String, Object> yamlProperties = yaml.getProperties();
+
+    if (yamlProperties != null) {
+      yamlProperties.forEach((name, value) -> {
+        if (!shouldBeIgnored(name)) {
+          properties.put(name,
+              ("userGroups".equals(name))
+                  ? getUserGroupUuids((List<String>) value, appService.getAccountIdByAppId(appId), yamlProperties)
+                  : value);
+        }
+      });
+    }
+  }
+
+  private void generateBeanForEnvStage(Yaml yaml, Change change, String appId, boolean skipAlways,
+      Map<String, Object> properties, Map<String, String> workflowVariablesPse) {
+    Workflow workflow;
+    workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
+    notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, USER);
+    properties.put("workflowId", workflow.getUuid());
+
+    String envId = resolveEnvironmentId(yaml, appId, properties, workflow);
+    List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+    if (isNotEmpty(yaml.getWorkflowVariables()) && isNotEmpty(workflowVariables)) {
+      for (WorkflowVariable variable : yaml.getWorkflowVariables()) {
+        String variableName = variable.getName();
+        Variable variableOrg =
+            workflowVariables.stream().filter(t -> t.getName().equals(variableName)).findFirst().orElse(null);
+        if (variableOrg == null) {
+          continue;
+        }
+        String entityType = variable.getEntityType();
+        String variableValue = variable.getValue();
+        String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
+            change.getAccountId(), envId, appId, entityType, variableValue, skipAlways, variableOrg);
+        if (workflowVariableValueForBean != null) {
+          workflowVariablesPse.put(variableName, workflowVariableValueForBean);
+        }
+      }
+    }
+    logger.info("The pipeline env stage properties for appId {} wrokflowId {} are {}", appId, workflow.getUuid(),
+        String.valueOf(properties));
   }
 
   private Object getUserGroupUuids(
@@ -217,69 +233,9 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     List<PipelineStage.WorkflowVariable> pipelineStageVariables = new ArrayList<>();
     if (!StateType.APPROVAL.name().equals(stageElement.getType())) {
-      Map<String, Object> properties = stageElement.getProperties();
-      notNullCheck("Pipeline stage element is null", properties, USER);
-
-      String workflowId = (String) properties.get("workflowId");
-      notNullCheck("Workflow id is null in stage properties", workflowId, USER);
-
-      Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-      notNullCheck("Workflow id is null in stage properties", workflowId, USER);
-
-      workflowName = workflow.getName();
-
-      Map<String, String> workflowVariables = stageElement.getWorkflowVariables();
-      notNullCheck("Pipeline stage element is null", workflowVariables, USER);
-
-      List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-      if (isEmpty(userVariables)) {
-        userVariables = new ArrayList<>();
-      }
-      Map<String, Variable> nameVariableMap =
-          userVariables.stream().collect(Collectors.toMap(Variable::getName, Function.identity()));
-      for (Map.Entry<String, String> entry : workflowVariables.entrySet()) {
-        Variable variable = nameVariableMap.get(entry.getKey());
-        if (variable != null) {
-          EntityType entityType = variable.obtainEntityType();
-          PipelineStage.WorkflowVariable workflowVariable =
-              PipelineStage.WorkflowVariable.builder()
-                  .name(entry.getKey())
-                  .entityType(entityType != null ? entityType.name() : null)
-                  .build();
-          String entryValue = entry.getValue();
-          String variableValue = workflowYAMLHelper.getWorkflowVariableValueYaml(
-              appId, entryValue, entityType, stageElement.checkDisableAssertion());
-          if (variableValue != null) {
-            workflowVariable.setValue(variableValue);
-            pipelineStageVariables.add(workflowVariable);
-          }
-        }
-      }
-    } else if (StateType.APPROVAL.name().equals(stageElement.getType())) {
-      Map<String, Object> properties = stageElement.getProperties();
-
-      if (properties != null) {
-        // Removing the disableAssertion field in approval stage properties as the expression is already displayed as
-        // skipCondition
-        properties.remove(ApprovalStateKeys.disableAssertion);
-        if (ApprovalStateType.SERVICENOW.name().equals(properties.get(APPROVAL_STATE_TYPE_VARIABLE))) {
-          Map<String, Object> snowParams =
-              (Map<String, Object>) ((Map<String, Object>) properties.get(ApprovalStateKeys.approvalStateParams))
-                  .get("serviceNowApprovalParams");
-          if (snowParams.containsKey("approval") || snowParams.containsKey("rejection")) {
-            snowParams.keySet().removeAll(Arrays.asList("approvalValue", "rejectionValue", "approvalField",
-                "rejectionField", "approvalOperator", "rejectionOperator"));
-          }
-        }
-        properties.forEach((name, value) -> {
-          if (!shouldBeIgnored(name)) {
-            outputProperties.put(name,
-                ("userGroups".equals(name) && value != null)
-                    ? getUserGroupNames((List<String>) value, appService.getAccountIdByAppId(appId))
-                    : value);
-          }
-        });
-      }
+      workflowName = generateYamlAndGetNameForEnvStage(appId, stageElement, pipelineStageVariables);
+    } else {
+      generateYamlForApprovalStage(appId, stageElement, outputProperties);
     }
 
     return Yaml.builder()
@@ -292,6 +248,77 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         .workflowVariables(pipelineStageVariables)
         .properties(outputProperties.isEmpty() ? null : outputProperties)
         .build();
+  }
+
+  private void generateYamlForApprovalStage(
+      String appId, PipelineStageElement stageElement, Map<String, Object> outputProperties) {
+    Map<String, Object> properties = stageElement.getProperties();
+
+    if (properties != null) {
+      // Removing the disableAssertion field in approval stage properties as the expression is already displayed as
+      // skipCondition
+      properties.keySet().removeAll(irrelevantApprovalStateFields);
+      if (ApprovalStateType.SERVICENOW.name().equals(properties.get(APPROVAL_STATE_TYPE_VARIABLE))) {
+        Map<String, Object> snowParams =
+            (Map<String, Object>) ((Map<String, Object>) properties.get(ApprovalStateKeys.approvalStateParams))
+                .get("serviceNowApprovalParams");
+        if (snowParams.containsKey("approval") || snowParams.containsKey("rejection")) {
+          snowParams.keySet().removeAll(Arrays.asList("approvalValue", "rejectionValue", "approvalField",
+              "rejectionField", "approvalOperator", "rejectionOperator"));
+        }
+      }
+      properties.forEach((name, value) -> {
+        if (!shouldBeIgnored(name)) {
+          outputProperties.put(name,
+              ("userGroups".equals(name) && value != null)
+                  ? getUserGroupNames((List<String>) value, appService.getAccountIdByAppId(appId))
+                  : value);
+        }
+      });
+    }
+  }
+
+  private String generateYamlAndGetNameForEnvStage(
+      String appId, PipelineStageElement stageElement, List<WorkflowVariable> pipelineStageVariables) {
+    String workflowName;
+    Map<String, Object> properties = stageElement.getProperties();
+    notNullCheck("Pipeline stage element is null", properties, USER);
+
+    String workflowId = (String) properties.get("workflowId");
+    notNullCheck("Workflow id is null in stage properties", workflowId, USER);
+
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    notNullCheck("Workflow id is null in stage properties", workflowId, USER);
+
+    workflowName = workflow.getName();
+
+    Map<String, String> workflowVariables = stageElement.getWorkflowVariables();
+    notNullCheck("Pipeline stage element is null", workflowVariables, USER);
+
+    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+    if (isEmpty(userVariables)) {
+      userVariables = new ArrayList<>();
+    }
+    Map<String, Variable> nameVariableMap =
+        userVariables.stream().collect(Collectors.toMap(Variable::getName, Function.identity()));
+    for (Map.Entry<String, String> entry : workflowVariables.entrySet()) {
+      Variable variable = nameVariableMap.get(entry.getKey());
+      if (variable != null) {
+        EntityType entityType = variable.obtainEntityType();
+        WorkflowVariable workflowVariable = WorkflowVariable.builder()
+                                                .name(entry.getKey())
+                                                .entityType(entityType != null ? entityType.name() : null)
+                                                .build();
+        String entryValue = entry.getValue();
+        String variableValue = workflowYAMLHelper.getWorkflowVariableValueYaml(
+            appId, entryValue, entityType, stageElement.checkDisableAssertion());
+        if (variableValue != null) {
+          workflowVariable.setValue(variableValue);
+          pipelineStageVariables.add(workflowVariable);
+        }
+      }
+    }
+    return workflowName;
   }
 
   private Object getUserGroupNames(List<String> userGroupList, String accountId) {

@@ -371,6 +371,7 @@ public class MigrationList {
         .add(Pair.of(328, ManageIPWhitelistPermissionMigration.class))
         .add(Pair.of(329, AlertNotificationAccountPermissionMigration.class))
         .add(Pair.of(330, ManageAuthenticationSettingsPermissionMigration.class))
+        .add(Pair.of(331, BaseMigration.class))
         .build();
   }
 }
