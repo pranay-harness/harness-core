@@ -2,9 +2,11 @@ package software.wings.service.intfc.azure.delegate;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.resources.Subscription;
+import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import software.wings.beans.AzureConfig;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AzureVMSSHelperServiceDelegate {
   /**
@@ -15,7 +17,7 @@ public interface AzureVMSSHelperServiceDelegate {
    * @param virtuaMachineScaleSetId
    * @return
    */
-  VirtualMachineScaleSet getVirtualMachineScaleSetsById(
+  Optional<VirtualMachineScaleSet> getVirtualMachineScaleSetsById(
       AzureConfig azureConfig, String subscriptionId, String virtuaMachineScaleSetId);
 
   /**
@@ -27,7 +29,7 @@ public interface AzureVMSSHelperServiceDelegate {
    * @param virtualMachineScaleSetName
    * @return
    */
-  VirtualMachineScaleSet getVirtualMachineScaleSetsByName(
+  Optional<VirtualMachineScaleSet> getVirtualMachineScaleSetByName(
       AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualMachineScaleSetName);
 
   /**
@@ -58,6 +60,14 @@ public interface AzureVMSSHelperServiceDelegate {
   void deleteVirtualMachineScaleSetById(AzureConfig azureConfig, String virtualMachineScaleSetId);
 
   /**
+   * Bulk delete Virtual Machine Scale Sets by Ids.
+   *
+   * @param azureConfig
+   * @param vmssIds
+   */
+  void bulkDeleteVirtualMachineScaleSets(AzureConfig azureConfig, List<String> vmssIds);
+
+  /**
    * List subscriptions.
    *
    * @param azureConfig
@@ -75,24 +85,41 @@ public interface AzureVMSSHelperServiceDelegate {
   List<String> listResourceGroupsNamesBySubscriptionId(AzureConfig azureConfig, String subscriptionId);
 
   /**
-   * Wait for all VMSS Instances to be in Running State
+   * Check if all VMSS Instances are stopped
    *
    * @param azureConfig
    * @param subscriptionId
    * @param virtualMachineScaleSetId
-   * @param autoScalingSteadyStateTimeout
-   */
-  void waitForAllVmssInstancesToBeReady(AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId,
-      Integer autoScalingSteadyStateTimeout);
-
-  /**
-   * Check if all VMSS Instances are in running state
-   *
-   * @param azureConfig
-   * @param subscriptionId
-   * @param virtualMachineScaleSetId
+   * @param numberOfVMInstances
    * @return
    */
-  boolean checkIfAllVmssInstancesAreInRunningState(
-      AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId);
+  boolean checkIsRequiredNumberOfVMInstances(
+      AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId, int numberOfVMInstances);
+
+  /**
+   * Update Virtual Machine Scale Set capacity
+   *
+   * @param azureConfig
+   * @param virtualMachineScaleSetName
+   * @param subscriptionId
+   * @param resourceGroupName
+   * @param limit
+   * @return
+   */
+  VirtualMachineScaleSet updateVMSSCapacity(AzureConfig azureConfig, String virtualMachineScaleSetName,
+      String subscriptionId, String resourceGroupName, int limit);
+
+  /**
+   * Create a new Virtual Machine Scale Set based on base scale set
+   * @param azureConfig
+   * @param baseVirtualMachineScaleSet
+   * @param infraMappingId
+   * @param newVirtualMachineScaleSetName
+   * @param harnessRevision
+   * @param azureUserAuthVMInstanceData
+   * @param isBlueGreen
+   */
+  void createVirtualMachineScaleSet(AzureConfig azureConfig, VirtualMachineScaleSet baseVirtualMachineScaleSet,
+      String infraMappingId, String newVirtualMachineScaleSetName, Integer harnessRevision,
+      AzureUserAuthVMInstanceData azureUserAuthVMInstanceData, boolean isBlueGreen);
 }

@@ -69,6 +69,7 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
+import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListResourceGroupsNamesParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListSubscriptionsParameters;
@@ -230,5 +231,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TaskData.class, 19002);
     kryo.register(YamlGitConfigDTO.class, 19087);
     kryo.register(YamlGitConfigDTO.RootFolder.class, 19095);
+    kryo.register(AzureVMSSPreDeploymentData.class, 19106);
   }
 }

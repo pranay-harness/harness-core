@@ -1,5 +1,7 @@
 package io.harness.azure.model;
 
+import java.util.concurrent.TimeUnit;
+
 public interface AzureConstants {
   int DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN = 2;
   String MIN_INSTANCES = "minInstancesExpr";
@@ -10,7 +12,21 @@ public interface AzureConstants {
   String AZURE_VMSS_SETUP_COMMAND_NAME = "Azure VMSS Setup";
   String AZURE_VMSS_DEPLOY_COMMAND_NAME = "Resize Azure Virtual Machine Scale Set";
   String ACTIVITY_ID = "activityId";
+  int NUMBER_OF_LATEST_VERSIONS_TO_KEEP = 3;
 
+  // VMSS Tags names and values
+  String HARNESS_AUTOSCALING_GROUP_TAG_NAME = "HARNESS_REVISION";
+  String DYNAMIC_BASE_VMSS_PROVISIONING_PREFIX = "azure:";
+  String NAME_TAG = "Name";
+  String BG_VERSION_TAG_NAME = "BG_VERSION";
+  String BG_GREEN_TAG_VALUE = "GREEN";
+  String VMSS_CREATED_TIME_STAMP_TAG_NAME = "Created";
+
+  // User VM Auth types
+  String VMSS_AUTH_TYPE_DEFAULT = "PASSWORD";
+  String VMSS_AUTH_TYPE_SSH_PUBLIC_KEY = "SSH_PUBLIC_KEY";
+
+  // Default Azure VMSS values
   int DEFAULT_AZURE_VMSS_MAX_INSTANCES = 10;
   int DEFAULT_AZURE_VMSS_MIN_INSTANCES = 0;
   int DEFAULT_AZURE_VMSS_DESIRED_INSTANCES = 6;
@@ -23,9 +39,29 @@ public interface AzureConstants {
   String DOWN_SCALE_COMMAND_UNIT = "Downscale Virtual Machine Scale Set";
   String DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Downscale wait for steady state";
   String DEPLOYMENT_STATUS = "Final Deployment status";
+  String DEPLOYMENT_ERROR = "Failed Deployment status";
   String DELETE_NEW_VMSS = "Delete New Virtual Machine Scale Set";
 
   // Messaging
   String SKIP_VMSS_DEPLOY = "No Azure VMSS setup context element found. Skipping deploy";
   String SKIP_VMSS_ROLLBACK = "No Azure VMSS setup context element found. Skipping rollback";
+
+  // Validation messages
+  String RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG = "Parameter resourceGroupName is required and cannot be null";
+  String TARGET_RESOURCE_ID_NULL_VALIDATION_MSG = "Parameter targetResourceId is required and cannot be null";
+  String AUTOSCALE_SETTINGS_RESOURCE_JSON_NULL_VALIDATION_MSG =
+      "Parameter autoScaleSettingResourceInnerJson is required and cannot be null";
+  String AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG = "Azure management client can't be null";
+  String SUBSCRIPTION_ID_NULL_VALIDATION_MSG = "Parameter subscriptionId is required and cannot be null";
+  String VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG =
+      "Parameter virtualMachineScaleSetId is required and cannot be null";
+  String VIRTUAL_SCALE_SET_NAME_NULL_VALIDATION_MSG = "Parameter virtualScaleSetName is required and cannot be null";
+  String BASE_VIRTUAL_MACHINE_SCALE_SET_IS_NULL_VALIDATION_MSG =
+      "Parameter baseVirtualMachineScaleSet is required and cannot be null";
+  long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
+  String NEW_VIRTUAL_MACHINE_SCALE_SET_NAME_IS_NULL_VALIDATION_MSG =
+      "Parameter newVirtualMachineScaleSetName is required and cannot be null";
+  String HARNESS_REVISION_IS_NULL_VALIDATION_MSG = "Parameter harnessRevision is required and cannot be null";
+  String VMSS_IDS_IS_NULL_VALIDATION_MSG = "Parameter vmssIds is required and cannot be null";
+  String NUMBER_OF_VM_INSTANCES_VALIDATION_MSG = "Required number of VM instances can't have negative value";
 }

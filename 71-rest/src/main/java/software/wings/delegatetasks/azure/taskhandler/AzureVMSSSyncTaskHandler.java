@@ -2,10 +2,12 @@ package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.resources.Subscription;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
@@ -26,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.beans.AzureConfig;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -87,9 +90,24 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
         String virtualMachineScaleSetName =
             ((AzureVMSSGetVirtualMachineScaleSetParameters) azureVMSSTaskParameters).getVmssName();
 
-        VirtualMachineScaleSet virtualMachineScaleSet = azureVMSSHelperServiceDelegate.getVirtualMachineScaleSetsByName(
-            azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
-        String administratorUsername = virtualMachineScaleSet.virtualMachines().list().get(0).administratorUserName();
+        Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp =
+            azureVMSSHelperServiceDelegate.getVirtualMachineScaleSetByName(
+                azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
+
+        if (!virtualMachineScaleSetOp.isPresent()) {
+          throw new InvalidRequestException(
+              format("There is no Virtual Machine Scale Set with name %s, subscriptionId: %s, resourceGroupName: %s",
+                  virtualMachineScaleSetName, subscriptionId, resourceGroupName));
+        }
+
+        VirtualMachineScaleSet virtualMachineScaleSet = virtualMachineScaleSetOp.get();
+
+        String administratorUsername = virtualMachineScaleSet.virtualMachines()
+                                           .list()
+                                           .stream()
+                                           .findFirst()
+                                           .map(VirtualMachineScaleSetVM::administratorUserName)
+                                           .orElse(EMPTY);
 
         VirtualMachineScaleSetData virtualMachineScaleSetData =
             VirtualMachineScaleSetData.builder()

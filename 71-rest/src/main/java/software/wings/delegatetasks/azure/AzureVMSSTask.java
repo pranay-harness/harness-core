@@ -9,10 +9,14 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.ServiceVariable;
+import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSetupTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSTaskHandler;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
@@ -24,6 +28,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class AzureVMSSTask extends AbstractDelegateRunnableTask {
   @Inject private AzureVMSSSyncTaskHandler azureVMSSSyncTaskHandler;
+  @Inject private AzureVMSSSetupTaskHandler setupTaskHandler;
   @Inject private EncryptionService encryptionService;
 
   public AzureVMSSTask(
@@ -48,16 +53,18 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
     AzureVMSSCommandRequest azureVMSSCommandRequest = (AzureVMSSCommandRequest) parameters;
     AzureVMSSTaskParameters azureVMSSTaskParameters = azureVMSSCommandRequest.getAzureVMSSTaskParameters();
 
-    if (azureVMSSCommandRequest.getAzureConfig() != null) {
-      encryptionService.decrypt(
-          azureVMSSCommandRequest.getAzureConfig(), azureVMSSCommandRequest.getAzureEncryptionDetails());
-    }
+    decryptCommandRequestParameters(azureVMSSCommandRequest);
+    decryptTaskParameters(azureVMSSCommandRequest, azureVMSSTaskParameters);
 
     AzureVMSSTaskHandler handler;
     if (azureVMSSTaskParameters.isSyncTask()) {
       handler = azureVMSSSyncTaskHandler;
     } else {
       switch (azureVMSSTaskParameters.getCommandType()) {
+        case AZURE_VMSS_SETUP: {
+          handler = setupTaskHandler;
+          break;
+        }
         default: {
           String message = format("Unrecognized task params type running azure vmss task: [%s].",
               azureVMSSTaskParameters.getCommandType().name());
@@ -67,5 +74,32 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
       }
     }
     return handler.executeTask(azureVMSSTaskParameters, azureVMSSCommandRequest.getAzureConfig());
+  }
+
+  private void decryptCommandRequestParameters(AzureVMSSCommandRequest azureVMSSCommandRequest) {
+    if (azureVMSSCommandRequest.getAzureConfig() != null) {
+      encryptionService.decrypt(
+          azureVMSSCommandRequest.getAzureConfig(), azureVMSSCommandRequest.getAzureEncryptionDetails());
+    }
+  }
+
+  private void decryptTaskParameters(
+      AzureVMSSCommandRequest azureVMSSCommandRequest, AzureVMSSTaskParameters azureVMSSTaskParameters) {
+    if (AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SETUP == azureVMSSTaskParameters.getCommandType()) {
+      AzureVMSSSetupTaskParameters setupTaskParameters = (AzureVMSSSetupTaskParameters) azureVMSSTaskParameters;
+
+      if (azureVMSSCommandRequest.getHostConnectionAttributes() != null) {
+        HostConnectionAttributes hostConnectionAttributes = azureVMSSCommandRequest.getHostConnectionAttributes();
+        encryptionService.decrypt(
+            hostConnectionAttributes, azureVMSSCommandRequest.getHostConnectionAttributesEncryptionDetails());
+        setupTaskParameters.setSshPublicKey(new String(hostConnectionAttributes.getSshPassword()));
+      }
+
+      if (azureVMSSCommandRequest.getServiceVariable() != null) {
+        ServiceVariable serviceVariable = azureVMSSCommandRequest.getServiceVariable();
+        encryptionService.decrypt(serviceVariable, azureVMSSCommandRequest.getServiceVariableEncryptionDetails());
+        setupTaskParameters.setSshPublicKey(new String(serviceVariable.getValue()));
+      }
+    }
   }
 }

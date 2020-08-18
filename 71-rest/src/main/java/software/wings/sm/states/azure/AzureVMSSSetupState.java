@@ -21,8 +21,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
+import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
-import io.harness.delegate.task.azure.response.AzureVMSSTaskSetupResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -168,8 +168,7 @@ public class AzureVMSSSetupState extends State {
     String userName = azureVMSSInfrastructureMapping.getUserName();
     String vmssAuthType = azureVMSSInfrastructureMapping.getVmssAuthType().name();
     String vmssDeploymentType = azureVMSSInfrastructureMapping.getVmssDeploymentType().name();
-    String hostConnectionAttrs = azureVMSSInfrastructureMapping.getHostConnectionAttrs();
-    String password = azureVMSSInfrastructureMapping.getPasswordSecretTextName();
+    String infraMappingId = azureVMSSInfrastructureMapping.getUuid();
 
     String accountId = app.getAccountId();
     String appId = app.getAppId();
@@ -205,8 +204,7 @@ public class AzureVMSSSetupState extends State {
         .userData(userData)
         .vmssAuthType(vmssAuthType)
         .vmssDeploymentType(vmssDeploymentType)
-        .hostConnectionAttrs(hostConnectionAttrs)
-        .password(password)
+        .infraMappingId(infraMappingId)
         .minInstances(minInstancesFixed)
         .maxInstances(maxInstancesFixed)
         .desiredInstances(desiredInstancesFixed)
@@ -308,8 +306,8 @@ public class AzureVMSSSetupState extends State {
 
   private AzureVMSSSetupContextElement buildAzureVMSSSetupContextElement(
       ExecutionContext context, AzureVMSSTaskExecutionResponse executionResponse) {
-    AzureVMSSTaskSetupResponse azureVMSSTaskSetupResponse =
-        (AzureVMSSTaskSetupResponse) executionResponse.getAzureVMSSTaskResponse();
+    AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse =
+        (AzureVMSSSetupTaskResponse) executionResponse.getAzureVMSSTaskResponse();
 
     boolean isBlueGreen = azureVMSSStateHelper.isBlueGreenWorkflow(context);
     ResizeStrategy resizeStrategyFixed = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
@@ -317,25 +315,25 @@ public class AzureVMSSSetupState extends State {
         autoScalingSteadyStateVMSSTimeout, context, DEFAULT_AZURE_VMSS_TIMEOUT_MIN);
 
     return AzureVMSSSetupContextElement.builder()
-        .newVirtualMachineScaleSetName(azureVMSSTaskSetupResponse.getNewVirtualMachineScaleSetName())
-        .oldVirtualMachineScaleSetName(azureVMSSTaskSetupResponse.getLastDeployedVMSSName())
-        .baseVMSSScalingPolicyJSONs(azureVMSSTaskSetupResponse.getBaseVMSSScalingPolicyJSONs())
-        .minInstances(azureVMSSTaskSetupResponse.getMinInstances())
-        .maxInstances(azureVMSSTaskSetupResponse.getMaxInstances())
-        .desiredInstances(azureVMSSTaskSetupResponse.getDesiredInstances())
+        .newVirtualMachineScaleSetName(azureVMSSSetupTaskResponse.getNewVirtualMachineScaleSetName())
+        .oldVirtualMachineScaleSetName(azureVMSSSetupTaskResponse.getLastDeployedVMSSName())
+        .baseVMSSScalingPolicyJSONs(azureVMSSSetupTaskResponse.getBaseVMSSScalingPolicyJSONs())
+        .minInstances(azureVMSSSetupTaskResponse.getMinInstances())
+        .maxInstances(azureVMSSSetupTaskResponse.getMaxInstances())
+        .desiredInstances(azureVMSSSetupTaskResponse.getDesiredInstances())
         .isBlueGreen(isBlueGreen)
         .resizeStrategy(resizeStrategyFixed)
         .autoScalingSteadyStateVMSSTimeout(autoScalingSteadyStateVMSSTimeoutFixed)
         .commandName(AZURE_VMSS_SETUP_COMMAND_NAME)
-        .oldVMSSNames(azureVMSSTaskSetupResponse.getOldVMSSNames())
+        .preDeploymentData(azureVMSSSetupTaskResponse.getPreDeploymentData())
         .build();
   }
 
   @NotNull
   private AzureVMSSSetupStateExecutionData populateAzureVMSSSetupStateExecutionData(
       ExecutionContext context, AzureVMSSTaskExecutionResponse executionResponse, ExecutionStatus executionStatus) {
-    AzureVMSSTaskSetupResponse azureVMSSTaskSetupResponse =
-        (AzureVMSSTaskSetupResponse) executionResponse.getAzureVMSSTaskResponse();
+    AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse =
+        (AzureVMSSSetupTaskResponse) executionResponse.getAzureVMSSTaskResponse();
 
     AzureVMSSSetupStateExecutionData stateExecutionData = context.getStateExecutionData();
 
@@ -343,12 +341,12 @@ public class AzureVMSSSetupState extends State {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    stateExecutionData.setNewVirtualMachineScaleSetName(azureVMSSTaskSetupResponse.getNewVirtualMachineScaleSetName());
-    stateExecutionData.setOldVirtualMachineScaleSetName(azureVMSSTaskSetupResponse.getLastDeployedVMSSName());
-    stateExecutionData.setNewVersion(azureVMSSTaskSetupResponse.getHarnessRevision());
-    stateExecutionData.setDelegateMetaInfo(azureVMSSTaskSetupResponse.getDelegateMetaInfo());
-    stateExecutionData.setDesiredInstances(azureVMSSTaskSetupResponse.getDesiredInstances());
-    stateExecutionData.setMaxInstances(azureVMSSTaskSetupResponse.getMaxInstances());
+    stateExecutionData.setNewVirtualMachineScaleSetName(azureVMSSSetupTaskResponse.getNewVirtualMachineScaleSetName());
+    stateExecutionData.setOldVirtualMachineScaleSetName(azureVMSSSetupTaskResponse.getLastDeployedVMSSName());
+    stateExecutionData.setNewVersion(azureVMSSSetupTaskResponse.getHarnessRevision());
+    stateExecutionData.setDelegateMetaInfo(azureVMSSSetupTaskResponse.getDelegateMetaInfo());
+    stateExecutionData.setDesiredInstances(azureVMSSSetupTaskResponse.getDesiredInstances());
+    stateExecutionData.setMaxInstances(azureVMSSSetupTaskResponse.getMaxInstances());
 
     return stateExecutionData;
   }

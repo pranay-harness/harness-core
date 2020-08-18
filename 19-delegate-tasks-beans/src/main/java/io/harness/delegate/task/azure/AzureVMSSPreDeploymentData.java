@@ -1,4 +1,4 @@
-package software.wings.sm.states.azure;
+package io.harness.delegate.task.azure;
 
 import lombok.Builder;
 import lombok.Data;
