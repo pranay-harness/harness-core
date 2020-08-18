@@ -13,7 +13,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NGPageResponse<T> {
-  long totalPages;
+  long pageCount;
   long itemCount;
   long pageSize;
   List<T> content;
