@@ -38,6 +38,7 @@ import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APPROVAL_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
@@ -45,8 +46,11 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -62,6 +66,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.jexl3.JexlException;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,6 +107,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.security.SecretManager;
+import software.wings.service.ApprovalUtils;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
@@ -109,6 +115,7 @@ import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
@@ -118,6 +125,8 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
@@ -161,6 +170,8 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private ServiceNowService serviceNowService;
   @Mock private ApprovalPolingService approvalPolingService;
   @Mock private UserGroupService userGroupService;
+  @Mock private StateExecutionService stateExecutionService;
+  @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private State state;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
@@ -1115,6 +1126,28 @@ public class ApprovalStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldOutputCorrectMessageOnFailure() {
+    StateExecutionData stateExecutionData = ApprovalStateExecutionData.builder().build();
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance()
+            .displayName(STATE_NAME)
+            .stateExecutionMap(Collections.singletonMap(STATE_NAME, stateExecutionData))
+            .build();
+    when(stateExecutionService.getStateExecutionData(APP_ID, STATE_EXECUTION_ID)).thenReturn(stateExecutionInstance);
+    ArgumentCaptor<ApprovalStateExecutionData> captor = ArgumentCaptor.forClass(ApprovalStateExecutionData.class);
+    ApprovalStateExecutionData approvalData =
+        ApprovalStateExecutionData.builder().appId(APP_ID).approvalId(APPROVAL_EXECUTION_ID).build();
+    ApprovalUtils.checkApproval(stateExecutionService, waitNotifyEngine, WORKFLOW_EXECUTION_ID, STATE_EXECUTION_ID,
+        "SOME_ERROR", FAILED, approvalData);
+    verify(waitNotifyEngine).doneWith(any(), captor.capture());
+    assertThat(captor.getValue()).isNotNull();
+    assertThat(captor.getValue().getStatus()).isEqualTo(FAILED);
+    assertThat(captor.getValue().getErrorMsg()).isEqualTo("Jira/ServiceNow approval failed: SOME_ERROR ticket: ");
   }
 
   @Test
