@@ -4,15 +4,29 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.git.Constants.COMMIT_MESSAGE;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
+import static io.harness.git.Constants.HARNESS_IO_KEY_;
+import static io.harness.git.Constants.HARNESS_SUPPORT_EMAIL_KEY;
+import static io.harness.git.Constants.PATH_DELIMITER;
+import static io.harness.git.model.CommitAndPushResult.commitAndPushResultBuilder;
+import static io.harness.git.model.CommitResult.commitResultBuilder;
 import static io.harness.git.model.DiffResult.diffResultBuilder;
+import static io.harness.git.model.PushResultGit.pushResultBuilder;
+import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
+import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -25,7 +39,10 @@ import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.AuthInfo;
+import io.harness.git.model.ChangeType;
 import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
+import io.harness.git.model.CommitResult;
 import io.harness.git.model.DiffRequest;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
@@ -35,6 +52,7 @@ import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitFileChange;
 import io.harness.git.model.JgitSshAuthRequest;
+import io.harness.git.model.PushResultGit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +63,9 @@ import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LsRemoteCommand;
 import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
@@ -63,6 +83,9 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
@@ -70,10 +93,11 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -207,7 +231,8 @@ public class GitClientV2Impl implements GitClientV2 {
     }
   }
 
-  private void updateRemoteOriginInConfig(String repoUrl, File gitRepoDirectory) {
+  @VisibleForTesting
+  void updateRemoteOriginInConfig(String repoUrl, File gitRepoDirectory) {
     try (Git git = Git.open(gitRepoDirectory)) {
       StoredConfig config = git.getRepository().getConfig();
       // Update local remote url if its changed
@@ -361,7 +386,7 @@ public class GitClientV2Impl implements GitClientV2 {
       }
 
       ObjectLoader loader = repository.open(objectId);
-      content = new String(loader.getBytes(), StandardCharsets.UTF_8);
+      content = new String(loader.getBytes(), UTF_8);
       GitFileChange gitFileChange = GitFileChange.builder()
                                         .commitId(headCommitId.getName())
                                         .changeType(gitClientHelper.getChangeType(entry.getChangeType()))
@@ -403,7 +428,332 @@ public class GitClientV2Impl implements GitClientV2 {
   }
 
   @Override
-  public void commitAndPush(CommitAndPushRequest request) {}
+  public synchronized CommitAndPushResult commitAndPush(CommitAndPushRequest commitAndPushRequest) {
+    CommitResult commitResult = commit(commitAndPushRequest);
+    CommitAndPushResult gitCommitAndPushResult = commitAndPushResultBuilder().gitCommitResult(commitResult).build();
+    if (isNotBlank(commitResult.getCommitId())) {
+      gitCommitAndPushResult.setGitPushResult(push(commitAndPushRequest));
+      List<GitFileChange> gitFileChanges = getFilesCommited(commitResult.getCommitId(), commitAndPushRequest);
+      gitCommitAndPushResult.setFilesCommittedToGit(gitFileChanges);
+    } else {
+      logger.warn(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType())
+              + "Null commitId. Nothing to push for request [{}]",
+          commitAndPushRequest);
+    }
+    return gitCommitAndPushResult;
+  }
+
+  @VisibleForTesting
+  synchronized CommitResult commit(CommitAndPushRequest commitRequest) {
+    boolean pushOnlyIfHeadSeen = commitRequest.isPushOnlyIfHeadSeen();
+    String lastProcessedCommit = commitRequest.getLastProcessedGitCommit();
+
+    List<String> filesToAdd = new ArrayList<>();
+
+    ensureRepoLocallyClonedAndUpdated(commitRequest);
+
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(commitRequest)))) {
+      applyChangeSetOnFileSystem(gitClientHelper.getRepoDirectory(commitRequest), commitRequest, filesToAdd, git);
+
+      // Removal of files should happen before addition of files.
+      applyGitAddCommand(commitRequest, filesToAdd, git);
+
+      Status status = git.status().call();
+
+      if (status.isClean()) {
+        logger.warn(gitClientHelper.getGitLogMessagePrefix(commitRequest.getRepoType())
+                + "No git change to commit. GitCommitRequest: [{}]",
+            commitRequest);
+        return commitResultBuilder().build(); // do nothing
+      }
+
+      ensureLastProcessedCommitIsHead(pushOnlyIfHeadSeen, lastProcessedCommit, git);
+
+      StringBuilder commitMessage = prepareCommitMessage(commitRequest, status);
+      String authorName = isNotBlank(commitRequest.getAuthorName()) ? commitRequest.getAuthorName() : HARNESS_IO_KEY_;
+      String authorEmailId =
+          isNotBlank(commitRequest.getAuthorEmail()) ? commitRequest.getAuthorEmail() : HARNESS_SUPPORT_EMAIL_KEY;
+
+      RevCommit revCommit = git.commit()
+                                .setCommitter(authorName, authorEmailId)
+                                .setAuthor(authorName, authorEmailId)
+                                .setAll(true)
+                                .setMessage(commitMessage.toString())
+                                .call();
+
+      return commitResultBuilder()
+          .commitId(revCommit.getName())
+          .commitTime(revCommit.getCommitTime())
+          .commitMessage(getTruncatedCommitMessage(commitMessage.toString()))
+          .build();
+
+    } catch (IOException | GitAPIException ex) {
+      logger.error(gitClientHelper.getGitLogMessagePrefix(commitRequest.getRepoType()) + "Exception: ", ex);
+      throw new YamlException("Error in writing commit", ex, ADMIN_SRE);
+    }
+  }
+
+  private StringBuilder prepareCommitMessage(CommitAndPushRequest commitAndPushRequest, Status status) {
+    StringBuilder commitMessage = new StringBuilder(48);
+    if (isNotBlank(commitAndPushRequest.getCommitMessage())) {
+      commitMessage.append(commitAndPushRequest.getCommitMessage());
+    } else {
+      commitMessage.append(COMMIT_MESSAGE);
+      status.getAdded().forEach(
+          filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
+      status.getChanged().forEach(
+          filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
+      status.getRemoved().forEach(
+          filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
+    }
+    logger.info(format("Commit message for git sync for accountId: [%s]  repoUrl: [%s] %n "
+            + "Additions: [%d] Modifications:[%d] Deletions:[%d]"
+            + "%n Message: [%s]",
+        commitAndPushRequest.getAccountId(), commitAndPushRequest.getRepoUrl(), status.getAdded().size(),
+        status.getChanged().size(), status.getRemoved().size(), commitMessage));
+    return commitMessage;
+  }
+
+  private List<GitFileChange> getFilesCommited(String gitCommitId, CommitAndPushRequest commitAndPushRequest) {
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(commitAndPushRequest)))) {
+      ObjectId commitId = ObjectId.fromString(gitCommitId);
+      RevCommit currentCommitObject = null;
+      try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+        currentCommitObject = revWalk.parseCommit(commitId);
+      }
+
+      if (currentCommitObject == null) {
+        String repoURL = StringUtils.defaultIfBlank(commitAndPushRequest.getRepoUrl(), "");
+        throw new GitClientException(
+            String.format("No commit was found with the commitId (%s) in git repo (%s)", gitCommitId, repoURL), USER,
+            null);
+      }
+
+      RevCommit parentCommit = currentCommitObject.getParent(0);
+
+      ObjectId newCommitHead = git.getRepository().resolve(currentCommitObject.getName() + "^{tree}");
+      ObjectId oldCommitHead = null;
+      if (parentCommit != null) {
+        oldCommitHead = git.getRepository().resolve(parentCommit.getName() + "^{tree}");
+      }
+      List<DiffEntry> diffs = getDiffEntries(git.getRepository(), git, newCommitHead, oldCommitHead);
+      return getGitFileChangesFromDiff(diffs, git.getRepository(), commitAndPushRequest.getAccountId());
+    } catch (Exception ex) {
+      logger.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + "Exception: ", ex);
+      throw new YamlException("Error in getting the files commited to the git", ex, USER_ADMIN);
+    }
+  }
+
+  private List<GitFileChange> getGitFileChangesFromDiff(List<DiffEntry> diffs, Repository repository, String accountId)
+      throws IOException {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+    for (DiffEntry entry : diffs) {
+      ObjectId objectId;
+      String filePath;
+      if (entry.getChangeType() == DiffEntry.ChangeType.DELETE) {
+        filePath = entry.getOldPath();
+        objectId = entry.getOldId().toObjectId();
+      } else {
+        filePath = entry.getNewPath();
+        objectId = entry.getNewId().toObjectId();
+      }
+      ObjectLoader loader = repository.open(objectId);
+      String content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      gitFileChanges.add(GitFileChange.builder()
+                             .accountId(accountId)
+                             .filePath(filePath)
+                             .fileContent(content)
+                             .changeType(gitClientHelper.getChangeType(entry.getChangeType()))
+                             .syncFromGit(false)
+                             .changeFromAnotherCommit(false)
+                             .build());
+    }
+    return gitFileChanges;
+  }
+
+  private List<DiffEntry> getDiffEntries(Repository repository, Git git, ObjectId newCommitHead, ObjectId oldCommitHead)
+      throws IOException, GitAPIException {
+    try (ObjectReader reader = repository.newObjectReader()) {
+      CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+      oldTreeIter.reset(reader, oldCommitHead);
+      CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+      newTreeIter.reset(reader, newCommitHead);
+
+      return git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
+    }
+  }
+
+  @VisibleForTesting
+  String getHeadCommit(Git git) {
+    try {
+      ObjectId id = git.getRepository().resolve(org.eclipse.jgit.lib.Constants.HEAD);
+      return id.getName();
+    } catch (Exception ex) {
+      throw new YamlException("Error in getting the head commit to the git", ex, USER_ADMIN);
+    }
+  }
+
+  @VisibleForTesting
+  void ensureLastProcessedCommitIsHead(boolean pushOnlyIfHeadSeen, String lastProcessedCommit, Git git) {
+    if (!pushOnlyIfHeadSeen || isEmpty(lastProcessedCommit)) {
+      return;
+    }
+    String headCommit = getHeadCommit(git);
+    if (!lastProcessedCommit.equals(headCommit)) {
+      throw new YamlException(String.format("Git commit failed. Encountered unseen commit [%s] expected [%s]",
+                                  headCommit, lastProcessedCommit),
+          ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT, ADMIN_SRE);
+    }
+  }
+
+  @VisibleForTesting
+  void applyGitAddCommand(GitBaseRequest request, List<String> filesToAdd, Git git) {
+    /*
+    We do not need to specifically git add every added/modified file. git add . will take care
+    of this
+     */
+    if (isNotEmpty(filesToAdd)) {
+      try {
+        git.add().addFilepattern(".").call();
+      } catch (GitAPIException ex) {
+        logger.error(
+            format("Error in add/modify git operation connectorId:[%s]", request.getConnectorId()) + " Exception: ",
+            ex);
+        throw new YamlException(
+            format("Error in add/modify git operation connectorId:[%s]", request.getConnectorId()), ex, ADMIN_SRE);
+      }
+    }
+  }
+
+  /*
+      We need to ensure creation/deletion in the same order as the gitFileChanges but we do not
+      want to git add each file individually because that slows down things but deleting is easy
+      since we can just do git delete root_folder if some entity is deleted. Therefore, git rm is
+      done here and just creation of files is done here and git add . should be done after this
+      method call.
+  */
+  @VisibleForTesting
+  void applyChangeSetOnFileSystem(
+      String repoDirectory, CommitAndPushRequest gitCommitRequest, List<String> filesToAdd, Git git) {
+    gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
+      String filePath = repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath();
+      File file = new File(filePath);
+      final ChangeType changeType = gitFileChange.getChangeType();
+      switch (changeType) {
+        case ADD:
+        case MODIFY:
+          try {
+            logger.info(gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType()) + "Adding git file "
+                + gitFileChange.toString());
+            FileUtils.forceMkdir(file.getParentFile());
+            FileUtils.writeStringToFile(file, gitFileChange.getFileContent(), UTF_8);
+            filesToAdd.add(gitFileChange.getFilePath());
+          } catch (IOException ex) {
+            logger.error(gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType())
+                + "Exception in adding/modifying file to git " + ex);
+            throw new YamlException("IOException in ADD/MODIFY git operation", ADMIN);
+          }
+          break;
+        case RENAME:
+          logger.info(
+              gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType()) + "Old path:[{}], new path: [{}]",
+              gitFileChange.getOldFilePath(), gitFileChange.getFilePath());
+          String oldFilePath = repoDirectory + PATH_DELIMITER + gitFileChange.getOldFilePath();
+          String newFilePath = repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath();
+
+          File oldFile = new File(oldFilePath);
+          File newFile = new File(newFilePath);
+
+          if (oldFile.exists()) {
+            try {
+              Path path = Files.move(oldFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+              filesToAdd.add(gitFileChange.getFilePath());
+              git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
+            } catch (IOException | GitAPIException e) {
+              logger.error(gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType())
+                  + "Exception in renaming file " + e);
+              throw new YamlException(
+                  format("Exception in renaming file [%s]->[%s]", oldFile.toPath(), newFile.toPath()), ADMIN_SRE);
+            }
+          } else {
+            logger.warn(gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType())
+                    + "File doesn't exist. path: [{}]",
+                gitFileChange.getOldFilePath());
+          }
+          break;
+        case DELETE:
+          File fileToBeDeleted = new File(repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath());
+          if (fileToBeDeleted.exists()) {
+            try {
+              git.rm().addFilepattern(gitFileChange.getFilePath()).call();
+            } catch (GitAPIException e) {
+              logger.error(gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType())
+                  + "Exception in deleting file " + e);
+              throw new YamlException(
+                  format("Exception in deleting file [%s]", gitFileChange.getFilePath()), ADMIN_SRE);
+            }
+            logger.info(gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType()) + "Deleting git file "
+                + gitFileChange.toString());
+          } else {
+            logger.warn(gitClientHelper.getGitLogMessagePrefix(gitCommitRequest.getRepoType())
+                    + "File already deleted. path: [{}]",
+                gitFileChange.getFilePath());
+          }
+          break;
+        default:
+          unhandled(changeType);
+      }
+    });
+  }
+
+  @VisibleForTesting
+  synchronized PushResultGit push(CommitAndPushRequest commitAndPushRequest) {
+    boolean forcePush = commitAndPushRequest.isForcePush();
+
+    logger.info(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType())
+        + "Performing git PUSH, forcePush is: " + forcePush);
+
+    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(commitAndPushRequest)))) {
+      Iterable<PushResult> pushResults = ((PushCommand) (getAuthConfiguredCommand(git.push(), commitAndPushRequest)))
+                                             .setRemote("origin")
+                                             .setForce(forcePush)
+                                             .setRefSpecs(new RefSpec(commitAndPushRequest.getBranch()))
+                                             .call();
+
+      RemoteRefUpdate remoteRefUpdate = pushResults.iterator().next().getRemoteUpdates().iterator().next();
+      PushResultGit.RefUpdate refUpdate =
+          PushResultGit.RefUpdate.builder()
+              .status(remoteRefUpdate.getStatus().name())
+              .expectedOldObjectId(remoteRefUpdate.getExpectedOldObjectId() != null
+                      ? remoteRefUpdate.getExpectedOldObjectId().name()
+                      : null)
+              .newObjectId(remoteRefUpdate.getNewObjectId() != null ? remoteRefUpdate.getNewObjectId().name() : null)
+              .forceUpdate(remoteRefUpdate.isForceUpdate())
+              .message(remoteRefUpdate.getMessage())
+              .build();
+      if (remoteRefUpdate.getStatus() == OK || remoteRefUpdate.getStatus() == UP_TO_DATE) {
+        return pushResultBuilder().refUpdate(refUpdate).build();
+      } else {
+        String errorMsg = format("Unable to push changes to git repository [%s]. "
+                + "Status reported by Remote is: %s and message is: %s. "
+                + "Other info: Force push: %s. Fast forward: %s",
+            commitAndPushRequest.getRepoUrl(), remoteRefUpdate.getStatus(), remoteRefUpdate.getMessage(),
+            remoteRefUpdate.isForceUpdate(), remoteRefUpdate.isFastForward());
+        logger.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + errorMsg);
+        throw new YamlException(errorMsg, ADMIN_SRE);
+      }
+    } catch (IOException | GitAPIException ex) {
+      logger.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + "Exception: ", ex);
+      String errorMsg = getMessage(ex);
+      if (ex instanceof InvalidRemoteException || ex.getCause() instanceof NoRemoteRepositoryException) {
+        errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:"
+            + commitAndPushRequest.getRepoUrl();
+      }
+
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
+      throw new YamlException(errorMsg, ex, USER);
+    }
+  }
 
   @Override
   public void fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request) {}
