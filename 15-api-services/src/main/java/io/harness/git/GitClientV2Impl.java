@@ -13,9 +13,6 @@ import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.git.Constants.HARNESS_IO_KEY_;
 import static io.harness.git.Constants.HARNESS_SUPPORT_EMAIL_KEY;
 import static io.harness.git.Constants.PATH_DELIMITER;
-import static io.harness.git.model.CommitAndPushResult.commitAndPushResultBuilder;
-import static io.harness.git.model.CommitResult.commitResultBuilder;
-import static io.harness.git.model.DiffResult.diffResultBuilder;
 import static io.harness.git.model.PushResultGit.pushResultBuilder;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notEmptyCheck;
@@ -48,6 +45,7 @@ import io.harness.git.model.DiffResult;
 import io.harness.git.model.DownloadFilesRequest;
 import io.harness.git.model.FetchFilesBwCommitsRequest;
 import io.harness.git.model.FetchFilesByPathRequest;
+import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitFileChange;
@@ -288,7 +286,7 @@ public class GitClientV2Impl implements GitClientV2 {
 
     ensureRepoLocallyClonedAndUpdated(request);
 
-    DiffResult diffResult = diffResultBuilder()
+    DiffResult diffResult = DiffResult.builder()
                                 .branch(request.getBranch())
                                 .repoName(request.getRepoUrl())
                                 .accountId(request.getAccountId())
@@ -430,7 +428,7 @@ public class GitClientV2Impl implements GitClientV2 {
   @Override
   public synchronized CommitAndPushResult commitAndPush(CommitAndPushRequest commitAndPushRequest) {
     CommitResult commitResult = commit(commitAndPushRequest);
-    CommitAndPushResult gitCommitAndPushResult = commitAndPushResultBuilder().gitCommitResult(commitResult).build();
+    CommitAndPushResult gitCommitAndPushResult = CommitAndPushResult.builder().gitCommitResult(commitResult).build();
     if (isNotBlank(commitResult.getCommitId())) {
       gitCommitAndPushResult.setGitPushResult(push(commitAndPushRequest));
       List<GitFileChange> gitFileChanges = getFilesCommited(commitResult.getCommitId(), commitAndPushRequest);
@@ -464,7 +462,7 @@ public class GitClientV2Impl implements GitClientV2 {
         logger.warn(gitClientHelper.getGitLogMessagePrefix(commitRequest.getRepoType())
                 + "No git change to commit. GitCommitRequest: [{}]",
             commitRequest);
-        return commitResultBuilder().build(); // do nothing
+        return CommitResult.builder().build(); // do nothing
       }
 
       ensureLastProcessedCommitIsHead(pushOnlyIfHeadSeen, lastProcessedCommit, git);
@@ -481,7 +479,7 @@ public class GitClientV2Impl implements GitClientV2 {
                                 .setMessage(commitMessage.toString())
                                 .call();
 
-      return commitResultBuilder()
+      return CommitResult.builder()
           .commitId(revCommit.getName())
           .commitTime(revCommit.getCommitTime())
           .commitMessage(getTruncatedCommitMessage(commitMessage.toString()))
@@ -755,11 +753,124 @@ public class GitClientV2Impl implements GitClientV2 {
     }
   }
 
-  @Override
-  public void fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request) {}
+  private void validateRequiredArgsForFilesBetweenCommit(String oldCommitId, String newCommitId) {
+    if (isEmpty(oldCommitId)) {
+      throw new YamlException("Old commit id can not be empty", USER_ADMIN);
+    }
+
+    if (isEmpty(newCommitId)) {
+      throw new YamlException("New commit id can not be empty", USER_ADMIN);
+    }
+  }
+
+  private void checkoutGivenCommitForAllPaths(FetchFilesBwCommitsRequest request) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(request)))) {
+      logger.info("Checking out commitId: " + request.getNewCommitId());
+      CheckoutCommand checkoutCommand =
+          git.checkout().setStartPoint(request.getNewCommitId()).setCreateBranch(false).setAllPaths(true);
+
+      checkoutCommand.call();
+      logger.info("Successfully Checked out commitId: " + request.getNewCommitId());
+    } catch (Exception ex) {
+      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+      gitClientHelper.checkIfGitConnectivityIssue(ex);
+      throw new YamlException("Error in checking out commit id " + request.getNewCommitId(), USER);
+    }
+  }
+
+  private List<GitFile> getGitFilesFromDiff(List<DiffEntry> diffs, Repository repository, String gitRepositoryType)
+      throws IOException {
+    logger.info(gitClientHelper.getGitLogMessagePrefix(gitRepositoryType)
+        + "Get git files from diff. Total diff entries found : " + diffs.size());
+
+    List<GitFile> gitFiles = new ArrayList<>();
+    for (DiffEntry entry : diffs) {
+      ObjectId objectId;
+      String filePath;
+      if (entry.getChangeType() == DiffEntry.ChangeType.DELETE) {
+        filePath = entry.getOldPath();
+        objectId = entry.getOldId().toObjectId();
+      } else {
+        filePath = entry.getNewPath();
+        objectId = entry.getNewId().toObjectId();
+      }
+      ObjectLoader loader = repository.open(objectId);
+      String content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      gitFiles.add(GitFile.builder().filePath(filePath).fileContent(content).build());
+    }
+
+    return gitFiles;
+  }
 
   @Override
-  public List<GitFile> fetchFilesByPath(FetchFilesByPathRequest request) {
+  public FetchFilesResult fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request) {
+    String gitConnectorId = request.getConnectorId();
+    validateRequiredArgsForFilesBetweenCommit(request.getOldCommitId(), request.getNewCommitId());
+
+    synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
+      try {
+        logger.info(new StringBuilder(128)
+                        .append(" Processing Git command: FILES_BETWEEN_COMMITS ")
+                        .append("Account: ")
+                        .append(request.getAccountId())
+                        .append(", repo: ")
+                        .append(request.getRepoUrl())
+                        .append(", newCommitId: ")
+                        .append(request.getNewCommitId())
+                        .append(", oldCommitId: ")
+                        .append(request.getOldCommitId())
+                        .append(", gitConnectorId: ")
+                        .append(request.getConnectorId())
+                        .toString());
+
+        gitClientHelper.createDirStructureForFileDownload(request);
+        cloneRepoForFilePathCheckout(request);
+        checkoutGivenCommitForAllPaths(request);
+        List<GitFile> gitFilesFromDiff;
+
+        try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(request)))) {
+          Repository repository = git.getRepository();
+
+          ObjectId newCommitHead = repository.resolve(request.getNewCommitId() + "^{tree}");
+          ObjectId oldCommitHead = repository.resolve(request.getOldCommitId() + "^{tree}");
+
+          List<DiffEntry> diffs = getDiffEntries(repository, git, newCommitHead, oldCommitHead);
+          gitFilesFromDiff = getGitFilesFromDiff(diffs, repository, request.getRepoType());
+
+        } catch (IOException | GitAPIException ex) {
+          logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+          throw new YamlException("Error in getting commit diff", USER_ADMIN);
+        }
+
+        resetWorkingDir(request);
+
+        return FetchFilesResult.builder()
+            .files(gitFilesFromDiff)
+            .commitResult(CommitResult.builder().commitId(request.getNewCommitId()).build())
+            .build();
+
+      } catch (WingsException e) {
+        throw e;
+      } catch (Exception e) {
+        logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", e);
+        throw new YamlException(new StringBuilder()
+                                    .append("Failed while fetching files between commits ")
+                                    .append("Account: ")
+                                    .append(request.getAccountId())
+                                    .append(", newCommitId: ")
+                                    .append(request.getNewCommitId())
+                                    .append(", oldCommitId: ")
+                                    .append(request.getOldCommitId())
+                                    .append(", gitConnectorId: ")
+                                    .append(request.getConnectorId())
+                                    .toString(),
+            ADMIN_SRE);
+      }
+    }
+  }
+
+  @Override
+  public FetchFilesResult fetchFilesByPath(FetchFilesByPathRequest request) {
     cleanup(request);
     validateRequiredArgs(request);
 
@@ -772,7 +883,12 @@ public class GitClientV2Impl implements GitClientV2 {
         if (isNotEmpty(gitFiles)) {
           gitFiles.forEach(gitFile -> logger.info("File fetched : " + gitFile.getFilePath()));
         }
-        return gitFiles;
+
+        return FetchFilesResult.builder()
+            .files(gitFiles)
+            .commitResult(
+                CommitResult.builder().commitId(request.useBranch() ? "latest" : request.getCommitId()).build())
+            .build();
 
       } catch (WingsException e) {
         throw e;

@@ -16,7 +16,7 @@ public class DiffResult extends GitBaseResult {
   private Long commitTimeMs;
   private String commitMessage;
 
-  @Builder(builderMethodName = "diffResultBuilder")
+  @Builder
   public DiffResult(String accountId, String repoName, String branch, String commitId,
       List<GitFileChange> gitFileChanges, Long commitTimeMs, String commitMessage) {
     super(accountId);
