@@ -50,6 +50,13 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
   }
 
   @Override
+  public List<BillingDataPipelineRecord> getAllRecordsByAccountId(String accountId) {
+    return hPersistence.createQuery(BillingDataPipelineRecord.class)
+        .filter(BillingDataPipelineRecordKeys.accountId, accountId)
+        .asList();
+  }
+
+  @Override
   public BillingDataPipelineRecord getBySettingId(String accountId, String settingId) {
     return hPersistence.createQuery(BillingDataPipelineRecord.class)
         .filter(BillingDataPipelineRecordKeys.accountId, accountId)
@@ -102,5 +109,15 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
     }
 
     return hPersistence.findAndModify(query, updateOperations, returnNewOptions);
+  }
+
+  @Override
+  public boolean removeBillingDataPipelineRecord(String accountId, String settingId) {
+    Query<BillingDataPipelineRecord> query = hPersistence.createQuery(BillingDataPipelineRecord.class)
+                                                 .filter(BillingDataPipelineRecordKeys.accountId, accountId)
+                                                 .field(BillingDataPipelineRecordKeys.uuid)
+                                                 .equal(settingId);
+
+    return hPersistence.delete(query);
   }
 }
