@@ -1964,7 +1964,6 @@ public class DelegateServiceImpl implements DelegateService {
     task.setStatus(QUEUED);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
-    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
 
     // For backward compatibility we base the queue task expiry on the execution timeout
     if (task.getExpiry() == 0) {
@@ -1972,6 +1971,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     generateCapabilitiesForTaskIfFeatureEnabled(task);
+    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
 
     // Ensure that broadcast happens at least 5 seconds from current time for async tasks
     if (task.getData().isAsync()) {

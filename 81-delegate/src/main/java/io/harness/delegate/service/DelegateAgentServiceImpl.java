@@ -1789,7 +1789,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         currentlyValidatingFutures.remove(taskId);
         logger.info("Removed from validating futures on post validation");
         List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
-        boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
+        boolean validated = results.stream().allMatch(DelegateConnectionResult::isValidated);
         logger.info("Validation {} for task", validated ? "succeeded" : "failed");
         try {
           DelegateTaskPackage delegateTaskPackage = execute(managerClient.reportConnectionResults(
