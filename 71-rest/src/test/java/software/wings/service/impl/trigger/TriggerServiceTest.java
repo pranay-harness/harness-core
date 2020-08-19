@@ -99,6 +99,7 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import software.wings.WingsBaseTest;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
@@ -152,6 +153,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -2383,5 +2385,31 @@ public class TriggerServiceTest extends WingsBaseTest {
                                              .build()));
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(buildNexusArtifactStream());
     triggerService.save(trigger);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void shouldGenerateWebhookTokenWithTempService() {
+    Trigger trigger = buildWorkflowWebhookTrigger();
+    WebHookTriggerCondition webhookCondition = (WebHookTriggerCondition) trigger.getCondition();
+    webhookCondition.setWebHookToken(null);
+    webhookCondition.setParameters(null);
+
+    Variable serviceVar = aVariable().name("Service").entityType(SERVICE).build();
+    Workflow workflow = buildWorkflow();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    canaryOrchestrationWorkflow.setUserVariables(Collections.singletonList(serviceVar));
+    trigger.setWorkflowVariables(ImmutableMap.of("Service", "${srv}"));
+
+    when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
+    TriggerServiceImpl triggerServiceImpl = (TriggerServiceImpl) triggerService;
+    WebHookToken webHookToken = triggerServiceImpl.generateWebHookToken(trigger, WebHookToken.builder().build());
+    assertThat(webHookToken).isNotNull();
+    assertThat(webHookToken.getPayload()).isNotEmpty();
+    assertThat(webHookToken.getPayload())
+        .isEqualTo(
+            "{\"application\":\"APP_ID\",\"parameters\":{\"Service\":\"Service_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Service_PLACEHOLDER\",\"buildNumber\":\"Service_BUILD_NUMBER_PLACE_HOLDER\"}]}");
   }
 }

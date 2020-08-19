@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -36,6 +37,7 @@ import static software.wings.service.impl.trigger.TriggerServiceHelper.validateA
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getServiceWorkflowVariables;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -1433,17 +1435,20 @@ public class TriggerServiceImpl implements TriggerService {
     validateAndSetCronExpression(trigger);
   }
 
-  private WebHookToken generateWebHookToken(Trigger trigger, WebHookToken existingToken) {
+  @VisibleForTesting
+  public WebHookToken generateWebHookToken(Trigger trigger, WebHookToken existingToken) {
     List<Service> services = null;
     boolean artifactNeeded = true;
     Map<String, String> parameters = new LinkedHashMap<>();
+    List<Variable> variables = new ArrayList<>();
     if (PIPELINE == trigger.getWorkflowType()) {
       Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
       services = pipeline.getServices();
       if (pipeline.isHasBuildWorkflow()) {
         artifactNeeded = false;
       }
-      addVariables(parameters, pipeline.getPipelineVariables());
+      variables = pipeline.getPipelineVariables();
+      addVariables(parameters, variables);
     } else if (ORCHESTRATION == trigger.getWorkflowType()) {
       Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       services = workflow.getServices();
@@ -1457,9 +1462,26 @@ public class TriggerServiceImpl implements TriggerService {
           }
         }
       }
-      addVariables(parameters, workflow.getOrchestrationWorkflow().getUserVariables());
+      variables = workflow.getOrchestrationWorkflow().getUserVariables();
+      addVariables(parameters, variables);
     }
-    return triggerServiceHelper.constructWebhookToken(trigger, existingToken, services, artifactNeeded, parameters);
+    List<String> templatizedServiceInTriggers = getTemplatizedServiceVarNames(trigger, variables);
+    return triggerServiceHelper.constructWebhookToken(
+        trigger, existingToken, services, artifactNeeded, parameters, templatizedServiceInTriggers);
+  }
+
+  private List<String> getTemplatizedServiceVarNames(Trigger trigger, List<Variable> variables) {
+    Map<String, String> variableValuesInTrigger = trigger.getWorkflowVariables();
+    List<String> templatizedServiceVars = new ArrayList<>();
+    List<Variable> serviceVars =
+        variables.stream().filter(t -> EntityType.SERVICE == t.obtainEntityType()).collect(toList());
+    for (Variable serviceVar : serviceVars) {
+      String value = variableValuesInTrigger.get(serviceVar.getName());
+      if (isEmpty(value) || containsVariablePattern(value)) {
+        templatizedServiceVars.add(serviceVar.getName());
+      }
+    }
+    return templatizedServiceVars;
   }
 
   private void addVariables(Map<String, String> parameters, List<Variable> variables) {
