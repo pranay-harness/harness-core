@@ -20,7 +20,7 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
   private static final String HEADER = "header";
   private static final String BODY = "body";
   private static final String ASSERTION = "assertion";
-  private static final String SOCKET_TIMEOUT_MILLIS = "socketTimeoutMillis";
+  private static final String TIMEOUT_MILLIS = "timeoutMillis";
   private static final String VARIABLES = "variables";
 
   @Override
@@ -51,7 +51,7 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
     if (isNotEmpty(httpTemplate.getAssertion())) {
       properties.put(ASSERTION, httpTemplate.getAssertion());
     }
-    properties.put(SOCKET_TIMEOUT_MILLIS, httpTemplate.getSocketTimeoutMillis());
+    properties.put(TIMEOUT_MILLIS, httpTemplate.getTimeoutMillis());
   }
 
   @Override

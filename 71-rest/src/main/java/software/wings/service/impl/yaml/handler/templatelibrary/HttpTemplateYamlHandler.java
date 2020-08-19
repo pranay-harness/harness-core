@@ -27,7 +27,7 @@ public class HttpTemplateYamlHandler extends TemplateLibraryYamlHandler<HttpTemp
                                     .header(yaml.getHeader())
                                     .method(yaml.getMethod())
                                     .body(yaml.getBody())
-                                    .socketTimeoutMillis(yaml.getTimeoutMillis())
+                                    .timeoutMillis(yaml.getTimeoutMillis())
                                     .build();
     template.setTemplateObject(baseTemplate);
   }
@@ -39,7 +39,7 @@ public class HttpTemplateYamlHandler extends TemplateLibraryYamlHandler<HttpTemp
                                             .assertion(httpTemplateBean.getAssertion())
                                             .header(httpTemplateBean.getHeader())
                                             .method(httpTemplateBean.getMethod())
-                                            .timeOutMillis(httpTemplateBean.getSocketTimeoutMillis())
+                                            .timeOutMillis(httpTemplateBean.getTimeoutMillis())
                                             .url(httpTemplateBean.getUrl())
                                             .body(httpTemplateBean.getBody())
                                             .build();

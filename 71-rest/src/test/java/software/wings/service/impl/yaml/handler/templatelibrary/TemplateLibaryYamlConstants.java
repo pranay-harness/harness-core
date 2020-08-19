@@ -140,7 +140,7 @@ public class TemplateLibaryYamlConstants {
                                                                 .body("xyz")
                                                                 .header("testheader")
                                                                 .method("GET")
-                                                                .socketTimeoutMillis(1000000)
+                                                                .timeoutMillis(1000000)
                                                                 .build();
   public static final String HTTP_TEMPLATE_VALID_YAML_FILE_PATH =
       "Setup/Template Library/Harness/" + httpTemplateName + ".yaml";
