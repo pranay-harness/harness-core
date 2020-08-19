@@ -1,5 +1,6 @@
 package io.harness.service;
 
+import static com.mongodb.DBCollection.ID_FIELD_NAME;
 import static io.harness.rule.OwnerRule.MARKO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,6 +17,8 @@ import io.harness.DelegateServiceTest;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.MongoDatabase;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResponseKeys;
+import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.impl.DelegateCallbackRegistryImpl;
@@ -87,7 +90,8 @@ public class MongoDelegateCallbackServiceTest extends DelegateServiceTest {
         mongoClient.getDatabase("harness").getCollection("cx_delegateSyncTaskResponses");
 
     assertThat(mongoCollection.countDocuments()).isEqualTo(1);
-    assertThat(mongoCollection.find().first().keySet()).containsExactlyInAnyOrder("_id", "responseData");
+    assertThat(mongoCollection.find().first().keySet())
+        .containsExactlyInAnyOrder(ID_FIELD_NAME, DelegateSyncTaskResponseKeys.responseData);
   }
 
   @Test
@@ -115,6 +119,7 @@ public class MongoDelegateCallbackServiceTest extends DelegateServiceTest {
 
     assertThat(mongoCollection.countDocuments()).isEqualTo(1);
     assertThat(mongoCollection.find().first().keySet())
-        .containsExactlyInAnyOrder("_id", "responseData", "lastProcessingAttempt");
+        .containsExactlyInAnyOrder(
+            ID_FIELD_NAME, DelegateAsyncTaskResponseKeys.responseData, DelegateAsyncTaskResponseKeys.processAfter);
   }
 }

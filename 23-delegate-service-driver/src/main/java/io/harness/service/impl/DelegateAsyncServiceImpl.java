@@ -2,17 +2,20 @@ package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.System.currentTimeMillis;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResponseKeys;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -37,12 +40,12 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
     while (true) {
       Query<DelegateAsyncTaskResponse> taskResponseQuery =
           persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
-              .field(DelegateAsyncTaskResponseKeys.lastProcessingAttempt)
-              .lessThan(System.currentTimeMillis() - MAX_PROCESSING_DURATION_MILLIS);
+              .field(DelegateAsyncTaskResponseKeys.processAfter)
+              .lessThan(currentTimeMillis() - MAX_PROCESSING_DURATION_MILLIS);
 
       UpdateOperations<DelegateAsyncTaskResponse> updateOperations =
           persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
-              .set(DelegateAsyncTaskResponseKeys.lastProcessingAttempt, System.currentTimeMillis());
+              .set(DelegateAsyncTaskResponseKeys.processAfter, currentTimeMillis());
 
       DelegateAsyncTaskResponse lockedAsyncTaskResponse =
           persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
@@ -80,5 +83,20 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
     }
 
     return deleteSuccessful;
+  }
+
+  @Getter(lazy = true)
+  private final byte[] timeoutMessage = kryoSerializer.asDeflatedBytes(
+      ErrorNotifyResponseData.builder()
+          .errorMessage("Delegate service did not provide response and the task time-outed")
+          .build());
+
+  @Override
+  public void setupTimeoutForTask(String taskId, long expiry) {
+    persistence.save(DelegateAsyncTaskResponse.builder()
+                         .uuid(taskId)
+                         .responseData(getTimeoutMessage())
+                         .processAfter(expiry)
+                         .build());
   }
 }

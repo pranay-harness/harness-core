@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.util.Timestamps;
 
 import io.grpc.StatusRuntimeException;
 import io.harness.callback.DelegateCallback;
@@ -39,6 +40,7 @@ import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateAsyncService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -50,12 +52,14 @@ import java.util.function.Consumer;
 @Slf4j
 public class DelegateServiceGrpcClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
+  private final DelegateAsyncService delegateAsyncService;
   private final KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateServiceGrpcClient(
-      DelegateServiceBlockingStub delegateServiceBlockingStub, KryoSerializer kryoSerializer) {
+  public DelegateServiceGrpcClient(DelegateServiceBlockingStub delegateServiceBlockingStub,
+      DelegateAsyncService delegateAsyncService, KryoSerializer kryoSerializer) {
     this.delegateServiceBlockingStub = delegateServiceBlockingStub;
+    this.delegateAsyncService = delegateAsyncService;
     this.kryoSerializer = kryoSerializer;
   }
 
@@ -88,6 +92,9 @@ public class DelegateServiceGrpcClient {
 
       SubmitTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
                                         .submitTask(submitTaskRequestBuilder.build());
+
+      delegateAsyncService.setupTimeoutForTask(
+          response.getTaskId().getId(), Timestamps.toMillis(response.getTotalExpiry()));
 
       return response.getTaskId();
     } catch (StatusRuntimeException ex) {

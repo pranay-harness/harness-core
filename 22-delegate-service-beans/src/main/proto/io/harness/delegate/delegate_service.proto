@@ -14,6 +14,8 @@ import "io/harness/delegate/capability.proto";
 import "io/harness/perpetualtask/perpetual_task.proto";
 import "io/harness/perpetualtask/perpetual_task_client.proto";
 
+import "google/protobuf/timestamp.proto";
+
 service DelegateService {
   rpc RegisterCallback(RegisterCallbackRequest) returns (RegisterCallbackResponse);
 
@@ -44,6 +46,7 @@ message SubmitTaskRequest {
 
 message SubmitTaskResponse {
   TaskId task_id = 1;
+  google.protobuf.Timestamp total_expiry = 2;
 }
 
 message CancelTaskRequest {
