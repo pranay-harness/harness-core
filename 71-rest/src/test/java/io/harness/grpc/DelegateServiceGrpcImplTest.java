@@ -59,6 +59,7 @@ import io.harness.perpetualtask.TaskClientParams;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.lang3.NotImplementedException;
@@ -91,6 +92,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
   private DelegateCallbackRegistry delegateCallbackRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
+  @Inject private DelegateAsyncService delegateAsyncService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HPersistence persistence;
 
@@ -110,7 +112,8 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
 
     DelegateServiceGrpc.DelegateServiceBlockingStub delegateServiceBlockingStub =
         DelegateServiceGrpc.newBlockingStub(channel);
-    delegateServiceGrpcClient = new DelegateServiceGrpcClient(delegateServiceBlockingStub, kryoSerializer);
+    delegateServiceGrpcClient =
+        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
 
     delegateCallbackRegistry = mock(DelegateCallbackRegistry.class);
     perpetualTaskService = mock(PerpetualTaskService.class);

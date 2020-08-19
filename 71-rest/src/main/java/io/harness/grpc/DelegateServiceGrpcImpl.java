@@ -121,8 +121,10 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
         delegateService.scheduleSyncTask(task);
       }
 
-      responseObserver.onNext(
-          SubmitTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
+      responseObserver.onNext(SubmitTaskResponse.newBuilder()
+                                  .setTaskId(TaskId.newBuilder().setId(taskId).build())
+                                  .setTotalExpiry(Timestamps.fromMillis(task.getExpiry() + task.getData().getTimeout()))
+                                  .build());
       responseObserver.onCompleted();
 
     } catch (Exception ex) {

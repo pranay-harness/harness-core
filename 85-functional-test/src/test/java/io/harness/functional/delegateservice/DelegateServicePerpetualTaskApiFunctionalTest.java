@@ -23,6 +23,7 @@ import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.threading.Poller;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -36,6 +37,7 @@ import java.util.Map;
 @Slf4j
 public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunctionalTest {
   @Inject private DelegateServiceBlockingStub delegateServiceBlockingStub;
+  @Inject private DelegateAsyncService delegateAsyncService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WingsPersistence wingsPersistence;
 
@@ -44,7 +46,7 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
   @Category(FunctionalTests.class)
   public void testPerpetualTaskExecution() throws InterruptedException {
     DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, kryoSerializer);
+        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
 
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put("countryName", "testCountry");
@@ -83,7 +85,7 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
     String countryName = "testCountry2";
 
     DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, kryoSerializer);
+        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromSeconds(30))

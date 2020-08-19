@@ -1,19 +1,23 @@
 package io.harness.service.impl;
 
+import static com.mongodb.DBCollection.ID_FIELD_NAME;
+
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
 import io.harness.callback.MongoDatabase;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResponseKeys;
+import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.service.intfc.DelegateCallbackService;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 public class MongoDelegateCallbackService implements DelegateCallbackService {
   private static final String SYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateSyncTaskResponses";
   private static final String ASYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateAsyncTaskResponses";
-  private static final String ID_PROPERTY = "_id";
-  private static final String RESPONSE_DATA_PROPERTY = "responseData";
-  private static final String LAST_PROCESSING_ATTEMPT_PROPERTY = "lastProcessingAttempt";
   private final MongoClient mongoClient;
   private final com.mongodb.client.MongoDatabase database;
   private final MongoCollection<Document> syncTaskResponseCollection;
@@ -38,18 +42,25 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
   @Override
   public void publishSyncTaskResponse(String delegateTaskId, byte[] responseData) {
     Document document = new Document();
-    document.put(ID_PROPERTY, delegateTaskId);
-    document.put(RESPONSE_DATA_PROPERTY, responseData);
+    document.put(ID_FIELD_NAME, delegateTaskId);
+    document.put(DelegateSyncTaskResponseKeys.responseData, responseData);
     syncTaskResponseCollection.insertOne(document);
   }
 
+  private static final UpdateOptions upsert = new UpdateOptions().upsert(true);
+
   @Override
   public void publishAsyncTaskResponse(String delegateTaskId, byte[] responseData) {
+    Bson filter = Filters.eq(ID_FIELD_NAME, delegateTaskId);
+
     Document document = new Document();
-    document.put(ID_PROPERTY, delegateTaskId);
-    document.put(RESPONSE_DATA_PROPERTY, responseData);
-    document.put(LAST_PROCESSING_ATTEMPT_PROPERTY, 0L);
-    asyncTaskResponseCollection.insertOne(document);
+    document.put(ID_FIELD_NAME, delegateTaskId);
+    document.put(DelegateAsyncTaskResponseKeys.responseData, responseData);
+    document.put(DelegateAsyncTaskResponseKeys.processAfter, 0);
+
+    Bson update = new Document("$set", document);
+
+    asyncTaskResponseCollection.updateOne(filter, update, upsert);
   }
 
   @Override
