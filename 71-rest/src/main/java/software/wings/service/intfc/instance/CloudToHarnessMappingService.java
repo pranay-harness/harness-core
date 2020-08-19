@@ -56,6 +56,8 @@ public interface CloudToHarnessMappingService {
 
   User getUser(String userId);
 
+  List<Account> getCeAccountsWithLicense();
+
   CEUserInfo getUserForCluster(String clusterId);
 
   List<UserGroup> listUserGroupsForAccount(String accountId);

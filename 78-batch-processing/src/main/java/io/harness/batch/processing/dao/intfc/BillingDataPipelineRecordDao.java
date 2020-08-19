@@ -11,6 +11,8 @@ public interface BillingDataPipelineRecordDao {
 
   BillingDataPipelineRecord getByAccountId(String accountId);
 
+  List<BillingDataPipelineRecord> getAllRecordsByAccountId(String accountId);
+
   BillingDataPipelineRecord getBySettingId(String accountId, String settingId);
 
   List<BillingDataPipelineRecord> listByGcpBillingAccountDataset(
@@ -19,4 +21,6 @@ public interface BillingDataPipelineRecordDao {
   List<BillingDataPipelineRecord> listAllBillingDataPipelineRecords();
 
   BillingDataPipelineRecord upsert(BillingDataPipelineRecord billingDataPipelineRecord);
+
+  boolean removeBillingDataPipelineRecord(String accountId, String settingId);
 }

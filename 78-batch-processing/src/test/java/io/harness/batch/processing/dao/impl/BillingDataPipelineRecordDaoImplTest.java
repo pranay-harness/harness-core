@@ -20,6 +20,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.WingsBaseTest;
 
 import java.time.Instant;
+import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
@@ -86,5 +87,26 @@ public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
         .isEqualTo(TransferState.SUCCEEDED.toString());
     assertThat(upsertedBillingDataPipelineRecord.getAwsFallbackTableScheduledQueryStatus())
         .isEqualTo(TransferState.SUCCEEDED.toString());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testBillingDataPipelineRecordDaoForCleanup() {
+    BillingDataPipelineRecord dataPipelineRecord = BillingDataPipelineRecord.builder()
+                                                       .accountId(accountId)
+                                                       .accountName(accountName)
+                                                       .settingId(settingId)
+                                                       .dataSetId(dataSetId)
+                                                       .dataTransferJobName(dataTransferJobName)
+                                                       .awsFallbackTableScheduledQueryName(fallBackTableName)
+                                                       .preAggregatedScheduledQueryName(preAggTableName)
+                                                       .build();
+    billingDataPipelineRecordDao.create(dataPipelineRecord);
+
+    List<BillingDataPipelineRecord> allRecordsByAccountId =
+        billingDataPipelineRecordDao.getAllRecordsByAccountId(accountId);
+    assertThat(allRecordsByAccountId.size()).isEqualTo(1);
+    billingDataPipelineRecordDao.removeBillingDataPipelineRecord(accountId, settingId);
   }
 }

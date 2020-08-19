@@ -449,6 +449,10 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     return account;
   }
 
+  public List<Account> getCeAccountsWithLicense() {
+    return persistence.createQuery(Account.class, excludeAuthority).field(AccountKeys.ceLicenseInfo).exists().asList();
+  }
+
   @Override
   public List<UserGroup> listUserGroupsForAccount(String accountId) {
     List<UserGroup> userGroups = new ArrayList<>();

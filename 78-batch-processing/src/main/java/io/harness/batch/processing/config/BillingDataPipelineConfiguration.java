@@ -2,6 +2,7 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.SettingAttributeReader;
+import io.harness.batch.processing.tasklet.AccountExpiryCleanupTasklet;
 import io.harness.batch.processing.tasklet.AwsBillingDataPipelineTasklet;
 import io.harness.batch.processing.tasklet.GcpBillingDataPipelineTasklet;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +31,27 @@ public class BillingDataPipelineConfiguration {
   }
 
   @Bean
+  public Tasklet accountExpiryCleanupTasklet() {
+    return new AccountExpiryCleanupTasklet();
+  }
+
+  @Bean
   @Autowired
   @Qualifier(value = "billingDataPipelineJob")
-  public Job billingDataPipelineJob(
-      JobBuilderFactory jobBuilderFactory, Step awsBillingDataPipelineStep, Step gcpBillingDataPipelineStep) {
+  public Job billingDataPipelineJob(JobBuilderFactory jobBuilderFactory, Step awsBillingDataPipelineStep,
+      Step gcpBillingDataPipelineStep, Step deletePipelineForExpiredAccountsStep) {
     return jobBuilderFactory.get(BatchJobType.BILLING_DATA_PIPELINE.name())
         .incrementer(new RunIdIncrementer())
-        .start(awsBillingDataPipelineStep)
+        .start(deletePipelineForExpiredAccountsStep)
+        .next(awsBillingDataPipelineStep)
         .next(gcpBillingDataPipelineStep)
+        .build();
+  }
+
+  @Bean
+  public Step deletePipelineForExpiredAccountsStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("deletePipelineForExpiredAccountsStep")
+        .tasklet(accountExpiryCleanupTasklet())
         .build();
   }
 
