@@ -25,6 +25,8 @@ import java.util.Set;
 class InfrastructureDefinitionHelper {
   @Inject private WingsPersistence wingsPersistence;
 
+  // Todo: This method does not handle maps/Lists etc. very well. Works well with Strings as of now. Enhance this to
+  // take care of non String fields.
   String getNameFromInfraDefinition(InfrastructureDefinition infrastructureDefinition, String serviceId) {
     StringBuilder stringBuilder = new StringBuilder()
                                       .append(infrastructureDefinition.getAppId())
@@ -58,6 +60,7 @@ class InfrastructureDefinitionHelper {
     return isEmpty(infrastructureMappings) ? null : infrastructureMappings.get(0);
   }
 
+  // Todo: Enhance this method to also query based on hash like getNameFromInfraDefinition method
   @NotNull
   private Query getQuery(InfrastructureDefinition infraDefinition, String serviceId) {
     Map<String, Object> queryMap = getQueryMap(infraDefinition.getInfrastructure());

@@ -1,9 +1,11 @@
 package software.wings.infra;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.CustomInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -20,7 +22,7 @@ import java.util.List;
 public class CustomInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   public static final String DUMMY_CLOUD_PROVIDER = "DUMMY_CLOUD_PROVIDER";
 
-  private List<NameValuePair> infraVariables;
+  @IncludeFieldMap @Expression private List<NameValuePair> infraVariables;
   private transient String customDeploymentName;
 
   @Override

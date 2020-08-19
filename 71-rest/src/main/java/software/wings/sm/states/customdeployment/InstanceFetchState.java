@@ -4,11 +4,13 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static java.util.Collections.singletonList;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.inject.Inject;
 
 import com.jayway.jsonpath.InvalidJsonException;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
@@ -41,6 +43,7 @@ import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
@@ -53,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class InstanceFetchState extends State {
@@ -202,8 +206,8 @@ public class InstanceFetchState extends State {
       stateExecutionData.setScriptOutput(output);
     }
 
-    // TODO(YOGESH): Save Instance Details
-
+    stateExecutionData.setNewInstanceStatusSummaries(
+        buildInstanceStatusSummaries(instanceElements, executionData.getExecutionStatus()));
     activityHelperService.updateStatus(
         stateExecutionData.getActivityId(), context.getAppId(), executionData.getExecutionStatus());
     InstanceElementListParam instanceElementListParam =
@@ -243,5 +247,13 @@ public class InstanceFetchState extends State {
         new ManagerPreviewExpressionEvaluator("${secrets.getValue(\"%s\")}");
     return (String) previewExpressionEvaluator.substitute(
         script, Collections.<String, Object>unmodifiableMap(contextMap));
+  }
+
+  private List<InstanceStatusSummary> buildInstanceStatusSummaries(
+      List<InstanceElement> instanceElementList, ExecutionStatus executionStatus) {
+    return instanceElementList.stream()
+        .map(instanceElement
+            -> anInstanceStatusSummary().withInstanceElement(instanceElement).withStatus(executionStatus).build())
+        .collect(Collectors.toList());
   }
 }

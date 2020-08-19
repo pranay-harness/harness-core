@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.data.validator.Trimmed;
+import io.harness.expression.Expression;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ public class NameValuePair {
   /*
     Value can only be of type String or in encrypted format
   */
-  @NotNull private String value;
+  @NotNull @Expression private String value;
 
   /*
    Could be TEXT / ENCRYPTED_TEXT

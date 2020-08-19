@@ -598,7 +598,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     } else if (phaseStepType == PhaseStepType.HELM_DEPLOY || phaseStepType == PhaseStepType.PCF_RESIZE
         || phaseStepType == PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP
         || phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY || phaseStepType == PhaseStepType.CONTAINER_DEPLOY
-        || phaseStepType == PhaseStepType.K8S_PHASE_STEP || phaseStepType == PhaseStepType.SPOTINST_DEPLOY) {
+        || phaseStepType == PhaseStepType.K8S_PHASE_STEP || phaseStepType == PhaseStepType.SPOTINST_DEPLOY
+        || phaseStepType == PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP) {
       ContextElement contextElement =
           fetchNotifiedContextElement(elementNotifyResponseData, InstanceElementListParam.class);
       if (contextElement != null) {
