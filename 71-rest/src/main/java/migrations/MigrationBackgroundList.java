@@ -21,6 +21,7 @@ import migrations.all.AddAccountIdToServiceCommands;
 import migrations.all.AddAccountIdToServiceInstance;
 import migrations.all.AddAccountIdToServiceTemplates;
 import migrations.all.AddAccountIdToServiceVariables;
+import migrations.all.AddAccountIdToStateExecutionInstance;
 import migrations.all.AddAccountIdToStateMachine;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
@@ -271,6 +272,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(158, AddAccountIdToPermitCollection.class))
         .add(Pair.of(159, AddAccountIdToStateMachine.class))
         .add(Pair.of(160, RemoveDeprecatedFieldsFromHarnessUserGroup.class))
+        .add(Pair.of(161, AddAccountIdToStateExecutionInstance.class))
         .build();
   }
 }
