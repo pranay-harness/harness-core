@@ -99,7 +99,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Before
   public void setup() throws IllegalAccessException {
     delegateService = spy(new AppdynamicsDelegateServiceImpl());
-    doReturn(appdynamicsRestClient).when(delegateService).getAppdynamicsRestClient(any(AppDynamicsConfig.class));
+    doReturn(appdynamicsRestClient).when(delegateService).getAppdynamicsRestClient(anyString());
     doReturn(appdynamicsRestClient).when(delegateService).getAppdynamicsRestClient(any(AppDynamicsConnectorDTO.class));
     when(delegateProxyFactory.get(eq(AppdynamicsDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(delegateService);

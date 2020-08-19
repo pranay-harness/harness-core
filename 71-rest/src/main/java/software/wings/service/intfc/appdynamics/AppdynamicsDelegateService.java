@@ -49,6 +49,9 @@ public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
+  boolean validateConfig(
+      AppDynamicsConnectorDTO appDynamicsConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails);
+
   List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 

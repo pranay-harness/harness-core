@@ -12,6 +12,8 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
@@ -119,6 +121,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
     kryo.register(AppDynamicsConnectorDTO.class, 19105);
+    kryo.register(AppDynamicsConnectionTaskParams.class, 19107);
+    kryo.register(AppDynamicsConnectionTaskResponse.class, 19108);
     kryo.register(ArtifactFileMetadata.class, 19034);
     kryo.register(ArtifactServerException.class, 7244);
     kryo.register(AwsElbListener.class, 5600);

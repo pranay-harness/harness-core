@@ -78,7 +78,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   public List<NewRelicApplication> getAllApplications(
       AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) {
     final Call<List<NewRelicApplication>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails));
     List<NewRelicApplication> newRelicApplications = requestExecutor.executeRequest(request);
 
@@ -120,7 +120,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     Preconditions.checkNotNull(thirdPartyApiCallLog);
     ThirdPartyApiCallLog apiCallLog = thirdPartyApiCallLog.copy();
     final Call<Set<AppdynamicsTier>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .listTiers(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId);
     apiCallLog.setTitle("Fetching tiers for application " + appdynamicsAppId);
     final Set<AppdynamicsTier> response = requestExecutor.executeRequest(apiCallLog, request);
@@ -147,7 +147,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     tiers.forEach(tier -> callables.add(() -> {
       final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
       Call<List<AppdynamicsMetric>> tierBTMetricRequest =
-          getAppdynamicsRestClient(appDynamicsConfig)
+          getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
               .listMetrices(
                   getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
 
@@ -211,7 +211,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching node list for app: " + appdynamicsAppId + " tier: " + tierId);
     final Call<List<AppdynamicsNode>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId, hosts);
     return new HashSet<>(requestExecutor.executeRequest(apiCallLog, request));
   }
@@ -225,7 +225,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
     apiCallLog.setTitle("Fetching business transactions for tier from " + appDynamicsConfig.getControllerUrl());
     Call<List<AppdynamicsMetric>> tierBTMetricRequest =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
 
@@ -247,7 +247,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     apiCallLog.setTitle("Fetching metric data for " + metricPath);
     logger.debug("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId,
                 metricPath, startTime, endTime, false);
     return requestExecutor.executeRequest(apiCallLog, tierBTMetricRequest);
@@ -259,7 +259,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching tiers from " + appDynamicsConfig.getControllerUrl());
     final Call<List<AppdynamicsTier>> tierDetail =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .getTierDetails(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
     List<AppdynamicsTier> tiers = requestExecutor.executeRequest(apiCallLog, tierDetail);
     return tiers.get(0);
@@ -292,7 +292,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final String childMetricPath = parentMetricPath + appdynamicsMetric.getName() + "|";
     apiCallLog.setTitle("Fetching metric names from " + appDynamicsConfig.getControllerUrl());
     Call<List<AppdynamicsMetric>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
     final List<AppdynamicsMetric> allMetrics = requestExecutor.executeRequest(apiCallLog, request);
@@ -326,7 +326,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final String childMetricPath = parentMetricPath + appdynamicsMetric.getName() + "|";
     apiCallLog.setTitle("Fetching external calls metric names from " + appDynamicsConfig.getControllerUrl());
     Call<List<AppdynamicsMetric>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
     final List<AppdynamicsMetric> allMetrics = requestExecutor.executeRequest(apiCallLog, request);
@@ -470,20 +470,28 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   @Override
   public boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     final Call<List<NewRelicApplication>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
+        getAppdynamicsRestClient(appDynamicsConfig.getControllerUrl())
             .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptedDataDetails));
     requestExecutor.executeRequest(request);
     return true;
   }
 
-  AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {
-    final Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(appDynamicsConfig.getControllerUrl().endsWith("/") ? appDynamicsConfig.getControllerUrl()
-                                                                        : appDynamicsConfig.getControllerUrl() + "/")
-            .addConverterFactory(JacksonConverterFactory.create())
-            .client(getUnsafeHttpClient(appDynamicsConfig.getControllerUrl()))
-            .build();
+  @Override
+  public boolean validateConfig(
+      AppDynamicsConnectorDTO appDynamicsConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
+    final Call<List<NewRelicApplication>> request =
+        getAppdynamicsRestClient(appDynamicsConnectorDTO.getControllerUrl())
+            .listAllApplications(getHeaderWithCredentials(appDynamicsConnectorDTO, encryptedDataDetails));
+    requestExecutor.executeRequest(request);
+    return true;
+  }
+
+  AppdynamicsRestClient getAppdynamicsRestClient(final String controllerUrl) {
+    final Retrofit retrofit = new Retrofit.Builder()
+                                  .baseUrl(controllerUrl.endsWith("/") ? controllerUrl : controllerUrl + "/")
+                                  .addConverterFactory(JacksonConverterFactory.create())
+                                  .client(getUnsafeHttpClient(controllerUrl))
+                                  .build();
     return retrofit.create(AppdynamicsRestClient.class);
   }
 

@@ -1,7 +1,5 @@
 package io.harness.cvng.client;
 
-import static io.harness.network.Http.connectionPool;
-
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
 
@@ -13,6 +11,7 @@ import io.harness.network.Http;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.security.VerificationAuthInterceptor;
 import io.harness.serializer.JsonSubtypeResolver;
+import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -79,7 +78,7 @@ public class VerificationManagerClientFactory implements Provider<VerificationMa
       final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
       return Http.getOkHttpClientWithProxyAuthSetup()
-          .connectionPool(connectionPool)
+          .connectionPool(new ConnectionPool(0, 5, TimeUnit.MINUTES))
           .readTimeout(30, TimeUnit.SECONDS)
           .retryOnConnectionFailure(true)
           .addInterceptor(new VerificationAuthInterceptor(tokenGenerator))

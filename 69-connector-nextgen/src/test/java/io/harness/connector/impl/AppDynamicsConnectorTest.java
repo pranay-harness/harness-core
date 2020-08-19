@@ -2,7 +2,10 @@ package io.harness.connector.impl;
 
 import static io.harness.delegate.beans.connector.ConnectorType.APP_DYNAMICS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -12,6 +15,9 @@ import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
+import io.harness.connector.validator.AppDynamicsConnectionValidator;
+import io.harness.connector.validator.ConnectionValidator;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -29,6 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -36,6 +43,8 @@ import java.util.Optional;
 public class AppDynamicsConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
+  @Mock AppDynamicsConnectionValidator appDynamicsConnectionValidator;
+  @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
@@ -115,6 +124,18 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
     ConnectorDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTO);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.NEMANJA)
+  @Category(UnitTests.class)
+  public void testConnection() {
+    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
+    when(connectionValidatorMap.get(any())).thenReturn(appDynamicsConnectionValidator);
+    when(appDynamicsConnectionValidator.validate(any(), anyString(), anyString(), anyString()))
+        .thenReturn(ConnectorValidationResult.builder().valid(true).errorMessage("").build());
+    connectorService.testConnection(accountIdentifier, null, null, identifier);
+    verify(appDynamicsConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString());
   }
 
   private void ensureAppDynamicsConnectorFieldsAreCorrect(ConnectorDTO connectorDTOOutput) {
