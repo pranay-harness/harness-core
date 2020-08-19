@@ -1,7 +1,7 @@
 package io.harness.batch.processing.tasklet.util;
 
 import io.harness.batch.processing.ccm.Resource;
-import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
+import io.harness.perpetualtask.k8s.watch.Quantity;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 

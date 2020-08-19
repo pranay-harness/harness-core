@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerBuilder;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
@@ -20,6 +19,7 @@ import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1PodCondition;
 import io.kubernetes.client.openapi.models.V1PodConditionBuilder;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1ResourceRequirementsBuilder;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,10 +64,10 @@ public class K8sResourceUtilsTest extends CategoryTest {
                     .build();
     assertThat(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
         .isEqualTo(Resource.newBuilder()
-                       .putRequests("cpu", Resource.Quantity.newBuilder().setAmount(800_000_000).setUnit("n").build())
-                       .putRequests("memory", Resource.Quantity.newBuilder().setAmount(1049600).setUnit("").build())
-                       .putLimits("cpu", Resource.Quantity.newBuilder().setAmount(1_500_000_000).setUnit("n").build())
-                       .putLimits("memory", Resource.Quantity.newBuilder().setAmount(1099776).setUnit("").build())
+                       .putRequests("cpu", Quantity.newBuilder().setAmount(800_000_000).setUnit("n").build())
+                       .putRequests("memory", Quantity.newBuilder().setAmount(1049600).setUnit("").build())
+                       .putLimits("cpu", Quantity.newBuilder().setAmount(1_500_000_000).setUnit("n").build())
+                       .putLimits("memory", Quantity.newBuilder().setAmount(1099776).setUnit("").build())
                        .build());
   }
 
@@ -75,24 +75,29 @@ public class K8sResourceUtilsTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetResourceMapNoCpu() throws Exception {
-    assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("memory", new Quantity("0.5Mi"))))
-        .isEqualTo(ImmutableMap.of("cpu", Resource.Quantity.newBuilder().setUnit("n").setAmount(0).build(), "memory",
-            Resource.Quantity.newBuilder().setAmount(512 * 1024).build()));
+    assertThat(
+        K8sResourceUtils.getResourceMap(ImmutableMap.of("memory", new io.kubernetes.client.custom.Quantity("0.5Mi"))))
+        .isEqualTo(ImmutableMap.of("cpu", Quantity.newBuilder().setUnit("n").setAmount(0).build(), "memory",
+            Quantity.newBuilder().setAmount(512 * 1024).build()));
   }
 
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetResourceMapNoMemory() throws Exception {
-    assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("cpu", new Quantity("100m"))))
-        .isEqualTo(ImmutableMap.of("cpu", Resource.Quantity.newBuilder().setUnit("n").setAmount(100_000_000L).build(),
-            "memory", Resource.Quantity.newBuilder().setAmount(0).build()));
+    assertThat(
+        K8sResourceUtils.getResourceMap(ImmutableMap.of("cpu", new io.kubernetes.client.custom.Quantity("100m"))))
+        .isEqualTo(ImmutableMap.of("cpu", Quantity.newBuilder().setUnit("n").setAmount(100_000_000L).build(), "memory",
+            Quantity.newBuilder().setAmount(0).build()));
 
-    assertThat(K8sResourceUtils.getResourceMap(
-                   ImmutableMap.of("cpu", new Quantity(new BigDecimal("1.9"), Quantity.Format.DECIMAL_SI), "memory",
-                       new Quantity(new BigDecimal(1_000L), Quantity.Format.BINARY_SI))))
-        .isEqualTo(ImmutableMap.of("cpu", Resource.Quantity.newBuilder().setUnit("n").setAmount(1_900_000_000L).build(),
-            "memory", Resource.Quantity.newBuilder().setAmount(1_000L).build()));
+    assertThat(K8sResourceUtils.getResourceMap(ImmutableMap.of("cpu",
+                   new io.kubernetes.client.custom.Quantity(
+                       new BigDecimal("1.9"), io.kubernetes.client.custom.Quantity.Format.DECIMAL_SI),
+                   "memory",
+                   new io.kubernetes.client.custom.Quantity(
+                       new BigDecimal(1_000L), io.kubernetes.client.custom.Quantity.Format.BINARY_SI))))
+        .isEqualTo(ImmutableMap.of("cpu", Quantity.newBuilder().setUnit("n").setAmount(1_900_000_000L).build(),
+            "memory", Quantity.newBuilder().setAmount(1_000L).build()));
   }
 
   @Test
@@ -109,16 +114,27 @@ public class K8sResourceUtilsTest extends CategoryTest {
     assertThat(podScheduledCondition.getLastTransitionTime().getMillis()).isEqualTo(TIMESTAMP.getMillis());
   }
 
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetStorageRequest() {
+    V1ResourceRequirements resources = new V1ResourceRequirementsBuilder()
+                                           .addToRequests("storage", new io.kubernetes.client.custom.Quantity("1Ki"))
+                                           .build();
+    assertThat(K8sResourceUtils.getStorageRequest(resources))
+        .isEqualTo(Quantity.newBuilder().setAmount(1024L).setUnit("B").build());
+  }
+
   private V1Container makeContainer(String cpuLim, String memLim) {
     return makeContainer(cpuLim, memLim, cpuLim, memLim);
   }
   private V1Container makeContainer(String cpuReq, String memReq, String cpuLim, String memLim) {
     return new V1ContainerBuilder()
         .withNewResources()
-        .addToRequests("cpu", new Quantity(cpuReq))
-        .addToRequests("memory", new Quantity(memReq))
-        .addToLimits("cpu", new Quantity(cpuLim))
-        .addToLimits("memory", new Quantity(memLim))
+        .addToRequests("cpu", new io.kubernetes.client.custom.Quantity(cpuReq))
+        .addToRequests("memory", new io.kubernetes.client.custom.Quantity(memReq))
+        .addToLimits("cpu", new io.kubernetes.client.custom.Quantity(cpuLim))
+        .addToLimits("memory", new io.kubernetes.client.custom.Quantity(memLim))
         .endResources()
         .build();
   }

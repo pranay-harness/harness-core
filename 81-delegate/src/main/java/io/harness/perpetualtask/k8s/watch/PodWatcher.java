@@ -4,6 +4,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
+import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,11 +27,13 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1OwnerReferenceBuilder;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1PodCondition;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodStatus;
+import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.util.CallGeneratorParams;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,6 +53,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
 
   private final String clusterId;
   private final EventPublisher eventPublisher;
+  private final PVCFetcher pvcFetcher;
   private final Set<String> publishedPods;
 
   private final PodInfo podInfoPrototype;
@@ -63,13 +67,15 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   @Inject
   public PodWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
       @Assisted K8sControllerFetcher controllerFetcher, @Assisted SharedInformerFactory sharedInformerFactory,
-      EventPublisher eventPublisher) {
+      @Assisted PVCFetcher pvcFetcher, EventPublisher eventPublisher) {
     this.controllerFetcher = controllerFetcher;
+    this.pvcFetcher = pvcFetcher;
     logger.info(
         "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.clusterId = params.getClusterId();
     this.publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
+
     podInfoPrototype = PodInfo.newBuilder()
                            .setCloudProviderId(params.getCloudProviderId())
                            .setClusterId(clusterId)
@@ -147,6 +153,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
               .setNamespace(pod.getMetadata().getNamespace())
               .setNodeName(pod.getSpec().getNodeName())
               .setTotalResource(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
+              .addAllVolume(getAllVolumes(pod))
               .setQosClass(pod.getStatus().getQosClass())
               .setCreationTimestamp(creationTimestamp)
               .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
@@ -210,6 +217,32 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
       eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       publishedPods.remove(uid);
     }
+  }
+
+  private List<io.harness.perpetualtask.k8s.watch.Volume> getAllVolumes(V1Pod pod) {
+    String namespace = ofNullable(pod.getMetadata().getNamespace()).orElse("");
+    List<io.harness.perpetualtask.k8s.watch.Volume> volumesList = new ArrayList<>();
+
+    if (pod.getSpec().getVolumes() != null) {
+      for (V1Volume volume : pod.getSpec().getVolumes()) {
+        try {
+          if (volume.getPersistentVolumeClaim() != null) {
+            String claimName = volume.getPersistentVolumeClaim().getClaimName();
+            V1PersistentVolumeClaim fetchedPvc = pvcFetcher.getPvcByKey(namespace, claimName);
+
+            volumesList.add(io.harness.perpetualtask.k8s.watch.Volume.newBuilder()
+                                .setId(claimName)
+                                .setType(VOLUME_TYPE_PVC)
+                                .setRequest(K8sResourceUtils.getStorageRequest(fetchedPvc.getSpec().getResources()))
+                                .build());
+          }
+          // add other volumes here e.g., getAzureDisk, getAwsElasticBlockStore, getGcePersistentDisk
+        } catch (Exception ex) {
+          logger.error("Error parsing Volume: {}", volume, ex);
+        }
+      }
+    }
+    return volumesList;
   }
 
   private boolean isPodDeleted(V1Pod pod) {
