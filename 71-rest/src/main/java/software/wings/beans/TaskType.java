@@ -14,6 +14,7 @@ import io.harness.cdng.k8s.K8sCommandValidationNG;
 import io.harness.cdng.k8s.rolling.K8sTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
+import io.harness.cvng.connectiontask.AppDynamicsTestConnectionDelegateTask;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
@@ -235,6 +236,8 @@ public enum TaskType {
   APM_GET_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(
       TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
+  APPDYNAMICS_NG_CONFIGURATION_VALIDATE_TASK(
+      TaskGroup.APPDYNAMICS, AppDynamicsTestConnectionDelegateTask.class, AppDynamicsNGValidation.class),
   APPDYNAMICS_GET_APP_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_GET_APP_TASK_NG(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppDynamicsNGValidation.class),
   APPDYNAMICS_GET_TIER_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),

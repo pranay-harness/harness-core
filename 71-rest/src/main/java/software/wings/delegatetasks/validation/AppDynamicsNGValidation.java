@@ -3,6 +3,7 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import software.wings.beans.AppDynamicsConfig;
 
@@ -18,7 +19,12 @@ public class AppDynamicsNGValidation extends AbstractSecretManagerValidation {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
+    Object[] parameters = getParameters();
+    if (parameters[0] instanceof AppDynamicsConnectionTaskParams) {
+      AppDynamicsConnectionTaskParams taskParams = (AppDynamicsConnectionTaskParams) parameters[0];
+      return singletonList(taskParams.getAppDynamicsConnectorDTO().getControllerUrl());
+    }
+    return singletonList(Arrays.stream(parameters)
                              .filter(o -> o instanceof AppDynamicsConnectorDTO || o instanceof AppDynamicsConfig)
                              .map(obj -> ((AppDynamicsConnectorDTO) obj).getControllerUrl())
                              .findFirst()

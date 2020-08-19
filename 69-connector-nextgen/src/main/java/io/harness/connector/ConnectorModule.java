@@ -24,6 +24,7 @@ import io.harness.connector.mappers.splunkconnectormapper.SplunkConnectorSummary
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.validator.AppDynamicsConnectionValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.GitConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
@@ -42,6 +43,8 @@ public class ConnectorModule extends AbstractModule {
     connectorValidatorMapBinder.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
         .to(KubernetesConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.GIT.getDisplayName()).to(GitConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
+        .to(AppDynamicsConnectionValidator.class);
 
     MapBinder<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectorDTOToEntityMapper.class);
