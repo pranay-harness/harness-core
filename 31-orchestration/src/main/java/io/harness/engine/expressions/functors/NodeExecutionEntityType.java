@@ -9,11 +9,12 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public enum NodeExecutionEntityType {
+  NODE_EXECUTION_FIELDS,
   STEP_PARAMETERS,
   OUTCOME,
   SWEEPING_OUTPUT;
 
   public static Set<NodeExecutionEntityType> allEntities() {
-    return EnumSet.of(STEP_PARAMETERS, OUTCOME, SWEEPING_OUTPUT);
+    return EnumSet.of(NODE_EXECUTION_FIELDS, STEP_PARAMETERS, OUTCOME, SWEEPING_OUTPUT);
   }
 }

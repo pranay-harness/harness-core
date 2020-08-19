@@ -1,6 +1,7 @@
 package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.execution.NodeExecution.NodeExecutionKeys;
 import static java.util.Arrays.asList;
 
 import io.harness.ambiance.Ambiance;
@@ -73,7 +74,9 @@ public class NodeExecutionMap extends LateBindingMap {
       return null;
     }
 
-    return fetchFirst(asList(this ::fetchChild, this ::fetchStepParameters, this ::fetchOutcomeOrOutput), (String) key);
+    return fetchFirst(asList(this ::fetchChild, this ::fetchNodeExecutionField, this ::fetchStepParameters,
+                          this ::fetchOutcomeOrOutput),
+        (String) key);
   }
 
   private Object fetchFirst(List<Function<String, Optional<Object>>> fns, String key) {
@@ -92,6 +95,22 @@ public class NodeExecutionMap extends LateBindingMap {
 
   private Optional<Object> fetchChild(String key) {
     return children.containsKey(key) ? Optional.of(children.get(key)) : Optional.empty();
+  }
+
+  private Optional<Object> fetchNodeExecutionField(String key) {
+    if (nodeExecution == null || !entityTypes.contains(NodeExecutionEntityType.NODE_EXECUTION_FIELDS)) {
+      return Optional.empty();
+    }
+
+    if (NodeExecutionKeys.status.equals(key)) {
+      return nodeExecution.getStatus() == null ? Optional.empty() : Optional.of(nodeExecution.getStatus().name());
+    } else if (NodeExecutionKeys.startTs.equals(key)) {
+      return Optional.ofNullable(nodeExecution.getStartTs());
+    } else if (NodeExecutionKeys.endTs.equals(key)) {
+      return Optional.ofNullable(nodeExecution.getEndTs());
+    } else {
+      return Optional.empty();
+    }
   }
 
   private Optional<Object> fetchStepParameters(String key) {
