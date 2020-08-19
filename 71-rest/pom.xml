@@ -583,6 +583,10 @@
             <artifactId>cloudfoundry-operations</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.coursera</groupId>
             <artifactId>metrics-datadog</artifactId>
         </dependency>
@@ -820,6 +824,11 @@
             <groupId>software.wings</groupId>
             <artifactId>70-delegate-service</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
         </dependency>
         <dependency>
             <groupId>xml-apis</groupId>

@@ -1164,6 +1164,12 @@
                 <version>${pcf.client.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy</artifactId>
+                <version>3.0.5</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.codehaus.janino</groupId>
                 <artifactId>janino</artifactId>
                 <version>3.0.6</version>
@@ -1212,7 +1218,13 @@
             <dependency>
                 <groupId>org.jfrog.artifactory.client</groupId>
                 <artifactId>artifactory-java-client-services</artifactId>
-                <version>2.5.0</version>
+                <version>2.9.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jooq</groupId>
@@ -1418,6 +1430,11 @@
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>auth</artifactId>
                 <version>2.10.18</version>
+            </dependency>
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>2.9.1</version>
             </dependency>
             <dependency>
                 <groupId>xml-apis</groupId>
@@ -1884,19 +1901,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>1.4.1</version>
-                    <executions>
-                        <execution>
-                            <id>enforce</id>
-                            <goals>
-                                <goal>enforce</goal>
-                            </goals>
-                            <configuration>
-                                <rules>
-                                    <DependencyConvergence />
-                                </rules>
-                            </configuration>
-                        </execution>
-                    </executions>
+                    <configuration>
+                        <rules>
+                            <dependencyConvergence />
+                        </rules>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

@@ -4,9 +4,9 @@ import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.A
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID_PARAM;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.USER_GROUP_ID;
 
-import groovyx.net.http.URIBuilder;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.apache.http.client.utils.URIBuilder;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.net.URISyntaxException;
@@ -52,7 +52,7 @@ public class LdapUrlHelper implements WingsIntegrationTestConstants {
 
   private static String addAccountIdToURI(String url) {
     try {
-      return new URIBuilder(url).addQueryParam(ACCOUNT_ID_PARAM, ACCOUNT_ID).toString();
+      return new URIBuilder(url).addParameter(ACCOUNT_ID_PARAM, ACCOUNT_ID).toString();
     } catch (URISyntaxException e) {
       throw new RuntimeException("Ldap Integration test failed.", e);
     }
@@ -60,7 +60,7 @@ public class LdapUrlHelper implements WingsIntegrationTestConstants {
 
   private static String addAccountIdAndQueryParamsToURI(String url, String param, String value) {
     try {
-      return new URIBuilder(url).addQueryParam(ACCOUNT_ID_PARAM, ACCOUNT_ID).addQueryParam(param, value).toString();
+      return new URIBuilder(url).addParameter(ACCOUNT_ID_PARAM, ACCOUNT_ID).addParameter(param, value).toString();
     } catch (URISyntaxException e) {
       throw new RuntimeException("Ldap Integration test failed.", e);
     }
