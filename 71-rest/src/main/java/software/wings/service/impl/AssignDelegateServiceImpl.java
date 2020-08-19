@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
@@ -22,6 +23,7 @@ import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateProfileScopingRule.DelegateProfileScopingRuleKeys;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskGroup;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -327,16 +329,19 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean isWhitelisted(DelegateTask task, String delegateId) {
     try {
+      boolean matching = true;
       for (String criteria : fetchCriteria(task)) {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
-          if (result.isPresent() && result.get().getLastUpdatedAt() > clock.millis() - WHITELIST_TTL
-              && result.get().isValidated()) {
-            return true;
+          if (!result.isPresent() || result.get().getLastUpdatedAt() < clock.millis() - WHITELIST_TTL
+              || !result.get().isValidated()) {
+            matching = false;
+            break;
           }
         }
       }
+      return matching;
     } catch (Exception e) {
       logger.error("Error checking whether delegate is whitelisted for task {}", task.getUuid(), e);
     }
@@ -378,15 +383,23 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
       delegateSelectionLogsService.save(batch);
 
-      for (String criteria : fetchCriteria(task)) {
-        if (isNotBlank(criteria)) {
-          for (String delegateId : connectedEligibleDelegates) {
-            Optional<DelegateConnectionResult> result =
-                delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
-            if (result.isPresent() && result.get().isValidated()) {
-              delegateIds.add(delegateId);
-            }
+      List<String> criteria = fetchCriteria(task);
+      if (isEmpty(criteria)) {
+        return connectedEligibleDelegates;
+      }
+
+      for (String delegateId : connectedEligibleDelegates) {
+        boolean matching = true;
+        for (String criterion : criteria) {
+          Optional<DelegateConnectionResult> result =
+              delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criterion));
+          if (!result.isPresent() || !result.get().isValidated()) {
+            matching = false;
+            break;
           }
+        }
+        if (matching) {
+          delegateIds.add(delegateId);
         }
       }
     } catch (Exception e) {
@@ -397,14 +410,25 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   private List<String> fetchCriteria(DelegateTask task) {
     DelegateTaskPackage delegateTaskPackage = DelegateTaskUtils.getDelegateTaskPackage(task);
-    // TODO: For now always use the original criteria
-    return TaskType.valueOf(task.getData().getTaskType()).getCriteria(delegateTaskPackage, injector);
+    if (featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, task.getAccountId())) {
+      if (isEmpty(delegateTaskPackage.getExecutionCapabilities())) {
+        return emptyList();
+      }
+
+      return delegateTaskPackage.getExecutionCapabilities()
+          .stream()
+          .map(ExecutionCapability::fetchCapabilityBasis)
+          .collect(toList());
+    } else {
+      return TaskType.valueOf(task.getData().getTaskType()).getCriteria(delegateTaskPackage, injector);
+    }
   }
 
   @Override
   public String pickFirstAttemptDelegate(DelegateTask task) {
     List<String> delegates = connectedWhitelistedDelegates(task);
     if (delegates.isEmpty()) {
+      logger.info("No first attempt delegate was picked");
       return null;
     }
     return delegates.get(random.nextInt(delegates.size()));

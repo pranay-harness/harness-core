@@ -142,6 +142,31 @@ resource "google_logging_metric" "delegate_tasks_acquire_by_type" {
   }
 }
 
+resource "google_logging_metric" "delegate_tasks_no_first_pick" {
+  name = join("_", [local.name_prefix, "delegate_tasks_no_first_pick"])
+  description = "Owner: Platform delegate"
+  filter = join("\n", [local.filter_prefix,
+    "\"No first attempt delegate was picked\""])
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type = "INT64"
+    labels {
+      key = "taskType"
+      value_type = "STRING"
+      description = "The type of the task"
+    }
+    labels {
+      key = "taskGroup"
+      value_type = "STRING"
+      description = "The group of the task"
+    }
+  }
+  label_extractors = {
+    "taskType": "EXTRACT(jsonPayload.harness.taskType)",
+    "taskGroup": "EXTRACT(jsonPayload.harness.taskGroup)"
+  }
+}
+
 resource "google_logging_metric" "delegate_tasks_validate" {
   name = join("_", [local.name_prefix, "delegate_tasks_validate"])
   description = "Owner: Platform delegate"
@@ -364,6 +389,21 @@ resource "google_monitoring_dashboard" "delegate_tasks_dashboard" {
               },
               "plotType": "LINE",
               "minAlignmentPeriod": "60s"
+            },
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_no_first_pick\" resource.type=\"k8s_container\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM"
+                  },
+                  "secondaryAggregation": {}
+                },
+                "unitOverride": "1"
+              },
+              "plotType": "LINE",
+              "minAlignmentPeriod": "60s"
             }
           ],
           "timeshiftDuration": "0s",
@@ -493,6 +533,44 @@ resource "google_monitoring_dashboard" "delegate_tasks_dashboard" {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
                   "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_validate\" resource.type=\"k8s_container\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM",
+                    "groupByFields": [
+                      "metric.label.\"taskGroup\""
+                    ]
+                  },
+                  "secondaryAggregation": {},
+                  "pickTimeSeriesFilter": {
+                    "rankingMethod": "METHOD_MAX",
+                    "numTimeSeries": 5,
+                    "direction": "TOP"
+                  }
+                },
+                "unitOverride": "1"
+              },
+              "plotType": "LINE",
+              "minAlignmentPeriod": "60s"
+            }
+          ],
+          "timeshiftDuration": "0s",
+          "yAxis": {
+            "label": "y1Axis",
+            "scale": "LINEAR"
+          },
+          "chartOptions": {
+            "mode": "COLOR"
+          }
+        }
+      },
+      {
+        "title": "Delegate Task no first pick by Task Group",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_no_first_pick\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",

@@ -132,15 +132,6 @@ public class DelegateQueueTask implements Runnable {
       List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                      .field(DelegateTaskKeys.uuid)
                                      .in(taskIds)
-                                     .project(DelegateTaskKeys.uuid, true)
-                                     .project(DelegateTaskKeys.delegateId, true)
-                                     .project(DelegateTaskKeys.driverId, true)
-                                     .project(DelegateTaskKeys.waitId, true)
-                                     .project(DelegateTaskKeys.tags, true)
-                                     .project(DelegateTaskKeys.accountId, true)
-                                     .project(DelegateTaskKeys.data_taskType, true)
-                                     .project(DelegateTaskKeys.data_async, true)
-                                     .project(DelegateTaskKeys.data_parameters, true)
                                      .asList();
       delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, identity())));
       taskWaitIds.putAll(tasks.stream()
@@ -152,13 +143,6 @@ public class DelegateQueueTask implements Runnable {
         try {
           DelegateTask task = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                   .filter(DelegateTaskKeys.uuid, taskId)
-                                  .project(DelegateTaskKeys.uuid, true)
-                                  .project(DelegateTaskKeys.delegateId, true)
-                                  .project(DelegateTaskKeys.waitId, true)
-                                  .project(DelegateTaskKeys.tags, true)
-                                  .project(DelegateTaskKeys.accountId, true)
-                                  .project(DelegateTaskKeys.data_taskType, true)
-                                  .project(DelegateTaskKeys.data_parameters, true)
                                   .get();
           delegateTasks.put(taskId, task);
           if (isNotEmpty(task.getWaitId())) {
