@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.validation.constraints.NotNull;
@@ -53,7 +54,7 @@ public class ExpressionEvaluatorUtils {
                                                   .prefix(prefix)
                                                   .suffix(suffix)
                                                   .build();
-    return substitute(expression, ctx, variableResolver, pattern);
+    return substitute(expression, ctx, variableResolver, pattern, EngineExpressionEvaluator::hasVariables);
   }
 
   public String substitute(
@@ -72,7 +73,7 @@ public class ExpressionEvaluatorUtils {
                                                     .prefix(prefix)
                                                     .suffix(suffix)
                                                     .build();
-    return substitute(expression, ctx, variableResolver, pattern);
+    return substitute(expression, ctx, variableResolver, pattern, ExpressionEvaluator::containsVariablePattern);
   }
 
   public String substituteSecured(
@@ -91,11 +92,12 @@ public class ExpressionEvaluatorUtils {
                                                     .prefix(prefix)
                                                     .suffix(suffix)
                                                     .build();
-    return substituteSecretsSecured(expression, ctx, variableResolver, pattern);
+    return substituteSecretsSecured(
+        expression, ctx, variableResolver, pattern, ExpressionEvaluator::containsVariablePattern);
   }
 
-  public String substitute(
-      @NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver, Pattern pattern) {
+  public String substitute(@NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver,
+      Pattern pattern, Function<String, Boolean> hasExpressions) {
     StrSubstitutor substitutor = new StrSubstitutor();
     substitutor.setEnableSubstitutionInVariables(true);
     substitutor.setVariableResolver(variableResolver);
@@ -125,6 +127,9 @@ public class ExpressionEvaluatorUtils {
         return result;
       }
       if (result.length() > limit) {
+        if (!hasExpressions.apply(result)) {
+          return result;
+        }
         throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
       }
     }
@@ -317,8 +322,8 @@ public class ExpressionEvaluatorUtils {
     return sb.toString();
   }
 
-  private String substituteSecretsSecured(
-      @NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver, Pattern pattern) {
+  private String substituteSecretsSecured(@NotNull String expression, JexlContext ctx,
+      StrLookup<Object> variableResolver, Pattern pattern, Function<String, Boolean> hasExpressions) {
     StrSubstitutor substitutor = getSubstitutor(variableResolver);
 
     String result = expression;
@@ -339,6 +344,9 @@ public class ExpressionEvaluatorUtils {
         return result;
       }
       if (result.length() > limit) {
+        if (!hasExpressions.apply(result)) {
+          return result;
+        }
         throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
       }
     }
