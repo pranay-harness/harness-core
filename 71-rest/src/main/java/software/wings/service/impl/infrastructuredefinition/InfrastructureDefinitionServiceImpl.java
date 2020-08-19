@@ -17,6 +17,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -69,6 +70,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -86,10 +88,12 @@ import io.harness.exception.ReflectionException;
 import io.harness.exception.WingsException;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.logging.Misc;
 import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
 import io.harness.reflection.ReflectionUtils;
+import io.harness.reflection.ReflectionUtils.Functor;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -133,6 +137,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.common.InfrastructureConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsAmiInfrastructure.AwsAmiInfrastructureKeys;
@@ -193,6 +198,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.StateExecutionContext;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.ServiceVersionConvention;
 
@@ -206,6 +212,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -848,7 +855,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   boolean renderExpression(InfrastructureDefinition infrastructureDefinition, ExecutionContext context) {
     Set<String> ignoredExpressions = ImmutableSet.of(InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION);
     Map<String, Object> fieldMapForClass = getExpressionAnnotatedFields(infrastructureDefinition.getInfrastructure());
-    Map<String, String> renderedFieldMap = new HashMap<>();
+    Map<String, Object> renderedFieldMap = new HashMap<>();
+    final ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+    // This is to ensure resolved secrets are not stored in DB
+    final Functor safeExpressionResolver = getSecretSafeFunctor(context, expressionEvaluator);
 
     if (isEmpty(infrastructureDefinition.getProvisionerId())) {
       for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
@@ -861,6 +871,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
             throw new InvalidRequestException(format("Unable to resolve expression : \"%s\"", expression), USER);
           }
           renderedFieldMap.put(entry.getKey(), renderedValue);
+        } else if (entry.getValue() instanceof List) {
+          List objectList = (List) entry.getValue();
+          ListIterator it = objectList.listIterator();
+          while (it.hasNext()) {
+            ExpressionReflectionUtils.applyExpression(it.next(), safeExpressionResolver);
+          }
+          renderedFieldMap.put(entry.getKey(), objectList);
         }
       }
       saveFieldMapForDefinition(infrastructureDefinition, renderedFieldMap);
@@ -875,6 +892,19 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
           infrastructureDefinition.getEnvId(), infrastructureDefinition.getUuid());
     }
     return true;
+  }
+
+  private Functor getSecretSafeFunctor(
+      ExecutionContext context, ManagerPreviewExpressionEvaluator expressionEvaluator) {
+    return val -> {
+      context.resetPreparedCache();
+      return expressionEvaluator.substitute(context.renderExpression(val,
+                                                StateExecutionContext.builder()
+                                                    .expressionFunctorToken(HashGenerator.generateIntegerHash())
+                                                    .adoptDelegateDecryption(true)
+                                                    .build()),
+          emptyMap());
+    };
   }
 
   private boolean isIgnored(Set<String> ignoredExpressions, String expression) {
@@ -903,11 +933,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   private void saveFieldMapForDefinition(
-      InfrastructureDefinition infrastructureDefinition, Map<String, String> fieldMapForClass) {
+      InfrastructureDefinition infrastructureDefinition, Map<String, Object> fieldMapForClass) {
     try {
       Class<? extends InfraMappingInfrastructureProvider> aClass =
           infrastructureDefinition.getInfrastructure().getClass();
-      for (Entry<String, String> entry : fieldMapForClass.entrySet()) {
+      for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
         Field field = aClass.getDeclaredField(entry.getKey());
         field.setAccessible(true);
         field.set(infrastructureDefinition.getInfrastructure(), entry.getValue());

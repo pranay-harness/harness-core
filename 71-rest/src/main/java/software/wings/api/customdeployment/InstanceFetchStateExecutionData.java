@@ -5,8 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.InstanceFetchStateExecutionSummary;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -17,6 +20,7 @@ public class InstanceFetchStateExecutionData extends StateExecutionData implemen
   private String instanceFetchScript;
   private Map<String, String> hostAttributes;
   private String scriptOutput;
+  @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {

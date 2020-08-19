@@ -141,6 +141,7 @@ public abstract class ExpressionBuilder {
   protected static final String INFRA_KUBERNETES_INFRAID = "infra.kubernetes.infraId";
   protected static final String INFRA_HELM_SHORTID = "infra.helm.shortId";
   protected static final String INFRA_HELM_RELEASENAME = "infra.helm.releaseName";
+  protected static final String INFRA_CUSTOM_VARS = "infra.custom.vars";
 
   protected static final String INFRA_PCF_ORG = "infra.pcf.organization";
   protected static final String INFRA_PCF_SPACE = "infra.pcf.space";
@@ -216,6 +217,7 @@ public abstract class ExpressionBuilder {
     expressions.addAll(asList(INFRA_KUBERNETES_NAMESPACE, INFRA_KUBERNETES_INFRAID));
     expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF));
     expressions.add(WorkflowStandardParams.DEPLOYMENT_TRIGGERED_BY);
+    expressions.addAll(asList(INFRA_CUSTOM_VARS));
 
     return expressions;
   }

@@ -74,6 +74,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
@@ -152,6 +153,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
 import software.wings.api.WorkflowElement.WorkflowElementBuilder;
+import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.app.MainConfiguration;
@@ -3481,6 +3483,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           PcfDeployStateExecutionData pcfDeployStateExecutionData =
               (PcfDeployStateExecutionData) next.fetchStateExecutionData();
           instanceStatusSummaries.addAll(pcfDeployStateExecutionData.getNewInstanceStatusSummaries());
+        } else if (nextStateType == CUSTOM_DEPLOYMENT_FETCH_INSTANCES) {
+          StateExecutionData stateExecutionData = next.fetchStateExecutionData();
+          if (stateExecutionData instanceof InstanceFetchStateExecutionData) {
+            InstanceFetchStateExecutionData instanceFetchStateExecutionData =
+                (InstanceFetchStateExecutionData) stateExecutionData;
+            if (isNotEmpty(instanceFetchStateExecutionData.getNewInstanceStatusSummaries())) {
+              instanceStatusSummaries.addAll(instanceFetchStateExecutionData.getNewInstanceStatusSummaries());
+            }
+          }
         }
         last = next;
       }
