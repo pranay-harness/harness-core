@@ -11,7 +11,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
-import io.harness.secretmanagerclient.SecretManagerClientConfig;
+import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import lombok.Getter;
 import org.reflections.Reflections;
 
@@ -31,7 +31,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
-  @JsonProperty("secretManagerClient") private SecretManagerClientConfig secretManagerClientConfig;
+  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;

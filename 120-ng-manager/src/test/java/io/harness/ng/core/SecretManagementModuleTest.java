@@ -16,9 +16,9 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceImpl;
+import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
-import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoRegistrar;
@@ -38,8 +38,8 @@ public class SecretManagementModuleTest extends CategoryTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testSecretManagementModule() {
-    SecretManagerClientConfig secretManagerClientConfig =
-        SecretManagerClientConfig.builder().baseUrl("http://localhost:7143").build();
+    ServiceHttpClientConfig secretManagerClientConfig =
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7143").build();
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule = new SecretManagementClientModule(secretManagerClientConfig, serviceSecret);

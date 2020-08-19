@@ -6,8 +6,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Owner;
-import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.remote.SecretManagerHttpClientFactory;
 import io.harness.security.ServiceTokenGenerator;
@@ -30,11 +30,11 @@ public class SecretManagerHttpClientFactoryTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGet() {
     initMocks(this);
-    SecretManagerClientConfig secretManagerConfig = SecretManagerClientConfig.builder()
-                                                        .baseUrl(BASE_URL)
-                                                        .connectTimeOutSeconds(CONNECTION_TIME_OUT_IN_SECONDS)
-                                                        .readTimeOutSeconds(READ_TIME_OUT_IN_SECONDS)
-                                                        .build();
+    ServiceHttpClientConfig secretManagerConfig = ServiceHttpClientConfig.builder()
+                                                      .baseUrl(BASE_URL)
+                                                      .connectTimeOutSeconds(CONNECTION_TIME_OUT_IN_SECONDS)
+                                                      .readTimeOutSeconds(READ_TIME_OUT_IN_SECONDS)
+                                                      .build();
 
     SecretManagerHttpClientFactory secretManagerHttpClientFactory =
         new SecretManagerHttpClientFactory(secretManagerConfig, SERVICE_SECRET, tokenGenerator, kryoConverterFactory);
