@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.core.ssh.executors.SshSessionFactory.generateTGTUsingSshConfig;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
@@ -37,7 +38,6 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.yaml.GitClient;
-import software.wings.utils.SshHelperUtils;
 
 import java.net.URL;
 import java.util.Collections;
@@ -120,9 +120,7 @@ public class GitServiceImpl implements GitService {
       HttpTransport.setConnectionFactory(new GitClientImpl.ApacheHttpConnectionFactory());
       URL url = new URL(gitConfig.getRepoUrl());
       SshSessionConfig sshSessionConfig = createSshSessionConfig(gitConfig.getSshSettingAttribute(), url.getHost());
-      SshHelperUtils.generateTGT(sshSessionConfig.getUserName(),
-          sshSessionConfig.getPassword() != null ? new String(sshSessionConfig.getPassword()) : null,
-          sshSessionConfig.getKeyPath(), new NoopExecutionCallback());
+      generateTGTUsingSshConfig(sshSessionConfig, new NoopExecutionCallback());
     } catch (Exception e) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception while setting kerberos auth for repo: [{}] with ex: [{}]",
           gitConfig.getRepoUrl(), getMessage(e));

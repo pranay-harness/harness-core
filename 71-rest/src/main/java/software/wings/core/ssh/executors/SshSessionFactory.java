@@ -76,8 +76,7 @@ public class SshSessionFactory {
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme() == KERBEROS) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
       logger.info("SSH using Kerberos Auth");
-      SshHelperUtils.generateTGT(config.getUserName(),
-          config.getPassword() != null ? new String(config.getPassword()) : null, config.getKeyPath(), logCallback);
+      generateTGTUsingSshConfig(config, logCallback);
 
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
@@ -121,6 +120,18 @@ public class SshSessionFactory {
     session.connect(config.getSshConnectionTimeout());
 
     return session;
+  }
+
+  public static void generateTGTUsingSshConfig(SshSessionConfig config, LogCallback logCallback) throws JSchException {
+    if (config.getKerberosConfig() == null) {
+      return;
+    }
+    logger.info("Do we need to generate Ticket Granting Ticket(TGT)? " + config.getKerberosConfig().isGenerateTGT());
+    if (config.getKerberosConfig().isGenerateTGT()) {
+      SshHelperUtils.generateTGT(config.getKerberosConfig().getPrincipalWithRealm(),
+          config.getPassword() != null ? new String(config.getPassword()) : null,
+          config.getKerberosConfig().getKeyTabFilePath(), logCallback);
+    }
   }
 
   protected static String getKeyPath(SshSessionConfig config) {
