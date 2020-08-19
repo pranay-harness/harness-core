@@ -261,7 +261,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(elkConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + elkConfig.getElkUrl() + "/");
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
@@ -304,7 +304,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(logzConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + logzConfig.getLogzUrl() + "/");
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
@@ -416,7 +416,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(instanaConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + instanaConfig.getInstanaUrl());
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
@@ -482,7 +482,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(newRelicConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + newRelicConfig.getNewRelicUrl() + "/");
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
@@ -547,7 +547,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(appDynamicsConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + appDynamicsConfig.getControllerUrl() + "/");
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
@@ -619,7 +619,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(dynaTraceConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + dynaTraceConfig.getDynaTraceUrl());
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
@@ -686,7 +686,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(prometheusConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + prometheusConfig.getUrl());
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
@@ -725,7 +725,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(scalyrConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("IllegalArgumentException: Illegal URL: " + scalyrConfig.getUrl());
+        .isEqualTo("IllegalArgumentException: Expected URL scheme 'http' or 'https' but no colon was found");
   }
 
   @Test
