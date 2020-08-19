@@ -48,20 +48,4 @@ public class BinaryResource {
       return Response.noContent().build();
     }
   }
-
-  /**
-   * Sample.
-   *
-   * @return the response
-   * @throws IOException              Signals that an I/O exception has occurred.
-   * @throws GeneralSecurityException the general security exception
-   */
-  @GET
-  @Path("sample")
-  @Encoded
-  @Timed
-  @ExceptionMetered
-  public Response sample() throws IOException, GeneralSecurityException {
-    return downloadFileFromResource("sample.tar.gz");
-  }
 }
