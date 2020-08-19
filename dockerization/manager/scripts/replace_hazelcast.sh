@@ -60,6 +60,6 @@ elif [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETE
     sed -i "s|<property name=\"host-header\">ec2.amazonaws.com</property>||" /opt/harness/hazelcast.xml
     sed -i "s|<property name=\"security-group-name\">hazelcast</property>||" /opt/harness/hazelcast.xml
     sed -i "s|<property name=\"tag-key\">aws-test-cluster</property>||" /opt/harness/hazelcast.xml
-    sed -i "s|<property name=\"tag-value\">cluster1</property>||" /opt/harness/hazelcast.xml
+    sed -i "s|<property name=\"tag-value\">\(.*\)</property>||" /opt/harness/hazelcast.xml
     sed -i "s|<property name=\"hz-port\">5701</property>||" /opt/harness/hazelcast.xml
 fi
