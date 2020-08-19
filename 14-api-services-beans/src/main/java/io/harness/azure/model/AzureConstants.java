@@ -45,6 +45,9 @@ public interface AzureConstants {
   // Messaging
   String SKIP_VMSS_DEPLOY = "No Azure VMSS setup context element found. Skipping deploy";
   String SKIP_VMSS_ROLLBACK = "No Azure VMSS setup context element found. Skipping rollback";
+  String SKIP_RESIZE_SCALE_SET = "No scale set found with the name = [%s], hence skipping";
+  String REQUEST_DELETE_SCALE_SET = "Sending request to delete newly created Virtual Machine Scale Set: [%s]";
+  String SUCCESS_DELETE_SCALE_SET = "Virtual Machine Scale Set: [%s] deleted successfully";
 
   // Validation messages
   String RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG = "Parameter resourceGroupName is required and cannot be null";

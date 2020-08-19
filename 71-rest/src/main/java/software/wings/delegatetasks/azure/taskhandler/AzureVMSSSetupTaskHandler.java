@@ -1,9 +1,10 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
-import static io.harness.azure.model.AzureConstants.AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.NUMBER_OF_LATEST_VERSIONS_TO_KEEP;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
@@ -16,9 +17,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -29,7 +28,6 @@ import static software.wings.utils.AsgConvention.getAsgName;
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
@@ -42,7 +40,6 @@ import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -187,48 +183,22 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
             .skip(versionsToKeep)
             .collect(toList());
 
-    downsizeVMSSs(azureConfig, listOfVMSSsForDownsize, subscriptionId, resourceGroupName,
+    downsizeVMSSs(azureConfig, setupTaskParameters, listOfVMSSsForDownsize, subscriptionId, resourceGroupName,
         autoScalingSteadyStateVMSSTimeout, executionLogCallback);
     deleteVMSSs(azureConfig, listOfVMSSsForDelete, executionLogCallback);
   }
 
-  public void downsizeVMSSs(AzureConfig azureConfig, List<VirtualMachineScaleSet> vmssForDownsize,
-      String subscriptionId, String resourceGroupName, int autoScalingSteadyStateTimeout,
-      ExecutionLogCallback executionLogCallback) {
+  public void downsizeVMSSs(AzureConfig azureConfig, AzureVMSSSetupTaskParameters setupTaskParameters,
+      List<VirtualMachineScaleSet> vmssForDownsize, String subscriptionId, String resourceGroupName,
+      int autoScalingSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     vmssForDownsize.stream().filter(vmss -> vmss.capacity() > 0).forEach(vmss -> {
       String virtualMachineScaleSetName = vmss.name();
       executionLogCallback.saveExecutionLog(
           format("Set VMSS : [%s] desired capacity to [%s]", virtualMachineScaleSetName, 0), INFO);
-      VirtualMachineScaleSet updatedVMSS = azureVMSSHelperServiceDelegate.updateVMSSCapacity(
-          azureConfig, virtualMachineScaleSetName, subscriptionId, resourceGroupName, 0);
-      waitForVMSSToBeDownSized(
-          azureConfig, subscriptionId, updatedVMSS.id(), autoScalingSteadyStateTimeout, executionLogCallback);
-      executionLogCallback.saveExecutionLog("Successfully set desired capacity", INFO);
+      updateVMSSCapacity(azureConfig, setupTaskParameters, virtualMachineScaleSetName, subscriptionId,
+          resourceGroupName, 0, autoScalingSteadyStateTimeout, DOWN_SCALE_COMMAND_UNIT,
+          DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     });
-  }
-
-  public void waitForVMSSToBeDownSized(AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId,
-      Integer autoScalingSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    try {
-      timeLimiter.callWithTimeout(() -> {
-        while (true) {
-          executionLogCallback.saveExecutionLog(
-              format("Checking if all VM instances of : [%s] are stopped", virtualMachineScaleSetId), INFO);
-          if (azureVMSSHelperServiceDelegate.checkIsRequiredNumberOfVMInstances(
-                  azureConfig, subscriptionId, virtualMachineScaleSetId, 0)) {
-            return Boolean.TRUE;
-          }
-          sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
-        }
-      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
-    } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out waiting for Virtual Machine Scale Set to be downsized to zero capacity", e);
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new InvalidRequestException(
-          "Error while waiting for Virtual Machine Scale Set to be downsized to zero capacity", e);
-    }
   }
 
   public void deleteVMSSs(

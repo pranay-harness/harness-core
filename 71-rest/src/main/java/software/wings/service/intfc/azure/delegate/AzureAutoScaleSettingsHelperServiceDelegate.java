@@ -21,6 +21,17 @@ public interface AzureAutoScaleSettingsHelperServiceDelegate {
       AzureConfig azureConfig, String resourceGroupName, String targetResourceId);
 
   /**
+   *
+   * @param azureConfig
+   * @param resourceGroupName
+   * @param targetResourceId
+   * @param autoScaleSettingResourceInnerJson
+   * @param defaultProfileScaleCapacity
+   */
+  void attachAutoScaleSettingToTargetResourceId(AzureConfig azureConfig, String resourceGroupName,
+      String targetResourceId, List<String> autoScaleSettingResourceInnerJson,
+      ScaleCapacity defaultProfileScaleCapacity);
+  /**
    * Get Auto Scale Setting
    *
    * @param azureConfig

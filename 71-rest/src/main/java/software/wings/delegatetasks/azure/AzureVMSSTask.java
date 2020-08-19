@@ -9,6 +9,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.ServiceVariable;
+import software.wings.delegatetasks.azure.taskhandler.AzureVMSSDeployTaskHandler;
+import software.wings.delegatetasks.azure.taskhandler.AzureVMSSRollbackTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSetupTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSTaskHandler;
@@ -29,6 +32,8 @@ import java.util.function.Consumer;
 public class AzureVMSSTask extends AbstractDelegateRunnableTask {
   @Inject private AzureVMSSSyncTaskHandler azureVMSSSyncTaskHandler;
   @Inject private AzureVMSSSetupTaskHandler setupTaskHandler;
+  @Inject private AzureVMSSDeployTaskHandler deployTaskHandler;
+  @Inject private AzureVMSSRollbackTaskHandler rollbackTaskHandler;
   @Inject private EncryptionService encryptionService;
 
   public AzureVMSSTask(
@@ -65,6 +70,22 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
           handler = setupTaskHandler;
           break;
         }
+
+        case AZURE_VMSS_DEPLOY: {
+          if (!(azureVMSSTaskParameters instanceof AzureVMSSDeployTaskParameters)) {
+            String message = format("Parameters of unrecognized class: [%s] found while executing deploy step",
+                azureVMSSTaskParameters.getClass().getSimpleName());
+            logger.error(message);
+            return AzureVMSSTaskExecutionResponse.builder()
+                .commandExecutionStatus(FAILURE)
+                .errorMessage(message)
+                .build();
+          }
+          AzureVMSSDeployTaskParameters deployTaskParameters = (AzureVMSSDeployTaskParameters) azureVMSSTaskParameters;
+          handler = deployTaskParameters.isRollback() ? rollbackTaskHandler : deployTaskHandler;
+          break;
+        }
+
         default: {
           String message = format("Unrecognized task params type running azure vmss task: [%s].",
               azureVMSSTaskParameters.getCommandType().name());

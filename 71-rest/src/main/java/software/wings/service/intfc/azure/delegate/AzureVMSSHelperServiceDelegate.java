@@ -14,11 +14,11 @@ public interface AzureVMSSHelperServiceDelegate {
    *
    * @param azureConfig
    * @param subscriptionId
-   * @param virtuaMachineScaleSetId
+   * @param virtualMachineScaleSetId
    * @return
    */
   Optional<VirtualMachineScaleSet> getVirtualMachineScaleSetsById(
-      AzureConfig azureConfig, String subscriptionId, String virtuaMachineScaleSetId);
+      AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId);
 
   /**
    * Get Virtual Machine Scale Set by name.
