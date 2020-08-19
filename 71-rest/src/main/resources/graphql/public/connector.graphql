@@ -52,6 +52,11 @@ enum ConnectorType {
   GCS_HELM_REPO
 }
 
+enum UrlType {
+  REPO
+  ACCOUNT
+}
+
 interface Connector {
   id: String
   name: String
@@ -163,12 +168,27 @@ type GCSConnector implements Connector {
   createdAt: DateTime
   createdBy: User
 }
+type CustomCommitDetails {
+  authorName: String
+  authorEmailId: String
+  commitMessage: String
+}
 type GitConnector implements Connector {
   id: String
   name: String
   description: String
   createdAt: DateTime
   createdBy: User
+
+  userName: String
+  URL: String
+  urlType: UrlType
+  branch: String
+  passwordSecretId: String
+  sshSettingId: String
+  webhookToken: String
+  generateWebhookUrl: Boolean
+  customCommitDetails: CustomCommitDetails
 }
 type JenkinsConnector implements Connector {
   id: String

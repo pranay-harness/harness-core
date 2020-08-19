@@ -32,6 +32,9 @@ enum DataFetcherEnum {
   connector
   connectorConnection
   connectorStats
+  createConnector
+  updateConnector
+  deleteConnector
   deploymentStats
   efficiencyStats
   eksClusterStats
