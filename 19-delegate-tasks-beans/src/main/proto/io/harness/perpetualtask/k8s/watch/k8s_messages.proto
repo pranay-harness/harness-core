@@ -6,11 +6,12 @@ option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 
+message Quantity {
+  int64 amount = 1;
+  string unit = 2;
+}
+
 message Resource {
-  message Quantity {
-    int64 amount = 1;
-    string unit = 2;
-  }
   map<string, Quantity> requests = 1;
   map<string, Quantity> limits = 2;
 }
@@ -26,6 +27,17 @@ message Owner {
   string kind = 2;
   string name = 3;
   map<string, string> labels = 4;
+}
+
+message Volume {
+  enum VolumeType {
+    VOLUME_TYPE_UNSPECIFIED = 0;
+    VOLUME_TYPE_PVC = 1;
+  }
+  VolumeType type = 1;
+  Quantity request = 2;
+  // the identifier: claimName in case of PVC
+  string id = 3;
 }
 
 message PodInfo {
@@ -44,6 +56,7 @@ message PodInfo {
   string cluster_name = 14;
   string kube_system_uid = 15;
   string qos_class = 16;
+  repeated Volume volume = 17;
 }
 
 message PodEvent {
@@ -66,7 +79,7 @@ message NodeInfo {
   string node_name = 4;
   google.protobuf.Timestamp creation_time = 5;
   map<string, string> labels = 6;
-  map<string, Resource.Quantity> allocatable_resource = 7;
+  map<string, Quantity> allocatable_resource = 7;
   string cluster_id = 8;
   string cluster_name = 9;
   string provider_id = 10;

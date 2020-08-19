@@ -36,7 +36,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
-import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.informer.EventType;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.JSON;
@@ -46,6 +45,7 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1PodConditionBuilder;
 import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1VolumeBuilder;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.Watch;
 import lombok.extern.slf4j.Slf4j;
@@ -72,8 +72,8 @@ public class PodWatcherTest extends CategoryTest {
 
   final DateTime TIMESTAMP = DateTime.now();
   final DateTime DELETION_TIMESTAMP = TIMESTAMP.plusMinutes(5);
-  private static final String START_RV = "77330476";
-  private static final String END_RV = "77330477";
+  private static final String START_RV = "1001";
+  private static final String END_RV = "1002";
   private static final UrlMatchingStrategy POD_URL_MATCHING = urlMatching("^/api/v1/pods.*");
 
   ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
@@ -104,7 +104,7 @@ public class PodWatcherTest extends CategoryTest {
             .cloudProviderId("cloud-provider-id")
             .kubeSystemUid("cluster-uid")
             .build(),
-        controllerFetcher, sharedInformerFactory, eventPublisher);
+        controllerFetcher, sharedInformerFactory, null, eventPublisher);
   }
 
   @Test
@@ -241,17 +241,25 @@ public class PodWatcherTest extends CategoryTest {
         .withQosClass("Guaranteed")
         .endStatus()
         .withNewSpec()
+        .withVolumes(new V1VolumeBuilder()
+                         .withNewPersistentVolumeClaim()
+                         .withClaimName("mongo-data")
+                         .endPersistentVolumeClaim()
+                         .build())
         .withNodeName("gke-pr-private-pool-1-49d0f375-12xx")
-        .withContainers(new V1ContainerBuilder()
-                            .withImage("us.gcr.io/platform-205701/harness/feature-manager:19204")
-                            .withName("manager")
-                            .withNewResources()
-                            .addToLimits("cpu", new Quantity(new BigDecimal("1"), DECIMAL_SI))
-                            .addToLimits("memory", new Quantity(new BigDecimal("2861563904"), BINARY_SI))
-                            .addToRequests("cpu", new Quantity(new BigDecimal("1"), DECIMAL_SI))
-                            .addToRequests("memory", new Quantity(new BigDecimal("2861563904"), BINARY_SI))
-                            .endResources()
-                            .build())
+        .withContainers(
+            new V1ContainerBuilder()
+                .withImage("us.gcr.io/platform-205701/harness/feature-manager:19204")
+                .withName("manager")
+                .withNewResources()
+                .addToLimits("cpu", new io.kubernetes.client.custom.Quantity(new BigDecimal("1"), DECIMAL_SI))
+                .addToLimits(
+                    "memory", new io.kubernetes.client.custom.Quantity(new BigDecimal("2861563904"), BINARY_SI))
+                .addToRequests("cpu", new io.kubernetes.client.custom.Quantity(new BigDecimal("1"), DECIMAL_SI))
+                .addToRequests(
+                    "memory", new io.kubernetes.client.custom.Quantity(new BigDecimal("2861563904"), BINARY_SI))
+                .endResources()
+                .build())
         .endSpec();
   }
 
@@ -280,21 +288,19 @@ public class PodWatcherTest extends CategoryTest {
                 .setImage("us.gcr.io/platform-205701/harness/feature-manager:19204")
                 .setResource(
                     Resource.newBuilder()
-                        .putLimits("cpu", Resource.Quantity.newBuilder().setAmount(1_000_000_000L).setUnit("n").build())
-                        .putLimits("memory", Resource.Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
-                        .putRequests(
-                            "cpu", Resource.Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
-                        .putRequests(
-                            "memory", Resource.Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
+                        .putLimits("cpu", Quantity.newBuilder().setAmount(1_000_000_000L).setUnit("n").build())
+                        .putLimits("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
+                        .putRequests("cpu", Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
+                        .putRequests("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
                         .build())
                 .build());
     assertThat(podInfo.getQosClass()).isEqualTo("Guaranteed");
     assertThat(podInfo.getTotalResource())
         .isEqualTo(Resource.newBuilder()
-                       .putLimits("cpu", Resource.Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
-                       .putLimits("memory", Resource.Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
-                       .putRequests("cpu", Resource.Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
-                       .putRequests("memory", Resource.Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
+                       .putLimits("cpu", Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
+                       .putLimits("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
+                       .putRequests("cpu", Quantity.newBuilder().setAmount(1_000_000_000).setUnit("n").build())
+                       .putRequests("memory", Quantity.newBuilder().setAmount(2861563904L).setUnit("").build())
                        .build());
     assertThat(podInfo.getLabelsMap())
         .isEqualTo(

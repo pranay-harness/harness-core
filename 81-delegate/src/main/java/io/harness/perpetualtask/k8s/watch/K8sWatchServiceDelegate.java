@@ -10,16 +10,19 @@ import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import io.harness.serializer.KryoSerializer;
+import io.kubernetes.client.informer.SharedInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.models.V1DaemonSet;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Job;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import lombok.Builder;
+import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -102,13 +105,20 @@ public class K8sWatchServiceDelegate {
       SharedInformerFactory sharedInformerFactory =
           sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails);
 
+      PVCFetcher pvcFetcher = watcherFactory.createPVCFetcher(apiClient, sharedInformerFactory);
+      SharedInformer<V1PersistentVolumeClaim> pvcInformer =
+          sharedInformerFactory.getExistingSharedIndexInformer(V1PersistentVolumeClaim.class);
+      pvcInformer.run();
+
       Map<String, Store<?>> stores = KNOWN_WORKLOAD_TYPES.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey, e -> sharedInformerFactory.getExistingSharedIndexInformer(e.getValue()).getIndexer()));
 
       K8sControllerFetcher controllerFetcher = new K8sControllerFetcher(stores);
 
-      watcherFactory.createPodWatcher(apiClient, clusterDetails, controllerFetcher, sharedInformerFactory);
       watcherFactory.createNodeWatcher(apiClient, clusterDetails, sharedInformerFactory);
+
+      blockingWaitForPVCInformerSync(pvcInformer);
+      watcherFactory.createPodWatcher(apiClient, clusterDetails, controllerFetcher, sharedInformerFactory, pvcFetcher);
 
       logger.info("Starting AllRegisteredInformers for watch {}", id);
       sharedInformerFactory.startAllRegisteredInformers();
@@ -117,6 +127,15 @@ public class K8sWatchServiceDelegate {
     });
 
     return watchId;
+  }
+
+  @SneakyThrows
+  private void blockingWaitForPVCInformerSync(SharedInformer<V1PersistentVolumeClaim> pvcInformer) {
+    int cnt = 0;
+    while (!pvcInformer.hasSynced() && ++cnt <= 15) {
+      logger.info("Waiting for PVCInformer to sync... {}", cnt);
+      Thread.sleep(200);
+    }
   }
 
   public static String getKubeSystemUid(DefaultK8sMetricsClient client) {

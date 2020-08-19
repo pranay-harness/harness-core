@@ -39,7 +39,7 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 import io.harness.perpetualtask.k8s.watch.NodeEvent.EventType;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
-import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
+import io.harness.perpetualtask.k8s.watch.Quantity;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

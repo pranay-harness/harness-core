@@ -4,10 +4,10 @@ import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.perpetualtask.k8s.watch.Resource.Quantity.Builder;
-import io.kubernetes.client.custom.Quantity;
+import io.harness.perpetualtask.k8s.watch.Quantity.Builder;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1PodSpec;
+import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,6 +18,7 @@ import java.util.Map;
 public class K8sResourceUtils {
   private static final String K8S_CPU_RESOURCE = "cpu";
   private static final String K8S_MEMORY_RESOURCE = "memory";
+  private static final String K8S_STORAGE_RESOURCE = "storage";
 
   public static Resource getResource(V1Container k8sContainer) {
     // get the resource for each container
@@ -29,13 +30,13 @@ public class K8sResourceUtils {
     return resourceBuilder.build();
   }
 
-  private static Resource.Quantity getCpuRequest(V1Container k8sContainer) {
-    Builder cpuRequestBuilder = Resource.Quantity.newBuilder();
+  private static Quantity getCpuRequest(V1Container k8sContainer) {
+    Builder cpuRequestBuilder = Quantity.newBuilder();
     if (k8sContainer.getResources() == null) {
       return cpuRequestBuilder.build();
     }
 
-    Map<String, Quantity> resourceRequestsMap = k8sContainer.getResources().getRequests();
+    Map<String, io.kubernetes.client.custom.Quantity> resourceRequestsMap = k8sContainer.getResources().getRequests();
     if (resourceRequestsMap != null && resourceRequestsMap.get(K8S_CPU_RESOURCE) != null) {
       cpuRequestBuilder.setAmount(K8sResourceStandardizer.getCpuNano(resourceRequestsMap.get(K8S_CPU_RESOURCE)));
       cpuRequestBuilder.setUnit("n");
@@ -43,13 +44,13 @@ public class K8sResourceUtils {
     return cpuRequestBuilder.build();
   }
 
-  private static Resource.Quantity getMemRequest(V1Container k8sContainer) {
-    Builder memRequestBuilder = Resource.Quantity.newBuilder();
+  private static Quantity getMemRequest(V1Container k8sContainer) {
+    Builder memRequestBuilder = Quantity.newBuilder();
     if (k8sContainer.getResources() == null) {
       return memRequestBuilder.build();
     }
 
-    Map<String, Quantity> resourceRequestsMap = k8sContainer.getResources().getRequests();
+    Map<String, io.kubernetes.client.custom.Quantity> resourceRequestsMap = k8sContainer.getResources().getRequests();
     if (resourceRequestsMap != null && resourceRequestsMap.get(K8S_MEMORY_RESOURCE) != null) {
       memRequestBuilder.setAmount(K8sResourceStandardizer.getMemoryByte(resourceRequestsMap.get(K8S_MEMORY_RESOURCE)));
       memRequestBuilder.setUnit("");
@@ -57,13 +58,13 @@ public class K8sResourceUtils {
     return memRequestBuilder.build();
   }
 
-  private static Resource.Quantity getCpuLimit(V1Container k8sContainer) {
-    Builder cpuLimitBuilder = Resource.Quantity.newBuilder();
+  private static Quantity getCpuLimit(V1Container k8sContainer) {
+    Builder cpuLimitBuilder = Quantity.newBuilder();
     if (k8sContainer.getResources() == null) {
       return cpuLimitBuilder.build();
     }
 
-    Map<String, Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
+    Map<String, io.kubernetes.client.custom.Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
     if (resourceLimitsMap != null && resourceLimitsMap.get(K8S_CPU_RESOURCE) != null) {
       cpuLimitBuilder.setAmount(K8sResourceStandardizer.getCpuNano(resourceLimitsMap.get(K8S_CPU_RESOURCE)));
       cpuLimitBuilder.setUnit("n");
@@ -71,13 +72,13 @@ public class K8sResourceUtils {
     return cpuLimitBuilder.build();
   }
 
-  private static Resource.Quantity getMemLimit(V1Container k8sContainer) {
-    Builder memLimitBuilder = Resource.Quantity.newBuilder();
+  private static Quantity getMemLimit(V1Container k8sContainer) {
+    Builder memLimitBuilder = Quantity.newBuilder();
     if (k8sContainer.getResources() == null) {
       return memLimitBuilder.build();
     }
 
-    Map<String, Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
+    Map<String, io.kubernetes.client.custom.Quantity> resourceLimitsMap = k8sContainer.getResources().getLimits();
     if (resourceLimitsMap != null && resourceLimitsMap.get(K8S_MEMORY_RESOURCE) != null) {
       memLimitBuilder.setAmount(K8sResourceStandardizer.getMemoryByte(resourceLimitsMap.get(K8S_MEMORY_RESOURCE)));
       memLimitBuilder.setUnit("");
@@ -91,53 +92,65 @@ public class K8sResourceUtils {
     long limCpuNanos = 0;
     long limMemBytes = 0;
     for (V1Container container : podSpec.getContainers()) {
-      Map<String, Quantity> resourceRequests = container.getResources().getRequests();
+      Map<String, io.kubernetes.client.custom.Quantity> resourceRequests = container.getResources().getRequests();
       reqCpuNanos += getCpuNanos(resourceRequests);
       reqMemBytes += getMemBytes(resourceRequests);
-      Map<String, Quantity> resourceLimits = container.getResources().getLimits();
+      Map<String, io.kubernetes.client.custom.Quantity> resourceLimits = container.getResources().getLimits();
       limCpuNanos += getCpuNanos(resourceLimits);
       limMemBytes += getMemBytes(resourceLimits);
     }
 
     if (podSpec.getInitContainers() != null) {
       for (V1Container initContainer : podSpec.getInitContainers()) {
-        Map<String, Quantity> resourceRequests = initContainer.getResources().getRequests();
+        Map<String, io.kubernetes.client.custom.Quantity> resourceRequests = initContainer.getResources().getRequests();
         reqCpuNanos = Math.max(reqCpuNanos, getCpuNanos(resourceRequests));
         reqMemBytes = Math.max(reqMemBytes, getMemBytes(resourceRequests));
-        Map<String, Quantity> resourceLimits = initContainer.getResources().getLimits();
+        Map<String, io.kubernetes.client.custom.Quantity> resourceLimits = initContainer.getResources().getLimits();
         limCpuNanos = Math.max(limCpuNanos, getCpuNanos(resourceLimits));
         limMemBytes = Math.max(limMemBytes, getMemBytes(resourceLimits));
       }
     }
 
     return Resource.newBuilder()
-        .putRequests(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setAmount(reqCpuNanos).setUnit("n").build())
-        .putRequests(K8S_MEMORY_RESOURCE, Resource.Quantity.newBuilder().setAmount(reqMemBytes).setUnit("").build())
-        .putLimits(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setAmount(limCpuNanos).setUnit("n").build())
-        .putLimits(K8S_MEMORY_RESOURCE, Resource.Quantity.newBuilder().setAmount(limMemBytes).setUnit("").build())
+        .putRequests(K8S_CPU_RESOURCE, Quantity.newBuilder().setAmount(reqCpuNanos).setUnit("n").build())
+        .putRequests(K8S_MEMORY_RESOURCE, Quantity.newBuilder().setAmount(reqMemBytes).setUnit("").build())
+        .putLimits(K8S_CPU_RESOURCE, Quantity.newBuilder().setAmount(limCpuNanos).setUnit("n").build())
+        .putLimits(K8S_MEMORY_RESOURCE, Quantity.newBuilder().setAmount(limMemBytes).setUnit("").build())
         .build();
   }
 
-  static Map<String, Resource.Quantity> getResourceMap(Map<String, Quantity> resourceMap) {
+  static Map<String, Quantity> getResourceMap(Map<String, io.kubernetes.client.custom.Quantity> resourceMap) {
     long cpuNanos = getCpuNanos(resourceMap);
     long memBytes = getMemBytes(resourceMap);
-    return ImmutableMap.<String, Resource.Quantity>builder()
-        .put(K8S_CPU_RESOURCE, Resource.Quantity.newBuilder().setUnit("n").setAmount(cpuNanos).build())
-        .put(K8S_MEMORY_RESOURCE, Resource.Quantity.newBuilder().setUnit("").setAmount(memBytes).build())
+    return ImmutableMap.<String, Quantity>builder()
+        .put(K8S_CPU_RESOURCE, Quantity.newBuilder().setUnit("n").setAmount(cpuNanos).build())
+        .put(K8S_MEMORY_RESOURCE, Quantity.newBuilder().setUnit("").setAmount(memBytes).build())
         .build();
   }
 
-  private static long getMemBytes(Map<String, Quantity> resourceMap) {
+  private static long getMemBytes(Map<String, io.kubernetes.client.custom.Quantity> resourceMap) {
     return ofNullable(resourceMap)
         .map(resReq -> resReq.get(K8S_MEMORY_RESOURCE))
         .map(K8sResourceStandardizer::getMemoryByte)
         .orElse(0L);
   }
 
-  private static long getCpuNanos(Map<String, Quantity> resourceMap) {
+  private static long getCpuNanos(Map<String, io.kubernetes.client.custom.Quantity> resourceMap) {
     return ofNullable(resourceMap)
         .map(resMap -> resMap.get(K8S_CPU_RESOURCE))
         .map(K8sResourceStandardizer::getCpuNano)
         .orElse(0L);
+  }
+
+  public static Quantity getStorageRequest(V1ResourceRequirements resources) {
+    Builder storageRequestBuilder = Quantity.newBuilder();
+    if (resources != null && resources.getRequests() != null) {
+      storageRequestBuilder.setAmount(
+          ofNullable(resources.getRequests().get(K8S_STORAGE_RESOURCE)).map(x -> x.getNumber().longValue()).orElse(0L));
+      return storageRequestBuilder.setUnit("B").build();
+    }
+    logger.warn("Returning default storge value");
+    // no unit when the value is default.
+    return storageRequestBuilder.setAmount(0L).build();
   }
 }
