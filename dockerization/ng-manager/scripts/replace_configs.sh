@@ -79,3 +79,10 @@ fi
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
+
+if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
+fi
+
+
+
