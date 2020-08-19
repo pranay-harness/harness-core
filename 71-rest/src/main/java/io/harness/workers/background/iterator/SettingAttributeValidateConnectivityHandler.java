@@ -1,7 +1,7 @@
 package io.harness.workers.background.iterator;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofHours;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -42,14 +42,14 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
         PumpExecutorOptions.builder()
             .name("SettingAttributeValidateConnectivity")
             .poolSize(5)
-            .interval(Duration.ofMinutes(1))
+            .interval(Duration.ofMinutes(10))
             .build(),
         SettingAttributeValidateConnectivityHandler.class,
         MongoPersistenceIterator.<SettingAttribute, MorphiaFilterExpander<SettingAttribute>>builder()
             .clazz(SettingAttribute.class)
             .fieldName(SettingAttributeKeys.nextIteration)
-            .targetInterval(ofMinutes(15))
-            .acceptableNoAlertDelay(ofMinutes(10))
+            .targetInterval(ofHours(3))
+            .acceptableNoAlertDelay(ofHours(1))
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
