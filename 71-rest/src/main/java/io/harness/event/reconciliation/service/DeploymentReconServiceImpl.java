@@ -347,7 +347,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
                                          .field(WorkflowExecutionKeys.pipelineExecutionId)
                                          .doesNotExist()
                                          .field(WorkflowExecutionKeys.status)
-                                         .in(ExecutionStatus.combinedStatuses());
+                                         .in(ExecutionStatus.persistedStatuses());
 
     addTimeQuery(query, durationStartTs, durationEndTs);
     return query.count();
