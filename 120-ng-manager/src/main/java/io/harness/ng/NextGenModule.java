@@ -141,7 +141,7 @@ public class NextGenModule extends DependencyModule {
     install(NGModule.getInstance());
     install(new SecretManagementModule());
     install(new SecretManagementClientModule(
-        this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+        this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ManagerDelegateServiceDriverModule(this.appConfig.getGrpcClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
     install(new NgAsyncTaskGrpcServerModule(
@@ -192,6 +192,9 @@ public class NextGenModule extends DependencyModule {
     bind(ConnectorService.class)
         .annotatedWith(Names.named(SECRET_MANAGER_CONNECTOR_SERVICE))
         .to(SecretManagerConnectorServiceImpl.class);
+
+    install(new UserClientModule(
+        this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
   }
 
   private ValidatorFactory getValidatorFactory() {

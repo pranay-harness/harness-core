@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
+import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.remote.SecretManagerHttpClientFactory;
 import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
@@ -12,10 +13,10 @@ import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 public class SecretManagementClientModule extends AbstractModule {
-  private final SecretManagerClientConfig secretManagerConfig;
+  private final ServiceHttpClientConfig secretManagerConfig;
   private final String serviceSecret;
 
-  public SecretManagementClientModule(SecretManagerClientConfig secretManagerConfig, String serviceSecret) {
+  public SecretManagementClientModule(ServiceHttpClientConfig secretManagerConfig, String serviceSecret) {
     this.secretManagerConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
   }

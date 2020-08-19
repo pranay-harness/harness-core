@@ -55,7 +55,7 @@ mongo:
 #  connectionsPerHost: 300
 #  indexManagerMode: AUTO
 
-secretManagerClient:
+managerClientConfig:
   baseUrl: http://localhost:3457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15

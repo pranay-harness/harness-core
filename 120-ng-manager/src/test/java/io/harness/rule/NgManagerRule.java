@@ -14,9 +14,9 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.CorePersistenceTestModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
-import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
@@ -59,7 +59,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(KryoModule.getInstance());
     modules.add(new SecretManagementModule());
     modules.add(new SecretManagementClientModule(
-        SecretManagerClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret"));
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

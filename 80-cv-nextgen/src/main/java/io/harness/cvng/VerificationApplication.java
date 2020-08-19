@@ -179,7 +179,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
-    modules.add(new SecretManagementClientModule(configuration.getSecretManagerClientConfig(),
+    modules.add(new SecretManagementClientModule(configuration.getServiceHttpClientConfig(),
         configuration.getNgManagerServiceConfig().getManagerServiceSecret()));
     modules.add(new CVNextGenCommonsServiceModule());
     Injector injector = Guice.createInjector(modules);
