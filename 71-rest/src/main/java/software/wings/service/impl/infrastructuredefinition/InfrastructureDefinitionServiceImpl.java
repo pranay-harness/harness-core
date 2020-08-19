@@ -315,7 +315,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     List<String> serviceIdsInScope = new ArrayList<>();
     Set<String> customDeploymentTemplateIds = new HashSet<>();
     for (String serviceId : serviceIds) {
-      if (isEmpty(serviceId) || ExpressionEvaluator.matchesVariablePattern(serviceId)) {
+      if (isEmpty(serviceId) || ExpressionEvaluator.containsVariablePattern(serviceId)) {
         continue;
       }
       Service service = serviceResourceService.get(appId, serviceId);

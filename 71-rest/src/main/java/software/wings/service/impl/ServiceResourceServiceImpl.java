@@ -385,7 +385,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> infraNames = new ArrayList<>();
     for (String infraId : infraIds) {
       // if infra value for related field is variable or there is no value,
-      if (isEmpty(infraId) || ExpressionEvaluator.matchesVariablePattern(infraId)) {
+      if (isEmpty(infraId) || ExpressionEvaluator.containsVariablePattern(infraId)) {
         continue;
       }
       InfrastructureDefinition infra = infrastructureDefinitionService.get(appId, infraId);
