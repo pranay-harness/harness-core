@@ -27,6 +27,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +41,7 @@ import java.util.Optional;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
@@ -153,8 +155,15 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (connectorOptional.isPresent()) {
       ConnectorDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
       ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
-      ConnectorValidationResult validationResult = connectionValidator.validate(
-          connectorDTO.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
+      ConnectorValidationResult validationResult;
+      try {
+        validationResult = connectionValidator.validate(
+            connectorDTO.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
+      } catch (Exception ex) {
+        logger.info(String.format(
+            "Test Connection failed for connector [%s] with error [%s]", fullyQualifiedIdentifier, ex.getMessage()));
+        validationResult = ConnectorValidationResult.builder().build();
+      }
       long connectivityTestedAt = System.currentTimeMillis();
       validationResult.setTestedAt(connectivityTestedAt);
       updateConnectivityStatusOfConnector(connectorOptional.get(), validationResult, connectivityTestedAt);
