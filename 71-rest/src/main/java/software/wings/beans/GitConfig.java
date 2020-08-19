@@ -106,7 +106,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
       String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth,
       AuthenticationScheme authenticationScheme, String description, String webhookToken, GitRepositoryType gitRepoType,
       boolean generateWebhookUrl, String authorName, String authorEmailId, String commitMessage, UrlType urlType,
-      String repoName) {
+      String repoName, String reference) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password == null ? null : password.clone();
@@ -127,6 +127,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     this.commitMessage = commitMessage;
     this.urlType = urlType;
     this.repoName = repoName;
+    this.reference = reference;
   }
 
   @Data

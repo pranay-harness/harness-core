@@ -1,9 +1,13 @@
 package software.wings.graphql.datafetcher.connector;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.experimental.UtilityClass;
+import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
+import software.wings.graphql.schema.type.QLConnectorType;
+import software.wings.graphql.schema.type.QLCustomCommitDetails;
 import software.wings.graphql.schema.type.connector.QLAmazonS3RepoConnector;
 import software.wings.graphql.schema.type.connector.QLApmVerificationConnector;
 import software.wings.graphql.schema.type.connector.QLAppDynamicsConnector;
@@ -22,6 +26,7 @@ import software.wings.graphql.schema.type.connector.QLGCRConnector;
 import software.wings.graphql.schema.type.connector.QLGCSConnector;
 import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.connector.QLGitConnector.QLGitConnectorBuilder;
 import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLInstanaConnector;
 import software.wings.graphql.schema.type.connector.QLJenkinsConnector;
@@ -48,7 +53,6 @@ public class ConnectorsController {
   }
 
   public static QLConnectorBuilder getConnectorBuilder(SettingAttribute settingAttribute) {
-    QLConnectorBuilder builder;
     final SettingVariableTypes settingType = settingAttribute.getValue().getSettingType();
     switch (settingType) {
       case JIRA:
@@ -104,7 +108,7 @@ public class ConnectorsController {
       case GCS:
         return QLGCSConnector.builder();
       case GIT:
-        return QLGitConnector.builder();
+        return getPrePopulatedGitConnectorBuilder(settingAttribute);
       case SMB:
         return QLSmtpConnector.builder();
       case SFTP:
@@ -119,6 +123,34 @@ public class ConnectorsController {
         return QLCustomConnector.builder();
       default:
         throw new WingsException("Unsupported Connector " + settingType);
+    }
+  }
+
+  public static QLGitConnectorBuilder getPrePopulatedGitConnectorBuilder(SettingAttribute settingAttribute) {
+    QLGitConnectorBuilder builder = QLGitConnector.builder();
+    GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+    builder.userName(gitConfig.getUsername())
+        .URL(gitConfig.getRepoUrl())
+        .urlType(gitConfig.getUrlType())
+        .branch(gitConfig.getBranch())
+        .sshSettingId(gitConfig.getSshSettingId())
+        .webhookToken(gitConfig.getWebhookToken())
+        .generateWebhookUrl(gitConfig.isGenerateWebhookUrl())
+        .customCommitDetails(QLCustomCommitDetails.builder()
+                                 .authorName(gitConfig.getAuthorName())
+                                 .authorEmailId(gitConfig.getAuthorEmailId())
+                                 .commitMessage(gitConfig.getCommitMessage())
+                                 .build());
+    if (null != gitConfig.getPassword()) {
+      builder.passwordSecretId(String.copyValueOf(gitConfig.getPassword()));
+    }
+    return builder;
+  }
+
+  public static void checkIfInputIsNotPresent(QLConnectorType type, Object input) {
+    if (input == null) {
+      throw new InvalidRequestException(
+          String.format("No input provided with the request for %s connector", type.getStringValue()));
     }
   }
 }
