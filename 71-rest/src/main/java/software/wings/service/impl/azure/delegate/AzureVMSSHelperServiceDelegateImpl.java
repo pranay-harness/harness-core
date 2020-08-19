@@ -17,6 +17,7 @@ import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_DEFAULT;
 import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_SSH_PUBLIC_KEY;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.VMSS_IDS_IS_NULL_VALIDATION_MSG;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.utils.AzureVMSSUtils.dateToISO8601BasicStr;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
@@ -184,6 +185,9 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
     }
     if (isBlank(virtualMachineScaleSetName)) {
       throw new IllegalArgumentException(VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG);
+    }
+    if (isEmpty(virtualMachineScaleSetName)) {
+      return Optional.empty();
     }
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);

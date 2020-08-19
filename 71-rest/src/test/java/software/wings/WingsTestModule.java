@@ -85,6 +85,7 @@ import software.wings.service.impl.aws.delegate.AwsEcsHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsElbHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsS3HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
+import software.wings.service.impl.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegateImpl;
 import software.wings.service.impl.azure.delegate.AzureVMSSHelperServiceDelegateImpl;
 import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceDelegateServiceImpl;
@@ -118,6 +119,7 @@ import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
+import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
 import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
@@ -214,6 +216,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AzureArtifactsBuildService.class).to(AzureArtifactsBuildServiceImpl.class);
     bind(CloudWatchDelegateService.class).to(CloudWatchDelegateServiceImpl.class);
     bind(AzureVMSSHelperServiceDelegate.class).to(AzureVMSSHelperServiceDelegateImpl.class);
+    bind(AzureAutoScaleSettingsHelperServiceDelegate.class).to(AzureAutoScaleSettingsHelperServiceDelegateImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))

@@ -60,6 +60,16 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImpl
   }
 
   @Override
+  public void attachAutoScaleSettingToTargetResourceId(AzureConfig azureConfig, String resourceGroupName,
+      String targetResourceId, List<String> autoScaleSettingResourceInnerJson,
+      ScaleCapacity defaultProfileScaleCapacity) {
+    for (String autoScaleSetting : autoScaleSettingResourceInnerJson) {
+      attachAutoScaleSettingToTargetResourceId(
+          azureConfig, resourceGroupName, targetResourceId, autoScaleSetting, defaultProfileScaleCapacity);
+    }
+  }
+
+  @Override
   public Optional<AutoscaleSetting> getAutoScaleSettingByTargetResourceId(
       AzureConfig azureConfig, final String resourceGroupName, final String targetResourceId) {
     if (isBlank(resourceGroupName)) {
