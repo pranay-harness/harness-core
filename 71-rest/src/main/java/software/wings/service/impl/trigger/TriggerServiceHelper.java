@@ -274,7 +274,7 @@ public class TriggerServiceHelper {
   }
 
   public WebHookToken constructWebhookToken(Trigger trigger, WebHookToken existingToken, List<Service> services,
-      boolean artifactNeeded, Map<String, String> parameters) {
+      boolean artifactNeeded, Map<String, String> parameters, List<String> templatizedServiceVars) {
     WebHookToken webHookToken;
     if (existingToken == null || existingToken.getWebHookToken() == null) {
       webHookToken =
@@ -286,13 +286,14 @@ public class TriggerServiceHelper {
     Map<String, Object> payload = new HashMap<>();
     payload.put("application", trigger.getAppId());
 
-    List<Map<String, Object>> artifactList = new ArrayList();
+    List<Map<String, Object>> artifactList = new ArrayList<>();
     if (isNotEmpty(trigger.getArtifactSelections())) {
       if (services != null) {
         for (Service service : services) {
           Map<String, Object> artifacts = new HashMap<>();
           artifacts.put("service", service.getName());
           artifacts.put("buildNumber", service.getName() + "_BUILD_NUMBER_PLACE_HOLDER");
+          artifacts.put("artifactSourceName", service.getName() + "_ARTIFACT_SOURCE_NAME_PLACE_HOLDER");
           if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, service.getAccountId())) {
             Map<String, Object> parameterMap = addParametersForArtifactStream(service, trigger.getArtifactSelections());
             if (isNotEmpty(parameterMap)) {
@@ -302,9 +303,19 @@ public class TriggerServiceHelper {
           artifactList.add(artifacts);
         }
       }
-      if (!artifactList.isEmpty() && artifactNeeded) {
-        payload.put("artifacts", artifactList);
+    }
+    if (isNotEmpty(templatizedServiceVars)) {
+      for (String service : templatizedServiceVars) {
+        Map<String, Object> artifacts = new HashMap<>();
+        artifacts.put("service", service + "_PLACEHOLDER");
+        artifacts.put("buildNumber", service + "_BUILD_NUMBER_PLACE_HOLDER");
+        artifacts.put("artifactSourceName", service + "_ARTIFACT_SOURCE_NAME_PLACE_HOLDER");
+        artifactList.add(artifacts);
       }
+    }
+
+    if (!artifactList.isEmpty() && artifactNeeded) {
+      payload.put("artifacts", artifactList);
     }
     if (!parameters.isEmpty()) {
       payload.put("parameters", parameters);

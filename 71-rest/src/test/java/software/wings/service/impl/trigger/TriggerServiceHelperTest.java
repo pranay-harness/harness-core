@@ -31,6 +31,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +60,7 @@ public class TriggerServiceHelperTest extends WingsBaseTest {
     parameters.put("MyVar", "MyVar_placeholder");
     WebHookToken webHookToken = triggerServiceHelper.constructWebhookToken(workflowWebhookConditionTrigger, null,
         asList(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).accountId(ACCOUNT_ID).build()), true,
-        parameters);
+        parameters, Collections.emptyList());
     assertThat(webHookToken).isNotNull();
     assertThat(webHookToken.getWebHookToken()).isNotNull();
     assertThat(webHookToken.getPayload()).isNotEmpty();
