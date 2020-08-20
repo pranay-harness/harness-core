@@ -12,8 +12,8 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
-import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.Tag;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
 import io.harness.yaml.core.nonyaml.WithNonYamlInfo;
 import lombok.Builder;
@@ -41,8 +41,7 @@ public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInf
   private String name;
   private String description;
   private List<Tag> tags;
-  // TODO(harsh): Please change list element type to StageElementWrapper to support parallel stages
-  private List<StageElement> stages;
+  private List<StageElementWrapper> stages;
 
   @FdIndex private String accountId;
   private String projectId;

@@ -36,6 +36,7 @@ import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
 import software.wings.beans.ci.pod.ContainerResourceParams;
@@ -325,7 +326,7 @@ public class CIExecutionPlanTestHelper {
     return CIPipeline.builder().identifier("testPipelineIdentifier").stages(getStages()).build();
   }
 
-  private List<StageElement> getStages() {
+  private List<StageElementWrapper> getStages() {
     return new ArrayList<>(singletonList(getIntegrationStageElement()));
   }
 
