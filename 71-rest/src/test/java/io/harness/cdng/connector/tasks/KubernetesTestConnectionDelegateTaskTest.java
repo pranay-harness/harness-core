@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
@@ -18,8 +17,10 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.k8s.KubernetesContainerService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
 import org.junit.Test;
@@ -32,8 +33,9 @@ import software.wings.beans.TaskType;
 import java.util.Collections;
 
 public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
-  @Mock KubernetesConnectorDelegateService kubernetesConnectorDelegateService;
+  @Mock KubernetesContainerService kubernetesContainerService;
   @Mock SecretDecryptionService secretDecryptionService;
+  @Mock K8sYamlToDelegateDTOMapper K8sYamlToDelegateDTOMapper;
 
   String passwordRef = "passwordRef";
   SecretRefData passwordSecretRef = SecretRefData.builder().identifier(passwordRef).scope(Scope.ACCOUNT).build();
@@ -68,6 +70,6 @@ public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
   public void run() {
     when(secretDecryptionService.decrypt(any(), anyList())).thenReturn(kubernetesAuthDTO.getCredentials());
     kubernetesTestConnectionDelegateTask.run();
-    verify(kubernetesConnectorDelegateService, times(1)).validate(any());
+    verify(kubernetesContainerService, times(1)).validate(any());
   }
 }

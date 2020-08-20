@@ -11,8 +11,6 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
-import io.harness.cdng.connector.impl.KubernetesConnectorDelegateServiceImpl;
-import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.cdng.gitclient.GitClientNGImpl;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -671,7 +669,6 @@ public class DelegateModule extends DependencyModule {
     bind(TerraformConfigInspectClient.class).toInstance(new TerraformConfigInspectClientImpl());
     bind(TerraformConfigInspectService.class).toInstance(new TerraformConfigInspectServiceImpl());
     bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
-    bind(KubernetesConnectorDelegateService.class).to(KubernetesConnectorDelegateServiceImpl.class);
     bind(AzureVMSSHelperServiceDelegate.class).to(AzureVMSSHelperServiceDelegateImpl.class);
     bind(AzureAutoScaleSettingsHelperServiceDelegate.class).to(AzureAutoScaleSettingsHelperServiceDelegateImpl.class);
     bind(GitClientNG.class).to(GitClientNGImpl.class);
