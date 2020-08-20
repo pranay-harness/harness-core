@@ -10,12 +10,15 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -69,9 +72,10 @@ public class ConnectorResource {
       @QueryParam("size") @DefaultValue("100") int size,
       @NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("searchTerm") String searchTerm, @QueryParam("type") String type) {
-    return ResponseDTO.newResponse(getNGPageResponse(
-        connectorService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type)));
+      @QueryParam("searchTerm") String searchTerm, @QueryParam("type") ConnectorType type,
+      @QueryParam("categories") List<ConnectorCategory> categories) {
+    return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, categories)));
   }
 
   @POST

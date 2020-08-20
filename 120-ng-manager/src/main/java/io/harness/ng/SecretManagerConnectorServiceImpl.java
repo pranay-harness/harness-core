@@ -14,6 +14,8 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import software.wings.service.impl.security.SecretManagementException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -39,7 +42,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   @Override
   public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, String type) {
+      String projectIdentifier, String searchTerm, ConnectorType type, List<ConnectorCategory> categories) {
     throw new UnsupportedOperationException("This operation is not supported for secret manager");
   }
 

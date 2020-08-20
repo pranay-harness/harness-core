@@ -1,5 +1,6 @@
 package io.harness.connector.apis.resource;
 
+import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 public class ConnectorResourceTest extends CategoryTest {
@@ -112,13 +114,14 @@ public class ConnectorResourceTest extends CategoryTest {
     final Page<ConnectorSummaryDTO> page =
         PageTestUtils.getPage(Arrays.asList(ConnectorSummaryDTO.builder().build()), 1);
     when(connectorService.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
-             KUBERNETES_CLUSTER.getDisplayName()))
+             KUBERNETES_CLUSTER, Collections.singletonList(CLOUD_PROVIDER)))
         .thenReturn(page);
-    ResponseDTO<NGPageResponse<ConnectorSummaryDTO>> connectorSummaryListResponse = connectorResource.list(
-        100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, KUBERNETES_CLUSTER.getDisplayName());
+    ResponseDTO<NGPageResponse<ConnectorSummaryDTO>> connectorSummaryListResponse =
+        connectorResource.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
+            KUBERNETES_CLUSTER, Collections.singletonList(CLOUD_PROVIDER));
     Mockito.verify(connectorService, times(1))
         .list(eq(100), eq(0), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(searchTerm),
-            eq(KUBERNETES_CLUSTER.getDisplayName()));
+            eq(KUBERNETES_CLUSTER), eq(Collections.singletonList(CLOUD_PROVIDER)));
     assertThat(connectorSummaryListResponse.getData()).isNotNull();
   }
 
