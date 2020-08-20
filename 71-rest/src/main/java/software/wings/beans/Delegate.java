@@ -1,9 +1,12 @@
 package software.wings.beans;
 
+import static java.time.Duration.ofDays;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,6 +21,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.time.Duration;
+import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -28,6 +33,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+  public static final Duration TTL = ofDays(30);
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore @FdIndex private long createdAt;
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
@@ -64,6 +71,8 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   private boolean profileError;
   private long profileExecutedAt;
   private boolean sampleDelegate;
+
+  @FdTtlIndex private Date validUntil;
 
   @SchemaIgnore private List<String> keywords;
 
