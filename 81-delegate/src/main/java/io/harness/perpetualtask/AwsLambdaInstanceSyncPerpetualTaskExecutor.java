@@ -133,8 +133,8 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
                      .build())
           .collect(Collectors.toList());
     } catch (Exception exception) {
-      logger.error(String.format("Failed to get the invocation count for function: [%s]", taskParams.getFunctionName()),
-          exception);
+      logger.error(String.format("Failed to get the invocation count for function: [%s],  exception: %s",
+          taskParams.getFunctionName(), exception.getMessage()));
       return emptyList();
     }
   }
@@ -177,8 +177,8 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     try {
       return awsCloudWatchHelperServiceDelegate.getMetricStatistics(request);
     } catch (Exception ex) {
-      logger.error(
-          String.format("Failed to execute aws CloudWatch statistics: [%s]", taskParams.getFunctionName()), ex);
+      logger.error(String.format("Failed to execute aws CloudWatch statistics: [%s], exception: %s",
+          taskParams.getFunctionName(), ex.getMessage()));
       return AwsCloudWatchStatisticsResponse.builder().executionStatus(FAILED).errorMessage(ex.getMessage()).build();
     }
   }
@@ -223,7 +223,8 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     try {
       return awsLambdaHelperServiceDelegate.getFunctionDetails(request);
     } catch (Exception ex) {
-      logger.error(String.format("Failed to execute aws function: [%s]", taskParams.getFunctionName()), ex);
+      logger.error(String.format(
+          "Failed to execute aws function: [%s], exception: %s", taskParams.getFunctionName(), ex.getMessage()));
       return AwsLambdaDetailsResponse.builder().executionStatus(FAILED).errorMessage(ex.getMessage()).build();
     }
   }
