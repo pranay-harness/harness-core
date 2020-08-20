@@ -48,7 +48,7 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
     assertThat(appDynamicsConnectorDTO.getPasswordRef().getIdentifier())
         .isEqualTo(appDynamicsConnector.getPasswordRef());
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
-    assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl());
+    assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl() + "/");
     assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(appDynamicsConnector.getAccountId());
   }
 }

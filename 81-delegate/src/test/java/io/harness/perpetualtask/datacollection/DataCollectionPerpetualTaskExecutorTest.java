@@ -175,7 +175,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
     assertThat(dsl).isNotEmpty();
     assertThat(dslCaptor.getValue()).isEqualTo(dsl);
     RuntimeParameters runtimeParameters = runtimeParams.getValue();
-    assertThat(runtimeParameters.getBaseUrl()).isEqualTo(appDynamicsConnectorDTO.getControllerUrl() + "/");
+    assertThat(runtimeParameters.getBaseUrl()).isEqualTo(appDynamicsConnectorDTO.getControllerUrl());
     assertThat(runtimeParameters.getCommonHeaders().size()).isEqualTo(1);
     assertThat(runtimeParameters.getCommonHeaders().get("Authorization"))
         .isEqualTo("Basic "

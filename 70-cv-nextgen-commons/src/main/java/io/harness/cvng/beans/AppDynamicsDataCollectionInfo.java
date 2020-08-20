@@ -37,11 +37,7 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
 
   @Override
   public String getBaseUrl(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    String controllerUrl = appDynamicsConnectorDTO.getControllerUrl();
-    if (appDynamicsConnectorDTO.getControllerUrl().endsWith("/")) {
-      return controllerUrl;
-    }
-    return controllerUrl + "/";
+    return appDynamicsConnectorDTO.getControllerUrl();
   }
 
   @Override

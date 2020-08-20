@@ -15,6 +15,7 @@ import io.harness.cdng.k8s.rolling.K8sTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
 import io.harness.cvng.connectiontask.AppDynamicsTestConnectionDelegateTask;
+import io.harness.cvng.connectiontask.SplunkTestConnectionDelegateTask;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
@@ -285,6 +286,8 @@ public enum TaskType {
       TaskGroup.GUARD_24x7, StackDriverLogDataCollectionTask.class, StackDriverValidation.class),
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
+  SPLUNK_NG_CONFIGURATION_VALIDATE_TASK(
+      TaskGroup.SPLUNK, SplunkTestConnectionDelegateTask.class, SplunkValidation.class),
   SPLUNK_GET_HOST_RECORDS(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_GET_SAVED_SEARCHES(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_NEXT_GEN_VALIDATION_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),

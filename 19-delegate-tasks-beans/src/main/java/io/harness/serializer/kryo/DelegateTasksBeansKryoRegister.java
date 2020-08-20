@@ -37,6 +37,9 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskParams;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskResponse;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -236,5 +239,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(YamlGitConfigDTO.class, 19087);
     kryo.register(YamlGitConfigDTO.RootFolder.class, 19095);
     kryo.register(AzureVMSSPreDeploymentData.class, 19106);
+    kryo.register(SplunkConnectionTaskParams.class, 19109);
+    kryo.register(SplunkConnectionTaskResponse.class, 19110);
+    kryo.register(SplunkConnectorDTO.class, 19111);
   }
 }

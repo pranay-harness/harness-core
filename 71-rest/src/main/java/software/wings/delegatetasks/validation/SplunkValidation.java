@@ -3,6 +3,7 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskParams;
 import software.wings.beans.SplunkConfig;
 
 import java.util.Arrays;
@@ -20,7 +21,12 @@ public class SplunkValidation extends AbstractSecretManagerValidation {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
+    Object[] parameters = getParameters();
+    if (parameters[0] instanceof SplunkConnectionTaskParams) {
+      SplunkConnectionTaskParams taskParams = (SplunkConnectionTaskParams) parameters[0];
+      return singletonList(taskParams.getSplunkConnectorDTO().getSplunkUrl());
+    }
+    return singletonList(Arrays.stream(parameters)
                              .filter(o -> o instanceof SplunkConfig)
                              .map(obj -> ((SplunkConfig) obj).getSplunkUrl())
                              .findFirst()

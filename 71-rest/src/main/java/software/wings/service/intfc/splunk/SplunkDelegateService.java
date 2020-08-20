@@ -3,6 +3,7 @@ package software.wings.service.intfc.splunk;
 import com.splunk.Service;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -27,6 +28,14 @@ public interface SplunkDelegateService {
    */
   @DelegateTaskType(TaskType.SPLUNK_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(@NotNull SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
+
+  /**
+   * Method to validate Next Gen Splunk connector
+   * @param splunkConnectorDTO
+   * @param encryptedDataDetails
+   * @return
+   */
+  boolean validateConfig(SplunkConnectorDTO splunkConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Method to initialize the Splunk Service.
