@@ -57,9 +57,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
@@ -126,6 +124,8 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
     when(ceBudgetFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(100);
     when(budgetDao.list(accountId)).thenReturn(Collections.singletonList(budget));
+    when(budgetDao.list(accountId, budget.getName())).thenReturn(Collections.singletonList(budget));
+    when(budgetDao.get(budget.getUuid())).thenReturn(budget);
     resetValues();
     mockResultSet();
   }
@@ -181,11 +181,20 @@ public class BudgetServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = SANDESH)
   @Category(UnitTests.class)
   public void shouldCreate() {
-    budgetService.create(budget);
-    verify(budgetDao).save(budget);
+    Budget newBudget = Budget.builder()
+                           .accountId(budget.getAccountId())
+                           .name("newBudget")
+                           .scope(budget.getScope())
+                           .type(budget.getType())
+                           .budgetAmount(budget.getBudgetAmount())
+                           .alertThresholds(budget.getAlertThresholds())
+                           .userGroupIds(budget.getUserGroupIds())
+                           .build();
+    budgetService.create(newBudget);
+    verify(budgetDao).save(newBudget);
   }
 
   @Test
@@ -202,10 +211,16 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = SANDESH)
   @Category(UnitTests.class)
   public void shouldStopSavingSameBudgetTwice() {
-    List<Budget> availableBudgets = new ArrayList<>();
-    availableBudgets.add(budget);
-    when(budgetDao.list(budget.getAccountId(), budget.getName())).thenReturn(availableBudgets);
-    assertThatThrownBy(() -> { budgetService.create(budget); }).isInstanceOf(InvalidRequestException.class);
+    Budget duplicateBudget = Budget.builder()
+                                 .accountId(budget.getAccountId())
+                                 .name(budget.getName())
+                                 .scope(budget.getScope())
+                                 .type(budget.getType())
+                                 .budgetAmount(budget.getBudgetAmount())
+                                 .alertThresholds(budget.getAlertThresholds())
+                                 .userGroupIds(budget.getUserGroupIds())
+                                 .build();
+    assertThatThrownBy(() -> { budgetService.create(duplicateBudget); }).isInstanceOf(InvalidRequestException.class);
   }
   @Test
   @Owner(developers = HANTANG)

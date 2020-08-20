@@ -79,7 +79,15 @@ public class BudgetServiceImpl implements BudgetService {
   public String create(Budget budget) {
     validateBudget(budget);
     removeEmailDuplicates(budget);
+    checkBudgetName(budget.getAccountId(), budget);
     return budgetDao.save(budget);
+  }
+
+  private void checkBudgetName(String accountId, Budget budget) {
+    List<Budget> existingBudgets = budgetDao.list(accountId, budget.getName());
+    if (!existingBudgets.isEmpty() && (!existingBudgets.get(0).getUuid().equals(budget.getUuid()))) {
+      throw new InvalidRequestException(BUDGET_NAME_EXISTS_EXCEPTION);
+    }
   }
 
   @Override
@@ -95,13 +103,17 @@ public class BudgetServiceImpl implements BudgetService {
                              .alertThresholds(budget.getAlertThresholds())
                              .userGroupIds(budget.getUserGroupIds())
                              .build();
-    return budgetDao.save(cloneBudget);
+    return create(cloneBudget);
   }
 
   @Override
   public void update(String budgetId, Budget budget) {
     validateBudget(budget);
     removeEmailDuplicates(budget);
+    // Method argument Budget object is obtained from UI doesn't contain accountId field. hence need to fetch accountId
+    // from db inorder check for duplicate name
+    Budget existingBudget = budgetDao.get(budgetId);
+    checkBudgetName(existingBudget.getAccountId(), budget);
     budgetDao.update(budgetId, budget);
   }
 
@@ -356,10 +368,6 @@ public class BudgetServiceImpl implements BudgetService {
     }
     if (budget.getBudgetAmount() < 0 || budget.getBudgetAmount() > BUDGET_AMOUNT_UPPER_LIMIT) {
       throw new InvalidRequestException(BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION);
-    }
-    List<Budget> existingBudgets = budgetDao.list(budget.getAccountId(), budget.getName());
-    if (!existingBudgets.isEmpty()) {
-      throw new InvalidRequestException(BUDGET_NAME_EXISTS_EXCEPTION);
     }
     int maxBudgetsAllowed = ceBudgetFeature.getMaxUsageAllowedForAccount(budget.getAccountId());
     int currentBudgetCount = getBudgetCount(budget.getAccountId());
