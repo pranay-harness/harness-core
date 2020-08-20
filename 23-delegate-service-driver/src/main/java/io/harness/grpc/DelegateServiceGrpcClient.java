@@ -29,6 +29,7 @@ import io.harness.delegate.SubmitTaskResponse;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskProgressRequest;
 import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskSelector;
@@ -93,8 +94,10 @@ public class DelegateServiceGrpcClient {
       SubmitTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
                                         .submitTask(submitTaskRequestBuilder.build());
 
-      delegateAsyncService.setupTimeoutForTask(
-          response.getTaskId().getId(), Timestamps.toMillis(response.getTotalExpiry()));
+      if (taskDetails.getMode() == TaskMode.ASYNC) {
+        delegateAsyncService.setupTimeoutForTask(
+            response.getTaskId().getId(), Timestamps.toMillis(response.getTotalExpiry()));
+      }
 
       return response.getTaskId();
     } catch (StatusRuntimeException ex) {
