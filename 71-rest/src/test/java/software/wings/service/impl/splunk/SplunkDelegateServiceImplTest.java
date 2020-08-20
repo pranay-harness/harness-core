@@ -86,19 +86,25 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   public void initSplunkService() throws IllegalAccessException {
     FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(null, null), true);
     splunkDelegateService.initSplunkService(config, Lists.emptyList());
-    verify(splunkDelegateService, times(1)).initSplunkServiceWithToken(config);
-    verify(splunkDelegateService, times(1)).initSplunkServiceWithBasicAuth(config);
+    verify(splunkDelegateService, times(1))
+        .initSplunkServiceWithToken(config.getUsername(), config.getPassword(), config.getSplunkUrl());
+    verify(splunkDelegateService, times(1))
+        .initSplunkServiceWithBasicAuth(config.getUsername(), config.getPassword(), config.getSplunkUrl());
   }
 
   @Test(expected = Exception.class)
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void initSplunkServiceOnlyToken() throws IllegalAccessException {
-    when(splunkDelegateService.initSplunkServiceWithToken(config)).thenReturn(mock(Service.class));
+    when(splunkDelegateService.initSplunkServiceWithToken(
+             config.getUsername(), config.getPassword(), config.getSplunkUrl()))
+        .thenReturn(mock(Service.class));
     FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(null, null), true);
     splunkDelegateService.initSplunkService(config, Lists.emptyList());
-    verify(splunkDelegateService, times(1)).initSplunkServiceWithToken(config);
-    verify(splunkDelegateService, times(1)).initSplunkServiceWithBasicAuth(config);
+    verify(splunkDelegateService, times(1))
+        .initSplunkServiceWithToken(config.getUsername(), config.getPassword(), config.getSplunkUrl());
+    verify(splunkDelegateService, times(1))
+        .initSplunkServiceWithBasicAuth(config.getUsername(), config.getPassword(), config.getSplunkUrl());
   }
 
   @Test

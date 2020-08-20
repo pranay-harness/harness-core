@@ -30,4 +30,11 @@ public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements Decry
   @NotNull String controllerUrl;
   @NotNull String accountId;
   @NotNull @SecretReference SecretRefData passwordRef;
+
+  public String getControllerUrl() {
+    if (controllerUrl.endsWith("/")) {
+      return controllerUrl;
+    }
+    return controllerUrl + "/";
+  }
 }

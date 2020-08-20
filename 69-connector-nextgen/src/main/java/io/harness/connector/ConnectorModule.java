@@ -28,6 +28,7 @@ import io.harness.connector.validator.AppDynamicsConnectionValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.GitConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
+import io.harness.connector.validator.SplunkConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.persistence.HPersistence;
 
@@ -43,6 +44,7 @@ public class ConnectorModule extends AbstractModule {
     connectorValidatorMapBinder.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
         .to(KubernetesConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.GIT.getDisplayName()).to(GitConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.SPLUNK.getDisplayName()).to(SplunkConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
         .to(AppDynamicsConnectionValidator.class);
 

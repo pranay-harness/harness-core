@@ -29,9 +29,11 @@ import io.harness.cvng.beans.SplunkValidationResponse.Histogram.HistogramBuilder
 import io.harness.cvng.beans.SplunkValidationResponse.SampleLog;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkValidationResponseBuilder;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -88,6 +90,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   private final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private SecretDecryptionService secretDecryptionService;
 
   @Override
   public boolean validateConfig(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -95,6 +98,23 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       encryptionService.decrypt(splunkConfig, encryptedDataDetails);
       logger.info("Validating splunk, url {}, for user {} ", splunkConfig.getSplunkUrl(), splunkConfig.getUsername());
       Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+      createSearchJob(splunkService, getQuery("*exception*", null, null, false),
+          System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
+      return true;
+    } catch (HttpException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new DataCollectionException(e);
+    }
+  }
+
+  @Override
+  public boolean validateConfig(SplunkConnectorDTO splunkConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
+    try {
+      secretDecryptionService.decrypt(splunkConnectorDTO, encryptedDataDetails);
+      logger.info("Validating splunk, url {}, for user {} ", splunkConnectorDTO.getSplunkUrl(),
+          splunkConnectorDTO.getUsername());
+      Service splunkService = initSplunkService(splunkConnectorDTO);
       createSearchJob(splunkService, getQuery("*exception*", null, null, false),
           System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5), System.currentTimeMillis());
       return true;
@@ -132,7 +152,6 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       splunkLogElement.setHost(event.get(hostnameField));
       splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
       splunkLogElement.setLogMessage(event.get("_raw"));
-      // splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
       splunkLogElement.setTimeStamp(System.currentTimeMillis());
       splunkLogElement.setLogCollectionMinute(logCollectionMinute);
       logElements.add(splunkLogElement);
@@ -359,14 +378,15 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   }
 
   @VisibleForTesting
-  Service initSplunkServiceWithToken(SplunkConfig splunkConfig) {
+  Service initSplunkServiceWithToken(String username, char[] password, String splunkUrl) {
     final ServiceArgs loginArgs = new ServiceArgs();
-    loginArgs.setUsername(splunkConfig.getUsername());
-    loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
+    loginArgs.setUsername(username);
+    loginArgs.setPassword(String.valueOf(password));
     URI uri;
     try {
-      uri = new URI(splunkConfig.getSplunkUrl().trim());
-      final URL url = new URL(splunkConfig.getSplunkUrl().trim());
+      String trimmedUrl = splunkUrl.trim();
+      uri = new URI(trimmedUrl);
+      final URL url = new URL(trimmedUrl);
       loginArgs.setHost(url.getHost());
       loginArgs.setPort(url.getPort());
 
@@ -386,14 +406,15 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   }
 
   @VisibleForTesting
-  Service initSplunkServiceWithBasicAuth(SplunkConfig splunkConfig) {
+  Service initSplunkServiceWithBasicAuth(String username, char[] password, String splunkUrl) {
     URI uri;
     try {
-      uri = new URI(splunkConfig.getSplunkUrl().trim());
-      final URL url = new URL(splunkConfig.getSplunkUrl().trim());
+      String trimmedUrl = splunkUrl.trim();
+      uri = new URI(trimmedUrl);
+      final URL url = new URL(trimmedUrl);
 
       Service splunkService = new Service(url.getHost(), url.getPort(), uri.getScheme());
-      String credentials = splunkConfig.getUsername() + ":" + splunkConfig.getPassword();
+      String credentials = username + ":" + String.valueOf(password);
       String basicAuthHeader = Base64.encode(credentials.getBytes());
       splunkService.setToken("Basic " + basicAuthHeader);
 
@@ -417,11 +438,24 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     encryptionService.decrypt(splunkConfig, encryptedDataDetails);
 
     try {
-      return initSplunkServiceWithToken(splunkConfig);
+      return initSplunkServiceWithToken(
+          splunkConfig.getUsername(), splunkConfig.getPassword(), splunkConfig.getSplunkUrl());
 
     } catch (Exception ex1) {
       logger.error("Token based splunk connection failed. Trying basic auth", ex1);
-      return initSplunkServiceWithBasicAuth(splunkConfig);
+      return initSplunkServiceWithBasicAuth(
+          splunkConfig.getUsername(), splunkConfig.getPassword(), splunkConfig.getSplunkUrl());
+    }
+  }
+
+  public Service initSplunkService(SplunkConnectorDTO splunkConnectorDTO) {
+    try {
+      return initSplunkServiceWithToken(splunkConnectorDTO.getUsername(),
+          splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
+    } catch (Exception ex1) {
+      logger.error("Token based splunk connection failed. Trying basic auth", ex1);
+      return initSplunkServiceWithBasicAuth(splunkConnectorDTO.getUsername(),
+          splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
     }
   }
 

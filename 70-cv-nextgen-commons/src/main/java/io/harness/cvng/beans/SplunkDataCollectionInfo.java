@@ -1,17 +1,20 @@
 package io.harness.cvng.beans;
 
 import io.harness.cvng.models.VerificationType;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.nio.charset.Charset;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class SplunkDataCollectionInfo extends DataCollectionInfo {
+public class SplunkDataCollectionInfo extends DataCollectionInfo<SplunkConnectorDTO> {
   private String query;
   private String serviceInstanceIdentifier;
   @Override
@@ -30,19 +33,24 @@ public class SplunkDataCollectionInfo extends DataCollectionInfo {
     return map;
   }
 
-  // TODO: implement these methods
   @Override
-  public String getBaseUrl(ConnectorConfigDTO connectorConfigDTO) {
-    return null;
+  public String getBaseUrl(SplunkConnectorDTO splunkConnectorDTO) {
+    return splunkConnectorDTO.getSplunkUrl();
   }
 
   @Override
-  public Map<String, String> collectionHeaders(ConnectorConfigDTO connectorConfigDTO) {
-    return null;
+  public Map<String, String> collectionHeaders(SplunkConnectorDTO splunkConnectorDTO) {
+    String decryptedPassword = new String(splunkConnectorDTO.getPasswordRef().getDecryptedValue());
+    String usernameColonPassword = splunkConnectorDTO.getUsername().concat(":").concat(decryptedPassword);
+    String auth =
+        "Basic " + Base64.getEncoder().encodeToString(usernameColonPassword.getBytes(Charset.forName("UTF-8")));
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Authorization", auth);
+    return headers;
   }
 
   @Override
-  public Map<String, String> collectionParams(ConnectorConfigDTO connectorConfigDTO) {
-    return null;
+  public Map<String, String> collectionParams(SplunkConnectorDTO splunkConnectorDTO) {
+    return Collections.emptyMap();
   }
 }

@@ -51,7 +51,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   String password = "password";
   String identifier = "identifier";
   String name = "name";
-  String controllerUrl = "https://xwz.com";
+  String controllerUrl = "https://xwz.com/";
   String accountName = "accountName";
   ConnectorRequestDTO connectorRequestDTO;
   ConnectorDTO connectorDTO;
