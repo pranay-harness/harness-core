@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.internal;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -7,15 +8,20 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.alert.AlertType.PerpetualTaskAlert;
 
 import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.Capability;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.NoAvaliableDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
@@ -28,17 +34,26 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
+import io.harness.serializer.KryoSerializer;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.TaskType;
+import software.wings.service.InstanceSyncConstants;
+import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>, PerpetualTaskCrudObserver {
@@ -63,6 +78,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
   @Inject private transient AlertService alertService;
   @Inject private AccountService accountService;
+  @Inject private KryoSerializer kryoSerializer;
 
   PersistenceIterator<PerpetualTaskRecord> iterator;
 
@@ -98,13 +114,25 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
       String taskId = taskRecord.getUuid();
       logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskRecord.getPerpetualTaskType(),
           taskId);
-      PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
-      DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
+      DelegateTask validationTask = getValidationTask(taskRecord);
 
       try {
         ResponseData response = delegateService.executeTask(validationTask);
 
         if (response instanceof DelegateTaskNotifyResponseData) {
+          if (response instanceof PerpetualTaskCapabilityCheckResponse) {
+            boolean isAbleToExecutePerpetualTask =
+                ((PerpetualTaskCapabilityCheckResponse) response).isAbleToExecutePerpetualTask();
+            if (!isAbleToExecutePerpetualTask) {
+              perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES);
+
+              raiseAlert(
+                  taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
+
+              return;
+            }
+          }
+
           String delegateId = ((DelegateTaskNotifyResponseData) response).getDelegateMetaInfo().getId();
           logger.info("Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId,
               taskRecord.getPerpetualTaskType(), taskId);
@@ -145,6 +173,46 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
         logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
       }
     }
+  }
+
+  protected DelegateTask getValidationTask(PerpetualTaskRecord taskRecord) {
+    if (isNotEmpty(taskRecord.getClientContext().getClientParams())) {
+      PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
+      return client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
+    }
+
+    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle = null;
+    try {
+      if (taskRecord.getClientContext().getExecutionBundle() == null) {
+        return null;
+      }
+      perpetualTaskExecutionBundle =
+          PerpetualTaskExecutionBundle.parseFrom(taskRecord.getClientContext().getExecutionBundle());
+
+    } catch (InvalidProtocolBufferException e) {
+      logger.error("Failed to parse perpetual task execution bundle", e);
+      return null;
+    }
+
+    List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
+    List<Capability> capabilityList = perpetualTaskExecutionBundle.getCapabilitiesList();
+    if (isNotEmpty(capabilityList)) {
+      executionCapabilityList = capabilityList.stream()
+                                    .map(capability
+                                        -> (ExecutionCapability) kryoSerializer.asInflatedObject(
+                                            capability.getKryoCapability().toByteArray()))
+                                    .collect(toList());
+    }
+
+    return DelegateTask.builder()
+        .accountId(taskRecord.getAccountId())
+        .data(TaskData.builder()
+                  .async(false)
+                  .taskType(TaskType.CAPABILITY_VALIDATION.name())
+                  .parameters(new Object[] {executionCapabilityList.toArray()})
+                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                  .build())
+        .build();
   }
 
   private void raiseAlert(PerpetualTaskRecord taskRecord, String message) {
