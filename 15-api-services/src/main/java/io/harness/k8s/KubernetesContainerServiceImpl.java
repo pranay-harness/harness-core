@@ -1,5 +1,6 @@
 package io.harness.k8s;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -79,6 +80,7 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
@@ -1531,6 +1533,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String releaseName) {
+    Secret secret = getSecret(kubernetesConfig, releaseName);
+    if (secret != null && secret.getData() != null && secret.getData().containsKey(ReleaseHistoryKeyName)) {
+      return decodeBase64ToString(secret.getData().get(ReleaseHistoryKeyName));
+    }
+
+    return StringUtils.EMPTY;
+  }
+
+  @Override
   public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
     try {
       ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
@@ -1551,6 +1563,39 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (Exception e) {
       throw new WingsException(ErrorCode.GENERAL_ERROR, e)
           .addParam("message", "Failed to save release History. " + ExceptionUtils.getMessage(e));
+    }
+  }
+
+  @Override
+  public void saveReleaseHistory(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
+    if (storeInSecrets) {
+      saveReleaseHistoryInSecrets(kubernetesConfig, releaseName, releaseHistory);
+    } else {
+      saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory);
+    }
+  }
+
+  @VisibleForTesting
+  void saveReleaseHistoryInSecrets(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
+    try {
+      Secret secret = getSecret(kubernetesConfig, releaseName);
+      if (secret == null) {
+        secret = new SecretBuilder()
+                     .withNewMetadata()
+                     .withName(releaseName)
+                     .withNamespace(kubernetesConfig.getNamespace())
+                     .endMetadata()
+                     .withData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64(releaseHistory)))
+                     .build();
+      } else {
+        Map data = secret.getData();
+        data.put(ReleaseHistoryKeyName, encodeBase64(releaseHistory));
+        secret.setData(data);
+      }
+      createOrReplaceSecret(kubernetesConfig, secret);
+    } catch (Exception e) {
+      throw new GeneralException("Failed to save release History in secrets. " + ExceptionUtils.getMessage(e), e);
     }
   }
 

@@ -50,8 +50,10 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeProjection;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import io.kubernetes.client.util.Yaml;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -63,6 +65,8 @@ import java.util.function.UnaryOperator;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class KubernetesResource {
   private static final String MISSING_DEPLOYMENT_SPEC_MSG = "Deployment does not have spec";
   private static final String MISSING_DEPLOYMENT_CONFIG_SPEC_MSG = "DeploymentConfig does not have spec";
@@ -705,8 +709,12 @@ public class KubernetesResource {
   }
 
   private boolean hasMetadataAnnotation(String harnessAnnotation) {
-    String isManaged = (String) this.getField("metadata.annotations." + encodeDot(harnessAnnotation));
+    String isManaged = getMetadataAnnotationValue(harnessAnnotation);
     return StringUtils.equalsIgnoreCase(isManaged, "true");
+  }
+
+  public String getMetadataAnnotationValue(String harnessAnnotation) {
+    return (String) this.getField("metadata.annotations." + encodeDot(harnessAnnotation));
   }
 
   /* Issue https://github.com/kubernetes/kubernetes/pull/66165 was fixed in 1.11.2.

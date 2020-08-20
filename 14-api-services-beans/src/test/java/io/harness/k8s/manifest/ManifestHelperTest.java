@@ -335,22 +335,6 @@ public class ManifestHelperTest extends CategoryTest {
         asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
-
-    KubernetesResource deploymentManagedWorkload = ManifestHelper
-                                                       .processYaml("apiVersion: apps/v1\n"
-                                                           + "kind: Deployment\n"
-                                                           + "metadata:\n"
-                                                           + "  name: deployment\n"
-                                                           + "  annotations:\n"
-                                                           + "    harness.io/managed-workload: true\n"
-                                                           + "spec:\n"
-                                                           + "  replicas: 1")
-                                                       .get(0);
-
-    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(
-        asList(deployment, statefulSet, daemonSet, deploymentManagedWorkload));
-    assertThat(kubernetesResources.size()).isEqualTo(1);
-    assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
   }
 
   @Test
@@ -363,9 +347,9 @@ public class ManifestHelperTest extends CategoryTest {
 
     KubernetesResource managedDeployment = ManifestHelper
                                                .processYaml("apiVersion: apps/v1\n"
-                                                   + "kind: Deployment\n"
+                                                   + "kind: Foo\n"
                                                    + "metadata:\n"
-                                                   + "  name: deployment\n"
+                                                   + "  name: foo\n"
                                                    + "  annotations:\n"
                                                    + "    harness.io/managed-workload: true\n"
                                                    + "spec:\n"
@@ -373,7 +357,7 @@ public class ManifestHelperTest extends CategoryTest {
                                                .get(0);
 
     List<KubernetesResource> kubernetesResources =
-        ManifestHelper.getManagedWorkloads(asList(deployment, managedDeployment));
+        ManifestHelper.getCustomResourceDefinitionWorkloads(asList(deployment, managedDeployment));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(managedDeployment);
 
@@ -384,17 +368,17 @@ public class ManifestHelperTest extends CategoryTest {
 
     KubernetesResource managedDeploymentConfig = ManifestHelper
                                                      .processYaml("apiVersion: apps/v1\n"
-                                                         + "kind: DeploymentConfig\n"
+                                                         + "kind: Foo\n"
                                                          + "metadata:\n"
-                                                         + "  name: deployment_config\n"
+                                                         + "  name: foo\n"
                                                          + "  annotations:\n"
                                                          + "    harness.io/managed-workload: true\n"
                                                          + "spec:\n"
                                                          + "  replicas: 1")
                                                      .get(0);
 
-    kubernetesResources =
-        ManifestHelper.getManagedWorkloads(asList(managedDeployment, deploymentConfig, managedDeploymentConfig));
+    kubernetesResources = ManifestHelper.getCustomResourceDefinitionWorkloads(
+        asList(managedDeployment, deploymentConfig, managedDeploymentConfig));
     assertThat(kubernetesResources.size()).isEqualTo(2);
     assertThat(kubernetesResources.containsAll(ImmutableList.of(managedDeployment, managedDeploymentConfig))).isTrue();
 
@@ -405,16 +389,16 @@ public class ManifestHelperTest extends CategoryTest {
 
     KubernetesResource managedStatefulSet = ManifestHelper
                                                 .processYaml("apiVersion: apps/v1\n"
-                                                    + "kind: StatefulSet\n"
+                                                    + "kind: Foo\n"
                                                     + "metadata:\n"
-                                                    + "  name: stateful_set\n"
+                                                    + "  name: foo\n"
                                                     + "  annotations:\n"
                                                     + "    harness.io/managed-workload: true\n"
                                                     + "spec:\n"
                                                     + "  replicas: 1")
                                                 .get(0);
 
-    kubernetesResources = ManifestHelper.getManagedWorkloads(asList(statefulSet, managedStatefulSet));
+    kubernetesResources = ManifestHelper.getCustomResourceDefinitionWorkloads(asList(statefulSet, managedStatefulSet));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(managedStatefulSet);
 
@@ -424,25 +408,25 @@ public class ManifestHelperTest extends CategoryTest {
 
     KubernetesResource managedDaemonSet = ManifestHelper
                                               .processYaml("apiVersion: apps/v1\n"
-                                                  + "kind: DaemonSet\n"
+                                                  + "kind: Foo\n"
                                                   + "metadata:\n"
-                                                  + "  name: daemon_set\n"
+                                                  + "  name: foo\n"
                                                   + "  annotations:\n"
                                                   + "    harness.io/managed-workload: true\n"
                                                   + "spec:\n"
                                                   + "  replicas: 1")
                                               .get(0);
 
-    kubernetesResources =
-        ManifestHelper.getManagedWorkloads(asList(deployment, statefulSet, daemonSet, managedDaemonSet));
+    kubernetesResources = ManifestHelper.getCustomResourceDefinitionWorkloads(
+        asList(deployment, statefulSet, daemonSet, managedDaemonSet));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(managedDaemonSet);
 
     KubernetesResource managedDeploymentDirectAppy = ManifestHelper
                                                          .processYaml("apiVersion: apps/v1\n"
-                                                             + "kind: Deployment\n"
+                                                             + "kind: Foo\n"
                                                              + "metadata:\n"
-                                                             + "  name: deployment\n"
+                                                             + "  name: foo\n"
                                                              + "  annotations:\n"
                                                              + "    harness.io/managed-workload: true\n"
                                                              + "    harness.io/direct-apply: true\n"
@@ -450,9 +434,9 @@ public class ManifestHelperTest extends CategoryTest {
                                                              + "  replicas: 1")
                                                          .get(0);
 
-    kubernetesResources = ManifestHelper.getManagedWorkloads(
+    kubernetesResources = ManifestHelper.getCustomResourceDefinitionWorkloads(
         asList(managedDeployment, statefulSet, daemonSet, managedDeploymentDirectAppy));
-    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.size()).isEqualTo(2);
     assertThat(kubernetesResources.get(0)).isEqualTo(managedDeployment);
   }
 

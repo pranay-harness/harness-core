@@ -117,7 +117,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     }
 
     success = k8sTaskHelperBase.applyManifests(
-        client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Apply));
+        client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Apply), true);
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
       kubernetesContainerService.saveReleaseHistory(
@@ -125,8 +125,11 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    success = k8sTaskHelperBase.doStatusCheck(client, canaryWorkload.getResourceId(), k8sDelegateTaskParams,
-        k8sTaskHelper.getExecutionLogCallback(k8sCanaryDeployTaskParameters, WaitForSteadyState));
+    ExecutionLogCallback executionLogCallback =
+        k8sTaskHelper.getExecutionLogCallback(k8sCanaryDeployTaskParameters, WaitForSteadyState);
+    success = k8sTaskHelperBase.doStatusCheck(
+        client, canaryWorkload.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
+
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
       kubernetesContainerService.saveReleaseHistory(

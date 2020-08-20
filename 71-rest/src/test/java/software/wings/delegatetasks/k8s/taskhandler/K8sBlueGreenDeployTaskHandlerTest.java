@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
@@ -124,13 +126,13 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(spyHandler).set("stageService", stageService());
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .applyManifests(
-            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
-    on(k8sBlueGreenDeployTaskHandler)
+    on(spyHandler)
         .set("resources", new ArrayList<>(asList(primaryService(), deployment(), stageService(), configMap())));
     doReturn("latest-rev")
         .when(k8sTaskHelperBase)
@@ -169,8 +171,8 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     deployTaskParams.setReleaseName("releaseName-apply");
     doReturn(false)
         .when(k8sTaskHelperBase)
-        .applyManifests(
-            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
     response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     verify(kubernetesContainerService)
@@ -308,7 +310,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     release.setManagedWorkloads(null);
     k8sBlueGreenDeployTaskHandler.cleanupForBlueGreen(delegateTaskParams, releaseHistory, executionLogCallback);
     verify(k8sTaskHelperBase, times(1))
-        .delete(client, delegateTaskParams, asList(kubernetesResource.getResourceId()), executionLogCallback);
+        .delete(client, delegateTaskParams, asList(kubernetesResource.getResourceId()), executionLogCallback, true);
   }
 
   @Test
@@ -573,7 +575,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), anyBoolean());
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
@@ -591,8 +593,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(handler).set("currentRelease", new Release());
     on(handler).set("primaryService", primaryService());
     on(handler).set("stageService", stageService());
-    on(k8sBlueGreenDeployTaskHandler)
-        .set("resources", new ArrayList<>(asList(primaryService(), deployment(), stageService(), configMap())));
+    on(handler).set("resources", new ArrayList<>(asList(primaryService(), deployment(), stageService(), configMap())));
 
     K8sTaskExecutionResponse response = handler.executeTask(deployTaskParameters, delegateTaskParams);
     K8sBlueGreenDeployResponse deployResponse = (K8sBlueGreenDeployResponse) response.getK8sTaskResponse();
@@ -607,6 +608,55 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidArgumentsException.class)
         .isThrownBy(() -> k8sBlueGreenDeployTaskHandler.executeTaskInternal(null, null))
         .withMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testFailWorkloadStatusCheck() throws Exception {
+    K8sBlueGreenDeployTaskHandler handler = spy(k8sBlueGreenDeployTaskHandler);
+    K8sDelegateManifestConfig manifestConfig = K8sDelegateManifestConfig.builder()
+                                                   .manifestStoreTypes(StoreType.HelmChartRepo)
+                                                   .helmChartConfigParams(HelmChartConfigParams.builder().build())
+                                                   .build();
+    K8sBlueGreenDeployTaskParameters deployTaskParameters =
+        K8sBlueGreenDeployTaskParameters.builder().k8sDelegateManifestConfig(manifestConfig).build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory(".").build();
+
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
+    doReturn(executionLogCallback)
+        .when(k8sTaskHelper)
+        .getExecutionLogCallback(any(K8sBlueGreenDeployTaskParameters.class), anyString());
+    doReturn(true).when(handler).init(
+        any(K8sBlueGreenDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true).when(handler).prepareForBlueGreen(
+        any(K8sBlueGreenDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(false)
+        .when(k8sTaskHelperBase)
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+
+    doAnswer(invocation
+        -> K8sTaskExecutionResponse.builder()
+               .k8sTaskResponse(invocation.getArgumentAt(0, K8sBlueGreenDeployResponse.class))
+               .build())
+        .when(k8sTaskHelper)
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
+    on(handler).set("managedWorkload", deployment());
+    on(handler).set("currentRelease", new Release());
+    on(handler).set("primaryService", primaryService());
+    on(handler).set("stageService", stageService());
+    on(handler).set("resources", new ArrayList<>(asList(primaryService(), deployment(), stageService(), configMap())));
+
+    K8sTaskExecutionResponse response = handler.executeTask(deployTaskParameters, delegateTaskParams);
+    assertThat(FAILURE).isEqualTo(response.getCommandExecutionStatus());
   }
 
   @Data

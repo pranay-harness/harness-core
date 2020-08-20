@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getExecutionLogOutputStream;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getOcCommandPrefix;
+import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Rollback;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
@@ -69,6 +70,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   private Release previousRollbackEligibleRelease;
   private boolean isNoopRollBack;
   private List<KubernetesResourceIdRevision> previousManagedWorkloads = new ArrayList<>();
+  private List<KubernetesResource> previousCustomManagedWorkloads = new ArrayList<>();
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -96,24 +98,32 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    if (isEmpty(previousManagedWorkloads)) {
+    if (isEmpty(previousManagedWorkloads) && isEmpty(previousCustomManagedWorkloads)) {
       k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState)
           .saveExecutionLog(
               "Skipping Status Check since there is no previous eligible Managed Workload.", INFO, SUCCESS);
     } else {
+      long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
       List<KubernetesResourceId> kubernetesResourceIds =
           previousManagedWorkloads.stream().map(KubernetesResourceIdRevision::getWorkload).collect(Collectors.toList());
       k8sTaskHelperBase.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
-          kubernetesConfig.getNamespace(), k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState), true);
+          kubernetesConfig.getNamespace(), k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState),
+          previousCustomManagedWorkloads.isEmpty());
 
+      if (isNotEmpty(previousCustomManagedWorkloads)) {
+        k8sTaskHelperBase.checkSteadyStateCondition(previousCustomManagedWorkloads);
+        k8sTaskHelperBase.doStatusCheckForAllCustomResources(client, previousCustomManagedWorkloads,
+            k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState), true,
+            steadyStateTimeoutInMillis);
+      }
       release.setStatus(Status.Failed);
       // update the revision on the previous release.
       updateManagedWorkloadRevisionsInRelease(k8sDelegateTaskParams);
     }
 
     if (!isNoopRollBack) {
-      kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml());
+      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, request.getReleaseName(),
+          releaseHistory.getAsYaml(), !previousCustomManagedWorkloads.isEmpty());
     }
 
     return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
@@ -128,7 +138,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
-    String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(
         kubernetesConfig, k8sRollingDeployRollbackTaskParameters.getReleaseName());
 
     if (StringUtils.isEmpty(releaseHistoryData)) {
@@ -157,7 +167,8 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return true;
     }
 
-    if (isEmpty(release.getManagedWorkloads()) && release.getManagedWorkload() == null) {
+    if (isEmpty(release.getManagedWorkloads()) && isEmpty(release.getCustomWorkloads())
+        && release.getManagedWorkload() == null) {
       executionLogCallback.saveExecutionLog("\nNo Managed Workload found. Skipping rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
@@ -188,11 +199,16 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
         + " with status " + previousRollbackEligibleRelease.getStatus());
 
     if (isEmpty(previousRollbackEligibleRelease.getManagedWorkloads())
-        && previousRollbackEligibleRelease.getManagedWorkload() == null) {
+        && previousRollbackEligibleRelease.getManagedWorkload() == null
+        && isEmpty(previousRollbackEligibleRelease.getCustomWorkloads())) {
       executionLogCallback.saveExecutionLog(
           "No Managed Workload found in previous eligible release. Skipping rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
+    }
+
+    if (isNotEmpty(previousRollbackEligibleRelease.getCustomWorkloads())) {
+      previousCustomManagedWorkloads.addAll(previousRollbackEligibleRelease.getCustomWorkloads());
     }
 
     if (isNotEmpty(previousRollbackEligibleRelease.getManagedWorkloads())) {
@@ -216,6 +232,22 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
   private boolean rollback(K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback)
       throws Exception {
+    boolean success = true;
+    if (isNotEmpty(previousCustomManagedWorkloads)) {
+      if (isNotEmpty(release.getCustomWorkloads())) {
+        executionLogCallback.saveExecutionLog("\nDeleting current custom resources "
+            + k8sTaskHelperBase.getResourcesInTableFormat(release.getCustomWorkloads()));
+
+        k8sTaskHelperBase.delete(client, k8sDelegateTaskParams,
+            release.getCustomWorkloads().stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()),
+            executionLogCallback, false);
+      }
+      executionLogCallback.saveExecutionLog("\nRolling back custom resource by applying previous release manifests "
+          + k8sTaskHelperBase.getResourcesInTableFormat(previousCustomManagedWorkloads));
+      success = k8sTaskHelperBase.applyManifests(
+          client, previousCustomManagedWorkloads, k8sDelegateTaskParams, executionLogCallback, false);
+    }
+
     executionLogCallback.saveExecutionLog("\nRolling back to release " + previousRollbackEligibleRelease.getNumber());
 
     for (KubernetesResourceIdRevision kubernetesResourceIdRevision : previousManagedWorkloads) {
@@ -261,7 +293,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       }
     }
 
-    return true;
+    return success;
   }
 
   @VisibleForTesting
@@ -301,6 +333,10 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     release = releaseHistory.getLatestRelease();
 
     List<KubernetesResource> kubernetesResources = new ArrayList<>();
+
+    if (isNotEmpty(release.getCustomWorkloads())) {
+      kubernetesResources.addAll(release.getCustomWorkloads());
+    }
 
     if (isNotEmpty(release.getManagedWorkloads())) {
       for (KubernetesResourceIdRevision kubernetesResourceIdRevision : release.getManagedWorkloads()) {

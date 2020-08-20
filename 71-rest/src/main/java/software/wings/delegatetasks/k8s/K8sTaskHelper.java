@@ -85,7 +85,7 @@ public class K8sTaskHelper {
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
   @Inject private OpenShiftDelegateService openShiftDelegateService;
-  @Inject K8sTaskHelperBase k8sTaskHelperBase;
+  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   public boolean doHelmStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       HelmCommandRequest helmInstallCommandRequest, ExecutionLogCallback executionLogCallback) throws Exception {

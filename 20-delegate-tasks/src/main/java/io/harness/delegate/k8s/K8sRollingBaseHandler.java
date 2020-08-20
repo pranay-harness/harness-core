@@ -81,6 +81,12 @@ public class K8sRollingBaseHandler {
     release.setManagedWorkloads(kubernetesResourceIdRevisions);
   }
 
+  public void setCustomWorkloadsInRelease(List<KubernetesResource> customWorkloads, Release release) {
+    if (isNotEmpty(customWorkloads)) {
+      release.setCustomWorkloads(customWorkloads);
+    }
+  }
+
   public void addLabelsInDeploymentSelectorForCanary(
       boolean inCanaryWorkflow, List<KubernetesResource> managedWorkloads) {
     if (!inCanaryWorkflow) {

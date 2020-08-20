@@ -10,6 +10,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
+import static io.harness.k8s.manifest.ManifestHelper.getCustomResourceDefinitionWorkloads;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
@@ -46,6 +47,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -76,6 +78,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   private ReleaseHistory releaseHistory;
   Release release;
   List<KubernetesResource> managedWorkloads;
+  List<KubernetesResource> customWorkloads;
   List<KubernetesResource> resources;
   private String releaseName;
   private String manifestFilesDirectory;
@@ -114,39 +117,46 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
+    List<KubernetesResource> allWorkloads = ListUtils.union(managedWorkloads, customWorkloads);
     List<K8sPod> existingPodList =
-        k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
+        k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
-        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply));
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply), true);
     if (!success) {
       return getFailureResponse();
     }
 
-    if (isEmpty(managedWorkloads)) {
+    if (isEmpty(managedWorkloads) && isEmpty(customWorkloads)) {
       k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState)
           .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
     } else {
       k8sRollingBaseHandler.setManagedWorkloadsInRelease(k8sDelegateTaskParams, managedWorkloads, release, client);
+      k8sRollingBaseHandler.setCustomWorkloadsInRelease(customWorkloads, release);
 
-      kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
+          releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
 
       List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
           managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
+      ExecutionLogCallback executionLogCallback =
+          k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState);
+
       success = k8sTaskHelperBase.doStatusCheckForAllResources(client, managedWorkloadKubernetesResourceIds,
-          k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
-          k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState), true);
+          k8sDelegateTaskParams, kubernetesConfig.getNamespace(), executionLogCallback, customWorkloads.isEmpty());
+
+      boolean customWorkloadsStatusSuccess = k8sTaskHelperBase.doStatusCheckForAllCustomResources(
+          client, customWorkloads, k8sDelegateTaskParams, executionLogCallback, true, steadyStateTimeoutInMillis);
 
       // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
       // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
       // after the apply command has successfully run
       k8sRollingBaseHandler.updateDeploymentConfigRevision(k8sDelegateTaskParams, release, client);
 
-      if (!success) {
+      if (!success || !customWorkloadsStatusSuccess) {
         releaseHistory.setReleaseStatus(Status.Failed);
-        kubernetesContainerService.saveReleaseHistory(
-            kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+        kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
+            releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
         return getFailureResponse();
       }
     }
@@ -158,14 +168,14 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp), client);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
+        releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
-            .k8sPodList(k8sRollingBaseHandler.tagNewPods(k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis,
-                                                             managedWorkloads, kubernetesConfig, releaseName),
+            .k8sPodList(k8sRollingBaseHandler.tagNewPods(
+                k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
             .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))
             .helmChartInfo(helmChartInfo)
@@ -193,9 +203,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     try {
-      String releaseHistoryData =
-          kubernetesContainerService.fetchReleaseHistory(kubernetesConfig, request.getReleaseName());
-
+      String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(kubernetesConfig, request.getReleaseName());
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);
 
@@ -256,11 +264,15 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       k8sTaskHelperBase.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
-      if (isEmpty(managedWorkloads)) {
+      customWorkloads = getCustomResourceDefinitionWorkloads(resources);
+
+      if (isEmpty(managedWorkloads) && isEmpty(customWorkloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
       } else {
         executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)
-            + k8sTaskHelperBase.getResourcesInTableFormat(managedWorkloads));
+            + k8sTaskHelperBase.getResourcesInTableFormat(ListUtils.union(managedWorkloads, customWorkloads)));
+
+        k8sTaskHelperBase.checkSteadyStateCondition(customWorkloads);
 
         executionLogCallback.saveExecutionLog("\nVersioning resources.");
         addRevisionNumber(resources, release.getNumber());

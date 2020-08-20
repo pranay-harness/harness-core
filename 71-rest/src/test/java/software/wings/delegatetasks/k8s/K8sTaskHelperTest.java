@@ -13,6 +13,7 @@ import static io.harness.k8s.model.Kind.Service;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SAHIL;
@@ -60,6 +61,7 @@ import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.HelmClientException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -75,6 +77,7 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.ScaleCommand;
 import io.harness.k8s.kubectl.Utils;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.Kind;
@@ -484,7 +487,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     //    createDirectoryIfDoesNotExist(Paths.get("/tmp/test").toString());
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
-    spyHelperBase.applyManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
+    spyHelperBase.applyManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback, true);
 
     ArgumentCaptor<ApplyCommand> captor = ArgumentCaptor.forClass(ApplyCommand.class);
     verify(spyHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
@@ -498,7 +501,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                    .spec("")
                    .resourceId(KubernetesResourceId.builder().kind("Route").build())
                    .build()),
-        k8sDelegateTaskParams, executionLogCallback);
+        k8sDelegateTaskParams, executionLogCallback, true);
     verify(spyHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests.yaml --record");
@@ -1566,5 +1569,88 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         .saveExecutionLog(logMessageCaptor.capture(), eq(ERROR), eq(CommandExecutionStatus.FAILURE));
     String logMessage = logMessageCaptor.getValue();
     assertThat(logMessage).contains(exceptionMessage);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testOcRolloutCommand() throws Exception {
+    KubernetesResourceId resourceId =
+        KubernetesResourceId.builder().name("app1").kind("Deployment").namespace("default").build();
+    String actualOcRolloutCommand =
+        spyHelperBase.getRolloutStatusCommandForDeploymentConfig("oc", "/.kube/config", resourceId);
+
+    String expectedOcRolloutCommand =
+        "oc --kubeconfig=/.kube/config rollout status Deployment/app1 --namespace=default --watch=true";
+    assertThat(actualOcRolloutCommand).isEqualTo(expectedOcRolloutCommand);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testSteadyStateConditionIsSet() {
+    List<KubernetesResource> managedResources = ManifestHelper.processYaml("apiVersion: apps/v1\n"
+        + "kind: Foo\n"
+        + "metadata:\n"
+        + "  name: deployment\n"
+        + "  annotations:\n"
+        + "    harness.io/managed-workload: true\n"
+        + "    harness.io/steadyStateCondition: 1==1\n"
+        + "spec:\n"
+        + "  replicas: 1");
+
+    spyHelperBase.checkSteadyStateCondition(managedResources);
+    assert true;
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testSteadyStateConditionIsUnset() {
+    List<KubernetesResource> managedResources = ManifestHelper.processYaml("apiVersion: apps/v1\n"
+        + "kind: Foo\n"
+        + "metadata:\n"
+        + "  name: deployment\n"
+        + "  annotations:\n"
+        + "    harness.io/managed-workload: true\n"
+        + "spec:\n"
+        + "  replicas: 1");
+
+    try {
+      spyHelperBase.checkSteadyStateCondition(managedResources);
+    } catch (InvalidArgumentsException e) {
+      assertThat(e).hasMessage("INVALID_ARGUMENT");
+    }
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetReleaseHistoryFromSecretFirst() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn("secret");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release");
+    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKubernetesContainerService).fetchReleaseHistoryFromSecrets(any(), releaseArgumentCaptor.capture());
+    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistory(any(), any());
+
+    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
+    assertThat(releaseHistory).isEqualTo("secret");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetReleaseHistoryConfigMapIfNotFoundInSecret() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn(null);
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn("configmap");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release");
+    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKubernetesContainerService, times(1)).fetchReleaseHistoryFromSecrets(any(), anyString());
+    verify(mockKubernetesContainerService, times(1)).fetchReleaseHistory(any(), releaseArgumentCaptor.capture());
+
+    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
+    assertThat(releaseHistory).isEqualTo("configmap");
   }
 }

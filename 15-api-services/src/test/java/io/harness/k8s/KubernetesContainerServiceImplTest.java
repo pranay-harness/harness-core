@@ -1,8 +1,11 @@
 package io.harness.k8s;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
 import static io.harness.k8s.model.KubernetesClusterAuthType.USER_PASSWORD;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -22,10 +25,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 
 import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.kubernetes.api.model.DoneableHorizontalPodAutoscaler;
@@ -46,6 +51,7 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
@@ -133,12 +139,25 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
       RollableScalableResource<ReplicationController, DoneableReplicationController>> namespacedReplicationControllers;
 
   @Mock private MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> services;
+  @Mock private MixedOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> secrets;
+  @Mock
+  private MixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>>
+      configMaps;
   @Mock
   private NonNamespaceOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>>
       namespacedServices;
+
+  @Mock
+  private NonNamespaceOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> namespacedSecrets;
+  @Mock
+  private NonNamespaceOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>>
+      namespacedConfigMaps;
+
   @Mock
   private RollableScalableResource<ReplicationController, DoneableReplicationController> scalableReplicationController;
   @Mock private Resource<Service, DoneableService> serviceResource;
+  @Mock private Resource<Secret, DoneableSecret> secretResource;
+  @Mock private Resource<ConfigMap, DoneableConfigMap> configMapResource;
   @Mock private MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> pods;
 
   @Mock
@@ -186,18 +205,11 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
   // Secrets
   @Mock private MixedOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> secretOperations;
-  @Mock
-  private NonNamespaceOperation<Secret, SecretList, DoneableSecret, Resource<Secret, DoneableSecret>> namespacedSecrets;
-  @Mock private Resource<Secret, DoneableSecret> secretResource;
 
   // ConfigMaps
   @Mock
   private MixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>>
       configMapOperations;
-  @Mock
-  private NonNamespaceOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>>
-      namespacedConfigMaps;
-  @Mock private Resource<ConfigMap, DoneableConfigMap> configMapResource;
 
   // HPA
   @Mock
@@ -219,6 +231,21 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
   ReplicationController replicationController;
   ReplicationControllerSpec spec;
+  Secret releaseHistory = new SecretBuilder()
+                              .withNewMetadata()
+                              .withName("test-rn")
+                              .withNamespace("default")
+                              .endMetadata()
+                              .withData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64("test")))
+                              .build();
+
+  ConfigMap releaseHistoryConfigMap = new ConfigMapBuilder()
+                                          .withNewMetadata()
+                                          .withName("test-rn")
+                                          .withNamespace("default")
+                                          .endMetadata()
+                                          .withData(ImmutableMap.of(ReleaseHistoryKeyName, "test"))
+                                          .build();
 
   Deployment deployment;
   DeploymentSpec deploymentSpec;
@@ -247,11 +274,22 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(kubernetesClient.namespaces()).thenReturn(namespacedNamespaces);
 
     when(kubernetesClient.replicationControllers()).thenReturn(replicationControllers);
+    when(kubernetesClient.secrets()).thenReturn(secrets);
+    when(kubernetesClient.configMaps()).thenReturn(configMaps);
+    when(services.inNamespace("default")).thenReturn(namespacedServices);
+    when(secrets.inNamespace("default")).thenReturn(namespacedSecrets);
+    when(configMaps.inNamespace("default")).thenReturn(namespacedConfigMaps);
     when(replicationControllers.inNamespace("default")).thenReturn(namespacedReplicationControllers);
     when(services.inNamespace(anyString())).thenReturn(namespacedServices);
     when(namespacedServices.createOrReplaceWithNew()).thenReturn(new DoneableService(item -> item));
     when(namespacedReplicationControllers.withName(anyString())).thenReturn(scalableReplicationController);
     when(namespacedServices.withName(anyString())).thenReturn(serviceResource);
+    when(namespacedSecrets.withName(anyString())).thenReturn(secretResource);
+    when(namespacedSecrets.createOrReplace(any(Secret.class))).thenReturn(releaseHistory);
+    when(namespacedConfigMaps.withName(anyString())).thenReturn(configMapResource);
+    when(namespacedConfigMaps.createOrReplace(any(ConfigMap.class))).thenReturn(releaseHistoryConfigMap);
+    doReturn(releaseHistory).when(secretResource).get();
+    doReturn(releaseHistoryConfigMap).when(configMapResource).get();
 
     when(extensionsAPIGroupClient.deployments()).thenReturn(deploymentOperations);
     when(deploymentOperations.inNamespace("default")).thenReturn(namespacedDeployments);
@@ -640,6 +678,104 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(deploymentFilteredList.list()).thenReturn(new DeploymentList());
     activeServiceCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(KUBERNETES_CONFIG, emptyMap());
     assertThat(activeServiceCounts).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchReleaseHistoryFromSecrets() {
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromSecrets(KUBERNETES_CONFIG, "secret");
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(namespacedSecrets).withName(args.capture());
+    assertThat(args.getValue()).isEqualTo("secret");
+    verify(secretResource).get();
+
+    assertThat(releaseHistory).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFetchReleaseHistoryFromConfigMap() {
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistory(KUBERNETES_CONFIG, "configmap");
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(namespacedConfigMaps).withName(args.capture());
+    assertThat(args.getValue()).isEqualTo("configmap");
+    verify(configMapResource).get();
+
+    assertThat(releaseHistory).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldSaveReleaseHistoryInConfigMap() {
+    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=1.0");
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(namespacedConfigMaps, times(2)).withName(args.capture());
+    assertThat(args.getValue()).isEqualTo("test-rn");
+    verify(configMapResource, times(2)).get();
+
+    ArgumentCaptor<ConfigMap> configMapCaptor = ArgumentCaptor.forClass(ConfigMap.class);
+    verify(namespacedConfigMaps, times(1)).createOrReplace(configMapCaptor.capture());
+
+    assertThat(configMapCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
+    assertThat(configMapCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo("version=1.0");
+    assertThat(configMapCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldSaveReleaseHistoryInConfigMapWhenFalse() {
+    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=1.0", false);
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(namespacedConfigMaps, times(2)).withName(args.capture());
+    assertThat(args.getValue()).isEqualTo("test-rn");
+    verify(configMapResource, times(2)).get();
+
+    ArgumentCaptor<ConfigMap> configMapCaptor = ArgumentCaptor.forClass(ConfigMap.class);
+    verify(namespacedConfigMaps, times(1)).createOrReplace(configMapCaptor.capture());
+
+    assertThat(configMapCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
+    assertThat(configMapCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo("version=1.0");
+    assertThat(configMapCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldSaveReleaseHistoryInSecrets() {
+    kubernetesContainerService.saveReleaseHistoryInSecrets(KUBERNETES_CONFIG, "release", "version=2.0");
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(namespacedSecrets, times(1)).withName(args.capture());
+    assertThat(args.getValue()).isEqualTo("release");
+    verify(secretResource, times(1)).get();
+
+    ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
+    verify(namespacedSecrets, times(1)).createOrReplace(secretCaptor.capture());
+
+    assertThat(secretCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
+    assertThat(secretCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo(encodeBase64("version=2.0"));
+    assertThat(secretCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldSaveReleaseHistoryInSecretsWhenTrue() {
+    kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=2.0", true);
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(namespacedSecrets, times(1)).withName(args.capture());
+    assertThat(args.getValue()).isEqualTo("release");
+    verify(secretResource, times(1)).get();
+
+    ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
+    verify(namespacedSecrets, times(1)).createOrReplace(secretCaptor.capture());
+
+    assertThat(secretCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
+    assertThat(secretCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo(encodeBase64("version=2.0"));
+    assertThat(secretCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
   }
 
   @Test

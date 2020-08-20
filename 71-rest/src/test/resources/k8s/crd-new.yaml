@@ -1,0 +1,10 @@
+apiVersion: samplecontroller.k8s.io/v1alpha1
+kind: Foo
+metadata:
+  name: example-foo-bar
+  annotations:
+    "harness.io/managed-workload": "true"
+    "harness.io/steadyStateCondition": ${json.select("$..status.availableReplicas", response) == json.select("$..spec.replicas", response) && json.select("$..spec.deploymentName", response) == "example-foo-bar"}
+spec:
+  deploymentName: example-foo-bar
+  replicas: 1

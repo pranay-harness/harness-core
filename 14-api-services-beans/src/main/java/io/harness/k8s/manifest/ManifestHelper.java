@@ -159,11 +159,13 @@ public class ManifestHelper {
   private static final Set<String> managedWorkloadKinds =
       ImmutableSet.of("Deployment", "StatefulSet", "DaemonSet", "DeploymentConfig");
 
+  private static final Set<String> allManagedWorkloadKinds =
+      ImmutableSet.of("Deployment", "StatefulSet", "DaemonSet", "DeploymentConfig", "Job");
+
   public static List<KubernetesResource> getWorkloads(List<KubernetesResource> resources) {
     return resources.stream()
         .filter(resource -> managedWorkloadKinds.contains(resource.getResourceId().getKind()))
         .filter(resource -> !resource.isDirectApply())
-        .filter(resource -> !resource.isManagedWorkload())
         .collect(Collectors.toList());
   }
 
@@ -173,7 +175,6 @@ public class ManifestHelper {
             -> ImmutableSet.of(Kind.Deployment.name(), Kind.DeploymentConfig.name())
                    .contains(resource.getResourceId().getKind()))
         .filter(resource -> !resource.isDirectApply())
-        .filter(resource -> !resource.isManagedWorkload())
         .collect(Collectors.toList());
   }
 
@@ -185,14 +186,12 @@ public class ManifestHelper {
                        Kind.DeploymentConfig.name())
                    .contains(resource.getResourceId().getKind()))
         .filter(resource -> !resource.isDirectApply())
-        .filter(resource -> !resource.isManagedWorkload())
         .collect(Collectors.toList());
   }
 
-  public static List<KubernetesResource> getManagedWorkloads(List<KubernetesResource> resources) {
+  public static List<KubernetesResource> getCustomResourceDefinitionWorkloads(List<KubernetesResource> resources) {
     return resources.stream()
-        .filter(resource -> managedWorkloadKinds.contains(resource.getResourceId().getKind()))
-        .filter(resource -> !resource.isDirectApply())
+        .filter(resource -> !allManagedWorkloadKinds.contains(resource.getResourceId().getKind()))
         .filter(resource -> resource.isManagedWorkload())
         .collect(Collectors.toList());
   }
