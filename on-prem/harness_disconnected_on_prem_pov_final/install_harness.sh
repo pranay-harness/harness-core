@@ -303,7 +303,7 @@ function setupManager(){
     ALLOWED_ORIGINS=$LOAD_BALANCER_URL
     DELEGATE_METADATA_URL=$LOAD_BALANCER_URL/storage/wingsdelegates/delegateprod.txt
     SERVER_PORT=$managerport
-    TCP_HOSTS_DETAILS=$host1:$(getProperty "config_template/manager/manager.properties" "HAZELCAST_PORT")
+    TCP_HOSTS_DETAILS=127.0.0.1:$(getProperty "config_template/manager/manager.properties" "HAZELCAST_PORT")
     FEATURES=$(getProperty "config_template/manager/manager.properties" "FEATURES")
     jre_version=$(getProperty "config_template/manager/manager.properties" "jre_version")
     UI_SERVER_URL=$LOAD_BALANCER_URL
