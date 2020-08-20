@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 import migrations.accountpermission.AlertNotificationAccountPermissionMigration;
 import migrations.accountpermission.ManageAuthenticationSettingsPermissionMigration;
 import migrations.accountpermission.ManageCloudProvidersAndConnectorsPermissionMigration;
+import migrations.accountpermission.ManageDelegatePermissionMigration;
 import migrations.accountpermission.ManageIPWhitelistPermissionMigration;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
@@ -374,6 +375,7 @@ public class MigrationList {
         .add(Pair.of(330, ManageAuthenticationSettingsPermissionMigration.class))
         .add(Pair.of(331, BaseMigration.class))
         .add(Pair.of(332, AddHarnessGroupAccessFlagToAccount.class))
+        .add(Pair.of(333, ManageDelegatePermissionMigration.class))
         .build();
   }
 }
