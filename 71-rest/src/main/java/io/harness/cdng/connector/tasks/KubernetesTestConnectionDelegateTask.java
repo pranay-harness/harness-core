@@ -2,7 +2,6 @@ package io.harness.cdng.connector.tasks;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
@@ -12,6 +11,9 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskP
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
+import io.harness.k8s.KubernetesContainerService;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -21,8 +23,9 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnableTask {
-  @Inject private KubernetesConnectorDelegateService kubernetesConnectorDelegateService;
   @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Inject private KubernetesContainerService kubernetesContainerService;
   private static final String EMPTY_STR = "";
 
   public KubernetesTestConnectionDelegateTask(
@@ -39,8 +42,11 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
     secretDecryptionService.decrypt(kubernetesCredentialAuth, kubernetesConnectionTaskParams.getEncryptionDetails());
     Exception execptionInProcessing = null;
     boolean validCredentials = false;
+    KubernetesConfig kubernetesConfig =
+        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
     try {
-      validCredentials = kubernetesConnectorDelegateService.validate(kubernetesClusterConfig);
+      kubernetesContainerService.validate(kubernetesConfig);
+      validCredentials = true;
     } catch (Exception ex) {
       logger.info("Exception while validating kubernetes credentials", ex);
       execptionInProcessing = ex;
