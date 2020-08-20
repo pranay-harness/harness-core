@@ -424,7 +424,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setStatus(Status.DISABLED);
     delegateService.update(delegate);
     Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
-    assertThat(updatedDelegate).isEqualTo(delegate);
+    assertThat(updatedDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
@@ -486,7 +486,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setStatus(Status.DISABLED);
     delegateService.update(delegate);
     Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
-    assertThat(updatedDelegate).isEqualTo(delegate);
+    assertThat(updatedDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
@@ -735,7 +735,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate = delegateService.add(delegate);
     delegateService.register(delegate);
     Delegate registeredDelegate = delegateService.get(accountId, delegate.getUuid(), true);
-    assertThat(registeredDelegate).isEqualTo(delegate);
+    assertThat(registeredDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
   }
 
   @Test

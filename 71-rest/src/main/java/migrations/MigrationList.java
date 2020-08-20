@@ -27,6 +27,7 @@ import migrations.all.AddTagManagementPermissionToAdminUserGroup;
 import migrations.all.AddTemplateMgmtPermissionToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
+import migrations.all.AddValidUntilToDelegate;
 import migrations.all.AddValidUntilToDelegateTask;
 import migrations.all.AddWhitelistedDomainsToAccountMigration;
 import migrations.all.AmiDeploymentTypeMigration;
@@ -378,6 +379,7 @@ public class MigrationList {
         .add(Pair.of(332, AddHarnessGroupAccessFlagToAccount.class))
         .add(Pair.of(333, ManageDelegatePermissionMigration.class))
         .add(Pair.of(334, ManageDelegateProfilesPermissionMigration.class))
+        .add(Pair.of(335, AddValidUntilToDelegate.class))
         .build();
   }
 }

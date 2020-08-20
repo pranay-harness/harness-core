@@ -228,9 +228,11 @@ import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -605,6 +607,8 @@ public class DelegateServiceImpl implements DelegateService {
       updateOperations.set(DelegateKeys.status, delegate.getStatus());
     }
     setUnset(updateOperations, DelegateKeys.lastHeartBeat, delegate.getLastHeartBeat());
+    setUnset(updateOperations, DelegateKeys.validUntil,
+        Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
     setUnset(updateOperations, DelegateKeys.version, delegate.getVersion());
     setUnset(updateOperations, DelegateKeys.description, delegate.getDescription());
     if (delegate.getDelegateType() != null) {
@@ -673,7 +677,9 @@ public class DelegateServiceImpl implements DelegateService {
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .filter(DelegateKeys.accountId, delegate.getAccountId())
                                 .filter(DelegateKeys.uuid, delegate.getUuid()),
-        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.lastHeartBeat, currentTimeMillis()));
+        wingsPersistence.createUpdateOperations(Delegate.class)
+            .set(DelegateKeys.lastHeartBeat, currentTimeMillis())
+            .set(DelegateKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant())));
     delegateTaskService.touchExecutingTasks(
         delegate.getAccountId(), delegate.getUuid(), delegate.getCurrentlyExecutingDelegateTasks());
 
@@ -1695,6 +1701,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Delegate {} has clock skew of {}", delegate.getUuid(), Misc.getDurationString(skew));
     }
     delegate.setLastHeartBeat(now);
+    delegate.setValidUntil(Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
     Delegate registeredDelegate;
     if (existingDelegate == null) {
       logger.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
