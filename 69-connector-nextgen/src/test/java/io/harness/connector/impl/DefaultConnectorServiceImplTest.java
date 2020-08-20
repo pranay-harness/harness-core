@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.encryption.SecretRefData.SECRET_DELIMINITER;
@@ -50,6 +51,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -183,8 +185,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
     createConnector(connectorIdentifier2);
     createConnector(connectorIdentifier3);
     ArgumentCaptor<Page> connectorsListArgumentCaptor = ArgumentCaptor.forClass(Page.class);
-    Page<ConnectorSummaryDTO> connectorSummaryDTOSList =
-        connectorService.list(0, 100, accountIdentifier, null, null, "connector", KUBERNETES_CLUSTER.getDisplayName());
+    Page<ConnectorSummaryDTO> connectorSummaryDTOSList = connectorService.list(0, 100, accountIdentifier, null, null,
+        "connector", KUBERNETES_CLUSTER, Collections.singletonList(CLOUD_PROVIDER));
     verify(connectorScopeHelper, times(1))
         .createConnectorSummaryListForConnectors(connectorsListArgumentCaptor.capture());
     List<Connector> connectorsList = connectorsListArgumentCaptor.getValue().toList();

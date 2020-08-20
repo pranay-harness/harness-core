@@ -9,7 +9,14 @@ public enum ConnectorType {
   GIT("Git"),
   SPLUNK("Splunk"),
   APP_DYNAMICS("AppDynamics"),
-  VAULT("Vault");
+  VAULT("Vault"),
+  LOCAL("Local"),
+  KMS("AwsKms"),
+  GCP_KMS("GcpKms"),
+  AWS_SECRETS_MANAGER("Awssecretsmanager"),
+  AZURE_VAULT("Azurevault"),
+  CYBERARK("Cyberark"),
+  CUSTOM("CustomSecretManager");
 
   private final String displayName;
 

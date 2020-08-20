@@ -12,11 +12,13 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.exception.InvalidRequestException;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -46,9 +48,9 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, String type) {
+      String projectIdentifier, String searchTerm, ConnectorType type, List<ConnectorCategory> categories) {
     return defaultConnectorService.list(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type);
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, categories);
   }
 
   @Override

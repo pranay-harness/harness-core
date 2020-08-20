@@ -21,6 +21,8 @@ import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
+import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -35,6 +37,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -81,9 +84,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, String type) {
+      String projectIdentifier, String searchTerm, ConnectorType type, List<ConnectorCategory> categories) {
     Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type);
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, categories);
     Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, ConnectorKeys.createdAt));
     Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
     return connectorScopeHelper.createConnectorSummaryListForConnectors(connectors);
