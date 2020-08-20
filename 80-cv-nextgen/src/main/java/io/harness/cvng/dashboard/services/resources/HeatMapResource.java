@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
@@ -22,6 +23,7 @@ import javax.ws.rs.QueryParam;
 @Api("heatmap")
 @Path("/heatmap")
 @Produces("application/json")
+@ExposeInternalException
 public class HeatMapResource {
   @Inject private HeatMapService heatMapService;
 

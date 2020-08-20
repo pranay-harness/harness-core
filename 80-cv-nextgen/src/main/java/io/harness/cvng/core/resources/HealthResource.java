@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.codahale.metrics.health.HealthCheck;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.NoResultFoundException;
 import io.harness.health.HealthException;
@@ -29,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @PublicApi
 @Slf4j
+@ExposeInternalException
 public class HealthResource {
   private HealthService healthService;
 

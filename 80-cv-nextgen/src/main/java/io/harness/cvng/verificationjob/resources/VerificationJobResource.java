@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rest.RestResponse;
@@ -21,6 +22,7 @@ import javax.ws.rs.QueryParam;
 @Api("verification-job")
 @Path("verification-job")
 @Produces("application/json")
+@ExposeInternalException
 public class VerificationJobResource {
   @Inject private VerificationJobService verificationJobService;
   @GET

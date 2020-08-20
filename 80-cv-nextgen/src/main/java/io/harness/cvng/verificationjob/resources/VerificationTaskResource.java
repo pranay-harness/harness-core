@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.verificationjob.beans.VerificationTaskDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationTaskService;
 import io.swagger.annotations.Api;
@@ -18,6 +19,7 @@ import javax.ws.rs.QueryParam;
 @Api("verification-task")
 @Path("verification-task")
 @Produces("application/json")
+@ExposeInternalException
 public class VerificationTaskResource {
   @Inject private VerificationTaskService verificationTaskService;
   @POST

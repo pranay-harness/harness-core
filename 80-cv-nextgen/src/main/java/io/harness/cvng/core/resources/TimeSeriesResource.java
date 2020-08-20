@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.services.api.TimeSeriesService;
@@ -21,6 +22,7 @@ import javax.ws.rs.QueryParam;
 @Api("/timeseries")
 @Path("/timeseries")
 @Produces("application/json")
+@ExposeInternalException
 public class TimeSeriesResource {
   @Inject private TimeSeriesService timeSeriesService;
 

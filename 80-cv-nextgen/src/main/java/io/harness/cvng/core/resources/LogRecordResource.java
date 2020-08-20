@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.rest.RestResponse;
@@ -24,6 +25,7 @@ import javax.ws.rs.QueryParam;
 @Api(LOG_RECORD_RESOURCE_PATH)
 @Path(LOG_RECORD_RESOURCE_PATH)
 @Produces("application/json")
+@ExposeInternalException
 public class LogRecordResource {
   @Inject private LogRecordService logRecordService;
 

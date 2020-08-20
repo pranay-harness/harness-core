@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.beans.DSConfig;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.rest.RestResponse;
@@ -22,6 +23,7 @@ import javax.ws.rs.QueryParam;
 @Api("ds-config")
 @Path("ds-config")
 @Produces("application/json")
+@ExposeInternalException
 public class DSConfigResource {
   @Inject private DSConfigService dsConfigService;
   @GET
