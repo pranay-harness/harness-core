@@ -1147,6 +1147,7 @@ public class UserServiceImpl implements UserService {
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
     model.put("message", "You have been assigned new user groups: " + String.join(",", userGroupNamesList));
+    model.put("shouldMailContainTwoFactorInfo", Boolean.toString(false));
 
     // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
     if (account.getAuthenticationMechanism() == USER_PASSWORD) {
@@ -1165,7 +1166,6 @@ public class UserServiceImpl implements UserService {
       throw new GeneralException("New authentication mechanism detected.");
     }
     model.put("ssoUrl", checkGetDomainName(account, ssoSettings.getUrl()));
-    model.put("shouldMailContainTwoFactorInfo", false);
     return model;
   }
 
