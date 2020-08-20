@@ -66,6 +66,9 @@ public class CreateConnectorDataFetcher
     boolean passwordSecretIsPresent = false;
     boolean sshSettingIdIsPresent = false;
     if (gitConnectorInput.getPasswordSecretId().isPresent()) {
+      if (!gitConnectorInput.getUserName().isPresent() || !gitConnectorInput.getUserName().getValue().isPresent()) {
+        throw new InvalidRequestException("userName should be specified");
+      }
       passwordSecretIsPresent = gitConnectorInput.getPasswordSecretId().getValue().isPresent();
     }
     if (gitConnectorInput.getSshSettingId().isPresent()) {

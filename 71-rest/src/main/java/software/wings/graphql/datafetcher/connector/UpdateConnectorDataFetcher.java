@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -60,7 +61,7 @@ public class UpdateConnectorDataFetcher
 
     if (GIT == input.getConnectorType()) {
       checkIfInputIsNotPresent(input.getConnectorType(), input.getGitConnector());
-      checkSecrets(input.getGitConnector());
+      checkSecrets(input.getGitConnector(), settingAttribute);
       gitDataFetcherHelper.updateSettingAttribute(settingAttribute, input.getGitConnector());
     } else {
       throw new InvalidRequestException("Invalid connector Type");
@@ -83,10 +84,11 @@ public class UpdateConnectorDataFetcher
     }
   }
 
-  private void checkSecrets(QLUpdateGitConnectorInput gitConnectorInput) {
+  private void checkSecrets(QLUpdateGitConnectorInput gitConnectorInput, SettingAttribute settingAttribute) {
     boolean passwordSecretIsPresent = false;
     boolean sshSettingIdIsPresent = false;
     if (gitConnectorInput.getPasswordSecretId().isPresent()) {
+      throwExceptionIfUsernameShoulBeSpecified(gitConnectorInput, settingAttribute);
       passwordSecretIsPresent = gitConnectorInput.getPasswordSecretId().getValue().isPresent();
     }
     if (gitConnectorInput.getSshSettingId().isPresent()) {
@@ -94,6 +96,15 @@ public class UpdateConnectorDataFetcher
     }
     if (passwordSecretIsPresent && sshSettingIdIsPresent) {
       throw new InvalidRequestException("Just one secretId should be specified");
+    }
+  }
+
+  private void throwExceptionIfUsernameShoulBeSpecified(
+      QLUpdateGitConnectorInput gitConnectorInput, SettingAttribute settingAttribute) {
+    if (null == ((GitConfig) settingAttribute.getValue()).getUsername()) {
+      if (!gitConnectorInput.getUserName().isPresent() || !gitConnectorInput.getUserName().getValue().isPresent()) {
+        throw new InvalidRequestException("userName should be specified");
+      }
     }
   }
 }
