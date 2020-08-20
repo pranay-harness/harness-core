@@ -35,7 +35,7 @@ public class AccountBackgroundJobHandler implements Handler<Account> {
             .fieldName(AccountKeys.accountBackgroundJobCheckIteration)
             .targetInterval(ofMinutes(jobsFrequencyConfig.getAccountBackgroundJobFrequencyInMinutes()))
             .acceptableNoAlertDelay(ofMinutes(60))
-            .acceptableExecutionTime(ofSeconds(45))
+            .acceptableExecutionTime(ofSeconds(60))
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)

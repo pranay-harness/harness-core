@@ -61,9 +61,9 @@ clusterName: ""
 bugsnagApiKey: ""
 
 jobsFrequencyConfig:
-  accountLicenseCheckJobFrequencyInMinutes: 5
-  accountBackgroundJobFrequencyInMinutes: 5
-  accountDeletionJobFrequencyInMinutes: 5
+  accountLicenseCheckJobFrequencyInMinutes: 60
+  accountBackgroundJobFrequencyInMinutes: 60
+  accountDeletionJobFrequencyInMinutes: 300
 
 ceSetUpConfig:
   awsAccountId: 108817434118

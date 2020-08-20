@@ -1165,6 +1165,7 @@ public class UserServiceImpl implements UserService {
       throw new GeneralException("New authentication mechanism detected.");
     }
     model.put("ssoUrl", checkGetDomainName(account, ssoSettings.getUrl()));
+    model.put("shouldMailContainTwoFactorInfo", false);
     return model;
   }
 
@@ -1387,7 +1388,7 @@ public class UserServiceImpl implements UserService {
 
     LicenseInfo licenseInfo = LicenseInfo.builder()
                                   .accountType(AccountType.PAID)
-                                  .licenseUnits(marketPlace.getOrderQuantity())
+                                  .licenseUnits(0)
                                   .expiryTime(marketPlace.getExpirationDate().getTime())
                                   .accountStatus(AccountStatus.ACTIVE)
                                   .build();

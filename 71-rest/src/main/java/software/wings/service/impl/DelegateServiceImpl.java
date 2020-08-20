@@ -1559,8 +1559,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateRegisterResponse register(Delegate delegate) {
-    if (!delegateProcessingController.canProcessAccount(delegate.getAccountId())) {
-      logger.info("Account {} is disabled. Delegates cannot be registered", delegate.getAccountId());
+    if (licenseService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }

@@ -78,16 +78,4 @@ public class DelegateProcessingControllerTest extends WingsBaseTest {
     wingsPersistence.save(account);
     assertThat(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).isTrue();
   }
-
-  @Test
-  @Owner(developers = MEHUL)
-  @Category(UnitTests.class)
-  public void shouldNotProcessExpiredAccountAfterFourDaysOfExpiry() {
-    Account account = anAccount()
-                          .withUuid(ACCOUNT_ID)
-                          .withLicenseInfo(getLicenseInfo(AccountStatus.EXPIRED, FOUR_DAYS_BEFORE_CURRENT_TIME))
-                          .build();
-    wingsPersistence.save(account);
-    assertThat(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).isFalse();
-  }
 }

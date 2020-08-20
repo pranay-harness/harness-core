@@ -10,7 +10,6 @@ import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import software.wings.beans.AccountStatus;
-import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.service.intfc.AccountService;
 
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.List;
 public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobService {
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler persistentScheduler;
   @Inject private AccountService accountService;
-  @Inject private DelegateProcessingController delegateProcessingController;
   @Inject private PerpetualTaskService perpetualTaskService;
 
   @Override
