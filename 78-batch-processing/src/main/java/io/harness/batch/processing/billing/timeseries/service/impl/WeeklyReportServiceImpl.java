@@ -291,11 +291,20 @@ public class WeeklyReportServiceImpl {
       templateHelper.populateCostDataForTemplate(templateModel, costValues);
 
       templateModel.put("DATE", reportDateRange);
-
       costValues.put("DATE", reportDateRange);
+
+      String explorerUrl = "";
+      try {
+        explorerUrl = templateHelper.buildAbsoluteUrl(String.format(OVERVIEW_URL, accountId));
+      } catch (URISyntaxException e) {
+        logger.error("Error in forming Explorer URL for Weekly Report", e);
+      }
+
+      templateModel.put("url", explorerUrl);
+      costValues.put("url", explorerUrl);
+
       emailIds.forEach(emailId -> {
         try {
-          templateModel.put("url", templateHelper.buildAbsoluteUrl(String.format(OVERVIEW_URL, accountId)));
           templateModel.put("UNSUBSCRIBE_URL",
               templateHelper.buildAbsoluteUrl(String.format(UNSUBSCRIBE_URL, enabledUsers.get(emailId))));
         } catch (URISyntaxException e) {
