@@ -5,10 +5,12 @@ import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.NO_DE
 import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.VUK;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,14 +44,15 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String taskId = "TASK_ID";
   private String delegateId = "DELEGATE_ID";
   private PerpetualTaskRecord record;
-  @Mock private DelegateTask delegateTask;
 
+  @Mock private DelegateTask delegateTask;
   @Mock K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;
@@ -60,11 +63,13 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
 
   @Before
   public void setUp() throws InterruptedException {
+    Map<String, String> clientParams = new HashMap<>();
+    clientParams.put("test", "test");
     record = PerpetualTaskRecord.builder()
                  .accountId(accountId)
                  .uuid(taskId)
                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                 .clientContext(PerpetualTaskClientContext.builder().clientParams(new HashMap<>()).build())
+                 .clientContext(PerpetualTaskClientContext.builder().clientParams(clientParams).build())
                  .build();
     when(clientRegistry.getClient(isA(String.class))).thenReturn(k8sWatchPerpetualTaskServiceClient);
     when(k8sWatchPerpetualTaskServiceClient.getValidationTask(isA(PerpetualTaskClientContext.class), anyString()))
@@ -93,6 +98,33 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testPerpetualTaskServiceClientGetValidationTask() {
+    Map<String, String> clientParams = new HashMap<>();
+    clientParams.put("test", "test");
+    PerpetualTaskRecord record =
+        PerpetualTaskRecord.builder()
+            .accountId(accountId)
+            .uuid(taskId)
+            .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
+            .clientContext(PerpetualTaskClientContext.builder().clientParams(clientParams).build())
+            .build();
+
+    when(clientRegistry.getClient(isA(String.class))).thenReturn(k8sWatchPerpetualTaskServiceClient);
+    when(k8sWatchPerpetualTaskServiceClient.getValidationTask(isA(PerpetualTaskClientContext.class), anyString()))
+        .thenReturn(delegateTask);
+
+    DelegateTask realDelegateTask = perpetualTaskRecordHandler.getValidationTask(record);
+
+    assertThat(realDelegateTask).isNotNull();
+    assertThat(realDelegateTask).isEqualTo(delegateTask);
+
+    verify(k8sWatchPerpetualTaskServiceClient, atLeastOnce())
+        .getValidationTask(isA(PerpetualTaskClientContext.class), anyString());
+  }
+
+  @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldNotHandle() throws InterruptedException {
@@ -105,7 +137,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldNotHandle_ServiceUnavailableNoDelegateAvailableToHandlePT() throws InterruptedException {
+  public void shouldNotHandle_NoDelegateAvailableToHandlePerpetualTask() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new NoAvaliableDelegatesException());
     perpetualTaskRecordHandler.handle(record);
     String expectedMessage =
@@ -122,7 +154,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldNotHandle_ServiceUnavailableFailedToAssignAnyDelegateToPT() throws InterruptedException {
+  public void shouldNotHandle_PerpetualTaskFailedToBeAssignedToAnyDelegate() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new WingsException(""));
     perpetualTaskRecordHandler.handle(record);
     String expectedMessage =
@@ -139,7 +171,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldNotHandle_ServiceUnavailableFailedToAssignAnyDelegateToPT2() throws InterruptedException {
+  public void shouldNotHandle_FailToAssignAnyDelegateToPerpetualTask() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new RuntimeException());
     perpetualTaskRecordHandler.handle(record);
     String expectedMessage =

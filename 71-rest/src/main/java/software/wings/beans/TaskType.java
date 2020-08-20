@@ -44,6 +44,7 @@ import software.wings.delegatetasks.KubernetesSwapServiceSelectorsTask;
 import software.wings.delegatetasks.LogDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
+import software.wings.delegatetasks.PerpetualTaskCapabilityCheckTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.StackDriverDataCollectionTask;
@@ -150,6 +151,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public enum TaskType {
+  CAPABILITY_VALIDATION(
+      TaskGroup.CAPABILITY_VALIDATION, PerpetualTaskCapabilityCheckTask.class, AlwaysTrueValidation.class),
   COMMAND(TaskGroup.COMMAND, CommandTask.class, CommandValidation.class),
   SCRIPT(TaskGroup.SCRIPT, ShellScriptTask.class, ShellScriptValidation.class),
   HTTP(TaskGroup.HTTP, HttpTask.class, HttpValidation.class),

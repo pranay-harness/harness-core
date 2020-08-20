@@ -61,4 +61,5 @@ public enum TaskGroup {
   SLACK,
   ARTIFACT_COLLECT,
   K8S_NG,
+  CAPABILITY_VALIDATION,
 }
