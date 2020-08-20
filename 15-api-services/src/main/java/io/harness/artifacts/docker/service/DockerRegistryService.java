@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.docker;
+package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

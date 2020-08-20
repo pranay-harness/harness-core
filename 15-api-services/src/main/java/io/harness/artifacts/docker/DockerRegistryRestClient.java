@@ -1,8 +1,12 @@
-package software.wings.helpers.ext.docker;
+package io.harness.artifacts.docker;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
+import io.harness.artifacts.docker.beans.DockerPublicImageTagResponse;
+import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerImageTagResponse;
+import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerRegistryToken;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -10,8 +14,6 @@ import retrofit2.http.Headers;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
-import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerImageTagResponse;
-import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerRegistryToken;
 
 @OwnedBy(CDC)
 public interface DockerRegistryRestClient {

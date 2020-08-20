@@ -37,8 +37,9 @@ import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -51,7 +52,6 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClientBuilder;
 import software.wings.common.BuildDetailsComparator;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails.BuildStatus;
 
 import java.io.IOException;

@@ -11,6 +11,10 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import io.harness.artifacts.docker.client.DockerRestClientFactory;
+import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
+import io.harness.artifacts.docker.service.DockerRegistryService;
+import io.harness.artifacts.docker.service.DockerRegistryServiceImpl;
 import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.cdng.gitclient.GitClientNGImpl;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -120,10 +124,6 @@ import software.wings.helpers.ext.chartmuseum.ChartMuseumClientImpl;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.customrepository.CustomRepositoryService;
 import software.wings.helpers.ext.customrepository.CustomRepositoryServiceImpl;
-import software.wings.helpers.ext.docker.DockerRegistryService;
-import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
-import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
-import software.wings.helpers.ext.docker.client.DockerRestClientFactoryImpl;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrClassicServiceImpl;
 import software.wings.helpers.ext.ecr.EcrService;
@@ -490,7 +490,6 @@ public class DelegateModule extends DependencyModule {
     bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
     bind(DockerBuildService.class).to(DockerBuildServiceImpl.class);
     bind(BambooService.class).to(BambooServiceImpl.class);
-    bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(AsyncHttpClient.class)
         .toInstance(new AsyncHttpClient(
             new AsyncHttpClientConfig.Builder().setUseProxyProperties(true).setAcceptAnyCertificate(true).build()));
@@ -569,7 +568,6 @@ public class DelegateModule extends DependencyModule {
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceImpl.class);
-    bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
     bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
     bind(CustomRepositoryService.class).to(CustomRepositoryServiceImpl.class);
     bind(AwsRoute53HelperServiceDelegate.class).to(AwsRoute53HelperServiceDelegateImpl.class);
@@ -678,6 +676,9 @@ public class DelegateModule extends DependencyModule {
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
         MapBinder.newMapBinder(binder(), String.class, K8sRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING.name()).to(K8sRollingRequestHandler.class);
+
+    bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
+    bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
   }
 
   @Override

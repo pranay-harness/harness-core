@@ -24,6 +24,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
@@ -39,7 +40,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 

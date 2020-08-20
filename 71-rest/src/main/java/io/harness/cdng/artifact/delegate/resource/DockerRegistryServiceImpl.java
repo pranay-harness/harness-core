@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;

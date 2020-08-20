@@ -66,7 +66,6 @@ import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
@@ -127,7 +126,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AppDynamicsConnectionTaskParams.class, 19107);
     kryo.register(AppDynamicsConnectionTaskResponse.class, 19108);
     kryo.register(ArtifactFileMetadata.class, 19034);
-    kryo.register(ArtifactServerException.class, 7244);
     kryo.register(AwsElbListener.class, 5600);
     kryo.register(AwsElbListenerRuleData.class, 19035);
     kryo.register(AwsLoadBalancerDetails.class, 19024);

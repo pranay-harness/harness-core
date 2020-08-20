@@ -1,9 +1,8 @@
-package software.wings.exception;
+package io.harness.exception;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 
 import io.harness.eraro.Level;
-import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 

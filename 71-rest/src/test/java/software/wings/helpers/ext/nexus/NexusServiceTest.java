@@ -20,7 +20,8 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.ArtifactServerException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -41,7 +42,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 

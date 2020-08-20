@@ -1,20 +1,22 @@
-package software.wings.helpers.ext.docker;
+package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.artifacts.docker.service.DockerRegistryServiceImpl.isSuccessful;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.docker.DockerRegistryRestClient;
+import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
-import software.wings.exception.InvalidArtifactServerException;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -25,6 +25,10 @@
             <artifactId>istio-client-uberjar</artifactId>
         </dependency>
         <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>expiringmap</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>compile</scope>

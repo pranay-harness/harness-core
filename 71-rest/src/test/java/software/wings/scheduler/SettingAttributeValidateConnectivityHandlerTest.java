@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -28,7 +29,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.SettingsService;
 
