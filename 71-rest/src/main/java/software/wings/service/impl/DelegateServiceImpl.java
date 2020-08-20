@@ -10,6 +10,7 @@ import static io.harness.beans.DelegateTask.Status.runningStatuses;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.SizeFunction.size;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static io.harness.delegate.beans.DelegateType.CE_KUBERNETES;
@@ -84,7 +85,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateParams;
@@ -1837,7 +1837,7 @@ public class DelegateServiceImpl implements DelegateService {
     FileMetadata fileMetadata = FileMetadata.builder()
                                     .fileName(new File(fileDetail.getFileName()).getName())
                                     .accountId(accountId)
-                                    .fileUuid(UUIDGenerator.generateUuid())
+                                    .fileUuid(generateUuid())
                                     .build();
     String fileId = fileService.saveFile(fileMetadata,
         new BoundedInputStream(uploadedInputStream, mainConfiguration.getFileUploadLimits().getProfileResultLimit()),
@@ -1884,11 +1884,14 @@ public class DelegateServiceImpl implements DelegateService {
           "Account is disabled. Delegates cannot execute tasks", null, ACCOUNT_DISABLED, Level.ERROR, USER, null);
     }
     task.getData().setAsync(true);
-    saveDelegateTask(task);
+    if (task.getUuid() == null) {
+      task.setUuid(generateUuid());
+    }
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
+      saveDelegateTask(task);
       logger.info("Queueing async task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
@@ -1898,11 +1901,14 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void scheduleSyncTask(DelegateTask task) {
     task.getData().setAsync(false);
-    saveDelegateTask(task);
+    if (task.getUuid() == null) {
+      task.setUuid(generateUuid());
+    }
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
+      saveDelegateTask(task);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         logger.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
