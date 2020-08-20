@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
@@ -25,6 +26,7 @@ import javax.ws.rs.QueryParam;
 @Api("/metric-pack")
 @Path("/metric-pack")
 @Produces("application/json")
+@ExposeInternalException
 public class MetricPackResource {
   @Inject private MetricPackService metricPackService;
 
