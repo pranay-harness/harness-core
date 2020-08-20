@@ -124,6 +124,34 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
+  public void updateGitWithPasswordSecretWhenNoUsername() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    QLUpdateGitConnectorInputBuilder updateGitConnectorInputBuilder =
+        getQlUpdateGitConnectorInputBuilder()
+            .userName(RequestField.absent())
+            .passwordSecretId(RequestField.ofNullable("PASSWORD"));
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    QLUpdateConnectorInput input = QLUpdateConnectorInput.builder()
+                                       .connectorId(CONNECTOR_ID)
+                                       .connectorType(QLConnectorType.GIT)
+                                       .gitConnector(updateGitConnectorInputBuilder.build())
+                                       .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("userName should be specified");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
   public void updateGitDifferentSettingCategoryReturned() {
     SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
                                    .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)

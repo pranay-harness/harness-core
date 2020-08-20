@@ -111,6 +111,22 @@ public class CreateConnectorDataFetcherTest {
         .hasMessage("No secretId provided with the request for connector");
   }
 
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void createGitConnectorWithPasswordNotSpecifyingUsername() {
+    QLGitConnectorInputBuilder gitConnectorInputBuilder = getQlGitConnectorInputBuilder();
+    gitConnectorInputBuilder.userName(RequestField.absent()).passwordSecretId(RequestField.ofNullable("password"));
+    QLCreateConnectorInput input = QLCreateConnectorInput.builder()
+                                       .connectorType(QLConnectorType.GIT)
+                                       .gitConnector(gitConnectorInputBuilder.build())
+                                       .build();
+    MutationContext mutationContext = MutationContext.builder().accountId("ACCOUNT_ID").build();
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, mutationContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("userName should be specified");
+  }
+
   private QLGitConnectorInputBuilder getQlGitConnectorInputBuilder() {
     return QLGitConnectorInput.builder()
         .name(RequestField.ofNullable("NAME"))

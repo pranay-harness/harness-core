@@ -141,7 +141,9 @@ public class ConnectorsController {
                                  .authorEmailId(gitConfig.getAuthorEmailId())
                                  .commitMessage(gitConfig.getCommitMessage())
                                  .build());
-    if (null != gitConfig.getPassword()) {
+    if (null != gitConfig.getEncryptedPassword()) {
+      builder.passwordSecretId(gitConfig.getEncryptedPassword());
+    } else if (null != gitConfig.getPassword()) {
       builder.passwordSecretId(String.copyValueOf(gitConfig.getPassword()));
     }
     return builder;

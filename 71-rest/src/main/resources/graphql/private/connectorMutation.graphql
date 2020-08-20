@@ -49,7 +49,7 @@ input CustomCommitDetailsInput {
 
 input GitConnectorInput {
   name: String!
-  userName: String!
+  userName: String
   URL: String!
   urlType: UrlType!
   branch: String
