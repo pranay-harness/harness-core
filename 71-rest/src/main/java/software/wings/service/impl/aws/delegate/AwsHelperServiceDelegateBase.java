@@ -121,7 +121,6 @@ class AwsHelperServiceDelegateBase {
         throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException, USER);
       }
     } else {
-      logger.error("Unhandled aws exception", amazonServiceException);
       throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException, USER);
     }
   }
