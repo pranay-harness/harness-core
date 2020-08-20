@@ -701,8 +701,11 @@ public class StateMachineExecutor implements StateInspectionListener {
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class)
             .set(StateExecutionInstanceKeys.stateTimeout, executionInstanceTimeout);
 
-    wingsPersistence.findAndModify(
+    StateExecutionInstance updated = wingsPersistence.findAndModify(
         stateExecutionInstanceQuery, updateOperations, new FindAndModifyOptions().returnNew(false));
+    if (updated == null) {
+      logger.error("[TimeOut Op] StateExecutionInstance stateTimeout update Failed");
+    }
   }
 
   private StateExecutionInstance reloadStateExecutionInstanceAndCheckStatus(
@@ -750,7 +753,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       }
       case PAUSE: {
         logger.info(
-            "[Update Expiry]: Updating expiryTs to Long.MAX_VALUE on PAUSE Advice for stateExecutionInstance id: {}, name: {}",
+            "[TimeOut Op]: Updating expiryTs to Long.MAX_VALUE on PAUSE Advice for stateExecutionInstance id: {}, name: {}",
             stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
         updateStatus(stateExecutionInstance, WAITING, brokeStatuses(), null, ops -> {
           ops.set(StateExecutionInstanceKeys.expiryTs, Long.MAX_VALUE);
@@ -1199,6 +1202,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     cloned.setLastUpdatedAt(0);
     cloned.setHasInspection(false);
     cloned.setExpiryTs(Long.MAX_VALUE);
+    cloned.setStateTimeout(null);
     return cloned;
   }
 
@@ -1229,7 +1233,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private boolean updateStatusPauseAndWaiting(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
     logger.info(
-        "[Update Expiry]: Updating expiryTs to Long.MAX_VALUE on PAUSE_ALL interrupt or pause error strategy on failure for stateExecutionInstance id: {}, name: {}",
+        "[TimeOut Op]: Updating expiryTs to Long.MAX_VALUE on PAUSE_ALL interrupt or pause error strategy on failure for stateExecutionInstance id: {}, name: {}",
         stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason,
         ops -> ops.set(StateExecutionInstanceKeys.expiryTs, Long.MAX_VALUE));
@@ -1297,8 +1301,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
       List<ContextElement> notifyElements, @NotNull Long expiryTs) {
-    logger.info(
-        "[Update Expiry]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
+    logger.info("[TimeOut Op]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
         expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(
@@ -1308,8 +1311,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
       List<ContextElement> notifyElements, String delegateTaskId, @NotNull Long expiryTs) {
-    logger.info(
-        "[Update Expiry]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
+    logger.info("[TimeOut Op]: Updating expiryTs to: {} on {} status set for stateExecutionInstance id: {}, name: {}",
         expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(
@@ -1320,7 +1322,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
       Collection<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
       List<ContextElement> notifyElements, String delegateTaskId, @NotNull Long expiryTs) {
-    logger.info("[Update Expiry]: Updating expiryTs to {} on {} status set for stateExecutionInstance id: {}, name: {}",
+    logger.info("[TimeOut Op]: Updating expiryTs to {} on {} status set for stateExecutionInstance id: {}, name: {}",
         expiryTs, status, stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
     stateExecutionInstance.setExpiryTs(expiryTs);
     return updateStateExecutionData(stateExecutionInstance, stateExecutionData, status, errorMsg, runningStatusLists,
