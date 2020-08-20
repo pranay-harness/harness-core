@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
+import io.harness.artifacts.docker.service.DockerRegistryService;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -20,7 +21,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
-import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.DockerBuildService;
 

@@ -13,8 +13,8 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateFile;
-import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnknownArtifactStreamTypeException;
 import io.harness.logging.CommandExecutionStatus;

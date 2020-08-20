@@ -16,7 +16,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;

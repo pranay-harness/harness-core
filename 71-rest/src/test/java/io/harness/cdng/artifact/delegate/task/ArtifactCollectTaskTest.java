@@ -18,7 +18,7 @@ import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfi
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.ArtifactServerException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Rule;

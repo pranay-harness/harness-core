@@ -15,7 +15,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.ArtifactServerException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -25,7 +26,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.exception.InvalidArtifactServerException;
 
 import java.io.IOException;
 

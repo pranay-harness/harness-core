@@ -1,7 +1,7 @@
 package io.harness.cdng.artifact.delegate.resource;
 
+import static io.harness.artifacts.docker.service.DockerRegistryServiceImpl.isSuccessful;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -11,6 +11,7 @@ import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerPublicImageTagResponse;
 import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.expression.RegexFunctor;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,6 @@ import okhttp3.OkHttpClient;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.exception.InvalidArtifactServerException;
 
 import java.io.IOException;
 import java.util.Collections;

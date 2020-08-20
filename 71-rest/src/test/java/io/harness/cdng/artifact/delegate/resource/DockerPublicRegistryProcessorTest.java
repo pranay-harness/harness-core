@@ -18,6 +18,7 @@ import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerPublicImageTagResponse;
 import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -30,7 +31,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.exception.InvalidArtifactServerException;
 
 import java.io.IOException;
 import java.util.Arrays;

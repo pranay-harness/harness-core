@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.docker;
+package io.harness.artifacts.docker.service;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
@@ -8,21 +8,27 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
+import io.harness.artifacts.docker.DockerRegistryRestClient;
+import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.WingsBaseTest;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class DockerRegistryUtilsTest extends WingsBaseTest {
+public class DockerRegistryUtilsTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private DockerRegistryRestClient dockerRegistryRestClient;
   @InjectMocks DockerRegistryUtils dockerRegistryUtils = new DockerRegistryUtils();
   private static final String AUTH_HEADER = "AUTH_HEADER";

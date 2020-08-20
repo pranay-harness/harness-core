@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.docker;
+package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -12,10 +12,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.artifacts.BuildDetailsInternalComparatorAscending;
 import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.artifacts.docker.client.DockerRestClientFactory;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -26,8 +29,6 @@ import okhttp3.Credentials;
 import okhttp3.Headers;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
-import software.wings.exception.InvalidArtifactServerException;
-import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
 
 import java.io.IOException;
 import java.net.URL;

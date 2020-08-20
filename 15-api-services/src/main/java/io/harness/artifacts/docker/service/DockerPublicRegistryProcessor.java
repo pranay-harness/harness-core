@@ -1,19 +1,25 @@
-package software.wings.helpers.ext.docker;
+package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.artifacts.docker.service.DockerRegistryServiceImpl.isSuccessful;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
+import io.harness.artifacts.docker.beans.DockerPublicImageTagResponse;
+import io.harness.artifacts.docker.client.DockerRestClientFactory;
+import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerRegistryToken;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.expiringmap.ExpirationPolicy;
@@ -22,10 +28,6 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
-import software.wings.exception.InvalidArtifactServerException;
-import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerRegistryToken;
-import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -136,8 +138,8 @@ public class DockerPublicRegistryProcessor {
           .stream()
           .map(tag -> {
             Map<String, String> metadata = new HashMap<>();
-            metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag.getName());
-            metadata.put(ArtifactMetadataKeys.tag, tag.getName());
+            metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag.getName());
+            metadata.put(ArtifactMetadataKeys.TAG, tag.getName());
             return BuildDetailsInternal.builder()
                 .number(tag.getName())
                 .buildUrl(tagUrl + tag.getName())

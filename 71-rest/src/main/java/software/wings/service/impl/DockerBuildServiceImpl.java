@@ -12,13 +12,13 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.docker.service.DockerRegistryService;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.exception.InvalidArtifactServerException;
-import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.DockerBuildService;

@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.network.Http;
 import lombok.experimental.UtilityClass;
 import okhttp3.OkHttpClient;
@@ -19,7 +20,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
-import software.wings.exception.InvalidArtifactServerException;
 
 import java.io.IOException;
 import java.io.InputStream;

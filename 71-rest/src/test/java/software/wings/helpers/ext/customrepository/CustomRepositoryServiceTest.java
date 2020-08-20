@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
@@ -20,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.BufferedWriter;

@@ -14,6 +14,7 @@ import com.google.inject.Key;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +25,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.CustomBuildService;

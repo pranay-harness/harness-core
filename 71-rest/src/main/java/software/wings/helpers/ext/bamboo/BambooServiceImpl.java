@@ -22,7 +22,8 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.ArtifactServerException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -41,7 +42,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 

@@ -3,6 +3,12 @@
 12-commons/src/main/java/io/harness/expression/ExpressionEvaluatorUtils.java
 12-commons/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
 12-commons/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
+15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerImageManifestResponse.java
+15-api-services/src/main/java/io/harness/artifacts/docker/beans/DockerPublicImageTagResponse.java
+15-api-services/src/main/java/io/harness/artifacts/docker/client/DockerRestClientFactoryImpl.java
+15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerPublicRegistryProcessor.java
+15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerRegistryServiceImpl.java
+15-api-services/src/main/java/io/harness/artifacts/docker/service/DockerRegistryUtils.java
 21-persistence/src/main/java/io/harness/cache/SpringCacheEntity.java
 22-timeout-engine/src/main/java/io/harness/registrars/TimeoutEngineTimeoutRegistrar.java
 22-timeout-engine/src/main/java/io/harness/registries/TimeoutEngineRegistryModule.java
@@ -624,12 +630,6 @@
 71-rest/src/main/java/software/wings/helpers/ext/azure/devops/AzureDevopsProject.java
 71-rest/src/main/java/software/wings/helpers/ext/azure/devops/AzureDevopsProjects.java
 71-rest/src/main/java/software/wings/helpers/ext/bamboo/BambooServiceImpl.java
-71-rest/src/main/java/software/wings/helpers/ext/docker/DockerImageManifestResponse.java
-71-rest/src/main/java/software/wings/helpers/ext/docker/DockerPublicImageTagResponse.java
-71-rest/src/main/java/software/wings/helpers/ext/docker/DockerPublicRegistryProcessor.java
-71-rest/src/main/java/software/wings/helpers/ext/docker/DockerRegistryServiceImpl.java
-71-rest/src/main/java/software/wings/helpers/ext/docker/DockerRegistryUtils.java
-71-rest/src/main/java/software/wings/helpers/ext/docker/client/DockerRestClientFactoryImpl.java
 71-rest/src/main/java/software/wings/helpers/ext/ecr/EcrClassicServiceImpl.java
 71-rest/src/main/java/software/wings/helpers/ext/ecr/EcrServiceImpl.java
 71-rest/src/main/java/software/wings/helpers/ext/gcb/GcbServiceImpl.java

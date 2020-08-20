@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
@@ -21,7 +22,6 @@ import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;

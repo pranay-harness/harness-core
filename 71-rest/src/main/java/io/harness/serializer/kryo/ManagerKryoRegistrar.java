@@ -437,7 +437,6 @@ import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapab
 import software.wings.delegatetasks.validation.capabilities.SmbConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
-import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageVersion;
@@ -1542,7 +1541,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
     kryo.register(CCMConfig.class, 7248);
     kryo.register(StackDriverMetricDefinition.class, 7249);
-    kryo.register(InvalidArtifactServerException.class, 7250);
     kryo.register(Dimension.class, 7251);
     kryo.register(Datapoint.class, 7252);
     kryo.register(AwsCloudWatchStatisticsResponse.class, 7253);
