@@ -3,6 +3,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.k8s.model.Release.Status.Succeeded;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -11,7 +12,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -38,6 +42,7 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
@@ -62,8 +67,11 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({K8sTaskHelper.class, Utils.class})
@@ -116,6 +124,178 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   public void testRollbackForDeployment() throws Exception {
     rollbackUtil("/k8s/deployment.yaml",
         "kubectl --kubeconfig=config-path rollout undo Deployment/nginx-deployment --to-revision=1");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testRollbackCustomWorkloadAndDoStatusCheck() throws Exception {
+    K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters =
+        K8sRollingDeployRollbackTaskParameters.builder().build();
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().kubectlPath("kubectl").ocPath("oc").kubeconfigPath("config-path").build();
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
+
+    KubernetesResource previousCustomResource = parseKubernetesResourceFromFile("/k8s/crd-old.yaml");
+    KubernetesResource currentCustomResource = parseKubernetesResourceFromFile("/k8s/crd-new.yaml");
+
+    Release release = Release.builder()
+                          .resources(asList(currentCustomResource.getResourceId()))
+                          .number(2)
+                          .customWorkloads(asList(currentCustomResource))
+                          .build();
+    Release previousEligibleRelease = Release.builder()
+                                          .resources(asList(previousCustomResource.getResourceId()))
+                                          .number(1)
+                                          .customWorkloads(asList(previousCustomResource))
+                                          .build();
+
+    when(releaseHistory.getPreviousRollbackEligibleRelease(anyInt())).thenReturn(previousEligibleRelease);
+    when(releaseHistory.getLatestRelease()).thenReturn(release);
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(KubernetesConfig.builder().build());
+    on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", releaseHistory);
+    on(k8sRollingDeployRollbackTaskHandler).set("release", release);
+    on(k8sRollingDeployRollbackTaskHandler).set("client", Kubectl.client("kubectl", "config-path"));
+    when(taskHelperBase.applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+             any(ExecutionLogCallback.class), anyBoolean()))
+        .thenReturn(true);
+    when(taskHelperBase.doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(),
+             any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class), anyBoolean(), anyLong()))
+        .thenReturn(true);
+
+    K8sTaskExecutionResponse response = k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
+        K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    ArgumentCaptor<List> statusCheckCustomWorkloadsCaptor = ArgumentCaptor.forClass(List.class);
+    verify(taskHelperBase, times(1))
+        .doStatusCheckForAllCustomResources(any(Kubectl.class), statusCheckCustomWorkloadsCaptor.capture(),
+            any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class), anyBoolean(), anyLong());
+    List<KubernetesResource> customWorkloadsUnderCheck = statusCheckCustomWorkloadsCaptor.getValue();
+    assertThat(customWorkloadsUnderCheck).isNotEmpty();
+    assertThat(customWorkloadsUnderCheck.get(0)).isEqualTo(previousCustomResource);
+
+    Release releaseToSave = on(k8sRollingDeployRollbackTaskHandler).get("release");
+    assertThat(releaseToSave).isNotNull();
+    assertThat(releaseToSave.getStatus()).isEqualTo(Failed);
+    verify(kubernetesContainerService, never()).saveReleaseHistory(any(), any(), any(), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testRollbackCustomWorkload() throws Exception {
+    K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters =
+        K8sRollingDeployRollbackTaskParameters.builder().build();
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().kubectlPath("kubectl").ocPath("oc").kubeconfigPath("config-path").build();
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
+
+    KubernetesResource previousCustomResource = parseKubernetesResourceFromFile("/k8s/crd-old.yaml");
+    KubernetesResource currentCustomResource = parseKubernetesResourceFromFile("/k8s/crd-new.yaml");
+
+    Release release = Release.builder()
+                          .resources(asList(currentCustomResource.getResourceId()))
+                          .number(2)
+                          .customWorkloads(asList(currentCustomResource))
+                          .build();
+    Release previousEligibleRelease = Release.builder()
+                                          .resources(asList(previousCustomResource.getResourceId()))
+                                          .number(1)
+                                          .customWorkloads(asList(previousCustomResource))
+                                          .build();
+
+    when(releaseHistory.getPreviousRollbackEligibleRelease(anyInt())).thenReturn(previousEligibleRelease);
+    on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", releaseHistory);
+    on(k8sRollingDeployRollbackTaskHandler).set("release", release);
+    on(k8sRollingDeployRollbackTaskHandler).set("client", Kubectl.client("kubectl", "config-path"));
+    when(taskHelperBase.applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+             any(ExecutionLogCallback.class), anyBoolean()))
+        .thenReturn(true);
+
+    boolean rollback = k8sRollingDeployRollbackTaskHandler.rollback(
+        k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams, executionLogCallback);
+    assertThat(rollback).isTrue();
+
+    ArgumentCaptor<List> previousCustomWorkloadsCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<List> currentCustomWorkloadsCaptor = ArgumentCaptor.forClass(List.class);
+
+    verify(taskHelperBase, times(1))
+        .delete(any(Kubectl.class), any(K8sDelegateTaskParams.class), currentCustomWorkloadsCaptor.capture(),
+            any(ExecutionLogCallback.class), anyBoolean());
+
+    verify(taskHelperBase, times(1))
+        .applyManifests(any(Kubectl.class), previousCustomWorkloadsCaptor.capture(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+
+    List<KubernetesResource> previousCustomWorkloads = previousCustomWorkloadsCaptor.getValue();
+    assertThat(previousCustomWorkloads).isNotEmpty();
+    assertThat(previousCustomWorkloads.get(0)).isEqualTo(previousCustomResource);
+
+    List<KubernetesResourceId> currentCustomWorkloads = currentCustomWorkloadsCaptor.getValue();
+    assertThat(currentCustomWorkloads).isNotEmpty();
+    assertThat(currentCustomWorkloads.get(0)).isEqualTo(currentCustomResource.getResourceId());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testRollbackCustomWorkloadWithoutDeletingCurrent() throws Exception {
+    K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters =
+        K8sRollingDeployRollbackTaskParameters.builder().build();
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().kubectlPath("kubectl").ocPath("oc").kubeconfigPath("config-path").build();
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
+
+    KubernetesResource previousCustomResource = parseKubernetesResourceFromFile("/k8s/crd-old.yaml");
+    KubernetesResource deployment = parseKubernetesResourceFromFile("/k8s/deployment.yaml");
+
+    Release release = Release.builder()
+                          .resources(asList(deployment.getResourceId()))
+                          .number(2)
+                          .managedWorkloads(asList(Release.KubernetesResourceIdRevision.builder()
+                                                       .workload(deployment.getResourceId())
+                                                       .revision("2")
+                                                       .build()))
+                          .build();
+    Release previousEligibleRelease = Release.builder()
+                                          .resources(asList(previousCustomResource.getResourceId()))
+                                          .number(1)
+                                          .customWorkloads(asList(previousCustomResource))
+                                          .build();
+
+    when(releaseHistory.getPreviousRollbackEligibleRelease(anyInt())).thenReturn(previousEligibleRelease);
+    on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", releaseHistory);
+    on(k8sRollingDeployRollbackTaskHandler).set("release", release);
+    on(k8sRollingDeployRollbackTaskHandler).set("client", Kubectl.client("kubectl", "config-path"));
+    when(taskHelperBase.applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+             any(ExecutionLogCallback.class), anyBoolean()))
+        .thenReturn(true);
+
+    boolean rollback = k8sRollingDeployRollbackTaskHandler.rollback(
+        k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams, executionLogCallback);
+    assertThat(rollback).isTrue();
+
+    ArgumentCaptor<List> previousCustomWorkloadsCaptor = ArgumentCaptor.forClass(List.class);
+
+    verify(taskHelperBase, times(0))
+        .delete(any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(ExecutionLogCallback.class),
+            anyBoolean());
+
+    verify(taskHelperBase, times(1))
+        .applyManifests(any(Kubectl.class), previousCustomWorkloadsCaptor.capture(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+
+    List<KubernetesResource> previousCustomWorkloads = previousCustomWorkloadsCaptor.getValue();
+    assertThat(previousCustomWorkloads).isNotEmpty();
+    assertThat(previousCustomWorkloads.get(0)).isEqualTo(previousCustomResource);
+  }
+
+  private KubernetesResource parseKubernetesResourceFromFile(String path) throws IOException {
+    URL url = this.getClass().getResource(path);
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    return ManifestHelper.processYaml(fileContents).get(0);
   }
 
   private void rollbackUtil(String manifestFilePath, String expectedOutput) throws Exception {
@@ -195,7 +375,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
+    verify(taskHelperBase, times(1)).getReleaseHistoryData(any(KubernetesConfig.class), anyString());
   }
 
   private void testRollBackToSpecificRelease() throws Exception {

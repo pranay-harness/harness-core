@@ -22,6 +22,7 @@ public class Release {
   private String managedWorkloadRevision;
 
   @Builder.Default private List<KubernetesResourceIdRevision> managedWorkloads = new ArrayList();
+  @Builder.Default private List<KubernetesResource> customWorkloads = new ArrayList<>();
 
   @Data
   @Builder

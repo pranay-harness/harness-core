@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -104,8 +105,8 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .applyManifests(
-            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
@@ -390,6 +391,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(Arrays.asList(K8sPod.builder().build())).when(handler).getAllPods(anyLong());
 
     on(handler).set("canaryWorkload", deployment);
+    on(handler).set("resources", Collections.emptyList());
     ReleaseHistory releaseHist = ReleaseHistory.createNew();
     releaseHist.setReleases(asList(Release.builder().number(2).build()));
     on(handler).set("releaseHistory", releaseHist);
@@ -423,8 +425,8 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
 
     doReturn(false)
         .when(k8sTaskHelperBase)
-        .applyManifests(
-            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
 
     K8sTaskExecutionResponse taskExecutionResponse =
         handler.executeTask(K8sCanaryDeployTaskParameters.builder().releaseName("release-Name").build(),
@@ -543,7 +545,17 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
                                                    .build();
     HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
 
+    List<KubernetesResource> managedResources = ManifestHelper.processYaml("apiVersion: apps/v1\n"
+        + "kind: Foo\n"
+        + "metadata:\n"
+        + "  name: deployment\n"
+        + "  annotations:\n"
+        + "    harness.io/managed-workload: true\n"
+        + "spec:\n"
+        + "  replicas: 1");
+
     on(handler).set("canaryWorkload", deployment);
+    on(handler).set("resources", managedResources);
     ReleaseHistory releaseHist = ReleaseHistory.createNew();
     releaseHist.setReleases(asList(Release.builder().number(2).build()));
     on(handler).set("releaseHistory", releaseHist);

@@ -111,7 +111,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(k8sRollingDeployRequest, Apply));
+        k8sTaskHelperBase.getExecutionLogCallback(k8sRollingDeployRequest, Apply), true);
     if (!success) {
       return getFailureResponse();
     }

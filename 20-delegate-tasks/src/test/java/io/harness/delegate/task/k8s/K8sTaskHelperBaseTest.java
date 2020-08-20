@@ -4,7 +4,10 @@ import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
 import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.k8s.model.Kind.Service;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -18,7 +21,11 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -36,6 +43,9 @@ import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import org.junit.Rule;
@@ -190,5 +200,74 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     kubernetesResourceIds.add(
         KubernetesResourceId.builder().kind(Service.name()).name("s1").namespace("default").build());
     return kubernetesResourceIds;
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateLogInfoOutputStream() throws Exception {
+    List<KubernetesResourceId> resourceIds =
+        ImmutableList.of(KubernetesResourceId.builder().name("app1").namespace("default").build());
+
+    final String eventInfoFormat = "%-7s: %-4s   %s";
+    LogCallback executionLogCallback = spy(getLogCallback());
+    LogOutputStream logOutputStream =
+        k8sTaskHelperBase.createFilteredInfoLogOutputStream(resourceIds, executionLogCallback, eventInfoFormat);
+    byte[] message = "Starting app1 in default namespace\r\n".getBytes();
+    logOutputStream.write(message);
+
+    verify(executionLogCallback, times(1)).saveExecutionLog("Event  : app1   Starting app1 in default namespace", INFO);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateLogErrorOutputStream() throws Exception {
+    LogCallback executionLogCallback = spy(getLogCallback());
+    LogOutputStream logOutputStream = k8sTaskHelperBase.createErrorLogOutputStream(executionLogCallback);
+    byte[] message = "Failed to start app1 in default namespace\r\n".getBytes();
+    logOutputStream.write(message);
+
+    verify(executionLogCallback, times(1))
+        .saveExecutionLog("Event  : Failed to start app1 in default namespace", ERROR);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateStatusInfoLogOutputStream() throws Exception {
+    LogCallback executionLogCallback = spy(getLogCallback());
+    LogOutputStream logOutputStream =
+        k8sTaskHelperBase.createStatusInfoLogOutputStream(executionLogCallback, "app1", "%n%-7s: %-4s   %s");
+    byte[] message = "Deployed\r\n".getBytes();
+    logOutputStream.write(message);
+
+    verify(executionLogCallback, times(1)).saveExecutionLog("\nStatus : app1   Deployed", INFO);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateStatusErrorLogOutputStream() throws Exception {
+    LogCallback executionLogCallback = spy(getLogCallback());
+    LogOutputStream logOutputStream =
+        k8sTaskHelperBase.createStatusErrorLogOutputStream(executionLogCallback, "app1", "%n%-7s: %-4s   %s");
+    byte[] message = "Failed\r\n".getBytes();
+    logOutputStream.write(message);
+
+    verify(executionLogCallback, times(1)).saveExecutionLog("\nStatus : app1   Failed", ERROR);
+  }
+
+  private LogCallback getLogCallback() {
+    return new LogCallback() {
+      @Override
+      public void saveExecutionLog(String line) {}
+
+      @Override
+      public void saveExecutionLog(String line, LogLevel logLevel) {}
+
+      @Override
+      public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {}
+    };
   }
 }

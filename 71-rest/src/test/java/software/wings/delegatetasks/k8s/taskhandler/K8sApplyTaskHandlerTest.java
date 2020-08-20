@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -9,6 +10,7 @@ import static java.util.Collections.EMPTY_LIST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -28,10 +30,12 @@ import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -52,6 +56,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -240,11 +245,13 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     List<KubernetesResource> resources = asList(K8sTestHelper.deployment(), K8sTestHelper.configMap());
     Reflect.on(k8sApplyTaskHandler).set("resources", EMPTY_LIST);
 
-    assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class))).isTrue();
+    assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class), mock(K8sApplyTaskParameters.class)))
+        .isTrue();
     assertThat(Reflect.on(k8sApplyTaskHandler).<List>get("resources")).isEmpty();
 
     Reflect.on(k8sApplyTaskHandler).set("resources", resources);
-    assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class))).isTrue();
+    assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class), mock(K8sApplyTaskParameters.class)))
+        .isTrue();
     assertThat(Reflect.on(k8sApplyTaskHandler).<List>get("workloads")).hasSize(1);
   }
 
@@ -253,7 +260,8 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void prepareFailure() {
     //    PowerMockito.when(ManifestHelper.getWorkloadsForApplyState(anyList())).thenThrow(new RuntimeException());
-    assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class))).isFalse();
+    assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class), mock(K8sApplyTaskParameters.class)))
+        .isFalse();
   }
 
   @Test
@@ -267,11 +275,11 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(true).when(handler).init(
         any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
-    doReturn(true).when(handler).prepare(any(ExecutionLogCallback.class));
+    doReturn(true).when(handler).prepare(any(ExecutionLogCallback.class), any(K8sApplyTaskParameters.class));
     doReturn(false)
         .when(k8sTaskHelperBase)
-        .applyManifests(
-            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
 
     final K8sTaskExecutionResponse response =
         k8sApplyTaskHandler.executeTask(K8sApplyTaskParameters.builder().releaseName("release-name").build(),
@@ -292,16 +300,29 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(true).when(handler).init(
         any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
-    doReturn(true).when(handler).prepare(any(ExecutionLogCallback.class));
+    doReturn(true).when(handler).prepare(any(ExecutionLogCallback.class), any(K8sApplyTaskParameters.class));
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .applyManifests(
-            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
     doReturn(true)
         .when(k8sTaskHelperBase)
         .doStatusCheckForAllResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), anyString(),
-            any(ExecutionLogCallback.class), eq(true));
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean(), anyLong());
+
     Reflect.on(handler).set("workloads",
+        asList(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(),
+            KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build()));
+
+    Reflect.on(handler).set("customWorkloads",
+        asList(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(),
+            KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build()));
+
+    Reflect.on(handler).set("resources",
         asList(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(),
             KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build()));
 
@@ -316,7 +337,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class),
-            anyString(), any(ExecutionLogCallback.class), eq(true));
+            anyString(), any(ExecutionLogCallback.class), anyBoolean());
 
     verify(k8sTaskHelperBase, times(1))
         .describe(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
@@ -326,5 +347,130 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(response.getK8sTaskResponse()).isNotNull();
     assertThat(capturedResources).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void applyManifestFilesWithCrd() throws Exception {
+    K8sApplyTaskHandler handler = spy(k8sApplyTaskHandler);
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
+    doReturn(true).when(handler).init(
+        any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true).when(handler).prepare(any(ExecutionLogCallback.class), any(K8sApplyTaskParameters.class));
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), anyString(),
+            any(ExecutionLogCallback.class), eq(false));
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), eq(true), anyLong());
+
+    Reflect.on(handler).set("workloads",
+        asList(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(),
+            KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build()));
+
+    List<KubernetesResource> managedResources = ManifestHelper.processYaml("apiVersion: apps/v1\n"
+        + "kind: Foo\n"
+        + "metadata:\n"
+        + "  name: deployment\n"
+        + "  annotations:\n"
+        + "    harness.io/managed-workload: true\n"
+        + "spec:\n"
+        + "  replicas: 1");
+
+    Reflect.on(handler).set("resources", managedResources);
+    Reflect.on(handler).set("customWorkloads", managedResources);
+
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    final K8sTaskExecutionResponse response =
+        handler.executeTask(K8sApplyTaskParameters.builder()
+                                .releaseName("release-name")
+                                .skipSteadyStateCheck(false)
+                                .k8sClusterConfig(K8sClusterConfig.builder().namespace("default").build())
+                                .build(),
+            K8sDelegateTaskParams.builder().workingDirectory(".").build());
+
+    verify(k8sTaskHelperBase, times(1))
+        .doStatusCheckForAllCustomResources(any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), eq(true), anyLong());
+
+    verify(k8sTaskHelperBase, times(1))
+        .describe(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+
+    @SuppressWarnings("unchecked")
+    final List<KubernetesResourceId> capturedResources = (List<KubernetesResourceId>) captor.getValue();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getK8sTaskResponse()).isNotNull();
+    assertThat(capturedResources).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testFailCrdStatusCheck() throws Exception {
+    K8sApplyTaskHandler handler = spy(k8sApplyTaskHandler);
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
+    doReturn(true).when(handler).init(
+        any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true).when(handler).prepare(any(ExecutionLogCallback.class), any(K8sApplyTaskParameters.class));
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), anyString(),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(false)
+        .when(k8sTaskHelperBase)
+        .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), eq(true), anyLong());
+
+    doReturn(K8sTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).build())
+        .when(k8sTaskHelper)
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
+
+    Reflect.on(handler).set("workloads",
+        asList(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(),
+            KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build()));
+
+    List<KubernetesResource> managedResources = ManifestHelper.processYaml("apiVersion: apps/v1\n"
+        + "kind: Foo\n"
+        + "metadata:\n"
+        + "  name: deployment\n"
+        + "  annotations:\n"
+        + "    harness.io/managed-workload: true\n"
+        + "spec:\n"
+        + "  replicas: 1");
+
+    Reflect.on(handler).set("resources", managedResources);
+    Reflect.on(handler).set("customWorkloads", managedResources);
+
+    ArgumentCaptor<CommandExecutionStatus> captor = ArgumentCaptor.forClass(CommandExecutionStatus.class);
+    final K8sTaskExecutionResponse response =
+        handler.executeTask(K8sApplyTaskParameters.builder()
+                                .releaseName("release-name")
+                                .skipSteadyStateCheck(false)
+                                .k8sClusterConfig(K8sClusterConfig.builder().namespace("default").build())
+                                .build(),
+            K8sDelegateTaskParams.builder().workingDirectory(".").build());
+
+    verify(k8sTaskHelper, times(1)).getK8sTaskExecutionResponse(any(K8sTaskResponse.class), captor.capture());
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    @SuppressWarnings("unchecked") final CommandExecutionStatus capturedResources = captor.getValue();
+    assertThat(capturedResources).isEqualTo(FAILURE);
   }
 }

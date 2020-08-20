@@ -119,9 +119,12 @@ public interface KubernetesContainerService {
 
   void saveReleaseHistory(KubernetesConfig kubernetesConfig, String infraMappingxId, String releaseHistory);
 
-  List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
+  String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String infraMappingId);
 
-  HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace);
+  void saveReleaseHistory(
+      KubernetesConfig kubernetesConfig, String infraMappingId, String releaseHistory, boolean storeInSecrets);
+
+  List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
 
   void deleteIstioVirtualService(KubernetesConfig kubernetesConfig, String name);
 
@@ -136,4 +139,6 @@ public interface KubernetesContainerService {
   void tryListControllersKubectl(KubernetesConfig kubernetesConfig);
 
   String getConfigFileContent(KubernetesConfig config);
+
+  HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace);
 }

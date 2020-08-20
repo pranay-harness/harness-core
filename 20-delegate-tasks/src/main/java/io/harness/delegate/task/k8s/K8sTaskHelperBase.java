@@ -59,6 +59,7 @@ import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -147,6 +148,7 @@ public class K8sTaskHelperBase {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
   public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
       + "subset: $ISTIO_DESTINATION_SUBSET_NAME";
@@ -634,7 +636,8 @@ public class K8sTaskHelperBase {
   }
 
   public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess)
+      throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
@@ -647,7 +650,10 @@ public class K8sTaskHelperBase {
       return false;
     }
 
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    if (denoteOverallSuccess) {
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    }
+
     return true;
   }
 
@@ -734,7 +740,8 @@ public class K8sTaskHelperBase {
   }
 
   public void delete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
-      List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback) throws Exception {
+      List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
+      throws Exception {
     for (KubernetesResourceId resourceId : kubernetesResourceIds) {
       DeleteCommand deleteCommand =
           client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
@@ -744,7 +751,9 @@ public class K8sTaskHelperBase {
       }
     }
 
-    executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
+    if (denoteOverallSuccess) {
+      executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
+    }
   }
 
   public void describe(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback)
@@ -1501,6 +1510,190 @@ public class K8sTaskHelperBase {
     }
 
     return manifestFiles;
+  }
+
+  public boolean doStatusCheckForAllCustomResources(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
+      long timeoutInMillis) throws Exception {
+    List<KubernetesResourceId> resourceIds =
+        resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
+    if (isEmpty(resourceIds)) {
+      return true;
+    }
+
+    executionLogCallback.saveExecutionLog("Performing steady check for managed workloads \n");
+    int maxResourceNameLength = 0;
+    for (KubernetesResourceId kubernetesResourceId : resourceIds) {
+      maxResourceNameLength = Math.max(maxResourceNameLength, kubernetesResourceId.getName().length());
+    }
+
+    final String eventInfoFormat = "%-7s: %-" + maxResourceNameLength + "s   %s";
+
+    Set<String> namespaces = resourceIds.stream().map(KubernetesResourceId::getNamespace).collect(toSet());
+    List<GetCommand> getEventCommands = namespaces.stream()
+                                            .map(ns
+                                                -> client.get()
+                                                       .resources("events")
+                                                       .namespace(ns)
+                                                       .output(K8sConstants.eventWithNamespaceOutputFormat)
+                                                       .watchOnly(true))
+                                            .collect(toList());
+
+    for (GetCommand cmd : getEventCommands) {
+      executionLogCallback.saveExecutionLog(GetCommand.getPrintableCommand(cmd.command()) + "\n");
+    }
+
+    boolean success = false;
+
+    List<StartedProcess> eventWatchProcesses = new ArrayList<>();
+    String currentSteadyCondition = null;
+    try (LogOutputStream watchInfoStream =
+             createFilteredInfoLogOutputStream(resourceIds, executionLogCallback, eventInfoFormat);
+         LogOutputStream watchErrorStream = createErrorLogOutputStream(executionLogCallback)) {
+      for (GetCommand getEventsCommand : getEventCommands) {
+        eventWatchProcesses.add(getEventWatchProcess(
+            k8sDelegateTaskParams.getWorkingDirectory(), getEventsCommand, watchInfoStream, watchErrorStream));
+      }
+
+      for (KubernetesResource kubernetesResource : resources) {
+        String steadyCondition = kubernetesResource.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
+        currentSteadyCondition = steadyCondition;
+        success = timeLimiter.callWithTimeout(
+            ()
+                -> doStatusCheckForCustomResources(client, kubernetesResource.getResourceId(), steadyCondition,
+                    k8sDelegateTaskParams, executionLogCallback),
+            timeoutInMillis, TimeUnit.MILLISECONDS, true);
+
+        if (!success) {
+          break;
+        }
+      }
+
+      return success;
+    } catch (Exception e) {
+      logger.error("Exception while doing statusCheck", e);
+      executionLogCallback.saveExecutionLog("\nFailed to execute the status check of the custom resources.", INFO);
+      executionLogCallback.saveExecutionLog(color(
+          format(
+              "%nPossible reasons: %n\t 1. The steady check condition [%s] is wrong. %n\t 2. The custom controller is not running.",
+              currentSteadyCondition),
+          Yellow, Bold));
+
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      return false;
+    } finally {
+      for (StartedProcess eventWatchProcess : eventWatchProcesses) {
+        eventWatchProcess.getProcess().destroyForcibly().waitFor();
+      }
+      if (success) {
+        if (denoteOverallSuccess) {
+          executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+        }
+      } else {
+        executionLogCallback.saveExecutionLog(
+            format("%nStatus check for resources in namespace [%s] failed.", namespaces), INFO,
+            CommandExecutionStatus.FAILURE);
+      }
+    }
+  }
+
+  public void checkSteadyStateCondition(List<KubernetesResource> customWorkloads) {
+    for (KubernetesResource customWorkload : customWorkloads) {
+      String steadyCondition = customWorkload.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
+      if (isEmpty(steadyCondition)) {
+        throw new InvalidArgumentsException(
+            Pair.of(HarnessAnnotations.steadyStateCondition, "Metadata annotation not provided."));
+      }
+    }
+  }
+
+  @VisibleForTesting
+  LogOutputStream createFilteredInfoLogOutputStream(
+      List<KubernetesResourceId> resourceIds, LogCallback executionLogCallback, String eventInfoFormat) {
+    return new LogOutputStream() {
+      @Override
+      protected void processLine(String line) {
+        Optional<KubernetesResourceId> filteredResourceId =
+            resourceIds.parallelStream()
+                .filter(kubernetesResourceId
+                    -> line.contains(kubernetesResourceId.getNamespace())
+                        && line.contains(kubernetesResourceId.getName()))
+                .findFirst();
+
+        filteredResourceId.ifPresent(kubernetesResourceId
+            -> executionLogCallback.saveExecutionLog(
+                format(eventInfoFormat, "Event", kubernetesResourceId.getName(), line), INFO));
+      }
+    };
+  }
+
+  @VisibleForTesting
+  LogOutputStream createErrorLogOutputStream(LogCallback executionLogCallback) {
+    return new LogOutputStream() {
+      @Override
+      protected void processLine(String line) {
+        executionLogCallback.saveExecutionLog(format("%-7s: %s", "Event", line), ERROR);
+      }
+    };
+  }
+
+  boolean doStatusCheckForCustomResources(Kubectl client, KubernetesResourceId resourceId, String steadyCondition,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) throws Exception {
+    GetCommand crdStatusCommand =
+        client.get().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace()).output("json");
+
+    executionLogCallback.saveExecutionLog(getPrintableCommand(crdStatusCommand.command()) + "\n");
+    final Map<String, Object> evaluatorResponseContext = new HashMap<>(1);
+
+    while (true) {
+      ProcessResult result = crdStatusCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), null, null, false);
+
+      boolean success = 0 == result.getExitValue();
+      if (!success) {
+        logger.warn(result.outputUTF8());
+        return false;
+      }
+
+      evaluatorResponseContext.put("response", result.outputUTF8());
+      String steadyResult = delegateExpressionEvaluator.substitute(steadyCondition, evaluatorResponseContext);
+      if (isNotEmpty(steadyResult)) {
+        boolean steady = Boolean.parseBoolean(steadyResult);
+        if (steady) {
+          return true;
+        }
+      }
+    }
+  }
+
+  @VisibleForTesting
+  LogOutputStream createStatusInfoLogOutputStream(LogCallback executionLogCallback, String message, String format) {
+    return new LogOutputStream() {
+      @Override
+      protected void processLine(String line) {
+        executionLogCallback.saveExecutionLog(format(format, "Status", message, line), INFO);
+      }
+    };
+  }
+
+  @VisibleForTesting
+  LogOutputStream createStatusErrorLogOutputStream(LogCallback executionLogCallback, String message, String format) {
+    return new LogOutputStream() {
+      @Override
+      protected void processLine(String line) {
+        executionLogCallback.saveExecutionLog(format(format, "Status", message, line), ERROR);
+      }
+    };
+  }
+
+  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) {
+    String releaseHistoryData =
+        kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+
+    if (isEmpty(releaseHistoryData)) {
+      releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(kubernetesConfig, releaseName);
+    }
+
+    return releaseHistoryData;
   }
 
   public LogCallback getExecutionLogCallback(K8sRollingDeployRequest k8sRollingDeployRequest, String commandUnitName) {

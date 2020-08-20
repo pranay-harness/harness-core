@@ -9,6 +9,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
+import static io.harness.k8s.manifest.ManifestHelper.getCustomResourceDefinitionWorkloads;
 import static io.harness.k8s.manifest.ManifestHelper.getEligibleWorkloads;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -36,6 +37,7 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -62,6 +64,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
   private String releaseName;
   private List<KubernetesResource> resources;
   private List<KubernetesResource> workloads;
+  private List<KubernetesResource> customWorkloads;
   private KubernetesConfig kubernetesConfig;
   private String manifestFilesDirectory;
 
@@ -92,18 +95,18 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    success = prepare(k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Prepare));
+    success = prepare(k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Prepare), k8sApplyTaskParameters);
     if (!success) {
       return getFailureResponse();
     }
 
-    success = k8sTaskHelperBase.applyManifests(
-        client, resources, k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Apply));
+    success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
+        k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Apply), true);
     if (!success) {
       return getFailureResponse();
     }
 
-    if (isEmpty(workloads)) {
+    if (isEmpty(workloads) && isEmpty(customWorkloads)) {
       k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, WaitForSteadyState)
           .saveExecutionLog("Skipping Status Check since there is no Workload.", INFO, SUCCESS);
     } else {
@@ -111,13 +114,16 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
         List<KubernetesResourceId> kubernetesResourceIds =
             workloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
 
-        success = k8sTaskHelperBase.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
-            k8sTaskParameters.getK8sClusterConfig().getNamespace(),
+        ExecutionLogCallback executionLogCallback =
             new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
-                k8sTaskParameters.getActivityId(), WaitForSteadyState),
-            true);
+                k8sTaskParameters.getActivityId(), WaitForSteadyState);
+        success = k8sTaskHelperBase.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
+            k8sTaskParameters.getK8sClusterConfig().getNamespace(), executionLogCallback, customWorkloads.isEmpty());
 
-        if (!success) {
+        boolean customResourcesStatusSuccess = k8sTaskHelperBase.doStatusCheckForAllCustomResources(
+            client, customWorkloads, k8sDelegateTaskParams, executionLogCallback, true, timeoutInMillis);
+
+        if (!success || !customResourcesStatusSuccess) {
           return k8sTaskHelper.getK8sTaskExecutionResponse(k8sApplyResponse, CommandExecutionStatus.FAILURE);
         }
       }
@@ -182,17 +188,21 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
   }
 
   @VisibleForTesting
-  boolean prepare(ExecutionLogCallback executionLogCallback) {
+  boolean prepare(ExecutionLogCallback executionLogCallback, K8sApplyTaskParameters k8sApplyTaskParameters) {
     try {
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(resources));
 
       workloads = getEligibleWorkloads(resources);
-      if (isEmpty(workloads)) {
+      customWorkloads = getCustomResourceDefinitionWorkloads(resources);
+      if (isEmpty(workloads) && isEmpty(customWorkloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Workload found.", Yellow, Bold));
       } else {
-        executionLogCallback.saveExecutionLog(
-            "Found following Workloads\n" + k8sTaskHelperBase.getResourcesInTableFormat(workloads));
+        executionLogCallback.saveExecutionLog("Found following Workloads\n"
+            + k8sTaskHelperBase.getResourcesInTableFormat(ListUtils.union(workloads, customWorkloads)));
+        if (!k8sApplyTaskParameters.isSkipSteadyStateCheck() && !customWorkloads.isEmpty()) {
+          k8sTaskHelperBase.checkSteadyStateCondition(customWorkloads);
+        }
       }
     } catch (Exception e) {
       logger.error("Exception:", e);
