@@ -1503,7 +1503,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     workflowPhase.setStatefulSet(isStatefulSet(appId, workflowPhase.getServiceId()));
 
-    Category category = workflowServiceHelper.getCategory(workflow.getAppId(), workflow.getServiceId());
+    Category category = workflowServiceHelper.getCategory(workflow.getAppId(), workflowPhase.getServiceId());
     WorkflowCreator workflowCreator = abstractWorkflowFactory.getWorkflowCreatorFactory(category).getWorkflowCreator(
         orchestrationWorkflow.getOrchestrationWorkflowType());
 
