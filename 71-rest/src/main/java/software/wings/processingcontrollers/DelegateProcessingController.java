@@ -10,7 +10,7 @@ import software.wings.service.intfc.AccountService;
 public class DelegateProcessingController implements ProcessingController {
   @Inject private AccountService accountService;
 
-  private static final long ALLOWED_NUMBER_OF_DAYS_SINCE_EXPIRY = 4;
+  private static final long ALLOWED_NUMBER_OF_DAYS_SINCE_EXPIRY = Integer.MAX_VALUE;
 
   @Override
   public boolean canProcessAccount(String accountId) {

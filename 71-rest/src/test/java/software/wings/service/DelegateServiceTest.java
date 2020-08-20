@@ -114,7 +114,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
@@ -2177,34 +2176,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(countOfDelegatesForAccounts.get(0)).isEqualTo(1);
     assertThat(countOfDelegatesForAccounts.get(1)).isEqualTo(0);
-  }
-
-  @Test
-  @Owner(developers = SANJA)
-  @Category(UnitTests.class)
-  public void shouldUpdateHeartbeatForDelegateWithPollingEnabled() {
-    Delegate delegate = Delegate.builder()
-                            .uuid(generateUuid())
-                            .hostName(HOST_NAME)
-                            .accountId(ACCOUNT_ID)
-                            .ip("127.0.0.1")
-                            .version(VERSION)
-                            .status(Status.ENABLED)
-                            .lastHeartBeat(System.currentTimeMillis())
-                            .tags(ImmutableList.of("abc", "qwe"))
-                            .build();
-
-    Answer<Boolean> answer = invocation -> {
-      wingsPersistence.save(delegate);
-      return false;
-    };
-    doAnswer(answer).when(delegateProcessingController).canProcessAccount(anyString());
-    when(licenseService.isAccountDeleted(anyString())).thenReturn(true);
-
-    Delegate result = delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate);
-
-    assertThat(result).extracting(Delegate::getStatus).isEqualTo(Status.DELETED);
-    assertThat(result).extracting(Delegate::getUuid).isEqualTo(delegate.getUuid());
   }
 
   private DelegateTask saveDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {

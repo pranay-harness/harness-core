@@ -27,12 +27,7 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELIN
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
-import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
-import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -714,10 +709,7 @@ public class AuthServiceImpl implements AuthService {
             .build();
 
     AccountPermissions accountPermissions =
-        AccountPermissions.builder()
-            .permissions(Sets.newHashSet(USER_PERMISSION_READ, ACCOUNT_MANAGEMENT, USER_PERMISSION_MANAGEMENT,
-                TEMPLATE_MANAGEMENT, APPLICATION_CREATE_DELETE, AUDIT_VIEWER))
-            .build();
+        AccountPermissions.builder().permissions(authHandler.getAllAccountPermissions()).build();
     UserGroup userGroup = UserGroup.builder()
                               .accountId(accountId)
                               .accountPermissions(accountPermissions)

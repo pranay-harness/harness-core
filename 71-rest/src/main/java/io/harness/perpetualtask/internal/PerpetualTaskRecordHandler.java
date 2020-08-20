@@ -85,7 +85,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
                 -> query.field(PerpetualTaskRecordKeys.delegateId)
                        .equal("")
                        .field(PerpetualTaskRecordKeys.state)
-                       .notEqual(PerpetualTaskState.TASK_PAUSED.name()))
+                       .notEqual(PerpetualTaskState.TASK_PAUSED))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
