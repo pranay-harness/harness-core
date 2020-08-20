@@ -68,6 +68,7 @@
             "text": "Explore",
             "emoji": true
           },
+          "url": "${url}",
           "value": "click_me_123"
         }
       ]
