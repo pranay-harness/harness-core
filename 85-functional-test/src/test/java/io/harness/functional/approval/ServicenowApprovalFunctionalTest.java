@@ -98,7 +98,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalForMultipleORConditions() {
     Criteria rejectionCriteria = new Criteria();
@@ -132,7 +132,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalWithChangeWindowTimeout() {
     Criteria rejectionCriteria = new Criteria();
@@ -191,7 +191,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesForChange() {
     Criteria rejectionCriteria = new Criteria();
@@ -238,7 +238,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ThrowExceptionForInvalidChangeWindowValues() {
     Criteria rejectionCriteria = new Criteria();
@@ -292,7 +292,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalForExpiredButWaitingForTimeWindow() {
     Criteria rejectionCriteria = new Criteria();
@@ -346,7 +346,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesOtherTicketTypes() {
     Criteria rejectionCriteria = new Criteria();
@@ -423,7 +423,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowRejectionForMultipleANDConditions() {
     Criteria rejectionCriteria = new Criteria();
@@ -457,7 +457,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalPipelineForMultipleANDConditions() {
     Criteria rejectionCriteria = new Criteria();
@@ -547,7 +547,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowRejectionPipelineForMultipleORConditions() {
     Criteria rejectionCriteria = new Criteria();
