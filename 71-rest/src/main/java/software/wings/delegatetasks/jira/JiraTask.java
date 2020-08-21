@@ -561,9 +561,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
     BasicCredentials creds = new BasicCredentials(jiraConfig.getUsername(), new String(jiraConfig.getPassword()));
-    String baseUrl =
-        jiraConfig.getBaseUrl().endsWith("/") ? jiraConfig.getBaseUrl() : jiraConfig.getBaseUrl().concat("/");
-    return new JiraClient(baseUrl, creds);
+
+    return new JiraClient(jiraConfig.getBaseUrl(), creds);
   }
 
   private ResponseData fetchIssue(JiraTaskParameters parameters) {

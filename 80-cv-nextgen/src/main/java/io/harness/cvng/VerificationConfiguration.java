@@ -72,7 +72,7 @@ public class VerificationConfiguration extends Configuration {
     FileAppenderFactory<IAccessEvent> fileAppenderFactory = new FileAppenderFactory<>();
     fileAppenderFactory.setArchive(true);
     fileAppenderFactory.setCurrentLogFilename("cv-nextgen-access.log");
-    fileAppenderFactory.setThreshold(Level.ALL.toString());
+    fileAppenderFactory.setThreshold(Level.ALL);
     fileAppenderFactory.setArchivedLogFilenamePattern("cv-nextgen-access.%d.log.gz");
     fileAppenderFactory.setArchivedFileCount(14);
     logbackAccessRequestLogFactory.setAppenders(ImmutableList.of(fileAppenderFactory));

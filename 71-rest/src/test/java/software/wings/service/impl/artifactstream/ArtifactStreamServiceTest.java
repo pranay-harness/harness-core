@@ -773,7 +773,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .artifactPaths(asList("todolist"))
                                                   .autoPopulate(false)
                                                   .repositoryType("maven")
-                                                  .repositoryFormat("maven")
                                                   .name(name)
                                                   .build();
     ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusArtifactStream);
@@ -1040,7 +1039,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .autoPopulate(true)
                                                         .dockerRegistryUrl("https://nexus3.harness.io")
                                                         .repositoryType("docker")
-                                                        .repositoryFormat("docker")
                                                         .build();
     updateNexusDockerArtifactStreamAndValidate(nexusDockerArtifactStream, GLOBAL_APP_ID);
     verify(yamlPushService, times(2))

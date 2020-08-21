@@ -310,7 +310,7 @@
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-keyvault</artifactId>
-            <version>1.2.4</version>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -461,7 +461,7 @@
             <artifactId>reactor-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.projectreactor.netty</groupId>
+            <groupId>io.projectreactor.ipc</groupId>
             <artifactId>reactor-netty</artifactId>
         </dependency>
         <dependency>
@@ -561,6 +561,10 @@
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-hazelcast</artifactId>
         </dependency>
         <dependency>
             <groupId>org.atmosphere</groupId>
