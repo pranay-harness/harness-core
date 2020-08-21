@@ -1,5 +1,7 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HPersistence;
@@ -37,7 +39,8 @@ public class CEClusterDao {
   }
 
   public boolean deleteCluster(String uuid) {
-    Query<CECluster> query = hPersistence.createQuery(CECluster.class).field(CEClusterKeys.uuid).equal(uuid);
+    Query<CECluster> query =
+        hPersistence.createQuery(CECluster.class, excludeAuthority).field(CEClusterKeys.uuid).equal(uuid);
     return hPersistence.delete(query);
   }
 }

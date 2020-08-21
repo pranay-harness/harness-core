@@ -37,6 +37,9 @@ public class CEClusterDaoTest extends WingsBaseTest {
     assertThat(savedCECluster.getInfraAccountId()).isEqualTo(infraAccountId);
     assertThat(savedCECluster.getInfraMasterAccountId()).isEqualTo(infraMasterAccountId);
     assertThat(savedCECluster.getParentAccountSettingId()).isEqualTo(masterAccountSettingId);
+    ceClusterDao.deleteCluster(savedCECluster.getUuid());
+    List<CECluster> ceClusterList = ceClusterDao.getByInfraAccountId(accountId, infraAccountId);
+    assertThat(ceClusterList).hasSize(0);
   }
 
   private CECluster getCECluster() {
@@ -48,17 +51,5 @@ public class CEClusterDaoTest extends WingsBaseTest {
         .clusterName(clusterName)
         .region(region)
         .build();
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldDeleteCECloudAccount() {
-    ceClusterDao.create(getCECluster());
-    List<CECluster> ceClusters = ceClusterDao.getByInfraAccountId(accountId, infraAccountId);
-    CECluster savedCECluster = ceClusters.get(0);
-    ceClusterDao.deleteCluster(savedCECluster.getUuid());
-    List<CECluster> ceClusterList = ceClusterDao.getByInfraAccountId(accountId, infraAccountId);
-    assertThat(ceClusterList).hasSize(0);
   }
 }
