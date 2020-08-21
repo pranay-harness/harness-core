@@ -856,9 +856,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     Set<String> ignoredExpressions = ImmutableSet.of(InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION);
     Map<String, Object> fieldMapForClass = getExpressionAnnotatedFields(infrastructureDefinition.getInfrastructure());
     Map<String, Object> renderedFieldMap = new HashMap<>();
-    final ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+    final ManagerPreviewExpressionEvaluator expressionEvaluator =
+        ManagerPreviewExpressionEvaluator.evaluatorWithSecretExpressionFormat();
     // This is to ensure resolved secrets are not stored in DB
-    final Functor safeExpressionResolver = getSecretSafeFunctor(context, expressionEvaluator);
+    final Functor safeExpressionResolver = buildSecretSafeFunctor(context, expressionEvaluator);
 
     if (isEmpty(infrastructureDefinition.getProvisionerId())) {
       for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
@@ -894,7 +895,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return true;
   }
 
-  private Functor getSecretSafeFunctor(
+  private Functor buildSecretSafeFunctor(
       ExecutionContext context, ManagerPreviewExpressionEvaluator expressionEvaluator) {
     return val -> {
       context.resetPreparedCache();

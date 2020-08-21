@@ -7,6 +7,7 @@ import io.harness.expression.ExpressionFunctor;
 
 @OwnedBy(CDC)
 public class SecretManagerPreviewFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
+  public static final String SECRET_EXPRESSION_FORMATTER = "${secrets.getValue(\"%s\")}";
   private String formatter;
 
   public SecretManagerPreviewFunctor() {
@@ -15,6 +16,10 @@ public class SecretManagerPreviewFunctor implements ExpressionFunctor, SecretMan
 
   public SecretManagerPreviewFunctor(String formatter) {
     this.formatter = formatter;
+  }
+
+  public static SecretManagerPreviewFunctor functorWithSecretExpressionFormat() {
+    return new SecretManagerPreviewFunctor(SECRET_EXPRESSION_FORMATTER);
   }
 
   @Override

@@ -22,4 +22,11 @@ public class CustomDeploymentTypeTemplate implements BaseTemplate {
   private String fetchInstanceScript;
   private String hostObjectArrayPath;
   private Map<String, String> hostAttributes;
+
+  public CustomDeploymentTypeTemplateBuilder but() {
+    return CustomDeploymentTypeTemplate.builder()
+        .hostObjectArrayPath(hostObjectArrayPath)
+        .hostAttributes(hostAttributes)
+        .fetchInstanceScript(fetchInstanceScript);
+  }
 }

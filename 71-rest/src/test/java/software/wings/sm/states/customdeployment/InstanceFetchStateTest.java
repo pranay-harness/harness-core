@@ -2,6 +2,7 @@ package software.wings.sm.states.customdeployment;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -22,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -50,6 +52,7 @@ import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
@@ -66,6 +69,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private DelegateService delegateService;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private InstanceFetchState state = new InstanceFetchState("Fetch Instances");
 
@@ -99,6 +103,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
         .createAndSaveActivity(eq(context), eq(Activity.Type.Command), anyString(),
             eq(CommandUnitType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName()), anyList());
     doReturn("5").when(context).renderExpression(timeoutExpr);
+    doReturn("some-string").when(context).appendStateExecutionId(anyString());
+    doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(WORKFLOW);
   }
 
   @Test
@@ -242,6 +248,29 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     assertThat(instanceElements).hasSize(2);
     assertThat(instanceElements.stream().map(InstanceElement::getHostName).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("10.244.12.15", "10.244.12.13");
+  }
+
+  /*
+  Test with output of kubectl get pod -l app=nginx -o json
+   */
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testMapJsonToInstanceElementsNestedAttributes() throws IOException {
+    InstanceFetchStateExecutionData executionData = InstanceFetchStateExecutionData.builder()
+                                                        .hostObjectArrayPath("items")
+                                                        .hostAttributes(ImmutableMap.of("hostname", "metadata.name"))
+                                                        .build();
+    String output = readFile("NestedAttributesInstance.json");
+
+    final List<InstanceElement> instanceElements =
+        InstanceElementMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+            executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper);
+
+    assertThat(instanceElements).hasSize(5);
+    assertThat(instanceElements.stream().map(InstanceElement::getHostName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(
+            "cd-statefulset-0", "cd-statefulset-1", "k8sv2-statefulset-0", "statefulset-test-0", "statefulset-test-1");
   }
 
   private String readFile(String fileName) throws IOException {
