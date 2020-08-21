@@ -18,4 +18,5 @@ public interface Constants {
   String HARNESS_IO_KEY_ = "Harness.io";
   String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
   String COMMIT_MESSAGE = "Harness IO Git Sync.\n";
+  String EXCEPTION_STRING = "Exception: ";
 }
