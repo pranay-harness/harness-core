@@ -109,7 +109,7 @@ public class GitChangeSetRunnable implements Runnable {
       logger.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getUuid());
 
       if (yamlChangeSet.isGitToHarness()) {
-        // TODO(abhinav): add git to harness.
+        yamlGitSyncService.handleGitChangeSet(yamlChangeSet, accountId);
       } else {
         yamlGitSyncService.handleHarnessChangeSet(yamlChangeSet, accountId);
       }

@@ -1,11 +1,21 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.gitsync.common.YamlProcessingLogContext.WEBHOOK_TOKEN;
+import static io.harness.gitsync.core.impl.YamlGitServiceImpl.WEBHOOK_SUCCESS_MSG;
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.trigger.WebhookSource.GITHUB;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
@@ -20,11 +30,17 @@ import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig.YamlGitFolderConfigRepository;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
+import io.harness.gitsync.core.callback.GitCommandCallback;
+import io.harness.gitsync.core.service.GitCommitService;
+import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.ng.core.gitsync.ChangeType;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.waiter.WaitNotifyEngine;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,12 +48,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.trigger.WebhookEventUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Optional;
+import javax.ws.rs.core.HttpHeaders;
 
 public class YamlGitServiceImplTest extends CategoryTest {
   public static final String ACCOUNTID = "ACCOUNTID";
+  static final String GH_PUSH_REQ_FILE = "software/wings/service/impl/webhook/github_push_request.json";
+
   @Inject YamlGitConfigRepository yamlGitConfigRepository;
   @Inject YamlGitFolderConfigRepository yamlGitFolderConfigRepository;
   @Mock YamlGitConfigService yamlGitConfigService;
@@ -45,6 +69,11 @@ public class YamlGitServiceImplTest extends CategoryTest {
   @Mock ManagerDelegateServiceDriver managerDelegateServiceDriver;
   @Mock GitSyncErrorService gitSyncErrorService;
   @Mock WaitNotifyEngine waitNotifyEngine;
+  @Mock private HttpHeaders httpHeaders;
+  @Mock YamlChangeSetService yamlChangeSetService;
+  @Mock GitCommitService gitCommitService;
+  @Mock WebhookEventUtils webhookEventUtils;
+
   @InjectMocks @Inject @Spy public YamlGitServiceImpl yamlGitService;
 
   @Before
@@ -71,7 +100,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
                                       .gitFileChanges(Collections.singletonList(gitFileChange))
                                       .build();
 
-    doReturn(null).when(ngSecretService).getEncryptionDetails(any());
+    doReturn(null).when(ngSecretService).getEncryptionDetails(any(), any());
     doReturn(YamlGitConfigDTO.builder().build())
         .when(yamlGitConfigService)
         .getByFolderIdentifierAndIsEnabled(null, null, ACCOUNTID, null);
@@ -102,7 +131,8 @@ public class YamlGitServiceImplTest extends CategoryTest {
                                       .gitFileChanges(Collections.singletonList(gitFileChange))
                                       .build();
 
-    assertThatThrownBy(() -> yamlGitService.handleHarnessChangeSet(yamlChangeSet, ACCOUNTID));
+    yamlGitService.handleHarnessChangeSet(yamlChangeSet, ACCOUNTID);
+    verify(yamlGitConfigService, times(0)).getGitConfig(any(), any(), any(), any());
   }
 
   @Test
@@ -119,5 +149,73 @@ public class YamlGitServiceImplTest extends CategoryTest {
     yamlGitService.removeGitSyncErrors(ACCOUNTID, null, null, Collections.singletonList(gitFileChange), false);
     verify(gitSyncErrorService, times(1))
         .deleteByAccountIdOrgIdProjectIdAndFilePath(ACCOUNTID, null, null, Collections.singletonList("path"));
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testProcessWebhookPost() throws Exception {
+    when(webhookEventUtils.isGitPingEvent(httpHeaders)).thenReturn(false);
+    when(webhookEventUtils.obtainWebhookSource(httpHeaders)).thenReturn(GITHUB);
+    doNothing().when(webhookEventUtils).validatePushEvent(GITHUB, httpHeaders);
+
+    doReturn(Collections.singletonList(SettingAttribute.Builder.aSettingAttribute().build()))
+        .when(yamlGitService)
+        .getGitConnectors(anyString());
+    doReturn("abc").when(yamlGitService).getGitConnectorIdByWebhookToken(any(), anyString());
+    doReturn(Collections.singletonList(YamlGitConfigDTO.builder().build()))
+        .when(yamlGitConfigService)
+        .getByConnectorRepoAndBranch(any(), any(), any(), any());
+
+    when(webhookEventUtils.obtainBranchName(any(), any(), any())).thenReturn("master");
+    when(webhookEventUtils.obtainRepositoryName(any(), any(), any())).thenReturn(Optional.of("test-repo"));
+
+    final YamlChangeSet yamlChangeSet = YamlChangeSet.builder().build();
+    yamlChangeSet.setUuid("uuid");
+    doReturn(yamlChangeSet).when(yamlChangeSetService).save(any(YamlChangeSet.class));
+
+    String response = yamlGitService.validateAndQueueWebhookRequest(
+        ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
+    assertThat(response).isEqualTo(WEBHOOK_SUCCESS_MSG);
+    verify(yamlChangeSetService, times(1)).save(any(YamlChangeSet.class));
+  }
+
+  private String obtainPayload(String filePath) throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+
+    File file = new File(classLoader.getResource(filePath).getFile());
+    return FileUtils.readFileToString(file, Charset.defaultCharset());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void test_handleGitChangeSet() {
+    final GitWebhookRequestAttributes gitWebhookRequestAttributes = GitWebhookRequestAttributes.builder()
+                                                                        .gitConnectorId(SETTING_ID)
+                                                                        .branchName("branchName")
+                                                                        .headCommitId("commitId")
+                                                                        .repo("repo")
+                                                                        .build();
+    final YamlChangeSet yamlChangeSet =
+        YamlChangeSet.builder().accountId(ACCOUNT_ID).gitWebhookRequestAttributes(gitWebhookRequestAttributes).build();
+    yamlChangeSet.setUuid("changesetId");
+
+    doReturn(Optional.empty()).when(gitCommitService).findGitCommitWithProcessedStatus(any(), any(), any(), any());
+    doReturn(Collections.singletonList(YamlGitConfigDTO.builder().build()))
+        .when(yamlGitConfigService)
+        .getByConnectorRepoAndBranch(any(), any(), any(), any());
+    doReturn(Optional.of(GitCommit.builder().build()))
+        .when(gitCommitService)
+        .findLastProcessedGitCommit(any(), any(), any());
+    doReturn(null).when(ngSecretService).getEncryptionDetails(any(), any());
+    doReturn(Optional.of(GitConfigDTO.builder().build()))
+        .when(yamlGitConfigService)
+        .getGitConfig(any(), any(), any(), any());
+
+    yamlGitService.handleGitChangeSet(yamlChangeSet, ACCOUNT_ID);
+    verify(waitNotifyEngine, times(1)).waitForAllOn(eq(NG_ORCHESTRATION), any(GitCommandCallback.class), anyString());
+    verify(yamlChangeSetService, times(0))
+        .updateStatus(eq(ACCOUNT_ID), eq("changesetId"), any(YamlChangeSet.Status.class));
   }
 }

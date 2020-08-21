@@ -23,4 +23,13 @@ public interface YamlGitFolderConfigRepository extends PagingAndSortingRepositor
       String accountId, String organizationId, String projectId, Scope scope, boolean isDefault);
 
   Optional<YamlGitFolderConfig> findByUuidAndAccountIdAndEnabled(String identifier, String accountId, boolean enabled);
+
+  List<YamlGitFolderConfig> findByYamlGitConfigIdAndGitConnectorIdAndRepoAndBranchAndAccountId(
+      String yamlGitConfigId, String connectorId, String repo, String branch, String accountId);
+
+  List<YamlGitFolderConfig> findByGitConnectorIdAndRepoAndBranchAndAccountId(
+      String connectorId, String repo, String branch, String accountId);
+
+  Long removeByAccountIdAndOrganizationIdAndProjectIdAndScopeAndUuid(
+      String accountId, String organizationIdentifier, String projectIdentifier, Scope scope, String uuid);
 }

@@ -5,6 +5,7 @@ import io.harness.gitsync.common.beans.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 
 import java.util.List;
+import javax.ws.rs.core.HttpHeaders;
 
 public interface YamlGitService {
   YamlGitConfigDTO weNeedToPushChanges(
@@ -17,4 +18,13 @@ public interface YamlGitService {
 
   void removeGitSyncErrors(
       String accountId, String orgId, String projectId, List<GitFileChange> gitFileChangeList, boolean gitToHarness);
+
+  void handleGitChangeSet(YamlChangeSet yamlChangeSets, String accountId);
+
+  String validateAndQueueWebhookRequest(
+      String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
+
+  boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch);
+
+  List<YamlGitConfigDTO> getYamlGitConfigsForGitToHarnessChangeSet(YamlChangeSet gitToHarnessChangeSet);
 }

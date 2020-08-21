@@ -18,6 +18,12 @@ public interface YamlGitConfigService {
 
   Optional<YamlGitConfigDTO.RootFolder> getDefault(String projectIdentifier, String orgIdentifier, String accountId);
 
+  YamlGitConfigDTO getByYamlGitConfigIdAndBranchAndRepoAndConnectorId(
+      String uuid, String branch, String repo, String connectorId, String accountId);
+
+  List<YamlGitConfigDTO> getByConnectorRepoAndBranch(
+      String gitConnectorId, String repo, String branchName, String accountId);
+
   List<YamlGitConfigDTO> get(String projectId, String orgId, String accountId);
 
   YamlGitConfigDTO getByFolderIdentifierAndIsEnabled(
