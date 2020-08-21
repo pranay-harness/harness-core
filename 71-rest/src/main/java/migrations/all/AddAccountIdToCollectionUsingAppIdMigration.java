@@ -75,7 +75,7 @@ public abstract class AddAccountIdToCollectionUsingAppIdMigration implements Mig
           bulkWriteOperation.execute();
           sleep(Duration.ofMillis(200));
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          dataRecords = collection.find(objectsToBeUpdated).limit(1000);
+          dataRecords = collection.find(objectsToBeUpdated, projection).limit(1000);
           batched = 0;
           logger.info("Number of records updated for {} is: {}", getCollectionName(), updated);
         }
