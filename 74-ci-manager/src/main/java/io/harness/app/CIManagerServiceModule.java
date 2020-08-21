@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
 
 import io.harness.CIExecutionServiceModule;
 import io.harness.OrchestrationModule;
@@ -43,6 +44,13 @@ public class CIManagerServiceModule extends DependencyModule {
   @Singleton
   ManagerClientFactory managerClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new ManagerClientFactory(managerBaseUrl, new ServiceTokenGenerator(), kryoConverterFactory);
+  }
+
+  @Provides
+  @Singleton
+  @Named("serviceSecret")
+  String serviceSecret() {
+    return ciManagerConfiguration.getDelegateGrpcServiceTokenSecret();
   }
 
   @Override

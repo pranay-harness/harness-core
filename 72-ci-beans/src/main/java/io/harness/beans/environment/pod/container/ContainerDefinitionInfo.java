@@ -2,7 +2,6 @@ package io.harness.beans.environment.pod.container;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.ContainerResourceParams;
@@ -16,7 +15,6 @@ import java.util.Map;
  */
 
 @Data
-@Value
 @Builder
 public class ContainerDefinitionInfo {
   @NotEmpty private String name;

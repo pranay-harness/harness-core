@@ -41,6 +41,12 @@ public class CIExecutionConstants {
   public static final String ENDPOINT_MINIO_VARIABLE = "ENDPOINT_MINIO";
   public static final String BUCKET_MINIO_VARIABLE = "BUCKET_MINIO";
 
+  public static final String DELEGATE_SERVICE_TOKEN_VARIABLE = "DELEGATE_SERVICE_TOKEN";
+  public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE = "DELEGATE_SERVICE_ENDPOINT";
+  public static final String DELEGATE_SERVICE_ID_VARIABLE = "DELEGATE_SERVICE_ID";
+  public static final String DELEGATE_SERVICE_ID_VARIABLE_VALUE = "delegate-grpc-service";
+  public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE = "localhost:8080";
+
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
 

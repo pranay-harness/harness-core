@@ -11,6 +11,7 @@
         <module>13-grpc-api</module>
         <module>14-api-services-beans</module>
         <module>15-api-services</module>
+        <module>16-expression-service</module>
         <module>19-delegate-tasks-beans</module>
         <module>20-delegate-tasks</module>
         <module>20-delegate-beans</module>

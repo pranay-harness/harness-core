@@ -5,6 +5,11 @@ package io.harness.stateutils.buildstate;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
@@ -40,7 +45,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -77,66 +81,77 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
         k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default",
             ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true);
 
-    Map<String, EncryptedVariableWithType> envSecretVars = new LinkedHashMap<>();
+    Map<String, EncryptedVariableWithType> envSecretVars = new HashMap<>();
     envSecretVars.put(ACCESS_KEY_MINIO_VARIABLE, null);
     envSecretVars.put(SECRET_KEY_MINIO_VARIABLE, null);
-    envSecretVars.put("VAR1", EncryptedVariableWithType.builder().build());
-    envSecretVars.put("VAR2", EncryptedVariableWithType.builder().build());
-
     envSecretVars.putAll(ciExecutionPlanTestHelper.getEncryptedSecrets());
 
-    Map<String, String> envVars = new LinkedHashMap<>();
-    envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
-    envVars.put("VAR3", "value3");
-    envVars.put("VAR4", "value4");
+    Map<String, String> envVars = new HashMap<>();
     envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
-
+    envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
+    envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE,
+        podParams.getContainerParamsList().get(0).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
+    envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE);
+    envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
     envVars.putAll(ciExecutionPlanTestHelper.getEnvVars());
 
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     assertThat(podParams.getContainerParamsList().get(0))
-        .isEqualTo(CIK8ContainerParams.builder()
-                       .name("build-setup1")
-                       .containerResourceParams(ContainerResourceParams.builder()
-                                                    .resourceLimitMemoryMiB(1000)
-                                                    .resourceLimitMilliCpu(1000)
-                                                    .resourceRequestMemoryMiB(1000)
-                                                    .resourceRequestMilliCpu(1000)
-                                                    .build())
-                       .containerType(CIContainerType.STEP_EXECUTOR)
-                       .commands(command)
-                       .containerSecrets(ContainerSecrets.builder().encryptedSecrets(envSecretVars).build())
-                       .envVars(envVars)
-                       .args(args)
-                       .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
-                                                      .connectorName("testConnector")
-                                                      .imageDetails(imageDetails)
-                                                      .build())
-                       .volumeToMountPath(map)
-                       .build());
+        .isEqualToIgnoringGivenFields(
+            CIK8ContainerParams.builder()
+                .name("build-setup1")
+                .containerResourceParams(ContainerResourceParams.builder()
+                                             .resourceLimitMemoryMiB(1000)
+                                             .resourceLimitMilliCpu(1000)
+                                             .resourceRequestMemoryMiB(1000)
+                                             .resourceRequestMilliCpu(1000)
+                                             .build())
+                .containerType(CIContainerType.STEP_EXECUTOR)
+                .commands(command)
+                .containerSecrets(ContainerSecrets.builder().encryptedSecrets(envSecretVars).build())
+                .envVars(envVars)
+                .args(args)
+                .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                               .connectorName("testConnector")
+                                               .imageDetails(imageDetails)
+                                               .build())
+                .volumeToMountPath(map)
+                .build(),
+            "envVars", "containerSecrets");
+    assertThat(podParams.getContainerParamsList().get(0).getContainerSecrets().getEncryptedSecrets())
+        .containsAllEntriesOf(envSecretVars);
+    assertThat(podParams.getContainerParamsList().get(0).getEnvVars()).containsAllEntriesOf(envVars);
 
     assertThat(podParams.getContainerParamsList().get(1))
-        .isEqualTo(CIK8ContainerParams.builder()
-                       .name("build-setup2")
-                       .containerResourceParams(ContainerResourceParams.builder()
-                                                    .resourceLimitMemoryMiB(1000)
-                                                    .resourceLimitMilliCpu(1000)
-                                                    .resourceRequestMemoryMiB(1000)
-                                                    .resourceRequestMilliCpu(1000)
-                                                    .build())
-                       .containerType(CIContainerType.STEP_EXECUTOR)
-                       .commands(command)
-                       .containerSecrets(ContainerSecrets.builder().encryptedSecrets(envSecretVars).build())
-                       .envVars(envVars)
-                       .args(args2)
-                       .ports(singletonList(9001))
-                       .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
-                                                      .connectorName("testConnector")
-                                                      .imageDetails(imageDetails)
-                                                      .build())
-                       .volumeToMountPath(map)
-                       .build());
+        .isEqualToIgnoringGivenFields(
+            CIK8ContainerParams.builder()
+                .name("build-setup2")
+                .containerResourceParams(ContainerResourceParams.builder()
+                                             .resourceLimitMemoryMiB(1000)
+                                             .resourceLimitMilliCpu(1000)
+                                             .resourceRequestMemoryMiB(1000)
+                                             .resourceRequestMilliCpu(1000)
+                                             .build())
+                .containerType(CIContainerType.STEP_EXECUTOR)
+                .commands(command)
+                .containerSecrets(ContainerSecrets.builder().encryptedSecrets(envSecretVars).build())
+                .envVars(envVars)
+                .args(args2)
+                .ports(singletonList(9001))
+                .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                               .connectorName("testConnector")
+                                               .imageDetails(imageDetails)
+                                               .build())
+                .volumeToMountPath(map)
+                .build(),
+            "envVars", "containerSecrets");
+
+    envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE,
+        podParams.getContainerParamsList().get(1).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
+    assertThat(podParams.getContainerParamsList().get(1).getContainerSecrets().getEncryptedSecrets())
+        .containsAllEntriesOf(envSecretVars);
+    assertThat(podParams.getContainerParamsList().get(1).getEnvVars()).containsAllEntriesOf(envVars);
 
     assertThat(podParams.getContainerParamsList().get(2))
         .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER)

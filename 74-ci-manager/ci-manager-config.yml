@@ -47,3 +47,4 @@ cimanager-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
+delegateGrpcServiceTokenSecret: "j6ErHMBlC2dn6WctNQKt0xfyo_PZuK7ls0Z4d6XCaBg"

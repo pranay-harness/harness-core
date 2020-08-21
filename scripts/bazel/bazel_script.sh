@@ -60,6 +60,7 @@ build_proto_module() {
 
 build_bazel_module 11-commons-test
 build_proto_module 13-grpc-api
+build_proto_module 16-expression-service
 build_proto_module 19-delegate-tasks-beans
 build_proto_module 20-delegate-beans
 build_proto_module 21-delegate-agent-beans
