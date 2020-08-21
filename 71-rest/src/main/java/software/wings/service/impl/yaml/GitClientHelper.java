@@ -7,14 +7,12 @@ import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.validation.Validator.notEmptyCheck;
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -250,18 +248,6 @@ public class GitClientHelper {
       return encodeHexString(messageDigest);
     } catch (Exception e) {
       throw new YamlException(String.format("Error while calculating hash for input [%s].", input), e, ADMIN_SRE);
-    }
-  }
-
-  @VisibleForTesting
-  String fetchCompleteUrl(GitConfig gitConfig, String repoName) {
-    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
-      notEmptyCheck("Repo name cannot be null for Account level git connector", repoName);
-      String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
-      String purgedRepoName = repoName.replaceAll("^/*", "");
-      return purgedRepoUrl + "/" + purgedRepoName;
-    } else {
-      return gitConfig.getRepoUrl();
     }
   }
 }
