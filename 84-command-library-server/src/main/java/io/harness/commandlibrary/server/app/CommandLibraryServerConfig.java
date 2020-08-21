@@ -107,7 +107,7 @@ public class CommandLibraryServerConfig extends Configuration implements AssetsB
     fileAppenderFactory.setCurrentLogFilename("command-library-server-access.log");
     fileAppenderFactory.setArchive(true);
     fileAppenderFactory.setArchivedLogFilenamePattern("command-library-server-access.%d.log.gz");
-    fileAppenderFactory.setThreshold(Level.ALL.toString());
+    fileAppenderFactory.setThreshold(Level.ALL);
     fileAppenderFactory.setArchivedFileCount(14);
     logbackAccessRequestLogFactory.setAppenders(ImmutableList.of(fileAppenderFactory));
     return logbackAccessRequestLogFactory;

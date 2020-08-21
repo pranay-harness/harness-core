@@ -12,14 +12,13 @@ import com.google.inject.Provider;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.eclipse.jetty.util.ArrayQueue;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-
-import java.util.ArrayDeque;
 
 public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Mock Provider<ElasticsearchBulkSyncTask> elasticsearchBulkSyncTaskProvider;
@@ -40,7 +39,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
     ElasticsearchBulkSyncTaskResult elasticsearchBulkSyncTaskResult =
         ElasticsearchBulkSyncTaskResult.builder()
             .isSuccessful(true)
-            .changeEventsDuringBulkSync(new ArrayDeque<>())
+            .changeEventsDuringBulkSync(new ArrayQueue<>())
             .build();
 
     when(elasticsearchBulkSyncTask.run()).thenReturn(elasticsearchBulkSyncTaskResult);
@@ -69,7 +68,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
     ElasticsearchBulkSyncTaskResult elasticsearchBulkSyncTaskResult =
         ElasticsearchBulkSyncTaskResult.builder()
             .isSuccessful(true)
-            .changeEventsDuringBulkSync(new ArrayDeque<>())
+            .changeEventsDuringBulkSync(new ArrayQueue<>())
             .build();
 
     when(elasticsearchBulkSyncTask.run()).thenReturn(elasticsearchBulkSyncTaskResult);

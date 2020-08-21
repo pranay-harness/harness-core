@@ -62,7 +62,6 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
                                                    .protocol(Protocol.HTTP_2)
                                                    .code(200)
                                                    .request(new Request.Builder().url("http://test.harness.io").build())
-                                                   .message("test")
                                                    .build();
 
   @Before

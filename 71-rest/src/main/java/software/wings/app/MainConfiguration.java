@@ -237,7 +237,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     FileAppenderFactory<IAccessEvent> fileAppenderFactory = new FileAppenderFactory<>();
     fileAppenderFactory.setArchive(true);
     fileAppenderFactory.setCurrentLogFilename("access.log");
-    fileAppenderFactory.setThreshold(Level.ALL.toString());
+    fileAppenderFactory.setThreshold(Level.ALL);
     fileAppenderFactory.setArchivedLogFilenamePattern("access.%d.log.gz");
     fileAppenderFactory.setArchivedFileCount(14);
     logbackAccessRequestLogFactory.setAppenders(ImmutableList.of(fileAppenderFactory));
