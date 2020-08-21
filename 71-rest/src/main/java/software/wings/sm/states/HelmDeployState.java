@@ -762,9 +762,10 @@ public class HelmDeployState extends State {
               gitFileConfigHelperService.renderGitFileConfig(context, appManifest.getGitFileConfig());
           GitConfig sourceRepoGitConfig =
               settingsService.fetchGitConfigFromConnectorId(sourceRepoGitFileConfig.getConnectorId());
-          gitConfigHelperService.convertToRepoGitConfig(sourceRepoGitConfig, sourceRepoGitFileConfig.getRepoName());
-
           gitConfigHelperService.renderGitConfig(context, sourceRepoGitConfig);
+          if (null != sourceRepoGitConfig) {
+            gitConfigHelperService.convertToRepoGitConfig(sourceRepoGitConfig, sourceRepoGitFileConfig.getRepoName());
+          }
           repoConfig = K8sDelegateManifestConfig.builder()
                            .gitFileConfig(sourceRepoGitFileConfig)
                            .gitConfig(sourceRepoGitConfig)
@@ -852,7 +853,9 @@ public class HelmDeployState extends State {
       } else {
         gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
       }
-      gitConfigHelperService.convertToRepoGitConfig(gitConfig, gitFileConfig.getRepoName());
+      if (null != gitConfig) {
+        gitConfigHelperService.convertToRepoGitConfig(gitConfig, gitFileConfig.getRepoName());
+      }
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 

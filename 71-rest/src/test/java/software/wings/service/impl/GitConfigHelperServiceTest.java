@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -33,6 +35,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GitConfigHelperServiceTest extends WingsBaseTest {
@@ -95,6 +98,80 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
   public void validateGitConfigTestFeatureOffUrlTypeRepo() throws Exception {
     doReturn(false).when(featureFlagService).isEnabled(FeatureName.GIT_ACCOUNT_SUPPORT, ACCOUNT_ID);
     validateGitConfigUrlTypeRepo();
+  }
+
+  private void validateGitConfigConvert(String expectedRepoUrl, String repoName, GitConfig config, String resetRepoUrl,
+      GitConfig.UrlType resetUrlType, String resetRepoName) {
+    gitConfigHelperService.convertToRepoGitConfig(config, repoName);
+
+    assertThat(config.getRepoUrl()).isEqualTo(expectedRepoUrl);
+    assertThat(config.getUrlType()).isEqualTo(GitConfig.UrlType.REPO);
+    assertThat(config.getRepoName()).isEqualTo(repoName);
+
+    config.setRepoUrl(resetRepoUrl);
+    config.setUrlType(resetUrlType);
+    config.setRepoName(resetRepoName);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testConvertToRepoGitConfigRepo() {
+    String repoUrl1 = "https://abc@a.org/account/name";
+    String repoUrl2 = "https://abc@a.org/account/name.git";
+    String random = "random";
+    GitConfig config = GitConfig.builder().build();
+
+    // UrlType: Repo
+    config.setUrlType(GitConfig.UrlType.REPO);
+    config.setRepoUrl(repoUrl1);
+    config.setRepoName(random);
+    validateGitConfigConvert(repoUrl1, null, config, repoUrl1, GitConfig.UrlType.REPO, random);
+    validateGitConfigConvert(repoUrl1, random, config, repoUrl1, GitConfig.UrlType.REPO, random);
+
+    config.setRepoUrl(repoUrl2);
+    validateGitConfigConvert(repoUrl2, null, config, repoUrl2, GitConfig.UrlType.REPO, random);
+    validateGitConfigConvert(repoUrl2, random, config, repoUrl2, GitConfig.UrlType.REPO, random);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testConvertToRepoGitConfigAccount() {
+    List<String> urls =
+        Arrays.asList("https://abc@a.org/account/", "https://abc@a.org/account///", "https://abc@a.org/account");
+    List<String> repoNames = Arrays.asList("/repo", "///repo", "repo");
+    List<String> extendedRepoNames = Arrays.asList("/xyz/repo", "///xyz/repo", "xyz/repo");
+
+    String repoUrl1 = "https://abc@a.org/account/repo";
+    String repoUrl2 = "https://abc@a.org/account/xyz/repo";
+    GitConfig config = GitConfig.builder().build();
+
+    // UrlType: Account
+    config.setUrlType(GitConfig.UrlType.ACCOUNT);
+
+    for (String url : urls) {
+      config.setRepoUrl(url);
+      for (String repoName : repoNames) {
+        validateGitConfigConvert(repoUrl1, repoName, config, url, GitConfig.UrlType.ACCOUNT, null);
+      }
+      for (String repoName : extendedRepoNames) {
+        validateGitConfigConvert(repoUrl2, repoName, config, url, GitConfig.UrlType.ACCOUNT, null);
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testConvertToRepoGitConfigException() {
+    assertThatThrownBy(() -> gitConfigHelperService.convertToRepoGitConfig(null, null))
+        .isInstanceOf(GeneralException.class);
+    assertThatThrownBy(() -> {
+      GitConfig config = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).build();
+      gitConfigHelperService.convertToRepoGitConfig(config, null);
+    })
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   private void validateGitConfigUrlTypeRepo() throws InterruptedException {

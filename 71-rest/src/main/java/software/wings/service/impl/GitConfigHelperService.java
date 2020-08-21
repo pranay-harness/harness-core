@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notEmptyCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -192,6 +193,7 @@ public class GitConfigHelperService {
   }
 
   public void convertToRepoGitConfig(GitConfig gitConfig, String repoName) {
+    notNullCheck("GitConfig provided cannot be null", gitConfig);
     if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
       notEmptyCheck("Repo name cannot be null for Account level git connector", repoName);
       String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");

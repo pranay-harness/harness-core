@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -545,6 +546,24 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(null);
     verify(delegateService).queueTask(any());
     verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testEmptyHelmChartSpecWithGitConfigAbsent() {
+    when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(null);
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
+    doNothing().when(gitConfigHelperService).setSshKeySettingAttributeIfNeeded(any());
+    helmDeployState.setGitFileConfig(GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).build());
+    ExecutionResponse executionResponse = helmDeployState.execute(context);
+    assertThat(executionResponse.isAsync()).isEqualTo(true);
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(helmDeployStateExecutionData.getChartName()).isEqualTo(null);
+    assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(null);
+    verify(delegateService).queueTask(any());
+    verify(gitConfigHelperService, times(0)).convertToRepoGitConfig(any(GitConfig.class), anyString());
   }
 
   @Test()
