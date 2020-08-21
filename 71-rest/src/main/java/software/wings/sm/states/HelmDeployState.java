@@ -1133,7 +1133,7 @@ public class HelmDeployState extends State {
     logger.info("Found Values at following sources: " + valuesFiles.keySet());
     List<String> helmValueOverridesYamlFiles = getOrderedValuesYamlList(valuesFiles);
 
-    List<String> helmValueOverridesYamlFilesEvaluated = null;
+    List<String> helmValueOverridesYamlFilesEvaluated = new ArrayList<>();
     if (isNotEmpty(helmValueOverridesYamlFiles)) {
       helmValueOverridesYamlFilesEvaluated =
           helmValueOverridesYamlFiles.stream()
@@ -1268,6 +1268,7 @@ public class HelmDeployState extends State {
             .containerServiceParams(containerServiceParams)
             .workflowExecutionId(context.getWorkflowExecutionId())
             .isBindTaskFeatureSet(isBindTaskFeatureSet)
+            .timeoutInMillis(getSafeTimeoutInMillis(getTimeoutMillis()))
             .build();
 
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
