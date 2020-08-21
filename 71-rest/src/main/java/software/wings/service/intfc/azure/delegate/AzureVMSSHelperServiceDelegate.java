@@ -1,6 +1,7 @@
 package software.wings.service.intfc.azure.delegate;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.resources.Subscription;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import software.wings.beans.AzureConfig;
@@ -68,6 +69,18 @@ public interface AzureVMSSHelperServiceDelegate {
   void bulkDeleteVirtualMachineScaleSets(AzureConfig azureConfig, List<String> vmssIds);
 
   /**
+   * List VMs of Virtual Machine Scale Set.
+   *
+   * @param azureConfig
+   * @param subscriptionId
+   * @param resourceGroupName
+   * @param virtualMachineScaleSetName
+   * @return
+   */
+  List<VirtualMachineScaleSetVM> listVirtualMachineScaleSetVMs(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualMachineScaleSetName);
+
+  /**
    * List subscriptions.
    *
    * @param azureConfig
@@ -85,7 +98,7 @@ public interface AzureVMSSHelperServiceDelegate {
   List<String> listResourceGroupsNamesBySubscriptionId(AzureConfig azureConfig, String subscriptionId);
 
   /**
-   * Check if all VMSS Instances are stopped
+   * Check if all VMSS Instances are stopped.
    *
    * @param azureConfig
    * @param subscriptionId
@@ -97,7 +110,7 @@ public interface AzureVMSSHelperServiceDelegate {
       AzureConfig azureConfig, String subscriptionId, String virtualMachineScaleSetId, int numberOfVMInstances);
 
   /**
-   * Update Virtual Machine Scale Set capacity
+   * Update Virtual Machine Scale Set capacity.
    *
    * @param azureConfig
    * @param virtualMachineScaleSetName
@@ -110,7 +123,8 @@ public interface AzureVMSSHelperServiceDelegate {
       String subscriptionId, String resourceGroupName, int limit);
 
   /**
-   * Create a new Virtual Machine Scale Set based on base scale set
+   * Create a new Virtual Machine Scale Set based on base scale set.
+   *
    * @param azureConfig
    * @param baseVirtualMachineScaleSet
    * @param infraMappingId

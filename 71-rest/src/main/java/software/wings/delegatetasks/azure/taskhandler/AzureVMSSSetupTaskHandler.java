@@ -195,8 +195,8 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
       String virtualMachineScaleSetName = vmss.name();
       executionLogCallback.saveExecutionLog(
           format("Set VMSS : [%s] desired capacity to [%s]", virtualMachineScaleSetName, 0), INFO);
-      updateVMSSCapacity(azureConfig, setupTaskParameters, virtualMachineScaleSetName, subscriptionId,
-          resourceGroupName, 0, autoScalingSteadyStateTimeout, DOWN_SCALE_COMMAND_UNIT,
+      updateVMSSCapacityAndWaitForSteadyState(azureConfig, setupTaskParameters, virtualMachineScaleSetName,
+          subscriptionId, resourceGroupName, 0, autoScalingSteadyStateTimeout, DOWN_SCALE_COMMAND_UNIT,
           DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     });
   }
