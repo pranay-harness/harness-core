@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.k8s.manifest.ManifestHelper.getEligibleWorkloads;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -18,6 +19,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.esotericsoftware.yamlbeans.YamlException;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
@@ -29,12 +31,16 @@ import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.model.Release;
+import io.harness.k8s.model.Release.Status;
+import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -116,6 +122,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmHelper helmHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private GitClientHelper gitClientHelper;
+  @Inject private KubernetesContainerService kubernetesContainerService;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   protected static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
@@ -155,6 +162,18 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
       commandResponse.setHelmChartInfo(helmChartInfo);
 
+      boolean useK8sSteadyStateCheck = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
+          commandRequest.isK8SteadyStateCheckEnabled(), commandRequest.getContainerServiceParams(),
+          (ExecutionLogCallback) commandRequest.getExecutionLogCallback());
+      List<KubernetesResourceId> k8sWorkloads = Collections.emptyList();
+      if (useK8sSteadyStateCheck) {
+        k8sWorkloads = readKubernetesResourcesIds(commandRequest, commandRequest.getVariableOverridesYamlFiles(),
+            executionLogCallback, commandRequest.getTimeoutInMillis());
+        ReleaseHistory releaseHistory =
+            createK8sNewRelease(commandRequest, k8sWorkloads, commandRequest.getNewReleaseVersion());
+        saveK8sReleaseHistory(commandRequest, commandResponse, releaseHistory);
+      }
+
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;
       }
@@ -162,12 +181,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
 
-      List<ContainerInfo> containerInfos = getContainerInfos(commandRequest,
-          commandRequest.getVariableOverridesYamlFiles(), executionLogCallback, commandRequest.getTimeoutInMillis());
+      List<ContainerInfo> containerInfos = getContainerInfos(commandRequest, k8sWorkloads, useK8sSteadyStateCheck,
+          executionLogCallback, commandRequest.getTimeoutInMillis());
       commandResponse.setContainerInfoList(containerInfos);
 
       executionLogCallback = markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WrapUp);
-
       return commandResponse;
     } catch (UncheckedTimeoutException e) {
       String msg = TIMED_OUT_IN_STEADY_STATE;
@@ -204,14 +222,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private List<ContainerInfo> getContainerInfos(HelmCommandRequest commandRequest,
-      List<String> variableOverridesYamlFiles, LogCallback executionLogCallback, long timeoutInMillis)
-      throws Exception {
-    boolean useK8sSteadyStateCheck =
-        containerDeploymentDelegateHelper.useK8sSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(),
-            commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
+  private List<ContainerInfo> getContainerInfos(HelmCommandRequest commandRequest, List<KubernetesResourceId> workloads,
+      boolean useK8sSteadyStateCheck, LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
     return useK8sSteadyStateCheck
-        ? getKubectlContainerInfos(commandRequest, variableOverridesYamlFiles, executionLogCallback, timeoutInMillis)
+        ? getKubectlContainerInfos(commandRequest, workloads, executionLogCallback, timeoutInMillis)
         : getFabric8ContainerInfos(commandRequest, executionLogCallback, timeoutInMillis);
   }
 
@@ -227,29 +241,13 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @VisibleForTesting
-  List<ContainerInfo> getKubectlContainerInfos(HelmCommandRequest commandRequest,
-      List<String> variableOverridesYamlFiles, LogCallback executionLogCallback, long timeoutInMillis)
-      throws Exception {
+  List<ContainerInfo> getKubectlContainerInfos(HelmCommandRequest commandRequest, List<KubernetesResourceId> workloads,
+      LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
     Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(), commandRequest.getKubeConfigLocation());
 
-    String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
-
-    List<FileData> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
-        helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
-        commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
-        (ExecutionLogCallback) executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis);
-
-    List<KubernetesResource> resources =
-        k8sTaskHelperBase.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
-    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
-        resources, commandRequest.getContainerServiceParams().getNamespace());
-
-    List<KubernetesResource> workloads = getEligibleWorkloads(resources);
     List<ContainerInfo> containerInfoList = new ArrayList<>();
     final Map<String, List<KubernetesResourceId>> namespacewiseResources =
-        workloads.stream()
-            .map(KubernetesResource::getResourceId)
-            .collect(Collectors.groupingBy(KubernetesResourceId::getNamespace));
+        workloads.stream().collect(Collectors.groupingBy(KubernetesResourceId::getNamespace));
     boolean success = true;
     for (Map.Entry<String, List<KubernetesResourceId>> entry : namespacewiseResources.entrySet()) {
       if (success) {
@@ -272,6 +270,24 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     } else {
       throw new InvalidRequestException("Steady state check failed", USER);
     }
+  }
+
+  private List<KubernetesResourceId> readKubernetesResourcesIds(HelmCommandRequest commandRequest,
+      List<String> variableOverridesYamlFiles, LogCallback executionLogCallback, long timeoutInMillis)
+      throws Exception {
+    String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
+
+    List<FileData> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
+        helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
+        commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
+        (ExecutionLogCallback) executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis);
+
+    List<KubernetesResource> resources =
+        k8sTaskHelperBase.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
+    k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
+        resources, commandRequest.getContainerServiceParams().getNamespace());
+
+    return getEligibleWorkloads(resources).stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
   }
 
   private void prepareRepoAndCharts(HelmCommandRequest commandRequest, long timeoutInMillis) throws Exception {
@@ -446,6 +462,40 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         executionLogCallback, ImmutableMap.of("release", commandRequest.getReleaseName()), existingPods);
   }
 
+  private ReleaseHistory fetchK8sReleaseHistory(HelmCommandRequest request, KubernetesConfig kubernetesConfig)
+      throws IOException {
+    String releaseHistoryData =
+        kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, request.getReleaseName());
+
+    return (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
+                                                     : ReleaseHistory.createFromData(releaseHistoryData);
+  }
+
+  private ReleaseHistory createK8sNewRelease(
+      HelmCommandRequest request, List<KubernetesResourceId> resourceList, Integer releaseVersion) throws IOException {
+    KubernetesConfig kubernetesConfig =
+        containerDeploymentDelegateHelper.getKubernetesConfig(request.getContainerServiceParams());
+    ReleaseHistory releaseHistory = fetchK8sReleaseHistory(request, kubernetesConfig);
+    // Need to keep only latest successful releases, older releases can be removed
+    releaseHistory.cleanup();
+    releaseHistory.createNewRelease(resourceList);
+    if (releaseVersion != null) {
+      releaseHistory.setReleaseNumber(releaseVersion);
+    }
+
+    return releaseHistory;
+  }
+
+  private void saveK8sReleaseHistory(
+      HelmCommandRequest request, HelmCommandResponse response, ReleaseHistory releaseHistory) throws YamlException {
+    KubernetesConfig kubernetesConfig =
+        containerDeploymentDelegateHelper.getKubernetesConfig(request.getContainerServiceParams());
+    releaseHistory.setReleaseStatus(
+        CommandExecutionStatus.SUCCESS == response.getCommandExecutionStatus() ? Status.Succeeded : Status.Failed);
+    kubernetesContainerService.saveReleaseHistory(
+        kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml(), true);
+  }
+
   @Override
   public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest) {
     LogCallback executionLogCallback = getExecutionLogCallback(commandRequest, HelmDummyCommandUnit.Rollback);
@@ -461,17 +511,19 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       boolean useK8sSteadyStateCheck =
           containerDeploymentDelegateHelper.useK8sSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(),
               commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
-
+      List<KubernetesResourceId> k8sRollbackWorkloads = Collections.emptyList();
       if (useK8sSteadyStateCheck) {
-        fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
-        prepareRepoAndCharts(commandRequest, commandRequest.getTimeoutInMillis());
+        prepareWorkingDirectoryForK8sRollout(commandRequest);
+        k8sRollbackWorkloads = getKubernetesResourcesIdsForRollback(commandRequest);
+        ReleaseHistory releaseHistory = createK8sNewRelease(commandRequest, k8sRollbackWorkloads, null);
+        saveK8sReleaseHistory(commandRequest, commandResponse, releaseHistory);
       }
 
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
 
-      List<ContainerInfo> containerInfos = getContainerInfos(commandRequest,
-          commandRequest.getVariableOverridesYamlFiles(), executionLogCallback, commandRequest.getTimeoutInMillis());
+      List<ContainerInfo> containerInfos = getContainerInfos(commandRequest, k8sRollbackWorkloads,
+          useK8sSteadyStateCheck, executionLogCallback, commandRequest.getTimeoutInMillis());
       commandResponse.setContainerInfoList(containerInfos);
 
       executionLogCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
@@ -486,7 +538,42 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     } catch (Exception e) {
       logger.error("Helm chart rollback failed [{}]", commandRequest.toString(), e);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
+    } finally {
+      cleanupWorkingDirectory(commandRequest);
     }
+  }
+
+  private void prepareWorkingDirectoryForK8sRollout(HelmCommandRequest commandRequest) throws IOException {
+    String workingDirectory = getWorkingDirectory(commandRequest);
+    FileIo.createDirectoryIfDoesNotExist(workingDirectory);
+    commandRequest.setWorkingDir(workingDirectory);
+  }
+
+  private void cleanupWorkingDirectory(HelmCommandRequest commandRequest) {
+    try {
+      if (commandRequest.getWorkingDir() != null) {
+        FileIo.deleteDirectoryAndItsContentIfExists(commandRequest.getWorkingDir());
+      }
+    } catch (IOException e) {
+      logger.info("Unable to delete working directory: " + commandRequest.getWorkingDir(), e);
+    }
+  }
+
+  private List<KubernetesResourceId> getKubernetesResourcesIdsForRollback(HelmRollbackCommandRequest request)
+      throws IOException {
+    KubernetesConfig kubernetesConfig =
+        containerDeploymentDelegateHelper.getKubernetesConfig(request.getContainerServiceParams());
+    ReleaseHistory releaseHistory = fetchK8sReleaseHistory(request, kubernetesConfig);
+    Release rollbackRelease = releaseHistory.getRelease(request.getPrevReleaseVersion());
+    notNullCheck("Unable to find release " + request.getPrevReleaseVersion(), rollbackRelease);
+
+    if (Status.Succeeded != rollbackRelease.getStatus()) {
+      throw new InvalidRequestException("Invalid status for release with number " + request.getPrevReleaseVersion()
+              + ". Expected 'Succeeded' status, actual status is '" + rollbackRelease.getStatus() + "'",
+          USER);
+    }
+
+    return rollbackRelease.getResources();
   }
 
   @Override
