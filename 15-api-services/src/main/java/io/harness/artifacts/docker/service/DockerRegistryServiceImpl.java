@@ -102,6 +102,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     while (true) {
       String nextLink = findNextLink(response.headers());
       if (nextLink == null) {
+        if (buildDetails.size() > MAX_NO_OF_TAGS_PER_IMAGE) {
+          buildDetails.subList(0, buildDetails.size() - MAX_NO_OF_TAGS_PER_IMAGE).clear();
+        }
         return buildDetails;
       } else {
         logger.info(
@@ -124,6 +127,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       if (buildDetails.size() > MAX_NO_OF_TAGS_PER_IMAGE) {
         logger.warn(
             "Image name {} has more than {} tags. We might miss some new tags", imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+        buildDetails.subList(0, buildDetails.size() - MAX_NO_OF_TAGS_PER_IMAGE).clear();
         break;
       }
     }
