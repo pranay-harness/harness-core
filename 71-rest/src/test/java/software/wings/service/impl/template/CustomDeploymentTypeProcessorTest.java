@@ -1,6 +1,9 @@
 package software.wings.service.impl.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -10,8 +13,13 @@ import io.harness.rule.OwnerRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
+import software.wings.utils.WingsTestConstants;
+
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class CustomDeploymentTypeProcessorTest extends WingsBaseTest {
   private CustomDeploymentTypeProcessor processor = new CustomDeploymentTypeProcessor();
@@ -80,5 +88,46 @@ public class CustomDeploymentTypeProcessorTest extends WingsBaseTest {
 
     assertThat(processor.checkTemplateDetailsChanged(newTemplate, CustomDeploymentTypeTemplate.builder().build()))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void shouldTrimFields() {
+    Template processedTemplate;
+    Template template;
+    template = Template.builder()
+                   .accountId(ACCOUNT_ID)
+                   .name(WingsTestConstants.TEMPLATE_NAME)
+                   .templateObject(CustomDeploymentTypeTemplate.builder().build())
+                   .variables(Arrays.asList(aVariable().name("k").value("v").build()))
+                   .build();
+    processedTemplate = processor.process(template);
+
+    assertThat(processedTemplate).isEqualTo(template);
+
+    template.setTemplateObject(CustomDeploymentTypeTemplate.builder()
+                                   .hostObjectArrayPath("   path   ")
+                                   .hostAttributes(new HashMap<String, String>() {
+                                     {
+                                       put("k1", " v1 ");
+                                       put("k2", "v2 ");
+                                     }
+                                   })
+                                   .build());
+    processedTemplate = processor.process(template);
+    assertThat(processedTemplate.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(processedTemplate.getName()).isEqualTo(TEMPLATE_NAME);
+    assertThat(processedTemplate.getVariables()).containsExactly(aVariable().name("k").value("v").build());
+    assertThat(processedTemplate.getTemplateObject())
+        .isEqualTo(CustomDeploymentTypeTemplate.builder()
+                       .hostObjectArrayPath("path")
+                       .hostAttributes(new HashMap<String, String>() {
+                         {
+                           put("k1", "v1");
+                           put("k2", "v2");
+                         }
+                       })
+                       .build());
   }
 }

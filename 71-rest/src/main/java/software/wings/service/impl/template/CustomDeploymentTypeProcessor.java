@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static org.apache.commons.lang3.StringUtils.trim;
 import static software.wings.beans.template.TemplateType.CUSTOM_DEPLOYMENT_TYPE;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
@@ -8,10 +9,35 @@ import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
+import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 
 import java.util.List;
+import java.util.Optional;
 
 public class CustomDeploymentTypeProcessor extends AbstractTemplateProcessor {
+  /**
+   * Process the template
+   *
+   * @param template
+   */
+  @Override
+  public Template process(Template template) {
+    CustomDeploymentTypeTemplate customDeploymentTypeTemplate =
+        (CustomDeploymentTypeTemplate) template.getTemplateObject();
+    if (customDeploymentTypeTemplate != null) {
+      final CustomDeploymentTypeTemplate processedTemplateObject =
+          customDeploymentTypeTemplate.but()
+              .hostObjectArrayPath(trim(customDeploymentTypeTemplate.getHostObjectArrayPath()))
+              .build();
+      Optional.ofNullable(processedTemplateObject.getHostAttributes())
+          .ifPresent(map -> map.replaceAll((k, v) -> v.trim()));
+      template.setTemplateObject(processedTemplateObject);
+    }
+
+    template.setType(getTemplateType().name());
+    return template;
+  }
+
   @Override
   public TemplateType getTemplateType() {
     return CUSTOM_DEPLOYMENT_TYPE;
