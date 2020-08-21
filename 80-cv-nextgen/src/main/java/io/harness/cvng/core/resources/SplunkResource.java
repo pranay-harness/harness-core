@@ -28,8 +28,11 @@ public class SplunkResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<SplunkSavedSearch>> getSavedSearches(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("connectorId") String connectorId, @QueryParam("requestGuid") @NotNull String requestGuid) {
-    return new RestResponse<>(splunkService.getSavedSearches(accountId, connectorId, requestGuid));
+      @QueryParam("connectorId") String connectorId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("requestGuid") @NotNull String requestGuid) {
+    return new RestResponse<>(
+        splunkService.getSavedSearches(accountId, connectorId, orgIdentifier, projectIdentifier, requestGuid));
   }
 
   @GET
@@ -38,7 +41,10 @@ public class SplunkResource {
   @ExceptionMetered
   public RestResponse<SplunkValidationResponse> getValidationResponse(
       @NotNull @QueryParam("accountId") final String accountId, @NotNull @QueryParam("connectorId") String connectorId,
-      @NotNull @QueryParam("query") String query, @QueryParam("requestGuid") @NotNull String requestGuid) {
-    return new RestResponse<>(splunkService.getValidationResponse(accountId, connectorId, query, requestGuid));
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @NotNull @QueryParam("query") String query,
+      @QueryParam("requestGuid") @NotNull String requestGuid) {
+    return new RestResponse<>(splunkService.getValidationResponse(
+        accountId, connectorId, orgIdentifier, projectIdentifier, query, requestGuid));
   }
 }

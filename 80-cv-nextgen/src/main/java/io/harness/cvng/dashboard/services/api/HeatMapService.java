@@ -9,10 +9,11 @@ import java.util.SortedSet;
 import javax.validation.constraints.NotNull;
 
 public interface HeatMapService {
-  void updateRiskScore(@NotNull String accountId, @NotNull String serviceIdentifier, @NotNull String envIdentifier,
-      @NotNull CVMonitoringCategory category, @NotNull Instant timeStamp, double riskScore);
+  void updateRiskScore(@NotNull String accountId, @NotNull String projectIdentifier, @NotNull String serviceIdentifier,
+      @NotNull String envIdentifier, @NotNull CVMonitoringCategory category, @NotNull Instant timeStamp,
+      double riskScore);
 
   Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> getHeatMap(@NotNull String accountId,
-      @NotNull String serviceIdentifier, @NotNull String envIdentifier, @NotNull Instant startTime,
+      @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier, @NotNull Instant startTime,
       @NotNull Instant endTime);
 }

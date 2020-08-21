@@ -19,8 +19,9 @@ public interface SplunkAnalysisService {
    * @return
    */
   VerificationNodeDataSetupResponse getLogDataByHost(String accountId, SplunkSetupTestNodeData elkSetupTestNodeData);
-  List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId, String requestGuid);
+  List<SplunkSavedSearch> getSavedSearches(
+      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, String requestGuid);
 
-  SplunkValidationResponse getValidationResponse(
-      String accountId, String connectorId, String query, String requestGuid);
+  SplunkValidationResponse getValidationResponse(String accountId, String connectorId, String orgIdentifier,
+      String projectIdentifier, String query, String requestGuid);
 }

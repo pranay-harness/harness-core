@@ -352,7 +352,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     final List<MetricPackDTO> metricPacks = yamlUtils.read(metricPackYaml, new TypeReference<List<MetricPackDTO>>() {});
 
     final Set<AppdynamicsValidationResponse> metricPacksData =
-        appdynamicsService.getMetricPackData(accountId, generateUuid(), 100, 200, generateUuid(),
+        appdynamicsService.getMetricPackData(accountId, generateUuid(), generateUuid(), 100, 200, generateUuid(),
             AppdynamicsMetricPackDataValidationRequest.builder()
                 .connector(AppDynamicsConnectorDTO.builder()
                                .controllerUrl("https://www.google.com")

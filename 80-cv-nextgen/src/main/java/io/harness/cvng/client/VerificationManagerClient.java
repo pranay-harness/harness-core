@@ -40,11 +40,14 @@ public interface VerificationManagerClient {
 
   @GET(SPLUNK_RESOURCE_PATH + SPLUNK_SAVED_SEARCH_PATH)
   Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(@Query("accountId") String accountId,
-      @Query("connectorId") String connectorId, @Query("requestGuid") String requestGuid);
+      @Query("connectorId") String connectorId, @Query("orgIdentifier") String orgIdentifier,
+      @Query("projectIdentifier") String projectIdentifier, @Query("requestGuid") String requestGuid);
 
   @GET(SPLUNK_RESOURCE_PATH + SPLUNK_VALIDATION_RESPONSE_PATH)
   Call<RestResponse<SplunkValidationResponse>> getSamples(@Query("accountId") String accountId,
-      @Query("connectorId") String connectorId, @Query("query") String query, @Query("requestGuid") String requestGuid);
+      @Query("connectorId") String connectorId, @Query("orgIdentifier") String orgIdentifier,
+      @Query("projectIdentifier") String projectIdentifier, @Query("query") String query,
+      @Query("requestGuid") String requestGuid);
 
   @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")
   Call<RestResponse<Boolean>> authenticateUser(
@@ -53,15 +56,18 @@ public interface VerificationManagerClient {
       + "/metric-data")
 
   Call<RestResponse<Set<AppdynamicsValidationResponse>>>
-  getAppDynamicsMetricData(@Query("accountId") String accountId, @Query("projectIdentifier") String projectIdentifier,
-      @Query("appdAppId") long appdAppId, @Query("appdTierId") long appdTierId,
-      @Query("requestGuid") String requestGuid, @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
+  getAppDynamicsMetricData(@Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+      @Query("projectIdentifier") String projectIdentifier, @Query("appdAppId") long appdAppId,
+      @Query("appdTierId") long appdTierId, @Query("requestGuid") String requestGuid,
+      @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
 
   @POST("appdynamics/applications-ng")
-  Call<RestResponse<List<AppDynamicsApplication>>> getAppDynamicsApplications(
-      @Query("accountId") String accountId, @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
+  Call<RestResponse<List<AppDynamicsApplication>>> getAppDynamicsApplications(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
 
   @POST("appdynamics/tiers-ng")
   Call<RestResponse<Set<AppDynamicsTier>>> getTiers(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Query("appDynamicsAppId") long appDynamicsAppId, @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
 }

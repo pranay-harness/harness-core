@@ -121,8 +121,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
     learningEngineTaskService.markCompleted(taskId);
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
-    heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getServiceIdentifier(),
-        cvConfig.getEnvIdentifier(), CVMonitoringCategory.PERFORMANCE, analysisEndTime, analysisBody.getScore());
+    heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
+        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), CVMonitoringCategory.PERFORMANCE, analysisEndTime,
+        analysisBody.getScore());
   }
 
   private String createAnalysisSaveUrl(AnalysisInput input, String taskId) {

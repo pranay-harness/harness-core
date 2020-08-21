@@ -17,6 +17,7 @@ import java.util.List;
 public abstract class DSConfig {
   private String identifier;
   private String accountId;
+  private String orgIdentifier;
   private String projectIdentifier;
   private String productName;
   private String connectorId;
@@ -34,6 +35,7 @@ public abstract class DSConfig {
   public void populateCommonFields(CVConfig cvConfig) {
     this.identifier = cvConfig.getGroupId();
     this.accountId = cvConfig.getAccountId();
+    this.orgIdentifier = cvConfig.getOrgIdentifier();
     this.projectIdentifier = cvConfig.getProjectIdentifier();
     this.productName = cvConfig.getProductName();
     this.connectorId = cvConfig.getConnectorId();
@@ -43,6 +45,7 @@ public abstract class DSConfig {
   protected void fillCommonFields(CVConfig cvConfig) {
     cvConfig.setGroupId(identifier);
     cvConfig.setAccountId(accountId);
+    cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setProductName(productName);
     cvConfig.setConnectorId(connectorId);

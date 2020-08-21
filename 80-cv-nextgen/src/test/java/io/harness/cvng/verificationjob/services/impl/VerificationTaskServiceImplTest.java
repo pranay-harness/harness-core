@@ -53,6 +53,8 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
   private long deploymentStartTimeMs;
   private String connectorId;
   private String dataCollectionTaskId;
+  private String orgIdentifier;
+  private String projectIdentifier;
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
@@ -62,8 +64,11 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
     deploymentStartTimeMs = Instant.parse("2020-07-27T10:44:06.390Z").toEpochMilli();
     connectorId = generateUuid();
     dataCollectionTaskId = generateUuid();
+    orgIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
     FieldUtils.writeField(verificationTaskService, "verificationManagerService", verificationManagerService, true);
-    when(verificationManagerService.createDeploymentVerificationDataCollectionTask(any(), any(), any(), any()))
+    when(verificationManagerService.createDeploymentVerificationDataCollectionTask(
+             any(), any(), any(), any(), any(), any()))
         .thenReturn(dataCollectionTaskId);
   }
 
@@ -100,7 +105,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
     verificationTaskService.createDataCollectionTasks(verificationTask);
     verify(verificationManagerService)
         .createDeploymentVerificationDataCollectionTask(eq(accountId), eq(verificationTaskId), eq(connectorId),
-            eq(getDataCollectionWorkerId(verificationTaskId, connectorId)));
+            eq(orgIdentifier), eq(projectIdentifier), eq(getDataCollectionWorkerId(verificationTaskId, connectorId)));
     VerificationTask saved = verificationTaskService.getVerificationTask(verificationTaskId);
     assertThat(saved.getDataCollectionTaskIds()).isEqualTo(Lists.newArrayList(dataCollectionTaskId));
   }
@@ -146,8 +151,9 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorId(connectorId);
     cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setEnvIdentifier(generateUuid());
-    cvConfig.setProjectIdentifier(generateUuid());
     cvConfig.setGroupId("groupId");
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName("productName");

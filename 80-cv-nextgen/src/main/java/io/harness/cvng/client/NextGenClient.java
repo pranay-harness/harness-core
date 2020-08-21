@@ -8,8 +8,10 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 
 public interface NextGenClient {
   String CONNECTOR_BASE_PATH = "/accounts/{accountIdentifier}/connectors";
@@ -19,6 +21,7 @@ public interface NextGenClient {
       @Body ConnectorRequestDTO connectorRequestDTO, @Path("accountIdentifier") String accountIdentifier);
 
   @GET(CONNECTOR_BASE_PATH + "/{connectorIdentifier}")
-  Call<ResponseDTO<Optional<ConnectorDTO>>> get(
-      @Path("accountIdentifier") String accountIdentifier, @Path("connectorIdentifier") String connectorIdentifier);
+  Call<ResponseDTO<Optional<ConnectorDTO>>> get(@Path("accountIdentifier") String accountIdentifier,
+      @Path("connectorIdentifier") String connectorIdentifier, @Query("orgIdentifier") @NotNull String orgIdentifier,
+      @Query("projectIdentifier") @NotNull String projectIdentifier);
 }

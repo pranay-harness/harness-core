@@ -44,7 +44,8 @@ public class SplunkResourceTest extends CvNextGenTest {
     splunkValidationResponse =
         SplunkValidationResponse.builder().queryDurationMillis(Duration.ofDays(3).toMillis()).build();
     FieldUtils.writeField(splunkResource, "splunkService", splunkService, true);
-    when(splunkService.getValidationResponse(eq(accountId), eq(connectorId), anyString(), anyString()))
+    when(splunkService.getValidationResponse(
+             eq(accountId), eq(connectorId), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(splunkValidationResponse);
     this.accountId = generateUuid();
     this.connectorId = generateUuid();
@@ -58,6 +59,8 @@ public class SplunkResourceTest extends CvNextGenTest {
                             .target("http://localhost:9998/splunk/validation")
                             .queryParam("accountId", accountId)
                             .queryParam("connectorId", connectorId)
+                            .queryParam("orgIdentifier", "orgIdentifier")
+                            .queryParam("projectIdentifier", "project")
                             .queryParam("requestGuid", generateUuid())
                             .queryParam("query", "exception")
                             .request(MediaType.APPLICATION_JSON_TYPE)
@@ -74,6 +77,8 @@ public class SplunkResourceTest extends CvNextGenTest {
                             .queryParam("accountId", accountId)
                             .queryParam("connectorId", connectorId)
                             .queryParam("requestGuid", generateUuid())
+                            .queryParam("orgIdentifier", "orgIdentifier")
+                            .queryParam("projectIdentifier", "project")
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
     assertThat(response.getStatus()).isEqualTo(400);

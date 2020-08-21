@@ -21,13 +21,15 @@ import javax.validation.constraints.NotNull;
 public interface AppdynamicsService {
   List<NewRelicApplication> getApplications(@NotNull String settingId);
   List<NewRelicApplication> getApplications(@NotNull String settingId, String appId, String workflowExecutionId);
-  List<AppDynamicsApplication> getApplications(@NotNull AppDynamicsConnectorDTO appDynamicsConnector);
+  List<AppDynamicsApplication> getApplications(@NotNull AppDynamicsConnectorDTO appDynamicsConnector,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier);
 
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId);
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog);
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, String appId, String workflowExecutionId,
       ThirdPartyApiCallLog apiCallLog);
-  Set<AppDynamicsTier> getTiers(long appDynamicsAppId, @NotNull AppDynamicsConnectorDTO appDynamicsConnectorDTO);
+  Set<AppDynamicsTier> getTiers(@NotNull AppDynamicsConnectorDTO appDynamicsConnectorDTO, @NotNull String orgIdentifier,
+      @NotNull String projectIdentifier, long appDynamicsAppId);
   /**
    * Api to fetch metric data for given node.
    * @param appdynamicsSetupTestNodeData
@@ -49,6 +51,7 @@ public interface AppdynamicsService {
   String getTierByName(String analysisServerConfigId, String applicationId, String tierName, String appId,
       String workflowExecutionId, ThirdPartyApiCallLog apiCallLog);
 
-  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier, long appdAppId,
-      long appdTierId, String requestGuid, AppdynamicsMetricPackDataValidationRequest validationRequest);
+  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String orgIdentifier, String projectIdentifier,
+      long appdAppId, long appdTierId, String requestGuid,
+      AppdynamicsMetricPackDataValidationRequest validationRequest);
 }

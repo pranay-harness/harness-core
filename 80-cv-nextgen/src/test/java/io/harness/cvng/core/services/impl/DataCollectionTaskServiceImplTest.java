@@ -64,6 +64,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   private String accountId;
   private Instant fakeNow;
   private String dataCollectionWorkerId;
+  private String orgIdentifier;
+  private String projectIdentifier;
 
   @Before
   public void setupTests() throws IllegalAccessException {
@@ -380,7 +382,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
     when(verificationManagerService.createServiceGuardDataCollectionTask(
-             eq(accountId), eq(cvConfigId), anyString(), eq(cvConfigId)))
+             eq(accountId), eq(cvConfigId), anyString(), anyString(), anyString(), eq(cvConfigId)))
         .thenReturn(taskId);
     AppDynamicsCVConfig cvConfig = getCVConfig();
 
@@ -414,7 +416,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
     when(verificationManagerService.createServiceGuardDataCollectionTask(
-             eq(accountId), eq(cvConfigId), anyString(), eq(cvConfigId)))
+             eq(accountId), eq(cvConfigId), anyString(), anyString(), anyString(), eq(cvConfigId)))
         .thenReturn(taskId);
     SplunkCVConfig cvConfig = getSplunkCVConfig();
 

@@ -95,7 +95,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
   }
 
   @Override
-  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId, String requestGuid) {
+  public List<SplunkSavedSearch> getSavedSearches(
+      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, String requestGuid) {
     final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
     SyncTaskContext taskContext = getSyncTaskContext(accountId);
@@ -104,8 +105,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
   }
 
   @Override
-  public SplunkValidationResponse getValidationResponse(
-      String accountId, String connectorId, String query, String requestGuid) {
+  public SplunkValidationResponse getValidationResponse(String accountId, String connectorId, String orgIdentifier,
+      String projectIdentifier, String query, String requestGuid) {
     final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
     SyncTaskContext taskContext = getSyncTaskContext(accountId);

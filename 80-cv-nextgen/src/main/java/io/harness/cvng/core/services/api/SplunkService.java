@@ -6,8 +6,9 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 import java.util.List;
 
 public interface SplunkService {
-  List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId, String requestGuid);
+  List<SplunkSavedSearch> getSavedSearches(
+      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, String requestGuid);
 
-  SplunkValidationResponse getValidationResponse(
-      String accountId, String connectorId, String query, String requestGuid);
+  SplunkValidationResponse getValidationResponse(String accountId, String connectorId, String orgIdentifier,
+      String projectIdentifier, String query, String requestGuid);
 }

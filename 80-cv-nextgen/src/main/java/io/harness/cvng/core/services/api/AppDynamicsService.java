@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Set;
 
 public interface AppDynamicsService {
-  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier, String connectorId,
-      long appdAppId, long appdTierId, String requestGuid, List<MetricPack> metricPacks);
+  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorId, String orgIdentifier,
+      String projectIdentifier, long appdAppId, long appdTierId, String requestGuid, List<MetricPack> metricPacks);
 
-  List<AppDynamicsApplication> getApplications(String accountId, String connectorId);
+  List<AppDynamicsApplication> getApplications(
+      String accountId, String connectorId, String orgIdentifier, String projectIdentifier);
 
-  Set<AppDynamicsTier> getTiers(String accountId, String connectorId, long appDynamicsAppId);
+  Set<AppDynamicsTier> getTiers(
+      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, long appDynamicsAppId);
 }

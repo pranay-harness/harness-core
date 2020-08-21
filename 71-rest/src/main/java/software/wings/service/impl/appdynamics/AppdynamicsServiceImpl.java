@@ -77,9 +77,13 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public List<AppDynamicsApplication> getApplications(AppDynamicsConnectorDTO appDynamicsConnector) {
-    NGAccess basicNGAccessObject =
-        BaseNGAccess.builder().accountIdentifier(appDynamicsConnector.getAccountId()).build();
+  public List<AppDynamicsApplication> getApplications(
+      AppDynamicsConnectorDTO appDynamicsConnector, String orgIdentifier, String projectIdentifier) {
+    NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                       .accountIdentifier(appDynamicsConnector.getAccountId())
+                                       .orgIdentifier(orgIdentifier)
+                                       .projectIdentifier(projectIdentifier)
+                                       .build();
     List<EncryptedDataDetail> encryptedDataDetails =
         ngSecretService.getEncryptionDetails(basicNGAccessObject, appDynamicsConnector);
 
@@ -120,9 +124,13 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public Set<AppDynamicsTier> getTiers(long appDynamicsAppId, AppDynamicsConnectorDTO appDynamicsConnector) {
-    NGAccess basicNGAccessObject =
-        BaseNGAccess.builder().accountIdentifier(appDynamicsConnector.getAccountId()).build();
+  public Set<AppDynamicsTier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector, String orgIdentifier,
+      String projectIdentifier, long appDynamicsAppId) {
+    NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                       .accountIdentifier(appDynamicsConnector.getAccountId())
+                                       .orgIdentifier(orgIdentifier)
+                                       .projectIdentifier(projectIdentifier)
+                                       .build();
     List<EncryptedDataDetail> encryptedDataDetails =
         ngSecretService.getEncryptionDetails(basicNGAccessObject, appDynamicsConnector);
 
@@ -253,14 +261,17 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier,
-      long appdAppId, long appdTierId, String requestGuid,
+  public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String orgIdentifier,
+      String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
       AppdynamicsMetricPackDataValidationRequest validationRequest) {
     logger.info("for {} getting data for {}", projectIdentifier, validationRequest);
     Preconditions.checkState(isNotEmpty(validationRequest.getMetricPacks()),
         "No metric packs found for project {} with the name {}", projectIdentifier, validationRequest.getMetricPacks());
-    NGAccess basicNGAccessObject =
-        BaseNGAccess.builder().accountIdentifier(validationRequest.getConnector().getAccountId()).build();
+    NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                       .accountIdentifier(validationRequest.getConnector().getAccountId())
+                                       .orgIdentifier(orgIdentifier)
+                                       .projectIdentifier(projectIdentifier)
+                                       .build();
     List<EncryptedDataDetail> encryptedDataDetails =
         ngSecretService.getEncryptionDetails(basicNGAccessObject, validationRequest.getConnector());
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()

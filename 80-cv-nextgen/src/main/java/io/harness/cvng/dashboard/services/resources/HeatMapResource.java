@@ -32,11 +32,12 @@ public class HeatMapResource {
   @ExceptionMetered
   public RestResponse<Map<CVMonitoringCategory, SortedSet<HeatMapDTO>>> getCVConfig(
       @QueryParam("accountId") @NotNull final String accountId,
-      @QueryParam("serviceIdentifier") @NotNull final String serviceIdentifier,
-      @QueryParam("envIdentifier") @NotNull final String envIdentifier,
+      @QueryParam("projectIdentifier") @NotNull final String projectIdentifier,
+      @QueryParam("serviceIdentifier") final String serviceIdentifier,
+      @QueryParam("envIdentifier") final String envIdentifier,
       @QueryParam("startTimeMs") @NotNull final Long startTimeMs,
       @QueryParam("endTimeMs") @NotNull final Long endTimeMs) {
-    return new RestResponse<>(heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
+    return new RestResponse<>(heatMapService.getHeatMap(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
         Instant.ofEpochMilli(startTimeMs), Instant.ofEpochMilli(endTimeMs)));
   }
 }

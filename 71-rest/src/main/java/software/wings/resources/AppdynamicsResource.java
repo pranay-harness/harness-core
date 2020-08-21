@@ -92,13 +92,13 @@ public class AppdynamicsResource {
   @LearningEngineAuth
   @ExposeInternalException(withStackTrace = true)
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
-      @QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("appdAppId") @NotNull long appdAppId, @QueryParam("appdTierId") @NotNull long appdTierId,
       @QueryParam("requestGuid") @NotNull String requestGuid,
       @NotNull @Valid @Body AppdynamicsMetricPackDataValidationRequest validationRequest) {
     return new RestResponse<>(appdynamicsService.getMetricPackData(
-        accountId, projectIdentifier, appdAppId, appdTierId, requestGuid, validationRequest));
+        accountId, orgIdentifier, projectIdentifier, appdAppId, appdTierId, requestGuid, validationRequest));
   }
 
   @POST
@@ -107,9 +107,12 @@ public class AppdynamicsResource {
   @ExceptionMetered
   @LearningEngineAuth
   @ExposeInternalException(withStackTrace = true)
-  public RestResponse<List<AppDynamicsApplication>> getAllApplications(
-      @QueryParam("accountId") String accountId, AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    return new RestResponse<>(appdynamicsService.getApplications(appDynamicsConnectorDTO));
+  public RestResponse<List<AppDynamicsApplication>> getAllApplications(@QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
+    return new RestResponse<>(
+        appdynamicsService.getApplications(appDynamicsConnectorDTO, orgIdentifier, projectIdentifier));
   }
 
   @POST
@@ -119,7 +122,10 @@ public class AppdynamicsResource {
   @LearningEngineAuth
   @ExposeInternalException(withStackTrace = true)
   public RestResponse<Set<AppDynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
-      @QueryParam("appDynamicsAppId") Long appDynamicsAppId, AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    return new RestResponse<>(appdynamicsService.getTiers(appDynamicsAppId, appDynamicsConnectorDTO));
+      @QueryParam("appDynamicsAppId") Long appDynamicsAppId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
+    return new RestResponse<>(
+        appdynamicsService.getTiers(appDynamicsConnectorDTO, orgIdentifier, projectIdentifier, appDynamicsAppId));
   }
 }
