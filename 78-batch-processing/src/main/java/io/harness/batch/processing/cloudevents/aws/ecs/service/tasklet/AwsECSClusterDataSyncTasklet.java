@@ -69,6 +69,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -257,7 +258,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                                            .map(task -> getIdFromArn(task.getContainerInstanceArn()))
                                            .collect(Collectors.toSet());
     Map<String, InstanceData> instanceDataMap = getInstanceDataMap(containerInstanceArn);
-    tasks.forEach(task -> {
+    tasks.stream().filter(task -> null != task.getPullStartedAt()).forEach(task -> {
       String taskId = getIdFromArn(task.getTaskArn());
       if (null != activeInstanceDataMap.get(taskId)) {
         InstanceData instanceData = activeInstanceDataMap.get(taskId);
@@ -541,15 +542,21 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   }
 
   private Map<String, AwsCrossAccountAttributes> getCrossAccountAttributes(String accountId) {
-    List<CECloudAccount> ceCloudAccountList = ceCloudAccountDao.getByAWSAccountId(accountId);
-    Map<String, AwsCrossAccountAttributes> crossAccountAttributesMap = ceCloudAccountList.stream().collect(
-        Collectors.toMap(CECloudAccount::getInfraAccountId, CECloudAccount::getAwsCrossAccountAttributes));
-    List<SettingAttribute> ceConnectorList =
+    List<SettingAttribute> ceConnectorsList =
         cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AWS);
-    ceConnectorList.forEach(ceConnector -> {
-      CEAwsConfig ceAwsConfig = (CEAwsConfig) ceConnector.getValue();
-      crossAccountAttributesMap.put(ceAwsConfig.getAwsMasterAccountId(), ceAwsConfig.getAwsCrossAccountAttributes());
-    });
-    return crossAccountAttributesMap;
+    if (!CollectionUtils.isEmpty(ceConnectorsList)) {
+      List<CECloudAccount> ceCloudAccountList =
+          ceCloudAccountDao.getBySettingId(accountId, ceConnectorsList.get(0).getUuid());
+      Map<String, AwsCrossAccountAttributes> crossAccountAttributesMap = ceCloudAccountList.stream().collect(
+          Collectors.toMap(CECloudAccount::getInfraAccountId, CECloudAccount::getAwsCrossAccountAttributes));
+      List<SettingAttribute> ceConnectorList =
+          cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AWS);
+      ceConnectorList.forEach(ceConnector -> {
+        CEAwsConfig ceAwsConfig = (CEAwsConfig) ceConnector.getValue();
+        crossAccountAttributesMap.put(ceAwsConfig.getAwsMasterAccountId(), ceAwsConfig.getAwsCrossAccountAttributes());
+      });
+      return crossAccountAttributesMap;
+    }
+    return Collections.emptyMap();
   }
 }

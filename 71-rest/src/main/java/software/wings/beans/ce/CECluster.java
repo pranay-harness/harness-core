@@ -6,6 +6,7 @@ import com.google.common.hash.Hashing;
 
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -43,7 +44,7 @@ public final class CECluster implements PersistentEntity, UuidAware, CreatedAtAw
   String infraAccountId;
   String infraMasterAccountId;
   String parentAccountSettingId; // setting id of ce connectors
-  String hash;
+  @FdIndex String hash;
   long lastReceivedAt;
   long createdAt;
   long lastUpdatedAt;
