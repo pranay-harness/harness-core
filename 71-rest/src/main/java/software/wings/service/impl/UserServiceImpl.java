@@ -946,24 +946,17 @@ public class UserServiceImpl implements UserService {
     if (isEmpty(userGroups)) {
       return;
     }
-    // Stores information about newly added user groups
+
     Set<String> newUserGroups = Sets.newHashSet();
     for (UserGroup userGroup : userGroups) {
-      if (userGroup.getMembers() != null) {
-        logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
-            userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
-            userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
-      }
-      List<User> userGroupMembers = userGroup.getMembers();
-      if (isEmpty(userGroupMembers)) {
-        userGroupMembers = new ArrayList<>();
-        userGroup.setMembers(userGroupMembers);
-      }
-      if (!userGroupMembers.contains(user)) {
-        userGroupMembers.add(user);
+      if (!userGroup.hasMember(user)) {
+        if (userGroup.getMemberIds() == null) {
+          userGroup.setMemberIds(new ArrayList<>());
+        }
+        userGroup.getMemberIds().add(user.getUuid());
         userGroupService.updateMembers(userGroup, false, toBeAudited);
         NotificationSettings notificationSettings = userGroup.getNotificationSettings();
-        if (null == notificationSettings) {
+        if (notificationSettings == null) {
           logger.error("Notification settings not found for user group id: [{}]", userGroup.getUuid());
         } else if (notificationSettings.isSendMailToNewMembers()) {
           newUserGroups.add(userGroup.getUuid());
@@ -971,7 +964,6 @@ public class UserServiceImpl implements UserService {
       }
     }
 
-    // Sending email only if user was added to some new group
     if (sendNotification && isNotEmpty(newUserGroups)) {
       sendAddedGroupEmail(user, accountService.get(accountId), userGroups);
     }
@@ -1001,9 +993,9 @@ public class UserServiceImpl implements UserService {
     if (isNotEmpty(userGroups)) {
       final User userFinal = user;
       userGroups.forEach(userGroup -> {
-        List<User> userGroupMembers = userGroup.getMembers();
+        List<String> userGroupMembers = userGroup.getMemberIds();
         if (userGroupMembers != null) {
-          userGroupMembers.remove(userFinal);
+          userGroupMembers.remove(userFinal.getUuid());
           userGroupService.updateMembers(userGroup, sendNotification, false);
         }
       });
@@ -1133,7 +1125,7 @@ public class UserServiceImpl implements UserService {
   private Map<String, Object> getAddedUserGroupTemplateModel(User user, Account account, List<UserGroup> userGroups)
       throws URISyntaxException {
     List<String> userGroupNamesList = new ArrayList<>();
-    userGroups.forEach(userGroup -> { userGroupNamesList.add(userGroup.getName()); });
+    userGroups.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
     String loginUrl =
         buildAbsoluteUrl(format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
             account.getUuid());

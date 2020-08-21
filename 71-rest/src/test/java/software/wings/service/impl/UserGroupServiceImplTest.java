@@ -691,21 +691,24 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
       userGroup1 = userGroupService.save(userGroup1);
       try {
-        userService.register(user1);
-        userService.register(user2);
+        user1 = userService.register(user1);
       } catch (IndexOutOfBoundsException e) {
         // Ignoring the primary account fetch failure
       }
-      userGroup1.setMembers(Arrays.asList(user1, user2));
+      try {
+        user2 = userService.register(user2);
+      } catch (IndexOutOfBoundsException e) {
+        // Ignoring the primary account fetch failure
+      }
+      userGroup1.setMemberIds(Arrays.asList(user1.getUuid(), user2.getUuid()));
       userGroupService.updateMembers(userGroup1, true, false);
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
-      assertThat(2).isNotEqualTo(
-          emailsData.stream()
+      assertThat(2).isEqualTo(
+          (int) emailsData.stream()
               .filter(emailData -> emailData.getTemplateName().equals(ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME))
-              .collect(toList())
-              .size());
-      userGroup1.setMembers(Arrays.asList(user1));
+              .count());
+      userGroup1.setMemberIds(singletonList(user1.getUuid()));
       userGroupService.updateMembers(userGroup1, true, true);
       verify(auditServiceHelper, atLeast(2))
           .reportForAuditingUsingAccountId(ArgumentCaptor.forClass(String.class).capture(),

@@ -10,7 +10,9 @@ import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.unEqualCheck;
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -96,9 +98,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -146,8 +147,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     checkForUserGroupWithSameName(userGroup);
 
     if (null == userGroup.getNotificationSettings()) {
-      NotificationSettings notificationSettings =
-          new NotificationSettings(false, true, Collections.emptyList(), null, "", "");
+      NotificationSettings notificationSettings = new NotificationSettings(false, true, emptyList(), null, "", "");
       userGroup.setNotificationSettings(notificationSettings);
     }
     AccountPermissions accountPermissions =
@@ -259,7 +259,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> getUserGroupSummary(List<UserGroup> userGroupList) {
     if (isEmpty(userGroupList)) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return userGroupList.stream().map(this ::getUserGroupSummary).collect(toList());
   }
@@ -416,26 +416,13 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup updateMembers(UserGroup userGroup, boolean sendNotification, boolean toBeAudited) {
-    if (userGroup.getMembers() != null) {
-      logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
-          userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
-          userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
-    }
-    Set<String> newMemberIds = Sets.newHashSet();
-    if (isNotEmpty(userGroup.getMembers())) {
-      newMemberIds = userGroup.getMembers()
-                         .stream()
-                         .filter(user -> StringUtils.isNotBlank(user.getUuid()))
-                         .map(User::getUuid)
-                         .collect(Collectors.toSet());
-    }
+  public UserGroup updateMembers(UserGroup userGroupToUpdate, boolean sendNotification, boolean toBeAudited) {
+    Set<String> newMemberIds = isEmpty(userGroupToUpdate.getMemberIds())
+        ? Sets.newHashSet()
+        : Sets.newHashSet(userGroupToUpdate.getMemberIds());
+    newMemberIds.remove(null);
 
-    logger.info("New members of userGroup={} in account={} are: {}", userGroup.getName(), userGroup.getAccountId(),
-        newMemberIds.toString());
-
-    UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
-
+    UserGroup existingUserGroup = get(userGroupToUpdate.getAccountId(), userGroupToUpdate.getUuid());
     if (UserGroupUtils.isAdminUserGroup(existingUserGroup) && newMemberIds.isEmpty()) {
       throw new WingsException(
           ErrorCode.UPDATE_NOT_ALLOWED, "Account Administrator user group must have at least one user");
@@ -445,42 +432,24 @@ public class UserGroupServiceImpl implements UserGroupService {
         ? Sets.newHashSet()
         : Sets.newHashSet(existingUserGroup.getMemberIds());
 
-    if (existingUserGroup.getMembers() != null) {
-      logger.info("Existing members of userGroup={} in account={} are: {} and their emails are: {}",
-          existingUserGroup.getName(), existingUserGroup.getAccountId(), existingMemberIds.toString(),
-          existingUserGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
-    }
-
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.memberIds, newMemberIds);
-    UserGroup updatedUserGroup = update(userGroup, operations);
-
-    Set<String> updatedMemberIds =
-        isEmpty(updatedUserGroup.getMemberIds()) ? Sets.newHashSet() : Sets.newHashSet(updatedUserGroup.getMemberIds());
-
-    if (updatedUserGroup.getMembers() != null) {
-      logger.info("Updated userGroup={} in account={}. Member Ids={}, Member Emails={}", updatedUserGroup.getName(),
-          updatedUserGroup.getAccountId(), updatedMemberIds.toString(),
-          updatedUserGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
-    }
+    UserGroup updatedUserGroup = update(userGroupToUpdate, operations);
 
     // auditing addition/removal of users in/from user group
     if (toBeAudited) {
       Set<String> memberIdsToBeAdded = Sets.difference(newMemberIds, existingMemberIds);
       Set<String> memberIdsToBeRemoved = Sets.difference(existingMemberIds, newMemberIds);
 
-      logger.info("Update userGroup={} in account={}. Members to be added={}. Members to be removed={}",
-          updatedUserGroup.getName(), updatedUserGroup.getAccountId(), memberIdsToBeAdded, memberIdsToBeRemoved);
-
       auditServiceHelper.reportForAuditingUsingAccountId(
-          userGroup.getAccountId(), userGroup, updatedUserGroup, Type.UPDATE);
+          userGroupToUpdate.getAccountId(), userGroupToUpdate, updatedUserGroup, Type.UPDATE);
       memberIdsToBeAdded.forEach(userId -> {
         User user = userService.get(userId);
-        auditServiceHelper.reportForAuditingUsingAccountId(userGroup.getAccountId(), null, user, Type.ADD);
+        auditServiceHelper.reportForAuditingUsingAccountId(userGroupToUpdate.getAccountId(), null, user, Type.ADD);
       });
       memberIdsToBeRemoved.forEach(userId -> {
         User user = userService.get(userId);
-        auditServiceHelper.reportForAuditingUsingAccountId(userGroup.getAccountId(), null, user, Type.REMOVE);
+        auditServiceHelper.reportForAuditingUsingAccountId(userGroupToUpdate.getAccountId(), null, user, Type.REMOVE);
       });
     }
 
@@ -490,18 +459,18 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (isNotEmpty(newMemberIds)) {
       evictUserPermissionInfoCacheForUsers(
-          userGroup.getAccountId(), newMemberIds.stream().distinct().collect(toList()));
+          userGroupToUpdate.getAccountId(), newMemberIds.stream().distinct().collect(toList()));
     }
 
     if (sendNotification) {
-      // Send added role email for all newly added users to the group
       Set<String> newlyAddedMemberIds = Sets.difference(newMemberIds, existingMemberIds);
       Account account = accountService.get(updatedUserGroup.getAccountId());
-      updatedUserGroup.getMembers().forEach(member -> {
-        if (newlyAddedMemberIds.contains(member.getUuid())) {
-          userService.sendAddedGroupEmail(member, account, Arrays.asList(userGroup));
+      for (String member : newlyAddedMemberIds) {
+        User user = userService.get(member);
+        if (user != null) {
+          userService.sendAddedGroupEmail(user, account, singletonList(userGroupToUpdate));
         }
-      });
+      }
     }
 
     return updatedUserGroup;
@@ -519,7 +488,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       return userGroup;
     }
 
-    members.forEach(groupMembers::remove);
+    userGroup.getMemberIds().removeAll(members.stream().map(User::getUuid).collect(toList()));
     return updateMembers(userGroup, sendNotification, toBeAudited);
   }
 
@@ -572,9 +541,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (userGroup.getAccountPermissions() == null || isEmpty(userGroup.getAccountPermissions().getPermissions())) {
       return;
     }
-    Set<PermissionType> newAccountPermissions = new HashSet<>();
+    EnumSet<PermissionType> newAccountPermissions = EnumSet.noneOf(PermissionType.class);
     for (PermissionType permission : userGroup.getAccountPermissions().getPermissions()) {
-      if (ACCOUNT_MANAGEMENT.equals(permission)) {
+      if (ACCOUNT_MANAGEMENT == permission) {
         newAccountPermissions.add(MANAGE_IP_WHITELIST);
         newAccountPermissions.add(MANAGE_AUTHENTICATION_SETTINGS);
         newAccountPermissions.add(MANAGE_APPLICATION_STACKS);
@@ -755,7 +724,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> fetchUserGroupNamesFromIdsUsingSecondary(Collection<String> userGroupIds) {
     if (isEmpty(userGroupIds)) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     return wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
@@ -833,7 +802,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (!retainMembers) {
       removeUserGroupFromInvites(accountId, userGroupId);
-      group.setMembers(Collections.emptyList());
+      group.setMemberIds(emptyList());
       group = updateMembers(group, false, false);
     }
 
@@ -964,7 +933,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public List<UserGroup> getUserGroupsFromUserInvite(UserInvite userInvite) {
     Object[] userIds = userInvite.getUserGroups().stream().map(UuidAware::getUuid).toArray();
     if (isEmpty(userIds)) {
-      return Collections.emptyList();
+      return emptyList();
     }
     PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ID_KEY, Operator.IN, userIds);
     return list(userInvite.getAccountId(), pageRequest.build(), true).getResponse();

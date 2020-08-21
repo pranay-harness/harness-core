@@ -1,8 +1,5 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.User.Builder.anUser;
-
 import com.google.inject.Inject;
 
 import io.harness.exception.DuplicateFieldException;
@@ -34,10 +31,6 @@ public class AddUserToUserGroupDataFetcher
     super(QLAddUserToUserGroupInput.class, QLAddUserToUserGroupPayload.class);
   }
 
-  private User createEmptyUser(String userId) {
-    return anUser().uuid(userId).build();
-  }
-
   private UserGroup addUserToUserGroup(UserGroup existingUserGroup, String userId, User user) {
     boolean sendNotification = true;
     if (existingUserGroup.getNotificationSettings() != null) {
@@ -49,7 +42,7 @@ public class AddUserToUserGroupDataFetcher
       throw new DuplicateFieldException(String.format("A user with id %s already exists in the user group", userId));
     } else {
       memberIds.add(userId);
-      existingUserGroup.setMembers(memberIds.stream().map(this ::createEmptyUser).collect(toList()));
+      existingUserGroup.setMemberIds(memberIds);
     }
     return userGroupService.updateMembers(existingUserGroup, sendNotification, true);
   }

@@ -1613,13 +1613,12 @@ public class AuthHandler {
 
       if (!userMemberOfGroup) {
         logger.info("User {} is not part of the user group in account {}, adding now ", user.getName(), accountId);
-        List<User> members = userGroup.getMembers();
+        List<String> members = userGroup.getMemberIds();
         if (members == null) {
           members = new ArrayList<>();
         }
-
-        members.add(user);
-        userGroup.setMembers(members);
+        members.add(user.getUuid());
+        userGroup.setMemberIds(members);
 
         userGroupService.updateMembers(userGroup, sendNotification, true);
 

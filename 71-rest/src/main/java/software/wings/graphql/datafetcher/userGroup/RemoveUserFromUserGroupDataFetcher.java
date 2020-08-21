@@ -1,8 +1,5 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.User.Builder.anUser;
-
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -33,10 +30,6 @@ public class RemoveUserFromUserGroupDataFetcher
     super(QLRemoveUserFromUserGroupInput.class, QLRemoveUserFromUserGroupPayload.class);
   }
 
-  private User createEmptyUser(String userId) {
-    return anUser().uuid(userId).build();
-  }
-
   private UserGroup deleteUserFromUserGroup(UserGroup existingUserGroup, String userId, User user) {
     // Adding new userId to the
     List<String> memberIds = new ArrayList<>(ListUtils.emptyIfNull(existingUserGroup.getMemberIds()));
@@ -44,7 +37,7 @@ public class RemoveUserFromUserGroupDataFetcher
       throw new InvalidRequestException(String.format("No user with id %s exists in the user group", userId));
     } else {
       memberIds.remove(userId);
-      existingUserGroup.setMembers(memberIds.stream().map(this ::createEmptyUser).collect(toList()));
+      existingUserGroup.setMemberIds(memberIds);
     }
     return userGroupService.updateMembers(existingUserGroup, false, true);
   }

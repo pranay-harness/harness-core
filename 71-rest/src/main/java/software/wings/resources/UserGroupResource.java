@@ -36,6 +36,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -232,6 +233,7 @@ public class UserGroupResource {
     if (null != existingGroup.getNotificationSettings()) {
       sendMailToNewMembers = existingGroup.getNotificationSettings().isSendMailToNewMembers();
     }
+    userGroup.setMemberIds(userGroup.getMembers().stream().map(User::getUuid).collect(Collectors.toList()));
     return new RestResponse<>(
         getPublicUserGroup(userGroupService.updateMembers(userGroup, sendMailToNewMembers, true)));
   }

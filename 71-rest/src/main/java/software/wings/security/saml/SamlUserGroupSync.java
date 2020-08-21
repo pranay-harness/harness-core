@@ -1,7 +1,5 @@
 package software.wings.security.saml;
 
-import static java.util.stream.Collectors.toSet;
-
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +20,7 @@ public class SamlUserGroupSync {
 
   public void syncUserGroup(
       final SamlUserAuthorization samlUserAuthorization, final String accountId, final String ssoId) {
-    logger.info("Syncing saml groups for user: {}", samlUserAuthorization.getEmail());
+    logger.info("Syncing saml user groups for user: {}", samlUserAuthorization.getEmail());
 
     List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountId, ssoId);
     updateUserGroups(userGroupsToSync, samlUserAuthorization, accountId);
@@ -33,31 +31,23 @@ public class SamlUserGroupSync {
     User user = userService.getUserByEmail(samlUserAuthorization.getEmail());
 
     List<String> newUserGroups = samlUserAuthorization.getUserGroups();
-    logger.info("Adding user {} to groups {} in saml authorization.", samlUserAuthorization.getEmail(),
+    logger.info("SAML authorisation user groups for user: {} are: {}", samlUserAuthorization.getEmail(),
         newUserGroups.toString());
 
     List<UserGroup> userAddedToGroups = new ArrayList<>();
 
     userGroupsToSync.forEach(userGroup -> {
-      if (userGroup.getMembers() != null) {
-        logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
-            userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
-            userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
-      }
       if (userGroup.hasMember(user) && !newUserGroups.contains(userGroup.getSsoGroupId())) {
         logger.info("Removing user: {} from user group: {} in account: {}", samlUserAuthorization.getEmail(),
             userGroup.getName(), userGroup.getAccountId());
         userGroupService.removeMembers(userGroup, Collections.singletonList(user), false, true);
       } else if (!userGroup.hasMember(user) && newUserGroups.contains(userGroup.getSsoGroupId())) {
         userAddedToGroups.add(userGroup);
-        if (userGroup.getMembers() != null) {
-          logger.info("Updating members of userGroup={} in account={}. Member Ids={}, Member Emails={}",
-              userGroup.getName(), userGroup.getAccountId(), userGroup.getMemberIds(),
-              userGroup.getMembers().stream().map(User::getEmail).collect(toSet()).toString());
-        }
       }
     });
 
+    logger.info("Adding user {} to groups {} in saml authorization.", samlUserAuthorization.getEmail(),
+        userAddedToGroups.toString());
     userService.addUserToUserGroups(accountId, user, userAddedToGroups, true, true);
   }
 }
