@@ -19,7 +19,6 @@ import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
-import com.microsoft.azure.management.compute.VirtualMachineScaleSetVMs;
 import com.microsoft.azure.management.compute.implementation.VirtualMachineScaleSetVMInner;
 import com.microsoft.azure.management.network.PublicIPAddressDnsSettings;
 import com.microsoft.azure.management.network.VirtualMachineScaleSetNetworkInterface;
@@ -58,19 +57,34 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
 
   @Before
   public void setupMocks() {
-    VirtualMachineScaleSet newVirtualMachineScaleSet = buildScaleSet(newInstancesSize);
-    VirtualMachineScaleSet oldVirtualMachineScaleSet = buildScaleSet(oldInstancesSize);
-
     AzureVMSSDeployTaskParameters deployTaskParameters = buildDeployTaskParameters();
+    VirtualMachineScaleSet newVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
+    VirtualMachineScaleSet oldVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
 
     doReturn(Optional.of(newVirtualMachineScaleSet))
         .when(azureVMSSHelperServiceDelegate)
         .getVirtualMachineScaleSetByName(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getNewVirtualMachineScaleSetName()));
+
     doReturn(Optional.of(oldVirtualMachineScaleSet))
         .when(azureVMSSHelperServiceDelegate)
         .getVirtualMachineScaleSetByName(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
+            eq(deployTaskParameters.getResourceGroupName()),
+            eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
+
+    PagedList<VirtualMachineScaleSetVM> newVirtualMachineScaleSetList = buildScaleSetVMs(newInstancesSize);
+    PagedList<VirtualMachineScaleSetVM> oldVirtualMachineScaleSetList = buildScaleSetVMs(oldInstancesSize);
+
+    doReturn(newVirtualMachineScaleSetList)
+        .when(azureVMSSHelperServiceDelegate)
+        .listVirtualMachineScaleSetVMs(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
+            eq(deployTaskParameters.getResourceGroupName()),
+            eq(deployTaskParameters.getNewVirtualMachineScaleSetName()));
+
+    doReturn(oldVirtualMachineScaleSetList)
+        .when(azureVMSSHelperServiceDelegate)
+        .listVirtualMachineScaleSetVMs(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
   }
@@ -189,15 +203,6 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
                                .scalingPolicyJSON(Collections.emptyList())
                                .build())
         .build();
-  }
-
-  private VirtualMachineScaleSet buildScaleSet(int count) {
-    VirtualMachineScaleSet scaleSet = mock(VirtualMachineScaleSet.class);
-    VirtualMachineScaleSetVMs scaleSetVMs = mock(VirtualMachineScaleSetVMs.class);
-    PagedList<VirtualMachineScaleSetVM> vmPagedList = buildScaleSetVMs(count);
-    doReturn(scaleSetVMs).when(scaleSet).virtualMachines();
-    doReturn(vmPagedList).when(scaleSetVMs).list();
-    return scaleSet;
   }
 
   private PagedList<VirtualMachineScaleSetVM> buildScaleSetVMs(int count) {

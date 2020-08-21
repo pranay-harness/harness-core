@@ -74,7 +74,7 @@ public abstract class AzureVMSSTaskHandler {
   protected abstract AzureVMSSTaskExecutionResponse executeTaskInternal(
       AzureVMSSTaskParameters azureVMSSTaskParameters, AzureConfig azureConfig);
 
-  protected void updateVMSSCapacity(AzureConfig azureConfig, AzureVMSSTaskParameters parameters,
+  protected void updateVMSSCapacityAndWaitForSteadyState(AzureConfig azureConfig, AzureVMSSTaskParameters parameters,
       String virtualMachineScaleSetName, String subscriptionId, String resourceGroupName, int capacity,
       int autoScalingSteadyStateTimeout, String scaleCommandUnit, String waitCommandUnit) {
     ExecutionLogCallback logCallBack = getLogCallBack(parameters, scaleCommandUnit);

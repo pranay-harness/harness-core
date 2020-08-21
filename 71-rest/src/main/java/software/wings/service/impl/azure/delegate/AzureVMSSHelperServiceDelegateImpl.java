@@ -60,6 +60,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -136,6 +137,25 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
 
     logger.debug("Start bulk deleting Virtual Machine Scale Sets, ids: {}", vmssIDs);
     azure.virtualMachineScaleSets().deleteByIds(vmssIDs);
+  }
+
+  @Override
+  public List<VirtualMachineScaleSetVM> listVirtualMachineScaleSetVMs(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualMachineScaleSetName) {
+    Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp =
+        getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
+    if (!virtualMachineScaleSetOp.isPresent()) {
+      return Collections.emptyList();
+    }
+
+    VirtualMachineScaleSet virtualMachineScaleSet = virtualMachineScaleSetOp.get();
+    List<VirtualMachineScaleSetVM> virtualMachineScaleSetVMsList = new ArrayList<>();
+    PagedList<VirtualMachineScaleSetVM> virtualMachineScaleSetVMs = virtualMachineScaleSet.virtualMachines().list();
+    for (VirtualMachineScaleSetVM scaleSetVM : virtualMachineScaleSetVMs) {
+      virtualMachineScaleSetVMsList.add(scaleSetVM);
+    }
+
+    return virtualMachineScaleSetVMsList;
   }
 
   @Override

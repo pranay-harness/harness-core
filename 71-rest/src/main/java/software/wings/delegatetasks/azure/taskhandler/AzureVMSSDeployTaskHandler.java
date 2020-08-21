@@ -34,10 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 @NoArgsConstructor
@@ -136,8 +135,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
         ? deployTaskParameters.getTimeoutIntervalInMin()
         : DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
 
-    updateVMSSCapacity(azureConfig, deployTaskParameters, scaleSetName, subscriptionId, resourceGroupName, capacity,
-        timeoutIntervalInMin, scaleCommandUnit, waitCommandUnit);
+    updateVMSSCapacityAndWaitForSteadyState(azureConfig, deployTaskParameters, scaleSetName, subscriptionId,
+        resourceGroupName, capacity, timeoutIntervalInMin, scaleCommandUnit, waitCommandUnit);
   }
 
   private void attachScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet,
@@ -164,18 +163,11 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private List<AzureVMInstanceData> getInstances(
       AzureConfig azureConfig, String scaleSetName, AzureVMSSDeployTaskParameters deployTaskParameters) {
-    Optional<VirtualMachineScaleSet> scaleSet = getScaleSet(azureConfig, deployTaskParameters, scaleSetName);
-    if (!scaleSet.isPresent()) {
-      return Collections.emptyList();
-    }
-    VirtualMachineScaleSet virtualMachineScaleSet = scaleSet.get();
-    List<AzureVMInstanceData> scaleSetVMInstanceData = new ArrayList<>();
-    PagedList<VirtualMachineScaleSetVM> virtualMachineScaleSetVMS = virtualMachineScaleSet.virtualMachines().list();
-    for (VirtualMachineScaleSetVM scaleSetVM : virtualMachineScaleSetVMS) {
-      AzureVMInstanceData azureVMInstanceData = generateVMInstanceData(scaleSetVM);
-      scaleSetVMInstanceData.add(azureVMInstanceData);
-    }
-    return scaleSetVMInstanceData;
+    List<VirtualMachineScaleSetVM> scaleSetVMs =
+        azureVMSSHelperServiceDelegate.listVirtualMachineScaleSetVMs(azureConfig,
+            deployTaskParameters.getSubscriptionId(), deployTaskParameters.getResourceGroupName(), scaleSetName);
+
+    return scaleSetVMs.stream().map(this ::generateVMInstanceData).collect(Collectors.toList());
   }
 
   private AzureVMInstanceData generateVMInstanceData(VirtualMachineScaleSetVM scaleSetVM) {
