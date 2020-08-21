@@ -1,6 +1,5 @@
 package io.harness.git;
 
-import static io.harness.exception.WingsException.SRE;
 import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.RENAME;
@@ -12,6 +11,7 @@ import static io.harness.git.model.FetchFilesByPathRequest.fetchFilesByPathReque
 import static io.harness.git.model.PushResultGit.pushResultBuilder;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,7 +24,6 @@ import static org.mockito.Mockito.doThrow;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
-import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
 import io.harness.git.model.CommitAndPushRequest;
@@ -42,16 +41,24 @@ import io.harness.git.model.PushResultGit;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LsRemoteCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.NoFilepatternException;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -61,6 +68,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,6 +79,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -86,9 +95,14 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     repoPath = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
-    createLocalRepo(repoPath);
+    createRepo(repoPath, false);
     git = Git.open(new File(repoPath));
     doReturn("").when(gitClientHelper).getGitLogMessagePrefix(any());
+  }
+
+  @After
+  public void cleanup() throws Exception {
+    FileUtils.deleteDirectory(new File(repoPath));
   }
 
   @Test
@@ -113,6 +127,42 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
+  public void testValidate_Exception() throws Exception {
+    GitBaseRequest request = GitBaseRequest.builder()
+                                 .repoUrl(repoPath)
+                                 .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                                 .build();
+    doReturn("").when(gitClientHelper).getGitLogMessagePrefix(any());
+    LsRemoteCommand mockedLsRemoteCommand = Mockito.mock(LsRemoteCommand.class);
+    doReturn(mockedLsRemoteCommand).when(gitClient).getAuthConfiguredCommand(any(), any());
+    doReturn(mockedLsRemoteCommand).when(mockedLsRemoteCommand).setRemote(repoPath);
+    doReturn(mockedLsRemoteCommand).when(mockedLsRemoteCommand).setHeads(true);
+    doReturn(mockedLsRemoteCommand).when(mockedLsRemoteCommand).setTags(true);
+    TransportException exception1 =
+        new TransportException("m1", new TransportException("m2", new UnknownHostException()));
+    doThrow(exception1).when(mockedLsRemoteCommand).call();
+    assertThat(gitClient.validate(request)).contains("Unreachable hostname");
+
+    TransportException exception2 = new TransportException("m1");
+    doThrow(exception2).when(mockedLsRemoteCommand).call();
+    assertThat(gitClient.validate(request)).contains("m1");
+
+    TransportException exception3 = new TransportException("m1", new TransportException("m2"));
+    doThrow(exception3).when(mockedLsRemoteCommand).call();
+    assertThat(gitClient.validate(request)).contains("m1");
+
+    InvalidRemoteException exception4 = new InvalidRemoteException("m3");
+    doThrow(exception4).when(mockedLsRemoteCommand).call();
+    assertThat(gitClient.validate(request)).contains("Invalid git repo");
+
+    GitAPIException exception5 = new WrongRepositoryStateException("m4");
+    doThrow(exception5).when(mockedLsRemoteCommand).call();
+    assertThat(gitClient.validate(request)).contains("m4");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
   public void testEnsureRepoLocallyClonedAndUpdated() {
     assertThatThrownBy(() -> gitClient.ensureRepoLocallyClonedAndUpdated(null)).isInstanceOf(GeneralException.class);
 
@@ -132,7 +182,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
-  public void testDownloadFiles_Branch() throws Exception {
+  public void testDownloadFiles_Branch_Directory() throws Exception {
     DownloadFilesRequest request = downloadFilesRequestBuilder()
                                        .repoUrl(repoPath)
                                        .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
@@ -150,6 +200,35 @@ public class GitClientV2ImplTest extends CategoryTest {
     doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
     addRemote(repoPath);
     gitClient.downloadFiles(request);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testDownloadFiles_File() throws Exception {
+    String destinationDirectory = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
+    DownloadFilesRequest request = downloadFilesRequestBuilder()
+                                       .repoUrl(repoPath)
+                                       .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                                       .branch("master")
+                                       .connectorId("CONNECTOR_ID")
+                                       .accountId("ACCOUNT_ID")
+                                       .destinationDirectory(destinationDirectory)
+                                       .build();
+    addRemote(repoPath);
+    String data = "ABCD\nDEP\n";
+    FileUtils.writeStringToFile(new File(repoPath + "/base.txt"), data, UTF_8);
+
+    request.setFilePaths(Collections.singletonList("./base.txt"));
+    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
+    doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
+    doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
+    gitClient.downloadFiles(request);
+    assertThat(FileUtils.readFileToString(new File(destinationDirectory + "/base.txt"), UTF_8)).isEqualTo(data);
+
+    gitClient.downloadFiles(request);
+    doReturn(null).when(gitClientHelper).getFileDownloadRepoDirectory(any());
+    assertThatThrownBy(() -> gitClient.downloadFiles(request)).isInstanceOf(YamlException.class);
   }
 
   @Test
@@ -207,7 +286,6 @@ public class GitClientV2ImplTest extends CategoryTest {
         fetchFilesByPathRequestBuilder()
             .repoUrl(repoPath)
             .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
-            .branch("master")
             .connectorId("CONNECTOR_ID")
             .accountId("ACCOUNT_ID")
             .build();
@@ -215,6 +293,10 @@ public class GitClientV2ImplTest extends CategoryTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("FilePaths can not be empty");
     request.setFilePaths(Collections.singletonList("./"));
+    assertThatThrownBy(() -> gitClient.fetchFilesByPath(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No refs provided to checkout");
+    request.setBranch("master");
     doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
     doNothing().when(gitClientHelper).createDirStructureForFileDownload(any());
     doReturn(repoPath).when(gitClientHelper).getFileDownloadRepoDirectory(any());
@@ -291,14 +373,14 @@ public class GitClientV2ImplTest extends CategoryTest {
   private void addRemote(String repoPath) {
     try {
       String remoteRepo = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
-      createLocalRepo(remoteRepo);
+      createRepo(remoteRepo, true);
       String command = new StringBuilder(128)
                            .append("cd " + repoPath + ";")
                            .append("git remote add origin " + remoteRepo + ";")
                            .append("touch base.txt;")
                            .append("git add base.txt;")
                            .append("git commit -m 'commit base';")
-                           .append("git push origin master;")
+                           .append("git push -u origin master;")
                            .append("git tag base;")
                            .append("git push origin base;")
                            .append("git remote update;")
@@ -331,11 +413,11 @@ public class GitClientV2ImplTest extends CategoryTest {
     }
   }
 
-  private void createLocalRepo(String repoPath) {
+  private void createRepo(String repoPath, boolean bare) {
     String command = new StringBuilder(128)
                          .append("mkdir -p " + repoPath + ";")
                          .append("cd " + repoPath + ";")
-                         .append("git init;")
+                         .append("git init " + (bare ? "--bare" : "") + ";")
                          .toString();
 
     executeCommand(command);
@@ -390,7 +472,7 @@ public class GitClientV2ImplTest extends CategoryTest {
     String repoPath = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
     File rootDirectory = new File(repoPath);
     FileUtils.cleanDirectory(rootDirectory);
-    createLocalRepo(repoPath);
+    createRepo(repoPath, false);
     Git git = Git.open(rootDirectory);
     // should not delete since files they are not tracked
     gitClient.applyChangeSetOnFileSystem(repoPath, gitCommitAndPushRequest, filesToAdd, git);
@@ -504,6 +586,17 @@ public class GitClientV2ImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testCommitAndPush_Warn() throws Exception {
+    CommitAndPushRequest request = commitAndPushRequestBuilder().build();
+    CommitResult result = CommitResult.builder().build();
+    doReturn(result).when(gitClient).commit(request);
+
+    assertThat(gitClient.commitAndPush(request).getGitCommitResult()).isEqualTo(result);
+  }
+
+  @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testPush() {
@@ -524,29 +617,89 @@ public class GitClientV2ImplTest extends CategoryTest {
     final PushResultGit pushResultGit = gitClient.push(gitCommitAndPushRequest);
     assertThat(pushResultGit).isNotNull();
     assertThat(pushResultGit.getRefUpdate()).isNotNull();
-    assertThat(pushResultGit.getRefUpdate().getExpectedOldObjectId()).isNotNull();
+    assertThat(pushResultGit.getRefUpdate().getExpectedOldObjectId()).isNull();
   }
 
   @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
-  public void testFetchFilesBetweenCommits_Exceptions() throws Exception {
-    FetchFilesBwCommitsRequest request =
-        fetchFilesBwCommitsRequestBuilder()
-            .repoUrl(repoPath)
-            .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
-            .branch("master")
-            .connectorId("CONNECTOR_ID")
-            .accountId("ACCOUNT_ID")
-            .build();
+  public void testUpdateRemoteOriginInConfig_Exceptions() throws Exception {
+    gitClient.updateRemoteOriginInConfig(repoPath, new File("wrong_path"));
+  }
 
-    request.setOldCommitId("t1");
-    request.setNewCommitId("t2");
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testPull_http() throws Exception {
+    DiffRequest request = diffRequestBuilder()
+                              .repoUrl(repoPath)
+                              .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
+                              .build();
+    addRemote(repoPath);
+    addGitTag(repoPath, "t1");
+    gitClient.performGitPull(request, git);
+  }
 
-    doReturn("").when(gitClientHelper).getLockObject(request.getConnectorId());
-    doThrow(new GitClientException("m1", SRE)).when(gitClientHelper).createDirStructureForFileDownload(any());
-    assertThatThrownBy(() -> gitClient.fetchFilesBetweenCommits(request))
-        .isInstanceOf(GitClientException.class)
-        .hasMessageContaining("m1");
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHeadCommit() throws Exception {
+    assertThatThrownBy(() -> gitClient.getHeadCommit(git)).isInstanceOf(YamlException.class);
+    addRemote(repoPath);
+    addGitTag(repoPath, "t1");
+    String headCommit = gitClient.getHeadCommit(git);
+    assertThat(headCommit).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testEnsureLastProcessedCommitIsHead() throws Exception {
+    gitClient.ensureLastProcessedCommitIsHead(false, null, git);
+    gitClient.ensureLastProcessedCommitIsHead(true, null, git);
+    addRemote(repoPath);
+    addGitTag(repoPath, "t1");
+    assertThatThrownBy(() -> gitClient.ensureLastProcessedCommitIsHead(true, "12345", git))
+        .isInstanceOf(YamlException.class);
+    final String headCommit = gitClient.getHeadCommit(git);
+    gitClient.ensureLastProcessedCommitIsHead(true, headCommit, git);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testApplyGitAddCommand_Exception() throws Exception {
+    GitBaseRequest request = GitBaseRequest.builder().build();
+    List<String> filesToAdd = new ArrayList<>();
+    gitClient.applyGitAddCommand(request, filesToAdd, git);
+
+    Git mockedGit = Mockito.mock(Git.class);
+    AddCommand mockedAddGit = Mockito.mock(AddCommand.class);
+
+    doReturn(mockedAddGit).when(mockedGit).add();
+    doReturn(mockedAddGit).when(mockedAddGit).addFilepattern(any());
+    doThrow(new NoFilepatternException("m1")).when(mockedAddGit).call();
+
+    filesToAdd.add("testApplyGitAddCommand_Exception");
+
+    assertThatThrownBy(() -> gitClient.applyGitAddCommand(request, filesToAdd, mockedGit))
+        .isInstanceOf(YamlException.class);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testMatchingFilesExtensions() {
+    addRemote(repoPath);
+    Path path = Paths.get(repoPath + "/base.txt");
+    Predicate<Path> nullPredicate = gitClient.matchingFilesExtensions(null);
+    Predicate<Path> emptyPredicate = gitClient.matchingFilesExtensions(new ArrayList<>());
+    Predicate<Path> validPredicate = gitClient.matchingFilesExtensions(Arrays.asList(".txt"));
+    Predicate<Path> invalidPredicate = gitClient.matchingFilesExtensions(Arrays.asList(".yaml"));
+
+    assertThat(nullPredicate.test(path)).isTrue();
+    assertThat(emptyPredicate.test(path)).isTrue();
+    assertThat(validPredicate.test(path)).isTrue();
+    assertThat(invalidPredicate.test(path)).isFalse();
   }
 }

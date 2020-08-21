@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.git.Constants.COMMIT_MESSAGE;
+import static io.harness.git.Constants.EXCEPTION_STRING;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.git.Constants.HARNESS_IO_KEY_;
 import static io.harness.git.Constants.HARNESS_SUPPORT_EMAIL_KEY;
@@ -91,7 +92,6 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -150,7 +150,7 @@ public class GitClientV2Impl implements GitClientV2 {
             logger.info(
                 gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Hard reset failed for branch [{}]",
                 request.getBranch());
-            logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+            logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
             gitClientHelper.checkIfGitConnectivityIssue(ex);
           }
         }
@@ -166,7 +166,7 @@ public class GitClientV2Impl implements GitClientV2 {
       }
     }
 
-    // We are here, so either repo doesnt exist or we encounter some error while
+    // We are here, so either repo doesn't exist or we encounter some error while
     // opening/updating repo
     logger.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Do a fresh clone");
     clone(request, gitClientHelper.getRepoDirectory(request), false);
@@ -222,7 +222,7 @@ public class GitClientV2Impl implements GitClientV2 {
       }
 
     } catch (IOException | GitAPIException ex) {
-      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
       throw new YamlException(format("Unable to checkout given reference: %s",
                                   isEmpty(request.getCommitId()) ? request.getBranch() : request.getCommitId()),
           USER);
@@ -339,7 +339,7 @@ public class GitClientV2Impl implements GitClientV2 {
       }
 
     } catch (IOException | GitAPIException ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
@@ -486,7 +486,7 @@ public class GitClientV2Impl implements GitClientV2 {
           .build();
 
     } catch (IOException | GitAPIException ex) {
-      logger.error(gitClientHelper.getGitLogMessagePrefix(commitRequest.getRepoType()) + "Exception: ", ex);
+      logger.error(gitClientHelper.getGitLogMessagePrefix(commitRequest.getRepoType()) + EXCEPTION_STRING, ex);
       throw new YamlException("Error in writing commit", ex, ADMIN_SRE);
     }
   }
@@ -537,7 +537,7 @@ public class GitClientV2Impl implements GitClientV2 {
       List<DiffEntry> diffs = getDiffEntries(git.getRepository(), git, newCommitHead, oldCommitHead);
       return getGitFileChangesFromDiff(diffs, git.getRepository(), commitAndPushRequest.getAccountId());
     } catch (Exception ex) {
-      logger.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + "Exception: ", ex);
+      logger.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + EXCEPTION_STRING, ex);
       throw new YamlException("Error in getting the files commited to the git", ex, USER_ADMIN);
     }
   }
@@ -556,7 +556,7 @@ public class GitClientV2Impl implements GitClientV2 {
         objectId = entry.getNewId().toObjectId();
       }
       ObjectLoader loader = repository.open(objectId);
-      String content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      String content = new String(loader.getBytes(), UTF_8);
       gitFileChanges.add(GitFileChange.builder()
                              .accountId(accountId)
                              .filePath(filePath)
@@ -741,7 +741,7 @@ public class GitClientV2Impl implements GitClientV2 {
         throw new YamlException(errorMsg, ADMIN_SRE);
       }
     } catch (IOException | GitAPIException ex) {
-      logger.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + "Exception: ", ex);
+      logger.error(gitClientHelper.getGitLogMessagePrefix(commitAndPushRequest.getRepoType()) + EXCEPTION_STRING, ex);
       String errorMsg = getMessage(ex);
       if (ex instanceof InvalidRemoteException || ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:"
@@ -772,7 +772,7 @@ public class GitClientV2Impl implements GitClientV2 {
       checkoutCommand.call();
       logger.info("Successfully Checked out commitId: " + request.getNewCommitId());
     } catch (Exception ex) {
-      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getNewCommitId(), USER);
     }
@@ -795,7 +795,7 @@ public class GitClientV2Impl implements GitClientV2 {
         objectId = entry.getNewId().toObjectId();
       }
       ObjectLoader loader = repository.open(objectId);
-      String content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      String content = new String(loader.getBytes(), UTF_8);
       gitFiles.add(GitFile.builder().filePath(filePath).fileContent(content).build());
     }
 
@@ -806,6 +806,9 @@ public class GitClientV2Impl implements GitClientV2 {
   public FetchFilesResult fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request) {
     String gitConnectorId = request.getConnectorId();
     validateRequiredArgsForFilesBetweenCommit(request.getOldCommitId(), request.getNewCommitId());
+    if (!isEmpty(request.getBranch())) {
+      request.setBranch(StringUtils.EMPTY);
+    }
 
     synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
       try {
@@ -838,7 +841,7 @@ public class GitClientV2Impl implements GitClientV2 {
           gitFilesFromDiff = getGitFilesFromDiff(diffs, repository, request.getRepoType());
 
         } catch (IOException | GitAPIException ex) {
-          logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+          logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
           throw new YamlException("Error in getting commit diff", USER_ADMIN);
         }
 
@@ -852,7 +855,7 @@ public class GitClientV2Impl implements GitClientV2 {
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
-        logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", e);
+        logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, e);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files between commits ")
                                     .append("Account: ")
@@ -893,7 +896,7 @@ public class GitClientV2Impl implements GitClientV2 {
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
-        logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", e);
+        logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, e);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files ")
                                     .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
@@ -907,7 +910,7 @@ public class GitClientV2Impl implements GitClientV2 {
   }
 
   @VisibleForTesting
-  public List<GitFile> getFilteredGitFiles(FetchFilesByPathRequest request) {
+  List<GitFile> getFilteredGitFiles(FetchFilesByPathRequest request) {
     List<GitFile> gitFiles = new ArrayList<>();
 
     String repoPath = gitClientHelper.getFileDownloadRepoDirectory(request);
@@ -938,7 +941,8 @@ public class GitClientV2Impl implements GitClientV2 {
     return gitFiles;
   }
 
-  private Predicate<Path> matchingFilesExtensions(List<String> fileExtensions) {
+  @VisibleForTesting
+  Predicate<Path> matchingFilesExtensions(List<String> fileExtensions) {
     return path -> {
       if (isEmpty(fileExtensions)) {
         return true;
@@ -1002,7 +1006,7 @@ public class GitClientV2Impl implements GitClientV2 {
       resetCommand.call();
       logger.info("Resetting repo completed successfully");
     } catch (Exception ex) {
-      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+      logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in resetting repo", USER);
     }
@@ -1045,7 +1049,7 @@ public class GitClientV2Impl implements GitClientV2 {
       checkoutCommand.call();
       logger.info("Successfully Checked out commitId: " + request.getCommitId());
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getCommitId(), USER);
     }
@@ -1065,7 +1069,7 @@ public class GitClientV2Impl implements GitClientV2 {
       checkoutCommand.call();
       logger.info("Successfully Checked out Branch: " + request.getBranch());
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out Branch " + request.getBranch(), USER);
     }
@@ -1122,7 +1126,7 @@ public class GitClientV2Impl implements GitClientV2 {
           logger.info(
               gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Hard reset failed for branch [{}]",
               request.getBranch());
-          logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Exception: ", ex);
+          logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
           gitClientHelper.checkIfGitConnectivityIssue(ex);
         }
       } finally {
@@ -1151,7 +1155,8 @@ public class GitClientV2Impl implements GitClientV2 {
     }
   }
 
-  private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitBaseRequest gitBaseRequest) {
+  @VisibleForTesting
+  TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitBaseRequest gitBaseRequest) {
     if (gitBaseRequest.getAuthRequest().getAuthType() == AuthInfo.AuthType.HTTP_PASSWORD) {
       UsernamePasswordAuthRequest authRequest = (UsernamePasswordAuthRequest) gitBaseRequest.getAuthRequest();
       gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(

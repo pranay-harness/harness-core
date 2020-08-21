@@ -10,15 +10,22 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.eclipse.jgit.diff.DiffEntry.ChangeType.ADD;
+import static org.eclipse.jgit.diff.DiffEntry.ChangeType.COPY;
+import static org.eclipse.jgit.diff.DiffEntry.ChangeType.DELETE;
+import static org.eclipse.jgit.diff.DiffEntry.ChangeType.MODIFY;
+import static org.eclipse.jgit.diff.DiffEntry.ChangeType.RENAME;
 
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GitClientException;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.NonPersistentLockException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
 import io.harness.reflection.ReflectionUtils;
@@ -148,5 +155,57 @@ public class GitClientHelperTest extends CategoryTest {
     assertThat(files.get(0).getFilePath()).isEqualTo(filePath);
     assertThat(files.get(0).getFileContent()).isEqualTo("ABC\nDEF\n");
     FileIo.deleteDirectoryAndItsContentIfExists("./repository");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testAddFiles_Exception() throws Exception {
+    List<GitFile> files = new LinkedList<>();
+
+    assertThatThrownBy(() -> gitClientHelper.addFiles(null, null, null)).isInstanceOf(GitClientException.class);
+    assertThatThrownBy(() -> gitClientHelper.addFiles(files, null, null)).isInstanceOf(GitClientException.class);
+
+    String repoPath = "./repository/repo/";
+    String filePath = "internalPath/1.txt";
+    Path repoFilePath = Paths.get(repoPath + filePath);
+
+    FileIo.createDirectoryIfDoesNotExist(repoPath + "/internalPath");
+    FileIo.writeFile(repoFilePath, "ABC\nDEF".getBytes());
+    Stream<Path> walk = Files.walk(repoFilePath, 1);
+    FileIo.deleteFileIfExists(repoFilePath.toString());
+    walk.forEach(path -> {
+      assertThatThrownBy(() -> gitClientHelper.addFiles(files, path, repoPath)).isInstanceOf(GitClientException.class);
+    });
+
+    assertThat(files.size()).isEqualTo(0);
+    FileIo.deleteDirectoryAndItsContentIfExists("./repository");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testReleaseLock() throws Exception {
+    String repoPath = "./repository/repo/";
+    FileIo.createDirectoryIfDoesNotExist(repoPath + "/internalPath");
+    gitClientHelper.releaseLock(null, repoPath);
+
+    assertThatThrownBy(
+        ()
+            -> gitClientHelper.releaseLock(
+                GitBaseRequest.builder().branch("b1").repoUrl("http://x.y/z").accountId("ACCOUNT_ID").build(), null))
+        .isInstanceOf(GitClientException.class);
+    FileIo.deleteDirectoryAndItsContentIfExists("./repository");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetChangeType() throws Exception {
+    assertThat(gitClientHelper.getChangeType(ADD)).isEqualTo(ChangeType.ADD);
+    assertThat(gitClientHelper.getChangeType(MODIFY)).isEqualTo(ChangeType.MODIFY);
+    assertThat(gitClientHelper.getChangeType(DELETE)).isEqualTo(ChangeType.DELETE);
+    assertThat(gitClientHelper.getChangeType(RENAME)).isEqualTo(ChangeType.RENAME);
+    assertThat(gitClientHelper.getChangeType(COPY)).isEqualTo(null);
   }
 }
