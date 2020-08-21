@@ -41,6 +41,7 @@ import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
+import io.harness.cvng.exception.NotFoundExceptionMapper;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.cvng.verificationjob.entities.VerificationTask;
 import io.harness.cvng.verificationjob.entities.VerificationTask.VerificationJobKeys;
@@ -338,5 +339,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerExceptionMappers(JerseyEnvironment jersey) {
     jersey.register(GenericExceptionMapper.class);
     jersey.register(ConstraintViolationExceptionMapper.class);
+    jersey.register(NotFoundExceptionMapper.class);
   }
 }
