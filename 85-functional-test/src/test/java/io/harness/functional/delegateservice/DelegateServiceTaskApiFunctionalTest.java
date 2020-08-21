@@ -65,8 +65,8 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateSyncService, 0L, 2L, TimeUnit.SECONDS);
 
-    DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
 
     DelegateCallbackToken callbackToken = delegateServiceGrpcClient.registerCallback(
         DelegateCallback.newBuilder()
@@ -88,16 +88,19 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .useProxy(false)
                                                 .build();
 
-    TaskId taskId = delegateServiceGrpcClient.submitTask(callbackToken,
-        AccountId.newBuilder().setId(getAccount().getUuid()).build(), TaskSetupAbstractions.newBuilder().build(),
-        TaskDetails.newBuilder()
-            .setMode(TaskMode.SYNC)
-            .setType(TaskType.newBuilder().setType("HTTP").build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
-            .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
-            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
-            .build(),
-        httpTaskParameters.fetchRequiredExecutionCapabilities(), null);
+    TaskId taskId =
+        delegateServiceGrpcClient
+            .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
+                TaskSetupAbstractions.newBuilder().build(),
+                TaskDetails.newBuilder()
+                    .setMode(TaskMode.SYNC)
+                    .setType(TaskType.newBuilder().setType("HTTP").build())
+                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
+                    .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
+                    .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                    .build(),
+                httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
+            .getTaskId();
 
     ResponseData responseData =
         delegateSyncService.waitForTask(taskId.getId(), "Http Execution", Duration.ofSeconds(60));
@@ -115,8 +118,8 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateSyncService, 0L, 2L, TimeUnit.SECONDS);
 
-    DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
 
     DelegateCallbackToken callbackToken = delegateServiceGrpcClient.registerCallback(
         DelegateCallback.newBuilder()
@@ -138,16 +141,19 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .useProxy(false)
                                                 .build();
 
-    TaskId taskId = delegateServiceGrpcClient.submitTask(callbackToken,
-        AccountId.newBuilder().setId(getAccount().getUuid()).build(), TaskSetupAbstractions.newBuilder().build(),
-        TaskDetails.newBuilder()
-            .setMode(TaskMode.SYNC)
-            .setType(TaskType.newBuilder().setType("HTTP").build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
-            .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
-            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
-            .build(),
-        httpTaskParameters.fetchRequiredExecutionCapabilities(), null);
+    TaskId taskId =
+        delegateServiceGrpcClient
+            .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
+                TaskSetupAbstractions.newBuilder().build(),
+                TaskDetails.newBuilder()
+                    .setMode(TaskMode.SYNC)
+                    .setType(TaskType.newBuilder().setType("HTTP").build())
+                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
+                    .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
+                    .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                    .build(),
+                httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
+            .getTaskId();
 
     ResponseData responseData =
         delegateSyncService.waitForTask(taskId.getId(), "Http Execution", Duration.ofSeconds(60));
@@ -168,8 +174,8 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateSyncService, 0L, 2L, TimeUnit.SECONDS);
 
-    DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
 
     DelegateCallbackToken callbackToken = delegateServiceGrpcClient.registerCallback(
         DelegateCallback.newBuilder()
@@ -216,8 +222,8 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateAsyncService, 0L, 2L, TimeUnit.SECONDS);
 
-    DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
 
     DelegateCallbackToken callbackToken = delegateServiceGrpcClient.registerCallback(
         DelegateCallback.newBuilder()
@@ -239,16 +245,19 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .useProxy(false)
                                                 .build();
 
-    TaskId taskId = delegateServiceGrpcClient.submitTask(callbackToken,
-        AccountId.newBuilder().setId(getAccount().getUuid()).build(), TaskSetupAbstractions.newBuilder().build(),
-        TaskDetails.newBuilder()
-            .setMode(TaskMode.ASYNC)
-            .setType(TaskType.newBuilder().setType("HTTP").build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
-            .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
-            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
-            .build(),
-        httpTaskParameters.fetchRequiredExecutionCapabilities(), null);
+    TaskId taskId =
+        delegateServiceGrpcClient
+            .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
+                TaskSetupAbstractions.newBuilder().build(),
+                TaskDetails.newBuilder()
+                    .setMode(TaskMode.ASYNC)
+                    .setType(TaskType.newBuilder().setType("HTTP").build())
+                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
+                    .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
+                    .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                    .build(),
+                httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
+            .getTaskId();
 
     Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
       NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, taskId.getId());
@@ -270,8 +279,8 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateAsyncService, 0L, 2L, TimeUnit.SECONDS);
 
-    DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
 
     DelegateCallbackToken callbackToken = delegateServiceGrpcClient.registerCallback(
         DelegateCallback.newBuilder()
@@ -293,16 +302,19 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .useProxy(false)
                                                 .build();
 
-    TaskId taskId = delegateServiceGrpcClient.submitTask(callbackToken,
-        AccountId.newBuilder().setId(getAccount().getUuid()).build(), TaskSetupAbstractions.newBuilder().build(),
-        TaskDetails.newBuilder()
-            .setMode(TaskMode.ASYNC)
-            .setType(TaskType.newBuilder().setType("HTTP").build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
-            .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(30).setNanos(0).build())
-            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
-            .build(),
-        emptyList(), Arrays.asList(NON_EXISTING_SELECTOR));
+    TaskId taskId =
+        delegateServiceGrpcClient
+            .submitTask(callbackToken, AccountId.newBuilder().setId(getAccount().getUuid()).build(),
+                TaskSetupAbstractions.newBuilder().build(),
+                TaskDetails.newBuilder()
+                    .setMode(TaskMode.ASYNC)
+                    .setType(TaskType.newBuilder().setType("HTTP").build())
+                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
+                    .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(30).setNanos(0).build())
+                    .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                    .build(),
+                emptyList(), Arrays.asList(NON_EXISTING_SELECTOR))
+            .getTaskId();
 
     Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
       NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, taskId.getId());
