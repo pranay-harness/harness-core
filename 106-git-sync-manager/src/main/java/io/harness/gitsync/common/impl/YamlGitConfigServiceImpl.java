@@ -173,6 +173,25 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
+  public YamlGitConfigDTO getByYamlGitConfigIdAndBranchAndRepoAndConnectorId(
+      String identifier, String branch, String repo, String connectorId, String accountId) {
+    // Assuming identifier == uuid.
+    List<YamlGitFolderConfig> yamlGitConfig =
+        yamlGitConfigFolderRepository.findByYamlGitConfigIdAndGitConnectorIdAndRepoAndBranchAndAccountId(
+            identifier, connectorId, repo, branch, accountId);
+    return YamlGitConfigMapper.toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(yamlGitConfig);
+  }
+
+  @Override
+  public List<YamlGitConfigDTO> getByConnectorRepoAndBranch(
+      String gitConnectorId, String repo, String branchName, String accountId) {
+    List<YamlGitFolderConfig> yamlGitConfigs =
+        yamlGitConfigFolderRepository.findByGitConnectorIdAndRepoAndBranchAndAccountId(
+            gitConnectorId, repo, branchName, accountId);
+    return getYamlGitConfigDTOsFromYamlGitFolderConfig(yamlGitConfigs);
+  }
+
+  @Override
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs) {
     return save(ygs, true);
   }
