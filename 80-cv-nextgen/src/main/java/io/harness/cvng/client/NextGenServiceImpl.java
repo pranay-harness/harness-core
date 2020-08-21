@@ -17,7 +17,10 @@ public class NextGenServiceImpl implements NextGenService {
   }
 
   @Override
-  public Optional<ConnectorDTO> get(String accountIdentifier, String connectorIdentifier) {
-    return requestExecutor.execute(nextGenClient.get(accountIdentifier, connectorIdentifier)).getData();
+  public Optional<ConnectorDTO> get(
+      String accountIdentifier, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
+    return requestExecutor
+        .execute(nextGenClient.get(accountIdentifier, connectorIdentifier, orgIdentifier, projectIdentifier))
+        .getData();
   }
 }

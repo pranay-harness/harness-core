@@ -17,11 +17,11 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
   @Override
-  public String createServiceGuardDataCollectionTask(
-      String accountId, String cvConfigId, String connectorId, String dataCollectionWorkerId) {
+  public String createServiceGuardDataCollectionTask(String accountId, String cvConfigId, String connectorId,
+      String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
     // Need to write this to handle retries, exception etc in a proper way.
 
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId);
+    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorId);
     }
@@ -40,9 +40,9 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   }
 
   @Override
-  public String createDeploymentVerificationDataCollectionTask(
-      String accountId, String verificationTaskId, String connectorId, String dataCollectionWorkerId) {
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId);
+  public String createDeploymentVerificationDataCollectionTask(String accountId, String verificationTaskId,
+      String connectorId, String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
+    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorId);
     }

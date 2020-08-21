@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class HeatMapServiceImplTest extends CvNextGenTest {
   @Inject private HeatMapService heatMapService;
 
+  private String projectIdentifier;
   private String serviceIdentifier;
   private String envIdentifier;
   private String accountId;
@@ -47,6 +48,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
   @Before
   public void setUp() {
+    projectIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
     accountId = generateUuid();
@@ -58,7 +60,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
   public void testUpsertAndUpdate() {
     Instant instant = Instant.now();
     heatMapService.updateRiskScore(
-        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
+        accountId, projectIdentifier, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
     verifyUpdates(instant, 0.6);
     List<HeatMap> heatMaps;
     HeatMap heatMap;
@@ -67,24 +69,43 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
     // update and test
     heatMapService.updateRiskScore(
-        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.7);
+        accountId, projectIdentifier, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.7);
     verifyUpdates(instant, 0.7);
 
     // updating with lower risk score shouldn't change anything
     heatMapService.updateRiskScore(
-        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.5);
+        accountId, projectIdentifier, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.5);
     verifyUpdates(instant, 0.7);
   }
 
   private void verifyUpdates(Instant instant, double riskScore) {
-    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority).asList();
+    verifyHeatMaps(instant, riskScore,
+        hPersistence.createQuery(HeatMap.class, excludeAuthority)
+            .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+            .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+            .filter(HeatMapKeys.envIdentifier, null)
+            .asList());
+    verifyHeatMaps(instant, riskScore,
+        hPersistence.createQuery(HeatMap.class, excludeAuthority)
+            .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+            .filter(HeatMapKeys.serviceIdentifier, null)
+            .filter(HeatMapKeys.envIdentifier, envIdentifier)
+            .asList());
+    verifyHeatMaps(instant, riskScore,
+        hPersistence.createQuery(HeatMap.class, excludeAuthority)
+            .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+            .filter(HeatMapKeys.serviceIdentifier, null)
+            .filter(HeatMapKeys.envIdentifier, null)
+            .asList());
+  }
+
+  private void verifyHeatMaps(Instant instant, double riskScore, List<HeatMap> heatMaps) {
     assertThat(heatMaps.size()).isEqualTo(HeatMapResolution.values().length);
     for (int i = 0; i < HeatMapResolution.values().length; i++) {
       HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
       HeatMap heatMap = heatMaps.get(i);
       assertThat(heatMap.getAccountId()).isEqualTo(accountId);
-      assertThat(heatMap.getServiceIdentifier()).isEqualTo(serviceIdentifier);
-      assertThat(heatMap.getEnvIdentifier()).isEqualTo(envIdentifier);
+      assertThat(heatMap.getProjectIdentifier()).isEqualTo(projectIdentifier);
       assertThat(heatMap.getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
       assertThat(heatMap.getHeatMapResolution()).isEqualTo(heatMapResolution);
       assertThat(heatMap.getHeatMapBucketStartTime())
@@ -108,16 +129,19 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testUpsert_whenMultipleBoundaries() {
-    double numOfUnits = 3000;
+    double numOfUnits = 1500;
     for (int minuteBoundry = 0; minuteBoundry < numOfUnits * CV_ANALYSIS_WINDOW_MINUTES;
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
-      heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.6);
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
+          CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.6);
     }
     for (int i = 0; i < HeatMapResolution.values().length; i++) {
       HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
       List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority)
                                    .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                   .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                   .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+                                   .filter(HeatMapKeys.envIdentifier, null)
                                    .asList();
       assertThat(heatMaps.size())
           .isEqualTo((int) Math.ceil(numOfUnits * TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES)
@@ -139,8 +163,8 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
 
     // update a riskscore
     Instant updateInstant = Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(680));
-    heatMapService.updateRiskScore(
-        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, updateInstant, 0.7);
+    heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
+        CVMonitoringCategory.PERFORMANCE, updateInstant, 0.7);
 
     for (int i = 0; i < HeatMapResolution.values().length; i++) {
       HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
@@ -149,6 +173,9 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
       List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority)
                                    .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
                                    .filter(HeatMapKeys.heatMapBucketStartTime, bucketBoundary)
+                                   .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                   .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+                                   .filter(HeatMapKeys.envIdentifier, null)
                                    .asList();
       assertThat(heatMaps.size()).isEqualTo(1);
       HeatMap heatMap = heatMaps.get(0);
@@ -175,8 +202,8 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     // no analysis
     int startMin = 5;
     int endMin = 200;
-    Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier,
-        envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
+    Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, projectIdentifier,
+        serviceIdentifier, envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
     assertThat(heatMap.size()).isEqualTo(CVMonitoringCategory.values().length);
@@ -196,11 +223,12 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     for (int minuteBoundry = riskStartBoundary;
          minuteBoundry < riskStartBoundary + numOfRiskUnits * CV_ANALYSIS_WINDOW_MINUTES;
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
-      heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
+          CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
     }
 
-    heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
+    heatMap = heatMapService.getHeatMap(accountId, projectIdentifier, null, null,
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
@@ -233,8 +261,8 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     // no analysis
     int startMin = 75;
     int endMin = 350;
-    Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier,
-        envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
+    Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, projectIdentifier,
+        serviceIdentifier, envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
     assertThat(heatMap.size()).isEqualTo(CVMonitoringCategory.values().length);
@@ -254,11 +282,12 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     for (int minuteBoundry = riskStartBoundary;
          minuteBoundry <= riskStartBoundary + numOfRiskUnits * CV_ANALYSIS_WINDOW_MINUTES;
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
-      heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
+          CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
     }
 
-    heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
+    heatMap = heatMapService.getHeatMap(accountId, projectIdentifier, null, null,
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
@@ -283,5 +312,33 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
                            .build());
       }
     }
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetHeatMap_projectRollup() {
+    // no analysis
+    int numOfService = 3;
+    int numOfEnv = 4;
+    Instant instant = Instant.now();
+    for (int i = 1; i <= numOfService; i++) {
+      for (int j = 1; j <= numOfEnv; j++) {
+        heatMapService.updateRiskScore(
+            accountId, projectIdentifier, "service" + i, "env" + j, CVMonitoringCategory.PERFORMANCE, instant, i * j);
+      }
+    }
+
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                 .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                 .filter(HeatMapKeys.serviceIdentifier, null)
+                                 .filter(HeatMapKeys.envIdentifier, null)
+                                 .asList();
+    assertThat(heatMaps.size()).isEqualTo(HeatMapResolution.values().length);
+    heatMaps.forEach(heatMap -> {
+      assertThat(heatMap.getHeatMapRisks().size()).isEqualTo(1);
+      heatMap.getHeatMapRisks().forEach(
+          heatMapRisk -> assertThat(heatMapRisk.getRiskScore()).isEqualTo(numOfEnv * numOfService, offset(0.00001)));
+    });
   }
 }

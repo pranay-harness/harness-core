@@ -80,10 +80,13 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
     // connectors.
     List<String> dataCollectionTaskIds = new ArrayList<>();
 
+    // TODO: add org and project identifier in verificationTask
+    CVConfig cvConfig = cvConfigs.stream().findFirst().orElse(null);
     connectorIds.forEach(connectorId -> {
       String dataCollectionWorkerId = getDataCollectionWorkerId(verificationTask, connectorId);
       dataCollectionTaskIds.add(verificationManagerService.createDeploymentVerificationDataCollectionTask(
-          verificationTask.getAccountId(), verificationTask.getUuid(), connectorId, dataCollectionWorkerId));
+          verificationTask.getAccountId(), verificationTask.getUuid(), connectorId, cvConfig.getOrgIdentifier(),
+          cvConfig.getProjectIdentifier(), dataCollectionWorkerId));
     });
     setDataCollectionTaskIds(verificationTask, dataCollectionTaskIds);
     createDataCollectionTasks(verificationTask, verificationJob, cvConfigs);

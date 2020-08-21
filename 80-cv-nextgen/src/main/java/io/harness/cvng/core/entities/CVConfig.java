@@ -49,6 +49,7 @@ public abstract class CVConfig
   @NotNull private String serviceIdentifier;
   @NotNull private String envIdentifier;
   @NotNull private String projectIdentifier;
+  @NotNull private String orgIdentifier;
   @NotNull private CVMonitoringCategory category;
   private String dataCollectionTaskId;
   private String productName;

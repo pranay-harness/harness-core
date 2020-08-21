@@ -211,9 +211,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
     dataCollectionTask.setDataCollectionWorkerId(cvConfig.getUuid());
-    String dataCollectionTaskId =
-        verificationManagerService.createServiceGuardDataCollectionTask(cvConfig.getAccountId(), cvConfig.getUuid(),
-            cvConfig.getConnectorId(), dataCollectionTask.getDataCollectionWorkerId());
+    String dataCollectionTaskId = verificationManagerService.createServiceGuardDataCollectionTask(
+        cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getConnectorId(), cvConfig.getOrgIdentifier(),
+        cvConfig.getProjectIdentifier(), dataCollectionTask.getDataCollectionWorkerId());
     save(dataCollectionTask);
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
 

@@ -14,15 +14,20 @@ public class SplunkServiceImpl implements SplunkService {
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private RequestExecutor requestExecutor;
   @Override
-  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId, String requestGuid) {
-    return requestExecutor.execute(verificationManagerClient.getSavedSearches(accountId, connectorId, requestGuid))
+  public List<SplunkSavedSearch> getSavedSearches(
+      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, String requestGuid) {
+    return requestExecutor
+        .execute(verificationManagerClient.getSavedSearches(
+            accountId, connectorId, orgIdentifier, projectIdentifier, requestGuid))
         .getResource();
   }
 
   @Override
-  public SplunkValidationResponse getValidationResponse(
-      String accountId, String connectorId, String query, String requestGuid) {
-    return requestExecutor.execute(verificationManagerClient.getSamples(accountId, connectorId, query, requestGuid))
+  public SplunkValidationResponse getValidationResponse(String accountId, String connectorId, String orgIdentifier,
+      String projectIdentifier, String query, String requestGuid) {
+    return requestExecutor
+        .execute(verificationManagerClient.getSamples(
+            accountId, connectorId, orgIdentifier, projectIdentifier, query, requestGuid))
         .getResource();
   }
 }

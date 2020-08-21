@@ -32,8 +32,20 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private HPersistence hPersistence;
 
   @Override
-  public void updateRiskScore(String accountId, String serviceIdentifier, String envIdentifier,
-      CVMonitoringCategory category, Instant timeStamp, double riskScore) {
+  public void updateRiskScore(String accountId, String projectIdentifier, String serviceIdentifier,
+      String envIdentifier, CVMonitoringCategory category, Instant timeStamp, double riskScore) {
+    // update for service
+    updateRiskScore(category, accountId, projectIdentifier, serviceIdentifier, null, timeStamp, riskScore);
+
+    // update for env
+    updateRiskScore(category, accountId, projectIdentifier, null, envIdentifier, timeStamp, riskScore);
+
+    // update for project
+    updateRiskScore(category, accountId, projectIdentifier, null, null, timeStamp, riskScore);
+  }
+
+  private void updateRiskScore(CVMonitoringCategory category, String accountId, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier, Instant timeStamp, double riskScore) {
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
     for (HeatMapResolution heatMapResolution : HeatMapResolution.values()) {
@@ -43,6 +55,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       Instant heatMapEndTime = heatMapStartTime.plusMillis(heatMapResolution.getResolution().toMillis() - 1);
 
       Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class)
+                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                         .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
                                         .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                         .filter(HeatMapKeys.category, category)
@@ -80,16 +93,16 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   @Override
-  public Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> getHeatMap(
-      String accountId, String serviceIdentifier, String envIdentifier, Instant startTime, Instant endTime) {
+  public Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> getHeatMap(String accountId, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier, Instant startTime, Instant endTime) {
     Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMaps = new HashMap<>();
     HeatMapResolution heatMapResolution = getHeatMapResolution(startTime, endTime);
     Instant startTimeBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getResolution());
     Instant endTimeBoundary = getBoundaryOfResolution(endTime, heatMapResolution.getResolution());
 
     for (CVMonitoringCategory category : CVMonitoringCategory.values()) {
-      Map<Instant, HeatMapDTO> heatMapsFromDB =
-          getHeatMapsFromDB(serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
+      Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(
+          projectIdentifier, serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
 
       SortedSet<HeatMapDTO> heatMapDTOS = new TreeSet<>();
       for (long timeStampMs = startTimeBoundary.toEpochMilli(); timeStampMs <= endTimeBoundary.toEpochMilli();
@@ -109,13 +122,15 @@ public class HeatMapServiceImpl implements HeatMapService {
     return heatMaps;
   }
 
-  private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String serviceIdentifier, String envIdentifier,
-      CVMonitoringCategory category, Instant startTime, Instant endTime, HeatMapResolution heatMapResolution) {
+  private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String projectIdentifier, String serviceIdentifier,
+      String envIdentifier, CVMonitoringCategory category, Instant startTime, Instant endTime,
+      HeatMapResolution heatMapResolution) {
     Instant startTimeBucketBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getBucketSize());
     Instant endTimeBucketBoundary = getBoundaryOfResolution(endTime, heatMapResolution.getBucketSize());
     Map<Instant, HeatMapDTO> heatMapDTOS = new HashMap<>();
     try (HIterator<HeatMap> heatMapRecords =
              new HIterator<>(hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                 .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                  .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
                                  .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                  .filter(HeatMapKeys.category, category)
