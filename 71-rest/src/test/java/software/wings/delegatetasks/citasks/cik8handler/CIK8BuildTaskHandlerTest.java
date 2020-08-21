@@ -209,7 +209,6 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.waitUntilPodIsReady(
              kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
         .thenReturn(true);
-
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }

@@ -11,6 +11,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,26 +32,33 @@ public class ServiceTokenGenerator {
     return createNewToken(VERIFICATION_SERVICE_SECRET.get());
   }
 
-  public String getServiceToken(String secretKey) {
+  public String getServiceTokenWithDuration(String secretKey, Duration duration) {
     if (isNotEmpty(secretKey)) {
-      return createNewToken(secretKey);
+      return createNewToken(secretKey, duration);
     }
     throw new InvalidArgumentsException("secretKey cannot be empty", null);
   }
 
-  private String createNewToken(String serviceSecret) {
+  public String getServiceToken(String secretKey) {
+    return getServiceTokenWithDuration(secretKey, Duration.ofHours(4));
+  }
+
+  private String createNewToken(String serviceSecret, Duration tokenDuration) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(serviceSecret);
 
       return JWT.create()
           .withIssuer("Harness Inc")
           .withIssuedAt(new Date())
-          .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(4)))
+          .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(tokenDuration.toHours())))
           .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
           .withIssuedAt(new Date())
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new InvalidRequestException("error creating jwt token", exception);
     }
+  }
+  private String createNewToken(String serviceSecret) {
+    return createNewToken(serviceSecret, Duration.ofHours(4));
   }
 }

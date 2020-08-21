@@ -6,32 +6,31 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>15-api-services</artifactId>
+    <artifactId>16-expression-service</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.github.scribejava</groupId>
-            <artifactId>scribejava-apis</artifactId>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-api</artifactId>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-client</artifactId>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.snowdrop</groupId>
-            <artifactId>istio-client-uberjar</artifactId>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.jodah</groupId>
-            <artifactId>expiringmap</artifactId>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
@@ -40,19 +39,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>14-api-services-beans</artifactId>
+            <artifactId>16-expression-service-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <classifier>standalone</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-server-mock</artifactId>
-            <version>3.1.12</version>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-testing</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -61,18 +53,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>joor</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

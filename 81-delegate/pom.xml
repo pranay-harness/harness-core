@@ -73,6 +73,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>16-expression-service</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>20-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

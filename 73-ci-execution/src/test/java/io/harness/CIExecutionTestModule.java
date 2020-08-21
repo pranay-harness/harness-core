@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.managerclient.ManagerClientFactory;
@@ -40,6 +41,12 @@ public class CIExecutionTestModule extends AbstractModule {
   @Singleton
   ServiceTokenGenerator ServiceTokenGenerator() {
     return new ServiceTokenGenerator();
+  }
+
+  @Provides
+  @Named("serviceSecret")
+  String serviceSecret() {
+    return "secret";
   }
 
   @Provides

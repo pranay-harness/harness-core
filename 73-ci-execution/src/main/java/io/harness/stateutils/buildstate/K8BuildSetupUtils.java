@@ -3,6 +3,11 @@ package io.harness.stateutils.buildstate;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
@@ -66,6 +71,7 @@ public class K8BuildSetupUtils {
   @Inject private LiteEngineTaskUtils liteEngineTaskUtils;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
+  @Inject ServiceTokenUtils serviceTokenUtils;
 
   public RestResponse<K8sTaskExecutionResponse> executeCISetupTask(
       BuildEnvSetupStepInfo buildEnvSetupStepInfo, Ambiance ambiance) {
@@ -246,6 +252,9 @@ public class K8BuildSetupUtils {
     // Put Harness internal env variable like that of minio
     envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
     envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
+    envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceTokenUtils.getServiceToken());
+    envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, DELEGATE_SERVICE_ENDPOINT_VARIABLE_VALUE);
+    envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
     return envVars;
   }
 }

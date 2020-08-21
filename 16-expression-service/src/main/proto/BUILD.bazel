@@ -1,0 +1,17 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
+
+proto_library(
+    name = "16_expression_service_proto",
+    srcs = ["io/harness/expression/service/expression_service.proto"],
+    strip_import_prefix = "",
+    visibility = ["//visibility:public"],
+)
+
+java_grpc_library(
+    name = "16_expression_service_java_proto",
+    deps = [
+        ":16_expression_service_proto",
+    ],
+    visibility = ["//visibility:public"],
+)

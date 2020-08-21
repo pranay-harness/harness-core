@@ -17,6 +17,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -176,11 +177,21 @@ public class DelegateApplication {
         () -> getDelegateId().orElse("UNREGISTERED")));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
+    modules.add(new DelegateGrpcServiceModule(
+        configuration.getGrpcServiceConnectors(), configuration.getGrpcServiceTokenSecret()));
+
     Injector injector = Guice.createInjector(modules);
     MessageService messageService = injector.getInstance(MessageService.class);
 
     // Add JVM shutdown hook so as to have a clean shutdown
     addShutdownHook(injector, messageService);
+
+    if (configuration.isGrpcServiceEnabled()) {
+      logger.info("Initializing gRPC server...");
+      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+      serviceManager.awaitHealthy();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+    }
 
     boolean watched = watcherProcess != null;
     if (watched) {
@@ -197,6 +208,7 @@ public class DelegateApplication {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));
     DelegateAgentService delegateService = injector.getInstance(DelegateAgentService.class);
     delegateService.run(watched);
+
     System.exit(0);
   }
 
