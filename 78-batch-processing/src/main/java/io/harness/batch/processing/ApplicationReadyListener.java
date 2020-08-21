@@ -26,8 +26,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -38,17 +41,21 @@ public class ApplicationReadyListener {
   private final TimeScaleDBService timeScaleDBService;
   private final HPersistence hPersistence;
   private final IndexManager indexManager;
+  private final Environment environment;
 
-  public ApplicationReadyListener(
-      TimeScaleDBService timeScaleDBService, HPersistence hPersistence, IndexManager indexManager) {
+  public ApplicationReadyListener(TimeScaleDBService timeScaleDBService, HPersistence hPersistence,
+      IndexManager indexManager, Environment environment) {
     this.timeScaleDBService = timeScaleDBService;
     this.hPersistence = hPersistence;
     this.indexManager = indexManager;
+    this.environment = environment;
   }
 
   @EventListener(ApplicationReadyEvent.class)
   void ensureTimescaleConnectivity() {
-    verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
+    if (Boolean.TRUE.equals(environment.getProperty("ensure-timescale", Boolean.class, Boolean.TRUE))) {
+      verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
+    }
   }
 
   @EventListener(ApplicationReadyEvent.class)
@@ -86,6 +93,17 @@ public class ApplicationReadyListener {
     } catch (UncheckedTimeoutException e) {
       logger.error("Timed out waiting for mongo connectivity");
       throw e;
+    }
+  }
+
+  @EventListener(ApplicationReadyEvent.class)
+  void createLivenessMarker() throws IOException {
+    File livenessMarker = new File("batch-processing-up");
+    boolean created = livenessMarker.createNewFile();
+    if (created) {
+      logger.info("Created liveness marker");
+    } else {
+      logger.error("Failed to create liveness marker");
     }
   }
 }

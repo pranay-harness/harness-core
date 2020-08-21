@@ -16,28 +16,32 @@ import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+import lombok.val;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mongodb.morphia.Morphia;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.mock.env.MockEnvironment;
 
 import java.time.Duration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(IndexManager.class)
 public class ApplicationReadyListenerTest extends CategoryTest {
-  @InjectMocks private ApplicationReadyListener listener;
+  private ApplicationReadyListener listener;
 
   @Mock private HPersistence hPersistence;
   @Mock private TimeScaleDBService timeScaleDBService;
+  @Mock private IndexManager indexManager;
 
-  @Captor private ArgumentCaptor<Morphia> captor;
+  @Before
+  public void setUp() throws Exception {
+    MockEnvironment env = new MockEnvironment();
+    listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, indexManager, env);
+  }
 
   @Test
   @Owner(developers = AVMOHAN)
@@ -55,6 +59,16 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   public void shouldPassIfTsdbConnectable() throws Exception {
     doReturn(true).when(timeScaleDBService).isValid();
     assertThatCode(() -> listener.ensureTimescaleConnectivity()).doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldPassIfTsDbNotConnectableButEnsureTimescaleFalse() throws Exception {
+    MockEnvironment env = new MockEnvironment();
+    env.setProperty("ensure-timescale", "false");
+    val listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, indexManager, env);
+    assertThatCode(listener::ensureTimescaleConnectivity).doesNotThrowAnyException();
   }
 
   @Test

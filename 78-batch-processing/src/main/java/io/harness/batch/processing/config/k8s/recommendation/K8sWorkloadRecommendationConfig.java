@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
 
@@ -95,13 +96,16 @@ public class K8sWorkloadRecommendationConfig {
   @StepScope
   public ItemReader<K8sWorkloadRecommendation> dirtyRecommendationReader(
       @Value("#{jobParameters[accountId]}") String accountId, HPersistence hPersistence, MongoTemplate mongoTemplate) {
+    long slow = Duration.ofMinutes(1).toMillis();
+    long dangerouslySlow = Duration.ofMinutes(3).toMillis();
     Iterator<K8sWorkloadRecommendation> hIterator =
         new HIterator<>(hPersistence.createQuery(K8sWorkloadRecommendation.class)
                             .field(K8sWorkloadRecommendationKeys.accountId)
                             .equal(accountId)
                             .field(K8sWorkloadRecommendationKeys.dirty)
                             .equal(Boolean.TRUE)
-                            .fetch());
+                            .fetch(),
+            slow, dangerouslySlow);
     return new CloseableIteratorItemReader<>(hIterator);
   }
 

@@ -31,7 +31,7 @@ import org.mongodb.morphia.annotations.Id;
       , @Field(value = CeExceptionRecordKeys.clusterId),
           @Field(value = CeExceptionRecordKeys.createdAt, type = IndexType.ASC)
     })
-public class CeExceptionRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+public final class CeExceptionRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id String uuid;
   @NotEmpty String accountId;
   @NotEmpty String clusterId;

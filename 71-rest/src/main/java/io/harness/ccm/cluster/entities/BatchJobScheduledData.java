@@ -32,7 +32,7 @@ import java.time.Instant;
 @FieldNameConstants(innerTypeName = "BatchJobScheduledDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
-public class BatchJobScheduledData
+public final class BatchJobScheduledData
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;

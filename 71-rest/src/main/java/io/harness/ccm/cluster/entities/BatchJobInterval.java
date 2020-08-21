@@ -26,7 +26,8 @@ import java.time.temporal.ChronoUnit;
 @FieldNameConstants(innerTypeName = "BatchJobIntervalKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
-public class BatchJobInterval implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class BatchJobInterval
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
   String batchJobType;

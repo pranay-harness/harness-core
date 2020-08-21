@@ -41,7 +41,7 @@ import java.util.Objects;
     fields =
     { @Field("accountId")
       , @Field("clusterId"), @Field("namespace"), @Field("workloadName"), @Field("workloadType") })
-public class K8sWorkloadRecommendation
+public final class K8sWorkloadRecommendation
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   private static final MongoMapSanitizer SANITIZER = new MongoMapSanitizer('~');
 
