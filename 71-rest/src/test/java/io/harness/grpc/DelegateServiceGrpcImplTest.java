@@ -61,6 +61,7 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateCallbackRegistry;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
@@ -95,6 +96,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
   @Inject private DelegateAsyncService delegateAsyncService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HPersistence persistence;
+  private DelegateSyncService delegateSyncService;
 
   private Server server;
   private Logger mockClientLogger;
@@ -112,8 +114,9 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
 
     DelegateServiceGrpc.DelegateServiceBlockingStub delegateServiceBlockingStub =
         DelegateServiceGrpc.newBlockingStub(channel);
-    delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
+    delegateSyncService = mock(DelegateSyncService.class);
 
     delegateCallbackRegistry = mock(DelegateCallbackRegistry.class);
     perpetualTaskService = mock(PerpetualTaskService.class);
@@ -153,18 +156,24 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
 
     List<String> taskSelectors = Arrays.asList("testSelector");
 
-    TaskId taskId1 = delegateServiceGrpcClient.submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
-        AccountId.newBuilder().setId(generateUuid()).build(),
-        TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
-        builder.setMode(TaskMode.SYNC).build(), asList(SystemEnvCheckerCapability.builder().build()), taskSelectors);
+    TaskId taskId1 = delegateServiceGrpcClient
+                         .submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
+                             AccountId.newBuilder().setId(generateUuid()).build(),
+                             TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
+                             builder.setMode(TaskMode.SYNC).build(),
+                             asList(SystemEnvCheckerCapability.builder().build()), taskSelectors)
+                         .getTaskId();
     assertThat(taskId1).isNotNull();
     assertThat(taskId1.getId()).isNotBlank();
     verify(delegateService).scheduleSyncTask(any(DelegateTask.class));
 
-    TaskId taskId2 = delegateServiceGrpcClient.submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
-        AccountId.newBuilder().setId(generateUuid()).build(),
-        TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
-        builder.setMode(TaskMode.ASYNC).build(), asList(SystemEnvCheckerCapability.builder().build()), taskSelectors);
+    TaskId taskId2 = delegateServiceGrpcClient
+                         .submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
+                             AccountId.newBuilder().setId(generateUuid()).build(),
+                             TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
+                             builder.setMode(TaskMode.ASYNC).build(),
+                             asList(SystemEnvCheckerCapability.builder().build()), taskSelectors)
+                         .getTaskId();
     assertThat(taskId2).isNotNull();
     assertThat(taskId2.getId()).isNotBlank();
     verify(delegateService).queueTask(any(DelegateTask.class));

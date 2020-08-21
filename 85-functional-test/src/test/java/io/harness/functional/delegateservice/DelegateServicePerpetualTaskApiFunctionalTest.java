@@ -24,6 +24,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.threading.Poller;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -40,13 +41,14 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
   @Inject private DelegateAsyncService delegateAsyncService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private DelegateSyncService delegateSyncService;
 
   @Test
   @Owner(developers = MARKO)
   @Category(FunctionalTests.class)
   public void testPerpetualTaskExecution() throws InterruptedException {
-    DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
 
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put("countryName", "testCountry");
@@ -84,8 +86,8 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
   public void testPerpetualTaskExecutionWithCachedParams() throws InterruptedException {
     String countryName = "testCountry2";
 
-    DelegateServiceGrpcClient delegateServiceGrpcClient =
-        new DelegateServiceGrpcClient(delegateServiceBlockingStub, delegateAsyncService, kryoSerializer);
+    DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
+        delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromSeconds(30))

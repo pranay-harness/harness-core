@@ -3,17 +3,9 @@ package io.harness.ng.core.delegate.sample;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Duration;
 
+import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.data.algorithm.HashGenerator;
-import io.harness.delegate.AccountId;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.TaskId;
-import io.harness.delegate.TaskMode;
-import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -52,41 +44,42 @@ public class NGDelegate2TaskResource {
   @POST
   @Path("sync")
   @ApiOperation(value = "Sync task using Delegate 2.0 framework", nickname = "syncTaskD2")
-  public ResponseData createSyncTaskD2(@QueryParam("accountId") @NotBlank String accountId) {
-    final HttpTaskParameters taskParameters = HttpTaskParameters.builder().method("GET").url(HTTP_URL_200).build();
+  public ResponseData createSyncTaskD2(@QueryParam("accountId") @NotBlank String accountId,
+      @QueryParam("orgIdentifier") @NotBlank String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotBlank String projectIdentifier) {
     final int timeoutInSecs = 30;
-    final TaskId taskId = delegateServiceGrpcClient.submitTask(delegateCallbackTokenSupplier.get(),
-        AccountId.newBuilder().setId(accountId).build(),
-        TaskSetupAbstractions.newBuilder().putValues("accountId", accountId).build(),
-        TaskDetails.newBuilder()
-            .setMode(TaskMode.SYNC)
-            .setType(TaskType.newBuilder().setType("HTTP").build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))
-            .setExecutionTimeout(Duration.newBuilder().setSeconds(timeoutInSecs).setNanos(0).build())
-            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
-            .build(),
-        taskParameters.fetchRequiredExecutionCapabilities(), null);
-    logger.info("sync task id =[{}]", taskId.getId());
-    return delegateSyncService.waitForTask(taskId.getId(), "", java.time.Duration.ofSeconds(timeoutInSecs));
+    final HttpTaskParameters taskParameters = HttpTaskParameters.builder().method("GET").url(HTTP_URL_200).build();
+    final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                        .accountId(accountId)
+                                                        .taskType("HTTP")
+                                                        .taskParameters(taskParameters)
+                                                        .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
+                                                        .taskSetupAbstraction("orgIdentifier", orgIdentifier)
+                                                        .taskSetupAbstraction("projectIdentifier", projectIdentifier)
+                                                        .build();
+    return delegateServiceGrpcClient.executeSyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
   }
 
   @POST
   @Path("async")
   @ApiOperation(value = "Create a delegate tasks", nickname = "asyncTaskD2")
-  public String createAsyncTaskD2(@QueryParam("accountId") @NotBlank String accountId) {
+  public String createAsyncTaskD2(@QueryParam("accountId") @NotBlank String accountId,
+      @QueryParam("orgIdentifier") @NotBlank String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotBlank String projectIdentifier) {
     final HttpTaskParameters taskParameters = HttpTaskParameters.builder().method("GET").url(HTTP_URL_200).build();
-    final TaskId taskId = delegateServiceGrpcClient.submitTask(delegateCallbackTokenSupplier.get(),
-        AccountId.newBuilder().setId(accountId).build(),
-        TaskSetupAbstractions.newBuilder().putValues("accountId", accountId).build(),
-        TaskDetails.newBuilder()
-            .setMode(TaskMode.ASYNC)
-            .setType(TaskType.newBuilder().setType("HTTP").build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))
-            .setExecutionTimeout(Duration.newBuilder().setSeconds(20).setNanos(0).build())
-            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
-            .build(),
-        taskParameters.fetchRequiredExecutionCapabilities(), null);
-    waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION, new SimpleNotifyCallback(), taskId.getId());
-    return taskId.getId();
+
+    final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                        .accountId(accountId)
+                                                        .taskType("HTTP")
+                                                        .taskParameters(taskParameters)
+                                                        .executionTimeout(java.time.Duration.ofSeconds(20))
+                                                        .taskSetupAbstraction("orgIdentifier", orgIdentifier)
+                                                        .taskSetupAbstraction("projectIdentifier", projectIdentifier)
+                                                        .build();
+    final String taskId =
+        delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
+
+    waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION, new SimpleNotifyCallback(), taskId);
+    return taskId;
   }
 }

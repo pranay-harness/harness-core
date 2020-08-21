@@ -1,14 +1,18 @@
 package io.harness.grpc;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
 
+import io.fabric8.utils.Strings;
 import io.grpc.StatusRuntimeException;
+import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
@@ -34,17 +38,27 @@ import io.harness.delegate.TaskProgressRequest;
 import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskSelector;
 import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.delegate.TaskType;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.DelegateServiceDriverException;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
+import io.harness.service.intfc.DelegateSyncService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -55,16 +69,35 @@ public class DelegateServiceGrpcClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
   private final DelegateAsyncService delegateAsyncService;
   private final KryoSerializer kryoSerializer;
+  private final DelegateSyncService delegateSyncService;
 
   @Inject
   public DelegateServiceGrpcClient(DelegateServiceBlockingStub delegateServiceBlockingStub,
-      DelegateAsyncService delegateAsyncService, KryoSerializer kryoSerializer) {
+      DelegateAsyncService delegateAsyncService, KryoSerializer kryoSerializer,
+      DelegateSyncService delegateSyncService) {
     this.delegateServiceBlockingStub = delegateServiceBlockingStub;
     this.delegateAsyncService = delegateAsyncService;
     this.kryoSerializer = kryoSerializer;
+    this.delegateSyncService = delegateSyncService;
   }
 
-  public TaskId submitTask(DelegateCallbackToken delegateCallbackToken, AccountId accountId,
+  public String submitAsyncTask(DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
+    final SubmitTaskResponse submitTaskResponse =
+        submitTaskInternal(TaskMode.ASYNC, taskRequest, delegateCallbackToken);
+    return submitTaskResponse.getTaskId().getId();
+  }
+
+  public <T extends ResponseData> T executeSyncTask(
+      DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
+    final SubmitTaskResponse submitTaskResponse = submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken);
+    final String taskId = submitTaskResponse.getTaskId().getId();
+    logger.info("sync task id created =[{}]", taskId);
+    return delegateSyncService.waitForTask(taskId,
+        Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
+        Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
+  }
+
+  public SubmitTaskResponse submitTask(DelegateCallbackToken delegateCallbackToken, AccountId accountId,
       TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails, List<ExecutionCapability> capabilities,
       List<String> taskSelectors) {
     try {
@@ -99,10 +132,31 @@ public class DelegateServiceGrpcClient {
             response.getTaskId().getId(), Timestamps.toMillis(response.getTotalExpiry()));
       }
 
-      return response.getTaskId();
+      return response;
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while submitting task.", ex);
     }
+  }
+
+  private SubmitTaskResponse submitTaskInternal(
+      TaskMode taskMode, DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
+    final TaskParameters taskParameters = taskRequest.getTaskParameters();
+
+    final List<ExecutionCapability> capabilities = (taskParameters instanceof ExecutionCapabilityDemander)
+        ? ListUtils.emptyIfNull(((ExecutionCapabilityDemander) taskParameters).fetchRequiredExecutionCapabilities())
+        : Collections.emptyList();
+
+    return submitTask(delegateCallbackToken, AccountId.newBuilder().setId(taskRequest.getAccountId()).build(),
+        TaskSetupAbstractions.newBuilder()
+            .putAllValues(MapUtils.emptyIfNull(taskRequest.getTaskSetupAbstractions()))
+            .build(),
+        TaskDetails.newBuilder()
+            .setMode(taskMode)
+            .setType(TaskType.newBuilder().setType(taskRequest.getTaskType()).build())
+            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))
+            .setExecutionTimeout(Durations.fromSeconds(taskRequest.getExecutionTimeout().getSeconds()))
+            .build(),
+        capabilities, taskRequest.getTaskSelectors());
   }
 
   public TaskExecutionStage cancelTask(AccountId accountId, TaskId taskId) {
