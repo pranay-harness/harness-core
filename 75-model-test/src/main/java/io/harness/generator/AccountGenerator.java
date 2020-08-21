@@ -3,7 +3,6 @@ package io.harness.generator;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Arrays.asList;
 import static software.wings.beans.Account.Builder;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
@@ -48,6 +47,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -292,8 +292,7 @@ public class AccountGenerator {
         aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, userGroupName).build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
-    userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup, false, false);
+    userService.addUserToUserGroups(accountId, user, Collections.singletonList(userGroup), false, false);
   }
 
   private void addUsersToUserGroup(List<User> users, String accountId, String userGroupName) {
@@ -301,8 +300,9 @@ public class AccountGenerator {
         aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, userGroupName).build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
-    userGroup.setMembers(users);
-    userGroupService.updateMembers(userGroup, false, false);
+    for (User user : users) {
+      userService.addUserToUserGroups(accountId, user, Collections.singletonList(userGroup), false, false);
+    }
   }
 
   public void addUserToHarnessUserGroup(User user) {
