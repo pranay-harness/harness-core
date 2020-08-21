@@ -48,6 +48,15 @@ public class CECloudAccountDao {
         .asList();
   }
 
+  public List<CECloudAccount> getBySettingId(String harnessAccountId, String masterAccountSettingId) {
+    return hPersistence.createQuery(CECloudAccount.class)
+        .field(CECloudAccountKeys.accountId)
+        .equal(harnessAccountId)
+        .field(CECloudAccountKeys.masterAccountSettingId)
+        .equal(masterAccountSettingId)
+        .asList();
+  }
+
   public boolean updateAccountStatus(CECloudAccount ceCloudAccount, AccountStatus accountStatus) {
     UpdateOperations<CECloudAccount> updateOperations = hPersistence.createUpdateOperations(CECloudAccount.class);
 

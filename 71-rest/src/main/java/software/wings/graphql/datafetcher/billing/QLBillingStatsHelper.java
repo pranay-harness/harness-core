@@ -14,6 +14,7 @@ import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.cluster.entities.InstanceData;
+import io.harness.ccm.health.CEClusterDao;
 import io.harness.exception.InvalidRequestException;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ce.CECluster;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.service.intfc.SettingsService;
@@ -33,6 +35,7 @@ import java.sql.SQLException;
 public class QLBillingStatsHelper {
   @Inject WingsPersistence wingsPersistence;
   @Inject ClusterRecordService clusterRecordService;
+  @Inject CEClusterDao ceClusterDao;
   @Inject SettingsService settingsService;
   @Inject InstanceDataServiceImpl instanceDataService;
   private static final long CACHE_SIZE = 10000;
@@ -140,6 +143,10 @@ public class QLBillingStatsHelper {
 
   private String getClusterName(String entityId) {
     try {
+      CECluster ceCluster = ceClusterDao.getCECluster(entityId);
+      if (null != ceCluster) {
+        return ceCluster.getClusterName();
+      }
       Cluster cluster = clusterRecordService.get(entityId).getCluster();
       if (cluster != null) {
         if (cluster.getClusterType().equals(AWS_ECS)) {
@@ -157,15 +164,12 @@ public class QLBillingStatsHelper {
             clusterName = settingAttribute.getName();
           }
           return clusterName;
-        } else {
-          return entityId;
         }
-      } else {
-        return entityId;
       }
     } catch (Exception e) {
       return entityId;
     }
+    return entityId;
   }
 
   public String getCloudProviderName(String entityId) {
