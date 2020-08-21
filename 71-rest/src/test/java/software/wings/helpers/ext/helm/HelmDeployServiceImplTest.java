@@ -5,11 +5,13 @@ import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -17,9 +19,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -44,12 +48,17 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.model.Release.Status;
+import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,6 +103,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private HelmClient helmClient;
@@ -109,6 +119,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @Mock private GitClientHelper gitClientHelper;
   @Mock private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
+  @Mock private KubernetesContainerService kubernetesContainerService;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
@@ -816,45 +827,112 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ACASIAN)
+  @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRollbacklK116() throws Exception {
+  public void testRollbackK116WithSteadyCheck() throws Exception {
     setFakeTimeLimiter();
+    KubernetesResourceId resource1 =
+        KubernetesResourceId.builder().namespace("default-1").name("resource-1").kind(Kind.StatefulSet.name()).build();
+    KubernetesResourceId resource2 =
+        KubernetesResourceId.builder().namespace("default-2").name("resource-2").kind(Kind.Deployment.name()).build();
+    KubernetesResourceId resource3 =
+        KubernetesResourceId.builder().namespace("default-3").name("resource-3").kind(Kind.Deployment.name()).build();
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
+
+    HelmInstallCommandResponse result = null;
+    ReleaseHistory releaseHistory = ReleaseHistory.createNew();
+
+    // Empty release history
+    assertThatThrownBy(() -> executeRollbackWithReleaseHistory(releaseHistory, 3))
+        .hasMessageContaining("Unable to find release 3");
+
+    // Trying to rollback to failed release
+    releaseHistory.createNewRelease(singletonList(resource1));
+    releaseHistory.setReleaseNumber(1);
+    releaseHistory.setReleaseStatus(Status.Failed);
+    assertThatThrownBy(() -> executeRollbackWithReleaseHistory(releaseHistory, 1))
+        .hasMessageContaining(
+            "Invalid status for release with number 1. Expected 'Succeeded' status, actual status is 'Failed'");
+
+    releaseHistory.createNewRelease(singletonList(resource1));
+    releaseHistory.setReleaseNumber(1);
+    releaseHistory.setReleaseStatus(Status.Succeeded);
+    // No such release
+    assertThatThrownBy(() -> executeRollbackWithReleaseHistory(releaseHistory, 2))
+        .hasMessageContaining("Unable to find release 2");
+
+    // Rollback to release 1
+    result = executeRollbackWithReleaseHistory(releaseHistory, 1);
+    assertThat(result.getContainerInfoList().stream().map(ContainerInfo::getHostName)).containsExactly("resource-1");
+    validateCreateNewRelease(2);
+
+    releaseHistory.createNewRelease(asList(resource1, resource2));
+    releaseHistory.setReleaseNumber(2);
+    releaseHistory.setReleaseStatus(Status.Succeeded);
+    // Rollback to release 2
+    result = executeRollbackWithReleaseHistory(releaseHistory, 2);
+    assertThat(result.getContainerInfoList().stream().map(ContainerInfo::getHostName))
+        .containsExactlyInAnyOrder("resource-1", "resource-2");
+    validateCreateNewRelease(3);
+
+    releaseHistory.createNewRelease(asList(resource1, resource2, resource3));
+    releaseHistory.setReleaseNumber(3);
+    releaseHistory.setReleaseStatus(Status.Succeeded);
+    releaseHistory.createNewRelease(singletonList(resource1));
+    releaseHistory.setReleaseNumber(4);
+    releaseHistory.setReleaseStatus(Status.Succeeded);
+    // Rollback to release 3
+    result = executeRollbackWithReleaseHistory(releaseHistory, 3);
+    assertThat(result.getContainerInfoList().stream().map(ContainerInfo::getHostName))
+        .containsExactlyInAnyOrder("resource-1", "resource-2", "resource-3");
+    validateCreateNewRelease(5);
+  }
+
+  private void validateCreateNewRelease(int releaseNumber) throws Exception {
+    ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
+    verify(kubernetesContainerService, atLeastOnce())
+        .saveReleaseHistory(any(KubernetesConfig.class), eq("release"), releaseHistoryCaptor.capture(), eq(true));
+    ReleaseHistory storedHistory = ReleaseHistory.createFromData(releaseHistoryCaptor.getValue());
+    assertThat(storedHistory.getRelease(releaseNumber)).isNotNull();
+  }
+
+  private HelmInstallCommandResponse executeRollbackWithReleaseHistory(ReleaseHistory releaseHistory, int version)
+      throws Exception {
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder()
+                                             .releaseName("release")
+                                             .prevReleaseVersion(version)
                                              .containerServiceParams(ContainerServiceParams.builder().build())
                                              .chartSpecification(HelmChartSpecification.builder()
                                                                      .chartName(HelmTestConstants.CHART_NAME_KEY)
                                                                      .chartUrl("http://127.0.0.1")
                                                                      .build())
-
-                                             .releaseName("first-release")
+                                             .timeoutInMillis(LONG_TIMEOUT_INTERVAL)
                                              .build();
-
-    List<KubernetesResource> resources = ImmutableList.of(
-        KubernetesResource.builder()
-            .resourceId(
-                KubernetesResourceId.builder().name("helm-deploy").namespace("default").kind("Deployment").build())
-            .build());
-    ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
-    List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
+    List<ContainerInfo> containerInfosDefault1 =
+        ImmutableList.of(ContainerInfo.builder().hostName("resource-1").build());
+    List<ContainerInfo> containerInfosDefault2 =
+        ImmutableList.of(ContainerInfo.builder().hostName("resource-2").build());
+    List<ContainerInfo> containerInfosDefault3 =
+        ImmutableList.of(ContainerInfo.builder().hostName("resource-3").build());
 
     when(helmClient.rollback(request))
         .thenReturn(HelmInstallCommandResponse.builder()
                         .output("Rollback was a success.")
                         .commandExecutionStatus(SUCCESS)
                         .build());
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
-    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
-    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
-             eq("default"), anyString(), any(ExecutionLogCallback.class)))
+    when(kubernetesContainerService.fetchReleaseHistoryFromSecrets(any(KubernetesConfig.class), eq("release")))
+        .thenReturn(releaseHistory.getAsYaml());
+    when(k8sTaskHelperBase.getContainerInfos(any(), eq("release"), eq("default-1"), eq(LONG_TIMEOUT_INTERVAL)))
+        .thenReturn(containerInfosDefault1);
+    when(k8sTaskHelperBase.getContainerInfos(any(), eq("release"), eq("default-2"), eq(LONG_TIMEOUT_INTERVAL)))
+        .thenReturn(containerInfosDefault2);
+    when(k8sTaskHelperBase.getContainerInfos(any(), eq("release"), eq("default-3"), eq(LONG_TIMEOUT_INTERVAL)))
+        .thenReturn(containerInfosDefault3);
+    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyListOf(KubernetesResourceId.class),
+             anyString(), anyString(), anyString(), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(true);
 
-    HelmInstallCommandResponse helmCommandResponse = (HelmInstallCommandResponse) helmDeployService.rollback(request);
-    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
-    assertThat(helmCommandResponse.getContainerInfoList()).isNotEmpty();
-    ContainerInfo actualContainerInfo = helmCommandResponse.getContainerInfoList().get(0);
-    assertThat(actualContainerInfo).isEqualTo(expectedContainerInfo);
+    return (HelmInstallCommandResponse) helmDeployService.rollback(request);
   }
 
   private void successWhenHelm3PresentInClientTools() throws InterruptedException, IOException, TimeoutException {
@@ -989,19 +1067,18 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .resourceId(
                 KubernetesResourceId.builder().name("helm-deploy-2").namespace("default").kind("StatefulSet").build())
             .build());
-    ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
-    List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
+    List<KubernetesResourceId> resourceIds =
+        resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
 
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
-    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
+    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), eq(resourceIds), anyString(), anyString(),
              anyString(), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(false);
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(()
-                        -> helmDeployService.getKubectlContainerInfos(helmInstallCommandRequest,
-                            Collections.emptyList(), executionLogCallback, LONG_TIMEOUT_INTERVAL))
+                        -> helmDeployService.getKubectlContainerInfos(
+                            helmInstallCommandRequest, resourceIds, executionLogCallback, LONG_TIMEOUT_INTERVAL))
         .withMessage("Steady state check failed");
 
     verify(k8sTaskHelper, times(1))

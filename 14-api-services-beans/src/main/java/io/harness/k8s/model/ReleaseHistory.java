@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 @Data
 @NoArgsConstructor
@@ -56,6 +57,10 @@ public class ReleaseHistory {
     this.getLatestRelease().setStatus(status);
   }
 
+  public void setReleaseNumber(int releaseNumber) {
+    this.getLatestRelease().setNumber(releaseNumber);
+  }
+
   public Release getLastSuccessfulRelease() {
     for (Release release : this.getReleases()) {
       if (release.getStatus() == Status.Succeeded) {
@@ -74,7 +79,25 @@ public class ReleaseHistory {
     return null;
   }
 
+  @Nullable
+  public Release getRelease(int releaseNumber) {
+    for (Release release : this.getReleases()) {
+      if (release.getNumber() == releaseNumber) {
+        return release;
+      }
+    }
+
+    return null;
+  }
+
   public String getAsYaml() throws YamlException {
     return ObjectYamlUtils.toYaml(this);
+  }
+
+  public void cleanup() {
+    Release lastSuccessfulRelease = this.getLastSuccessfulRelease();
+    int lastSuccessfulReleaseNumber = lastSuccessfulRelease != null ? lastSuccessfulRelease.getNumber() : 0;
+    releases.removeIf(
+        release -> release.getNumber() < lastSuccessfulReleaseNumber || Status.Failed == release.getStatus());
   }
 }

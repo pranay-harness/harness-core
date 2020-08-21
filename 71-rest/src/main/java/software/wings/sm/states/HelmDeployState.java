@@ -343,6 +343,14 @@ public class HelmDeployState extends State {
     return helmInstallCommandRequestBuilder.build();
   }
 
+  private void setHelmCommandRequestReleaseVersion(
+      HelmCommandRequest helmCommandRequest, HelmDeployStateExecutionData stateExecutionData) {
+    if (helmCommandRequest instanceof HelmInstallCommandRequest) {
+      HelmInstallCommandRequest helmInstallCommandRequest = (HelmInstallCommandRequest) helmCommandRequest;
+      helmInstallCommandRequest.setNewReleaseVersion(stateExecutionData.getReleaseNewVersion());
+    }
+  }
+
   private String getImageName(String yamlFileContent, String imageNameTag, String domainName) {
     if (isNotEmpty(domainName)) {
       Pattern pattern = ContainerTask.compileRegexPattern(domainName);
@@ -874,6 +882,8 @@ public class HelmDeployState extends State {
 
     StateExecutionContext stateExecutionContext =
         buildStateExecutionContext(stateExecutionDataBuilder, expressionFunctorToken);
+    HelmDeployStateExecutionData stateExecutionData = stateExecutionDataBuilder.build();
+    setHelmCommandRequestReleaseVersion(commandRequest, stateExecutionData);
 
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -897,7 +907,7 @@ public class HelmDeployState extends State {
     renderDelegateTask(context, delegateTask, stateExecutionContext);
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
-    stateExecutionDataBuilder.commandFlags(
+    stateExecutionData.setCommandFlags(
         expressionEvaluator.substitute(commandRequest.getCommandFlags(), Collections.emptyMap()));
 
     appendDelegateTaskDetails(context, delegateTask);
@@ -905,7 +915,7 @@ public class HelmDeployState extends State {
 
     return ExecutionResponse.builder()
         .correlationIds(singletonList(activityId))
-        .stateExecutionData(stateExecutionDataBuilder.build())
+        .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
   }
