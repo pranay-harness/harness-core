@@ -22,7 +22,7 @@ import java.util.List;
 @StoreIn("events")
 @Entity(value = "billingDataPipelineRecord", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "BillingDataPipelineRecordKeys")
-public class BillingDataPipelineRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+public final class BillingDataPipelineRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
   long createdAt;
 

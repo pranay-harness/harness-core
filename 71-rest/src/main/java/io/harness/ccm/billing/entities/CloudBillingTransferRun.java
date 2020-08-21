@@ -19,7 +19,7 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 @Entity(value = "cloudBillingTransferRuns", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "CloudBillingTransferRunKeys")
-public class CloudBillingTransferRun implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
+public final class CloudBillingTransferRun implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
   @Id String uuid;
   private String accountId;
   private String organizationUuid;

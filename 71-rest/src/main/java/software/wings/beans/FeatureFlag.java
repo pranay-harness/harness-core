@@ -20,7 +20,7 @@ import java.util.Set;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties({"obsolete", "accountIds"})
 @FieldNameConstants(innerTypeName = "FeatureFlagKeys")
-public class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {
+public final class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {
   @Id private String uuid;
 
   @FdIndex private String name;

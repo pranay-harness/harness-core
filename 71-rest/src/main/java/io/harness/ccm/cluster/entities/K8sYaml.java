@@ -32,7 +32,7 @@ import java.util.Base64;
 @CdIndex(name = "accountId_hash", fields = { @Field(K8sYamlKeys.accountId)
                                              , @Field(value = K8sYamlKeys.hash) })
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
-public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+public final class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
   long createdAt;
 

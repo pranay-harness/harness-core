@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Id;
     { @Field(LastReceivedPublishedMessageKeys.accountId)
       , @Field(LastReceivedPublishedMessageKeys.identifier) })
 @FieldNameConstants(innerTypeName = "LastReceivedPublishedMessageKeys")
-public class LastReceivedPublishedMessage
+public final class LastReceivedPublishedMessage
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   @NotEmpty String accountId;

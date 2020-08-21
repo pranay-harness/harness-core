@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
     fields = { @Field(K8sWorkloadKeys.accountId)
                , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels) })
 @FieldNameConstants(innerTypeName = "K8sWorkloadKeys")
-public class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   long createdAt;
   long lastUpdatedAt;

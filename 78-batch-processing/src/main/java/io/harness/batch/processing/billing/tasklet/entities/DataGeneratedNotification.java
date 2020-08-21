@@ -24,7 +24,7 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "DataGeneratedNotificationKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn(EVENTS_DB)
-public class DataGeneratedNotification implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+public final class DataGeneratedNotification implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id String uuid;
   @Unique String accountId;
   boolean mailSent;

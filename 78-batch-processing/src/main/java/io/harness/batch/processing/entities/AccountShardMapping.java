@@ -20,7 +20,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "AccountShardMappingKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
-public class AccountShardMapping implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class AccountShardMapping
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
   int shardId;

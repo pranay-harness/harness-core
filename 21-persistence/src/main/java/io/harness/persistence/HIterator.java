@@ -18,13 +18,21 @@ public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
   private static final long SLOW_PROCESSING = 1000;
   private static final long DANGEROUSLY_SLOW_PROCESSING = 5000;
 
-  private MorphiaIterator<T, T> iterator;
+  private final MorphiaIterator<T, T> iterator;
 
-  private StopWatch watch = new StopWatch();
+  private final StopWatch watch = new StopWatch();
+  private final long slowProcessing;
+  private final long dangerouslySlowProcessing;
 
-  public HIterator(MorphiaIterator<T, T> iterator) {
+  public HIterator(MorphiaIterator<T, T> iterator, long slowProcessing, long dangerouslySlowProcessing) {
     watch.start();
     this.iterator = iterator;
+    this.slowProcessing = slowProcessing;
+    this.dangerouslySlowProcessing = dangerouslySlowProcessing;
+  }
+
+  public HIterator(MorphiaIterator<T, T> iterator) {
+    this(iterator, SLOW_PROCESSING, DANGEROUSLY_SLOW_PROCESSING);
   }
 
   @Override
@@ -32,10 +40,10 @@ public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
     iterator.close();
 
     watch.stop();
-    if (watch.getTime() > SLOW_PROCESSING) {
+    if (watch.getTime() > slowProcessing) {
       try (CollectionLogContext ignore1 = new CollectionLogContext(iterator.getCollection(), OVERRIDE_NESTS);
            ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(watch.getTime(), OVERRIDE_NESTS)) {
-        if (watch.getTime() > DANGEROUSLY_SLOW_PROCESSING) {
+        if (watch.getTime() > dangerouslySlowProcessing) {
           logger.error("HIterator is dangerously slow processing the data for query: {}",
               iterator.getCursor().getQuery().toString());
         } else {

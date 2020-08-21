@@ -34,7 +34,7 @@ import java.util.Base64;
     })
 @FieldNameConstants(innerTypeName = "CEClusterKeys")
 @StoreIn("events")
-public class CECluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class CECluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
   String clusterName;
