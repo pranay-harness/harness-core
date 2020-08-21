@@ -11,6 +11,7 @@ import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
 import io.dropwizard.jersey.validation.Validators;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
+import io.harness.cvng.exception.NotFoundExceptionMapper;
 import io.harness.serializer.JsonSubtypeResolver;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -161,6 +162,7 @@ public class ResourceTestRule implements TestRule {
 
     private void configure(ResourceTestRule resourceTestRule) {
       register(ConstraintViolationExceptionMapper.class);
+      register(NotFoundExceptionMapper.class);
       register(GenericExceptionMapper.class);
       for (Class<?> provider : resourceTestRule.providers) {
         register(provider);
