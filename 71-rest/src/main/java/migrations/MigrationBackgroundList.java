@@ -62,6 +62,7 @@ import migrations.all.DisableServiceGuardsWithDeletedConnectorsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
+import migrations.all.FixDuplicatedHarnessGroups;
 import migrations.all.GitSyncErrorGitDetailsMigration;
 import migrations.all.HelmStateTimeoutMigration;
 import migrations.all.InfraMappingToDefinitionMigration;
@@ -274,6 +275,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(160, RemoveDeprecatedFieldsFromHarnessUserGroup.class))
         .add(Pair.of(161, BaseMigration.class))
         .add(Pair.of(162, AddAccountIdToStateExecutionInstance.class))
+        .add(Pair.of(163, FixDuplicatedHarnessGroups.class))
         .build();
   }
 }
