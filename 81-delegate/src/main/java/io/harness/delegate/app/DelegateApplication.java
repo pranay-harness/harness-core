@@ -177,8 +177,10 @@ public class DelegateApplication {
         () -> getDelegateId().orElse("UNREGISTERED")));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
-    modules.add(new DelegateGrpcServiceModule(
-        configuration.getGrpcServiceConnectors(), configuration.getGrpcServiceTokenSecret()));
+    if (configuration.isGrpcServiceEnabled()) {
+      modules.add(new DelegateGrpcServiceModule(
+          configuration.getGrpcServiceConnectors(), configuration.getGrpcServiceTokenSecret()));
+    }
 
     Injector injector = Guice.createInjector(modules);
     MessageService messageService = injector.getInstance(MessageService.class);
