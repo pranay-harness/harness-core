@@ -201,7 +201,7 @@ public class SSOServiceImpl implements SSOService {
     PermissionAttribute userReadPermissionAttribute =
         new PermissionAttribute(PermissionType.USER_PERMISSION_READ, Action.READ);
     PermissionAttribute accountManagementPermission =
-        new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ);
+        new PermissionAttribute(PermissionType.MANAGE_AUTHENTICATION_SETTINGS, Action.READ);
     boolean isAuthorized =
         handleExceptionInAuthorization(asList(userReadPermissionAttribute, accountManagementPermission));
     if (!isAuthorized) {

@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.ssoProvider;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -11,16 +13,15 @@ import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLSSOProviderQueryParameters;
 import software.wings.graphql.schema.type.QLSSOProvider;
 import software.wings.graphql.schema.type.QLSSOProvider.QLSSOProviderBuilder;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 @Slf4j
 public class SsoProviderDataFetcher extends AbstractObjectDataFetcher<QLSSOProvider, QLSSOProviderQueryParameters> {
-  public static final String SSO_PROVIDER_DOES_NOT_EXIST_MSG = "SSO Provider does not exist";
-  @Inject HPersistence persistence;
+  private static final String SSO_PROVIDER_DOES_NOT_EXIST_MSG = "SSO Provider does not exist";
+  @Inject private HPersistence persistence;
 
   @Override
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_AUTHENTICATION_SETTINGS)
   public QLSSOProvider fetch(QLSSOProviderQueryParameters qlQuery, String accountId) {
     SSOSettings ssoProvider = null;
     if (qlQuery.getSsoProviderId() != null) {

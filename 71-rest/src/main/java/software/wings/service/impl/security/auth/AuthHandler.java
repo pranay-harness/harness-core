@@ -710,7 +710,7 @@ public class AuthHandler {
 
       appPermissions.forEach(appPermission -> {
         Set<String> appIdSet = getAppIdsByFilter(allAppIds, appPermission.getAppFilter());
-        if (appIdSet == null) {
+        if (isEmpty(appIdSet)) {
           return;
         }
         PermissionType permissionType = appPermission.getPermissionType();
