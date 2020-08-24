@@ -15,7 +15,8 @@ import java.nio.charset.Charset;
 @Builder
 @Slf4j
 public class ConfigFileFunctor implements ExpressionFunctor {
-  static final int MAX_CONFIG_FILE_SIZE = ExpressionEvaluatorUtils.EXPANSION_LIMIT;
+  // Some customers have large JSON files with size around 512K, so MAX_CONFIG_FILE_SIZE should be greater than that.
+  static final int MAX_CONFIG_FILE_SIZE = 4 * ExpressionEvaluatorUtils.EXPANSION_LIMIT;
 
   private ServiceTemplateService serviceTemplateService;
   private ConfigService configService;
