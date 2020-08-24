@@ -43,4 +43,8 @@ public enum ConnectorType {
   public String toString() {
     return displayName;
   }
+
+  public static ConnectorType fromString(final String s) {
+    return ConnectorType.getConnectorType(s);
+  }
 }
