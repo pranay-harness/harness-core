@@ -881,6 +881,39 @@ public class CustomExecutionProvider {
         .build();
   }
 
+  public Plan provideSectionChainPlanWithNoChildren() {
+    String sectionChainNodeId = generateUuid();
+    String dummyNode1Id = generateUuid();
+
+    return Plan.builder()
+        .node(PlanNode.builder()
+                  .uuid(sectionChainNodeId)
+                  .name("Section Chain")
+                  .stepType(SectionChainStep.STEP_TYPE)
+                  .identifier("section_chain")
+                  .stepParameters(SectionChainStepParameters.builder().build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(OnSuccessAdviser.ADVISER_TYPE)
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode1Id).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode1Id)
+                  .name("Dummy Node 1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy1")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .startingNodeId(sectionChainNodeId)
+        .build();
+  }
+
   public Plan provideSectionChainRollbackPlan() {
     String sectionChainNodeId = generateUuid();
     String httpNode1Id = generateUuid();

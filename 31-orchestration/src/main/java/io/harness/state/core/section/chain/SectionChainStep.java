@@ -1,6 +1,7 @@
 package io.harness.state.core.section.chain;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
@@ -23,6 +24,10 @@ public class SectionChainStep implements Step, ChildChainExecutable<SectionChain
   @Override
   public ChildChainResponse executeFirstChild(
       Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters, StepInputPackage inputPackage) {
+    if (isEmpty(sectionChainStepParameters.getChildNodeIds())) {
+      return ChildChainResponse.builder().suspend(true).build();
+    }
+
     return ChildChainResponse.builder()
         .nextChildId(sectionChainStepParameters.getChildNodeIds().get(0))
         .passThroughData(SectionChainPassThroughData.builder().childIndex(0).build())

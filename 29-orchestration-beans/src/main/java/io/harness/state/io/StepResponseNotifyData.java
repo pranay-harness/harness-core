@@ -20,4 +20,5 @@ public class StepResponseNotifyData implements ResponseData {
   List<StepOutcomeRef> stepOutcomeRefs;
   FailureInfo failureInfo;
   Status status;
+  String description;
 }

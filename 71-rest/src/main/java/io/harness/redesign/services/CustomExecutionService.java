@@ -34,6 +34,8 @@ public interface CustomExecutionService {
 
   PlanExecution executeSectionChainPlan();
 
+  PlanExecution executeSectionChainPlanWithNoChildren();
+
   PlanExecution executeSectionChainRollbackPlan();
 
   PlanExecution testGraphPlan();
