@@ -12,6 +12,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -34,7 +35,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.TaskType;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DelegateQueueTask implements Runnable {
   private static final SecureRandom random = new SecureRandom();
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
@@ -84,12 +84,11 @@ public class DelegateQueueTask implements Runnable {
   private static final FindOptions expiryLimit = new FindOptions().limit(100);
 
   private void markTimedOutTasksAsFailed() {
-    List<Key<DelegateTask>> longRunningTimedOutTaskKeys =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-            .filter(DelegateTaskKeys.status, STARTED)
-            .field(DelegateTaskKeys.expiry)
-            .lessThan(currentTimeMillis())
-            .asKeyList(expiryLimit);
+    List<Key<DelegateTask>> longRunningTimedOutTaskKeys = persistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                              .filter(DelegateTaskKeys.status, STARTED)
+                                                              .field(DelegateTaskKeys.expiry)
+                                                              .lessThan(currentTimeMillis())
+                                                              .asKeyList(expiryLimit);
 
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
       List<String> keyList = longRunningTimedOutTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
@@ -102,7 +101,7 @@ public class DelegateQueueTask implements Runnable {
 
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long
-    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+    Query<DelegateTask> query = persistence.createQuery(DelegateTask.class, excludeAuthority)
                                     .filter(DelegateTaskKeys.status, QUEUED)
                                     .field(DelegateTaskKeys.expiry)
                                     .lessThan(currentTimeMillis());
@@ -125,11 +124,12 @@ public class DelegateQueueTask implements Runnable {
     }
   }
 
-  private void endTasks(List<String> taskIds) {
+  @VisibleForTesting
+  public void endTasks(List<String> taskIds) {
     Map<String, DelegateTask> delegateTasks = new HashMap<>();
     Map<String, String> taskWaitIds = new HashMap<>();
     try {
-      List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+      List<DelegateTask> tasks = persistence.createQuery(DelegateTask.class, excludeAuthority)
                                      .field(DelegateTaskKeys.uuid)
                                      .in(taskIds)
                                      .asList();
@@ -141,9 +141,8 @@ public class DelegateQueueTask implements Runnable {
       logger.error("Failed to deserialize {} tasks. Trying individually...", taskIds.size(), e1);
       for (String taskId : taskIds) {
         try {
-          DelegateTask task = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                  .filter(DelegateTaskKeys.uuid, taskId)
-                                  .get();
+          DelegateTask task =
+              persistence.createQuery(DelegateTask.class, excludeAuthority).filter(DelegateTaskKeys.uuid, taskId).get();
           delegateTasks.put(taskId, task);
           if (isNotEmpty(task.getWaitId())) {
             taskWaitIds.put(taskId, task.getWaitId());
@@ -151,7 +150,7 @@ public class DelegateQueueTask implements Runnable {
         } catch (Exception e2) {
           logger.error("Could not deserialize task {}. Trying again with only waitId field.", taskId, e2);
           try {
-            String waitId = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+            String waitId = persistence.createQuery(DelegateTask.class, excludeAuthority)
                                 .filter(DelegateTaskKeys.uuid, taskId)
                                 .project(DelegateTaskKeys.waitId, true)
                                 .get()
@@ -168,8 +167,8 @@ public class DelegateQueueTask implements Runnable {
       }
     }
 
-    boolean deleted = wingsPersistence.delete(
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(DelegateTaskKeys.uuid).in(taskIds));
+    boolean deleted = persistence.deleteOnServer(
+        persistence.createQuery(DelegateTask.class, excludeAuthority).field(DelegateTaskKeys.uuid).in(taskIds));
 
     if (deleted) {
       taskIds.forEach(taskId -> {
@@ -197,7 +196,7 @@ public class DelegateQueueTask implements Runnable {
     long now = clock.millis();
 
     Query<DelegateTask> unassignedTasksQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+        persistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter(DelegateTaskKeys.status, QUEUED)
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
             .field(DelegateTaskKeys.nextBroadcast)
@@ -209,12 +208,12 @@ public class DelegateQueueTask implements Runnable {
       int count = 0;
       while (iterator.hasNext()) {
         DelegateTask delegateTask = iterator.next();
-        Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+        Query<DelegateTask> query = persistence.createQuery(DelegateTask.class, excludeAuthority)
                                         .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                         .filter(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount());
 
         UpdateOperations<DelegateTask> updateOperations =
-            wingsPersistence.createUpdateOperations(DelegateTask.class)
+            persistence.createUpdateOperations(DelegateTask.class)
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
                 .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
@@ -223,7 +222,7 @@ public class DelegateQueueTask implements Runnable {
           updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
         }
 
-        delegateTask = wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
+        delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
           continue;

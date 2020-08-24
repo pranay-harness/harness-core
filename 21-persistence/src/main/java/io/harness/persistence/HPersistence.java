@@ -231,6 +231,14 @@ public interface HPersistence extends HealthMonitor {
   <T extends PersistentEntity> boolean delete(Query<T> query);
 
   /**
+   * Delete the items matching the query without deserializing them on the client side.
+   *
+   * @param query query that selects one or more items to delete
+   * @return true, if successful
+   */
+  <T extends PersistentEntity> boolean deleteOnServer(Query<T> query);
+
+  /**
    * Delete.
    *
    * @param entity entity to delete
