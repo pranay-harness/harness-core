@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.connector;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -44,6 +45,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
   @Mock private GitDataFetcherHelper gitDataFetcherHelper;
   @Mock private SettingsService settingsService;
   @Mock private SettingServiceHelper settingServiceHelper;
+  @Mock private ConnectorsController connectorsController;
 
   @InjectMocks @Inject private UpdateConnectorDataFetcher dataFetcher;
 
@@ -77,6 +79,9 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
     doNothing()
         .when(settingServiceHelper)
         .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLGitConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGitConnector.builder()).when(connectorsController).populateConnector(any(), any());
 
     QLUpdateConnectorPayload payload =
         dataFetcher.mutateAndFetch(QLUpdateConnectorInput.builder()

@@ -186,7 +186,7 @@ type GitConnector implements Connector {
   branch: String
   passwordSecretId: String
   sshSettingId: String
-  webhookToken: String
+  webhookUrl: String
   generateWebhookUrl: Boolean
   customCommitDetails: CustomCommitDetails
 }

@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.connector;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.experimental.UtilityClass;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
@@ -41,18 +43,21 @@ import software.wings.graphql.schema.type.connector.QLSlackConnector;
 import software.wings.graphql.schema.type.connector.QLSmtpConnector;
 import software.wings.graphql.schema.type.connector.QLSplunkConnector;
 import software.wings.graphql.schema.type.connector.QLSumoConnector;
+import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.settings.SettingVariableTypes;
 
-@UtilityClass
+@Singleton
 public class ConnectorsController {
-  public static QLConnectorBuilder populateConnector(SettingAttribute settingAttribute, QLConnectorBuilder builder) {
+  public static final String WEBHOOK_URL_PATH = "api/setup-as-code/yaml/webhook/";
+  @Inject private SubdomainUrlHelper subdomainUrlHelper;
+  public QLConnectorBuilder populateConnector(SettingAttribute settingAttribute, QLConnectorBuilder builder) {
     return builder.id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
         .createdAt(settingAttribute.getCreatedAt())
         .createdBy(UserController.populateUser(settingAttribute.getCreatedBy()));
   }
 
-  public static QLConnectorBuilder getConnectorBuilder(SettingAttribute settingAttribute) {
+  public QLConnectorBuilder getConnectorBuilder(SettingAttribute settingAttribute) {
     final SettingVariableTypes settingType = settingAttribute.getValue().getSettingType();
     switch (settingType) {
       case JIRA:
@@ -126,7 +131,7 @@ public class ConnectorsController {
     }
   }
 
-  public static QLGitConnectorBuilder getPrePopulatedGitConnectorBuilder(SettingAttribute settingAttribute) {
+  public QLGitConnectorBuilder getPrePopulatedGitConnectorBuilder(SettingAttribute settingAttribute) {
     QLGitConnectorBuilder builder = QLGitConnector.builder();
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
     builder.userName(gitConfig.getUsername())
@@ -134,7 +139,7 @@ public class ConnectorsController {
         .urlType(gitConfig.getUrlType())
         .branch(gitConfig.getBranch())
         .sshSettingId(gitConfig.getSshSettingId())
-        .webhookToken(gitConfig.getWebhookToken())
+        .webhookUrl(generateWebhookUrl(gitConfig.getWebhookToken(), settingAttribute.getAccountId()))
         .generateWebhookUrl(gitConfig.isGenerateWebhookUrl())
         .customCommitDetails(QLCustomCommitDetails.builder()
                                  .authorName(gitConfig.getAuthorName())
@@ -149,7 +154,16 @@ public class ConnectorsController {
     return builder;
   }
 
-  public static void checkIfInputIsNotPresent(QLConnectorType type, Object input) {
+  private String generateWebhookUrl(String webHookToken, String accountId) {
+    if (null != webHookToken) {
+      StringBuilder webhookURL = new StringBuilder(subdomainUrlHelper.getApiBaseUrl(accountId));
+      webhookURL.append(WEBHOOK_URL_PATH).append(webHookToken).append("?accountId=").append(accountId);
+      return webhookURL.toString();
+    }
+    return null;
+  }
+
+  public void checkIfInputIsNotPresent(QLConnectorType type, Object input) {
     if (input == null) {
       throw new InvalidRequestException(
           String.format("No input provided with the request for %s connector", type.getStringValue()));

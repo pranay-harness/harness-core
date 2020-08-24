@@ -34,6 +34,7 @@ public class ConnectorConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLConnectorFilter, QLNoOpSortCriteria, QLConnectorsConnection> {
   @Inject private SettingsService settingsService;
   @Inject ConnectorQueryHelper connectorQueryHelper;
+  @Inject ConnectorsController connectorsController;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -71,8 +72,8 @@ public class ConnectorConnectionDataFetcher
 
     List<QLConnector> nodes = new ArrayList<>();
     for (SettingAttribute settingAttribute : resp) {
-      nodes.add(ConnectorsController
-                    .populateConnector(settingAttribute, ConnectorsController.getConnectorBuilder(settingAttribute))
+      nodes.add(connectorsController
+                    .populateConnector(settingAttribute, connectorsController.getConnectorBuilder(settingAttribute))
                     .build());
     }
 
