@@ -1,13 +1,13 @@
 package io.harness.app;
 
-import io.harness.tasks.Task;
+import io.harness.delegate.task.HDelegateTask;
 import io.harness.tasks.TaskExecutor;
 
 import java.util.Map;
 
-public class EmptyTaskExecutor implements TaskExecutor {
+public class EmptyTaskExecutor implements TaskExecutor<HDelegateTask> {
   @Override
-  public String queueTask(Map<String, String> setupAbstractions, Task task) {
+  public String queueTask(Map<String, String> setupAbstractions, HDelegateTask task) {
     return null;
   }
 
