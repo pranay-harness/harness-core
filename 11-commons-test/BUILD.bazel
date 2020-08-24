@@ -1,6 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("@rules_jvm_external//:defs.bzl", "java_export")
 load("//11-commons-test:GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl","sources")
+sources()
 
 java_library(
     name = "maven_deps",
@@ -52,5 +54,4 @@ run_tests(
     ]
 )
 
-
-
+checkstyle()

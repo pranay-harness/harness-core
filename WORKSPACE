@@ -938,8 +938,9 @@ go_repository(
     sum = "h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=",
     version = "v1.0.0-20141024135613-dd632973f1e7",
 )
+##############################################################################################################################################################################################
+# ######################################   Java code ######################################
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 RULES_JVM_EXTERNAL_TAG = "3.3"
@@ -956,22 +957,32 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 maven_install(
     name = "maven",
     artifacts= [
-              "junit:junit:4.12",
-              "org.slf4j:slf4j-api:1.7.29",
-              "org.powermock:powermock-module-junit4:1.7.4",
-              "ch.qos.logback:logback-classic:1.2.3",
-              "com.bettercloud:vault-java-driver:4.0.0",
-              "com.google.code.findbugs:annotations:3.0.0",
-              "com.google.guava:guava:21.0",
-              "com.google.inject:guice:4.2.3",
-              "commons-codec:commons-codec:1.10",
-              "net.rcarz:jira-client:0.8-SNAPSHOT",
-              "org.apache.commons:commons-lang3:3.7",
-              "org.assertj:assertj-core:3.16.1",
-              "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
-              "org.jacoco:org.jacoco.agent:0.8.5",
-              "org.mockito:mockito-core:1.10.19",
-              "org.projectlombok:lombok:1.18.6",
+            "junit:junit:4.12",
+            "org.slf4j:slf4j-api:1.7.29",
+            "org.powermock:powermock-module-junit4:1.7.4",
+            "ch.qos.logback:logback-classic:1.2.3",
+            "com.bettercloud:vault-java-driver:4.0.0",
+            "com.google.code.findbugs:annotations:3.0.0",
+            "com.google.guava:guava:21.0",
+            "com.google.inject:guice:4.2.3",
+            "commons-codec:commons-codec:1.10",
+            "net.rcarz:jira-client:0.8-SNAPSHOT",
+            "org.apache.commons:commons-lang3:3.7",
+            "org.assertj:assertj-core:3.16.1",
+            "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
+            "org.jacoco:org.jacoco.agent:0.8.5",
+            "org.mockito:mockito-core:1.10.19",
+            "org.projectlombok:lombok:1.18.6",
+            "antlr:antlr:2.7.7",
+            "org.antlr:antlr4-runtime:4.7",
+            "com.puppycrawl.tools:checkstyle:8.5",
+            "commons-beanutils:commons-beanutils:1.9.3",
+            "info.picocli:picocli:3.8.2",
+            "commons-collections:commons-collections:3.2.2",
+            "com.google.guava:guava:21.0",
+            "org.slf4j:slf4j-simple:1.7.29",
+            "org.slf4j:jcl-over-slf4j:1.7.29",
+            "com.github.sevntu-checkstyle:sevntu-checks:1.35.0"
     ],
     version_conflict_policy = "pinned",
     repositories=[
