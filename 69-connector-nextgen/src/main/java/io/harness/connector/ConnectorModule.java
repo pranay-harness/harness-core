@@ -11,6 +11,9 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsConnectorSummaryMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
+import io.harness.connector.mappers.docker.DockerConnectorSummaryMapper;
+import io.harness.connector.mappers.docker.DockerDTOToEntity;
+import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
@@ -57,6 +60,7 @@ public class ConnectorModule extends AbstractModule {
         .to(AppDynamicsDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.SPLUNK.getDisplayName()).to(SplunkDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.VAULT.getDisplayName()).to(VaultDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -66,6 +70,7 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName()).to(AppDynamicsEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.SPLUNK.getDisplayName()).to(SplunkEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.VAULT.getDisplayName()).to(VaultEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorConfigSummaryDTOMapper.class);
@@ -78,6 +83,8 @@ public class ConnectorModule extends AbstractModule {
         .to(AppDynamicsConnectorSummaryMapper.class);
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.SPLUNK.getDisplayName())
         .to(SplunkConnectorSummaryMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName())
+        .to(DockerConnectorSummaryMapper.class);
 
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))

@@ -10,6 +10,7 @@ public enum ConnectorType {
   SPLUNK("Splunk"),
   APP_DYNAMICS("AppDynamics"),
   VAULT("Vault"),
+  DOCKER("DockerRegistry"),
   LOCAL("Local"),
   KMS("AwsKms"),
   GCP_KMS("GcpKms"),
