@@ -15,6 +15,7 @@ import software.wings.security.annotations.AuthRule;
 
 public class ConnectorDataFetcher extends AbstractObjectDataFetcher<QLConnector, QLConnectorQueryParameters> {
   @Inject HPersistence persistence;
+  @Inject ConnectorsController connectorsController;
 
   @Override
   @AuthRule(permissionType = LOGGED_IN)
@@ -28,8 +29,8 @@ public class ConnectorDataFetcher extends AbstractObjectDataFetcher<QLConnector,
       throw new InvalidRequestException("Connector does not exist", WingsException.USER);
     }
 
-    return ConnectorsController
-        .populateConnector(settingAttribute, ConnectorsController.getConnectorBuilder(settingAttribute))
+    return connectorsController
+        .populateConnector(settingAttribute, connectorsController.getConnectorBuilder(settingAttribute))
         .build();
   }
 }

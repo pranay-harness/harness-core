@@ -1,6 +1,5 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static software.wings.graphql.datafetcher.connector.ConnectorsController.checkIfInputIsNotPresent;
 import static software.wings.graphql.schema.type.QLConnectorType.GIT;
 
 import com.google.inject.Inject;
@@ -27,6 +26,7 @@ public class CreateConnectorDataFetcher
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private GitDataFetcherHelper gitDataFetcherHelper;
+  @Inject private ConnectorsController connectorsController;
 
   public CreateConnectorDataFetcher() {
     super(QLCreateConnectorInput.class, QLCreateConnectorPayload.class);
@@ -44,7 +44,7 @@ public class CreateConnectorDataFetcher
 
     SettingAttribute settingAttribute;
     if (GIT == input.getConnectorType()) {
-      checkIfInputIsNotPresent(input.getConnectorType(), input.getGitConnector());
+      connectorsController.checkIfInputIsNotPresent(input.getConnectorType(), input.getGitConnector());
       checkSecrets(input.getGitConnector());
 
       settingAttribute =
@@ -57,8 +57,8 @@ public class CreateConnectorDataFetcher
         settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, mutationContext.getAccountId());
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
 
-    QLConnectorBuilder qlGitConnectorBuilder = ConnectorsController.getConnectorBuilder(settingAttribute);
-    return builder.connector(ConnectorsController.populateConnector(settingAttribute, qlGitConnectorBuilder).build())
+    QLConnectorBuilder qlGitConnectorBuilder = connectorsController.getConnectorBuilder(settingAttribute);
+    return builder.connector(connectorsController.populateConnector(settingAttribute, qlGitConnectorBuilder).build())
         .build();
   }
 

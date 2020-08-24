@@ -3,7 +3,6 @@ package software.wings.graphql.datafetcher.connector;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
-import static software.wings.graphql.datafetcher.connector.ConnectorsController.checkIfInputIsNotPresent;
 import static software.wings.graphql.schema.type.QLConnectorType.GIT;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 
@@ -31,6 +30,7 @@ public class UpdateConnectorDataFetcher
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private GitDataFetcherHelper gitDataFetcherHelper;
+  @Inject private ConnectorsController connectorsController;
 
   public UpdateConnectorDataFetcher() {
     super(QLUpdateConnectorInput.class, QLUpdateConnectorPayload.class);
@@ -60,7 +60,7 @@ public class UpdateConnectorDataFetcher
         QLUpdateConnectorPayload.builder().clientMutationId(input.getClientMutationId());
 
     if (GIT == input.getConnectorType()) {
-      checkIfInputIsNotPresent(input.getConnectorType(), input.getGitConnector());
+      connectorsController.checkIfInputIsNotPresent(input.getConnectorType(), input.getGitConnector());
       checkSecrets(input.getGitConnector(), settingAttribute);
       gitDataFetcherHelper.updateSettingAttribute(settingAttribute, input.getGitConnector());
     } else {
@@ -71,8 +71,8 @@ public class UpdateConnectorDataFetcher
         settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
 
-    QLConnectorBuilder qlGitConnectorBuilder = ConnectorsController.getConnectorBuilder(settingAttribute);
-    return builder.connector(ConnectorsController.populateConnector(settingAttribute, qlGitConnectorBuilder).build())
+    QLConnectorBuilder qlGitConnectorBuilder = connectorsController.getConnectorBuilder(settingAttribute);
+    return builder.connector(connectorsController.populateConnector(settingAttribute, qlGitConnectorBuilder).build())
         .build();
   }
 

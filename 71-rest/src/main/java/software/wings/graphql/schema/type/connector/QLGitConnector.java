@@ -23,7 +23,7 @@ public class QLGitConnector implements QLConnector {
   private String branch;
   private String passwordSecretId;
   private String sshSettingId;
-  private String webhookToken;
+  private String webhookUrl;
   private Boolean generateWebhookUrl;
   private QLCustomCommitDetails customCommitDetails;
 
