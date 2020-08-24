@@ -2480,7 +2480,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (taskQuery != null) {
-      wingsPersistence.delete(taskQuery);
+      wingsPersistence.deleteOnServer(taskQuery);
     }
   }
 
@@ -2799,7 +2799,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class).filter(DelegateTaskKeys.accountId, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId));
   }
 
   //------ Start: ECS Delegate Specific Methods

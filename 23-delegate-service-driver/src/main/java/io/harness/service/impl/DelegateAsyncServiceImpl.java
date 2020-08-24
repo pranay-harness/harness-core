@@ -74,9 +74,9 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
     }
 
     boolean deleteSuccessful =
-        persistence.delete(persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
-                               .field(DelegateAsyncTaskResponseKeys.uuid)
-                               .in(responsesToBeDeleted));
+        persistence.deleteOnServer(persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
+                                       .field(DelegateAsyncTaskResponseKeys.uuid)
+                                       .in(responsesToBeDeleted));
 
     if (deleteSuccessful) {
       responsesToBeDeleted.clear();

@@ -65,12 +65,12 @@ public class DelegateConnectionDao {
         persistence.upsert(query, updateOperations, HPersistence.upsertReturnOldOptions);
 
     if (previousDelegateConnection == null) {
-      if (persistence.delete(persistence.createQuery(DelegateConnection.class)
-                                 .filter(DelegateConnectionKeys.accountId, accountId)
-                                 .filter(DelegateConnectionKeys.delegateId, delegateId)
-                                 .filter(DelegateConnectionKeys.version, heartbeat.getVersion())
-                                 .field(DelegateConnectionKeys.uuid)
-                                 .notEqual(heartbeat.getDelegateConnectionId()))) {
+      if (persistence.deleteOnServer(persistence.createQuery(DelegateConnection.class)
+                                         .filter(DelegateConnectionKeys.accountId, accountId)
+                                         .filter(DelegateConnectionKeys.delegateId, delegateId)
+                                         .filter(DelegateConnectionKeys.version, heartbeat.getVersion())
+                                         .field(DelegateConnectionKeys.uuid)
+                                         .notEqual(heartbeat.getDelegateConnectionId()))) {
         logger.error("Delegate restarted");
       }
     }
