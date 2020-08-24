@@ -106,9 +106,9 @@ public class NotifyResponseCleaner implements Runnable {
   private void deleteObsoleteResponses(List<String> deleteResponses) {
     if (isNotEmpty(deleteResponses)) {
       logger.info("Deleting {} not needed responses", deleteResponses.size());
-      persistence.delete(persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                             .field(NotifyResponseKeys.uuid)
-                             .in(deleteResponses));
+      persistence.deleteOnServer(persistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                     .field(NotifyResponseKeys.uuid)
+                                     .in(deleteResponses));
     }
   }
 }
