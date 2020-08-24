@@ -39,6 +39,7 @@ import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.impl.RemotePerpetualTaskServiceClientManagerImpl;
+import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
 import io.harness.ng.orchestration.NgDelegateTaskExecutor;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
@@ -133,6 +134,7 @@ public class NextGenModule extends DependencyModule {
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V2.name()).to(NgDelegateTaskExecutor.class);
+    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(NgDelegate2TaskExecutor.class);
     install(new ValidationModule(getValidatorFactory()));
     install(new NextGenPersistenceModule());
     install(new CoreModule());

@@ -47,6 +47,16 @@ public class NgOrchestrationResource {
     return new RestResponse<>(execution);
   }
 
+  @GET
+  @Path("/http-v3")
+  @ApiOperation(value = "Triggers a task v3 Plan", nickname = "http-v3")
+  public RestResponse<PlanExecution> triggerHttpV3Plan(
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
+    PlanExecution execution = orchestrationService.startExecution(
+        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId), EMBEDDED_USER);
+    return new RestResponse<>(execution);
+  }
+
   @POST
   @Path("/test-execution-plan")
   @Consumes("text/plain")

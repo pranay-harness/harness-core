@@ -176,6 +176,26 @@ public class CustomExecutionProvider {
         .build();
   }
 
+  public Plan provideHttpSwitchPlanV3() {
+    String httpNodeId = generateUuid();
+
+    BasicHttpStepParameters basicHttpStateParameters =
+        BasicHttpStepParameters.builder().url("http://httpstat.us/" + BASIC_HTTP_STATE_URL_200).method("GET").build();
+    return Plan.builder()
+        .node(PlanNode.builder()
+                  .uuid(httpNodeId)
+                  .name("Basic Http 1")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .identifier("http")
+                  .stepParameters(basicHttpStateParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_V3).build())
+                                             .build())
+                  .build())
+        .startingNodeId(httpNodeId)
+        .build();
+  }
+
   public Plan provideHttpForkPlan() {
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();

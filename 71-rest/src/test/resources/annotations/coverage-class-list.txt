@@ -175,11 +175,13 @@
 31-orchestration/src/main/java/io/harness/facilitator/chain/ChildChainFacilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/chain/TaskChainFacilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/chain/TaskChainV2Facilitator.java
+31-orchestration/src/main/java/io/harness/facilitator/chain/TaskChainV3Facilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/child/ChildFacilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/children/ChildrenFacilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/sync/SyncFacilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/task/TaskFacilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/taskv2/TaskV2Facilitator.java
+31-orchestration/src/main/java/io/harness/facilitator/taskv3/TaskV3Facilitator.java
 31-orchestration/src/main/java/io/harness/presentation/Graph.java
 31-orchestration/src/main/java/io/harness/presentation/GraphVertex.java
 31-orchestration/src/main/java/io/harness/presentation/Subgraph.java

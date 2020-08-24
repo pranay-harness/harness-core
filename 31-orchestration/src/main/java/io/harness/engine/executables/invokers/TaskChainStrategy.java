@@ -27,6 +27,7 @@ import lombok.NonNull;
 
 import java.util.Map;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class TaskChainStrategy implements TaskInvokeStrategy {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;

@@ -13,9 +13,11 @@ public enum ExecutionMode {
   SKIP,
   TASK_CHAIN,
   TASK_CHAIN_V2,
+  TASK_CHAIN_V3,
   CHILDREN,
   CHILD,
   TASK,
   CHILD_CHAIN,
-  TASK_V2
+  TASK_V2,
+  TASK_V3
 }
