@@ -15,6 +15,11 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
+import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
+import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -240,5 +245,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SplunkConnectionTaskParams.class, 19109);
     kryo.register(SplunkConnectionTaskResponse.class, 19110);
     kryo.register(SplunkConnectorDTO.class, 19111);
+    kryo.register(DockerAuthCredentialsDTO.class, 19112);
+    kryo.register(DockerAuthenticationDTO.class, 19113);
+    kryo.register(DockerAuthType.class, 19114);
+    kryo.register(DockerConnectorDTO.class, 19115);
+    kryo.register(DockerUserNamePasswordDTO.class, 19116);
   }
 }

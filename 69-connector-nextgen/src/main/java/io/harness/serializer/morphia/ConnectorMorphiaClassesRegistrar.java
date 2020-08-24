@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
+import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
@@ -28,6 +29,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(VaultConnector.class);
     set.add(AppDynamicsConnector.class);
     set.add(SplunkConnector.class);
+    set.add(DockerConnector.class);
   }
 
   @Override
