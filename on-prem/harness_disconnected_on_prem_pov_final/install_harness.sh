@@ -334,7 +334,7 @@ function setupManager(){
   mkdir -p $runtime_dir/manager/logs
   chmod -R 777 $runtime_dir/manager
 
- docker run -d --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -e TIMESCALEDB_URI=$TIMESCALEDB_URI -e TIMESCALEDB_USERNAME=$timescaledb_username -e TIMESCALEDB_PASSWORD=$timescaledb_password -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager:$managerVersion
+ docker run -d -u 0:0 --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -e TIMESCALEDB_URI=$TIMESCALEDB_URI -e TIMESCALEDB_USERNAME=$timescaledb_username -e TIMESCALEDB_PASSWORD=$timescaledb_password -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager:$managerVersion
 
  sleep 10
 
@@ -348,7 +348,7 @@ function setUpVerificationService(){
    echo "################################ Setting up Verification Service ################################"
    verificationServiceVersion=$(getProperty "version.properties" "VERIFICATION_SERVICE_VERSION")
    env=$(getProperty "version.properties" "ENV")
-   docker run -d --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -p $verificationport:$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service:$verificationServiceVersion
+   docker run -d -u 0:0    --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -p $verificationport:$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service:$verificationServiceVersion
 
     if [[ $(checkDockerImageRunning "verificationService") -eq 1 ]]; then
         echo "Verification service is not running"
@@ -420,7 +420,7 @@ function setupUI(){
    echo "################################ Setting up UI ################################"
    ui_version=$(getProperty "version.properties" "UI_VERSION")
    UI_PORT=$(getProperty "config_template/ui/ui.properties" "ui_port")
-   docker run -d --name harness_ui -p $UI_PORT:80 --rm -e API_URL="$LOAD_BALANCER_URL" -e HARNESS_ENABLE_EXTERNAL_SCRIPTS_PLACEHOLDER=false harness/ui:$ui_version
+   docker run -d --name harness_ui -p $UI_PORT:8080 --rm -e API_URL="$LOAD_BALANCER_URL" -e HARNESS_ENABLE_EXTERNAL_SCRIPTS_PLACEHOLDER=false harness/ui:$ui_version
 
    if [[ $(checkDockerImageRunning "harness_ui") -eq 1 ]]; then
       echo "Harness UI is not running"
