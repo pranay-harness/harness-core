@@ -303,6 +303,11 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public <T extends PersistentEntity> boolean delete(Query<T> query) {
+    return deleteOnServer(query);
+  }
+
+  @Override
+  public final <T extends PersistentEntity> boolean deleteOnServer(Query<T> query) {
     AdvancedDatastore datastore = getDatastore(query.getEntityClass());
     return HPersistence.retry(() -> {
       WriteResult result = datastore.delete(query);
