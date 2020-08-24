@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
+
 import com.google.inject.Inject;
 
 import io.harness.rest.RestResponse;
@@ -11,7 +13,6 @@ import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.PasswordExpirationPolicy;
 import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.loginSettings.UserLockoutPolicy;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -32,7 +33,7 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.SETTING)
-@AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@AuthRule(permissionType = MANAGE_AUTHENTICATION_SETTINGS)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoginSettingsResource {
   FeatureFlagService featureFlagService;

@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.security.PermissionAttribute.ResourceType.APP_STACK;
 
 import com.google.inject.Inject;
@@ -19,7 +20,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppContainerService;
@@ -97,7 +97,7 @@ public class AppContainerResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_APPLICATION_STACKS)
   public RestResponse<AppContainer> uploadPlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
@@ -126,7 +126,7 @@ public class AppContainerResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_APPLICATION_STACKS)
   public RestResponse<AppContainer> updatePlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("appContainerId") String appContainerId, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
@@ -150,7 +150,7 @@ public class AppContainerResource {
   @Path("{appContainerId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_APPLICATION_STACKS)
   public RestResponse deletePlatform(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("appContainerId") String appContainerId) {
     appContainerService.delete(accountId, appContainerId);

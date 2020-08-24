@@ -8,8 +8,8 @@ import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
@@ -708,7 +708,7 @@ public class UserResource {
   @Path("override-two-factor-auth/{accountId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_AUTHENTICATION_SETTINGS)
   public RestResponse<TwoFactorAdminOverrideSettings> setTwoFactorAuthAtAccountLevel(
       @PathParam("accountId") @NotEmpty String accountId, @NotNull TwoFactorAdminOverrideSettings settings) {
     // Trying Override = true
@@ -734,7 +734,7 @@ public class UserResource {
   @Path("disable-two-factor-auth/{accountId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_AUTHENTICATION_SETTINGS)
   public RestResponse<Boolean> disableTwoFactorAuth(@PathParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(twoFactorAuthenticationManager.disableTwoFactorAuthentication(accountId));
   }

@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.ssoProvider;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
+
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
@@ -17,7 +19,6 @@ import software.wings.graphql.schema.type.QLSSOProviderConnection;
 import software.wings.graphql.schema.type.QLSSOProviderConnection.QLSSOProviderConnectionBuilder;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.ssoProvider.QLSSOProviderFilter;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SSOService;
 
@@ -27,9 +28,10 @@ import java.util.List;
 @Slf4j
 public class SsoProviderConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLSSOProviderFilter, QLNoOpSortCriteria, QLSSOProviderConnection> {
-  @Inject SSOService ssoService;
+  @Inject private SSOService ssoService;
+
   @Override
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_AUTHENTICATION_SETTINGS)
   public QLSSOProviderConnection fetchConnection(List<QLSSOProviderFilter> appFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     List<SSOSettings> ssoSettings = ssoService.getAccountAccessManagementSettings(getAccountId()).getSsoSettings();

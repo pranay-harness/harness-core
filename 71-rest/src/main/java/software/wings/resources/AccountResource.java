@@ -5,7 +5,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.utils.Utils.urlDecode;
 
 import com.google.inject.Inject;
@@ -257,10 +256,9 @@ public class AccountResource {
             ? Collections.emptyMap()
             : licenseUpdateInfo.getRequiredInfoToComply();
 
-        if (migration != null) {
-          if (!featureService.complyFeatureUsagesWithRestrictions(accountId, toAccountType, requiredInfoToComply)) {
-            throw new WingsException("Can not update account license. Account is using restricted features");
-          }
+        if (migration != null
+            && !featureService.complyFeatureUsagesWithRestrictions(accountId, toAccountType, requiredInfoToComply)) {
+          throw new WingsException("Can not update account license. Account is using restricted features");
         }
         boolean licenseUpdated =
             licenseServiceProvider.get().updateAccountLicense(accountId, licenseUpdateInfo.getLicenseInfo());
@@ -313,7 +311,6 @@ public class AccountResource {
   @Path("{accountId}/tech-stacks")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_APPLICATION_STACKS)
   public RestResponse<Boolean> updateTechStacks(
       @PathParam("accountId") @NotEmpty String accountId, Set<TechStack> techStacks) {
     return new RestResponse<>(accountService.updateTechStacks(accountId, techStacks));
