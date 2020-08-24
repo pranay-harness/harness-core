@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 @Value
 @Builder
@@ -108,8 +109,8 @@ public class EngineResumeExecutor implements Runnable {
           ChildChainResponse lastChildChainExecutableResponse =
               Preconditions.checkNotNull((ChildChainResponse) nodeExecution.obtainLatestExecutableResponse());
           StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) response.values().iterator().next();
-          if (lastChildChainExecutableResponse.isLastLink()
-              || brokeStatuses().contains(responseNotifyData.getStatus())) {
+          if (lastChildChainExecutableResponse.isLastLink() || brokeStatuses().contains(responseNotifyData.getStatus())
+              || lastChildChainExecutableResponse.isSuspend()) {
             stepResponse = childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
                 lastChildChainExecutableResponse.getPassThroughData(), response);
             break;

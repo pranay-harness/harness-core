@@ -3,6 +3,7 @@ package io.harness.engine.executables.invokers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.Status.QUEUED;
+import static io.harness.execution.status.Status.SUSPENDED;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -26,11 +27,13 @@ import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.state.io.StepResponseNotifyData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import java.util.concurrent.ExecutorService;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class ChildChainStrategy implements InvokeStrategy {
   @Inject private OrchestrationEngine engine;
@@ -57,9 +60,18 @@ public class ChildChainStrategy implements InvokeStrategy {
   }
 
   private void handleResponse(Ambiance ambiance, ChildChainResponse childChainResponse) {
-    String childInstanceId = generateUuid();
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
+    if (childChainResponse.isSuspend()) {
+      suspendChain(childChainResponse, nodeExecution);
+    } else {
+      executeChild(ambiance, childChainResponse, planExecution, nodeExecution);
+    }
+  }
+
+  private void executeChild(Ambiance ambiance, ChildChainResponse childChainResponse, PlanExecution planExecution,
+      NodeExecution nodeExecution) {
+    String childInstanceId = generateUuid();
     Plan plan = planExecution.getPlan();
     PlanNode node = plan.fetchNode(childChainResponse.getNextChildId());
     Ambiance clonedAmbiance = ambianceUtils.cloneForChild(ambiance);
@@ -80,5 +92,22 @@ public class ChildChainStrategy implements InvokeStrategy {
     waitNotifyEngine.waitForAllOn(publisherName, callback, childInstanceId);
     nodeExecutionService.update(
         nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, childChainResponse));
+  }
+
+  private void suspendChain(ChildChainResponse childChainResponse, NodeExecution nodeExecution) {
+    String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
+    nodeExecutionService.update(
+        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, childChainResponse));
+    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    waitNotifyEngine.waitForAllOn(publisherName, callback, ignoreNotifyId);
+    PlanNode planNode = nodeExecution.getNode();
+    waitNotifyEngine.doneWith(ignoreNotifyId,
+        StepResponseNotifyData.builder()
+            .nodeUuid(planNode.getUuid())
+            .identifier(planNode.getIdentifier())
+            .group(planNode.getGroup())
+            .status(SUSPENDED)
+            .description("Ignoring Execution as next child found to be null")
+            .build());
   }
 }

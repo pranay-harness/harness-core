@@ -28,13 +28,17 @@ public enum Status {
   ERRORED,
   FAILED,
   EXPIRED,
+
+  // This is when a step is closed prematurely not because of the actual flow
+  SUSPENDED,
+
   SUCCEEDED;
 
   // Status Groups
   private static final EnumSet<Status> FINALIZABLE_STATUSES =
       EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
-  private static final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED);
+  private static final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED);
 
   private static final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
 
@@ -45,7 +49,7 @@ public enum Status {
       EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
   private static final EnumSet<Status> FINAL_STATUSES =
-      EnumSet.of(QUEUED, SKIPPED, PAUSED, ABORTED, ERRORED, FAILED, EXPIRED, SUCCEEDED);
+      EnumSet.of(QUEUED, SKIPPED, PAUSED, ABORTED, ERRORED, FAILED, EXPIRED, SUSPENDED, SUCCEEDED);
 
   private static final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED);
 
@@ -97,6 +101,7 @@ public enum Status {
       case ABORTED:
       case SUCCEEDED:
       case ERRORED:
+      case SUSPENDED:
       case FAILED:
         return FINALIZABLE_STATUSES;
       default:

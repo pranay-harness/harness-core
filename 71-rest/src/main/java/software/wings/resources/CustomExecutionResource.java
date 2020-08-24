@@ -77,6 +77,12 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/section-chain-no-children")
+  public RestResponse<PlanExecution> executeSectionChainPlanWithNoChild() {
+    return new RestResponse<>(customExecutionService.executeSectionChainPlanWithNoChildren());
+  }
+
+  @GET
   @Path("/section-chain-rollback")
   public RestResponse<PlanExecution> executeSectionChainRollbackPlan() {
     return new RestResponse<>(customExecutionService.executeSectionChainRollbackPlan());
