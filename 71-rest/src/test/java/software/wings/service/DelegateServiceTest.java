@@ -88,6 +88,8 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.NoAvailableDelegatesException;
+import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -112,6 +114,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -153,7 +156,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -197,7 +199,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private AlertService alertService;
   @Mock private VersionInfoManager versionInfoManager;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private ConfigurationController configurationController;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private DelegateProcessingController delegateProcessingController;
@@ -210,6 +211,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private UsageLimitedFeature delegatesFeature;
 
   @Inject private WingsPersistence wingsPersistence;
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
@@ -2176,6 +2179,56 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(countOfDelegatesForAccounts.get(0)).isEqualTo(1);
     assertThat(countOfDelegatesForAccounts.get(1)).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldUpdateHeartbeatForDelegateWithPollingEnabled() {
+    Delegate delegate = Delegate.builder()
+                            .uuid(generateUuid())
+                            .hostName(HOST_NAME)
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .tags(ImmutableList.of("abc", "qwe"))
+                            .build();
+
+    wingsPersistence.save(delegate);
+    when(licenseService.isAccountDeleted(anyString())).thenReturn(true);
+
+    Delegate result = delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate);
+
+    assertThat(result).extracting(Delegate::getStatus).isEqualTo(Status.DELETED);
+    assertThat(result).extracting(Delegate::getUuid).isEqualTo(delegate.getUuid());
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldScheduleSyncTaskThrowNoInstalledDelegatesException() {
+    thrown.expect(NoInstalledDelegatesException.class);
+    when(assignDelegateService.retrieveActiveDelegates(anyString(), any())).thenReturn(emptyList());
+    TaskData taskData = TaskData.builder().taskType(TaskType.HELM_COMMAND_TASK.name()).build();
+    DelegateTask task = DelegateTask.builder().accountId(ACCOUNT_ID).delegateId(DELEGATE_ID).data(taskData).build();
+    when(assignDelegateService.noInstalledDelegates(ACCOUNT_ID)).thenReturn(true);
+
+    delegateService.scheduleSyncTask(task);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldScheduleSyncTaskThrowNoAvailableDelegatesException() {
+    thrown.expect(NoAvailableDelegatesException.class);
+    when(assignDelegateService.retrieveActiveDelegates(anyString(), any())).thenReturn(emptyList());
+    TaskData taskData = TaskData.builder().taskType(TaskType.HELM_COMMAND_TASK.name()).build();
+    DelegateTask task = DelegateTask.builder().accountId(ACCOUNT_ID).delegateId(DELEGATE_ID).data(taskData).build();
+    when(assignDelegateService.noInstalledDelegates(ACCOUNT_ID)).thenReturn(false);
+
+    delegateService.scheduleSyncTask(task);
   }
 
   private DelegateTask saveDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {

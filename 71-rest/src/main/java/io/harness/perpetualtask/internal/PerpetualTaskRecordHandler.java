@@ -17,7 +17,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.Capability;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import io.harness.delegate.beans.NoAvaliableDelegatesException;
+import io.harness.delegate.beans.NoAvailableDelegatesException;
+import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -59,6 +60,9 @@ import java.util.concurrent.TimeUnit;
 public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>, PerpetualTaskCrudObserver {
   public static final String NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK =
       "No delegate available to handle perpetual task of %s task type";
+
+  public static final String NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK =
+      "No delegates found. Tasks require a delegate to be installed";
 
   public static final String NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK =
       "No eligible delegate to handle perpetual task of %s task type";
@@ -157,7 +161,11 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
           logger.error(format(
               "Assignment for perpetual task id=%s got unexpected delegate response %s", taskId, response.toString()));
         }
-      } catch (NoAvaliableDelegatesException exception) {
+      } catch (NoInstalledDelegatesException exception) {
+        ignoredOnPurpose(exception);
+        perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_INSTALLED);
+        raiseAlert(taskRecord, NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK);
+      } catch (NoAvailableDelegatesException exception) {
         ignoredOnPurpose(exception);
         perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE);
         raiseAlert(

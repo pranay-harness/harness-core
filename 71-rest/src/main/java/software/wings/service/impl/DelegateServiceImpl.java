@@ -100,7 +100,8 @@ import io.harness.delegate.beans.DelegateTaskPackage.DelegateTaskPackageBuilder;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.NoAvaliableDelegatesException;
+import io.harness.delegate.beans.NoAvailableDelegatesException;
+import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -181,6 +182,7 @@ import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
+import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -1919,7 +1921,11 @@ public class DelegateServiceImpl implements DelegateService {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         logger.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
-        throw new NoAvaliableDelegatesException();
+        if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
+          throw new NoInstalledDelegatesException();
+        } else {
+          throw new NoAvailableDelegatesException();
+        }
       }
 
       broadcastHelper.rebroadcastDelegateTask(task);
@@ -2088,9 +2094,15 @@ public class DelegateServiceImpl implements DelegateService {
     delegateSelectionLogsService.save(batch);
 
     if (activeDelegates.isEmpty()) {
-      logger.info("No delegates are active for the account");
-      alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
-          NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
+      if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
+        logger.info("No installed delegates found for the account");
+        alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoInstalledDelegates,
+            NoInstalledDelegatesAlert.builder().accountId(task.getAccountId()).build());
+      } else {
+        logger.info("No delegates are active for the account");
+        alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
+            NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
+      }
     } else if (eligibleDelegates.isEmpty()) {
       logger.warn("{} delegates active but no delegates are eligible to execute task", activeDelegates.size());
       alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,

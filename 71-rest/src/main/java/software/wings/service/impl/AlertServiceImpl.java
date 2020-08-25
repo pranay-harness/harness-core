@@ -22,6 +22,7 @@ import static software.wings.beans.alert.AlertType.InvalidKMS;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
+import static software.wings.beans.alert.AlertType.NoInstalledDelegates;
 import static software.wings.beans.alert.AlertType.RESOURCE_USAGE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
@@ -58,6 +59,7 @@ import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
+import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.logcontext.AlertLogContext;
@@ -147,6 +149,9 @@ public class AlertServiceImpl implements AlertService {
   public void delegateAvailabilityUpdated(String accountId) {
     findExistingAlert(
         accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
+        .ifPresent(this ::close);
+    findExistingAlert(accountId, GLOBAL_APP_ID, NoInstalledDelegates,
+        NoInstalledDelegatesAlert.builder().accountId(accountId).build())
         .ifPresent(this ::close);
   }
 

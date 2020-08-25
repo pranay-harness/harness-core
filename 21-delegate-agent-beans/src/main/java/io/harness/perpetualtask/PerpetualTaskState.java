@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 public enum PerpetualTaskState {
   TASK_UNASSIGNED,
   TASK_PAUSED,
+  NO_DELEGATE_INSTALLED,
   NO_DELEGATE_AVAILABLE,
   NO_ELIGIBLE_DELEGATES,
   TASK_ASSIGNED,
