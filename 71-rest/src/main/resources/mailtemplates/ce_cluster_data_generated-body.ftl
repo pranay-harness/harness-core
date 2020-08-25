@@ -46,7 +46,7 @@
                             <h1 style="font-size: 18px; color: #77787b; line-height: 30px; font-weight: normal;">
                                 Hi ${USER},<br></h1>
                             <h1 style="font-size: 18px; color: #77787b; line-height: 30px; font-weight: normal;">
-                                Your cloud spend data of ${CLUSTERS} is ready for you to explore.
+                                Your cloud spend data for ${CLUSTERS} is ready for you to explore.
                             </h1>
                         </td>
                     </tr>

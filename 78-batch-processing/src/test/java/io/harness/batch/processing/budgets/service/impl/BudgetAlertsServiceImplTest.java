@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.mail.CEMailNotificationService;
+import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.slackNotification.CESlackNotificationService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.BudgetUtils;
@@ -53,6 +54,7 @@ public class BudgetAlertsServiceImplTest extends CategoryTest {
   @Mock private CESlackWebhookService ceSlackWebhookService;
   @Mock private BatchMainConfig mainConfiguration;
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Mock private AccountShardService accountShardService;
   @InjectMocks private BudgetAlertsServiceImpl budgetAlertsService;
 
   @Mock Statement statement;
@@ -81,7 +83,7 @@ public class BudgetAlertsServiceImplTest extends CategoryTest {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(emailNotificationService.send(any())).thenReturn(true);
-    when(cloudToHarnessMappingService.getCeEnabledAccounts())
+    when(accountShardService.getCeEnabledAccounts())
         .thenReturn(Arrays.asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build()));
     alertThreshold = AlertThreshold.builder().percentage(0.5).basedOn(AlertThresholdBase.ACTUAL_COST).build();
 

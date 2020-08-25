@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.mail.CEMailNotificationService;
+import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.slackNotification.CESlackNotificationService;
 import io.harness.ccm.budget.BudgetUtils;
 import io.harness.ccm.budget.entities.AlertThreshold;
@@ -59,6 +60,7 @@ public class BudgetAlertsServiceImpl {
   @Autowired private CESlackWebhookService ceSlackWebhookService;
   @Autowired private BatchMainConfig mainConfiguration;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired private AccountShardService accountShardService;
 
   private static final String BUDGET_MAIL_ERROR = "Budget alert email couldn't be sent";
   private static final String BUDGET_DETAILS_URL_FORMAT = "/account/%s/continuous-efficiency/budget/%s";
@@ -66,7 +68,7 @@ public class BudgetAlertsServiceImpl {
   private static final String FORECASTED_COST_BUDGET = "forecasted cost";
 
   public void sendBudgetAlerts() {
-    List<Account> ceEnabledAccounts = cloudToHarnessMappingService.getCeEnabledAccounts();
+    List<Account> ceEnabledAccounts = accountShardService.getCeEnabledAccounts();
     List<String> accountIds = ceEnabledAccounts.stream().map(Account::getUuid).collect(Collectors.toList());
     accountIds.forEach(accountId -> {
       List<Budget> budgets = budgetUtils.listBudgetsForAccount(accountId);

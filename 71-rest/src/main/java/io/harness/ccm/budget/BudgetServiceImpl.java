@@ -66,6 +66,8 @@ public class BudgetServiceImpl implements BudgetService {
   private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
       "Error in creating budget. The budget amount should be positive and less than 100 million dollars.";
   private String BUDGET_NAME_EXISTS_EXCEPTION = "Error in creating budget. Budget with given name already exists";
+  private String BUDGET_NAME_NOT_PROVIDED_EXCEPTION = "Please provide a name for clone budget.";
+  private String UNDEFINED_BUDGET = "undefined";
 
   private static final long CACHE_SIZE = 10000;
   private static final int MAX_RETRY = 3;
@@ -94,6 +96,9 @@ public class BudgetServiceImpl implements BudgetService {
   public String clone(String budgetId, String cloneBudgetName) {
     Budget budget = budgetDao.get(budgetId);
     validateBudget(budget);
+    if (cloneBudgetName.equals(UNDEFINED_BUDGET)) {
+      throw new InvalidRequestException(BUDGET_NAME_NOT_PROVIDED_EXCEPTION);
+    }
     Budget cloneBudget = Budget.builder()
                              .accountId(budget.getAccountId())
                              .name(cloneBudgetName)
