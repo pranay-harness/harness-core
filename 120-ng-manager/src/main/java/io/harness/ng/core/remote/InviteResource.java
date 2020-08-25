@@ -33,12 +33,10 @@ import software.wings.service.impl.InviteOperationResponse;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -113,13 +111,5 @@ public class InviteResource {
       }
     }
     return ResponseDTO.newResponse(inviteOperationResponses);
-  }
-
-  @DELETE
-  @Path("/{inviteId}/cancel")
-  @ApiOperation(value = "Delete a invite for the specified project", nickname = "deleteInvite")
-  public ResponseDTO<Optional<InviteDTO>> delete(@PathParam("inviteId") @NotNull String inviteId) {
-    Optional<Invite> invite = invitesService.delete(inviteId);
-    return ResponseDTO.newResponse(invite.map(InviteMapper::writeDTO));
   }
 }
