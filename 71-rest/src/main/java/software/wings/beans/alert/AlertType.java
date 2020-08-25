@@ -17,6 +17,7 @@ public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
   ManualInterventionNeeded(ManualIntervention, Warning, ManualInterventionNeededAlert.class),
   NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class, 2),
+  NoInstalledDelegates(Setup, Error, NoInstalledDelegatesAlert.class, 2),
   DelegatesDown(Setup, Error, DelegatesDownAlert.class, 2),
   DelegateProfileError(Setup, Error, DelegateProfileErrorAlert.class),
   NoEligibleDelegates(

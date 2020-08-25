@@ -9,6 +9,8 @@ public enum CEError {
 
   DELEGATE_NOT_AVAILABLE("Unable to collect events. The Delegate %s may be disconnected or deleted."),
 
+  DELEGATE_NOT_INSTALLED("Unable to collect events. No installed delegates found."),
+
   NO_ELIGIBLE_DELEGATE("No Delegate has all the requisites to access the cluster %s."),
 
   PERPETUAL_TASK_NOT_ASSIGNED("Initializing the Delegate to collect events. Events will arrive in a few minutes."),

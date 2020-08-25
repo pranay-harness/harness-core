@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -1066,6 +1067,27 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, null);
     assertThat(activeDelegates).isNotNull();
     assertThat(activeDelegates).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldReturnNoInstalledDelegates() {
+    String accountId = generateUuid();
+    boolean noInstalledDelegates = assignDelegateService.noInstalledDelegates(accountId);
+    assertThat(noInstalledDelegates).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldReturnInstalledDelegates() {
+    String accountId = generateUuid();
+    String activeDelegateId = generateUuid();
+    Delegate activeDelegate = createDelegateBuilder().accountId(accountId).uuid(activeDelegateId).build();
+    wingsPersistence.save(activeDelegate);
+    boolean noInstalledDelegates = assignDelegateService.noInstalledDelegates(accountId);
+    assertThat(noInstalledDelegates).isFalse();
   }
 
   @Test

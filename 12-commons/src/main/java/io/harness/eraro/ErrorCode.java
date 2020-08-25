@@ -452,7 +452,9 @@ public enum ErrorCode {
 
   TIMEOUT_ENGINE_EXCEPTION,
 
-  NO_AVAILABLE_DELEGATES(NOT_FOUND);
+  NO_AVAILABLE_DELEGATES(NOT_FOUND),
+
+  NO_INSTALLED_DELEGATES(NOT_FOUND);
 
   private Status status = BAD_REQUEST;
   private String description;

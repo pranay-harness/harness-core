@@ -14,6 +14,7 @@ import static io.harness.ccm.health.CEConnectorHealthMessages.SETTING_ATTRIBUTE_
 import static io.harness.ccm.health.CEConnectorHealthMessages.WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE;
 import static io.harness.ccm.health.CEError.AWS_ECS_CLUSTER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
+import static io.harness.ccm.health.CEError.DELEGATE_NOT_INSTALLED;
 import static io.harness.ccm.health.CEError.K8S_PERMISSIONS_MISSING;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.NO_CLUSTERS_TRACKED_BY_HARNESS_CE;
@@ -34,7 +35,6 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -230,12 +230,21 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
       String delegateId = perpetualTaskRecord.getDelegateId();
       if (isNullOrEmpty(delegateId)) {
-        if (perpetualTaskRecord.getState().equals(PerpetualTaskState.TASK_UNASSIGNED)) {
-          errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
-        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_DELEGATE_AVAILABLE)) {
-          errors.add(DELEGATE_NOT_AVAILABLE);
-        } else if (perpetualTaskRecord.getState().equals(PerpetualTaskState.NO_ELIGIBLE_DELEGATES)) {
-          errors.add(NO_ELIGIBLE_DELEGATE);
+        switch (perpetualTaskRecord.getState()) {
+          case TASK_UNASSIGNED:
+            errors.add(PERPETUAL_TASK_NOT_ASSIGNED);
+            break;
+          case NO_DELEGATE_AVAILABLE:
+            errors.add(DELEGATE_NOT_AVAILABLE);
+            break;
+          case NO_ELIGIBLE_DELEGATES:
+            errors.add(NO_ELIGIBLE_DELEGATE);
+            break;
+          case NO_DELEGATE_INSTALLED:
+            errors.add(DELEGATE_NOT_INSTALLED);
+            break;
+          default:
+            logger.warn("Unexpected perpetual task state:{} for empty delegate id", perpetualTaskRecord.getState());
         }
         continue;
       }

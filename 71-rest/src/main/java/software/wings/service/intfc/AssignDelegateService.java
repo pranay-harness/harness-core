@@ -37,4 +37,6 @@ public interface AssignDelegateService {
   String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask);
 
   List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch);
+
+  boolean noInstalledDelegates(String accountId);
 }

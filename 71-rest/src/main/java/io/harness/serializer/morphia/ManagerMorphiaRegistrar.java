@@ -311,6 +311,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation;
+import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.beans.alert.NotificationRulesStatus;
 import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
@@ -1237,6 +1238,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.KmsSetupAlert", KmsSetupAlert.class);
     w.put("beans.alert.ManualInterventionNeededAlert", ManualInterventionNeededAlert.class);
     w.put("beans.alert.NoActiveDelegatesAlert", NoActiveDelegatesAlert.class);
+    w.put("beans.alert.NoInstalledDelegatesAlert", NoInstalledDelegatesAlert.class);
     w.put("beans.alert.NoEligibleDelegatesAlert", NoEligibleDelegatesAlert.class);
     w.put("beans.alert.NoEligibleDelegatesAlertReconciliation", NoEligibleDelegatesAlertReconciliation.class);
     w.put("beans.alert.PerpetualTaskAlert", PerpetualTaskAlert.class);

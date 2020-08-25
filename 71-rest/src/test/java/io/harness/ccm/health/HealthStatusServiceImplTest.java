@@ -5,6 +5,7 @@ import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_PIPELINE_C
 import static io.harness.ccm.health.CEConnectorHealthMessages.SETTING_ATTRIBUTE_CREATED;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
+import static io.harness.rule.OwnerRule.SANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -156,6 +157,16 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldReturnUnhealthyWhenDelegateDisconnected() {
     PerpetualTaskRecord taskRecord = getPerpetualTaskRecord(null, PerpetualTaskState.NO_DELEGATE_AVAILABLE);
+    when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
+    CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
+    assertThat(status.isHealthy()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldReturnUnhealthyWhenNoInstalledDelegate() {
+    PerpetualTaskRecord taskRecord = getPerpetualTaskRecord(null, PerpetualTaskState.NO_DELEGATE_INSTALLED);
     when(perpetualTaskService.getTaskRecord(anyString())).thenReturn(taskRecord);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isFalse();

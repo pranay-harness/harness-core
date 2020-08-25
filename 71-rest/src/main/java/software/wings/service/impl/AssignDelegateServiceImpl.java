@@ -561,6 +561,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   @Override
+  public boolean noInstalledDelegates(String accountId) {
+    try {
+      return accountDelegatesCache.get(accountId).isEmpty();
+    } catch (ExecutionException ex) {
+      logger.error("Unexpected error occurred while fetching delegates from cache.", ex);
+      return true;
+    }
+  }
+
+  @Override
   public List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch) {
     try {
       List<Delegate> accountDelegates = accountDelegatesCache.get(accountId);
