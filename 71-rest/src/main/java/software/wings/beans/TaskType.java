@@ -140,6 +140,7 @@ import software.wings.delegatetasks.validation.SftpValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SlackValidation;
 import software.wings.delegatetasks.validation.SmbValidation;
+import software.wings.delegatetasks.validation.SplunkNGValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.StackDriverValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
@@ -290,10 +291,10 @@ public enum TaskType {
   SPLUNK(TaskGroup.SPLUNK, HttpTask.class, SplunkValidation.class),
   SPLUNK_CONFIGURATION_VALIDATE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
   SPLUNK_NG_CONFIGURATION_VALIDATE_TASK(
-      TaskGroup.SPLUNK, SplunkTestConnectionDelegateTask.class, SplunkValidation.class),
+      TaskGroup.SPLUNK, SplunkTestConnectionDelegateTask.class, SplunkNGValidation.class),
   SPLUNK_GET_HOST_RECORDS(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
-  SPLUNK_GET_SAVED_SEARCHES(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
-  SPLUNK_NEXT_GEN_VALIDATION_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkValidation.class),
+  SPLUNK_NG_GET_SAVED_SEARCHES(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkNGValidation.class),
+  SPLUNK_NG_VALIDATION_RESPONSE_TASK(TaskGroup.SPLUNK, ServiceImplDelegateTask.class, SplunkNGValidation.class),
   SPLUNK_COLLECT_LOG_DATAV2(
       TaskGroup.SPLUNK, software.wings.delegatetasks.cv.LogDataCollectionTask.class, DataCollectionValidator.class),
   ELK_COLLECT_LOG_DATAV2(
