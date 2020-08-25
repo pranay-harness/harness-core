@@ -420,7 +420,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     Set<String> newMemberIds = isEmpty(userGroupToUpdate.getMemberIds())
         ? Sets.newHashSet()
         : Sets.newHashSet(userGroupToUpdate.getMemberIds());
-    newMemberIds.remove(null);
+    newMemberIds.removeIf(EmptyPredicate::isEmpty);
 
     UserGroup existingUserGroup = get(userGroupToUpdate.getAccountId(), userGroupToUpdate.getUuid());
     if (UserGroupUtils.isAdminUserGroup(existingUserGroup) && newMemberIds.isEmpty()) {
