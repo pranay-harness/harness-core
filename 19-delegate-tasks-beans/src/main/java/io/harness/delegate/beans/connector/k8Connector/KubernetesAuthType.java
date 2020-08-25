@@ -1,12 +1,13 @@
 package io.harness.delegate.beans.connector.k8Connector;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum KubernetesAuthType {
-  USER_PASSWORD("UsernamePassword"),
-  CLIENT_KEY_CERT("ClientKeyCert"),
-  SERVICE_ACCOUNT("ServiceAccount"),
-  OPEN_ID_CONNECT("OpenIdConnect");
+  @JsonProperty("UsernamePassword") USER_PASSWORD("UsernamePassword"),
+  @JsonProperty("ClientKeyCert") CLIENT_KEY_CERT("ClientKeyCert"),
+  @JsonProperty("ServiceAccount") SERVICE_ACCOUNT("ServiceAccount"),
+  @JsonProperty("OpenIdConnect") OPEN_ID_CONNECT("OpenIdConnect");
 
   private final String displayName;
 

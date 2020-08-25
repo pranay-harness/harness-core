@@ -1,10 +1,11 @@
 package io.harness.delegate.beans.connector.gitconnector;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum GitAuthType {
-  HTTP("Http"),
-  SSH("Ssh");
+  @JsonProperty("Http") HTTP("Http"),
+  @JsonProperty("Ssh") SSH("Ssh");
 
   private final String displayName;
 

@@ -1,10 +1,11 @@
 package io.harness.delegate.beans.connector.k8Connector;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum KubernetesCredentialType {
-  INHERIT_FROM_DELEGATE("InheritFromDelegate"),
-  MANUAL_CREDENTIALS("ManualConfig");
+  @JsonProperty("InheritFromDelegate") INHERIT_FROM_DELEGATE("InheritFromDelegate"),
+  @JsonProperty("ManualConfig") MANUAL_CREDENTIALS("ManualConfig");
 
   private final String displayName;
 
