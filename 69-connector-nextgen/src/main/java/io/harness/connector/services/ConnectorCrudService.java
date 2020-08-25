@@ -10,7 +10,7 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.Optional;
 
-interface ConnectorCrudService {
+public interface ConnectorCrudService {
   Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, ConnectorType type, List<ConnectorCategory> categories);
 

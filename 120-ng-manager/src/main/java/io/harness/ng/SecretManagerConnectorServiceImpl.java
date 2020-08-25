@@ -62,11 +62,14 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         logger.info("Account level Harness Secret Manager not found");
         String orgIdentifier = connector.getOrgIdentifier();
         String projectIdentifier = connector.getProjectIdentifier();
+        String description = connector.getDescription();
         connector.setOrgIdentifier(null);
         connector.setProjectIdentifier(null);
+        connector.setDescription("Account Level Secret Manager");
         createSecretManagerConnector(connector, accountIdentifier);
         connector.setProjectIdentifier(projectIdentifier);
         connector.setOrgIdentifier(orgIdentifier);
+        connector.setDescription(description);
       }
     }
     return createSecretManagerConnector(connector, accountIdentifier);
