@@ -19,6 +19,7 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
+import io.harness.cvng.core.services.api.ActivityService;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
@@ -32,6 +33,8 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.core.services.impl.ActivityServiceImpl;
 import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
@@ -47,6 +50,7 @@ import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
+import io.harness.cvng.core.services.impl.WebhookServiceImpl;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.impl.AnomalyServiceImpl;
@@ -143,9 +147,13 @@ public class CVServiceModule extends AbstractModule {
       bind(LogRecordService.class).to(LogRecordServiceImpl.class);
       bind(DeploymentVerificationTaskService.class).to(DeploymentVerificationTaskServiceImpl.class);
       bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
+
+      bind(ActivityService.class).to(ActivityServiceImpl.class);
+      bind(WebhookService.class).to(WebhookServiceImpl.class);
       bind(DeploymentVerificationTaskTimeSeriesAnalysisService.class)
           .to(DeploymentVerificationTaskTimeSeriesAnalysisServiceImpl.class);
       bind(NextGenService.class).to(NextGenServiceImpl.class);
+
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
