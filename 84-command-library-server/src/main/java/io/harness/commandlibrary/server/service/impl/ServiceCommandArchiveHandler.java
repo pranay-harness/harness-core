@@ -1,8 +1,8 @@
 package io.harness.commandlibrary.server.service.impl;
 
 import static io.harness.commandlibrary.server.beans.CommandType.SSH;
+import static io.harness.git.model.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
-import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.ChangeContext.Builder.aChangeContext;
 
 import com.google.inject.Inject;

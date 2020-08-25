@@ -52,6 +52,7 @@ import io.harness.ecs.EcsContainerDetails;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitFileChange;
+import io.harness.git.model.GitRepositoryType;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.k8s.model.HelmVersion;
@@ -160,7 +161,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesClusterAuthType.class, 7317);
     kryo.register(IstioDestinationWeight.class, 7183);
 
-    kryo.register(ChangeType.class, 1417);
+    kryo.register(ChangeType.class, 5212);
     kryo.register(GitFileChange.class, 1418);
+    kryo.register(GitRepositoryType.class, 5270);
   }
 }

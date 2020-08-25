@@ -9,12 +9,12 @@ import com.google.inject.Inject;
 
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.ExceptionUtils;
+import io.harness.git.model.ChangeType;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.service.intfc.AppService;

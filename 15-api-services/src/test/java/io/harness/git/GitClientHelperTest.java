@@ -5,6 +5,10 @@ import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_TERRAFORM_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_TRIGGER_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
+import static io.harness.git.model.GitRepositoryType.HELM;
+import static io.harness.git.model.GitRepositoryType.TERRAFORM;
+import static io.harness.git.model.GitRepositoryType.TRIGGER;
+import static io.harness.git.model.GitRepositoryType.YAML;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -75,7 +79,7 @@ public class GitClientHelperTest extends CategoryTest {
     final String repoDirectory = gitClientHelper.getRepoDirectory(GitBaseRequest.builder()
                                                                       .connectorId("id")
                                                                       .accountId("accountId")
-                                                                      .repoType("HELM")
+                                                                      .repoType(HELM)
                                                                       .repoUrl("http://github.com/my-repo")
                                                                       .build());
     assertThat(repoDirectory)
@@ -87,11 +91,10 @@ public class GitClientHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetGitLogMessagePrefix() {
     assertThat(gitClientHelper.getGitLogMessagePrefix(null)).isEqualTo(GIT_DEFAULT_LOG_PREFIX);
-    assertThat(gitClientHelper.getGitLogMessagePrefix("TERRAFORM")).isEqualTo(GIT_TERRAFORM_LOG_PREFIX);
-    assertThat(gitClientHelper.getGitLogMessagePrefix("YAML")).isEqualTo(GIT_YAML_LOG_PREFIX);
-    assertThat(gitClientHelper.getGitLogMessagePrefix("TRIGGER")).isEqualTo(GIT_TRIGGER_LOG_PREFIX);
-    assertThat(gitClientHelper.getGitLogMessagePrefix("HELM")).isEqualTo(GIT_HELM_LOG_PREFIX);
-    assertThat(gitClientHelper.getGitLogMessagePrefix("----")).isEqualTo(GIT_DEFAULT_LOG_PREFIX);
+    assertThat(gitClientHelper.getGitLogMessagePrefix(TERRAFORM)).isEqualTo(GIT_TERRAFORM_LOG_PREFIX);
+    assertThat(gitClientHelper.getGitLogMessagePrefix(YAML)).isEqualTo(GIT_YAML_LOG_PREFIX);
+    assertThat(gitClientHelper.getGitLogMessagePrefix(TRIGGER)).isEqualTo(GIT_TRIGGER_LOG_PREFIX);
+    assertThat(gitClientHelper.getGitLogMessagePrefix(HELM)).isEqualTo(GIT_HELM_LOG_PREFIX);
   }
 
   @Test
@@ -114,7 +117,7 @@ public class GitClientHelperTest extends CategoryTest {
     final String repoDirectory = gitClientHelper.getFileDownloadRepoDirectory(GitBaseRequest.builder()
                                                                                   .connectorId("id")
                                                                                   .accountId("accountId")
-                                                                                  .repoType("HELM")
+                                                                                  .repoType(HELM)
                                                                                   .repoUrl("http://github.com/my-repo")
                                                                                   .build());
     assertThat(repoDirectory)
@@ -128,7 +131,7 @@ public class GitClientHelperTest extends CategoryTest {
     gitClientHelper.createDirStructureForFileDownload(GitBaseRequest.builder()
                                                           .connectorId("id")
                                                           .accountId("accountId")
-                                                          .repoType("HELM")
+                                                          .repoType(HELM)
                                                           .repoUrl("http://github.com/my-repo")
                                                           .build());
 

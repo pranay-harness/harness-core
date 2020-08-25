@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GitConnectionDelegateException;
+import io.harness.git.model.GitRepositoryType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -45,7 +46,7 @@ public class GitClientHelperTest extends WingsBaseTest {
                                              .gitConnectorId("id")
                                              .gitConfig(GitConfig.builder()
                                                             .accountId("accountId")
-                                                            .gitRepoType(GitConfig.GitRepositoryType.HELM)
+                                                            .gitRepoType(GitRepositoryType.HELM)
                                                             .repoUrl("http://github.com/my-repo")
                                                             .build())
                                              .build());

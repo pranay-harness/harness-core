@@ -50,6 +50,7 @@ import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitFileChange;
+import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.JgitSshAuthRequest;
 import io.harness.git.model.PushResultGit;
 import lombok.extern.slf4j.Slf4j;
@@ -108,9 +109,9 @@ public class GitClientV2Impl implements GitClientV2 {
   @Inject private GitClientHelper gitClientHelper;
 
   private void cleanup(GitBaseRequest request) {
-    if (isEmpty(request.getRepoType())) {
+    if (request.getRepoType() == null) {
       logger.error("gitRepoType can not be null. defaulting it to YAML");
-      request.setRepoType("YAML");
+      request.setRepoType(GitRepositoryType.YAML);
     }
   }
 
@@ -180,7 +181,6 @@ public class GitClientV2Impl implements GitClientV2 {
     } catch (IOException ioex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", getMessage(ioex));
     }
-
     logger.info(GIT_YAML_LOG_PREFIX + "cloning repo, Git repo directory :{}", gitRepoDirectory);
 
     CloneCommand cloneCommand = (CloneCommand) getAuthConfiguredCommand(Git.cloneRepository(), request);
@@ -778,8 +778,8 @@ public class GitClientV2Impl implements GitClientV2 {
     }
   }
 
-  private List<GitFile> getGitFilesFromDiff(List<DiffEntry> diffs, Repository repository, String gitRepositoryType)
-      throws IOException {
+  private List<GitFile> getGitFilesFromDiff(
+      List<DiffEntry> diffs, Repository repository, GitRepositoryType gitRepositoryType) throws IOException {
     logger.info(gitClientHelper.getGitLogMessagePrefix(gitRepositoryType)
         + "Get git files from diff. Total diff entries found : " + diffs.size());
 

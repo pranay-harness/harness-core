@@ -17,11 +17,11 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
+import io.harness.git.model.GitRepositoryType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.GitConfig;
-import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -33,6 +33,7 @@ import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -47,6 +48,7 @@ import java.util.function.Consumer;
 public class GitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
+  @Inject private GitService gitService;
 
   public GitCommandTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -89,7 +91,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
                                     .gitCommitRequest(gitCommitRequest)
                                     .build();
 
-          GitCommitAndPushResult gitCommitAndPushResult = gitClient.commitAndPush(gitOperationContext);
+          GitCommitAndPushResult gitCommitAndPushResult = gitService.commitAndPush(gitOperationContext);
 
           gitCommitAndPushResult.setYamlGitConfig(gitCommitRequest.getYamlGitConfig());
 

@@ -8,6 +8,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.OnPrimaryManagerMigration;
@@ -15,7 +16,6 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;

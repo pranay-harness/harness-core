@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 
 import com.esotericsoftware.yamlbeans.YamlReader;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.git.model.ChangeType;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,6 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.trigger.Trigger;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.EntityHelper;

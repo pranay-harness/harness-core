@@ -3,13 +3,13 @@ package software.wings.service.impl.yaml;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.git.model.ChangeType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.FeatureFlagService;

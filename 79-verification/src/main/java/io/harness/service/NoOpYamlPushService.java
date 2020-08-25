@@ -1,7 +1,7 @@
 package io.harness.service;
 
+import io.harness.git.model.ChangeType;
 import software.wings.beans.Event.Type;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.concurrent.Future;

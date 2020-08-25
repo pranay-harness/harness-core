@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -9,7 +10,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
-import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;

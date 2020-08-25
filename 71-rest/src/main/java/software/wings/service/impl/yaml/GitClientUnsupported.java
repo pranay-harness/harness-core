@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
-import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
@@ -17,11 +16,6 @@ public class GitClientUnsupported implements GitClient {
 
   @Override
   public GitDiffResult diff(GitOperationContext gitOperationContext, boolean excludeFilesOutsideSetupFolder) {
-    throw new UnsupportedOperationException("Git operations not supported.");
-  }
-
-  @Override
-  public GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 

@@ -2,6 +2,7 @@ package software.wings.beans.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.git.model.ChangeType;
 import lombok.Data;
 import lombok.ToString;
 
@@ -17,8 +18,6 @@ public class Change {
   private ChangeType changeType;
   private String oldFilePath;
   @JsonIgnore @SchemaIgnore private boolean syncFromGit;
-
-  public enum ChangeType { ADD, MODIFY, RENAME, DELETE }
 
   public Builder toBuilder() {
     return Builder.aFileChange()

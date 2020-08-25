@@ -7,13 +7,13 @@ import static io.harness.validation.Validator.nullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.git.model.ChangeType;
 import io.harness.observer.Subject;
 import io.harness.persistence.UuidAware;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
