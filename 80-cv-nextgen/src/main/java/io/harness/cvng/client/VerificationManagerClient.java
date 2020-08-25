@@ -14,6 +14,7 @@ import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -38,16 +39,17 @@ public interface VerificationManagerClient {
   Call<RestResponse<Void>> deleteDataCollectionTask(
       @Query("accountId") String accountId, @Query("taskId") String taskId);
 
-  @GET(SPLUNK_RESOURCE_PATH + SPLUNK_SAVED_SEARCH_PATH)
+  @POST(SPLUNK_RESOURCE_PATH + SPLUNK_SAVED_SEARCH_PATH)
   Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(@Query("accountId") String accountId,
       @Query("connectorId") String connectorId, @Query("orgIdentifier") String orgIdentifier,
-      @Query("projectIdentifier") String projectIdentifier, @Query("requestGuid") String requestGuid);
+      @Query("projectIdentifier") String projectIdentifier, @Query("requestGuid") String requestGuid,
+      @Body SplunkConnectorDTO splunkConnectorDTO);
 
-  @GET(SPLUNK_RESOURCE_PATH + SPLUNK_VALIDATION_RESPONSE_PATH)
+  @POST(SPLUNK_RESOURCE_PATH + SPLUNK_VALIDATION_RESPONSE_PATH)
   Call<RestResponse<SplunkValidationResponse>> getSamples(@Query("accountId") String accountId,
       @Query("connectorId") String connectorId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier, @Query("query") String query,
-      @Query("requestGuid") String requestGuid);
+      @Query("requestGuid") String requestGuid, @Body SplunkConnectorDTO splunkConnectorDTO);
 
   @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")
   Call<RestResponse<Boolean>> authenticateUser(

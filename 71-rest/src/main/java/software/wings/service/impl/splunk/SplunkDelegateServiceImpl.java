@@ -5,7 +5,6 @@ import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -189,14 +188,21 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   @Override
   public List<SplunkSavedSearch> getSavedSearches(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String requestGuid) {
-    Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
-    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
-    apiCallLog.setTitle("Fetch request to " + splunkConfig.getSplunkUrl());
+      SplunkConnectorDTO splunkConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails, String requestGuid) {
+    secretDecryptionService.decrypt(splunkConnectorDTO, encryptedDataDetails);
+    Service splunkService = initSplunkService(splunkConnectorDTO);
+    return retrieveSplunkSearchResults(
+        splunkService, splunkConnectorDTO.getAccountId(), requestGuid, splunkConnectorDTO.getSplunkUrl());
+  }
+
+  private List<SplunkSavedSearch> retrieveSplunkSearchResults(
+      Service splunkService, String accountId, String requestGuid, String splunkUrl) {
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, requestGuid);
+    apiCallLog.setTitle("Fetch request to " + splunkUrl);
 
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name(URL_STRING)
-                                     .value(Paths.get(splunkConfig.getSplunkUrl(), "saved/searches").toString())
+                                     .value(Paths.get(splunkUrl, "saved/searches").toString())
                                      .type(FieldType.URL)
                                      .build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
@@ -220,20 +226,28 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
                                                                  .build())
                                                       .collect(Collectors.toList());
     apiCallLog.addFieldToResponse(HttpStatus.SC_OK, JsonUtils.asJson(splunkSavedSearches), FieldType.JSON);
-    delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
+    delegateLogService.save(accountId, apiCallLog);
     return splunkSavedSearches;
   }
 
-  public Histogram getHistogram(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
-    Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
-    Preconditions.checkNotNull(query, "query can not be null");
-    Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
-    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
+  public Histogram getHistogram(SplunkConnectorDTO splunkConnectorDTO, String query, String requestGuid) {
+    Service splunkService = initSplunkService(splunkConnectorDTO);
+    return retrieveHistogram(
+        splunkConnectorDTO.getAccountId(), requestGuid, query, splunkService, splunkConnectorDTO.getSplunkUrl());
+  }
+
+  @NotNull
+  private String getHistogramQuery(String query) {
+    return "search " + query + " | timechart count span=" + BAR_DURATION_IN_HOURS + "h | table _time, count";
+  }
+
+  private Histogram retrieveHistogram(
+      String accountId, String requestGuid, String query, Service splunkService, String splunkUrl) {
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, requestGuid);
     long now = Instant.now().toEpochMilli();
     long nowMinus7Days = Instant.now().minus(SPLUNK_VALIDATION_API_QUERY_DURATION).toEpochMilli();
     String histogramQuery = getHistogramQuery(query);
-    addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), histogramQuery, nowMinus7Days, now);
+    addThirdPartyAPILogRequestFields(apiCallLog, splunkUrl, histogramQuery, nowMinus7Days, now);
     HistogramBuilder histogramBuilder = Histogram.builder()
                                             .query(query)
                                             .intervalMs(Duration.ofHours(BAR_DURATION_IN_HOURS).toMillis())
@@ -256,28 +270,27 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       histogramBuilder = histogramBuilder.count(totalCount);
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_OK, JsonUtils.asJson(events), FieldType.JSON);
-      delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
+      delegateLogService.save(accountId, apiCallLog);
     } catch (IOException | ParseException e) {
       throw new IllegalStateException(e);
     }
     return histogramBuilder.build();
   }
 
-  @NotNull
-  private String getHistogramQuery(String query) {
-    return "search " + query + " | timechart count span=" + BAR_DURATION_IN_HOURS + "h | table _time, count";
-  }
   @VisibleForTesting
-  public SplunkSampleResponse getSamples(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
-    Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
-    Preconditions.checkNotNull(query, "query can not be null");
+  public SplunkSampleResponse getSamples(SplunkConnectorDTO splunkConnectorDTO, String query, String requestGuid) {
+    Service splunkService = initSplunkService(splunkConnectorDTO);
+    return retrieveSamples(
+        splunkService, splunkConnectorDTO.getAccountId(), query, requestGuid, splunkConnectorDTO.getSplunkUrl());
+  }
+
+  private SplunkSampleResponse retrieveSamples(
+      Service splunkService, String accountId, String query, String requestGuid, String splunkUrl) {
     String getSamplesQuery = "search " + query + " | head 10";
-    Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
-    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, requestGuid);
     long now = Instant.now().toEpochMilli();
     long nowMinus7Days = Instant.now().minus(SPLUNK_VALIDATION_API_QUERY_DURATION).toEpochMilli();
-    addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), getSamplesQuery, nowMinus7Days, now);
+    addThirdPartyAPILogRequestFields(apiCallLog, splunkUrl, getSamplesQuery, nowMinus7Days, now);
     ResultsReaderJson resultsReaderJson;
     List<SampleLog> results = new ArrayList<>();
     Map<String, String> sample = new HashMap<>();
@@ -306,7 +319,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToResponse(HttpStatus.SC_OK, JsonUtils.asJson(events), FieldType.JSON);
-    delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
+    delegateLogService.save(accountId, apiCallLog);
     // Fields starting with underscore are internal fields.
     // https://docs.splunk.com/Splexicon:Internalfield
     Map<String, String> withoutInternalFields =
@@ -323,11 +336,11 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
         .build();
   }
 
-  @Override
-  public SplunkValidationResponse getValidationResponse(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
-    SplunkSampleResponse splunkSampleResponse = getSamples(splunkConfig, encryptedDataDetails, query, requestGuid);
-    Histogram histogram = getHistogram(splunkConfig, encryptedDataDetails, query, requestGuid);
+  public SplunkValidationResponse getValidationResponse(SplunkConnectorDTO splunkConnectorDTO,
+      List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
+    secretDecryptionService.decrypt(splunkConnectorDTO, encryptedDataDetails);
+    SplunkSampleResponse splunkSampleResponse = getSamples(splunkConnectorDTO, query, requestGuid);
+    Histogram histogram = getHistogram(splunkConnectorDTO, query, requestGuid);
     SplunkValidationResponseBuilder response =
         SplunkValidationResponse.builder().samples(splunkSampleResponse).histogram(histogram);
     if (splunkSampleResponse.getErrorMessage() != null) {

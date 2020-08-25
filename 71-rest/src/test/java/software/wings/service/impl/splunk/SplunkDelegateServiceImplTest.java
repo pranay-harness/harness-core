@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -28,7 +27,11 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.Histogram;
 import io.harness.cvng.beans.SplunkValidationResponse.SampleLog;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -41,12 +44,10 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
-import software.wings.service.impl.security.EncryptionServiceImpl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,51 +61,59 @@ import java.util.List;
 @RunWith(MockitoJUnitRunner.class)
 @Slf4j
 public class SplunkDelegateServiceImplTest extends CategoryTest {
-  private SplunkConfig config;
+  private SplunkConnectorDTO splunkConnectorDTO;
   private String requestGuid;
   private String accountId;
   @Mock private DelegateLogService delegateLogService;
+  @Mock private SecretDecryptionService secretDecryptionService;
   private SplunkDelegateServiceImpl splunkDelegateService;
   @Before
   public void setUp() throws IllegalAccessException {
-    config = SplunkConfig.builder()
-                 .accountId("123")
-                 .splunkUrl("https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089")
-                 .username("123")
-                 .password("123".toCharArray())
-                 .build();
+    accountId = generateUuid();
+    splunkConnectorDTO = SplunkConnectorDTO.builder()
+                             .accountId(accountId)
+                             .splunkUrl("https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089")
+                             .username("123")
+                             .passwordRef(SecretRefData.builder()
+                                              .identifier("identifier")
+                                              .scope(Scope.ACCOUNT)
+                                              .decryptedValue("123".toCharArray())
+                                              .build())
+                             .build();
     requestGuid = generateUuid();
     splunkDelegateService = new SplunkDelegateServiceImpl();
     FieldUtils.writeField(splunkDelegateService, "delegateLogService", delegateLogService, true);
+    FieldUtils.writeField(splunkDelegateService, "secretDecryptionService", secretDecryptionService, true);
     splunkDelegateService = spy(splunkDelegateService);
-    accountId = generateUuid();
   }
 
   @Test
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
-  public void initSplunkService() throws IllegalAccessException {
-    FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(null, null), true);
-    splunkDelegateService.initSplunkService(config, Lists.emptyList());
+  public void initSplunkService() {
+    splunkDelegateService.initSplunkService(splunkConnectorDTO);
     verify(splunkDelegateService, times(1))
-        .initSplunkServiceWithToken(config.getUsername(), config.getPassword(), config.getSplunkUrl());
+        .initSplunkServiceWithToken(splunkConnectorDTO.getUsername(),
+            splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
     verify(splunkDelegateService, times(1))
-        .initSplunkServiceWithBasicAuth(config.getUsername(), config.getPassword(), config.getSplunkUrl());
+        .initSplunkServiceWithBasicAuth(splunkConnectorDTO.getUsername(),
+            splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
   }
 
   @Test(expected = Exception.class)
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
-  public void initSplunkServiceOnlyToken() throws IllegalAccessException {
-    when(splunkDelegateService.initSplunkServiceWithToken(
-             config.getUsername(), config.getPassword(), config.getSplunkUrl()))
+  public void initSplunkServiceOnlyToken() {
+    when(splunkDelegateService.initSplunkServiceWithToken(splunkConnectorDTO.getUsername(),
+             splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl()))
         .thenReturn(mock(Service.class));
-    FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(null, null), true);
-    splunkDelegateService.initSplunkService(config, Lists.emptyList());
+    splunkDelegateService.initSplunkService(splunkConnectorDTO);
     verify(splunkDelegateService, times(1))
-        .initSplunkServiceWithToken(config.getUsername(), config.getPassword(), config.getSplunkUrl());
+        .initSplunkServiceWithToken(splunkConnectorDTO.getUsername(),
+            splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
     verify(splunkDelegateService, times(1))
-        .initSplunkServiceWithBasicAuth(config.getUsername(), config.getPassword(), config.getSplunkUrl());
+        .initSplunkServiceWithBasicAuth(splunkConnectorDTO.getUsername(),
+            splunkConnectorDTO.getPasswordRef().getDecryptedValue(), splunkConnectorDTO.getSplunkUrl());
   }
 
   @Test
@@ -112,27 +121,27 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSavedSearches_withCorrectResults() {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url/").build();
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     SavedSearchCollection savedSearchCollection = mock(SavedSearchCollection.class);
     SavedSearch savedSearch = mock(SavedSearch.class);
     when(savedSearch.getSearch()).thenReturn("search query");
     when(savedSearch.getTitle()).thenReturn("search query title");
     when(savedSearchCollection.values()).thenReturn(Lists.newArrayList(savedSearch));
     when(service.getSavedSearches(any(JobArgs.class))).thenReturn(savedSearchCollection);
+    when(secretDecryptionService.decrypt(any(), any())).thenReturn(splunkConnectorDTO);
     List<SplunkSavedSearch> splunkSavedSearches =
-        splunkDelegateService.getSavedSearches(splunkConfig, new ArrayList<>(), requestGuid);
+        splunkDelegateService.getSavedSearches(splunkConnectorDTO, new ArrayList<>(), requestGuid);
     assertThat(splunkSavedSearches).hasSize(1);
     assertThat(splunkSavedSearches.get(0).getSearchQuery()).isEqualTo("search query");
     assertThat(splunkSavedSearches.get(0).getTitle()).isEqualTo("search query title");
     ThirdPartyApiCallLog apiCallLog = captureThirdPartyAPICallLog();
-    assertThat(apiCallLog.getTitle()).isEqualTo("Fetch request to splunk-url/");
+    assertThat(apiCallLog.getTitle()).isEqualTo("Fetch request to " + splunkConnectorDTO.getSplunkUrl());
     assertThat(apiCallLog.getStateExecutionId()).isEqualTo(requestGuid);
     assertThat(apiCallLog.getRequest())
         .contains(ThirdPartyApiCallField.builder()
                       .name("Url")
                       .type(FieldType.URL)
-                      .value("splunk-url/saved/searches")
+                      .value("https:/input-prd-p-429h4vj2lsng.cloud.splunk.com:8089/saved/searches")
                       .build());
     assertThat(apiCallLog.getRequest())
         .contains(
@@ -151,15 +160,14 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSavedSearches_withException() {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     SavedSearchCollection savedSearchCollection = mock(SavedSearchCollection.class);
     SavedSearch savedSearch = mock(SavedSearch.class);
     when(savedSearch.getSearch()).thenReturn("search query");
     when(savedSearch.getTitle()).thenReturn("search query title");
     when(savedSearchCollection.values()).thenReturn(Lists.newArrayList(savedSearch));
     when(service.getSavedSearches(any(JobArgs.class))).thenThrow(new RuntimeException("from test"));
-    assertThatThrownBy(() -> splunkDelegateService.getSavedSearches(splunkConfig, new ArrayList<>(), requestGuid))
+    assertThatThrownBy(() -> splunkDelegateService.getSavedSearches(splunkConnectorDTO, new ArrayList<>(), requestGuid))
         .hasMessage("from test");
   }
 
@@ -168,15 +176,14 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetHistogram() throws IOException {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     JobCollection jobCollection = mock(JobCollection.class);
     when(service.getJobs()).thenReturn(jobCollection);
     Job job = mock(Job.class);
     when(jobCollection.create(any(), any())).thenReturn(job);
     when(job.getResults(any()))
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
-    Histogram histogram = splunkDelegateService.getHistogram(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+    Histogram histogram = splunkDelegateService.getHistogram(splunkConnectorDTO, "exception", requestGuid);
     verify(jobCollection).create(eq("search exception | timechart count span=6h | table _time, count"), any());
     assertThat(histogram.getQuery()).isEqualTo("exception");
     assertThat(histogram.getBars()).hasSize(29);
@@ -184,10 +191,14 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
         .isEqualTo(Histogram.Bar.builder().count(10).timestamp(1589889600000L).build());
     assertThat(histogram.getCount()).isEqualTo(389L);
     ThirdPartyApiCallLog apiCallLog = captureThirdPartyAPICallLog();
-    assertThat(apiCallLog.getTitle()).isEqualTo("Fetch request to splunk-url");
+    assertThat(apiCallLog.getTitle()).isEqualTo("Fetch request to " + splunkConnectorDTO.getSplunkUrl());
     assertThat(apiCallLog.getStateExecutionId()).isEqualTo(requestGuid);
     assertThat(apiCallLog.getRequest())
-        .contains(ThirdPartyApiCallField.builder().name("Url").type(FieldType.URL).value("splunk-url").build());
+        .contains(ThirdPartyApiCallField.builder()
+                      .name("Url")
+                      .type(FieldType.URL)
+                      .value(splunkConnectorDTO.getSplunkUrl())
+                      .build());
     assertThat(apiCallLog.getRequest())
         .contains(ThirdPartyApiCallField.builder()
                       .name("Query")
@@ -202,16 +213,14 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSamples() throws IOException {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     JobCollection jobCollection = mock(JobCollection.class);
     when(service.getJobs()).thenReturn(jobCollection);
     Job job = mock(Job.class);
     when(jobCollection.create(any(), any())).thenReturn(job);
     when(job.getResults(any()))
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_query.json"));
-    SplunkSampleResponse samples =
-        splunkDelegateService.getSamples(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+    SplunkSampleResponse samples = splunkDelegateService.getSamples(splunkConnectorDTO, "exception", requestGuid);
     verify(jobCollection).create(eq("search exception | head 10"), any());
     assertThat(samples.getRawSampleLogs()).hasSize(10);
     assertThat(samples.getRawSampleLogs().get(0))
@@ -232,10 +241,14 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
                 + "        }",
             HashMap.class));
     ThirdPartyApiCallLog apiCallLog = captureThirdPartyAPICallLog();
-    assertThat(apiCallLog.getTitle()).isEqualTo("Fetch request to splunk-url");
+    assertThat(apiCallLog.getTitle()).isEqualTo("Fetch request to " + splunkConnectorDTO.getSplunkUrl());
     assertThat(apiCallLog.getStateExecutionId()).isEqualTo(requestGuid);
     assertThat(apiCallLog.getRequest())
-        .contains(ThirdPartyApiCallField.builder().name("Url").type(FieldType.URL).value("splunk-url").build());
+        .contains(ThirdPartyApiCallField.builder()
+                      .name("Url")
+                      .type(FieldType.URL)
+                      .value(splunkConnectorDTO.getSplunkUrl())
+                      .build());
     assertThat(apiCallLog.getRequest())
         .contains(ThirdPartyApiCallField.builder()
                       .name("Query")
@@ -250,8 +263,7 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetValidationResponse() throws IOException {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     JobCollection jobCollection = mock(JobCollection.class);
     when(service.getJobs()).thenReturn(jobCollection);
     Job job = mock(Job.class);
@@ -260,7 +272,7 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_query.json"))
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
     SplunkValidationResponse validationResponse =
-        splunkDelegateService.getValidationResponse(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+        splunkDelegateService.getValidationResponse(splunkConnectorDTO, new ArrayList<>(), "exception", requestGuid);
     verify(jobCollection).create(eq("search exception | head 10"), any());
     assertThat(validationResponse.getQueryDurationMillis()).isEqualTo(Duration.ofDays(7).toMillis());
     assertThat(validationResponse.getHistogram()).isNotNull();
@@ -273,8 +285,7 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetValidationResponse_withErrorMessage() throws IOException {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     JobCollection jobCollection = mock(JobCollection.class);
     when(service.getJobs()).thenReturn(jobCollection);
     Job job = mock(Job.class);
@@ -283,7 +294,7 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_invalid_query.json"))
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
     SplunkValidationResponse validationResponse =
-        splunkDelegateService.getValidationResponse(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+        splunkDelegateService.getValidationResponse(splunkConnectorDTO, new ArrayList<>(), "exception", requestGuid);
     verify(jobCollection).create(eq("search exception | head 10"), any());
     assertThat(validationResponse.getQueryDurationMillis()).isEqualTo(Duration.ofDays(7).toMillis());
     assertThat(validationResponse.getHistogram()).isNotNull();
@@ -297,15 +308,14 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSamples_withoutRawLogs() throws IOException {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = SplunkConfig.builder().accountId(accountId).splunkUrl("splunk-url").build();
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     JobCollection jobCollection = mock(JobCollection.class);
     when(service.getJobs()).thenReturn(jobCollection);
     Job job = mock(Job.class);
     when(jobCollection.create(any(), any())).thenReturn(job);
     when(job.getResults(any()))
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_invalid_query.json"));
-    SplunkSampleResponse samples = splunkDelegateService.getSamples(splunkConfig, new ArrayList<>(),
+    SplunkSampleResponse samples = splunkDelegateService.getSamples(splunkConnectorDTO,
         "index=_internal source=\"*metrics.log\" eps \"group=per_source_thruput\" NOT filetracker | eval events=eps*kb/kbps | timechart fixedrange=t span=1m limit=5 sum(events) by series",
         requestGuid);
     verify(jobCollection)
@@ -331,15 +341,13 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSample_withEmptyResults() throws IOException {
     Service service = mock(Service.class);
-    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
-    SplunkConfig splunkConfig = mock(SplunkConfig.class);
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
     JobCollection jobCollection = mock(JobCollection.class);
     when(service.getJobs()).thenReturn(jobCollection);
     Job job = mock(Job.class);
     when(jobCollection.create(any(), any())).thenReturn(job);
     when(job.getResults(any())).thenReturn(getSplunkJsonResponseInputStream("splunk_json_search_response_empty.json"));
-    SplunkSampleResponse samples =
-        splunkDelegateService.getSamples(splunkConfig, new ArrayList<>(), "exception", requestGuid);
+    SplunkSampleResponse samples = splunkDelegateService.getSamples(splunkConnectorDTO, "exception", requestGuid);
     verify(jobCollection).create(eq("search exception | head 10"), any());
     assertThat(samples.getRawSampleLogs()).isEmpty();
     assertThat(samples.getSample()).isEmpty();

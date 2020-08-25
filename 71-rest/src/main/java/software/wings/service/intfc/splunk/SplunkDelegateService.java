@@ -61,10 +61,10 @@ public interface SplunkDelegateService {
   List<LogElement> getLogResults(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String basicQuery, String hostNameField, String host, long startTime, long endTime,
       ThirdPartyApiCallLog apiCallLog, int logCollectionMinute, boolean isAdvancedQuery);
-  @DelegateTaskType(TaskType.SPLUNK_GET_SAVED_SEARCHES)
+  @DelegateTaskType(TaskType.SPLUNK_NG_GET_SAVED_SEARCHES)
   List<SplunkSavedSearch> getSavedSearches(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String requestGuid);
-  @DelegateTaskType(TaskType.SPLUNK_NEXT_GEN_VALIDATION_TASK)
-  SplunkValidationResponse getValidationResponse(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid);
+      SplunkConnectorDTO splunkConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails, String requestGuid);
+  @DelegateTaskType(TaskType.SPLUNK_NG_VALIDATION_RESPONSE_TASK)
+  SplunkValidationResponse getValidationResponse(SplunkConnectorDTO splunkConnectorDTO,
+      List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid);
 }
