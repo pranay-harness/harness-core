@@ -46,6 +46,8 @@ rules:
   - nodes
   - events
   - namespaces
+  - persistentvolumes
+  - persistentvolumeclaims
   verbs:
   - get
   - list
@@ -79,6 +81,14 @@ rules:
   verbs:
   - get
   - list
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - get
+  - list
+  - watch
 
 ---
 
