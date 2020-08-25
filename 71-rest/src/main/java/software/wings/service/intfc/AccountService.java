@@ -32,6 +32,9 @@ import javax.validation.constraints.NotNull;
 public interface AccountService {
   @ValidationGroups(Create.class) Account save(@Valid Account account, boolean fromDataGen);
 
+  @ValidationGroups(Create.class)
+  Account save(@Valid Account account, boolean fromDataGen, boolean shouldCreateSampleApp);
+
   @ValidationGroups(Update.class) Account update(@Valid Account account);
 
   Account getByName(String companyName);

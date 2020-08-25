@@ -242,6 +242,11 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account save(@Valid Account account, boolean fromDataGen) {
+    return save(account, fromDataGen, true);
+  }
+
+  @Override
+  public Account save(@Valid Account account, boolean fromDataGen, boolean shouldCreateSampleApp) {
     // Validate if account/company name is valid.
     validateAccount(account);
 
@@ -269,7 +274,8 @@ public class AccountServiceImpl implements AccountService {
       if (account.isForImport()) {
         logger.info("Creating the account for import only, no default account entities will be created");
       } else {
-        createDefaultAccountEntities(account);
+        createDefaultAccountEntities(account, shouldCreateSampleApp);
+
         // Schedule default account level jobs.
         scheduleAccountLevelJobs(account.getUuid());
       }
@@ -363,7 +369,7 @@ public class AccountServiceImpl implements AccountService {
     return AccountStatus.ACTIVE.equals(accountStatus);
   }
 
-  private void createDefaultAccountEntities(Account account) {
+  private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp) {
     createDefaultRoles(account)
         .stream()
         .filter(role -> RoleType.ACCOUNT_ADMIN == role.getRoleType())
@@ -387,7 +393,9 @@ public class AccountServiceImpl implements AccountService {
     });
 
     enableFeatureFlags(account);
-    sampleDataProviderService.createK8sV2SampleApp(account);
+    if (shouldCreateSampleApp) {
+      sampleDataProviderService.createK8sV2SampleApp(account);
+    }
     if (mainConfiguration.isNgManagerAvailable()) {
       createDefaultOrganization(account.getUuid());
     }
@@ -996,6 +1004,8 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public String generateSampleDelegate(String accountId) {
     assertTrialAccount(accountId);
+
+    sampleDataProviderService.createK8sV2SampleApp(get(accountId));
 
     if (isBlank(mainConfiguration.getSampleTargetEnv())) {
       String err = "Sample target env not configured";

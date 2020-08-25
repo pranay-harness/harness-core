@@ -1318,7 +1318,7 @@ public class UserServiceImpl implements UserService {
                     .utmInfo(userInvite.getUtmInfo())
                     .build();
 
-    completeSignup(user, userInvite, getTrialLicense());
+    completeSignup(user, userInvite, getTrialLicense(), false);
 
     return authenticationManager.defaultLoginUsingPasswordHash(userInvite.getEmail(), userInvite.getPasswordHash());
   }
@@ -1442,6 +1442,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserInvite completeSignup(User user, UserInvite userInvite, LicenseInfo licenseInfo) {
+    return completeSignup(user, userInvite, licenseInfo, true);
+  }
+
+  @Override
+  public UserInvite completeSignup(
+      User user, UserInvite userInvite, LicenseInfo licenseInfo, boolean shouldCreateSampleApp) {
     if (user.getAccountName() == null || user.getCompanyName() == null) {
       throw new InvalidRequestException("Account/company name is not provided", USER);
     }
@@ -1470,7 +1476,7 @@ public class UserServiceImpl implements UserService {
                           .withLicenseInfo(licenseInfo)
                           .build();
     // Create an trial account which license expires in 15 days.
-    account = setupAccount(account);
+    account = setupAccount(account, shouldCreateSampleApp);
     String accountId = account.getUuid();
 
     // For trial user just signed up, it will be assigned to the account admin role.
@@ -1599,7 +1605,7 @@ public class UserServiceImpl implements UserService {
                           .withLicenseInfo(licenseInfo)
                           .build();
 
-    account = setupAccount(account);
+    account = setupAccount(account, false);
     return account;
   }
 
@@ -2447,13 +2453,17 @@ public class UserServiceImpl implements UserService {
                                          .withAccountName(accountName)
                                          .withCompanyName(companyName)
                                          .withLicenseInfo(LicenseInfo.builder().accountType(AccountType.TRIAL).build());
-    return setupAccount(accountBuilder.build());
+    return setupAccount(accountBuilder.build(), false);
   }
 
   private Account setupAccount(Account account) {
+    return setupAccount(account, true);
+  }
+
+  private Account setupAccount(Account account, boolean shouldCreateSampleApp) {
     // HAR-8645: Always set default appId for account creation to pass validation
     account.setAppId(GLOBAL_APP_ID);
-    Account savedAccount = accountService.save(account, false);
+    Account savedAccount = accountService.save(account, false, shouldCreateSampleApp);
     logger.info("New account created with accountId {} and licenseType {}", account.getUuid(),
         account.getLicenseInfo().getAccountType());
     return savedAccount;
