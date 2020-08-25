@@ -205,7 +205,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void setup() {
     doNothing().when(authService).evictUserPermissionAndRestrictionCacheForAccount(anyString(), anyList());
     when(accountService.get(anyString())).thenReturn(account);
-    when(accountService.save(any(), eq(false))).thenReturn(account);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     when(roleService.getAccountAdminRole(any()))
         .thenReturn(Role.Builder.aRole().withAccountId(ACCOUNT_ID).withUuid(generateUuid()).build());
@@ -659,9 +658,10 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  public void testUpdateMembers() {
+  public void shouldUpdateMembers() {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
       ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
+      when(accountService.save(any(), eq(false), eq(false))).thenReturn(account);
       when(accountService.get(ACCOUNT_ID)).thenReturn(account);
 
       GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();

@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.Account;
 import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
@@ -36,6 +37,7 @@ import javax.ws.rs.core.MediaType;
 
 public class AccountResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
+  private Account account = Account.Builder.anAccount().build();
 
   private static AccountService accountService = mock(AccountService.class);
   private static UserService userService = mock(UserService.class);
@@ -56,6 +58,7 @@ public class AccountResourceTest extends CategoryTest {
 
   @Before
   public void setUp() {
+    when(accountService.get(eq(accountId))).thenReturn(account);
     when(licenseServiceProvider.get()).thenReturn(licenseService);
   }
 

@@ -376,7 +376,7 @@ public class UserServiceTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .build();
 
-    when(accountService.save(any(Account.class), eq(false))).thenReturn(account);
+    when(accountService.save(any(Account.class), eq(false), eq(true))).thenReturn(account);
     when(wingsPersistence.saveAndGet(any(Class.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.get(MarketPlace.class, "TESTUUID")).thenReturn(marketPlace);
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
@@ -411,7 +411,8 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
-    when(accountService.save(any(Account.class), eq(false))).thenReturn(account);
+
+    when(accountService.save(any(Account.class), eq(false), eq(false))).thenReturn(account);
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class))).thenReturn(aPageResponse().build());
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
     when(subdomainUrlHelper.getPortalBaseUrl(ACCOUNT_ID)).thenReturn(PORTAL_URL + "/");
@@ -543,7 +544,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getVerificationUrl()).thenReturn(VERIFICATION_PATH);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
-    when(accountService.save(any(Account.class), eq(false))).thenReturn(account);
+    when(accountService.save(any(Account.class), eq(false), eq(false))).thenReturn(account);
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(Lists.newArrayList(existingUser)).build());
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))

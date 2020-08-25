@@ -341,6 +341,8 @@ public interface UserService extends OwnedByAccount {
    */
   UserInvite completeSignup(User user, UserInvite userInvite, LicenseInfo licenseInfo);
 
+  UserInvite completeSignup(User user, UserInvite userInvite, LicenseInfo licenseInfo, boolean shouldCreateSampleApp);
+
   User completeMarketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType);
 
   /**
