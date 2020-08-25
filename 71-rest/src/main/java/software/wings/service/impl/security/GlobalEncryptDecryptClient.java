@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
+import static io.harness.secretmanagerclient.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.persistence.HPersistence;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -49,6 +51,11 @@ public class GlobalEncryptDecryptClient {
   @Inject private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   @Inject private FeatureFlagService featureFlagService;
 
+  public static boolean isNgHarnessSecretManager(NGSecretManagerMetadata ngSecretManagerMetadata) {
+    return ngSecretManagerMetadata != null && ngSecretManagerMetadata.getIdentifier() != null
+        && HARNESS_SECRET_MANAGER_IDENTIFIER.equals(ngSecretManagerMetadata.getIdentifier());
+  }
+
   public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     if (!kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
       throw new SecretManagementException(
@@ -58,7 +65,8 @@ public class GlobalEncryptDecryptClient {
   }
 
   public EncryptedData encrypt(String accountId, char[] value, GcpKmsConfig gcpKmsConfig) {
-    if (!gcpKmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
+    if (!gcpKmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)
+        && !isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
       throw new SecretManagementException(
           String.format("The gcp kms config %s is not the global kms", gcpKmsConfig.getUuid()));
     }
@@ -153,7 +161,8 @@ public class GlobalEncryptDecryptClient {
   }
 
   public char[] decrypt(EncryptedData encryptedData, GcpKmsConfig gcpKmsConfig) {
-    if (!gcpKmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)) {
+    if (!gcpKmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID)
+        && !isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
       throw new SecretManagementException(
           String.format("The gcp kms config %s is not the global kms", gcpKmsConfig.getUuid()));
     }

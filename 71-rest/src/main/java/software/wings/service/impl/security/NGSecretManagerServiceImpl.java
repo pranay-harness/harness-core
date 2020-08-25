@@ -7,15 +7,19 @@ import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.EncryptionType;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
 
 import java.util.List;
@@ -25,6 +29,9 @@ import javax.validation.constraints.NotNull;
 public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   @Inject private SecretManager secretManager;
   @Inject private VaultService vaultService;
+  @Inject private LocalEncryptionService localEncryptionService;
+  @Inject private GcpSecretsManagerService gcpSecretsManagerService;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private WingsPersistence wingsPersistence;
 
   private static final String ACCOUNT_IDENTIFIER_KEY =
@@ -48,10 +55,20 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       if (duplicatePresent) {
         throw new DuplicateFieldException("Secret manager with same configuration exists");
       }
-
-      if (secretManagerConfig.getEncryptionType() == EncryptionType.VAULT) {
-        vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
-        return secretManagerConfig;
+      switch (secretManagerConfig.getEncryptionType()) {
+        case VAULT:
+          vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
+          return secretManagerConfig;
+        case GCP_KMS:
+          gcpSecretsManagerService.saveGcpKmsConfig(
+              secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig);
+          return secretManagerConfig;
+        case LOCAL:
+          localEncryptionService.saveLocalEncryptionConfig(
+              secretManagerConfig.getAccountId(), (LocalEncryptionConfig) secretManagerConfig);
+          return secretManagerConfig;
+        default:
+          throw new UnsupportedOperationException("secret manager not supported in NG");
       }
     }
     throw new UnsupportedOperationException("secret manager not supported in NG");
@@ -90,12 +107,28 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   }
 
   @Override
-  public SecretManagerConfig updateSecretManager(SecretManagerConfig secretManagerConfig) {
-    if (secretManagerConfig.getEncryptionType() == EncryptionType.VAULT) {
-      vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
-      return secretManagerConfig;
+  public SecretManagerConfig getGlobalSecretManager(String accountIdentifier) {
+    SecretManagerConfig accountSecretManagerConfig =
+        secretManagerConfigService.getGlobalSecretManager(accountIdentifier);
+    if (accountSecretManagerConfig == null) {
+      accountSecretManagerConfig = localEncryptionService.getEncryptionConfig(accountIdentifier);
     }
-    throw new UnsupportedOperationException("Secret Manager not supported in NG");
+    return accountSecretManagerConfig;
+  }
+
+  @Override
+  public SecretManagerConfig updateSecretManager(SecretManagerConfig secretManagerConfig) {
+    switch (secretManagerConfig.getEncryptionType()) {
+      case VAULT:
+        vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
+        return secretManagerConfig;
+      case GCP_KMS:
+        gcpSecretsManagerService.updateGcpKmsConfig(
+            secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig);
+        return secretManagerConfig;
+      default:
+        throw new UnsupportedOperationException("Secret Manager not supported in NG");
+    }
   }
 
   @Override
@@ -110,11 +143,16 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
-      if (secretManagerConfig.getEncryptionType() == EncryptionType.VAULT) {
-        VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-        return vaultService.deleteVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
+      switch (secretManagerConfig.getEncryptionType()) {
+        case VAULT:
+          VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
+          return vaultService.deleteVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
+        case GCP_KMS:
+          GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) secretManagerConfig;
+          return gcpSecretsManagerService.deleteGcpKmsConfig(gcpKmsConfig.getAccountId(), gcpKmsConfig.getUuid());
+        default:
+          throw new UnsupportedOperationException("Secret manager not supported");
       }
-      throw new UnsupportedOperationException("Secret manager not supported");
     }
     return false;
   }

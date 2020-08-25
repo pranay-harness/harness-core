@@ -21,7 +21,8 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "encryptionType",
     visible = true)
 @JsonSubTypes({
-  @Type(name = "LOCAL", value = LocalConfigDTO.class), @Type(name = "VAULT", value = VaultConfigDTO.class)
+  @Type(name = "LOCAL", value = LocalConfigDTO.class)
+  , @Type(name = "VAULT", value = VaultConfigDTO.class), @Type(name = "GCP_KMS", value = GcpKmsConfigDTO.class)
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class SecretManagerConfigDTO {

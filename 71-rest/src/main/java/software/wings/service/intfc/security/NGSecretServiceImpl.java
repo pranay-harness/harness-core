@@ -5,7 +5,6 @@ import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,6 +26,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import lombok.AllArgsConstructor;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
@@ -58,16 +59,26 @@ public class NGSecretServiceImpl implements NGSecretService {
   private final NGSecretManagerService ngSecretManagerService;
   private final SecretManager secretManager;
   private final VaultService vaultService;
+  private final GcpKmsService gcpKmsService;
+  private final LocalEncryptionService localEncryptionService;
   private final WingsPersistence wingsPersistence;
   private final SecretManagerConfigService secretManagerConfigService;
 
   private EncryptedData encrypt(
       @NotNull EncryptedData encryptedData, String secretValue, SecretManagerConfig secretManagerConfig) {
-    if (encryptedData.getEncryptionType() == VAULT) {
-      return vaultService.encrypt(encryptedData.getName(), secretValue, encryptedData.getAccountId(),
-          SettingVariableTypes.SECRET_TEXT, (VaultConfig) secretManagerConfig, encryptedData);
+    switch (encryptedData.getEncryptionType()) {
+      case VAULT:
+        return vaultService.encrypt(encryptedData.getName(), secretValue, encryptedData.getAccountId(),
+            SettingVariableTypes.SECRET_TEXT, (VaultConfig) secretManagerConfig, encryptedData);
+      case GCP_KMS:
+        return gcpKmsService.encrypt(
+            secretValue, encryptedData.getAccountId(), (GcpKmsConfig) secretManagerConfig, encryptedData);
+      case LOCAL:
+        return localEncryptionService.encrypt(
+            secretValue.toCharArray(), encryptedData.getAccountId(), (LocalEncryptionConfig) secretManagerConfig);
+      default:
+        throw new UnsupportedOperationException("Encryption type not supported: " + encryptedData.getEncryptionType());
     }
-    throw new UnsupportedOperationException("Encryption type not supported: " + encryptedData.getEncryptionType());
   }
 
   @Override
@@ -113,8 +124,8 @@ public class NGSecretServiceImpl implements NGSecretService {
       // set fields and save secret in DB
       data.setEncryptionKey(encryptedData.getEncryptionKey());
       data.setEncryptedValue(encryptedData.getEncryptedValue());
-      secretManager.saveEncryptedData(encryptedData);
-      return encryptedData;
+      secretManager.saveEncryptedData(data);
+      return data;
     } else {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "No such secret manager found", USER);
     }
@@ -231,12 +242,17 @@ public class NGSecretServiceImpl implements NGSecretService {
 
   public void deleteSecretInSecretManager(
       String accountIdentifier, String path, SecretManagerConfig secretManagerConfig) {
-    if (secretManagerConfig.getEncryptionType() == VAULT) {
-      vaultService.deleteSecret(accountIdentifier, path, (VaultConfig) secretManagerConfig);
-      return;
+    switch (secretManagerConfig.getEncryptionType()) {
+      case VAULT:
+        vaultService.deleteSecret(accountIdentifier, path, (VaultConfig) secretManagerConfig);
+        return;
+      case LOCAL:
+      case GCP_KMS:
+        return;
+      default:
+        throw new UnsupportedOperationException(
+            "Encryption type " + secretManagerConfig.getEncryptionType() + " is not supported in next gen");
     }
-    throw new UnsupportedOperationException(
-        "Encryption type " + secretManagerConfig.getEncryptionType() + " is not supported in next gen");
   }
 
   private String getOrgIdentifier(String parentOrgIdentifier, @NotNull Scope scope) {

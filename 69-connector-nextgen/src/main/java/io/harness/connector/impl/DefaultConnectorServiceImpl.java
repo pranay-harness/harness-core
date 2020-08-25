@@ -62,8 +62,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (connector.isPresent()) {
       return Optional.of(connectorMapper.writeDTO(connector.get()));
     }
-    throw new InvalidRequestException(
-        createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+    return Optional.empty();
   }
 
   private String createConnectorNotFoundMessage(
@@ -118,7 +117,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
     if (!existingConnector.isPresent()) {
       throw new InvalidRequestException(
-          format("No connector exists with the  Identitier %s", connectorRequestDTO.getIdentifier()));
+          format("No connector exists with the  Identifier %s", connectorRequestDTO.getIdentifier()));
     }
     Connector newConnector = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     newConnector.setId(existingConnector.get().getId());

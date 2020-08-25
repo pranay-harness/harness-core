@@ -4,6 +4,7 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.secretmanagerclient.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.secretmanagerclient.utils.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
@@ -26,6 +27,7 @@ import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 
 @Singleton
 @Slf4j
@@ -53,7 +55,24 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorDTO create(ConnectorRequestDTO connector, String accountIdentifier) {
+  public ConnectorDTO create(@Valid ConnectorRequestDTO connector, String accountIdentifier) {
+    // TODO{karan} Remove this section after event driven is used to create harness secret manager for account
+    if (connector.getIdentifier().equals(HARNESS_SECRET_MANAGER_IDENTIFIER)) {
+      if (!defaultConnectorService.get(accountIdentifier, null, null, HARNESS_SECRET_MANAGER_IDENTIFIER).isPresent()) {
+        logger.info("Account level Harness Secret Manager not found");
+        String orgIdentifier = connector.getOrgIdentifier();
+        String projectIdentifier = connector.getProjectIdentifier();
+        connector.setOrgIdentifier(null);
+        connector.setProjectIdentifier(null);
+        createSecretManagerConnector(connector, accountIdentifier);
+        connector.setProjectIdentifier(projectIdentifier);
+        connector.setOrgIdentifier(orgIdentifier);
+      }
+    }
+    return createSecretManagerConnector(connector, accountIdentifier);
+  }
+
+  private ConnectorDTO createSecretManagerConnector(ConnectorRequestDTO connector, String accountIdentifier) {
     SecretManagerConfigDTO secretManagerConfigDTO =
         SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connector.getConnectorConfig());
     SecretManagerConfigDTO createdSecretManager =
@@ -63,8 +82,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         return defaultConnectorService.create(connector, accountIdentifier);
       } catch (Exception ex) {
         logger.error("Error occurred while creating secret manager in 71 rest", ex);
-        secretManagerClient.deleteSecret(connector.getIdentifier(), accountIdentifier, connector.getOrgIdentifier(),
-            connector.getProjectIdentifier());
+        secretManagerClient.deleteSecretManager(connector.getIdentifier(), accountIdentifier,
+            connector.getOrgIdentifier(), connector.getProjectIdentifier());
         throw new SecretManagementException(
             SECRET_MANAGEMENT_ERROR, "Exception occurred while saving secret manager", USER);
       }

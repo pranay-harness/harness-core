@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static software.wings.resources.secretsmanagement.mappers.SecretManagerConfigMapper.updateNGSecretManagerMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -12,7 +13,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.mongo.index.FdIndex;
-import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.security.encryption.AccessType;
@@ -106,7 +106,7 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
   }
 
   @Override
-  public SecretManagerConfigDTO toDTO() {
+  public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
     VaultConfigDTO ngVaultConfigDTO = VaultConfigDTO.builder()
                                           .encryptionType(getEncryptionType())
                                           .name(getName())
@@ -117,13 +117,10 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
                                           .renewIntervalHours(getRenewIntervalHours())
                                           .vaultUrl(getVaultUrl())
                                           .build();
-    NGSecretManagerMetadata ngMetadata = getNgMetadata();
-    if (ngMetadata != null) {
-      ngVaultConfigDTO.setAccountIdentifier(ngMetadata.getAccountIdentifier());
-      ngVaultConfigDTO.setOrgIdentifier(ngMetadata.getOrgIdentifier());
-      ngVaultConfigDTO.setProjectIdentifier(ngMetadata.getProjectIdentifier());
-      ngVaultConfigDTO.setIdentifier(ngMetadata.getIdentifier());
-      ngVaultConfigDTO.setTags(ngMetadata.getTags());
+    updateNGSecretManagerMetadata(getNgMetadata(), ngVaultConfigDTO);
+    if (!maskSecrets) {
+      ngVaultConfigDTO.setAuthToken(getAuthToken());
+      ngVaultConfigDTO.setSecretId(getSecretId());
     }
     return ngVaultConfigDTO;
   }

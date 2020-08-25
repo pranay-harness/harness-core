@@ -119,6 +119,10 @@ public interface SecretManagerClient {
       @Query(ACCOUNT_KEY) String accountIdentifier, @Query(ORG_KEY) String orgIdentifier,
       @Query(PROJECT_KEY) String projectIdentifier);
 
+  // get global secret manager
+  @GET(SECRET_MANAGERS_API + "/global/{accountIdentifier}")
+  Call<RestResponse<SecretManagerConfigDTO>> getGlobalSecretManager(@Path(ACCOUNT_KEY) String accountIdentifier);
+
   // delete secret manager
   @DELETE(SECRET_MANAGERS_API + "/{identifier}")
   Call<RestResponse<Boolean>> deleteSecretManager(@Path("identifier") String identifier,

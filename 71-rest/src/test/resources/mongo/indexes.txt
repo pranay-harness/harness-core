@@ -537,7 +537,7 @@ secretManagerRuntimeParameters {"name": "executionId_1", "background": true} {"e
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}
 secretManagers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagers {"name": "nextTokenRenewIteration_1", "background": true} {"nextTokenRenewIteration": 1}
-secretManagers {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1, "encryptionType": 1}
+secretManagers {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1, "encryptionType": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
 secretUsageLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
 secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretUsageLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}

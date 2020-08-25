@@ -84,7 +84,7 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig implements E
   }
 
   @Override
-  public SecretManagerConfigDTO toDTO() {
+  public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
     throw new UnsupportedOperationException();
   }
 }

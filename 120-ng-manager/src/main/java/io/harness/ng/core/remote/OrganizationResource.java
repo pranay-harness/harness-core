@@ -24,6 +24,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -52,6 +53,7 @@ import javax.ws.rs.QueryParam;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Slf4j
 public class OrganizationResource {
   private final OrganizationService organizationService;
 
@@ -82,7 +84,7 @@ public class OrganizationResource {
     Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(OrganizationKeys.deleted)
-                            .is(false);
+                            .is(Boolean.FALSE);
     Page<OrganizationDTO> organizations = organizationService.list(criteria, PageUtils.getPageRequest(page, size, sort))
                                               .map(OrganizationMapper::writeDto);
     return ResponseDTO.newResponse(getNGPageResponse(organizations));

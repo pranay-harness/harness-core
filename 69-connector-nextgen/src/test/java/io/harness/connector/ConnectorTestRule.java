@@ -15,8 +15,6 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.impl.OrganizationServiceImpl;
-import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
@@ -50,8 +48,8 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(ManagerDelegateServiceDriver.class).toInstance(mock(ManagerDelegateServiceDriver.class));
-        bind(ProjectService.class).toInstance(mock(ProjectServiceImpl.class));
-        bind(OrganizationService.class).toInstance(mock(OrganizationServiceImpl.class));
+        bind(ProjectService.class).toInstance(mock(ProjectService.class));
+        bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
       }
     });

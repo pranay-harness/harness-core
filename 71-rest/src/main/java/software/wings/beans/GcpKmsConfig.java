@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static software.wings.resources.secretsmanagement.mappers.SecretManagerConfigMapper.updateNGSecretManagerMetadata;
+import static software.wings.service.impl.security.GlobalEncryptDecryptClient.isNgHarnessSecretManager;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -10,6 +12,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -76,11 +79,24 @@ public class GcpKmsConfig extends SecretManagerConfig implements ExecutionCapabi
 
   @Override
   public boolean isGlobalKms() {
-    return Account.GLOBAL_ACCOUNT_ID.equals(getAccountId());
+    return Account.GLOBAL_ACCOUNT_ID.equals(getAccountId()) || isNgHarnessSecretManager(getNgMetadata());
   }
 
   @Override
-  public SecretManagerConfigDTO toDTO() {
-    throw new UnsupportedOperationException();
+  public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
+    GcpKmsConfigDTO ngGcpKmsConfigDTO = GcpKmsConfigDTO.builder()
+                                            .name(getName())
+                                            .isDefault(isDefault())
+                                            .encryptionType(getEncryptionType())
+                                            .projectId(getProjectId())
+                                            .keyRing(getKeyRing())
+                                            .keyName(getKeyName())
+                                            .region(getRegion())
+                                            .build();
+    updateNGSecretManagerMetadata(getNgMetadata(), ngGcpKmsConfigDTO);
+    if (!maskSecrets) {
+      ngGcpKmsConfigDTO.setCredentials(getCredentials());
+    }
+    return ngGcpKmsConfigDTO;
   }
 }

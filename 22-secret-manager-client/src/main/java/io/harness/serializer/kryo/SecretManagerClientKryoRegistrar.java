@@ -6,6 +6,8 @@ import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
@@ -26,5 +28,7 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
     kryo.register(VaultConfigDTO.class, 543217);
     kryo.register(LocalConfigDTO.class, 543218);
     kryo.register(VaultConfigUpdateDTO.class, 543219);
+    kryo.register(GcpKmsConfigDTO.class, 543220);
+    kryo.register(GcpKmsConfigUpdateDTO.class, 543221);
   }
 }

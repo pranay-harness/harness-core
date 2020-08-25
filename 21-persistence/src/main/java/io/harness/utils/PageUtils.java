@@ -54,7 +54,7 @@ public class PageUtils {
         .itemCount(page.getTotal())
         .content(page.getResponse())
         .pageSize(page.getPageSize())
-        .pageIndex(page.getCurrentPage())
+        .pageIndex(page.getStart())
         .empty(page.isEmpty())
         .build();
   }

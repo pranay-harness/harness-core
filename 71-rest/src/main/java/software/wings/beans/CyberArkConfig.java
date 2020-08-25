@@ -70,7 +70,7 @@ public class CyberArkConfig extends SecretManagerConfig implements ExecutionCapa
   }
 
   @Override
-  public SecretManagerConfigDTO toDTO() {
+  public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
     throw new UnsupportedOperationException();
   }
 }
