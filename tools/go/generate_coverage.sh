@@ -15,8 +15,11 @@ PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel)}"
 echo "Moving to project root directory: $PROJECT_ROOT"
 cd $PROJECT_ROOT
 
-echo "Generating coverage using bazel... "
-bazel coverage //...
+echo "Generating coverage of commons using bazel... "
+bazel coverage //commons/...
+
+echo "Generating coverage of product using bazel... "
+bazel coverage //product/...
 
 echo "Removing any previous existing coverage directory... "
 rm -rf /tmp/symportal

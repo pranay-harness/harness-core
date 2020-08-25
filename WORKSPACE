@@ -242,8 +242,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_crypto",
     importpath = "golang.org/x/crypto",
-    sum = "h1:iMGN4xG0cnqj3t+zOM8wUB0BiPKHEwSxEZCvzcbZuvk=",
-    version = "v0.0.0-20190510104115-cbcb75029529",
+    sum = "h1:R423Cnkcp5JABoeemiGEPlt9tHXFfw5kvc0yqlxRPWo=",
+    version = "v0.0.0-20190513172903-22d7a77e9e5f",
 )
 
 go_repository(
@@ -284,8 +284,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_xerrors",
     importpath = "golang.org/x/xerrors",
-    sum = "h1:9zdDQZ7Thm29KFXgAX/+yaf3eVbP7djjWp/dXAppNCc=",
-    version = "v0.0.0-20190717185122-a985d3407aa7",
+    sum = "h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=",
+    version = "v0.0.0-20191204190536-9bdfabe68543",
 )
 
 go_repository(
@@ -466,8 +466,8 @@ go_repository(
 go_repository(
     name = "com_github_golang_protobuf",
     importpath = "github.com/golang/protobuf",
-    sum = "h1:gyjaxf+svBWX08ZjK86iN9geUJF0H6gp2IRKX6Nf6/I=",
-    version = "v1.3.3",
+    sum = "h1:ZFgWrT+bLgsYPirOnRfKLYJLvssAegOj/hgyMFdJZe0=",
+    version = "v1.4.1",
 )
 
 go_repository(
@@ -480,8 +480,8 @@ go_repository(
 go_repository(
     name = "com_github_google_go_cmp",
     importpath = "github.com/google/go-cmp",
-    sum = "h1:+dTQ8DZQJz0Mb/HjFlkptS1FeQ4cWSnN941F8aEG4SQ=",
-    version = "v0.2.0",
+    sum = "h1:xsAVV57WRhGj6kEIi8ReJzQlHHqcBYCElAvkovg3B/4=",
+    version = "v0.4.0",
 )
 
 go_repository(
@@ -816,8 +816,8 @@ go_repository(
 go_repository(
     name = "com_github_sirupsen_logrus",
     importpath = "github.com/sirupsen/logrus",
-    sum = "h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4=",
-    version = "v1.4.2",
+    sum = "h1:1N5EYkVAPEywqZRJd7cwnRtCb6xJx7NH3T3WUTF980Q=",
+    version = "v1.5.0",
 )
 
 go_repository(
@@ -944,6 +944,7 @@ go_repository(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 RULES_JVM_EXTERNAL_TAG = "3.3"
+
 RULES_JVM_EXTERNAL_SHA = "d85951a92c0908c80bd8551002d66cb23c3434409c814179c0ff026b53544dab"
 
 http_archive(
@@ -952,6 +953,7 @@ http_archive(
     sha256 = RULES_JVM_EXTERNAL_SHA,
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
+
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 maven_install(
@@ -985,9 +987,23 @@ maven_install(
             "com.github.sevntu-checkstyle:sevntu-checks:1.35.0"
     ],
     version_conflict_policy = "pinned",
-    repositories=[
+    repositories = [
         "https://repo1.maven.org/maven2",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
         "https://harness.jfrog.io/harness/datacollection-dsl",
-    ]
+    ],
+)
+
+go_repository(
+    name = "com_github_drone_go_scm",
+    importpath = "github.com/drone/go-scm",
+    sum = "h1:KUf9gEaCDzhsE/V7hpFz7nmTisuR0gXJz3+D946ggLk=",
+    version = "v1.7.0",
+)
+
+go_repository(
+    name = "com_github_h2non_gock",
+    importpath = "github.com/h2non/gock",
+    sum = "h1:17gCehSo8ZOgEsFKpQgqHiR7VLyjxdAG3lkhVvO9QZU=",
+    version = "v1.0.9",
 )

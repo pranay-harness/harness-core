@@ -1,29 +1,30 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//11-commons-test:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl","sources")
+load("//:macros.bzl", "sources")
+
 sources()
 
 java_library(
     name = "maven_deps",
-    exports= [
-         "@maven//:junit_junit",
-         "@maven//:org_slf4j_slf4j_api",
-         "@maven//:org_powermock_powermock_module_junit4",
-         "@maven//:ch_qos_logback_logback_classic",
-         "@maven//:com_bettercloud_vault_java_driver",
-         "@maven//:com_google_code_findbugs_annotations",
-         "@maven//:com_google_guava_guava",
-         "@maven//:com_google_inject_guice",
-         "@maven//:commons_codec_commons_codec",
-         "@maven//:net_rcarz_jira_client",
-         "@maven//:org_apache_commons_commons_lang3",
-         "@maven//:org_assertj_assertj_core",
-         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
-         "@maven//:org_jacoco_org_jacoco_agent",
-         "@maven//:org_mockito_mockito_core",
-         "@maven//:org_powermock_powermock_core",
-     ],
+    exports = [
+        "@maven//:junit_junit",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:com_bettercloud_vault_java_driver",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:net_rcarz_jira_client",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_jacoco_org_jacoco_agent",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_core",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -32,12 +33,12 @@ java_library(
     srcs = glob(["src/main/**/*.java"]),
     deps = [
         "maven_deps",
-        "//:lombok"
+        "//:lombok",
     ],
-   resources = [
-           "//11-commons-test/src/main/resources:resource"
-       ],
-   visibility = ["//visibility:public"],
+    resources = [
+        "//11-commons-test/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
 )
 
 run_tests(
@@ -47,11 +48,11 @@ run_tests(
         "libmodule.jar",
         "maven_deps",
         "//:lombok",
-	    "@maven//:org_jacoco_org_jacoco_agent",
+        "@maven//:org_jacoco_org_jacoco_agent",
     ],
-    runtime_deps =[
-        "//11-commons-test/src/main/resources:resources"
-    ]
+    runtime_deps = [
+        "//11-commons-test/src/main/resources:resources",
+    ],
 )
 
 checkstyle()

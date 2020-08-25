@@ -5,6 +5,7 @@ go 1.14
 require (
 	cloud.google.com/go/storage v1.8.0
 	github.com/aws/aws-sdk-go v1.30.29
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/mock v1.4.3

@@ -1,4 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 exports_files([
     "checkstyle-suppressions.xml",
     "checkstyle-xpath-suppressions.xml",
@@ -12,11 +13,11 @@ bzl_library(
 )
 
 java_binary(
-    name="checkstyle",
-    srcs=glob(["src/main/java/io/harness/**/*.java"]),
-    main_class ='com.puppycrawl.tools.checkstyle.Main',
+    name = "checkstyle",
+    srcs = glob(["src/main/java/io/harness/**/*.java"]),
+    main_class = "com.puppycrawl.tools.checkstyle.Main",
     deps = [
-        "checkstyle_deps"
+        "checkstyle_deps",
     ],
     visibility = ["//visibility:public"],
 )
@@ -34,7 +35,7 @@ java_library(
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_slf4j_slf4j_simple",
         "@maven//:org_slf4j_jcl_over_slf4j",
-        "@maven//:com_github_sevntu_checkstyle_sevntu_checks"
+        "@maven//:com_github_sevntu_checkstyle_sevntu_checks",
     ],
     visibility = ["//visibility:public"],
 )

@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package io.harness.product.ci.scm.proto;
+
+option java_multiple_files = true;
+option go_package = "ciscmpb";
+
+import "google/protobuf/timestamp.proto";
+
+enum GitProvider {
+  BITBUCKET = 0;
+  GITEA = 1;
+  GITHUB = 2;
+  GITLAB = 3;
+  GOGS = 4;
+  STASH = 5;
+}
+
+enum Action {
+  UNKNOWN = 0;
+  CREATE = 1;
+  UPDATE = 2;
+  DELETE = 3;
+  // Issues
+  OPEN = 4;
+  REOPEN = 5;
+  CLOSE = 6;
+  LABEL = 7;
+  UNLABEL = 8;
+  // pull requests
+  SYNC = 9;
+  MERGE = 10;
+}
+
+// User represents a user account.
+message User {
+  string login = 1;
+  string name = 2;
+  string email = 3;
+  string avatar = 4;
+  google.protobuf.Timestamp created = 5;
+  google.protobuf.Timestamp updated = 6;
+}
+
+// Reference represents a git reference.
+message Reference {
+  string name = 1;
+  string path = 2;
+  string sha = 3;
+}
+
+// Perm represents a user's repository permissions.
+message Perm {
+  bool pull = 1;
+  bool push = 2;
+  bool admin = 3;
+}
+
+// Repository represents a git repository.
+message Repository {
+  string id = 1;
+  string namespace = 2;
+  string name = 3;
+  Perm perm = 4;
+  string branch = 5;
+  bool private = 6;
+  string clone = 7;
+  string clone_ssh = 8;
+  string link = 9;
+  google.protobuf.Timestamp created = 10;
+  google.protobuf.Timestamp updated = 11;
+}
+
+message PullRequest {
+  int64 number = 1;
+  string title = 2;
+  string body = 3;
+  string sha = 4;
+  string ref = 5;
+  string source = 6;
+  string target = 7;
+  string fork = 8;
+  string link = 9;
+  bool closed = 10;
+  bool merged = 11;
+  Reference base = 12;
+  Reference head = 13;
+  User author = 14;
+  google.protobuf.Timestamp created = 15;
+  google.protobuf.Timestamp updated = 16;
+}
+
+message PullRequestHook {
+  Action action = 1;
+  Repository repo = 2;
+  PullRequest pr = 3;
+  User sender = 4;
+}
+
+message Header {
+  message Pair {
+    string key = 1;
+    repeated string values = 2;
+  }
+  repeated Pair fields = 1;
+}
+
+message ParseWebhookRequest {
+  Header header = 1;
+  string body = 2;
+  string secret = 3;
+  GitProvider provider = 4;
+}
+
+message ParseWebhookResponse {
+  oneof hook {
+    PullRequestHook pr = 1;
+  }
+}
+
+service SCM {
+  // RPC to stop tailing on a file.
+  rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
+}
