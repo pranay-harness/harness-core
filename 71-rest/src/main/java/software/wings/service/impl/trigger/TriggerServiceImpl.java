@@ -931,8 +931,8 @@ public class TriggerServiceImpl implements TriggerService {
               getInfrastructureDefinition(appId, infraEnvId, infraDefIdOrName);
           if (infrastructureDefinition == null) {
             InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraDefIdOrName);
-            notNullCheck("Service Infrastrfeature-update-jira.shucture [" + infraDefIdOrName + "] does not exist",
-                infrastructureMapping, USER);
+            notNullCheck(
+                "Service Infrastructure [" + infraDefIdOrName + "] does not exist", infrastructureMapping, USER);
             triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
           } else {
             triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
@@ -947,7 +947,7 @@ public class TriggerServiceImpl implements TriggerService {
     List<String> finalValues = new ArrayList<>();
     for (String variableValue : variableValues) {
       InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(appId, infraEnvId, variableValue);
-
+      notNullCheck("Infrastructure Definition [" + variableValue + "] does not exist", infrastructureDefinition, USER);
       finalValues.add(infrastructureDefinition.getUuid());
     }
     return String.join(",", finalValues);
