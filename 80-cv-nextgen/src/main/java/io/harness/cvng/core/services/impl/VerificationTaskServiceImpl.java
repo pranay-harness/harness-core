@@ -53,10 +53,10 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
-  public Set<String> getVerificationTaskIds(String accountId, String verificationTaskId) {
+  public Set<String> getVerificationTaskIds(String accountId, String deploymentVerificationTaskId) {
     return hPersistence.createQuery(VerificationTask.class)
         .filter(VerificationTaskKeys.accountId, accountId)
-        .filter(VerificationTaskKeys.deploymentVerificationTaskId, verificationTaskId)
+        .filter(VerificationTaskKeys.deploymentVerificationTaskId, deploymentVerificationTaskId)
         .asList()
         .stream()
         .map(VerificationTask::getUuid)

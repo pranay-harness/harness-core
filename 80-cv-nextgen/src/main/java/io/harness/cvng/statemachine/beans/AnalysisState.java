@@ -18,6 +18,9 @@ public abstract class AnalysisState {
   public abstract AnalysisState handleSuccess();
   public abstract AnalysisState handleTransition();
   public abstract AnalysisState handleRetry();
+  public void handleFinalStatuses(AnalysisStatus finalStatus) {
+    // no-op - designed to override
+  }
 
   public AnalysisState handleFailure() {
     this.setStatus(AnalysisStatus.FAILED);

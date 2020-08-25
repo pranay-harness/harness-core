@@ -50,7 +50,7 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
   @SchemaIgnore
   @Default
   @FdTtlIndex
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(31).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(180).toInstant());
 
   @Data
   @Builder

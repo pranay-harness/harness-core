@@ -97,7 +97,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     DataCollectionTask updatedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
     assertThat(updatedDataCollectionTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(updatedDataCollectionTask.getVerificationTaskId()).isEqualTo(dataCollectionTask.getCvConfigId());
-    assertThat(updatedDataCollectionTask.isQueueAnalysis()).isTrue();
+    assertThat(updatedDataCollectionTask.shouldQueueAnalysis()).isTrue();
   }
 
   @Test
