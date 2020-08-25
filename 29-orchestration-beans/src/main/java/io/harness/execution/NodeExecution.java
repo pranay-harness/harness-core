@@ -16,6 +16,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.plan.PlanNode;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import lombok.Builder;
@@ -81,6 +82,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   // Timeout
   List<String> timeoutInstanceIds;
+
+  List<StepOutcomeRef> outcomeRefs;
 
   public boolean isRetry() {
     return !isEmpty(retryIds);

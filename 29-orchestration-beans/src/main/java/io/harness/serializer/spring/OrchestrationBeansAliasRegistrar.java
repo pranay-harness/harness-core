@@ -24,6 +24,7 @@ import io.harness.references.SweepingOutputRefObject;
 import io.harness.spring.AliasRegistrar;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepOutcomeRef;
 import io.harness.timeout.trackers.active.ActiveTimeoutTracker;
 
 import java.util.Map;
@@ -55,5 +56,6 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("taskExecutableResponse", TaskExecutableResponse.class);
     orchestrationElements.put("executionSweepingOutput", ExecutionSweepingOutputInstance.class);
     orchestrationElements.put("activeTimeoutTracker", ActiveTimeoutTracker.class);
+    orchestrationElements.put("stepOutcomeRef", StepOutcomeRef.class);
   }
 }

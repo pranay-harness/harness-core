@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
@@ -13,6 +14,7 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
 
 import java.util.Map;
@@ -54,7 +56,13 @@ public class SectionChainStep implements Step, ChildChainExecutable<SectionChain
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    StepResponseNotifyData notifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
-    return StepResponse.builder().status(notifyData.getStatus()).failureInfo(notifyData.getFailureInfo()).build();
+    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+    for (ResponseData responseData : responseDataMap.values()) {
+      Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
+      if (executionStatus != Status.SUCCEEDED) {
+        responseBuilder.status(executionStatus);
+      }
+    }
+    return responseBuilder.build();
   }
 }

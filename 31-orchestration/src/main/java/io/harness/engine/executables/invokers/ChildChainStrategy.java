@@ -13,8 +13,10 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -31,6 +33,7 @@ import io.harness.state.io.StepResponseNotifyData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -41,6 +44,7 @@ public class ChildChainStrategy implements InvokeStrategy {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private AmbianceUtils ambianceUtils;
+  @Inject private InvocationHelper invocationHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
@@ -53,10 +57,18 @@ public class ChildChainStrategy implements InvokeStrategy {
       childChainResponse = childChainExecutable.executeFirstChild(
           ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
     } else {
+      Map<String, ResponseData> response =
+          accumulateResponse(ambiance.getPlanExecutionId(), invokerPackage.getResponseDataMap());
       childChainResponse = childChainExecutable.executeNextChild(ambiance, invokerPackage.getParameters(),
-          invokerPackage.getInputPackage(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
+          invokerPackage.getInputPackage(), invokerPackage.getPassThroughData(), response);
     }
     handleResponse(ambiance, childChainResponse);
+  }
+
+  private Map<String, ResponseData> accumulateResponse(
+      String planExecutionId, Map<String, ResponseData> responseDataMap) {
+    String notifyId = responseDataMap.keySet().iterator().next();
+    return invocationHelper.accumulateResponses(planExecutionId, notifyId);
   }
 
   private void handleResponse(Ambiance ambiance, ChildChainResponse childChainResponse) {

@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
@@ -49,6 +50,7 @@ public class EngineResumeExecutor implements Runnable {
   OrchestrationEngine orchestrationEngine;
   Injector injector;
   StepRegistry stepRegistry;
+  InvocationHelper invocationHelper;
 
   @Override
   public void run() {
@@ -82,8 +84,10 @@ public class EngineResumeExecutor implements Runnable {
           break;
         case CHILD:
           ChildExecutable childExecutable = (ChildExecutable) step;
-          stepResponse =
-              childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
+          Map<String, ResponseData> accumulateResponses =
+              invocationHelper.accumulateResponses(ambiance.getPlanExecutionId(), response.keySet().iterator().next());
+          stepResponse = childExecutable.handleChildResponse(
+              ambiance, nodeExecution.getResolvedStepParameters(), accumulateResponses);
           break;
         case TASK:
         case TASK_V2:
@@ -113,8 +117,13 @@ public class EngineResumeExecutor implements Runnable {
           StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) response.values().iterator().next();
           if (lastChildChainExecutableResponse.isLastLink() || brokeStatuses().contains(responseNotifyData.getStatus())
               || lastChildChainExecutableResponse.isSuspend()) {
+            Map<String, ResponseData> accumulatedResponse = response;
+            if (!lastChildChainExecutableResponse.isSuspend()) {
+              accumulatedResponse = invocationHelper.accumulateResponses(
+                  ambiance.getPlanExecutionId(), response.keySet().iterator().next());
+            }
             stepResponse = childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
-                lastChildChainExecutableResponse.getPassThroughData(), response);
+                lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
             break;
           } else {
             orchestrationEngine.triggerLink(

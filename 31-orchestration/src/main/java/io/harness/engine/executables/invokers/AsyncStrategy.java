@@ -22,11 +22,11 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.plan.PlanNode;
-import io.harness.state.io.StepParameters;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 @Slf4j
 @Redesign
@@ -37,7 +37,7 @@ public class AsyncStrategy implements InvokeStrategy {
 
   @Override
   public void invoke(InvokerPackage invokerPackage) {
-    AsyncExecutable<StepParameters> asyncExecutable = (AsyncExecutable<StepParameters>) invokerPackage.getStep();
+    AsyncExecutable asyncExecutable = (AsyncExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
     AsyncExecutableResponse asyncExecutableResponse =
         asyncExecutable.executeAsync(ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());

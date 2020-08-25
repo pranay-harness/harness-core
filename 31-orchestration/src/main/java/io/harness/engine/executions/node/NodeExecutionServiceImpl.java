@@ -66,6 +66,12 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public List<NodeExecution> fetchNodeExecutionsByNotifyId(String planExecutionId, String notifyId) {
+    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndNotifyIdOrderByCreatedAtDesc(
+        planExecutionId, notifyId);
+  }
+
+  @Override
   public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status) {
     return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndStatus(planExecutionId, status);
   }
