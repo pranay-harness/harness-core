@@ -36,6 +36,7 @@ import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -104,6 +105,7 @@ public class OrchestrationEngine {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
   @Inject private AmbianceUtils ambianceUtils;
+  @Inject private InvocationHelper invocationHelper;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   public void startNodeExecution(String nodeExecutionId) {
@@ -239,18 +241,20 @@ public class OrchestrationEngine {
   }
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
-    NodeExecution nodeExecution =
-        nodeExecutionService.updateStatusWithOps(nodeExecutionId, stepResponse.getStatus(), ops -> {
-          setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis());
-          setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
-        });
-    // TODO => handle before node execution update
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
     List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
 
-    PlanNode node = nodeExecution.getNode();
+    NodeExecution updatedNodeExecution =
+        nodeExecutionService.updateStatusWithOps(nodeExecutionId, stepResponse.getStatus(), ops -> {
+          setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis());
+          setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
+          setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
+        });
+
+    PlanNode node = updatedNodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
-      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse.getFailureInfo(), outcomeRefs);
+      endTransition(updatedNodeExecution);
       return;
     }
     Advise advise = null;
@@ -269,7 +273,7 @@ public class OrchestrationEngine {
       }
     }
     if (advise == null) {
-      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse.getFailureInfo(), outcomeRefs);
+      endTransition(updatedNodeExecution);
       return;
     }
     handleAdvise(ambiance, advise);
@@ -292,17 +296,16 @@ public class OrchestrationEngine {
     return outcomeRefs;
   }
 
-  public void endTransition(
-      NodeExecution nodeExecution, Status status, FailureInfo failureInfo, List<StepOutcomeRef> outcomeRefs) {
+  public void endTransition(NodeExecution nodeExecution) {
     if (isNotEmpty(nodeExecution.getNotifyId())) {
       PlanNode planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
                                                 .nodeUuid(planNode.getUuid())
-                                                .stepOutcomeRefs(outcomeRefs)
-                                                .failureInfo(failureInfo)
+                                                .stepOutcomeRefs(nodeExecution.getOutcomeRefs())
+                                                .failureInfo(nodeExecution.getFailureInfo())
                                                 .identifier(planNode.getIdentifier())
                                                 .group(planNode.getGroup())
-                                                .status(status)
+                                                .status(nodeExecution.getStatus())
                                                 .build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
@@ -363,6 +366,7 @@ public class OrchestrationEngine {
                                   .orchestrationEngine(this)
                                   .stepRegistry(stepRegistry)
                                   .injector(injector)
+                                  .invocationHelper(invocationHelper)
                                   .build());
     } catch (Exception exception) {
       handleError(ambiance, exception);

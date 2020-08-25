@@ -32,6 +32,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import java.util.concurrent.ExecutorService;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 @Redesign
 public class ChildStrategy implements InvokeStrategy {

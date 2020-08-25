@@ -14,6 +14,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.io.StepResponse;
 import lombok.extern.slf4j.Slf4j;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 @Redesign
 @Slf4j

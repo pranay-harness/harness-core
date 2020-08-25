@@ -25,6 +25,9 @@ public interface NodeExecutionRepository extends CrudRepository<NodeExecution, S
 
   List<NodeExecution> findByAmbiancePlanExecutionIdAndStatus(String planExecutionId, Status status);
 
+  List<NodeExecution> findByAmbiancePlanExecutionIdAndNotifyIdOrderByCreatedAtDesc(
+      String planExecutionId, String notifyId);
+
   List<NodeExecution> findByAmbiancePlanExecutionIdAndStatusIn(String planExecutionId, EnumSet<Status> statuses);
 
   List<NodeExecution> findByAmbiancePlanExecutionIdAndParentIdInAndStatusIn(
