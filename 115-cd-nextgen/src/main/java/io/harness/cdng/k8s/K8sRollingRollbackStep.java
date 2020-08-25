@@ -16,7 +16,6 @@ import io.harness.execution.status.Status;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -30,8 +29,7 @@ import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 
 import java.util.Map;
 
-public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRollbackStepParameters>,
-                                               TaskV2Executable<K8sRollingRollbackStepParameters> {
+public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRollbackStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("K8S_ROLLBACK_ROLLING").build();
 
   @Inject K8sStepHelper k8sStepHelper;

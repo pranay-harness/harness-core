@@ -15,7 +15,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -34,8 +33,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class BasicHttpStep
-    implements Step, TaskExecutable<BasicHttpStepParameters>, TaskV2Executable<BasicHttpStepParameters> {
+public class BasicHttpStep implements Step, TaskExecutable<BasicHttpStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
   private static final int socketTimeoutMillis = 10000;
 

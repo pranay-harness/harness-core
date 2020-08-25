@@ -65,9 +65,9 @@ public class CustomExecutionResource {
   }
 
   @GET
-  @Path("/task-chain")
-  public RestResponse<PlanExecution> executeTaskChainPlan() {
-    return new RestResponse<>(customExecutionService.executeTaskChainPlan());
+  @Path("/task-chain-v1")
+  public RestResponse<PlanExecution> executeTaskChainPlanV1() {
+    return new RestResponse<>(customExecutionService.executeTaskChainPlanV1());
   }
 
   @GET

@@ -20,7 +20,6 @@ import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -39,8 +38,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ArtifactStep
-    implements Step, TaskExecutable<ArtifactStepParameters>, TaskV2Executable<ArtifactStepParameters> {
+public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();
 
   // Default timeout of 1 minute.
