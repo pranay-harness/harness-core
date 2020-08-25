@@ -56,6 +56,15 @@ public class EnvironmentRepositoryCustomImpl implements EnvironmentRepositoryCus
     return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateFirst(query, updateOperations, Environment.class));
   }
 
+  public UpdateResult delete(Criteria criteria) {
+    Query query = new Query(criteria);
+    Update updateOperationsForDelete = EnvironmentFilterHelper.getUpdateOperationsForDelete();
+    RetryPolicy<Object> retryPolicy = getRetryPolicy(
+        "[Retrying]: Failed deleting Environment; attempt: {}", "[Failed]: Failed deleting Environment; attempt: {}");
+    return Failsafe.with(retryPolicy)
+        .get(() -> mongoTemplate.updateFirst(query, updateOperationsForDelete, Environment.class));
+  }
+
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(OptimisticLockingFailureException.class)

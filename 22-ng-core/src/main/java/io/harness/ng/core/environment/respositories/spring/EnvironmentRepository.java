@@ -10,8 +10,8 @@ import java.util.Optional;
 @HarnessRepo
 public interface EnvironmentRepository
     extends PagingAndSortingRepository<Environment, String>, EnvironmentRepositoryCustom {
-  Optional<Environment> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
+  Optional<Environment> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, boolean notDeleted);
 
   void deleteByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);

@@ -31,6 +31,8 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class EnvironmentServiceImpl implements EnvironmentService {
   private final EnvironmentRepository environmentRepository;
+  private static final String DUP_KEY_EXP_FORMAT_STRING =
+      "Environment [%s] under Project[%s], Organization [%s] already exists";
 
   @Override
   public Environment create(@NotNull @Valid Environment environment) {
@@ -40,50 +42,63 @@ public class EnvironmentServiceImpl implements EnvironmentService {
       setName(environment);
       return environmentRepository.save(environment);
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format("Environment [%s] under Project[%s], Organization [%s] already exists",
-              environment.getIdentifier(), environment.getProjectIdentifier(), environment.getOrgIdentifier()),
+      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, environment.getIdentifier(),
+                                            environment.getProjectIdentifier(), environment.getOrgIdentifier()),
           USER_SRE, ex);
     }
   }
 
   @Override
   public Optional<Environment> get(
-      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier) {
-    return environmentRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier);
+      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier, boolean deleted) {
+    return environmentRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, !deleted);
   }
 
   @Override
   public Environment update(@Valid Environment requestEnvironment) {
-    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
-    setName(requestEnvironment);
-    Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment);
-    UpdateResult updateResult = environmentRepository.update(criteria, requestEnvironment);
-    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
-      throw new InvalidRequestException(
-          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
-              requestEnvironment.getOrgIdentifier()));
+    try {
+      validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+          requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
+      setName(requestEnvironment);
+      Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
+      UpdateResult updateResult = environmentRepository.update(criteria, requestEnvironment);
+      if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
+        throw new InvalidRequestException(
+            String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+                requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+                requestEnvironment.getOrgIdentifier()));
+      }
+      return requestEnvironment;
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(
+          String.format(DUP_KEY_EXP_FORMAT_STRING, requestEnvironment.getIdentifier(),
+              requestEnvironment.getProjectIdentifier(), requestEnvironment.getOrgIdentifier()),
+          USER_SRE, ex);
     }
-    return requestEnvironment;
   }
 
   @Override
   public Environment upsert(Environment requestEnvironment) {
-    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
-    setName(requestEnvironment);
-    Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment);
-    UpdateResult updateResult = environmentRepository.upsert(criteria, requestEnvironment);
-    if (!updateResult.wasAcknowledged()) {
-      throw new InvalidRequestException(
-          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be upserted.",
-              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
-              requestEnvironment.getOrgIdentifier()));
+    try {
+      validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+          requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
+      setName(requestEnvironment);
+      Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
+      UpdateResult upsertResult = environmentRepository.upsert(criteria, requestEnvironment);
+      if (!upsertResult.wasAcknowledged()) {
+        throw new InvalidRequestException(
+            String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be upserted.",
+                requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+                requestEnvironment.getOrgIdentifier()));
+      }
+      return requestEnvironment;
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(
+          String.format(DUP_KEY_EXP_FORMAT_STRING, requestEnvironment.getIdentifier(),
+              requestEnvironment.getProjectIdentifier(), requestEnvironment.getOrgIdentifier()),
+          USER_SRE, ex);
     }
-    return requestEnvironment;
   }
 
   @Override
@@ -94,8 +109,19 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Override
   public boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier) {
-    environmentRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier);
+    Environment environment = Environment.builder()
+                                  .accountId(accountId)
+                                  .orgIdentifier(orgIdentifier)
+                                  .projectIdentifier(projectIdentifier)
+                                  .identifier(environmentIdentifier)
+                                  .build();
+    Criteria criteria = getEnvironmentEqualityCriteria(environment, false);
+    UpdateResult updateResult = environmentRepository.delete(criteria);
+    if (!updateResult.wasAcknowledged()) {
+      throw new InvalidRequestException(
+          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be deleted.",
+              environmentIdentifier, projectIdentifier, orgIdentifier));
+    }
     return true;
   }
 
@@ -109,7 +135,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     }
   }
 
-  private Criteria getEnvironmentEqualityCriteria(Environment requestEnvironment) {
+  private Criteria getEnvironmentEqualityCriteria(Environment requestEnvironment, boolean deleted) {
     return Criteria.where(EnvironmentKeys.accountId)
         .is(requestEnvironment.getAccountId())
         .and(EnvironmentKeys.orgIdentifier)
@@ -117,6 +143,8 @@ public class EnvironmentServiceImpl implements EnvironmentService {
         .and(EnvironmentKeys.projectIdentifier)
         .is(requestEnvironment.getProjectIdentifier())
         .and(EnvironmentKeys.identifier)
-        .is(requestEnvironment.getIdentifier());
+        .is(requestEnvironment.getIdentifier())
+        .and(EnvironmentKeys.deleted)
+        .is(deleted);
   }
 }

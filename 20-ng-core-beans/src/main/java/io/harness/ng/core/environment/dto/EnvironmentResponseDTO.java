@@ -18,4 +18,5 @@ public class EnvironmentResponseDTO {
   String identifier;
   String name;
   EnvironmentType type;
+  boolean deleted;
 }

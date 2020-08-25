@@ -10,4 +10,5 @@ public interface EnvironmentRepositoryCustom {
   Page<Environment> findAll(Criteria criteria, Pageable pageable);
   UpdateResult upsert(Criteria criteria, Environment environment);
   UpdateResult update(Criteria criteria, Environment environment);
+  UpdateResult delete(Criteria criteria);
 }

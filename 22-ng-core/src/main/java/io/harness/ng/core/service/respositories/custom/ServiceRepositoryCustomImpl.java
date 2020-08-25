@@ -56,6 +56,16 @@ public class ServiceRepositoryCustomImpl implements ServiceRepositoryCustom {
     return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateFirst(query, update, ServiceEntity.class));
   }
 
+  @Override
+  public UpdateResult delete(Criteria criteria) {
+    Query query = new Query(criteria);
+    Update updateOperationsForDelete = ServiceFilterHelper.getUpdateOperationsForDelete();
+    RetryPolicy<Object> retryPolicy = getRetryPolicy(
+        "[Retrying]: Failed deleting Service; attempt: {}", "[Failed]: Failed deleting Service; attempt: {}");
+    return Failsafe.with(retryPolicy)
+        .get(() -> mongoTemplate.updateFirst(query, updateOperationsForDelete, ServiceEntity.class));
+  }
+
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(OptimisticLockingFailureException.class)

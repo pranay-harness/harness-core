@@ -17,4 +17,5 @@ public class ServiceResponseDTO {
   String projectIdentifier;
   String name;
   String description;
+  boolean deleted;
 }

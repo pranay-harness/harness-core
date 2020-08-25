@@ -26,6 +26,7 @@ public class EnvironmentMapper {
         .identifier(environment.getIdentifier())
         .name(environment.getName())
         .type(environment.getType())
+        .deleted(environment.getDeleted())
         .build();
   }
 }

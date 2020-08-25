@@ -13,7 +13,6 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
 import io.harness.ng.core.environment.services.impl.EnvironmentServiceImpl;
 import io.harness.rule.Owner;
-import io.harness.utils.PageUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,8 +20,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+import software.wings.beans.Environment.EnvironmentKeys;
 
 import java.util.Collections;
 import java.util.List;
@@ -74,10 +76,10 @@ public class EnvironmentResourceTest extends CategoryTest {
     doReturn(Optional.of(environmentEntity))
         .when(environmentService)
         .get("ACCOUNT_ID", environmentRequestDTO.getOrgIdentifier(), environmentRequestDTO.getProjectIdentifier(),
-            environmentRequestDTO.getIdentifier());
+            environmentRequestDTO.getIdentifier(), false);
 
     EnvironmentResponseDTO envResponse =
-        environmentResource.get("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
+        environmentResource.get("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false).getData();
 
     assertThat(envResponse).isNotNull();
     assertThat(envResponse).isEqualTo(environmentResponseDTO);
@@ -131,9 +133,9 @@ public class EnvironmentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testListServices() {
-    Criteria criteria = EnvironmentFilterHelper.createCriteria("", "", "");
-    Pageable pageable = PageUtils.getPageRequest(0, 10, null);
+  public void testListEnvironmentsWithDESCSort() {
+    Criteria criteria = EnvironmentFilterHelper.createCriteriaForGetList("", "", "", false);
+    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, EnvironmentKeys.createdAt));
     final Page<Environment> environments = new PageImpl<>(Collections.singletonList(environmentEntity), pageable, 1);
     doReturn(environments).when(environmentService).list(criteria, pageable);
 
