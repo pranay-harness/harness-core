@@ -17,6 +17,12 @@ import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
+import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.GcpKmsConnectorSummaryDTOMapper;
+import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.GcpKmsDTOToEntity;
+import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.GcpKmsEntityToDTO;
+import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.LocalConnectorSummaryDTOMapper;
+import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.LocalDTOToEntity;
+import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.LocalEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultConnectorSummaryDTOMapper;
 import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.secretmanagermapper.VaultEntityToDTO;
@@ -60,6 +66,8 @@ public class ConnectorModule extends AbstractModule {
         .to(AppDynamicsDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.SPLUNK.getDisplayName()).to(SplunkDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.VAULT.getDisplayName()).to(VaultDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.GCP_KMS.getDisplayName()).to(GcpKmsDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.LOCAL.getDisplayName()).to(LocalDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
@@ -70,6 +78,8 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName()).to(AppDynamicsEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.SPLUNK.getDisplayName()).to(SplunkEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.VAULT.getDisplayName()).to(VaultEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.GCP_KMS.getDisplayName()).to(GcpKmsEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.LOCAL.getDisplayName()).to(LocalEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.DOCKER.getDisplayName()).to(DockerEntityToDTO.class);
 
     MapBinder<String, ConnectorConfigSummaryDTOMapper> connectorConfigSummaryDTOMapper =
@@ -79,6 +89,10 @@ public class ConnectorModule extends AbstractModule {
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitConfigSummaryMapper.class);
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.VAULT.getDisplayName())
         .to(VaultConnectorSummaryDTOMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.GCP_KMS.getDisplayName())
+        .to(GcpKmsConnectorSummaryDTOMapper.class);
+    connectorConfigSummaryDTOMapper.addBinding(ConnectorType.LOCAL.getDisplayName())
+        .to(LocalConnectorSummaryDTOMapper.class);
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
         .to(AppDynamicsConnectorSummaryMapper.class);
     connectorConfigSummaryDTOMapper.addBinding(ConnectorType.SPLUNK.getDisplayName())

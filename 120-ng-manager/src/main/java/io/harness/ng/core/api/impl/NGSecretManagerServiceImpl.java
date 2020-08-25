@@ -46,6 +46,11 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   }
 
   @Override
+  public SecretManagerConfigDTO getGlobalSecretManager(String accountIdentifier) {
+    return getResponse(secretManagerClient.getGlobalSecretManager(accountIdentifier));
+  }
+
+  @Override
   public boolean deleteSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     return getResponse(

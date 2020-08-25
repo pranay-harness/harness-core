@@ -51,6 +51,8 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
     ConnectorRequestDTO connectorRequestDTO = ConnectorRequestDTO.builder().build();
     connectorRequestDTO.setConnectorType(ConnectorType.VAULT);
     connectorRequestDTO.setConnectorConfig(VaultConnectorDTO.builder().build());
+    connectorRequestDTO.setName("name");
+    connectorRequestDTO.setIdentifier("identifier");
     return connectorRequestDTO;
   }
 

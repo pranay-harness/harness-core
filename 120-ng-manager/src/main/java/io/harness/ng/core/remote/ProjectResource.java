@@ -26,6 +26,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -54,6 +55,7 @@ import javax.ws.rs.QueryParam;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Slf4j
 public class ProjectResource {
   private final ProjectService projectService;
   private final OrganizationService organizationService;
@@ -89,7 +91,8 @@ public class ProjectResource {
   public ResponseDTO<NGPageResponse<ProjectDTO>> listProjectsForOrganization(
       @PathParam("orgIdentifier") String orgIdentifier, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("100") int size, @QueryParam("sort") List<String> sort) {
-    Criteria criteria = Criteria.where(ProjectKeys.orgIdentifier).is(orgIdentifier).and(ProjectKeys.deleted).ne(true);
+    Criteria criteria =
+        Criteria.where(ProjectKeys.orgIdentifier).is(orgIdentifier).and(ProjectKeys.deleted).ne(Boolean.TRUE);
     Page<ProjectDTO> projects =
         projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
     if (!projects.getContent().isEmpty()) {

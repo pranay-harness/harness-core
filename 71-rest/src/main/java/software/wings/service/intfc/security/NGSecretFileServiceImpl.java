@@ -1,10 +1,10 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.security.encryption.EncryptionType.VAULT;
 import static software.wings.service.intfc.security.SecretManager.ILLEGAL_CHARACTERS;
 import static software.wings.service.intfc.security.SecretManager.containsIllegalCharacters;
 
@@ -17,11 +17,14 @@ import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.stream.BoundedInputStream;
 import lombok.AllArgsConstructor;
+import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
@@ -34,17 +37,28 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
   private final NGSecretManagerService ngSecretManagerService;
   private final NGSecretService ngSecretService;
   private final VaultService vaultService;
+  private final GcpKmsService gcpKmsService;
+  private final LocalEncryptionService localEncryptionService;
   private final WingsPersistence wingsPersistence;
   private final SecretManagerConfigService secretManagerConfigService;
+  private final FileService fileService;
 
   private EncryptedData encrypt(String accountIdentifier, SecretManagerConfig secretManagerConfig, String name,
       byte[] bytes, EncryptedData savedEncryptedData) {
-    if (secretManagerConfig.getEncryptionType() == VAULT) {
-      return vaultService.encryptFile(
-          accountIdentifier, (VaultConfig) secretManagerConfig, name, bytes, savedEncryptedData);
+    switch (secretManagerConfig.getEncryptionType()) {
+      case VAULT:
+        return vaultService.encryptFile(
+            accountIdentifier, (VaultConfig) secretManagerConfig, name, bytes, savedEncryptedData);
+      case GCP_KMS:
+        return gcpKmsService.encryptFile(
+            accountIdentifier, (GcpKmsConfig) secretManagerConfig, name, bytes, savedEncryptedData);
+      case LOCAL:
+        return localEncryptionService.encryptFile(
+            accountIdentifier, (LocalEncryptionConfig) secretManagerConfig, name, bytes);
+      default:
+        throw new UnsupportedOperationException(
+            "Encryption type " + secretManagerConfig.getEncryptionType() + " not supported in next gen");
     }
-    throw new UnsupportedOperationException(
-        "Encryption type " + secretManagerConfig.getEncryptionType() + " not supported in next gen");
   }
 
   @Override
@@ -143,8 +157,15 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       if (secretManagerConfigOptional.isPresent()) {
         // If name has changed, delete the old file (we do not allow reference with files)
         if (!dto.getName().equals(encryptedData.getName())) {
-          ngSecretService.deleteSecretInSecretManager(
-              account, encryptedData.getEncryptionKey(), secretManagerConfigOptional.get());
+          switch (secretManagerConfigOptional.get().getEncryptionType()) {
+            case LOCAL:
+            case GCP_KMS:
+              fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
+              break;
+            default:
+              ngSecretService.deleteSecretInSecretManager(
+                  account, encryptedData.getEncryptionKey(), secretManagerConfigOptional.get());
+          }
         }
 
         // decrypt secrets of secret manager before sending secret manager config to delegate

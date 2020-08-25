@@ -20,6 +20,7 @@ import software.wings.beans.LocalEncryptionConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.LocalEncryptionService;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.ByteArrayInputStream;
@@ -35,6 +36,7 @@ import java.nio.CharBuffer;
 @Slf4j
 public class LocalEncryptionServiceImpl implements LocalEncryptionService {
   @Inject private FileService fileService;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, LocalEncryptionConfig localEncryptionConfig) {
@@ -103,5 +105,11 @@ public class LocalEncryptionServiceImpl implements LocalEncryptionService {
     logger.info("Temp file path [{}]", file.getAbsolutePath());
     fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
     EncryptionUtils.decryptToStream(file, encryptedData.getEncryptionKey(), output, encryptedData.isBase64Encoded());
+  }
+
+  @Override
+  public String saveLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig) {
+    localEncryptionConfig.setAccountId(accountId);
+    return secretManagerConfigService.save(localEncryptionConfig);
   }
 }

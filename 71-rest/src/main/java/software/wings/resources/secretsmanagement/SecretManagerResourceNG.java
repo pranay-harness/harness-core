@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.rest.RestResponse;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTOConverter;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.swagger.annotations.Api;
@@ -20,9 +19,9 @@ import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.security.NGSecretManagerService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -47,7 +46,7 @@ public class SecretManagerResourceNG {
   @Consumes("application/x-kryo")
   public RestResponse<SecretManagerConfigDTO> createSecretManager(SecretManagerConfigDTO dto) {
     SecretManagerConfig secretManagerConfig = SecretManagerConfigMapper.fromDTO(dto);
-    return new RestResponse<>(ngSecretManagerService.createSecretManager(secretManagerConfig).toDTO());
+    return new RestResponse<>(ngSecretManagerService.createSecretManager(secretManagerConfig).toDTO(true));
   }
 
   @GET
@@ -56,8 +55,9 @@ public class SecretManagerResourceNG {
       @QueryParam(PROJECT_KEY) String projectIdentifier) {
     List<SecretManagerConfig> secretManagerConfigs =
         ngSecretManagerService.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier);
-    return new RestResponse<>(
-        secretManagerConfigs.stream().map(NGSecretManagerConfigDTOConverter::toDTO).collect(Collectors.toList()));
+    List<SecretManagerConfigDTO> dtoList = new ArrayList<>();
+    secretManagerConfigs.forEach(secretManagerConfig -> dtoList.add(secretManagerConfig.toDTO(true)));
+    return new RestResponse<>(dtoList);
   }
 
   @GET
@@ -67,7 +67,17 @@ public class SecretManagerResourceNG {
       @QueryParam(PROJECT_KEY) String projectIdentifier) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return new RestResponse<>(secretManagerConfigOptional.map(SecretManagerConfig::toDTO).orElse(null));
+    SecretManagerConfigDTO dto = null;
+    if (secretManagerConfigOptional.isPresent()) {
+      dto = secretManagerConfigOptional.get().toDTO(true);
+    }
+    return new RestResponse<>(dto);
+  }
+
+  @GET
+  @Path("global/{accountIdentifier}")
+  public RestResponse<SecretManagerConfigDTO> getGlobalSecretManager(@PathParam(ACCOUNT_KEY) String accountIdentifier) {
+    return new RestResponse<>(ngSecretManagerService.getGlobalSecretManager(accountIdentifier).toDTO(false));
   }
 
   @PUT
@@ -82,7 +92,7 @@ public class SecretManagerResourceNG {
     if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig applyUpdate =
           SecretManagerConfigMapper.applyUpdate(secretManagerConfigOptional.get(), secretManagerConfigUpdateDTO);
-      return new RestResponse<>(ngSecretManagerService.updateSecretManager(applyUpdate).toDTO());
+      return new RestResponse<>(ngSecretManagerService.updateSecretManager(applyUpdate).toDTO(true));
     }
     throw new SecretManagementException(ErrorCode.SECRET_MANAGEMENT_ERROR, "Secret Manager not found", USER);
   }

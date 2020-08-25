@@ -79,7 +79,7 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig implements Exec
   }
 
   @Override
-  public SecretManagerConfigDTO toDTO() {
+  public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
     throw new UnsupportedOperationException();
   }
 }

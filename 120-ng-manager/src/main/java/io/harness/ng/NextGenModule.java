@@ -37,8 +37,12 @@ import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.NgAsyncTaskGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
+import io.harness.ng.core.impl.OrganizationServiceImpl;
+import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.impl.RemotePerpetualTaskServiceClientManagerImpl;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
 import io.harness.ng.orchestration.NgDelegateTaskExecutor;
 import io.harness.queue.QueueController;
@@ -186,6 +190,8 @@ public class NextGenModule extends DependencyModule {
 
     bind(RemotePerpetualTaskServiceClientManager.class).to(RemotePerpetualTaskServiceClientManagerImpl.class);
 
+    bind(ProjectService.class).to(ProjectServiceImpl.class);
+    bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(GitSyncManagerInterface.class).to(GitSyncManagerInterfaceImpl.class);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))

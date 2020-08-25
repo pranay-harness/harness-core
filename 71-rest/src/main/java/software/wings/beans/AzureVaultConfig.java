@@ -97,7 +97,7 @@ public class AzureVaultConfig extends SecretManagerConfig implements ExecutionCa
   }
 
   @Override
-  public SecretManagerConfigDTO toDTO() {
+  public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
     throw new UnsupportedOperationException();
   }
 }

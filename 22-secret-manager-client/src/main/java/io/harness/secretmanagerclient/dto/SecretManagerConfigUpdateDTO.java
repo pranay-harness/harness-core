@@ -16,7 +16,10 @@ import java.util.List;
 @NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "encryptionType",
     visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(name = "VAULT", value = VaultConfigUpdateDTO.class) })
+@JsonSubTypes({
+  @JsonSubTypes.Type(name = "VAULT", value = VaultConfigUpdateDTO.class)
+  , @JsonSubTypes.Type(name = "GCP_KMS", value = GcpKmsConfigUpdateDTO.class)
+})
 public class SecretManagerConfigUpdateDTO {
   private List<String> tags;
   private EncryptionType encryptionType;

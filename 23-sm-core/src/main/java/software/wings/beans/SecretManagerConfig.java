@@ -46,8 +46,13 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"createdBy", "createdAt", "lastUpdatedBy", "lastUpdatedAt"})
 @Entity(value = "secretManagers")
-@CdUniqueIndex(name = "uniqueIdx", fields = { @Field("name")
-                                              , @Field("accountId"), @Field("encryptionType") })
+@CdUniqueIndex(name = "uniqueIdx",
+    fields =
+    {
+      @Field("name")
+      , @Field("accountId"), @Field("encryptionType"), @Field("ngMetadata.orgIdentifier"),
+          @Field("ngMetadata.projectIdentifier"), @Field("ngMetadata.identifier")
+    })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")

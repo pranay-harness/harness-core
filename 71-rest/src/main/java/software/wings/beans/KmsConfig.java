@@ -85,7 +85,7 @@ public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilit
   }
 
   @Override
-  public SecretManagerConfigDTO toDTO() {
+  public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
     throw new UnsupportedOperationException();
   }
 }

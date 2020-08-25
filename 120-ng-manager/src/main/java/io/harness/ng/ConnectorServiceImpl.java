@@ -3,6 +3,7 @@ package io.harness.ng;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
+import static io.harness.secretmanagerclient.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,8 +16,10 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import org.springframework.data.domain.Page;
+import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +37,10 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
-    if (connectorType == ConnectorType.VAULT) {
+    if (connectorType == ConnectorType.LOCAL) {
+      throw new SecretManagementException(
+          ErrorCode.SECRET_MANAGEMENT_ERROR, "Operation not allowed for Secret Manager", USER);
+    } else if (connectorType == ConnectorType.VAULT || connectorType == ConnectorType.GCP_KMS) {
       return secretManagerConnectorService;
     }
     return defaultConnectorService;
@@ -55,17 +61,27 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorDTO create(ConnectorRequestDTO connector, String accountIdentifier) {
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getIdentifier())) {
+      throw new InvalidRequestException(
+          String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
+    }
     return getConnectorService(connector.getConnectorType()).create(connector, accountIdentifier);
   }
 
   @Override
   public ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorRequestDTO.getIdentifier())) {
+      throw new InvalidRequestException("Update operation not supported for Harness Secret Manager", USER);
+    }
     return getConnectorService(connectorRequestDTO.getConnectorType()).update(connectorRequestDTO, accountIdentifier);
   }
 
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
+      throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager", USER);
+    }
     Optional<ConnectorDTO> connectorDTO = get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (connectorDTO.isPresent()) {
       return getConnectorService(connectorDTO.get().getConnectorType())

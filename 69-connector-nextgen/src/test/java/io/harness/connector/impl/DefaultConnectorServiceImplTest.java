@@ -33,7 +33,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +53,7 @@ import org.springframework.data.domain.Page;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -211,14 +211,11 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void testGetWhenConnectorDoesntExists() throws Exception {
-    expectedEx.expect(InvalidRequestException.class);
-    expectedEx.expectMessage(
-        "No connector exists with the identifier identifier in account accountIdentifier, organisation orgIdentifier, project projectIdentifier");
-
+  public void testGetWhenConnectorDoesntExists() {
     createConnector(identifier);
-    ConnectorDTO connectorDTO =
-        connectorService.get(accountIdentifier, "orgIdentifier", "projectIdentifier", identifier).get();
+    Optional<ConnectorDTO> connectorDTO =
+        connectorService.get(accountIdentifier, "orgIdentifier", "projectIdentifier", identifier);
+    assertThat(connectorDTO.isPresent()).isFalse();
   }
 
   private void ensureKubernetesConnectorFieldsAreCorrect(ConnectorDTO connectorDTOOutput) {

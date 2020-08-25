@@ -22,4 +22,6 @@ public interface LocalEncryptionService {
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
 
   void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output);
+
+  String saveLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig);
 }

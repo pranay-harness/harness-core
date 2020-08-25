@@ -13,6 +13,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.security.GlobalEncryptDecryptClient.isNgHarnessSecretManager;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
 import com.google.common.io.Files;
@@ -55,7 +56,8 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
       return encryptLocal(value.toCharArray());
     }
 
-    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())) {
+    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())
+        || isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
       logger.info("Encrypt secret with global KMS secret manager for account {}", accountId);
       return globalEncryptDecryptClient.encrypt(accountId, value.toCharArray(), gcpKmsConfig);
     } else {
@@ -75,7 +77,8 @@ public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpK
       return decryptLocal(data);
     }
 
-    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())) {
+    if (GLOBAL_ACCOUNT_ID.equals(gcpKmsConfig.getAccountId())
+        || isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
       // PL-1836: Perform encrypt/decrypt at manager side for global shared KMS.
       logger.info("Decrypt secret with global KMS secret manager for account {}", accountId);
       return globalEncryptDecryptClient.decrypt(data, gcpKmsConfig);

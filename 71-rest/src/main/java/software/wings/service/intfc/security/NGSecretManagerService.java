@@ -16,6 +16,8 @@ public interface NGSecretManagerService {
   Optional<SecretManagerConfig> getSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
+  SecretManagerConfig getGlobalSecretManager(String accountIdentifier);
+
   SecretManagerConfig updateSecretManager(SecretManagerConfig secretManagerConfig);
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);

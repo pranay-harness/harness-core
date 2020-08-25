@@ -3,6 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
+import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
@@ -13,6 +14,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassw
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
+import io.harness.connector.entities.embedded.localconnector.LocalConnector;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.morphia.MorphiaRegistrar;
@@ -27,6 +29,8 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(KubernetesClusterConfig.class);
     set.add(GitConfig.class);
     set.add(VaultConnector.class);
+    set.add(GcpKmsConnector.class);
+    set.add(LocalConnector.class);
     set.add(AppDynamicsConnector.class);
     set.add(SplunkConnector.class);
     set.add(DockerConnector.class);

@@ -31,6 +31,8 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.intfc.security.GcpKmsService;
+import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
 import software.wings.service.intfc.security.SecretManager;
@@ -44,6 +46,8 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
   @Mock private NGSecretManagerService ngSecretManagerService;
   @Mock private SecretManager secretManager;
   @Mock private VaultService vaultService;
+  @Mock private GcpKmsService gcpKmsService;
+  @Mock private LocalEncryptionService localEncryptionService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   private static final String ACCOUNT = "Account";
@@ -52,8 +56,8 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    ngSecretService = spy(new NGSecretServiceImpl(
-        ngSecretManagerService, secretManager, vaultService, wingsPersistence, secretManagerConfigService));
+    ngSecretService = spy(new NGSecretServiceImpl(ngSecretManagerService, secretManager, vaultService, gcpKmsService,
+        localEncryptionService, wingsPersistence, secretManagerConfigService));
   }
 
   @Test
@@ -72,7 +76,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     when(vaultService.encrypt(any(), any(), any(), any(), any(), any())).thenReturn(encryptedData);
 
     EncryptedData savedData = ngSecretService.createSecretText(secretTextDTO);
-    assertThat(savedData.getName()).isEqualTo(encryptedData.getName());
+    assertThat(savedData.getName()).isEqualTo(secretTextDTO.getName());
     verify(secretManager).validateSecretPath(any(), anyString());
     verify(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     verify(vaultService).encrypt(any(), any(), any(), any(), any(), any());
