@@ -1,5 +1,7 @@
 package software.wings.service.impl.security;
 
+import static io.harness.security.encryption.EncryptionType.LOCAL;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.DuplicateFieldException;
@@ -112,6 +114,8 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         secretManagerConfigService.getGlobalSecretManager(accountIdentifier);
     if (accountSecretManagerConfig == null) {
       accountSecretManagerConfig = localEncryptionService.getEncryptionConfig(accountIdentifier);
+      accountSecretManagerConfig.setUuid(null);
+      accountSecretManagerConfig.setEncryptionType(LOCAL);
     }
     return accountSecretManagerConfig;
   }
