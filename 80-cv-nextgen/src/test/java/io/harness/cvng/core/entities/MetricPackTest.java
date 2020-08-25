@@ -29,9 +29,9 @@ public class MetricPackTest extends CategoryTest {
                                 .dataSourceType(DataSourceType.APP_DYNAMICS)
                                 .metrics(Sets.newHashSet(MetricDefinition.builder().build()))
                                 .build();
-    MetricPackDTO metricPackDTO = metricPack.getDTO();
+    MetricPackDTO metricPackDTO = metricPack.toDTO();
     assertThat(metricPackDTO.getMetrics())
-        .isEqualTo(metricPack.getMetrics().stream().map(MetricDefinition::getDTO).collect(Collectors.toSet()));
+        .isEqualTo(metricPack.getMetrics().stream().map(MetricDefinition::toDTO).collect(Collectors.toSet()));
     assertThat(metricPackDTO.getAccountId()).isEqualTo(metricPack.getAccountId());
     assertThat(metricPackDTO.getIdentifier()).isEqualTo(metricPack.getIdentifier());
     assertThat(metricPackDTO.getDataSourceType()).isEqualTo(metricPack.getDataSourceType());
@@ -43,7 +43,7 @@ public class MetricPackTest extends CategoryTest {
   public void testGetDTO_metricPackDefinition() {
     MetricDefinition metricDefinition =
         MetricDefinition.builder().name("name").path("path").validationPath("validationPath").build();
-    MetricDefinitionDTO metricDefinitionDTO = metricDefinition.getDTO();
+    MetricDefinitionDTO metricDefinitionDTO = metricDefinition.toDTO();
 
     assertThat(metricDefinitionDTO.getPath()).isEqualTo(metricDefinition.getPath());
     assertThat(metricDefinitionDTO.getName()).isEqualTo(metricDefinition.getName());

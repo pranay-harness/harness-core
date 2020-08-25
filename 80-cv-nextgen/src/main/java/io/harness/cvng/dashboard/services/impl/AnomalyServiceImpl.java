@@ -7,7 +7,7 @@ import com.google.common.collect.Table;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 
-import io.harness.cvng.core.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.AnomalyDTO;

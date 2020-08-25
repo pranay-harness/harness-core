@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.DBCollectionUpdateOptions;
-import io.harness.cvng.core.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;

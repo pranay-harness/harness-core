@@ -7,6 +7,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
+import io.harness.cvng.beans.TimeSeriesThresholdDTO;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -46,4 +47,18 @@ public class TimeSeriesThreshold implements PersistentEntity, UuidAware, Created
   @Default private String metricGroupName = "*";
   @NotNull private TimeSeriesThresholdActionType action;
   @NotNull private TimeSeriesThresholdCriteria criteria;
+
+  public TimeSeriesThresholdDTO toDTO() {
+    return TimeSeriesThresholdDTO.builder()
+        .accountId(accountId)
+        .projectIdentifier(projectIdentifier)
+        .dataSourceType(dataSourceType)
+        .metricPackIdentifier(metricPackIdentifier)
+        .metricName(metricName)
+        .metricType(metricType)
+        .metricGroupName(metricGroupName)
+        .action(action)
+        .criteria(criteria)
+        .build();
+  }
 }

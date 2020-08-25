@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.core.entities.MetricPack;
@@ -34,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class MetricPackServiceImpl implements MetricPackService {
@@ -68,6 +70,14 @@ public class MetricPackServiceImpl implements MetricPackService {
   }
 
   @Inject private HPersistence hPersistence;
+
+  @Override
+  public List<MetricPackDTO> getMetricPacks(DataSourceType dataSourceType, String accountId, String projectIdentifier) {
+    return getMetricPacks(accountId, projectIdentifier, dataSourceType)
+        .stream()
+        .map(MetricPack::toDTO)
+        .collect(Collectors.toList());
+  }
 
   @Override
   public List<MetricPack> getMetricPacks(String accountId, String projectIdentifier, DataSourceType dataSourceType) {

@@ -1,13 +1,15 @@
 package io.harness.cvng.core.entities;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
@@ -68,13 +70,14 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
     return metrics;
   }
 
-  public MetricPackDTO getDTO() {
+  public MetricPackDTO toDTO() {
     return MetricPackDTO.builder()
         .accountId(getAccountId())
-        .dataSourceType(getDataSourceType())
         .projectIdentifier(getProjectIdentifier())
+        .dataSourceType(getDataSourceType())
         .identifier(getIdentifier())
-        .metrics(getMetrics().stream().map(MetricDefinition::getDTO).collect(Collectors.toSet()))
+        .category(getCategory())
+        .metrics(getMetrics().stream().map(MetricDefinition::toDTO).collect(Collectors.toSet()))
         .build();
   }
 
@@ -104,12 +107,15 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
       return type;
     }
 
-    public MetricDefinitionDTO getDTO() {
+    public MetricDefinitionDTO toDTO() {
       return MetricDefinitionDTO.builder()
           .name(name)
           .path(path)
           .validationPath(validationPath)
           .included(included)
+          .thresholds(isEmpty(thresholds)
+                  ? new ArrayList<>()
+                  : thresholds.stream().map(TimeSeriesThreshold::toDTO).collect(Collectors.toList()))
           .build();
     }
   }

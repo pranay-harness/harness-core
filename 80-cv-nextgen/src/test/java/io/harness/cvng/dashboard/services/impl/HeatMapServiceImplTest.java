@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.core.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
