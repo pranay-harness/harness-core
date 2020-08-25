@@ -26,9 +26,10 @@ import java.nio.file.Paths;
 public class HoverflyExampleTest extends CategoryTest {
   // TODO: This is just zero external dependency basic example for Hoverfly. Can be used to quickly try out Hoverfly
   //  We need make capture and simulation switching easier.
+  // TODO: trying out if assinging a fixed porr fixes the CI issues. We need a common rule for all tests.
   @ClassRule
-  public static final HoverflyRule rule =
-      HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
+  public static final HoverflyRule rule = HoverflyRule.inSimulationMode(
+      HoverflyConfig.localConfigs().disableTlsVerification().proxyPort(8053).adminPort(8054));
   // In capture mode-
   // public static final HoverflyRule rule =
   // HoverflyRule.inCaptureMode(HoverflyConfig.localConfigs().disableTlsVerification());

@@ -14,6 +14,7 @@ import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalys
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.entities.DeploymentVerificationTaskTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
@@ -34,7 +35,6 @@ import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
-import io.harness.cvng.core.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
@@ -43,6 +43,7 @@ import io.harness.cvng.dashboard.entities.Anomaly;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.cvng.statemachine.entities.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.persistence.HPersistence;
@@ -83,11 +84,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return Arrays.asList(timeSeriesTask.getUuid());
   }
   @Override
-  public List<String> scheduleVerificationTaskAnalysis(AnalysisInput analysisInput) {
+  public List<String> scheduleDeploymentVerificationTaskAnalysis(AnalysisInput analysisInput) {
     TimeSeriesCanaryLearningEngineTask timeSeriesTask = createTimeSeriesCanaryLearningEngineTask(analysisInput);
     learningEngineTaskService.createLearningEngineTasks(Arrays.asList(timeSeriesTask));
     // TODO: find a good way to return all taskIDs
     return Arrays.asList(timeSeriesTask.getUuid());
+  }
+  @Override
+  public void logDeploymentVerificationProgress(AnalysisInput analysisInput, AnalysisStatus analysisStatus) {
+    deploymentVerificationTaskService.logProgress(
+        verificationTaskService.getDeploymentVerificationTaskId(analysisInput.getVerificationTaskId()),
+        analysisInput.getStartTime(), analysisInput.getEndTime(), analysisStatus);
   }
 
   private TimeSeriesCanaryLearningEngineTask createTimeSeriesCanaryLearningEngineTask(AnalysisInput input) {
@@ -100,9 +107,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .preDeploymentDataUrl(preDeploymentDataUrl(input, deploymentVerificationTask))
             .postDeploymentDataUrl(postDeploymentDataUrl(input, deploymentVerificationTask))
             .dataLength(
-                (int) Duration.between(deploymentVerificationTask.getVerificationTaskStartTime(), input.getStartTime())
-                    .toMinutes()
-                + 1)
+                (int) Duration.between(deploymentVerificationTask.getStartTime(), input.getStartTime()).toMinutes() + 1)
             .metricTemplateUrl(createMetricTemplateUrl(input))
             .build();
 
@@ -198,8 +203,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     // TODO: rename params to startTime and endTime.
-    uriBuilder.addParameter(
-        "startTime", Long.toString(deploymentVerificationTask.getVerificationTaskStartTime().toEpochMilli()));
+    uriBuilder.addParameter("startTime", Long.toString(deploymentVerificationTask.getStartTime().toEpochMilli()));
     uriBuilder.addParameter("endTime", Long.toString(input.getEndTime().toEpochMilli()));
     return getUriString(uriBuilder);
   }

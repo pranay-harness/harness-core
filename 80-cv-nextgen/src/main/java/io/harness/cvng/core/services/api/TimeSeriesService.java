@@ -1,9 +1,9 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
-import io.harness.cvng.core.beans.TimeSeriesRecordDTO;
 
 import java.time.Instant;
 import java.util.List;

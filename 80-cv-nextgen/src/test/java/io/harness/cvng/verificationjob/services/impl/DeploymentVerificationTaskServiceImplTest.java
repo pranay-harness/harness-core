@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.VerificationManagerService;
@@ -26,6 +27,7 @@ import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.statemachine.entities.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
@@ -204,6 +206,56 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     assertThat(firstTask.getValidAfter())
         .isEqualTo(Instant.parse("2020-07-27T10:45:00Z").plus(DATA_COLLECTION_DELAY).toEpochMilli());
     assertThat(updated.getExecutionStatus()).isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testLogProgress_multipleUpdates() {
+    verificationJobService.upsert(accountId, newVerificationJob());
+    cvConfigService.save(newCVConfig());
+    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
+    DeploymentVerificationTask deploymentVerificationTask =
+        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(deploymentVerificationTask.getProgressLogs()).isEmpty();
+    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId,
+        deploymentVerificationTask.getStartTime(),
+        deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)), AnalysisStatus.SUCCESS);
+    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(1);
+    assertThat(deploymentVerificationTask.getProgressLogs().get(0).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(deploymentVerificationTask.getExecutionStatus())
+        .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.QUEUED);
+    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId,
+        deploymentVerificationTask.getEndTime().minus(Duration.ofMinutes(1)), deploymentVerificationTask.getEndTime(),
+        AnalysisStatus.SUCCESS);
+    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(2);
+    assertThat(deploymentVerificationTask.getProgressLogs().get(1).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(deploymentVerificationTask.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testLogProgress_onFailure() {
+    verificationJobService.upsert(accountId, newVerificationJob());
+    cvConfigService.save(newCVConfig());
+    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
+    DeploymentVerificationTask deploymentVerificationTask =
+        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(deploymentVerificationTask.getProgressLogs()).isEmpty();
+    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId,
+        deploymentVerificationTask.getStartTime(),
+        deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)), AnalysisStatus.FAILED);
+    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(1);
+    assertThat(deploymentVerificationTask.getProgressLogs().get(0).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.FAILED);
+    assertThat(deploymentVerificationTask.getExecutionStatus())
+        .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.FAILED);
   }
 
   private String getDataCollectionWorkerId(String verificationTaskId, String connectorId) {

@@ -15,6 +15,11 @@ import java.util.List;
 public class DeploymentTimeSeriesAnalysisState extends TimeSeriesAnalysisState {
   @Override
   protected List<String> scheduleAnalysis(AnalysisInput analysisInput) {
-    return timeSeriesAnalysisService.scheduleVerificationTaskAnalysis(analysisInput);
+    return timeSeriesAnalysisService.scheduleDeploymentVerificationTaskAnalysis(analysisInput);
+  }
+
+  @Override
+  public void handleFinalStatuses(AnalysisStatus finalStatus) {
+    timeSeriesAnalysisService.logDeploymentVerificationProgress(getInputs(), finalStatus);
   }
 }

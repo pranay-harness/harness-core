@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.analysis.beans;
 
 import lombok.Builder;
 import lombok.Value;

@@ -127,7 +127,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       } else {
         enqueueNextTask(dataCollectionTask);
       }
-      if (dataCollectionTask.isQueueAnalysis()) {
+      if (dataCollectionTask.shouldQueueAnalysis()) {
         orchestrationService.queueAnalysis(dataCollectionTask.getVerificationTaskId(),
             dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
       }

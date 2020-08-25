@@ -47,7 +47,7 @@ import io.harness.cvng.exception.NotFoundExceptionMapper;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.cvng.statemachine.jobs.DeploymentVerificationTaskOrchestrationJob;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.VerificationTaskKeys;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.DeploymentVerificationTaskKeys;
 import io.harness.cvng.verificationjob.jobs.DeploymentVerificationTaskHandler;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
@@ -244,7 +244,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(DeploymentVerificationTask.class)
-            .fieldName(VerificationTaskKeys.analysisOrchestrationIteration)
+            .fieldName(DeploymentVerificationTaskKeys.analysisOrchestrationIteration)
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofSeconds(30))
             .executorService(workflowVerificationExecutor)
@@ -252,7 +252,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query
-                -> query.field(VerificationTaskKeys.executionStatus)
+                -> query.field(DeploymentVerificationTaskKeys.executionStatus)
                        .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
             .redistribute(true)
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
@@ -297,14 +297,15 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(DeploymentVerificationTask.class)
-            .fieldName(VerificationTaskKeys.dataCollectionTaskIteration)
+            .fieldName(DeploymentVerificationTaskKeys.dataCollectionTaskIteration)
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(verificationTaskExecutor)
             .semaphore(new Semaphore(5))
             .handler(handler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(VerificationTaskKeys.dataCollectionTaskIds).doesNotExist())
+            .filterExpander(
+                query -> query.criteria(DeploymentVerificationTaskKeys.dataCollectionTaskIds).doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

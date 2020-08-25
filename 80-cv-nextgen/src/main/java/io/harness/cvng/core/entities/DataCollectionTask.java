@@ -15,8 +15,10 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -40,7 +42,7 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   @FdIndex private String dataCollectionWorkerId;
-  @Builder.Default private boolean queueAnalysis = true;
+  @Getter(AccessLevel.NONE) @Builder.Default private boolean queueAnalysis = true;
   private String nextTaskId;
   @FdIndex @NonNull private ExecutionStatus status;
 
@@ -55,6 +57,10 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   private DataCollectionInfo dataCollectionInfo;
   private Instant startTime;
   private Instant endTime;
+
+  public boolean shouldQueueAnalysis() {
+    return queueAnalysis;
+  }
   @Builder.Default
   @JsonIgnore
   @SchemaIgnore
