@@ -5,19 +5,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ConnectorType {
-  KUBERNETES_CLUSTER("K8sCluster"),
-  GIT("Git"),
-  SPLUNK("Splunk"),
-  APP_DYNAMICS("AppDynamics"),
-  VAULT("Vault"),
-  DOCKER("DockerRegistry"),
-  LOCAL("Local"),
-  KMS("AwsKms"),
-  GCP_KMS("GcpKms"),
-  AWS_SECRETS_MANAGER("Awssecretsmanager"),
-  AZURE_VAULT("Azurevault"),
-  CYBERARK("Cyberark"),
-  CUSTOM("CustomSecretManager");
+  @JsonProperty("K8sCluster") KUBERNETES_CLUSTER("K8sCluster"),
+  @JsonProperty("Git") GIT("Git"),
+  @JsonProperty("Splunk") SPLUNK("Splunk"),
+  @JsonProperty("AppDynamics") APP_DYNAMICS("AppDynamics"),
+  @JsonProperty("Vault") VAULT("Vault"),
+  @JsonProperty("DockerRegistry") DOCKER("DockerRegistry"),
+  @JsonProperty("Local") LOCAL("Local"),
+  @JsonProperty("AwsKms") KMS("AwsKms"),
+  @JsonProperty("GcpKms") GCP_KMS("GcpKms"),
+  @JsonProperty("Awssecretsmanager") AWS_SECRETS_MANAGER("Awssecretsmanager"),
+  @JsonProperty("Azurevault") AZURE_VAULT("Azurevault"),
+  @JsonProperty("Cyberark") CYBERARK("Cyberark"),
+  @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager");
 
   private final String displayName;
 
