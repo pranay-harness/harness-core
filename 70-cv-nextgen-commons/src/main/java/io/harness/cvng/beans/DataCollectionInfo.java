@@ -13,6 +13,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class DataCollectionInfo<T extends ConnectorConfigDTO> {
   private String dataCollectionDsl;
+  private boolean collectHostData;
   public abstract VerificationType getVerificationType();
   public abstract Map<String, Object> getDslEnvVariables();
   public abstract String getBaseUrl(T connectorConfigDTO);

@@ -31,6 +31,7 @@ import java.time.Instant;
 public abstract class LearningEngineTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   private String cvConfigId;
+  private String verificationTaskId;
   private long createdAt;
   private long lastUpdatedAt;
   private String accountId;
@@ -48,6 +49,7 @@ public abstract class LearningEngineTask implements PersistentEntity, UuidAware,
     SERVICE_GUARD_TIME_SERIES,
     SERVICE_GUARD_LOG_CLUSTER,
     SERVICE_GUARD_LOG_ANALYSIS,
+    TIME_SERIES_CANARY,
     SERVICE_GUARD_FEEDBACK_ANALYSIS;
   }
 }

@@ -25,13 +25,13 @@ public class AppDynamicsDataCollectionInfoMapperTest extends CvNextGenTest {
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(generateUuid());
     cvConfig.setAccountId(generateUuid());
-    cvConfig.setApplicationId(1234);
+    cvConfig.setApplicationName("cv-app");
     cvConfig.setMetricPack(metricPack);
-    cvConfig.setTierId(123);
+    cvConfig.setTierName("docker-tier");
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
     assertThat(appDynamicsDataCollectionInfo.getMetricPack()).isEqualTo(metricPack.getDTO());
-    assertThat(appDynamicsDataCollectionInfo.getApplicationId()).isEqualTo(1234);
-    assertThat(appDynamicsDataCollectionInfo.getTierId()).isEqualTo(123);
+    assertThat(appDynamicsDataCollectionInfo.getApplicationName()).isEqualTo("cv-app");
+    assertThat(appDynamicsDataCollectionInfo.getTierName()).isEqualTo("docker-tier");
     assertThat(appDynamicsDataCollectionInfo.getDataCollectionDsl()).isEqualTo("metric-pack-dsl");
   }
 }

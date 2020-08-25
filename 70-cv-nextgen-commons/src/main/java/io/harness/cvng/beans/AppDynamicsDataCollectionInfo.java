@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<AppDynamicsConnectorDTO> {
-  private long tierId;
-  private long applicationId;
+  private String applicationName;
+  private String tierName;
   private MetricPackDTO metricPack;
   @Override
   public Map<String, Object> getDslEnvVariables() {
     Map<String, Object> dslEnvVariables = new HashMap<>();
-    dslEnvVariables.put("appId", getApplicationId());
-    dslEnvVariables.put("tierId", getTierId());
+    dslEnvVariables.put("applicationName", getApplicationName());
+    dslEnvVariables.put("tierName", getTierName());
     final List<String> metricPaths = getMetricPack()
                                          .getMetrics()
                                          .stream()
@@ -32,6 +32,7 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
                                          .map(metricDefinition -> metricDefinition.getPath())
                                          .collect(Collectors.toList());
     dslEnvVariables.put("metricsToCollect", metricPaths);
+    dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
     return dslEnvVariables;
   }
 

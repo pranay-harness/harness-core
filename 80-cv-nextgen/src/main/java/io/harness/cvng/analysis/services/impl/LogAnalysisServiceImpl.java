@@ -72,6 +72,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     task.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
     task.setAnalysisStartTime(input.getStartTime());
     task.setCvConfigId(input.getCvConfigId());
+    task.setVerificationTaskId(input.getVerificationTaskId());
     task.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
     task.setAnalysisEndTime(input.getEndTime());
     task.setAnalysisEndEpochMinute(DateTimeUtils.instantToEpochMinute(input.getEndTime()));

@@ -17,8 +17,6 @@ import lombok.experimental.FieldNameConstants;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AppDynamicsCVConfig extends MetricCVConfig {
-  private long tierId;
-  private long applicationId;
   private String applicationName;
   private String tierName;
 
@@ -35,7 +33,7 @@ public class AppDynamicsCVConfig extends MetricCVConfig {
 
   @Override
   public String getVerificationJobDataCollectionDsl() {
-    throw new UnsupportedOperationException("Not implemented");
+    return this.getDataCollectionDsl();
   }
 
   @Override

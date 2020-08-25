@@ -1,10 +1,9 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
@@ -13,14 +12,18 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
+import io.harness.cvng.analysis.entities.DeploymentVerificationTaskTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
+import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
+import io.harness.cvng.analysis.services.api.DeploymentVerificationTaskTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.TimeSeriesMetricType;
@@ -28,6 +31,7 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.persistence.HPersistence;
@@ -48,23 +52,25 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
-  @Mock LearningEngineTaskService learningEngineTaskService;
+  @Inject LearningEngineTaskService learningEngineTaskService;
   @Mock TimeSeriesService mockTimeSeriesService;
   @Mock AnomalyService anomalyService;
   @Mock CVConfigService cvConfigService;
   @Inject TimeSeriesService timeSeriesService;
   @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject HPersistence hPersistence;
+  @Inject VerificationTaskService verificationTaskService;
+  @Inject
+  private DeploymentVerificationTaskTimeSeriesAnalysisService deploymentVerificationTaskTimeSeriesAnalysisService;
 
   private String cvConfigId;
-
+  private String verificationTaskId;
+  private String learningEngineTaskId;
   @Before
   public void setUp() throws Exception {
     cvConfigId = generateUuid();
@@ -77,8 +83,13 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setUuid(cvConfigId);
-
+    verificationTaskId = verificationTaskService.create(cvConfig.getAccountId(), cvConfigId);
     when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
+    TimeSeriesLearningEngineTask timeSeriesLearningEngineTask = TimeSeriesLearningEngineTask.builder().build();
+    timeSeriesLearningEngineTask.setVerificationTaskId(verificationTaskId);
+    timeSeriesLearningEngineTask.setAnalysisStartTime(Instant.now());
+    timeSeriesLearningEngineTask.setAnalysisStartTime(Instant.now().plus(Duration.ofMinutes(5)));
+    learningEngineTaskId = learningEngineTaskService.createLearningEngineTask(timeSeriesLearningEngineTask);
   }
 
   @Test
@@ -90,7 +101,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
                               .startTime(Instant.now().minus(10, ChronoUnit.MINUTES))
                               .endTime(Instant.now())
                               .build();
-    List<String> taskIds = timeSeriesAnalysisService.scheduleAnalysis(cvConfigId, input);
+    List<String> taskIds = timeSeriesAnalysisService.scheduleServiceGuardAnalysis(input);
 
     assertThat(taskIds).isNotNull();
 
@@ -102,28 +113,6 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(Duration.between(task.getAnalysisStartTime(), input.getStartTime())).isZero();
     assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES.name());
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testGetTaskStatus() throws Exception {
-    FieldUtils.writeField(timeSeriesAnalysisService, "learningEngineTaskService", learningEngineTaskService, true);
-    Set<String> taskIds = new HashSet<>();
-    taskIds.add("task1");
-    taskIds.add("task2");
-    timeSeriesAnalysisService.getTaskStatus(cvConfigId, taskIds);
-
-    verify(learningEngineTaskService).getTaskStatus(taskIds);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testGetMetricTemplate() {
-    timeSeriesAnalysisService.getMetricTemplate(cvConfigId);
-
-    verify(mockTimeSeriesService).getTimeSeriesMetricDefinitions(cvConfigId);
   }
 
   @Test
@@ -234,9 +223,9 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testSaveAnalysis() {
-    timeSeriesAnalysisService.saveAnalysis(buildServiceGuardMetricAnalysisDTO(), cvConfigId, "letTaskId",
-        Instant.now().minus(10, ChronoUnit.MINUTES), Instant.now().minus(5, ChronoUnit.MINUTES));
+  public void testSaveAnalysis_serviceGuard() {
+    when(cvConfigService.get(cvConfigId)).thenReturn(null);
+    timeSeriesAnalysisService.saveAnalysis(learningEngineTaskId, buildServiceGuardMetricAnalysisDTO());
 
     TimeSeriesCumulativeSums cumulativeSums =
         hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("cvConfigId", cvConfigId).get();
@@ -250,13 +239,14 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testOpenAnomaly() {
-    timeSeriesAnalysisService.saveAnalysis(buildServiceGuardMetricAnalysisDTO(), cvConfigId, "letTaskId",
-        Instant.now().minus(10, ChronoUnit.MINUTES), Instant.now().minus(5, ChronoUnit.MINUTES));
-
-    verify(anomalyService).openAnomaly(any(), any(), any(), any());
+  public void testSaveAnalysis_deploymentVerification() {
+    timeSeriesAnalysisService.saveAnalysis(learningEngineTaskId, buildDeploymentVerificationDTO());
+    List<DeploymentVerificationTaskTimeSeriesAnalysis> results =
+        deploymentVerificationTaskTimeSeriesAnalysisService.getAnalysisResults(verificationTaskId);
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
 
   private ServiceGuardMetricAnalysisDTO buildServiceGuardMetricAnalysisDTO() {
@@ -298,6 +288,10 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .overallMetricScores(overallMetricScores)
         .txnMetricAnalysisData(txnMetricMap)
         .build();
+  }
+
+  private DeploymentVerificationTaskTimeSeriesAnalysisDTO buildDeploymentVerificationDTO() {
+    return DeploymentVerificationTaskTimeSeriesAnalysisDTO.builder().build();
   }
 
   private List<TimeSeriesAnomalies> buildAnomList() {

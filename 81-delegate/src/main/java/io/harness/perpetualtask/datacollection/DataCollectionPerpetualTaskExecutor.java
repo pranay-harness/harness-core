@@ -117,15 +117,16 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           List<TimeSeriesRecord> timeSeriesRecords = (List<TimeSeriesRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
-                  dataCollectionTask.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
-          timeSeriesDataStoreService.saveTimeSeriesDataRecords(
-              dataCollectionTask.getAccountId(), cvConfigId, timeSeriesRecords);
+                  dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
+          timeSeriesDataStoreService.saveTimeSeriesDataRecords(dataCollectionTask.getAccountId(), cvConfigId,
+              dataCollectionTask.getVerificationTaskId(), timeSeriesRecords);
+
           break;
         case LOG:
           List<LogDataRecord> logDataRecords = (List<LogDataRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
-                  dataCollectionTask.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
+                  dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
           // TODO: merge these 2 IDs into a single concepts and use it everywhere in the data collection using models.
           logRecordDataStoreService.save(dataCollectionTask.getAccountId(), dataCollectionTask.getCvConfigId(),
               dataCollectionTask.getVerificationTaskId(), logDataRecords);
@@ -147,14 +148,6 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
                                             .stacktrace(ExceptionUtils.getStackTrace(e))
                                             .build();
       cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
-    }
-  }
-
-  private String get3PAPICallLogRequestId(DataCollectionTaskDTO dataCollectionTask) {
-    if (dataCollectionTask.getCvConfigId() != null) {
-      return dataCollectionTask.getCvConfigId();
-    } else {
-      return dataCollectionTask.getVerificationTaskId();
     }
   }
 

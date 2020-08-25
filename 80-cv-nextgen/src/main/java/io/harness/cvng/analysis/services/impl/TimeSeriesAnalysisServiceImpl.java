@@ -2,17 +2,26 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SAVE_ANALYSIS_PATH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_VERIFICATION_TASK_SAVE_ANALYSIS_PATH;
+import static io.harness.cvng.verificationjob.entities.CanaryVerificationJob.PRE_DEPLOYMENT_DATA_COLLECTION_DURATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
+import io.harness.cvng.analysis.entities.DeploymentVerificationTaskTimeSeriesAnalysis;
+import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesAnomalousPatternsKeys;
+import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask;
+import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask.DeploymentVerificationTaskInfo;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.TimeSeriesCumulativeSumsKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
@@ -20,17 +29,22 @@ import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesShortTermHistoryKeys;
+import io.harness.cvng.analysis.services.api.DeploymentVerificationTaskTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
+import io.harness.cvng.core.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.entities.Anomaly;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
+import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
@@ -56,16 +70,69 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private HeatMapService heatMapService;
   @Inject private CVConfigService cvConfigService;
   @Inject private AnomalyService anomalyService;
+  @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject
+  private DeploymentVerificationTaskTimeSeriesAnalysisService deploymentVerificationTaskTimeSeriesAnalysisService;
 
   @Override
-  public List<String> scheduleAnalysis(String cvConfigId, AnalysisInput analysisInput) {
-    // create timeseries analysis task and schedule it
+  public List<String> scheduleServiceGuardAnalysis(AnalysisInput analysisInput) {
     TimeSeriesLearningEngineTask timeSeriesTask = createTimeSeriesLearningTask(analysisInput);
-
     learningEngineTaskService.createLearningEngineTasks(Arrays.asList(timeSeriesTask));
-
     // TODO: find a good way to return all taskIDs
     return Arrays.asList(timeSeriesTask.getUuid());
+  }
+  @Override
+  public List<String> scheduleVerificationTaskAnalysis(AnalysisInput analysisInput) {
+    TimeSeriesCanaryLearningEngineTask timeSeriesTask = createTimeSeriesCanaryLearningEngineTask(analysisInput);
+    learningEngineTaskService.createLearningEngineTasks(Arrays.asList(timeSeriesTask));
+    // TODO: find a good way to return all taskIDs
+    return Arrays.asList(timeSeriesTask.getUuid());
+  }
+
+  private TimeSeriesCanaryLearningEngineTask createTimeSeriesCanaryLearningEngineTask(AnalysisInput input) {
+    String taskId = generateUuid();
+    DeploymentVerificationTask deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(
+        verificationTaskService.getDeploymentVerificationTaskId(input.getVerificationTaskId()));
+    Preconditions.checkNotNull(deploymentVerificationTask, "deploymentVerificationTask can not be null");
+    TimeSeriesCanaryLearningEngineTask timeSeriesLearningEngineTask =
+        TimeSeriesCanaryLearningEngineTask.builder()
+            .preDeploymentDataUrl(preDeploymentDataUrl(input, deploymentVerificationTask))
+            .postDeploymentDataUrl(postDeploymentDataUrl(input, deploymentVerificationTask))
+            .dataLength(
+                (int) Duration.between(deploymentVerificationTask.getVerificationTaskStartTime(), input.getStartTime())
+                    .toMinutes()
+                + 1)
+            .metricTemplateUrl(createMetricTemplateUrl(input))
+            .build();
+
+    timeSeriesLearningEngineTask.setVerificationTaskId(input.getVerificationTaskId());
+    timeSeriesLearningEngineTask.setAnalysisType(LearningEngineTaskType.TIME_SERIES_CANARY);
+    timeSeriesLearningEngineTask.setAnalysisStartTime(input.getStartTime());
+    timeSeriesLearningEngineTask.setAnalysisEndTime(input.getEndTime());
+    timeSeriesLearningEngineTask.setAnalysisEndEpochMinute(
+        TimeUnit.MILLISECONDS.toMinutes(input.getEndTime().toEpochMilli()));
+    timeSeriesLearningEngineTask.setAnalysisSaveUrl(createVerificationTaskAnalysisSaveUrl(taskId));
+    timeSeriesLearningEngineTask.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
+    timeSeriesLearningEngineTask.setUuid(taskId);
+
+    DeploymentVerificationTaskInfo deploymentVerificationTaskInfo =
+        DeploymentVerificationTaskInfo.builder()
+            .newHostsTrafficSplitPercentage(deploymentVerificationTask.getNewHostsTrafficSplitPercentage())
+            .newVersionHosts(deploymentVerificationTask.getNewVersionHosts())
+            .oldVersionHosts(deploymentVerificationTask.getOldVersionHosts())
+            .build();
+    timeSeriesLearningEngineTask.setDeploymentVerificationTaskInfo(deploymentVerificationTaskInfo);
+
+    return timeSeriesLearningEngineTask;
+  }
+
+  private String createVerificationTaskAnalysisSaveUrl(String taskId) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(
+        SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + TIMESERIES_VERIFICATION_TASK_SAVE_ANALYSIS_PATH);
+    uriBuilder.addParameter("taskId", taskId);
+    return getUriString(uriBuilder);
   }
 
   private TimeSeriesLearningEngineTask createTimeSeriesLearningTask(AnalysisInput input) {
@@ -87,25 +154,22 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .build();
 
     timeSeriesLearningEngineTask.setCvConfigId(input.getCvConfigId());
+    timeSeriesLearningEngineTask.setVerificationTaskId(input.getVerificationTaskId());
     timeSeriesLearningEngineTask.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES);
     timeSeriesLearningEngineTask.setAnalysisStartTime(input.getStartTime());
     timeSeriesLearningEngineTask.setAnalysisEndTime(input.getEndTime());
     timeSeriesLearningEngineTask.setAnalysisEndEpochMinute(
         TimeUnit.MILLISECONDS.toMinutes(input.getEndTime().toEpochMilli()));
-    timeSeriesLearningEngineTask.setAnalysisSaveUrl(createAnalysisSaveUrl(input, taskId));
+    timeSeriesLearningEngineTask.setAnalysisSaveUrl(createAnalysisSaveUrl(taskId));
     timeSeriesLearningEngineTask.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
     timeSeriesLearningEngineTask.setUuid(taskId);
 
     return timeSeriesLearningEngineTask;
   }
-  private String createAnalysisSaveUrl(AnalysisInput input, String taskId) {
+  private String createAnalysisSaveUrl(String taskId) {
     URIBuilder uriBuilder = new URIBuilder();
-    uriBuilder.setPath(
-        SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-save-analysis");
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + TIMESERIES_SAVE_ANALYSIS_PATH);
     uriBuilder.addParameter("taskId", taskId);
-    uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
-    uriBuilder.addParameter("analysisStartTime", input.getStartTime().toString());
-    uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
     return getUriString(uriBuilder);
   }
 
@@ -114,6 +178,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-shortterm-history");
     uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     return getUriString(uriBuilder);
   }
 
@@ -122,8 +187,35 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-cumulative-sums");
     uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     uriBuilder.addParameter("analysisStartTime", input.getStartTime().toString());
     uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
+    return getUriString(uriBuilder);
+  }
+
+  private String postDeploymentDataUrl(AnalysisInput input, DeploymentVerificationTask deploymentVerificationTask) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
+    // TODO: rename params to startTime and endTime.
+    uriBuilder.addParameter(
+        "startTime", Long.toString(deploymentVerificationTask.getVerificationTaskStartTime().toEpochMilli()));
+    uriBuilder.addParameter("endTime", Long.toString(input.getEndTime().toEpochMilli()));
+    return getUriString(uriBuilder);
+  }
+
+  private String preDeploymentDataUrl(AnalysisInput input, DeploymentVerificationTask deploymentVerificationTask) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
+    // TODO: rename params to startTime and endTime and the range should come from task or job.
+    //  Change it once more verification jobs are supported to find the right abstraction.
+    uriBuilder.addParameter("startTime",
+        Long.toString(deploymentVerificationTask.getDeploymentStartTime()
+                          .minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION)
+                          .toEpochMilli()));
+    uriBuilder.addParameter(
+        "endTime", Long.toString(deploymentVerificationTask.getDeploymentStartTime().toEpochMilli()));
     return getUriString(uriBuilder);
   }
 
@@ -132,6 +224,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-previous-anomalies");
     uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     return getUriString(uriBuilder);
   }
 
@@ -141,6 +234,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-test-data");
     uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     uriBuilder.addParameter("analysisStartTime", startForTestData.toString());
     uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
     return getUriString(uriBuilder);
@@ -150,7 +244,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-metric-template");
-    uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
+    uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     return getUriString(uriBuilder);
   }
 
@@ -163,7 +257,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public Map<String, ExecutionStatus> getTaskStatus(String cvConfigId, Set<String> taskIds) {
+  public Map<String, ExecutionStatus> getTaskStatus(String verificationTaskId, Set<String> taskIds) {
     return learningEngineTaskService.getTaskStatus(taskIds);
   }
 
@@ -184,9 +278,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public Map<String, Map<String, List<Double>>> getTestData(String cvConfigId, Instant startTime, Instant endTime) {
+  public Map<String, Map<String, List<Double>>> getTestData(
+      String verificationTaskId, Instant startTime, Instant endTime) {
     TimeSeriesTestDataDTO testDataDTO =
-        timeSeriesService.getTxnMetricDataForRange(cvConfigId, startTime, endTime, null, null);
+        timeSeriesService.getTxnMetricDataForRange(verificationTaskId, startTime, endTime, null, null);
 
     return testDataDTO.getTransactionMetricValues();
   }
@@ -216,14 +311,35 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public void saveAnalysis(
-      ServiceGuardMetricAnalysisDTO analysis, String cvConfigId, String taskId, Instant startTime, Instant endTime) {
+  public void saveAnalysis(String taskId, DeploymentVerificationTaskTimeSeriesAnalysisDTO analysis) {
+    LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
+    Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
+    learningEngineTaskService.markCompleted(taskId);
+
+    DeploymentVerificationTaskTimeSeriesAnalysis deploymentVerificationTaskTimeSeriesAnalysis =
+        DeploymentVerificationTaskTimeSeriesAnalysis.builder()
+            .startTime(learningEngineTask.getAnalysisStartTime())
+            .endTime(learningEngineTask.getAnalysisEndTime())
+            .verificationTaskId(learningEngineTask.getVerificationTaskId())
+            .hostSummaries(analysis.getHostSummaries())
+            .resultSummary(analysis.getResultSummary())
+            .build();
+    deploymentVerificationTaskTimeSeriesAnalysisService.save(deploymentVerificationTaskTimeSeriesAnalysis);
+  }
+
+  @Override
+  public void saveAnalysis(String taskId, ServiceGuardMetricAnalysisDTO analysis) {
+    LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
+    Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
+    Instant startTime = learningEngineTask.getAnalysisStartTime();
+    Instant endTime = learningEngineTask.getAnalysisEndTime();
+    String cvConfigId = verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId());
     TimeSeriesShortTermHistory shortTermHistory = buildShortTermHistory(analysis);
     TimeSeriesCumulativeSums cumulativeSums = buildCumulativeSums(analysis, startTime, endTime);
     TimeSeriesRiskSummary riskSummary = buildRiskSummary(analysis, startTime, endTime);
 
     saveShortTermHistory(shortTermHistory);
-    saveAnomalousPatterns(analysis, cvConfigId);
+    saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
     hPersistence.save(riskSummary);
     hPersistence.save(cumulativeSums);
     logger.info("Saving analysis for config: {}", cvConfigId);
@@ -261,11 +377,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
   }
 
-  private void saveAnomalousPatterns(ServiceGuardMetricAnalysisDTO analysis, String cvConfigId) {
+  private void saveAnomalousPatterns(ServiceGuardMetricAnalysisDTO analysis, String verificationTaskId) {
     TimeSeriesAnomalousPatterns patternsToSave = buildAnomalies(analysis);
-    TimeSeriesAnomalousPatterns patternsFromDB = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
-                                                     .filter(TimeSeriesAnomalousPatternsKeys.cvConfigId, cvConfigId)
-                                                     .get();
+    // change the filter to verificationTaskId
+    TimeSeriesAnomalousPatterns patternsFromDB =
+        hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
+            .filter(TimeSeriesAnomalousPatternsKeys.verificationTaskId, verificationTaskId)
+            .get();
 
     if (patternsFromDB != null) {
       patternsToSave.setUuid(patternsFromDB.getUuid());
@@ -276,7 +394,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   private void saveShortTermHistory(TimeSeriesShortTermHistory shortTermHistory) {
     TimeSeriesShortTermHistory historyFromDB =
         hPersistence.createQuery(TimeSeriesShortTermHistory.class)
-            .filter(TimeSeriesShortTermHistoryKeys.cvConfigId, shortTermHistory.getCvConfigId())
+            .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, shortTermHistory.getVerificationTaskId())
             .get();
     if (historyFromDB != null) {
       shortTermHistory.setUuid(historyFromDB.getUuid());
@@ -285,8 +403,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public List<TimeSeriesMetricDefinition> getMetricTemplate(String cvConfigId) {
-    return timeSeriesService.getTimeSeriesMetricDefinitions(cvConfigId);
+  public List<TimeSeriesMetricDefinition> getMetricTemplate(String verificationTaskId) {
+    return timeSeriesService.getTimeSeriesMetricDefinitions(verificationTaskService.getCVConfigId(verificationTaskId));
+  }
+
+  @Override
+  public List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    return timeSeriesService.getTimeSeriesRecordDTOs(verificationTaskId, startTime, endTime);
   }
 
   private TimeSeriesRiskSummary buildRiskSummary(
@@ -307,6 +431,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     });
     return TimeSeriesRiskSummary.builder()
         .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
         .analysisStartTime(startTime)
         .analysisEndTime(endTime)
         .transactionMetricRiskList(metricRiskList)
@@ -329,6 +454,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     return TimeSeriesCumulativeSums.builder()
         .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricSums(transactionMetricSums)
         .analysisStartTime(startTime)
         .analysisEndTime(endTime)
@@ -346,6 +472,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     return TimeSeriesShortTermHistory.builder()
         .cvConfigId(analysisDTO.getCvConfigId())
+        .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricHistories(TimeSeriesShortTermHistory.convertFromMap(shortTermHistoryMap))
         .build();
   }

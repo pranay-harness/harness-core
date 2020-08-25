@@ -40,9 +40,10 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   }
 
   @Override
-  public String createDeploymentVerificationDataCollectionTask(String accountId, String verificationTaskId,
-      String connectorId, String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
+  public String createDeploymentVerificationDataCollectionTask(String accountId, String connectorId,
+      String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
     Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
+
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorId);
     }
@@ -50,7 +51,6 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
     Map<String, String> params = new HashMap<>();
     params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
     params.put(CVConfigKeys.connectorId, connectorId);
-    params.put(DataCollectionTaskKeys.verificationTaskId, verificationTaskId);
 
     DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
                                                .connectorConfigDTO(connectorDTO.get().getConnectorConfig())

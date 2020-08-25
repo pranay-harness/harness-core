@@ -8,16 +8,21 @@ import com.google.inject.Injector;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.DeploymentTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
-import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
+import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
+import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
@@ -30,6 +35,9 @@ import java.util.ArrayList;
 public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineService {
   @Inject private Injector injector;
   @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Override
   public void initiateStateMachine(String cvConfigId, AnalysisStateMachine stateMachine) {
@@ -50,6 +58,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       }
     }
     stateMachine.setCvConfigId(cvConfigId);
+    stateMachine.setVerificationTaskId(cvConfigId);
     stateMachine.setStatus(AnalysisStatus.RUNNING);
     injector.injectMembers(stateMachine.getCurrentState());
     stateMachine.getCurrentState().execute();
@@ -197,20 +206,20 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Override
   public AnalysisStateMachine createStateMachine(AnalysisInput inputForAnalysis) {
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
-                                            .cvConfigId(inputForAnalysis.getCvConfigId())
+                                            .verificationTaskId(inputForAnalysis.getVerificationTaskId())
                                             .analysisStartTime(inputForAnalysis.getStartTime())
                                             .analysisEndTime(inputForAnalysis.getEndTime())
                                             .status(AnalysisStatus.CREATED)
                                             .build();
 
-    CVConfig cvConfiguration = hPersistence.get(CVConfig.class, inputForAnalysis.getCvConfigId());
+    CVConfig cvConfig = cvConfigService.get(inputForAnalysis.getVerificationTaskId());
 
-    if (cvConfiguration != null) {
-      VerificationType verificationType = cvConfiguration.getVerificationType();
+    if (cvConfig != null) {
+      VerificationType verificationType = cvConfig.getVerificationType();
       AnalysisState firstState = null;
       switch (verificationType) {
         case TIME_SERIES:
-          firstState = TimeSeriesAnalysisState.builder().build();
+          firstState = ServiceGuardTimeSeriesAnalysisState.builder().build();
           break;
         case LOG:
           firstState = ServiceGuardLogClusterState.builder().clusterLevel(LogClusterLevel.L1).build();
@@ -223,8 +232,19 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       firstState.setInputs(inputForAnalysis);
       stateMachine.setCurrentState(firstState);
     } else {
-      logger.error("cvConfigId is null in createStateMachine");
-      throw new AnalysisStateMachineException("cvConfigId is null in createStateMachine");
+      // TODO: create it for cvConfigId also.
+      DeploymentVerificationTask deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(
+          verificationTaskService.getDeploymentVerificationTaskId(inputForAnalysis.getVerificationTaskId()));
+      if (deploymentVerificationTask != null) {
+        DeploymentTimeSeriesAnalysisState deploymentTimeSeriesAnalysisState =
+            DeploymentTimeSeriesAnalysisState.builder().build();
+        deploymentTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
+        deploymentTimeSeriesAnalysisState.setInputs(inputForAnalysis);
+        stateMachine.setCurrentState(deploymentTimeSeriesAnalysisState);
+      } else {
+        logger.error("No verification found to createStateMachine");
+        throw new AnalysisStateMachineException("cvConfigId is null in createStateMachine");
+      }
     }
     return stateMachine;
   }

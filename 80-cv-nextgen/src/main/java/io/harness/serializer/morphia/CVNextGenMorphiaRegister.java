@@ -11,6 +11,7 @@ import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
@@ -38,6 +39,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(TimeSeriesThreshold.class);
     set.add(LogRecord.class);
     set.add(VerificationJob.class);
+    set.add(VerificationTask.class);
   }
 
   @Override

@@ -12,6 +12,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceGuardMetricAnalysisDTO {
   private String cvConfigId;
+  private String verificationTaskId;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   private Map<String, Double> overallMetricScores;

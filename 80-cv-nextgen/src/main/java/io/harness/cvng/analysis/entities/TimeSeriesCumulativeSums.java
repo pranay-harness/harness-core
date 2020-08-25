@@ -39,6 +39,7 @@ import java.util.Map;
 public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
   @Id private String uuid;
   @NotEmpty @FdIndex private String cvConfigId;
+  @FdIndex private String verificationTaskId;
   @NotEmpty @FdIndex private Instant analysisStartTime;
   @NotEmpty @FdIndex private Instant analysisEndTime;
 

@@ -37,7 +37,6 @@ public class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, A
   @FdIndex private String accountId;
   @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
-  private String verificationId;
   @NotEmpty private Instant timestamp;
   private String host;
   private long createdAt;

@@ -17,6 +17,8 @@ public abstract class VerificationJobDTO {
   private String jobName;
   private String serviceIdentifier;
   private String envIdentifier;
+  private String projectIdentifier;
+  private String orgIdentifier;
   private List<DataSourceType> dataSources;
   // TODO: make it Duration and write a custom serializer
   private String duration;
@@ -27,6 +29,8 @@ public abstract class VerificationJobDTO {
     verificationJob.setJobName(jobName);
     verificationJob.setDuration(parseDuration());
     verificationJob.setDataSources(dataSources);
+    verificationJob.setProjectIdentifier(projectIdentifier);
+    verificationJob.setOrgIdentifier(orgIdentifier);
   }
 
   private Duration parseDuration() {

@@ -99,7 +99,8 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
     FieldUtils.writeField(dataCollector, "timeSeriesDataStoreService", timeSeriesDataStoreService, true);
     FieldUtils.writeField(dataCollector, "dataCollectionDSLService", dataCollectionDSLService, true);
     FieldUtils.writeField(dataCollector, "cvNextGenServiceClient", cvNextGenServiceClient, true);
-    dataCollectionInfo = AppDynamicsDataCollectionInfo.builder().applicationId(123).tierId(1234).build();
+    dataCollectionInfo =
+        AppDynamicsDataCollectionInfo.builder().applicationName("cv-app").tierName("docker-tier").build();
     dataCollectionTaskDTO = DataCollectionTaskDTO.builder()
                                 .accountId(accountId)
                                 .startTime(Instant.now().minusSeconds(60))
@@ -186,9 +187,10 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
                           new String(appDynamicsConnectorDTO.getPasswordRef().getDecryptedValue()))
                       .getBytes(StandardCharsets.UTF_8)));
     Map<String, Object> otherEnvVariables = runtimeParameters.getOtherEnvVariables();
-    assertThat(otherEnvVariables.size()).isEqualTo(3);
-    assertThat(otherEnvVariables.get("appId")).isEqualTo(dataCollectionInfo.getApplicationId());
-    assertThat(otherEnvVariables.get("tierId")).isEqualTo(dataCollectionInfo.getTierId());
+    assertThat(otherEnvVariables.size()).isEqualTo(4);
+    assertThat(otherEnvVariables.get("applicationName")).isEqualTo(dataCollectionInfo.getApplicationName());
+    assertThat(otherEnvVariables.get("tierName")).isEqualTo(dataCollectionInfo.getTierName());
+    assertThat(otherEnvVariables.get("collectHostData")).isEqualTo("false");
 
     List<String> metricsToCollect = (List<String>) otherEnvVariables.get("metricsToCollect");
     assertThat(CollectionUtils.isEqualCollection(metricsToCollect, Lists.newArrayList("path1", "path3"))).isTrue();

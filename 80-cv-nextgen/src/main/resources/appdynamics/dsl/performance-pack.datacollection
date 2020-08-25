@@ -1,22 +1,22 @@
-Var tierDetailsUrl = concat(Env:baseUrl, "rest/applications/", Env:appId, "/tiers/", Env:tierId, "?output=json")
-Var tierDetail = sync-call(url=Var:tierDetailsUrl, header=Env:commonHeaders)
-Var tierName = "test"
-foreach tier in Var:tierDetail {
-  tierName = extract(Var:tier,$.name)
-}
-
-Var btUrl = concat(Env:baseUrl, "rest/applications/", Env:appId, "/metrics?output=JSON&metric-path=Business Transaction Performance|Business Transactions|")
-btUrl = concat(Var:btUrl, Var:tierName)
+Var btUrl = concat(Env:baseUrl, "rest/applications/", Env:applicationName, "/metrics?output=JSON&metric-path=Business Transaction Performance|Business Transactions|")
+btUrl = concat(Var:btUrl, Env:tierName)
 Var btList = sync-call(url=Var:btUrl, header=Env:commonHeaders)
 
-Var metricDataUrl = concat(Env:baseUrl, "rest/applications/", Env:appId, "/metric-data?output=JSON&time-range-type=BETWEEN_TIMES&rollup=false&start-time=", Env:startTimeMillis, "&end-time=", Env:endTimeMillis, "&metric-path=")
+Var metricDataUrl = concat(Env:baseUrl, "rest/applications/", Env:applicationName, "/metric-data?output=JSON&time-range-type=BETWEEN_TIMES&rollup=false&start-time=", Env:startTimeMillis, "&end-time=", Env:endTimeMillis, "&metric-path=")
 Var metricRequests = []
 foreach metricDefinition in Env:metricsToCollect {
   foreach bt in Var:btList {
     Var btName = extract(Var:bt,$.name)
     Var metricPath = concat("", Var:metricDefinition)
-    Var:metricPath.replaceAll("__tier_name__", Var:tierName)
-    Var:metricPath.replaceAll("__group_name__", Var:btName)
+    Var:metricPath.replaceAll("__tier_name__", Env:tierName)
+    if Env:collectHostData != "true" {
+        Var:metricPath.replaceAll("__metric_filter__", Var:btName)
+    }
+    if Env:collectHostData == "true" {
+        Var metricFilter = concat(Var:btName, "|Individual%20Nodes|*")
+        Var:metricPath.replaceAll("__metric_filter__", Var:metricFilter)
+    }
+    print Var:metricPath
     Var metricCall = concat(Var:metricDataUrl, Var:metricPath)
     Request metricRequest = new Request(url=Var:metricCall, header=Env:commonHeaders)
     Var:metricRequests.append(Var:metricRequest)
@@ -32,14 +32,26 @@ foreach metricArr in Var:metrics {
       Var metricPath = extract(Var:metric,$.metricPath)
       Var metricPathSplit = Var:metricPath.split("|")
       Var txnName = Var:metricPathSplit[3]
-      Var mName = Var:metricPathSplit[4]
-
-      Var metricValues = extract(Var:metric,$.metricValues)
-      foreach metricValue in Var:metricValues {
-        Var value = extract(Var:metricValue,$.value)
-        Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
-        Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp)
-        Var:metricsToReturn.append(Var:tsRecord)
+      if Env:collectHostData != "true" {
+        Var mName = Var:metricPathSplit[4]
+        Var metricValues = extract(Var:metric,$.metricValues)
+        foreach metricValue in Var:metricValues {
+          Var value = extract(Var:metricValue,$.value)
+          Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
+          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp)
+          Var:metricsToReturn.append(Var:tsRecord)
+        }
+      }
+      if Env:collectHostData == "true" {
+        Var mName = Var:metricPathSplit[6]
+        Var hostname = Var:metricPathSplit[5]
+        Var metricValues = extract(Var:metric,$.metricValues)
+        foreach metricValue in Var:metricValues {
+          Var value = extract(Var:metricValue,$.value)
+          Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
+          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp, host=Var:hostname)
+          Var:metricsToReturn.append(Var:tsRecord)
+        }
       }
     }
   }

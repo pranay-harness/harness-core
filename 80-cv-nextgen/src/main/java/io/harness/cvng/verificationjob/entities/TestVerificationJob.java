@@ -15,8 +15,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -47,11 +45,6 @@ public class TestVerificationJob extends VerificationJob {
 
   @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
-    List<TimeRange> ranges = new ArrayList<>();
-    for (Instant current = startTime; current.compareTo(startTime.plusMillis(getDuration().toMillis())) < 0;
-         current = current.plus(1, ChronoUnit.MINUTES)) {
-      ranges.add(TimeRange.builder().startTime(current).endTime(current.plus(1, ChronoUnit.MINUTES)).build());
-    }
-    return ranges;
+    return getTimeRangesForDuration(startTime);
   }
 }

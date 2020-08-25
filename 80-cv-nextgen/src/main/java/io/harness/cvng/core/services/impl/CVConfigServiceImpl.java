@@ -13,6 +13,7 @@ import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Query;
@@ -28,12 +29,14 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private HPersistence hPersistence;
   @Inject private AnomalyService anomalyService;
   @Inject private DeletedCVConfigService deletedCVConfigService;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
     checkArgument(cvConfig.getUuid() == null, "UUID should be null when creating CVConfig");
     cvConfig.validate();
     hPersistence.save(cvConfig);
+    verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid());
     return cvConfig;
   }
 

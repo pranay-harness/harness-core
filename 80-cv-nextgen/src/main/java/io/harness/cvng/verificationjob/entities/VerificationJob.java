@@ -27,6 +27,8 @@ import org.mongodb.morphia.annotations.Id;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -47,6 +49,8 @@ public abstract class VerificationJob
   private String jobName;
   private long createdAt;
   private long lastUpdatedAt;
+  private String projectIdentifier;
+  private String orgIdentifier;
   @NotNull @FdIndex private String accountId;
   @NotNull private String serviceIdentifier;
   @NotNull private String envIdentifier;
@@ -60,6 +64,8 @@ public abstract class VerificationJob
     Preconditions.checkNotNull(jobName, generateErrorMessageFromParam(VerificationJobKeys.jobName));
     Preconditions.checkNotNull(serviceIdentifier, generateErrorMessageFromParam(VerificationJobKeys.serviceIdentifier));
     Preconditions.checkNotNull(serviceIdentifier, generateErrorMessageFromParam(VerificationJobKeys.serviceIdentifier));
+    Preconditions.checkNotNull(projectIdentifier, generateErrorMessageFromParam(VerificationJobKeys.projectIdentifier));
+    Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(VerificationJobKeys.orgIdentifier));
     Preconditions.checkNotNull(envIdentifier, generateErrorMessageFromParam(VerificationJobKeys.envIdentifier));
     Preconditions.checkNotNull(duration, generateErrorMessageFromParam(VerificationJobKeys.duration));
     Preconditions.checkNotNull(dataSources, generateErrorMessageFromParam(VerificationJobKeys.dataSources));
@@ -79,5 +85,16 @@ public abstract class VerificationJob
     verificationJobDTO.setServiceIdentifier(this.serviceIdentifier);
     verificationJobDTO.setEnvIdentifier(this.envIdentifier);
     verificationJobDTO.setDataSources(this.dataSources);
+    verificationJobDTO.setProjectIdentifier(this.getProjectIdentifier());
+    verificationJobDTO.setOrgIdentifier(this.getOrgIdentifier());
+  }
+
+  protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {
+    List<TimeRange> ranges = new ArrayList<>();
+    for (Instant current = startTime; current.compareTo(startTime.plusMillis(getDuration().toMillis())) < 0;
+         current = current.plus(1, ChronoUnit.MINUTES)) {
+      ranges.add(TimeRange.builder().startTime(current).endTime(current.plus(1, ChronoUnit.MINUTES)).build());
+    }
+    return ranges;
   }
 }

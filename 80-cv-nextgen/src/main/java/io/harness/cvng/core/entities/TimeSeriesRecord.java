@@ -17,6 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PrePersist;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -36,6 +37,7 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
 
   @FdIndex private String accountId;
   @FdIndex private String cvConfigId;
+  @FdIndex private String verificationTaskId;
   @FdIndex private String host;
   @FdIndex private String metricName;
   private double riskScore;
@@ -63,6 +65,15 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
     @Override
     public int compareTo(TimeSeriesGroupValue other) {
       return timeStamp.compareTo(other.getTimeStamp());
+    }
+  }
+  @PrePersist
+  private void prePersist() {
+    // TODO: temp migration code. Remove this.
+    if (verificationTaskId == null) {
+      if (cvConfigId != null) {
+        verificationTaskId = cvConfigId;
+      }
     }
   }
 }

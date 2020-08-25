@@ -1,22 +1,27 @@
 package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
+import static java.util.stream.Collectors.groupingBy;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.TreeBasedTable;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
+import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
+import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordMetricValue;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.rest.RestResponse;
 import io.harness.verificationclient.CVNextGenServiceClient;
+import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,53 +35,59 @@ public class TimeSeriesDataStoreService {
 
   @VisibleForTesting
   List<TimeSeriesDataCollectionRecord> convertToCollectionRecords(
-      String accountId, String cvConfigId, List<TimeSeriesRecord> timeSeriesRecords) {
+      String accountId, String cvConfigId, String verificationTaskId, List<TimeSeriesRecord> timeSeriesRecords) {
+    Map<TimeSeriesRecordBucketKey, List<TimeSeriesRecord>> groupByHostAndTimestamp =
+        timeSeriesRecords.stream().collect(groupingBy(timeSeriesRecord
+            -> TimeSeriesRecordBucketKey.builder()
+                   .host(timeSeriesRecord.getHostname())
+                   .timestamp(timeSeriesRecord.getTimestamp())
+                   .build()));
+
     List<TimeSeriesDataCollectionRecord> dataCollectionRecords = new ArrayList<>();
-    TreeBasedTable<Long, String, TimeSeriesDataCollectionRecord.TimeSeriesDataRecordMetricValue> metricValues =
-        TreeBasedTable.create();
-    timeSeriesRecords.forEach(timeSeriesRecord -> {
-      final long timeStamp = timeSeriesRecord.getTimestamp();
-      final String metricName = timeSeriesRecord.getMetricName();
-
-      if (!metricValues.contains(timeStamp, metricName)) {
-        metricValues.put(timeStamp, metricName,
-            TimeSeriesDataCollectionRecord.TimeSeriesDataRecordMetricValue.builder()
-                .metricName(metricName)
-                .timeSeriesValues(new HashSet<>())
-                .build());
-      }
-
-      metricValues.get(timeStamp, metricName)
-          .getTimeSeriesValues()
-          .add(TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue.builder()
-                   .groupName(timeSeriesRecord.getTxnName())
-                   .value(timeSeriesRecord.getMetricValue())
-                   .build());
-    });
-    metricValues.rowMap().forEach((timeStamp, groupValueMap) -> {
-      final TimeSeriesDataCollectionRecord dataCollectionRecord = TimeSeriesDataCollectionRecord.builder()
-                                                                      .accountId(accountId)
-                                                                      .cvConfigId(cvConfigId)
-                                                                      .timeStamp(timeStamp)
-                                                                      .metricValues(new HashSet<>())
-                                                                      .build();
-
-      groupValueMap.forEach((metricName, dataRecordMetricValue) -> {
-        dataCollectionRecord.getMetricValues().add(dataRecordMetricValue);
-      });
-      dataCollectionRecords.add(dataCollectionRecord);
+    groupByHostAndTimestamp.forEach((timeSeriesRecordBucketKey, timeSeriesRecordsGroup) -> {
+      TimeSeriesDataCollectionRecord timeSeriesDataCollectionRecord =
+          TimeSeriesDataCollectionRecord.builder()
+              .accountId(accountId)
+              .cvConfigId(cvConfigId)
+              .verificationTaskId(verificationTaskId)
+              .timeStamp(timeSeriesRecordBucketKey.getTimestamp())
+              .host(timeSeriesRecordBucketKey.getHost())
+              .metricValues(new HashSet<>())
+              .build();
+      timeSeriesRecordsGroup.stream()
+          .collect(groupingBy(TimeSeriesRecord::getMetricName))
+          .forEach((metricName, timeSeriesRecordsGroupByMetricName) -> {
+            TimeSeriesDataRecordMetricValue timeSeriesDataRecordMetricValue = TimeSeriesDataRecordMetricValue.builder()
+                                                                                  .metricName(metricName)
+                                                                                  .timeSeriesValues(new HashSet<>())
+                                                                                  .build();
+            timeSeriesRecordsGroupByMetricName.forEach(timeSeriesRecord
+                -> timeSeriesDataRecordMetricValue.getTimeSeriesValues().add(
+                    TimeSeriesDataRecordGroupValue.builder()
+                        .groupName(timeSeriesRecord.getTxnName())
+                        .value(timeSeriesRecord.getMetricValue())
+                        .build()));
+            timeSeriesDataCollectionRecord.getMetricValues().add(timeSeriesDataRecordMetricValue);
+          });
+      dataCollectionRecords.add(timeSeriesDataCollectionRecord);
     });
     return dataCollectionRecords;
   }
+  @Value
+  @Builder
+  private static class TimeSeriesRecordBucketKey {
+    String host;
+    long timestamp;
+  }
 
   public boolean saveTimeSeriesDataRecords(
-      String accountId, String cvConfigId, List<TimeSeriesRecord> timeSeriesRecords) {
+      String accountId, String cvConfigId, String verificationTaskId, List<TimeSeriesRecord> timeSeriesRecords) {
     if (timeSeriesRecords.isEmpty()) {
       logger.info("TimeseriesRecords is empty. So we will not be saving anything from the delegate for {}", cvConfigId);
       return true;
     }
     List<TimeSeriesDataCollectionRecord> dataCollectionRecords =
-        convertToCollectionRecords(accountId, cvConfigId, timeSeriesRecords);
+        convertToCollectionRecords(accountId, cvConfigId, verificationTaskId, timeSeriesRecords);
     try {
       RestResponse<Boolean> restResponse = timeLimiter.callWithTimeout(
           ()
