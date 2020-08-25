@@ -7,6 +7,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
+import io.harness.facilitator.FacilitatorType;
 import io.harness.presentation.Graph;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
@@ -54,6 +55,28 @@ public class NgOrchestrationResource {
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
         customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId), EMBEDDED_USER);
+    return new RestResponse<>(execution);
+  }
+
+  @GET
+  @Path("/http-chain-v2")
+  @ApiOperation(value = "Triggers a task chain v2 Plan", nickname = "http-chain-v2")
+  public RestResponse<PlanExecution> triggerHttpChainV2Plan(
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
+    PlanExecution execution =
+        orchestrationService.startExecution(customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V2),
+            getAbstractions(accountId, appId), EMBEDDED_USER);
+    return new RestResponse<>(execution);
+  }
+
+  @GET
+  @Path("/http-chain-v3")
+  @ApiOperation(value = "Triggers a task chain v3 Plan", nickname = "http-chain-v3")
+  public RestResponse<PlanExecution> triggerHttpChainV3Plan(
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
+    PlanExecution execution =
+        orchestrationService.startExecution(customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN_V3),
+            getAbstractions(accountId, appId), EMBEDDED_USER);
     return new RestResponse<>(execution);
   }
 

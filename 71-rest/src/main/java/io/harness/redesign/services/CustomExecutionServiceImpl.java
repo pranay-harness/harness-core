@@ -16,6 +16,7 @@ import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
+import io.harness.facilitator.FacilitatorType;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.presentation.Graph;
@@ -85,9 +86,9 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public PlanExecution executeTaskChainPlan() {
+  public PlanExecution executeTaskChainPlanV1() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(), getAbstractions(), getEmbeddedUser());
+        customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN), getAbstractions(), getEmbeddedUser());
   }
 
   @Override

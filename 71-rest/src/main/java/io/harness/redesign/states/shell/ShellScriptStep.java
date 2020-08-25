@@ -32,7 +32,6 @@ import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.resolvers.ResolverUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
@@ -76,8 +75,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class ShellScriptStep
-    implements Step, TaskExecutable<ShellScriptStepParameters>, TaskV2Executable<ShellScriptStepParameters> {
+public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;

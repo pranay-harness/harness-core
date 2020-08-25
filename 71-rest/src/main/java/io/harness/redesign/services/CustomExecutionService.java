@@ -30,7 +30,7 @@ public interface CustomExecutionService {
 
   PlanExecution executeSimpleShellScriptPlan(String accountId, String appId);
 
-  PlanExecution executeTaskChainPlan();
+  PlanExecution executeTaskChainPlanV1();
 
   PlanExecution executeSectionChainPlan();
 

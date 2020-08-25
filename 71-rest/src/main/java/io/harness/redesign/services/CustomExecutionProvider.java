@@ -773,16 +773,16 @@ public class CustomExecutionProvider {
         .build();
   }
 
-  public Plan provideTaskChainPlan() {
+  public Plan provideTaskChainPlan(String facilitatorType) {
     String sectionNodeId = generateUuid();
     String httpChainId = generateUuid();
     String dummyNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url("http://httpstat.us/" + BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
+        BasicHttpStepParameters.builder().url("http://httpstat.us/" + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
             PlanNode.builder()
@@ -809,7 +809,7 @@ public class CustomExecutionProvider {
                                       .linkParameter(basicHttpStateParameters2)
                                       .build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_CHAIN).build())
+                                             .type(FacilitatorType.builder().type(facilitatorType).build())
                                              .build())
                   .build())
         .node(PlanNode.builder()

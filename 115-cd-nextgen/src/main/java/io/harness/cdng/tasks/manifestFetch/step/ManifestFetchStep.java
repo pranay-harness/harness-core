@@ -22,7 +22,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -42,8 +41,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ManifestFetchStep
-    implements Step, TaskExecutable<ManifestFetchParameters>, TaskV2Executable<ManifestFetchParameters> {
+public class ManifestFetchStep implements Step, TaskExecutable<ManifestFetchParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("MANIFEST_FETCH").build();
   @Inject ManifestFetchHelper manifestFetchHelper;
 
