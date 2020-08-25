@@ -59,7 +59,8 @@ public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
     assertThat(createdService.getName()).isEqualTo(serviceEntity.getName());
 
     // Get operations
-    Optional<ServiceEntity> getService = serviceEntityService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "IDENTIFIER");
+    Optional<ServiceEntity> getService =
+        serviceEntityService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "IDENTIFIER", false);
     assertThat(getService).isPresent();
     assertThat(getService.get()).isEqualTo(createdService);
 
@@ -103,7 +104,8 @@ public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
     assertThat(upsertService.getDescription()).isEqualTo(upsertServiceRequest.getDescription());
 
     // List services operations.
-    Criteria criteriaFromServiceFilter = ServiceFilterHelper.createCriteria("ACCOUNT_ID", "ORG_ID", "PROJECT_ID");
+    Criteria criteriaFromServiceFilter =
+        ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
     Pageable pageRequest = PageUtils.getPageRequest(0, 10, null);
     Page<ServiceEntity> list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
@@ -111,7 +113,7 @@ public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
     assertThat(ServiceElementMapper.writeDTO(list.getContent().get(0)))
         .isEqualTo(ServiceElementMapper.writeDTO(updatedServiceResponse));
 
-    criteriaFromServiceFilter = ServiceFilterHelper.createCriteria("ACCOUNT_ID", "ORG_ID", null);
+    criteriaFromServiceFilter = ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
 
     list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
@@ -126,7 +128,7 @@ public class ServiceEntityServiceImplTest extends NGCoreBaseTest {
     assertThat(delete).isTrue();
 
     Optional<ServiceEntity> deletedService =
-        serviceEntityService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_SERVICE");
+        serviceEntityService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_SERVICE", false);
     assertThat(deletedService.isPresent()).isFalse();
   }
 }

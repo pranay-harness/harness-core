@@ -1,6 +1,7 @@
 package io.harness.ng.core.environment.mappers;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -29,7 +30,7 @@ public class EnvironmentFilterHelperTest extends CategoryTest {
     String orgIdentifier = "ORG_ID";
     String projectIdentifier = "PROJECT_ID";
     Criteria criteriaFromServiceFilter =
-        EnvironmentFilterHelper.createCriteria(accountId, orgIdentifier, projectIdentifier);
+        EnvironmentFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     assertThat(criteriaFromServiceFilter).isNotNull();
     Document criteriaObject = criteriaFromServiceFilter.getCriteriaObject();
     assertThat(criteriaObject.get(EnvironmentKeys.accountId)).isEqualTo(accountId);
@@ -52,6 +53,24 @@ public class EnvironmentFilterHelperTest extends CategoryTest {
       boolean shouldExist =
           stringSet.contains(propertyDescriptor.getName()) || excludedFields.contains(propertyDescriptor.getName());
       assertThat(shouldExist).isTrue();
+    }
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetUpdateOperationsForDelete() {
+    Environment environment = Environment.builder().build();
+    Update updateOperations = EnvironmentFilterHelper.getUpdateOperationsForDelete();
+    Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
+    PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(Environment.class);
+
+    for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+      if (propertyDescriptor.getName().equals("deleted")) {
+        assertThat(stringSet.contains(propertyDescriptor.getName())).isTrue();
+      } else {
+        assertThat(stringSet.contains(propertyDescriptor.getName())).isFalse();
+      }
     }
   }
 }

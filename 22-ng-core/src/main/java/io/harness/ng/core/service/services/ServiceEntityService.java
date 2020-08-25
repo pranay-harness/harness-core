@@ -11,7 +11,7 @@ public interface ServiceEntityService {
   ServiceEntity create(ServiceEntity serviceEntity);
 
   Optional<ServiceEntity> get(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, boolean deleted);
 
   // TODO(archit): make it transactional
   ServiceEntity update(ServiceEntity requestService);

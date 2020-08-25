@@ -10,4 +10,5 @@ public interface ServiceRepositoryCustom {
   Page<ServiceEntity> findAll(Criteria criteria, Pageable pageable);
   UpdateResult upsert(Criteria criteria, ServiceEntity serviceEntity);
   UpdateResult update(Criteria criteria, ServiceEntity serviceEntity);
+  UpdateResult delete(Criteria criteria);
 }

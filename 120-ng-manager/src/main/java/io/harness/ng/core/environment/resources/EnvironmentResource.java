@@ -5,6 +5,7 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 import com.google.inject.Inject;
 
 import io.harness.beans.NGPageResponse;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -22,8 +23,11 @@ import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+import software.wings.beans.Environment.EnvironmentKeys;
 
 import java.util.List;
 import java.util.Optional;
@@ -58,9 +62,10 @@ public class EnvironmentResource {
   @ApiOperation(value = "Gets a Environment by identifier", nickname = "getEnvironment")
   public ResponseDTO<EnvironmentResponseDTO> get(@PathParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("deleted") @DefaultValue("false") boolean deleted) {
     Optional<Environment> environment =
-        environmentService.get(accountId, orgIdentifier, projectIdentifier, environmentIdentifier);
+        environmentService.get(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, deleted);
     return ResponseDTO.newResponse(environment.map(EnvironmentMapper::writeDTO).orElse(null));
   }
 
@@ -98,8 +103,8 @@ public class EnvironmentResource {
   public ResponseDTO<EnvironmentResponseDTO> upsert(
       @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
-    Environment updatedEnvironment = environmentService.upsert(requestEnvironment);
-    return ResponseDTO.newResponse(EnvironmentMapper.writeDTO(updatedEnvironment));
+    Environment upsertedEnvironment = environmentService.upsert(requestEnvironment);
+    return ResponseDTO.newResponse(EnvironmentMapper.writeDTO(upsertedEnvironment));
   }
 
   @GET
@@ -108,10 +113,16 @@ public class EnvironmentResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("sort") List<String> sort) {
-    Criteria criteria = EnvironmentFilterHelper.createCriteria(accountId, orgIdentifier, projectIdentifier);
-    Pageable pageRequest = PageUtils.getPageRequest(page, size, sort);
-    Page<EnvironmentResponseDTO> serviceList =
+    Criteria criteria =
+        EnvironmentFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
+    Pageable pageRequest;
+    if (EmptyPredicate.isEmpty(sort)) {
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, EnvironmentKeys.createdAt));
+    } else {
+      pageRequest = PageUtils.getPageRequest(page, size, sort);
+    }
+    Page<EnvironmentResponseDTO> environmentList =
         environmentService.list(criteria, pageRequest).map(EnvironmentMapper::writeDTO);
-    return ResponseDTO.newResponse(getNGPageResponse(serviceList));
+    return ResponseDTO.newResponse(getNGPageResponse(environmentList));
   }
 }

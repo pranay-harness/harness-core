@@ -34,6 +34,7 @@ public class ServiceElementMapperTest extends CategoryTest {
                              .orgIdentifier("ORG_ID")
                              .projectIdentifier("PROJECT_ID")
                              .name("Service")
+                             .deleted(false)
                              .build();
     responseServiceEntity = ServiceEntity.builder()
                                 .id("UUID")
@@ -42,6 +43,7 @@ public class ServiceElementMapperTest extends CategoryTest {
                                 .orgIdentifier("ORG_ID")
                                 .projectIdentifier("PROJECT_ID")
                                 .name("Service")
+                                .deleted(false)
                                 .build();
 
     requestServiceEntity = ServiceEntity.builder()
@@ -50,6 +52,7 @@ public class ServiceElementMapperTest extends CategoryTest {
                                .orgIdentifier("ORG_ID")
                                .projectIdentifier("PROJECT_ID")
                                .name("Service")
+                               .deleted(false)
                                .build();
   }
 

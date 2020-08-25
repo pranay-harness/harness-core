@@ -3,6 +3,7 @@ package io.harness.ng.core.service.resources;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static software.wings.beans.Service.ServiceKeys;
 
 import io.harness.NgManagerTest;
 import io.harness.category.element.UnitTests;
@@ -12,7 +13,6 @@ import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.impl.ServiceEntityServiceImpl;
 import io.harness.rule.Owner;
-import io.harness.utils.PageUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -20,7 +20,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.Collections;
@@ -67,10 +69,10 @@ public class ServiceResourceTest extends NgManagerTest {
     doReturn(Optional.of(serviceEntity))
         .when(serviceEntityService)
         .get("ACCOUNT_ID", serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(),
-            serviceRequestDTO.getIdentifier());
+            serviceRequestDTO.getIdentifier(), false);
 
     ServiceResponseDTO serviceResponse =
-        serviceResource.get("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID").getData();
+        serviceResource.get("IDENTIFIER", "ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false).getData();
 
     assertThat(serviceResponse).isNotNull();
     assertThat(serviceResponse).isEqualTo(serviceResponseDTO);
@@ -122,9 +124,9 @@ public class ServiceResourceTest extends NgManagerTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testListServices() {
-    Criteria criteria = ServiceFilterHelper.createCriteria("", "", "");
-    Pageable pageable = PageUtils.getPageRequest(0, 10, null);
+  public void testListServicesWithDESCSort() {
+    Criteria criteria = ServiceFilterHelper.createCriteriaForGetList("", "", "", false);
+    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, ServiceKeys.createdAt));
     final Page<ServiceEntity> serviceList = new PageImpl<>(Collections.singletonList(serviceEntity), pageable, 1);
     doReturn(serviceList).when(serviceEntityService).list(criteria, pageable);
 

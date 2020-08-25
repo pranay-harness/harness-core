@@ -26,6 +26,7 @@ public class ServiceElementMapper {
         .identifier(serviceEntity.getIdentifier())
         .name(serviceEntity.getName())
         .description(serviceEntity.getDescription())
+        .deleted(serviceEntity.getDeleted())
         .build();
   }
 }

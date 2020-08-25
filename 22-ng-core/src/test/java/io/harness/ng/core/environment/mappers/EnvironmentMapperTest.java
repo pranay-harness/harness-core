@@ -35,6 +35,7 @@ public class EnvironmentMapperTest extends CategoryTest {
                                  .orgIdentifier("ORG_ID")
                                  .projectIdentifier("PROJECT_ID")
                                  .type(EnvironmentType.PreProduction)
+                                 .deleted(false)
                                  .build();
 
     requestEnvironment = Environment.builder()
@@ -43,6 +44,7 @@ public class EnvironmentMapperTest extends CategoryTest {
                              .orgIdentifier("ORG_ID")
                              .projectIdentifier("PROJECT_ID")
                              .type(EnvironmentType.PreProduction)
+                             .deleted(false)
                              .build();
 
     responseEnvironment = Environment.builder()
@@ -52,6 +54,7 @@ public class EnvironmentMapperTest extends CategoryTest {
                               .projectIdentifier("PROJECT_ID")
                               .type(EnvironmentType.PreProduction)
                               .id("UUID")
+                              .deleted(false)
                               .build();
   }
 

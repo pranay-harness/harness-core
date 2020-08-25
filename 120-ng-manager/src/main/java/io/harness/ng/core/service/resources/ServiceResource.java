@@ -1,10 +1,12 @@
 package io.harness.ng.core.service.resources;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
+import static software.wings.beans.Service.ServiceKeys;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.NGPageResponse;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -22,7 +24,9 @@ import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
@@ -58,9 +62,10 @@ public class ServiceResource {
   @ApiOperation(value = "Gets a Service by identifier", nickname = "getService")
   public ResponseDTO<ServiceResponseDTO> get(@PathParam("serviceIdentifier") String serviceIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("deleted") @DefaultValue("false") boolean deleted) {
     Optional<ServiceEntity> serviceEntity =
-        serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier);
+        serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deleted);
     return ResponseDTO.newResponse(serviceEntity.map(ServiceElementMapper::writeDTO).orElse(null));
   }
 
@@ -108,8 +113,14 @@ public class ServiceResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("sort") List<String> sort) {
-    Criteria criteria = ServiceFilterHelper.createCriteria(accountId, orgIdentifier, projectIdentifier);
-    Pageable pageRequest = PageUtils.getPageRequest(page, size, sort);
+    Criteria criteria =
+        ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
+    Pageable pageRequest;
+    if (EmptyPredicate.isEmpty(sort)) {
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, ServiceKeys.createdAt));
+    } else {
+      pageRequest = PageUtils.getPageRequest(page, size, sort);
+    }
     Page<ServiceResponseDTO> serviceList =
         serviceEntityService.list(criteria, pageRequest).map(ServiceElementMapper::writeDTO);
     return ResponseDTO.newResponse(getNGPageResponse(serviceList));

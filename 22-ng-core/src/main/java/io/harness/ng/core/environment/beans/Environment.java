@@ -3,6 +3,7 @@ package io.harness.ng.core.environment.beans;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.ng.core.common.beans.Tag;
@@ -35,6 +36,7 @@ import javax.validation.constraints.Size;
       , @Field(EnvironmentKeys.orgIdentifier), @Field(EnvironmentKeys.projectIdentifier),
           @Field(EnvironmentKeys.identifier)
     })
+@CdIndex(name = "accountIdIndex", fields = { @Field(EnvironmentKeys.accountId) })
 @Entity(value = "environmentsNG", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
 @Document("environmentsNG")
@@ -54,4 +56,5 @@ public class Environment implements PersistentEntity {
   @Wither @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastModifiedAt;
   @Wither @Version Long version;
+  @Builder.Default Boolean deleted = Boolean.FALSE;
 }

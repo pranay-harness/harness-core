@@ -10,7 +10,8 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @UtilityClass
 public class EnvironmentFilterHelper {
-  public Criteria createCriteria(String accountId, String orgIdentifier, String projectIdentifier) {
+  public Criteria createCriteriaForGetList(
+      String accountId, String orgIdentifier, String projectIdentifier, boolean deleted) {
     Criteria criteria = new Criteria();
     if (isNotEmpty(accountId)) {
       criteria.and(EnvironmentKeys.accountId).is(accountId);
@@ -21,6 +22,7 @@ public class EnvironmentFilterHelper {
     if (isNotEmpty(projectIdentifier)) {
       criteria.and(EnvironmentKeys.projectIdentifier).is(projectIdentifier);
     }
+    criteria.and(EnvironmentKeys.deleted).is(deleted);
     return criteria;
   }
 
@@ -32,6 +34,13 @@ public class EnvironmentFilterHelper {
     update.set(EnvironmentKeys.identifier, environment.getIdentifier());
     update.set(EnvironmentKeys.name, environment.getName());
     update.set(EnvironmentKeys.type, environment.getType());
+    update.set(EnvironmentKeys.deleted, false);
+    return update;
+  }
+
+  public Update getUpdateOperationsForDelete() {
+    Update update = new Update();
+    update.set(EnvironmentKeys.deleted, true);
     return update;
   }
 }

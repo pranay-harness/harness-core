@@ -11,7 +11,7 @@ public interface EnvironmentService {
   Environment create(Environment environment);
 
   Optional<Environment> get(
-      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier);
+      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier, boolean deleted);
 
   // TODO(archit): make it transactional
   Environment update(Environment requestEnvironment);

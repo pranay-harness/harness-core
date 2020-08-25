@@ -58,7 +58,8 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     assertThat(createdEnvironment.getName()).isEqualTo(createEnvironmentRequest.getIdentifier());
 
     // Get Operations
-    Optional<Environment> getEnvironment = environmentService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "IDENTIFIER");
+    Optional<Environment> getEnvironment =
+        environmentService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "IDENTIFIER", false);
     assertThat(getEnvironment).isPresent();
     assertThat(getEnvironment.get()).isEqualTo(createdEnvironment);
 
@@ -101,7 +102,8 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     assertThat(upsertEnv.getName()).isEqualTo(upsertEnvironmentRequest.getName());
 
     // List services operations.
-    Criteria criteriaFromFilter = EnvironmentFilterHelper.createCriteria("ACCOUNT_ID", "ORG_ID", "PROJECT_ID");
+    Criteria criteriaFromFilter =
+        EnvironmentFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
     Pageable pageRequest = PageUtils.getPageRequest(0, 100, null);
     Page<Environment> list = environmentService.list(criteriaFromFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
@@ -109,7 +111,7 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     assertThat(EnvironmentMapper.writeDTO(list.getContent().get(0)))
         .isEqualTo(EnvironmentMapper.writeDTO(updatedEnvironment));
 
-    criteriaFromFilter = EnvironmentFilterHelper.createCriteria("ACCOUNT_ID", "ORG_ID", null);
+    criteriaFromFilter = EnvironmentFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
     pageRequest = PageUtils.getPageRequest(0, 100, null);
 
     list = environmentService.list(criteriaFromFilter, pageRequest);
@@ -125,7 +127,7 @@ public class EnvironmentServiceImplTest extends NGCoreBaseTest {
     assertThat(delete).isTrue();
 
     Optional<Environment> deletedEnvironment =
-        environmentService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_ENV");
+        environmentService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "UPDATED_ENV", false);
     assertThat(deletedEnvironment.isPresent()).isFalse();
   }
 }
