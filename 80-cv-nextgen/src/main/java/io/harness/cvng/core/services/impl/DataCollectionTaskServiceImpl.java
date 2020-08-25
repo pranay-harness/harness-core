@@ -1,6 +1,5 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -22,6 +21,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +48,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVConfigService cvConfigService;
   @Inject private OrchestrationService orchestrationService;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Override
   public void save(DataCollectionTask dataCollectionTask) {
@@ -123,10 +124,12 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       // TODO: make this an atomic operation
       if (isServiceGuardTask(dataCollectionTask)) {
         createNextTask(dataCollectionTask);
-        orchestrationService.queueAnalysis(
-            dataCollectionTask.getCvConfigId(), dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
       } else {
         enqueueNextTask(dataCollectionTask);
+      }
+      if (dataCollectionTask.isQueueAnalysis()) {
+        orchestrationService.queueAnalysis(dataCollectionTask.getVerificationTaskId(),
+            dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
       }
     } else {
       retry(dataCollectionTask);
@@ -162,7 +165,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   private boolean isServiceGuardTask(DataCollectionTask dataCollectionTask) {
-    return dataCollectionTask.getCvConfigId() != null;
+    return verificationTaskService.isServiceGuardId(dataCollectionTask.getVerificationTaskId());
   }
   private void retry(DataCollectionTask dataCollectionTask) {
     if (dataCollectionTask.getRetryCount() < MAX_RETRY_COUNT) {
@@ -244,9 +247,10 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
         .dataCollectionWorkerId(cvConfig.getUuid())
         .cvConfigId(cvConfig.getUuid())
         .status(ExecutionStatus.QUEUED)
-        .validAfter(endTime.toEpochMilli() + DATA_COLLECTION_DELAY.toMillis())
         .startTime(startTime)
         .endTime(endTime)
+        .verificationTaskId(
+            verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid()))
         .dataCollectionInfo(
             injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())))
                 .toDataCollectionInfo(cvConfig))

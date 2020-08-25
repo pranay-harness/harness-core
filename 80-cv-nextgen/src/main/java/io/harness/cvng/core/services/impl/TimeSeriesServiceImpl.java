@@ -7,13 +7,13 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
+import io.harness.cvng.core.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
@@ -23,7 +23,10 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.persistence.HPersistence;
+import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
@@ -48,35 +51,60 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     logger.info("Saving {} data records", dataRecords.size());
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
-    TreeBasedTable<Long, String, TimeSeriesRecord> timeSeriesRecordMap = bucketTimeSeriesRecords(dataRecords);
-    timeSeriesRecordMap.cellSet().forEach(timeSeriesRecordCell
-        -> hPersistence.getDatastore(TimeSeriesRecord.class)
-               .update(hPersistence.createQuery(TimeSeriesRecord.class)
-                           .filter(TimeSeriesRecordKeys.cvConfigId, timeSeriesRecordCell.getValue().getCvConfigId())
-                           .filter(TimeSeriesRecordKeys.bucketStartTime,
-                               Instant.ofEpochMilli(timeSeriesRecordCell.getRowKey()))
-                           .filter(TimeSeriesRecordKeys.metricName, timeSeriesRecordCell.getColumnKey()),
-                   hPersistence.createUpdateOperations(TimeSeriesRecord.class)
-                       .set(TimeSeriesRecordKeys.accountId, timeSeriesRecordCell.getValue().getAccountId())
-                       .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
-                           Lists.newArrayList(timeSeriesRecordCell.getValue().getTimeSeriesGroupValues())),
-                   options));
+    Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> timeSeriesRecordMap = bucketTimeSeriesRecords(dataRecords);
+    timeSeriesRecordMap.forEach((timeSeriesRecordBucketKey, timeSeriesRecord) -> {
+      Query<TimeSeriesRecord> query =
+          hPersistence.createQuery(TimeSeriesRecord.class)
+              .filter(
+                  TimeSeriesRecordKeys.bucketStartTime, Instant.ofEpochMilli(timeSeriesRecordBucketKey.getTimestamp()))
+              .filter(TimeSeriesRecordKeys.metricName, timeSeriesRecordBucketKey.getMetricName());
+      if (timeSeriesRecord.getCvConfigId() != null) {
+        query = query.filter(TimeSeriesRecordKeys.cvConfigId, timeSeriesRecord.getCvConfigId());
+      }
+      query = query.filter(TimeSeriesRecordKeys.verificationTaskId, timeSeriesRecord.getVerificationTaskId());
+
+      if (timeSeriesRecord.getHost() != null) {
+        query = query.filter(TimeSeriesRecordKeys.host, timeSeriesRecord.getHost());
+      }
+      hPersistence.getDatastore(TimeSeriesRecord.class)
+          .update(query,
+              hPersistence.createUpdateOperations(TimeSeriesRecord.class)
+                  .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
+                  .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
+                      Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues())),
+              options);
+    });
+
     return true;
   }
+  @Value
+  @Builder
+  private static class TimeSeriesRecordBucketKey {
+    String host;
+    long timestamp;
+    String metricName;
+  }
 
-  private TreeBasedTable<Long, String, TimeSeriesRecord> bucketTimeSeriesRecords(
+  private Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> bucketTimeSeriesRecords(
       List<TimeSeriesDataCollectionRecord> dataRecords) {
-    TreeBasedTable<Long, String, TimeSeriesRecord> rv = TreeBasedTable.create();
+    Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> rv = new HashMap<>();
     dataRecords.forEach(dataRecord -> {
       long bucketBoundary = dataRecord.getTimeStamp()
           - Math.floorMod(dataRecord.getTimeStamp(), TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES));
       dataRecord.getMetricValues().forEach(timeSeriesDataRecordMetricValue -> {
         String metricName = timeSeriesDataRecordMetricValue.getMetricName();
-        if (!rv.contains(bucketBoundary, metricName)) {
-          rv.put(bucketBoundary, metricName,
+        TimeSeriesRecordBucketKey timeSeriesRecordBucketKey = TimeSeriesRecordBucketKey.builder()
+                                                                  .host(dataRecord.getHost())
+                                                                  .metricName(metricName)
+                                                                  .timestamp(bucketBoundary)
+                                                                  .build();
+        if (!rv.containsKey(timeSeriesRecordBucketKey)) {
+          rv.put(timeSeriesRecordBucketKey,
               TimeSeriesRecord.builder()
                   .accountId(dataRecord.getAccountId())
                   .cvConfigId(dataRecord.getCvConfigId())
+                  .verificationTaskId(dataRecord.getVerificationTaskId())
+                  .host(dataRecord.getHost())
                   .accountId(dataRecord.getAccountId())
                   .bucketStartTime(Instant.ofEpochMilli(bucketBoundary))
                   .metricName(metricName)
@@ -84,7 +112,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
         }
 
         timeSeriesDataRecordMetricValue.getTimeSeriesValues().forEach(timeSeriesDataRecordGroupValue
-            -> rv.get(bucketBoundary, metricName)
+            -> rv.get(timeSeriesRecordBucketKey)
                    .getTimeSeriesGroupValues()
                    .add(TimeSeriesGroupValue.builder()
                             .groupName(timeSeriesDataRecordGroupValue.getGroupName())
@@ -177,26 +205,11 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     return null;
   }
 
+  // TODO: create a overridden method without metric and txnName
   @Override
   public TimeSeriesTestDataDTO getTxnMetricDataForRange(
-      String cvConfigId, Instant startTime, Instant endTime, String metricName, String txnName) {
-    Instant queryStartTime = startTime.truncatedTo(ChronoUnit.SECONDS);
-    Instant queryEndTime = endTime.truncatedTo(ChronoUnit.SECONDS);
-    Query<TimeSeriesRecord> timeSeriesRecordsQuery = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
-                                                         .filter(TimeSeriesRecordKeys.cvConfigId, cvConfigId)
-                                                         .field(TimeSeriesRecordKeys.bucketStartTime)
-                                                         .greaterThanOrEq(queryStartTime)
-                                                         .field(TimeSeriesRecordKeys.bucketStartTime)
-                                                         .lessThan(queryEndTime);
-    if (isNotEmpty(metricName)) {
-      timeSeriesRecordsQuery = timeSeriesRecordsQuery.filter(TimeSeriesRecordKeys.metricName, metricName);
-    }
-
-    List<TimeSeriesRecord> records = timeSeriesRecordsQuery.asList();
-
-    if (records == null) {
-      return null;
-    }
+      String verificationTaskId, Instant startTime, Instant endTime, String metricName, String txnName) {
+    List<TimeSeriesRecord> records = getTimeSeriesRecords(verificationTaskId, startTime, endTime, metricName);
 
     Map<String, List<TimeSeriesGroupValue>> metricValueList = new HashMap<>();
     records.forEach(record -> {
@@ -229,7 +242,53 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
       metricValueList.put(record.getMetricName(), valueList);
     });
 
-    return getSortedListOfTimeSeriesRecords(cvConfigId, metricValueList);
+    return getSortedListOfTimeSeriesRecords(verificationTaskId, metricValueList);
+  }
+  // TODO: use accountId
+  private List<TimeSeriesRecord> getTimeSeriesRecords(String verificationTaskId, Instant startTime, Instant endTime) {
+    return getTimeSeriesRecords(verificationTaskId, startTime, endTime, null);
+  }
+
+  private List<TimeSeriesRecord> getTimeSeriesRecords(
+      String verificationTaskId, Instant startTime, Instant endTime, String metricName) {
+    startTime = DateTimeUtils.roundDownToMinBoundary(startTime, (int) CV_ANALYSIS_WINDOW_MINUTES);
+    Instant queryStartTime = startTime.truncatedTo(ChronoUnit.SECONDS);
+    Instant queryEndTime = endTime.truncatedTo(ChronoUnit.SECONDS);
+    Query<TimeSeriesRecord> timeSeriesRecordsQuery =
+        hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
+            .filter(TimeSeriesRecordKeys.verificationTaskId, verificationTaskId)
+            .field(TimeSeriesRecordKeys.bucketStartTime)
+            .greaterThanOrEq(queryStartTime)
+            .field(TimeSeriesRecordKeys.bucketStartTime)
+            .lessThan(queryEndTime);
+    if (isNotEmpty(metricName)) {
+      timeSeriesRecordsQuery = timeSeriesRecordsQuery.filter(TimeSeriesRecordKeys.metricName, metricName);
+    }
+    // TODO: filter values that are outside of given time range.
+    return timeSeriesRecordsQuery.asList();
+  }
+
+  @Override
+  public List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    List<TimeSeriesRecord> timeSeriesRecords = getTimeSeriesRecords(verificationTaskId, startTime, endTime);
+    List<TimeSeriesRecordDTO> timeSeriesRecordDTOS = new ArrayList<>();
+    timeSeriesRecords.forEach(timeSeriesRecord -> {
+      for (TimeSeriesRecord.TimeSeriesGroupValue record : timeSeriesRecord.getTimeSeriesGroupValues()) {
+        if (record.getTimeStamp().compareTo(startTime) >= 0 && record.getTimeStamp().compareTo(endTime) < 0) {
+          TimeSeriesRecordDTO timeSeriesRecordDTO = TimeSeriesRecordDTO.builder()
+                                                        .groupName(record.getGroupName())
+                                                        .host(timeSeriesRecord.getHost())
+                                                        .metricName(timeSeriesRecord.getMetricName())
+                                                        .timestamp(record.getTimeStamp().toEpochMilli())
+                                                        .verificationTaskId(timeSeriesRecord.getVerificationTaskId())
+                                                        .metricValue(record.getMetricValue())
+                                                        .build();
+          timeSeriesRecordDTOS.add(timeSeriesRecordDTO);
+        }
+      }
+    });
+    return timeSeriesRecordDTOS;
   }
 
   private TimeSeriesTestDataDTO getSortedListOfTimeSeriesRecords(

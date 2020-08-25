@@ -19,7 +19,6 @@ import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
-import io.harness.cvng.statemachine.exception.AnalysisOrchestrationException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.persistence.HPersistence;
@@ -34,7 +33,6 @@ import org.mockito.MockitoAnnotations;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 public class OrchestrationServiceTest extends CvNextGenTest {
   @Inject HPersistence hPersistence;
@@ -59,7 +57,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testQueueAnalysis_firstEverOrchestration() {
     AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
-                                            .filter(AnalysisOrchestratorKeys.cvConfigId, cvConfigId)
+                                            .filter(AnalysisOrchestratorKeys.verificationTaskId, cvConfigId)
                                             .get();
 
     assertThat(orchestrator).isNull();
@@ -67,39 +65,24 @@ public class OrchestrationServiceTest extends CvNextGenTest {
     orchestrationService.queueAnalysis(cvConfigId, Instant.now(), Instant.now().minus(5, ChronoUnit.MINUTES));
 
     orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
-                       .filter(AnalysisOrchestratorKeys.cvConfigId, cvConfigId)
+                       .filter(AnalysisOrchestratorKeys.verificationTaskId, cvConfigId)
                        .get();
 
     assertThat(orchestrator).isNotNull();
     assertThat(orchestrator.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
   }
 
-  @Test(expected = AnalysisOrchestrationException.class)
+  @Test(expected = NullPointerException.class)
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testQueueAnalysis_firstEverOrchestrationInvalidInputs() {
     AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
-                                            .filter(AnalysisOrchestratorKeys.cvConfigId, cvConfigId)
+                                            .filter(AnalysisOrchestratorKeys.verificationTaskId, cvConfigId)
                                             .get();
 
     assertThat(orchestrator).isNull();
 
     orchestrationService.queueAnalysis(cvConfigId, Instant.now(), null);
-  }
-
-  @Test(expected = AnalysisOrchestrationException.class)
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testQueueAnalysis_firstEverOrchestrationBadCvConfig() {
-    AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
-                                            .filter(AnalysisOrchestratorKeys.cvConfigId, cvConfigId)
-                                            .get();
-
-    assertThat(orchestrator).isNull();
-
-    int lastCollectionMinute =
-        (int) TimeUnit.MILLISECONDS.toMinutes(Instant.now().minus(5, ChronoUnit.MINUTES).toEpochMilli());
-    orchestrationService.queueAnalysis(cvConfigId + "-bad", Instant.now(), Instant.now().minus(5, ChronoUnit.MINUTES));
   }
 
   @Test
@@ -109,7 +92,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
     AnalysisOrchestrator orchestrator = AnalysisOrchestrator
                                             .builder()
 
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(cvConfigId)
                                             .status(AnalysisStatus.RUNNING)
                                             .build();
     hPersistence.save(orchestrator);
@@ -133,7 +116,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testOrchestrate_currentStateMachineDoneExecuteNext() {
     AnalysisOrchestrator orchestrator = AnalysisOrchestrator.builder()
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(cvConfigId)
                                             .status(AnalysisStatus.RUNNING)
                                             .analysisStateMachineQueue(new ArrayList<>())
                                             .build();
@@ -167,7 +150,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
     AnalysisOrchestrator orchestrator = AnalysisOrchestrator
                                             .builder()
 
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(cvConfigId)
                                             .status(AnalysisStatus.RUNNING)
                                             .build();
     hPersistence.save(orchestrator);
@@ -193,7 +176,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
     AnalysisOrchestrator orchestrator = AnalysisOrchestrator
                                             .builder()
 
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(cvConfigId)
                                             .status(AnalysisStatus.RUNNING)
                                             .build();
     hPersistence.save(orchestrator);
@@ -219,7 +202,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
     AnalysisOrchestrator orchestrator = AnalysisOrchestrator
                                             .builder()
 
-                                            .cvConfigId(cvConfigId)
+                                            .verificationTaskId(cvConfigId)
                                             .status(AnalysisStatus.RUNNING)
                                             .build();
     hPersistence.save(orchestrator);

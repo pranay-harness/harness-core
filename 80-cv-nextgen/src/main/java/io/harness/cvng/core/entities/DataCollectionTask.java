@@ -1,5 +1,7 @@
 package io.harness.cvng.core.entities;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -19,6 +21,7 @@ import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PrePersist;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -37,7 +40,7 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   @FdIndex private String dataCollectionWorkerId;
-
+  @Builder.Default private boolean queueAnalysis = true;
   private String nextTaskId;
   @FdIndex @NonNull private ExecutionStatus status;
 
@@ -57,4 +60,10 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   @SchemaIgnore
   @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(30).toInstant());
+  @PrePersist
+  private void prePersist() {
+    if (validAfter == 0) {
+      validAfter = endTime.plus(DATA_COLLECTION_DELAY).toEpochMilli();
+    }
+  }
 }

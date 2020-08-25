@@ -5,12 +5,12 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
@@ -19,16 +19,15 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@Builder
-@AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
-public class TimeSeriesAnalysisState extends AnalysisState {
-  @JsonIgnore @Inject private transient TimeSeriesAnalysisService timeSeriesAnalysisService;
+public abstract class TimeSeriesAnalysisState extends AnalysisState {
+  @JsonIgnore @Inject protected transient TimeSeriesAnalysisService timeSeriesAnalysisService;
   private String workerTaskId;
   @Override
   public AnalysisState execute() {
-    List<String> taskIds = timeSeriesAnalysisService.scheduleAnalysis(this.getInputs().getCvConfigId(), getInputs());
+    List<String> taskIds = scheduleAnalysis(getInputs());
     this.setStatus(AnalysisStatus.RUNNING);
 
     if (taskIds != null && taskIds.size() == 1) {
@@ -40,6 +39,8 @@ public class TimeSeriesAnalysisState extends AnalysisState {
     logger.info("Executing timeseries analysis");
     return this;
   }
+
+  protected abstract List<String> scheduleAnalysis(AnalysisInput analysisInput);
 
   @Override
   public AnalysisStatus getExecutionStatus() {

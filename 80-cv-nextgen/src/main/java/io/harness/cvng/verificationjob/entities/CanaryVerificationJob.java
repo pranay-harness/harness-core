@@ -14,7 +14,9 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +25,7 @@ import java.util.Optional;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class CanaryVerificationJob extends VerificationJob {
+  public static final Duration PRE_DEPLOYMENT_DATA_COLLECTION_DURATION = Duration.ofMinutes(15);
   private Sensitivity sensitivity;
   private Integer trafficSplitPercentage;
   @Override
@@ -48,6 +51,12 @@ public class CanaryVerificationJob extends VerificationJob {
 
   @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
-    return null;
+    List<TimeRange> timeRanges = new ArrayList<>();
+    timeRanges.add(TimeRange.builder()
+                       .startTime(startTime.minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION))
+                       .endTime(startTime)
+                       .build());
+    timeRanges.addAll(getTimeRangesForDuration(startTime));
+    return timeRanges;
   }
 }

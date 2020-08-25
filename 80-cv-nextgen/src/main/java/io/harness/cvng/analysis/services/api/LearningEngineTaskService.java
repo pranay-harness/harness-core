@@ -12,8 +12,10 @@ public interface LearningEngineTaskService {
   LearningEngineTask getNextAnalysisTask();
   LearningEngineTask getNextAnalysisTask(List<LearningEngineTaskType> taskType);
   List<String> createLearningEngineTasks(List<LearningEngineTask> tasks);
+  String createLearningEngineTask(LearningEngineTask learningEngineTask);
   Map<String, ExecutionStatus> getTaskStatus(Set<String> taskIds);
   void markCompleted(String taskId);
   void markFailure(String taskId);
   String createFailureUrl(String taskId);
+  LearningEngineTask get(String learningEngineTaskId);
 }

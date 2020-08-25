@@ -110,6 +110,8 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setEnvIdentifier(generateUuid());
     testVerificationJobDTO.setBaselineVerificationTaskIdentifier(generateUuid());
     testVerificationJobDTO.setDuration("15m");
+    testVerificationJobDTO.setProjectIdentifier(generateUuid());
+    testVerificationJobDTO.setOrgIdentifier(generateUuid());
     return testVerificationJobDTO;
   }
 }

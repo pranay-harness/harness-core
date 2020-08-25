@@ -37,6 +37,7 @@ public class TimeSeriesAnomalousPatterns implements PersistentEntity, UuidAware,
   private long createdAt;
   private long lastUpdatedAt;
   private String cvConfigId;
+  private String verificationTaskId;
   private List<TimeSeriesAnomalies> anomalies;
 
   public static List<TimeSeriesAnomalies> convertFromMap(

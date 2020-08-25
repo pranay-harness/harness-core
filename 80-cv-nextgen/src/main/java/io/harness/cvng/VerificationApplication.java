@@ -9,6 +9,7 @@ import static java.time.Duration.ofSeconds;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -30,6 +31,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
@@ -43,9 +45,10 @@ import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
-import io.harness.cvng.verificationjob.entities.VerificationTask;
-import io.harness.cvng.verificationjob.entities.VerificationTask.VerificationJobKeys;
-import io.harness.cvng.verificationjob.jobs.VerificationTaskHandler;
+import io.harness.cvng.statemachine.jobs.DeploymentVerificationTaskOrchestrationJob;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.VerificationTaskKeys;
+import io.harness.cvng.verificationjob.jobs.DeploymentVerificationTaskHandler;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -191,6 +194,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
     registerOrchestrationIterator(injector);
+    registerVerificationTaskOrchestrationIterator(injector);
     registerCVConfigDataCollectionTaskIterator(injector);
     registerVerificationTaskIterator(injector);
     registerExceptionMappers(environment.jersey());
@@ -230,6 +234,34 @@ public class VerificationApplication extends Application<VerificationConfigurati
         () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
   }
 
+  private void registerVerificationTaskOrchestrationIterator(Injector injector) {
+    ScheduledThreadPoolExecutor workflowVerificationExecutor =
+        new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
+    Handler<DeploymentVerificationTask> handler =
+        injector.getInstance(DeploymentVerificationTaskOrchestrationJob.class);
+    PersistenceIterator analysisOrchestrationIterator =
+        MongoPersistenceIterator
+            .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(DeploymentVerificationTask.class)
+            .fieldName(VerificationTaskKeys.analysisOrchestrationIteration)
+            .targetInterval(ofSeconds(30))
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(workflowVerificationExecutor)
+            .semaphore(new Semaphore(3))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.field(VerificationTaskKeys.executionStatus)
+                       .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
+            .redistribute(true)
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .build();
+    injector.injectMembers(analysisOrchestrationIterator);
+    workflowVerificationExecutor.scheduleAtFixedRate(
+        () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
+  }
+
   private void registerCVConfigDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("cv-config-data-collection-iterator").build());
@@ -258,20 +290,21 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerVerificationTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("verification-task-data-collection-iterator").build());
-    VerificationTaskHandler handler = injector.getInstance(VerificationTaskHandler.class);
+    DeploymentVerificationTaskHandler handler = injector.getInstance(DeploymentVerificationTaskHandler.class);
     // TODO: setup alert if this goes above acceptable threshold.
     PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator.<VerificationTask, MorphiaFilterExpander<VerificationTask>>builder()
+        MongoPersistenceIterator
+            .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(VerificationTask.class)
-            .fieldName(VerificationJobKeys.dataCollectionTaskIteration)
+            .clazz(DeploymentVerificationTask.class)
+            .fieldName(VerificationTaskKeys.dataCollectionTaskIteration)
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(verificationTaskExecutor)
             .semaphore(new Semaphore(5))
             .handler(handler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(VerificationJobKeys.dataCollectionTaskIds).doesNotExist())
+            .filterExpander(query -> query.criteria(VerificationTaskKeys.dataCollectionTaskIds).doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

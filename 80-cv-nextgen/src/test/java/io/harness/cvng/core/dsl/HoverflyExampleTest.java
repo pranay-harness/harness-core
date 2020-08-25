@@ -24,7 +24,8 @@ import java.nio.file.Paths;
  * Sample test to use Hoverfly with OkHttpClient.
  */
 public class HoverflyExampleTest extends CategoryTest {
-  // TODO: This is just basic example for Hoverfly. We need make capture and simulation switching easier.
+  // TODO: This is just zero external dependency basic example for Hoverfly. Can be used to quickly try out Hoverfly
+  //  We need make capture and simulation switching easier.
   @ClassRule
   public static final HoverflyRule rule =
       HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());

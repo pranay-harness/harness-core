@@ -35,6 +35,9 @@ public class TimeSeriesResource {
     return new RestResponse<>(timeSeriesService.getTimeSeriesMetricDefinitions(cvConfigId));
   }
 
+  // TODO: rename params to startTime and endTime instead of startTimeEpochMillis
+  // The convention is to always use epoch millis for APIs. If something else is used
+  // we need to specify that in the API.
   @GET
   @Path("/metric-group-data")
   @Timed

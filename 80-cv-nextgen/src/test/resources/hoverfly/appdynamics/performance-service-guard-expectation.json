@@ -1,0 +1,78 @@
+[{
+  "txnName" : "/todolist/requestLogin",
+  "metricName" : "Calls per Minute",
+  "metricValue" : 4.0,
+  "timestamp" : 1598017740000
+},
+ {
+   "txnName" : "/todolist/exception",
+   "metricName" : "Calls per Minute",
+   "metricValue" : 8.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/inside",
+   "metricName" : "Calls per Minute",
+   "metricValue" : 15.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/register",
+   "metricName" : "Calls per Minute",
+   "metricValue" : 6.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/manager/WEB-INF",
+   "metricName" : "Calls per Minute",
+   "metricValue" : 0.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/exception",
+   "metricName" : "Errors per Minute",
+   "metricValue" : 8.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/inside",
+   "metricName" : "Errors per Minute",
+   "metricValue" : 8.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/requestLogin",
+   "metricName" : "Average Response Time (ms)",
+   "metricValue" : 1.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/exception",
+   "metricName" : "Average Response Time (ms)",
+   "metricValue" : 3174133.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/register",
+   "metricName" : "Average Response Time (ms)",
+   "metricValue" : 1.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/todolist/inside",
+   "metricName" : "Average Response Time (ms)",
+   "metricValue" : 1.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/manager/WEB-INF",
+   "metricName" : "Average Response Time (ms)",
+   "metricValue" : 0.0,
+   "timestamp" : 1598017740000
+ },
+ {
+   "txnName" : "/manager/WEB-INF",
+   "metricName" : "Stall Count",
+   "metricValue" : 0.0,
+   "timestamp" : 1598017740000
+ }]

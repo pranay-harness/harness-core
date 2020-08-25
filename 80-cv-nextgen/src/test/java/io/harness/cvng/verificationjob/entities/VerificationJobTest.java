@@ -123,6 +123,8 @@ public class VerificationJobTest extends CategoryTest {
     testVerificationJob.setEnvIdentifier(generateUuid());
     testVerificationJob.setBaseLineVerificationTaskIdentifier(generateUuid());
     testVerificationJob.setDuration(Duration.ofMinutes(15));
+    testVerificationJob.setProjectIdentifier(generateUuid());
+    testVerificationJob.setOrgIdentifier(generateUuid());
     return testVerificationJob;
   }
 }

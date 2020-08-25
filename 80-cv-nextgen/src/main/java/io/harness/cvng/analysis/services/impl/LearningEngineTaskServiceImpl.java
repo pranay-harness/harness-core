@@ -6,6 +6,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.cvng.analysis.beans.ExecutionStatus;
@@ -60,10 +61,15 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
 
   @Override
   public List<String> createLearningEngineTasks(List<LearningEngineTask> tasks) {
-    if (isNotEmpty(tasks)) {
-      tasks.forEach(task -> task.setTaskStatus(ExecutionStatus.QUEUED));
-    }
+    Preconditions.checkNotNull(tasks, "tasks can not be null");
+    Preconditions.checkArgument(tasks.size() > 0, "List size can not be zero");
+    tasks.forEach(task -> task.setTaskStatus(ExecutionStatus.QUEUED));
     return hPersistence.save(tasks);
+  }
+
+  @Override
+  public String createLearningEngineTask(LearningEngineTask learningEngineTask) {
+    return hPersistence.save(learningEngineTask);
   }
 
   @Override
@@ -109,6 +115,11 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     } catch (URISyntaxException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  @Override
+  public LearningEngineTask get(String learningEngineTaskId) {
+    return hPersistence.get(LearningEngineTask.class, learningEngineTaskId);
   }
 
   @Override

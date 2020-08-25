@@ -11,6 +11,7 @@ import java.util.Set;
 public class TimeSeriesDataCollectionRecord {
   private String accountId;
   private String cvConfigId;
+  private String verificationTaskId;
   private String host;
   private long timeStamp;
   private Set<TimeSeriesDataRecordMetricValue> metricValues;

@@ -16,13 +16,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
+import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -42,7 +47,9 @@ import java.util.concurrent.TimeUnit;
 public class StateMachineServiceTest extends CvNextGenTest {
   private String cvConfigId;
   private CVConfig cvConfig;
-
+  // TODO: Why do we have these test with mocks?
+  //  Probably investigate and need to rewrite these test with actual services. These test are unmaintainable and using
+  //  too many mocks.
   @Mock HPersistence hPersistence;
   @Mock Injector injector;
 
@@ -50,10 +57,13 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Mock private TimeSeriesAnalysisService mockTimeSeriesAnalysisService;
   @Mock private Query<AnalysisStateMachine> stateMachineQuery;
   @Mock private Query<CVConfig> cvConfigQuery;
+  @Mock private CVConfigService cvConfigService;
+  @Mock private VerificationTaskService verificationTaskService;
+  @Mock private DeploymentVerificationTaskService deploymentVerificationTaskService;
   @InjectMocks AnalysisStateMachineService stateMachineService = new AnalysisStateMachineServiceImpl();
 
   @Before
-  public void setup() throws Exception {
+  public void setup() {
     cvConfigId = generateUuid();
     cvConfig = new AppDynamicsCVConfig();
     cvConfig.setVerificationType(VerificationType.TIME_SERIES);
@@ -75,10 +85,11 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testCreateStateMachine() {
-    when(hPersistence.get(CVConfig.class, cvConfigId)).thenReturn(cvConfig);
+  public void testCreateStateMachine_forServiceGuard() {
+    when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
     AnalysisInput inputs = AnalysisInput.builder()
                                .cvConfigId(cvConfigId)
+                               .verificationTaskId(cvConfigId)
                                .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                .endTime(Instant.now())
                                .build();
@@ -87,6 +98,26 @@ public class StateMachineServiceTest extends CvNextGenTest {
     assertThat(stateMachine).isNotNull();
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateStateMachine_forDeployment() {
+    String verificationTaskId = generateUuid();
+    String deploymentVerificationTaskId = generateUuid();
+    when(verificationTaskService.getDeploymentVerificationTaskId(verificationTaskId))
+        .thenReturn(deploymentVerificationTaskId);
+    when(deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId))
+        .thenReturn(DeploymentVerificationTask.builder().build());
+
+    AnalysisInput inputs = AnalysisInput.builder()
+                               .verificationTaskId(verificationTaskId)
+                               .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
+                               .endTime(Instant.now())
+                               .build();
+
+    AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
+    assertThat(stateMachine).isNotNull();
+  }
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
@@ -120,7 +151,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
                                             .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                             .analysisEndTime(Instant.now())
                                             .build();
-    TimeSeriesAnalysisState timeSeriesAnalysisState = TimeSeriesAnalysisState.builder().build();
+    TimeSeriesAnalysisState timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setInputs(AnalysisInput.builder()
                                           .cvConfigId(cvConfigId)
                                           .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))
@@ -156,7 +187,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
                                             .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                                             .analysisEndTime(Instant.now())
                                             .build();
-    TimeSeriesAnalysisState timeSeriesAnalysisState = TimeSeriesAnalysisState.builder().build();
+    TimeSeriesAnalysisState timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setInputs(AnalysisInput.builder()
                                           .cvConfigId(cvConfigId)
                                           .startTime(Instant.now().minus(5, ChronoUnit.MINUTES))

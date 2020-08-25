@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,9 +50,10 @@ public class TimeSeriesDataStoreServiceTest extends CategoryTest {
     }
 
     List<TimeSeriesDataCollectionRecord> dataCollectionRecords =
-        new TimeSeriesDataStoreService().convertToCollectionRecords(accountId, cvConfigId, timeSeriesRecords);
+        new TimeSeriesDataStoreService().convertToCollectionRecords(accountId, null, cvConfigId, timeSeriesRecords);
     System.out.println(dataCollectionRecords);
     assertThat(dataCollectionRecords.size()).isEqualTo(numOfMins);
+    Collections.sort(dataCollectionRecords, Comparator.comparingLong(TimeSeriesDataCollectionRecord::getTimeStamp));
     for (int i = 0; i < numOfMins; i++) {
       TimeSeriesDataCollectionRecord dataCollectionRecord = dataCollectionRecords.get(i);
       assertThat(dataCollectionRecord.getTimeStamp()).isEqualTo(TimeUnit.MINUTES.toMillis(i));

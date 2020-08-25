@@ -29,7 +29,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "analysisStateMachines")
+@Entity(value = "analysisStateMachines", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class AnalysisStateMachine implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
@@ -38,6 +38,7 @@ public class AnalysisStateMachine implements PersistentEntity, UuidAware, Create
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   @FdIndex private String cvConfigId;
+  @FdIndex private String verificationTaskId;
   private AnalysisState currentState;
   private List<AnalysisState> completedStates;
   private AnalysisStatus status;

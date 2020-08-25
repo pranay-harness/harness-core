@@ -9,9 +9,9 @@ public class AppDynamicsDataCollectionInfoMapper
   @Override
   public AppDynamicsDataCollectionInfo toDataCollectionInfo(AppDynamicsCVConfig cvConfig) {
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo = AppDynamicsDataCollectionInfo.builder()
-                                                                      .applicationId(cvConfig.getApplicationId())
+                                                                      .applicationName(cvConfig.getApplicationName())
+                                                                      .tierName(cvConfig.getTierName())
                                                                       .metricPack(cvConfig.getMetricPack().getDTO())
-                                                                      .tierId(cvConfig.getTierId())
                                                                       .build();
     appDynamicsDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
     return appDynamicsDataCollectionInfo;
