@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.beans;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.QUALITY_PACK_IDENTIFIER;

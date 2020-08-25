@@ -79,7 +79,7 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
                             .filter(metricPack -> metricPack.getIdentifier().equals("Performance"))
                             .findFirst()
                             .get()
-                            .getDTO())
+                            .toDTO())
             .build();
     Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
 
@@ -121,7 +121,7 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
                             .filter(metricPack -> metricPack.getIdentifier().equals("Performance"))
                             .findFirst()
                             .get()
-                            .getDTO())
+                            .toDTO())
             .build();
     appDynamicsDataCollectionInfo.setCollectHostData(true);
     Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();

@@ -1,12 +1,15 @@
 package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 
 import java.util.List;
 
 public interface MetricPackService {
+  List<MetricPackDTO> getMetricPacks(DataSourceType dataSourceType, String accountId, String projectIdentifier);
+
   List<MetricPack> getMetricPacks(String accountId, String projectIdentifier, DataSourceType dataSourceType);
 
   boolean saveMetricPacks(

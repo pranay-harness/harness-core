@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.api.CVConfigTransformerTestBase;
-import io.harness.cvng.core.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.SplunkDSConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.rule.Owner;

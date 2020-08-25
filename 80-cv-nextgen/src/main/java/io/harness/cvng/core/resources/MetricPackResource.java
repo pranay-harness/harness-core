@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -33,10 +34,10 @@ public class MetricPackResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<List<MetricPack>> getMetricPacks(@QueryParam("accountId") @NotNull String accountId,
+  public RestResponse<List<MetricPackDTO>> getMetricPacks(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType) {
-    return new RestResponse<>(metricPackService.getMetricPacks(accountId, projectIdentifier, dataSourceType));
+    return new RestResponse<>(metricPackService.getMetricPacks(dataSourceType, accountId, projectIdentifier));
   }
 
   @POST

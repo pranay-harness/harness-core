@@ -32,7 +32,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesSh
 import io.harness.cvng.analysis.services.api.DeploymentVerificationTaskTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
-import io.harness.cvng.core.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.core.entities.CVConfig;

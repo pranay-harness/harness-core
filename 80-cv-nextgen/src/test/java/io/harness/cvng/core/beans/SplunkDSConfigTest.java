@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Lists;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
