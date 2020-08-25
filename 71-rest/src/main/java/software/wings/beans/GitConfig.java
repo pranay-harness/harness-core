@@ -11,6 +11,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
+import io.harness.git.model.GitRepositoryType;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -91,7 +92,6 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     }
   }
 
-  public enum GitRepositoryType { YAML, TERRAFORM, TRIGGER, HELM }
   public enum UrlType { REPO, ACCOUNT }
 
   /**

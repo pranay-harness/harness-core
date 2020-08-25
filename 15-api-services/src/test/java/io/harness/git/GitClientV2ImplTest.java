@@ -3,11 +3,6 @@ package io.harness.git;
 import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.RENAME;
-import static io.harness.git.model.CommitAndPushRequest.commitAndPushRequestBuilder;
-import static io.harness.git.model.DiffRequest.diffRequestBuilder;
-import static io.harness.git.model.DownloadFilesRequest.downloadFilesRequestBuilder;
-import static io.harness.git.model.FetchFilesBwCommitsRequest.fetchFilesBwCommitsRequestBuilder;
-import static io.harness.git.model.FetchFilesByPathRequest.fetchFilesByPathRequestBuilder;
 import static io.harness.git.model.PushResultGit.pushResultBuilder;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ARVIND;
@@ -103,6 +98,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @After
   public void cleanup() throws Exception {
     FileUtils.deleteDirectory(new File(repoPath));
+    git.rm();
   }
 
   @Test
@@ -183,7 +179,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testDownloadFiles_Branch_Directory() throws Exception {
-    DownloadFilesRequest request = downloadFilesRequestBuilder()
+    DownloadFilesRequest request = DownloadFilesRequest.builder()
                                        .repoUrl(repoPath)
                                        .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
                                        .branch("master")
@@ -207,7 +203,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testDownloadFiles_File() throws Exception {
     String destinationDirectory = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
-    DownloadFilesRequest request = downloadFilesRequestBuilder()
+    DownloadFilesRequest request = DownloadFilesRequest.builder()
                                        .repoUrl(repoPath)
                                        .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
                                        .branch("master")
@@ -235,7 +231,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testDownloadFiles_Commit() throws Exception {
-    DownloadFilesRequest request = downloadFilesRequestBuilder()
+    DownloadFilesRequest request = DownloadFilesRequest.builder()
                                        .repoUrl(repoPath)
                                        .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
                                        .commitId("t1")
@@ -259,7 +255,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testDownloadFiles_Clone() throws Exception {
-    DownloadFilesRequest request = downloadFilesRequestBuilder()
+    DownloadFilesRequest request = DownloadFilesRequest.builder()
                                        .repoUrl(repoPath)
                                        .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
                                        .branch("master")
@@ -283,7 +279,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFetchFilesByPath() throws Exception {
     FetchFilesByPathRequest request =
-        fetchFilesByPathRequestBuilder()
+        FetchFilesByPathRequest.builder()
             .repoUrl(repoPath)
             .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
             .connectorId("CONNECTOR_ID")
@@ -311,7 +307,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFetchFilesBetweenCommits() throws Exception {
     FetchFilesBwCommitsRequest request =
-        fetchFilesBwCommitsRequestBuilder()
+        FetchFilesBwCommitsRequest.builder()
             .repoUrl(repoPath)
             .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
             .branch("master")
@@ -440,7 +436,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testDiff() throws GitAPIException, IOException {
-    final DiffRequest diffRequest = diffRequestBuilder()
+    final DiffRequest diffRequest = DiffRequest.builder()
                                         .accountId("accountId")
                                         .branch("master")
                                         .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
@@ -465,7 +461,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testApplyChangeSetOnFileSystem() throws Exception {
     CommitAndPushRequest gitCommitAndPushRequest =
-        commitAndPushRequestBuilder().gitFileChanges(getSampleGitFileChanges()).build();
+        CommitAndPushRequest.builder().gitFileChanges(getSampleGitFileChanges()).build();
 
     List<String> filesToAdd = new ArrayList<>();
 
@@ -555,7 +551,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCommit() {
     final CommitAndPushRequest commitAndPushRequest =
-        commitAndPushRequestBuilder().gitFileChanges(getSampleGitFileChanges()).build();
+        CommitAndPushRequest.builder().gitFileChanges(getSampleGitFileChanges()).build();
     doNothing().when(gitClient).ensureRepoLocallyClonedAndUpdated(commitAndPushRequest);
     doReturn(repoPath).when(gitClientHelper).getRepoDirectory(commitAndPushRequest);
     final CommitResult commit = gitClient.commit(commitAndPushRequest);
@@ -571,7 +567,8 @@ public class GitClientV2ImplTest extends CategoryTest {
   public void testCommitAndPush() throws Exception {
     doNothing().when(gitClient).updateRemoteOriginInConfig(any(), any());
     List<GitFileChange> gitFileChanges = getSampleGitFileChanges();
-    CommitAndPushRequest gitCommitAndPushRequest = commitAndPushRequestBuilder().gitFileChanges(gitFileChanges).build();
+    CommitAndPushRequest gitCommitAndPushRequest =
+        CommitAndPushRequest.builder().gitFileChanges(gitFileChanges).build();
 
     PushResultGit toBeReturned = pushResultBuilder().refUpdate(PushResultGit.RefUpdate.builder().build()).build();
     addRemote(repoPath);
@@ -589,7 +586,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testCommitAndPush_Warn() throws Exception {
-    CommitAndPushRequest request = commitAndPushRequestBuilder().build();
+    CommitAndPushRequest request = CommitAndPushRequest.builder().build();
     CommitResult result = CommitResult.builder().build();
     doReturn(result).when(gitClient).commit(request);
 
@@ -604,11 +601,12 @@ public class GitClientV2ImplTest extends CategoryTest {
 
     GitFileChange gitFileChange = GitFileChange.builder().changeType(ADD).filePath(repoPath + "/1.txt").build();
     CommitAndPushRequest gitCommitAndPushRequest =
-        commitAndPushRequestBuilder()
+        CommitAndPushRequest.builder()
             .gitFileChanges(Collections.singletonList(gitFileChange))
+            .authorName("authorName")
+            .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
             .accountId("accountId")
             .branch("master")
-            .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
             .build();
     doNothing().when(gitClient).ensureRepoLocallyClonedAndUpdated(gitCommitAndPushRequest);
     doReturn(repoPath).when(gitClientHelper).getRepoDirectory(gitCommitAndPushRequest);
@@ -631,7 +629,7 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testPull_http() throws Exception {
-    DiffRequest request = diffRequestBuilder()
+    DiffRequest request = DiffRequest.builder()
                               .repoUrl(repoPath)
                               .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
                               .build();

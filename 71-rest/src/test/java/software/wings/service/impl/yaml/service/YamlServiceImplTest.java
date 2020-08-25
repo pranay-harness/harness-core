@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.git.model.ChangeType.DELETE;
+import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ALEXEI;
@@ -9,8 +11,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
-import static software.wings.beans.yaml.Change.ChangeType.DELETE;
-import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.Change;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;

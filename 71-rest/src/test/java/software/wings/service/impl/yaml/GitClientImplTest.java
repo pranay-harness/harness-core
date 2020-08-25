@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml;
 
-import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
@@ -8,17 +8,13 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
@@ -32,6 +28,8 @@ import com.jcraft.jsch.Session;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.filesystem.FileIo;
+import io.harness.git.model.ChangeType;
+import io.harness.git.model.GitRepositoryType;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -59,9 +57,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
-import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitOperationContext;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
@@ -488,15 +484,5 @@ public class GitClientImplTest extends WingsBaseTest {
     } catch (InterruptedException | TimeoutException | IOException ex) {
       fail("Should not reach here.");
     }
-  }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
-  public void testEnsureLastProcessedCommitIsHead() {
-    doReturn("abc").when(gitClient).getHeadCommit(any());
-    gitClient.ensureLastProcessedCommitIsHead(true, "abc", null);
-    assertThatThrownBy(() -> gitClient.ensureLastProcessedCommitIsHead(true, "xyz", null));
-    gitClient.ensureLastProcessedCommitIsHead(eq(false), eq("abc"), any());
   }
 }

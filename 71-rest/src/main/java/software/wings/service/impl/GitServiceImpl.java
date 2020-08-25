@@ -16,8 +16,15 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
 import io.harness.git.UsernamePasswordAuthRequest;
 import io.harness.git.model.AuthRequest;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushRequest.CommitAndPushRequestBuilder;
+import io.harness.git.model.CommitAndPushResult;
+import io.harness.git.model.CommitResult;
 import io.harness.git.model.GitBaseRequest;
+import io.harness.git.model.GitBaseRequest.GitBaseRequestBuilder;
+import io.harness.git.model.GitFileChange;
 import io.harness.git.model.JgitSshAuthRequest;
+import io.harness.git.model.PushResultGit;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.transport.HttpTransport;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
@@ -25,15 +32,19 @@ import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.util.FS;
 import software.wings.beans.GitConfig;
-import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.NoopExecutionCallback;
+import software.wings.beans.yaml.GitCommitAndPushResult;
+import software.wings.beans.yaml.GitCommitRequest;
+import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
+import software.wings.beans.yaml.GitPushResult;
+import software.wings.beans.yaml.GitPushResult.RefUpdate;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.GitService;
@@ -42,6 +53,7 @@ import software.wings.service.intfc.yaml.GitClient;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -51,17 +63,13 @@ public class GitServiceImpl implements GitService {
   @Inject private GitClient gitClient;
   @Inject private GitClientV2 gitClientV2;
 
-  private String getSafeRepoType(GitRepositoryType repositoryType) {
-    return null != repositoryType ? repositoryType.name() : null;
-  }
-
   @Override
   public String validate(GitConfig gitConfig) {
     AuthRequest authRequest = getAuthRequest(gitConfig);
     return gitClientV2.validate(GitBaseRequest.builder()
                                     .branch(gitConfig.getBranch())
                                     .repoUrl(gitConfig.getRepoUrl())
-                                    .repoType(getSafeRepoType(gitConfig.getGitRepoType()))
+                                    .repoType(gitConfig.getGitRepoType())
                                     .authRequest(authRequest)
                                     .build());
   }
@@ -74,7 +82,7 @@ public class GitServiceImpl implements GitService {
                                                       .branch(gitConfig.getBranch())
                                                       .commitId(gitConfig.getReference())
                                                       .repoUrl(gitConfig.getRepoUrl())
-                                                      .repoType(getSafeRepoType(gitConfig.getGitRepoType()))
+                                                      .repoType(gitConfig.getGitRepoType())
                                                       .authRequest(authRequest)
                                                       .accountId(gitConfig.getAccountId())
                                                       .connectorId(gitOperationContext.getGitConnectorId())
@@ -180,5 +188,115 @@ public class GitServiceImpl implements GitService {
             .fileExtensions(fileExtensions)
             .recursive(isRecursive)
             .build());
+  }
+
+  @Override
+  public GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext) {
+    final CommitAndPushRequest commitAndPushRequest = getCommitAndPushRequestFromOperationContext(gitOperationContext);
+    CommitAndPushResult commitAndPushResult = gitClientV2.commitAndPush(commitAndPushRequest);
+    return buildCommitAndPushResult(gitOperationContext, commitAndPushResult);
+  }
+
+  private GitCommitAndPushResult buildCommitAndPushResult(
+      GitOperationContext gitOperationContext, CommitAndPushResult commitAndPushResult) {
+    return GitCommitAndPushResult.builder()
+        .gitCommitResult(castToCommitResult(commitAndPushResult.getGitCommitResult()))
+        .filesCommitedToGit(toManagerGitFileChange(commitAndPushResult.getFilesCommittedToGit()))
+        .gitPushResult(toGitPushResult(commitAndPushResult.getGitPushResult()))
+        .yamlGitConfig(gitOperationContext.getGitCommitRequest().getYamlGitConfig())
+        .build();
+  }
+
+  private GitPushResult toGitPushResult(PushResultGit pushResultGit) {
+    PushResultGit.RefUpdate refUpdate = pushResultGit.getRefUpdate();
+    RefUpdate ref = RefUpdate.builder()
+                        .expectedOldObjectId(refUpdate.getExpectedOldObjectId())
+                        .forceUpdate(refUpdate.isForceUpdate())
+                        .message(refUpdate.getMessage())
+                        .newObjectId(refUpdate.getNewObjectId())
+                        .status(refUpdate.getStatus())
+                        .build();
+    return GitPushResult.builder().refUpdate(ref).build();
+  }
+
+  private GitCommitResult castToCommitResult(CommitResult commitResult) {
+    return GitCommitResult.builder()
+        .commitId(commitResult.getCommitId())
+        .commitMessage(commitResult.getCommitMessage())
+        .commitTime(commitResult.getCommitTime())
+        .build();
+  }
+
+  private List<software.wings.beans.yaml.GitFileChange> toManagerGitFileChange(List<GitFileChange> gitFileChanges) {
+    return gitFileChanges.stream().map(this ::toManagerGitFileChange).collect(Collectors.toList());
+  }
+
+  private software.wings.beans.yaml.GitFileChange toManagerGitFileChange(GitFileChange gitFileChange) {
+    return software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange()
+        .withFilePath(gitFileChange.getFilePath())
+        .withAccountId(gitFileChange.getAccountId())
+        .withFileContent(gitFileChange.getFileContent())
+        .withChangeType(gitFileChange.getChangeType())
+        .withCommitId(gitFileChange.getCommitId())
+        .withChangeFromAnotherCommit(gitFileChange.isChangeFromAnotherCommit())
+        .withSyncFromGit(gitFileChange.isSyncFromGit())
+        .withCommitMessage(gitFileChange.getCommitMessage())
+        .withCommitTimeMs(gitFileChange.getCommitTimeMs())
+        .withProcessingCommitId(gitFileChange.getProcessingCommitId())
+        .withOldFilePath(gitFileChange.getOldFilePath())
+        .withProcessingCommitMessage(gitFileChange.getProcessingCommitMessage())
+        .withObjectId(gitFileChange.getObjectId())
+        .withProcessingCommitTimeMs(gitFileChange.getProcessingCommitTimeMs())
+        .build();
+  }
+
+  private CommitAndPushRequest getCommitAndPushRequestFromOperationContext(GitOperationContext gitOperationContext) {
+    final GitConfig gitConfig = gitOperationContext.getGitConfig();
+    final GitCommitRequest gitCommitRequest = gitOperationContext.getGitCommitRequest();
+    final String gitConnectorId = gitOperationContext.getGitConnectorId();
+    CommitAndPushRequestBuilder<?, ?> builder = CommitAndPushRequest.builder();
+    setGitBaseRequest(gitConfig, gitConnectorId, null, builder);
+    return builder.commitMessage(gitConfig.getCommitMessage())
+        .authorEmail(gitConfig.getAuthorEmailId())
+        .authorName(gitConfig.getAuthorName())
+        .forcePush(gitCommitRequest.isForcePush())
+        .lastProcessedGitCommit(gitCommitRequest.getLastProcessedGitCommit())
+        .pushOnlyIfHeadSeen(gitCommitRequest.isPushOnlyIfHeadSeen())
+        .gitFileChanges(toApiServiceGitFileChange(gitCommitRequest.getGitFileChanges()))
+        .build();
+  }
+
+  private void setGitBaseRequest(
+      GitConfig gitConfig, String connectorId, String commitId, GitBaseRequestBuilder<?, ?> gitBaseRequestBuilder) {
+    gitBaseRequestBuilder.repoUrl(gitConfig.getRepoUrl())
+        .accountId(gitConfig.getAccountId())
+        .authRequest(getAuthRequest(gitConfig))
+        .repoType(gitConfig.getGitRepoType())
+        .branch(gitConfig.getBranch())
+        .connectorId(connectorId)
+        .commitId(commitId);
+  }
+
+  private List<GitFileChange> toApiServiceGitFileChange(List<software.wings.beans.yaml.GitFileChange> gitFileChanges) {
+    return gitFileChanges.stream().map(this ::toApiServiceGitFileChange).collect(Collectors.toList());
+  }
+
+  private GitFileChange toApiServiceGitFileChange(software.wings.beans.yaml.GitFileChange gitFileChange) {
+    return GitFileChange.builder()
+        .syncFromGit(gitFileChange.isSyncFromGit())
+        .oldFilePath(gitFileChange.getOldFilePath())
+        .filePath(gitFileChange.getFilePath())
+        .fileContent(gitFileChange.getFileContent())
+        .commitTimeMs(gitFileChange.getCommitTimeMs())
+        .accountId(gitFileChange.getAccountId())
+        .commitId(gitFileChange.getCommitId())
+        .changeFromAnotherCommit(gitFileChange.isChangeFromAnotherCommit())
+        .objectId(gitFileChange.getObjectId())
+        .commitMessage(gitFileChange.getCommitMessage())
+        .processingCommitId(gitFileChange.getProcessingCommitId())
+        .processingCommitMessage(gitFileChange.getProcessingCommitMessage())
+        .processingCommitTimeMs(gitFileChange.getProcessingCommitTimeMs())
+        .changeType(gitFileChange.getChangeType())
+        .build();
   }
 }

@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -40,7 +41,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;

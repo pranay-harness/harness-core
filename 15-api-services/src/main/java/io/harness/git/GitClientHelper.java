@@ -39,6 +39,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
+import io.harness.git.model.GitRepositoryType;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -70,22 +71,22 @@ public class GitClientHelper {
                                                                   }
                                                                 });
 
-  String getGitLogMessagePrefix(String repositoryType) {
+  String getGitLogMessagePrefix(GitRepositoryType repositoryType) {
     if (repositoryType == null) {
       return GIT_DEFAULT_LOG_PREFIX;
     }
 
     switch (repositoryType) {
-      case "TERRAFORM":
-        return GIT_TERRAFORM_LOG_PREFIX;
-
-      case "YAML":
+      case YAML:
         return GIT_YAML_LOG_PREFIX;
 
-      case "TRIGGER":
+      case TERRAFORM:
+        return GIT_TERRAFORM_LOG_PREFIX;
+
+      case TRIGGER:
         return GIT_TRIGGER_LOG_PREFIX;
 
-      case "HELM":
+      case HELM:
         return GIT_HELM_LOG_PREFIX;
 
       default:
@@ -209,9 +210,9 @@ public class GitClientHelper {
   }
 
   private String buildGitRepoBaseDir(
-      String accountId, String connectorId, String repoName, String repoUrlHash, String repoType) {
+      String accountId, String connectorId, String repoName, String repoUrlHash, GitRepositoryType repoType) {
     return GIT_REPO_BASE_DIR.replace("${ACCOUNT_ID}", accountId)
-        .replace("${REPO_TYPE}", repoType.toLowerCase())
+        .replace("${REPO_TYPE}", repoType.name().toLowerCase())
         .replace("${CONNECTOR_ID}", connectorId)
         .replace("${REPO_NAME}", repoName)
         .replace("${REPO_URL_HASH}", repoUrlHash);

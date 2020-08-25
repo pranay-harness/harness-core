@@ -1,5 +1,7 @@
 package io.harness.delegate.git;
 
+import static io.harness.git.model.GitRepositoryType.YAML;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,11 +31,10 @@ public class NGGitServiceImpl implements NGGitService {
 
   @VisibleForTesting
   GitBaseRequest getGitBaseRequest(GitConfigDTO gitConfig, String accountId) {
-    // todo @arvind: change repotype
     return GitBaseRequest.builder()
         .authRequest(getGitConnectionType(gitConfig))
         .branch(gitConfig.getGitAuth().getBranchName())
-        .repoType("YAML")
+        .repoType(YAML)
         .repoUrl(gitConfig.getGitAuth().getUrl())
         .accountId(accountId)
         .build();

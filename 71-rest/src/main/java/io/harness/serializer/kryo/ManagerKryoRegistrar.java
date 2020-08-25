@@ -393,7 +393,6 @@ import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 import software.wings.beans.utm.UtmInfo;
 import software.wings.beans.yaml.Change;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitCheckoutResult;
 import software.wings.beans.yaml.GitCloneResult;
@@ -1034,7 +1033,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ExecutionStrategy.class, 4002);
     kryo.register(GcpConfig.class, 5014);
     kryo.register(GcpKubernetesCluster.class, 5537);
-    kryo.register(GitConfig.GitRepositoryType.class, 5270);
     kryo.register(GitConfig.class, 5191);
     kryo.register(GitFetchFilesConfig.class, 5616);
     kryo.register(GitFetchFilesTaskParams.class, 5575);
@@ -1108,7 +1106,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(VaultConfig.class, 5214);
     kryo.register(WinRmConnectionAttributes.AuthenticationScheme.class, 5256);
     kryo.register(WinRmConnectionAttributes.class, 5255);
-    kryo.register(ChangeType.class, 5212);
     kryo.register(Change.class, 5198);
     kryo.register(ChangeContext.class, 5199);
     kryo.register(GitCheckoutResult.class, 5200);

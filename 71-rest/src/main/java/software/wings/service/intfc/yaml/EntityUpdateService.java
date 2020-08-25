@@ -1,9 +1,9 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.git.model.ChangeType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 
 import java.util.List;

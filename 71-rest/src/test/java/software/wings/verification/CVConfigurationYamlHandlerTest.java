@@ -10,6 +10,7 @@ import static org.mockito.Mockito.doReturn;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -20,7 +21,6 @@ import org.mockito.Spy;
 import org.reflections.Reflections;
 import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.Change;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.service.YamlHelper;

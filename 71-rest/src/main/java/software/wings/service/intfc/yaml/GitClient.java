@@ -2,7 +2,6 @@ package software.wings.service.intfc.yaml;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
-import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
@@ -19,8 +18,6 @@ public interface GitClient {
   void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 
   GitDiffResult diff(GitOperationContext gitOperationContext, boolean excludeFilesOutsideSetupFolder);
-
-  GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext);
 
   @Deprecated String validate(GitConfig gitConfig);
 
