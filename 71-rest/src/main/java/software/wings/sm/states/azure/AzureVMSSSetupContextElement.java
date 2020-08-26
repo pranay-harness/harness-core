@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
+import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -39,6 +40,7 @@ public class AzureVMSSSetupContextElement implements ContextElement {
   private ResizeStrategy resizeStrategy;
   private List<String> baseVMSSScalingPolicyJSONs;
   private AzureVMSSPreDeploymentData preDeploymentData;
+  private AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail;
 
   @Override
   public ContextElementType getElementType() {

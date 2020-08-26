@@ -37,6 +37,9 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.AZURE_VMSS_DEPLOY;
+import static software.wings.beans.PhaseStepType.AZURE_VMSS_SETUP;
+import static software.wings.beans.PhaseStepType.AZURE_VMSS_SWITCH_ROUTES;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
@@ -56,6 +59,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 import static software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory.Category.GENERAL;
 import static software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory.Category.K8S_V2;
 import static software.wings.sm.StateType.AZURE_VMSS_ROLLBACK;
+import static software.wings.sm.StateType.AZURE_VMSS_SWITCH_ROUTES_ROLLBACK;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
@@ -481,14 +485,20 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = IVAN)
+  @Owner(developers = {IVAN, ANIL})
   @Category(UnitTests.class)
   public void testGenerateRollbackWorkflowPhaseForAzureVMSS() {
     WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+    WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForAzureVMSS(workflowPhase, BASIC);
+    verifyPhase(rollbackPhase, singletonList(AZURE_VMSS_ROLLBACK.name()), 3);
 
-    WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForAzureVMSS(workflowPhase);
+    WorkflowPhase rollbackCanary = workflowServiceHelper.generateRollbackWorkflowPhaseForAzureVMSS(
+        workflowPhase, OrchestrationWorkflowType.CANARY);
+    verifyPhase(rollbackCanary, singletonList(AZURE_VMSS_ROLLBACK.name()), 3);
 
-    verifyPhase(rollbackPhase, asList(new String[] {AZURE_VMSS_ROLLBACK.name()}), 3);
+    WorkflowPhase rollbackPhaseBlueGreen = workflowServiceHelper.generateRollbackWorkflowPhaseForAzureVMSS(
+        workflowPhase, OrchestrationWorkflowType.BLUE_GREEN);
+    verifyPhase(rollbackPhaseBlueGreen, singletonList(AZURE_VMSS_SWITCH_ROUTES_ROLLBACK.name()), 3);
   }
 
   @Test
@@ -1081,7 +1091,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = IVAN)
+  @Owner(developers = {IVAN, ANIL})
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForAzureVMSS() {
     Service lambdaService =
@@ -1099,14 +1109,55 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(lambdaService);
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(featureFlagService.isEnabled(FeatureName.AZURE_VMSS, ACCOUNT_ID)).thenReturn(true);
 
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
-        APP_ID, workflowPhase, OrchestrationWorkflowType.BASIC, true);
-
-    List<PhaseStepType> phaseStepTypes =
+    // basic deployment test
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(APP_ID, ACCOUNT_ID, workflowPhase, BASIC, true);
+    List<PhaseStepType> phaseStepTypesBasic =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
-    assertThat(phaseStepTypes)
-        .containsExactly(PhaseStepType.AZURE_VMSS_SETUP, PhaseStepType.AZURE_VMSS_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+    assertThat(phaseStepTypesBasic).containsExactly(AZURE_VMSS_SETUP, AZURE_VMSS_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+
+    // canary deployment test
+    workflowPhase.getPhaseSteps().clear();
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, true);
+    List<PhaseStepType> phaseStepTypesCanary =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypesCanary).containsExactly(AZURE_VMSS_SETUP, AZURE_VMSS_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+
+    // blue green deployment test
+    workflowPhase.getPhaseSteps().clear();
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BLUE_GREEN, true);
+    List<PhaseStepType> phaseStepTypesBlueGreen =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypesBlueGreen)
+        .containsExactly(AZURE_VMSS_SETUP, AZURE_VMSS_DEPLOY, VERIFY_SERVICE, AZURE_VMSS_SWITCH_ROUTES, WRAP_UP);
+
+    // unsupported deployment type test
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BUILD, true))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.MULTI_SERVICE, true))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.ROLLING, true))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CUSTOM, true))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // feature flag test
+    when(featureFlagService.isEnabled(FeatureName.AZURE_VMSS, ACCOUNT_ID)).thenReturn(false);
+    assertThatThrownBy(()
+                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+                               APP_ID, ACCOUNT_ID, workflowPhase, BASIC, true))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

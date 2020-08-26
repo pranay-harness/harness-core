@@ -37,7 +37,8 @@ public class AzureVMSSTaskParameters implements TaskParameters, ExecutionCapabil
     AZURE_VMSS_GET_VIRTUAL_MACHINE_SCALE_SET,
     AZURE_VMSS_SETUP,
     AZURE_VMSS_DEPLOY,
-    AZURE_VMSS_LIST_VM_DATA
+    AZURE_VMSS_LIST_VM_DATA,
+    AZURE_VMSS_SWITCH_ROUTE
   }
 
   public boolean isSyncTask() {
