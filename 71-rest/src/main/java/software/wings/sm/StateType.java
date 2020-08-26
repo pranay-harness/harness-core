@@ -182,6 +182,8 @@ import software.wings.sm.states.WaitState;
 import software.wings.sm.states.azure.AzureVMSSDeployState;
 import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
+import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
+import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.customdeployment.InstanceFetchState;
@@ -473,6 +475,13 @@ public enum StateType implements StateTypeDescriptor {
   AZURE_VMSS_ROLLBACK(AzureVMSSRollbackState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_ROLLBACK,
       asList(InfrastructureMappingType.AZURE_VMSS), asList(PhaseStepType.AZURE_VMSS_ROLLBACK), ORCHESTRATION_STENCILS),
 
+  AZURE_VMSS_SWITCH_ROUTES(AzureVMSSSwitchRoutesState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_SWITCH_ROUTES,
+      singletonList(InfrastructureMappingType.AZURE_VMSS), singletonList(PhaseStepType.AZURE_VMSS_SWITCH_ROUTES),
+      ORCHESTRATION_STENCILS),
+
+  AZURE_VMSS_SWITCH_ROUTES_ROLLBACK(AzureVMSSSwitchRoutesRollbackState.class, AZURE_VMSS,
+      WorkflowServiceHelper.AZURE_VMSS_SWITCH_ROUTES_ROLLBACK, singletonList(InfrastructureMappingType.AZURE_VMSS),
+      singletonList(PhaseStepType.AZURE_VMSS_SWITCH_ROLLBACK), ORCHESTRATION_STENCILS),
   /**
    * AWS Node Select state.
    */

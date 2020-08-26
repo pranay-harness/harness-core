@@ -27,6 +27,7 @@ public class AzureVMSSSetupTaskParameters extends AzureVMSSTaskParameters {
   private String vmssAuthType;
   private String vmssDeploymentType;
   private String infraMappingId;
+  private AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail;
 
   @Builder
   public AzureVMSSSetupTaskParameters(String appId, String accountId, String activityId, String commandName,
@@ -34,7 +35,8 @@ public class AzureVMSSSetupTaskParameters extends AzureVMSSTaskParameters {
       String artifactRevision, String baseVMSSName, String subscriptionId, String resourceGroupName, String userName,
       String userData, String sshPublicKey, String password, int minInstances, int maxInstances, int desiredInstances,
       int autoScalingSteadyStateVMSSTimeout, boolean useCurrentRunningCount, String vmssAuthType,
-      String vmssDeploymentType, String infraMappingId) {
+      String vmssDeploymentType, String infraMappingId,
+      AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail) {
     super(appId, accountId, activityId, commandName, timeoutIntervalInMin, AZURE_VMSS_SETUP);
     this.blueGreen = blueGreen;
     this.vmssNamePrefix = vmssNamePrefix;
@@ -54,5 +56,6 @@ public class AzureVMSSSetupTaskParameters extends AzureVMSSTaskParameters {
     this.vmssAuthType = vmssAuthType;
     this.vmssDeploymentType = vmssDeploymentType;
     this.infraMappingId = infraMappingId;
+    this.azureLoadBalancerDetail = azureLoadBalancerDetail;
   }
 }

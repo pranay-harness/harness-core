@@ -727,6 +727,8 @@ import software.wings.sm.states.azure.AzureVMSSSetupContextElement;
 import software.wings.sm.states.azure.AzureVMSSSetupExecutionSummary;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.azure.AzureVMSSSetupStateExecutionData;
+import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
+import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.customdeployment.InstanceFetchState;
@@ -1611,6 +1613,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.azure.AzureVMSSDeployStateExecutionData", AzureVMSSDeployStateExecutionData.class);
     w.put("sm.states.azure.AzureVMSSDeployExecutionSummary", AzureVMSSDeployExecutionSummary.class);
     w.put("sm.states.azure.AzureVMSSRollbackState", AzureVMSSRollbackState.class);
+    w.put("sm.states.azure.AzureVMSSSwitchRoutesState", AzureVMSSSwitchRoutesState.class);
+    w.put("sm.states.azure.AzureVMSSSwitchRoutesRollbackState", AzureVMSSSwitchRoutesRollbackState.class);
     w.put("sm.WorkflowStandardParams", WorkflowStandardParams.class);
     w.put("verification.apm.APMCVServiceConfiguration", APMCVServiceConfiguration.class);
     w.put("verification.appdynamics.AppDynamicsCVServiceConfiguration", AppDynamicsCVServiceConfiguration.class);

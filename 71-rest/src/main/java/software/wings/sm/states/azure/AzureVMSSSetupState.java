@@ -19,6 +19,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
@@ -71,6 +72,7 @@ public class AzureVMSSSetupState extends State {
   @Getter @Setter private ResizeStrategy resizeStrategy;
 
   @Getter @Setter private String vmssNamePrefix;
+  @Getter @Setter private AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail;
 
   @Inject private transient DelegateService delegateService;
   @Inject private transient AzureVMSSStateHelper azureVMSSStateHelper;
