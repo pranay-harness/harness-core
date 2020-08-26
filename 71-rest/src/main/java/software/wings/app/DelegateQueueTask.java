@@ -201,6 +201,8 @@ public class DelegateQueueTask implements Runnable {
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
             .field(DelegateTaskKeys.nextBroadcast)
             .lessThan(now)
+            .field(DelegateTaskKeys.expiry)
+            .greaterThan(now)
             .field(DelegateTaskKeys.delegateId)
             .doesNotExist();
 
