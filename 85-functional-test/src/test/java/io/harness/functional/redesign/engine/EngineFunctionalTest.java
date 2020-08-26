@@ -23,6 +23,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
+import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.testframework.framework.MockServerExecutor;
 import org.junit.After;
 import org.junit.Before;
@@ -94,6 +95,27 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain");
 
     assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(FunctionalTests.class)
+  public void shouldExecuteSectionChainPlanWithFailure() {
+    PlanExecution sectionFailureResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain-failure");
+
+    List<NodeExecution> nodeExecutions = getNodeExecutions(sectionFailureResponse.getUuid());
+    assertThat(nodeExecutions).hasSize(3);
+
+    NodeExecution sectionChainExecution =
+        nodeExecutions.stream()
+            .filter(ex -> ex.getNode().getStepType().equals(SectionChainStep.STEP_TYPE))
+            .findFirst()
+            .orElse(null);
+
+    assertThat(sectionChainExecution).isNotNull();
+    assertThat(sectionChainExecution.getStatus()).isEqualTo(FAILED);
+    assertThat(sectionFailureResponse.getStatus()).isEqualTo(FAILED);
   }
 
   @Test

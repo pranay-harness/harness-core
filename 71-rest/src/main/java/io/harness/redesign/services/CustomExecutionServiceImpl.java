@@ -98,6 +98,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeSectionChainPlanWithFailure() {
+    return orchestrationService.startExecution(
+        customExecutionProvider.provideSectionChainPlanWithFailure(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
   public PlanExecution executeSectionChainPlanWithNoChildren() {
     return orchestrationService.startExecution(
         customExecutionProvider.provideSectionChainPlanWithNoChildren(), getAbstractions(), getEmbeddedUser());
