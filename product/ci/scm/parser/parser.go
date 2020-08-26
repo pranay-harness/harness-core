@@ -50,10 +50,21 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 		if err != nil {
 			return nil, err
 		}
-		log.Infow("Successfully parsed webhook", "elapsed_time_ms", utils.TimeSince(start))
+		log.Infow("Successfully parsed pr webhook", "elapsed_time_ms", utils.TimeSince(start))
 		return &pb.ParseWebhookResponse{
 			Hook: &pb.ParseWebhookResponse_Pr{
 				Pr: pr,
+			},
+		}, nil
+	case *scm.PushHook:
+		push, err := converter.ConvertPushHook(event)
+		if err != nil {
+			return nil, err
+		}
+		log.Infow("Successfully parsed push webhook", "elapsed_time_ms", utils.TimeSince(start))
+		return &pb.ParseWebhookResponse{
+			Hook: &pb.ParseWebhookResponse_Push{
+				Push: push,
 			},
 		}, nil
 	default:
