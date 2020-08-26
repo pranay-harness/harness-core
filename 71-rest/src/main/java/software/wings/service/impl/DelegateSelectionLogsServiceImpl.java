@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.FeatureName.DELEGATE_SELECTION_LOG;
+import static software.wings.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,8 +54,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       return;
     }
     try {
-      if (featureFlagService.isEnabled(
-              DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
+      if (featureFlagService.isNotEnabled(
+              DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
         wingsPersistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
         logger.info("Batch saved successfully");
       }
