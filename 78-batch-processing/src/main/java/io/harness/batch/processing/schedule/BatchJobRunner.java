@@ -40,9 +40,9 @@ public class BatchJobRunner {
    * @param job - Job
    * @throws Exception
    */
-  public void runJob(String accountId, Job job) throws JobParametersInvalidException,
-                                                       JobExecutionAlreadyRunningException, JobRestartException,
-                                                       JobInstanceAlreadyCompleteException {
+  public void runJob(String accountId, Job job, boolean runningMode)
+      throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException,
+             JobInstanceAlreadyCompleteException {
     BatchJobType batchJobType = BatchJobType.fromJob(job);
     long duration = batchJobType.getInterval();
     ChronoUnit chronoUnit = batchJobType.getIntervalUnit();
@@ -65,32 +65,45 @@ public class BatchJobRunner {
       Instant endInstant = batchJobScheduleTimeProvider.next();
       if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)
           && checkOutOfClusterDependentJobs(accountId, startInstant, endInstant, batchJobType)) {
-        JobParameters params =
-            new JobParametersBuilder()
-                .addString(CCMJobConstants.JOB_ID, String.valueOf(System.currentTimeMillis()))
-                .addString(CCMJobConstants.ACCOUNT_ID, accountId)
-                .addString(CCMJobConstants.JOB_START_DATE, String.valueOf(startInstant.toEpochMilli()))
-                .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
-                .addString(CCMJobConstants.BATCH_JOB_TYPE, batchJobType.name())
-                .toJobParameters();
-        Instant jobStartTime = Instant.now();
-        BatchStatus status = jobLauncher.run(job, params).getStatus();
-        logger.info("Job status {}", status);
-        Instant jobStopTime = Instant.now();
+        if (runningMode) {
+          JobParameters params =
+              new JobParametersBuilder()
+                  .addString(CCMJobConstants.JOB_ID, String.valueOf(System.currentTimeMillis()))
+                  .addString(CCMJobConstants.ACCOUNT_ID, accountId)
+                  .addString(CCMJobConstants.JOB_START_DATE, String.valueOf(startInstant.toEpochMilli()))
+                  .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
+                  .addString(CCMJobConstants.BATCH_JOB_TYPE, batchJobType.name())
+                  .toJobParameters();
+          Instant jobStartTime = Instant.now();
+          BatchStatus status = jobLauncher.run(job, params).getStatus();
+          logger.info("Job status {}", status);
+          Instant jobStopTime = Instant.now();
 
-        if (status == BatchStatus.COMPLETED) {
-          BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType.name(),
-              Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
-          batchJobScheduledDataService.create(batchJobScheduledData);
-          startInstant = endInstant;
+          if (status == BatchStatus.COMPLETED) {
+            BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType.name(),
+                Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
+            batchJobScheduledDataService.create(batchJobScheduledData);
+            startInstant = endInstant;
+          } else {
+            logger.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
+                batchJobType, status, startInstant, endInstant);
+            break;
+          }
         } else {
-          logger.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
-              batchJobType, status, startInstant, endInstant);
+          logDelayedJobs(accountId, batchJobType, endInstant);
           break;
         }
       } else {
         break;
       }
+    }
+  }
+
+  private void logDelayedJobs(String accountId, BatchJobType batchJobType, Instant endInstant) {
+    Instant currentTime = Instant.now();
+    long diffMillis = currentTime.toEpochMilli() - endInstant.toEpochMilli();
+    if (diffMillis > 21600000) {
+      logger.error("Batch job is delayed for account {} {} {}", accountId, batchJobType, diffMillis);
     }
   }
 
