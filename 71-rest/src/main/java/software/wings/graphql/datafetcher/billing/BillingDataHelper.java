@@ -215,15 +215,26 @@ public class BillingDataHelper {
       return null;
     }
 
+    long maxStartTime = getModifiedMaxStartTime(billingAmountData.getMaxStartTime());
     long billingTimeDiffMillis = ONE_DAY_MILLIS;
-    if (billingAmountData.getMaxStartTime() != billingAmountData.getMinStartTime()) {
-      billingTimeDiffMillis = billingAmountData.getMaxStartTime() - billingAmountData.getMinStartTime();
+    if (maxStartTime != billingAmountData.getMinStartTime()) {
+      billingTimeDiffMillis = maxStartTime - billingAmountData.getMinStartTime();
     }
 
     BigDecimal totalBillingAmount = billingAmountData.getCost();
     long actualTimeDiffMillis = endInstant.toEpochMilli() - billingAmountData.getMinStartTime();
     return totalBillingAmount.multiply(
         new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP));
+  }
+
+  private Long getModifiedMaxStartTime(long maxStartTime) {
+    Instant instant = Instant.ofEpochMilli(maxStartTime);
+    Instant dayTruncated = instant.truncatedTo(ChronoUnit.DAYS);
+    Instant hourlyTruncated = instant.truncatedTo(ChronoUnit.HOURS);
+    if (dayTruncated.equals(hourlyTruncated)) {
+      return dayTruncated.plus(1, ChronoUnit.DAYS).minus(1, ChronoUnit.SECONDS).toEpochMilli();
+    }
+    return hourlyTruncated.plus(1, ChronoUnit.HOURS).minus(1, ChronoUnit.SECONDS).toEpochMilli();
   }
 
   public BigDecimal getNewForecastCost(QLBillingAmountData billingAmountData, Instant endInstant) {

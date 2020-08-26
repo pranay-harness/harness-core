@@ -25,6 +25,10 @@ type ChartDataPoint {
 }
 
 type EventsDataPoint {
+  clusterId: String
+  clusterName: String
+  namespace: String
+  workloadName: String
   time: Number
   source: String
   type: String
