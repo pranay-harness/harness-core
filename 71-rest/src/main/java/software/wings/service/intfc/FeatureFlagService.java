@@ -9,7 +9,9 @@ import java.util.Set;
 
 public interface FeatureFlagService {
   boolean isGlobalEnabled(FeatureName featureName);
+  boolean isNotGlobalEnabled(FeatureName featureName);
   boolean isEnabled(FeatureName featureName, String accountId);
+  boolean isNotEnabled(FeatureName featureName, String accountId);
 
   void initializeFeatureFlags();
 

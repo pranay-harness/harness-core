@@ -133,6 +133,11 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
+  public boolean isNotGlobalEnabled(FeatureName featureName) {
+    return !isGlobalEnabled(featureName);
+  }
+
+  @Override
   public Optional<FeatureFlag> getFeatureFlag(@NonNull FeatureName featureName) {
     FeatureFlag featureFlag;
     synchronized (cache) {
@@ -179,6 +184,11 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     }
 
     return false;
+  }
+
+  @Override
+  public boolean isNotEnabled(FeatureName featureName, String accountId) {
+    return !isEnabled(featureName, accountId);
   }
 
   @Override

@@ -69,7 +69,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     delegateSelectionLogsService.save(null);
     delegateSelectionLogsService.save(BatchDelegateSelectionLog.builder().build());
 
-    verify(featureFlagService, never()).isEnabled(eq(FeatureName.DELEGATE_SELECTION_LOG), anyString());
+    verify(featureFlagService, never()).isNotEnabled(eq(FeatureName.DISABLE_DELEGATE_SELECTION_LOG), anyString());
   }
 
   @Test
@@ -79,8 +79,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     DelegateSelectionLog selectionLog = createDelegateSelectionLogBuilder().uuid(generateUuid()).build();
     BatchDelegateSelectionLog batch =
         BatchDelegateSelectionLog.builder().delegateSelectionLogs(Arrays.asList(selectionLog)).build();
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
-        .thenReturn(false);
+    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+        .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
 
@@ -95,7 +95,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
         createDelegateSelectionLogBuilder().uuid(generateUuid()).message("ffenabled").groupId(generateUuid()).build();
     BatchDelegateSelectionLog batch =
         BatchDelegateSelectionLog.builder().delegateSelectionLogs(Arrays.asList(selectionLog)).build();
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
@@ -111,7 +111,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     String accountId = generateUuid();
 
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLog.class);
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
+    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
 
     Concurrent.test(10, n -> {
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
