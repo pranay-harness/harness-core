@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_API_KEYS;
 
 import com.google.inject.Inject;
 
@@ -15,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -39,7 +39,7 @@ import javax.ws.rs.QueryParam;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.API_KEY)
-@AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@AuthRule(permissionType = MANAGE_API_KEYS)
 @Slf4j
 public class ApiKeyResource {
   private ApiKeyService apiKeyService;

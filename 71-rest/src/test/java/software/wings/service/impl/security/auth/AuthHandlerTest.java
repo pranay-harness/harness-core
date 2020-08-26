@@ -37,13 +37,11 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
-import static software.wings.security.PermissionAttribute.PermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -270,8 +268,7 @@ public class AuthHandlerTest extends WingsBaseTest {
         APPLICATION_CREATE_DELETE, TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER, TAG_MANAGEMENT, CE_ADMIN,
         CE_VIEWER, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
         MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
-        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS,
-        VIEW_USER_AND_USER_GROUPS_AND_API_KEYS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
+        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
         MANAGE_PIPELINE_GOVERNANCE_STANDARDS);
 
     Set<PermissionType> accountPermissions = authHandler.getAllAccountPermissions();

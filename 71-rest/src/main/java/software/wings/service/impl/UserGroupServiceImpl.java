@@ -30,6 +30,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMI
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
@@ -548,6 +549,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         newAccountPermissions.add(MANAGE_AUTHENTICATION_SETTINGS);
         newAccountPermissions.add(MANAGE_APPLICATION_STACKS);
         newAccountPermissions.add(MANAGE_ALERT_NOTIFICATION_RULES);
+        newAccountPermissions.add(MANAGE_API_KEYS);
       }
       newAccountPermissions.add(permission);
     }

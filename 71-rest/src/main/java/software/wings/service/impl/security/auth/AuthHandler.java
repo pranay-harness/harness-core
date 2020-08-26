@@ -23,6 +23,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEW
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
@@ -35,7 +36,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
@@ -43,7 +43,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.TAG_MAN
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
-import static software.wings.security.PermissionAttribute.PermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.security.UserRequestContext.EntityInfo;
 
@@ -1560,9 +1559,8 @@ public class AuthHandler {
         TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER, TAG_MANAGEMENT, CE_ADMIN, CE_VIEWER,
         MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
         MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
-        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS,
-        VIEW_USER_AND_USER_GROUPS_AND_API_KEYS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
-        MANAGE_PIPELINE_GOVERNANCE_STANDARDS);
+        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
+        MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS);
   }
 
   private Set<Action> getAllActions() {
