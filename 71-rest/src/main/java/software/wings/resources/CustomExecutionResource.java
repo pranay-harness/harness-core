@@ -77,6 +77,12 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/section-chain-failure")
+  public RestResponse<PlanExecution> executeSectionChainPlanWithFailure() {
+    return new RestResponse<>(customExecutionService.executeSectionChainPlanWithFailure());
+  }
+
+  @GET
   @Path("/section-chain-no-children")
   public RestResponse<PlanExecution> executeSectionChainPlanWithNoChild() {
     return new RestResponse<>(customExecutionService.executeSectionChainPlanWithNoChildren());

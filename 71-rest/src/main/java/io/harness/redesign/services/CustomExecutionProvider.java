@@ -901,6 +901,101 @@ public class CustomExecutionProvider {
         .build();
   }
 
+  public Plan provideSectionChainPlanWithFailure() {
+    String sectionChainNodeId = generateUuid();
+    String httpNode1Id = generateUuid();
+    String httpNode2Id = generateUuid();
+    String httpNode3Id = generateUuid();
+    String dummyNode1Id = generateUuid();
+    String dummyNode2Id = generateUuid();
+
+    BasicHttpStepParameters basicHttpStateParameters1 =
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
+
+    BasicHttpStepParameters basicHttpStateParameters2 =
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
+
+    BasicHttpStepParameters basicHttpStateParameters3 =
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_500).method("GET").build();
+    return Plan.builder()
+        .node(PlanNode.builder()
+                  .uuid(sectionChainNodeId)
+                  .name("Section Chain")
+                  .stepType(SectionChainStep.STEP_TYPE)
+                  .identifier("section_chain")
+                  .stepParameters(
+                      SectionChainStepParameters.builder().childNodeId(httpNode1Id).childNodeId(httpNode2Id).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
+                                             .build())
+                  .build())
+        .node(
+            PlanNode.builder()
+                .uuid(httpNode1Id)
+                .name("HTTP 1")
+                .stepType(BasicHttpStep.STEP_TYPE)
+                .identifier("http1")
+                .stepParameters(basicHttpStateParameters1)
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(OnSuccessAdviser.ADVISER_TYPE)
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(httpNode3Id).build())
+                                       .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                           .build())
+                .build())
+        .node(PlanNode.builder()
+                  .uuid(httpNode3Id)
+                  .name("HTTP 3")
+                  .stepType(BasicHttpStep.STEP_TYPE)
+                  .identifier("http3")
+                  .stepParameters(basicHttpStateParameters3)
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(OnSuccessAdviser.ADVISER_TYPE)
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode1Id).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(httpNode2Id)
+                  .name("HTTP 2")
+                  .stepType(BasicHttpStep.STEP_TYPE)
+                  .identifier("http2")
+                  .stepParameters(basicHttpStateParameters2)
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(OnSuccessAdviser.ADVISER_TYPE)
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode1Id)
+                  .name("Dummy Node 1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy1")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode2Id)
+                  .name("Dummy Node 2")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy2")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .startingNodeId(sectionChainNodeId)
+        .build();
+  }
+
   public Plan provideSectionChainPlanWithNoChildren() {
     String sectionChainNodeId = generateUuid();
     String dummyNode1Id = generateUuid();

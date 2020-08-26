@@ -69,7 +69,7 @@ public class EngineResumeExecutor implements Runnable {
       }
 
       PlanNode node = nodeExecution.getNode();
-      StepResponse stepResponse = null;
+      StepResponse stepResponse;
       Step step = stepRegistry.obtain(node.getStepType());
       switch (nodeExecution.getMode()) {
         case CHILDREN:
@@ -114,14 +114,16 @@ public class EngineResumeExecutor implements Runnable {
           ChildChainExecutable childChainExecutable = (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
           ChildChainResponse lastChildChainExecutableResponse =
               Preconditions.checkNotNull((ChildChainResponse) nodeExecution.obtainLatestExecutableResponse());
-          StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) response.values().iterator().next();
-          if (lastChildChainExecutableResponse.isLastLink() || brokeStatuses().contains(responseNotifyData.getStatus())
+          Map<String, ResponseData> accumulatedResponse = response;
+          if (!lastChildChainExecutableResponse.isSuspend()) {
+            accumulatedResponse = invocationHelper.accumulateResponses(
+                ambiance.getPlanExecutionId(), response.keySet().iterator().next());
+          }
+
+          if (lastChildChainExecutableResponse.isLastLink()
+              || accumulatedResponse.values().stream().anyMatch(stepNotifyResponse
+                     -> brokeStatuses().contains(((StepResponseNotifyData) stepNotifyResponse).getStatus()))
               || lastChildChainExecutableResponse.isSuspend()) {
-            Map<String, ResponseData> accumulatedResponse = response;
-            if (!lastChildChainExecutableResponse.isSuspend()) {
-              accumulatedResponse = invocationHelper.accumulateResponses(
-                  ambiance.getPlanExecutionId(), response.keySet().iterator().next());
-            }
             stepResponse = childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
                 lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
             break;
@@ -130,6 +132,7 @@ public class EngineResumeExecutor implements Runnable {
                 step, ambiance, nodeExecution, lastChildChainExecutableResponse.getPassThroughData(), response);
             return;
           }
+
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());
       }
