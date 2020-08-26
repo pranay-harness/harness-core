@@ -33,7 +33,8 @@ public interface VerificationManagerClient {
       @Query("featureName") String featureName, @Query("accountId") String accountId);
 
   @POST(CV_DATA_COLLECTION_PATH + "/create-task")
-  Call<RestResponse<String>> create(@Query("accountId") String accountId, @Body DataCollectionConnectorBundle bundle);
+  Call<RestResponse<String>> create(@Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+      @Query("projectIdentifier") String projectIdentifier, @Body DataCollectionConnectorBundle bundle);
 
   @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
   Call<RestResponse<Void>> deleteDataCollectionTask(

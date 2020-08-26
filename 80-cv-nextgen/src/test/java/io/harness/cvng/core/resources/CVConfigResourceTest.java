@@ -36,7 +36,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder().addResource(cvConfigResource).build();
 
   private String accountId;
-  private String connectorId;
+  private String connectorIdentifier;
   private String productName;
   private String groupId;
   private String serviceInstanceIdentifier;
@@ -45,7 +45,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
   public void setup() {
     injector.injectMembers(cvConfigResource);
     this.accountId = generateUuid();
-    this.connectorId = generateUuid();
+    this.connectorIdentifier = generateUuid();
     this.productName = generateUuid();
     this.groupId = generateUuid();
     this.serviceInstanceIdentifier = generateUuid();
@@ -70,9 +70,9 @@ public class CVConfigResourceTest extends CvNextGenTest {
   @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
-  public void testSaveCVConfig_whenConnectorIdIsMissing() {
+  public void testSaveCVConfig_whenConnectorIdentifierIsMissing() {
     SplunkCVConfig cvConfig = createCVConfig();
-    cvConfig.setConnectorId(null);
+    cvConfig.setConnectorIdentifier(null);
     Response saveResponse = RESOURCES.client()
                                 .target("http://localhost:9998/cv-config")
                                 .queryParam("accountId", accountId)
@@ -81,7 +81,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
     assertThat(saveResponse.getStatus()).isEqualTo(500);
     assertThat(
         saveResponse.readEntity(new GenericType<RestResponse<CVConfig>>() {}).getResponseMessages().get(0).getMessage())
-        .contains("connectorId should not be null");
+        .contains("connectorIdentifier should not be null");
   }
 
   @Test
@@ -308,7 +308,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
     Response saveResponse = RESOURCES.client()
                                 .target("http://localhost:9998/cv-config/batch")
                                 .queryParam("accountId", accountId)
-                                .queryParam("connectorId", connectorId)
+                                .queryParam("connectorIdentifier", connectorIdentifier)
                                 .request(MediaType.APPLICATION_JSON_TYPE)
                                 .post(entity(cvConfigs, MediaType.APPLICATION_JSON_TYPE));
 
@@ -320,7 +320,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
     Response response = RESOURCES.client()
                             .target("http://localhost:9998/cv-config/list")
                             .queryParam("accountId", accountId)
-                            .queryParam("connectorId", connectorId)
+                            .queryParam("connectorIdentifier", connectorIdentifier)
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
 
@@ -340,7 +340,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
     Response saveResponse = RESOURCES.client()
                                 .target("http://localhost:9998/cv-config/batch")
                                 .queryParam("accountId", accountId)
-                                .queryParam("connectorId", connectorId)
+                                .queryParam("connectorIdentifier", connectorIdentifier)
                                 .request(MediaType.APPLICATION_JSON_TYPE)
                                 .post(entity(cvConfigs, MediaType.APPLICATION_JSON_TYPE));
 
@@ -352,7 +352,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
     Response response = RESOURCES.client()
                             .target("http://localhost:9998/cv-config/product-names")
                             .queryParam("accountId", accountId)
-                            .queryParam("connectorId", connectorId)
+                            .queryParam("connectorIdentifier", connectorIdentifier)
                             .request(MediaType.APPLICATION_JSON_TYPE)
                             .get();
 
@@ -374,7 +374,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
   private void fillCommon(CVConfig cvConfig) {
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());

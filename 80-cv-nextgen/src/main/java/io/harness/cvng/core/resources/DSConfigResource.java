@@ -30,8 +30,8 @@ public class DSConfigResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<DSConfig>> getDataSourceCVConfigs(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("connectorId") String connectorId, @QueryParam("productName") String productName) {
-    return new RestResponse<>(dsConfigService.list(accountId, connectorId, productName));
+      @QueryParam("connectorIdentifier") String connectorIdentifier, @QueryParam("productName") String productName) {
+    return new RestResponse<>(dsConfigService.list(accountId, connectorIdentifier, productName));
   }
 
   @PUT
@@ -45,8 +45,8 @@ public class DSConfigResource {
   @Timed
   @ExceptionMetered
   public void deleteByGroup(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("connectorId") String connectorId, @QueryParam("productName") String productName,
+      @QueryParam("connectorIdentifier") String connectorIdentifier, @QueryParam("productName") String productName,
       @QueryParam("identifier") String identifier) {
-    dsConfigService.delete(accountId, connectorId, productName, identifier);
+    dsConfigService.delete(accountId, connectorIdentifier, productName, identifier);
   }
 }

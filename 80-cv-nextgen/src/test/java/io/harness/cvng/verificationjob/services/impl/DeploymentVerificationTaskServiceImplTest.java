@@ -283,7 +283,7 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceInstanceIdentifier("serviceInstanceIdentifier");
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorId);
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());

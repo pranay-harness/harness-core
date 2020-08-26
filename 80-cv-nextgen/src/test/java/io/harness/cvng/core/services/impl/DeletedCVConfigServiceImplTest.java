@@ -100,7 +100,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
   private void fillCommon(CVConfig cvConfig) {
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorId);
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());

@@ -89,7 +89,7 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
     VerificationJob verificationJob = verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
     Preconditions.checkNotNull(verificationJob);
     List<CVConfig> cvConfigs = cvConfigService.find(verificationJob.getAccountId(), verificationJob.getDataSources());
-    Set<String> connectorIds = cvConfigs.stream().map(CVConfig::getConnectorId).collect(Collectors.toSet());
+    Set<String> connectorIds = cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
     // TODO: Keeping it one perpetual task per connector. We need to figure this one out based on the next gen
     // connectors.
     List<String> dataCollectionTaskIds = new ArrayList<>();
@@ -171,7 +171,7 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
             DataCollectionTask.builder()
                 .verificationTaskId(verificationTaskId)
                 .dataCollectionWorkerId(
-                    getDataCollectionWorkerId(deploymentVerificationTask, cvConfig.getConnectorId()))
+                    getDataCollectionWorkerId(deploymentVerificationTask, cvConfig.getConnectorIdentifier()))
                 .startTime(timeRange.getStartTime())
                 .endTime(timeRange.getEndTime())
                 .validAfter(

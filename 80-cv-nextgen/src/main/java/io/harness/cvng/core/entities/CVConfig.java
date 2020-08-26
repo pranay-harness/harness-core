@@ -44,7 +44,7 @@ public abstract class CVConfig
   @NotNull private VerificationType verificationType;
 
   @NotNull @FdIndex private String accountId;
-  @NotNull @FdIndex private String connectorId;
+  @NotNull @FdIndex private String connectorIdentifier;
 
   @NotNull private String serviceIdentifier;
   @NotNull private String envIdentifier;
@@ -84,7 +84,7 @@ public abstract class CVConfig
   public void validate() {
     checkNotNull(getVerificationType(), generateErrorMessageFromParam(CVConfigKeys.verificationType));
     checkNotNull(accountId, generateErrorMessageFromParam(CVConfigKeys.accountId));
-    checkNotNull(connectorId, generateErrorMessageFromParam(CVConfigKeys.connectorId));
+    checkNotNull(connectorIdentifier, generateErrorMessageFromParam(CVConfigKeys.connectorIdentifier));
     checkNotNull(serviceIdentifier, generateErrorMessageFromParam(CVConfigKeys.serviceIdentifier));
     checkNotNull(envIdentifier, generateErrorMessageFromParam(CVConfigKeys.envIdentifier));
     checkNotNull(projectIdentifier, generateErrorMessageFromParam(CVConfigKeys.projectIdentifier));

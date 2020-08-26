@@ -20,7 +20,7 @@ public abstract class DSConfig {
   private String orgIdentifier;
   private String projectIdentifier;
   private String productName;
-  private String connectorId;
+  private String connectorIdentifier;
   private String envIdentifier;
 
   public abstract DataSourceType getType();
@@ -38,7 +38,7 @@ public abstract class DSConfig {
     this.orgIdentifier = cvConfig.getOrgIdentifier();
     this.projectIdentifier = cvConfig.getProjectIdentifier();
     this.productName = cvConfig.getProductName();
-    this.connectorId = cvConfig.getConnectorId();
+    this.connectorIdentifier = cvConfig.getConnectorIdentifier();
     this.envIdentifier = cvConfig.getEnvIdentifier();
   }
 
@@ -48,7 +48,7 @@ public abstract class DSConfig {
     cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setProductName(productName);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setEnvIdentifier(envIdentifier);
   }
 }

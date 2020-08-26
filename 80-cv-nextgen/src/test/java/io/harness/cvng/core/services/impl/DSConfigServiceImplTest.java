@@ -26,12 +26,12 @@ import java.util.Set;
 public class DSConfigServiceImplTest extends CvNextGenTest {
   @Inject DSConfigService dsConfigService;
   private String accountId;
-  private String connectorId;
+  private String connectorIdentifier;
   private String productName;
   @Before
   public void setup() {
     this.accountId = generateUuid();
-    this.connectorId = generateUuid();
+    this.connectorIdentifier = generateUuid();
     this.productName = "Application monitoring";
   }
 
@@ -42,7 +42,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
     DSConfig dsConfig = createAppDynamicsDataSourceCVConfig("appd application name");
     dsConfigService.upsert(dsConfig);
     List<? extends DSConfig> dataSourceCVConfigs =
-        dsConfigService.list(accountId, connectorId, dsConfig.getProductName());
+        dsConfigService.list(accountId, connectorIdentifier, dsConfig.getProductName());
     assertThat(dataSourceCVConfigs).hasSize(1);
     AppDynamicsDSConfig appDynamicsDataSourceCVConfig = (AppDynamicsDSConfig) dataSourceCVConfigs.get(0);
     assertThat(appDynamicsDataSourceCVConfig).isEqualTo(dsConfig);
@@ -57,7 +57,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
     dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app2");
     dsConfigService.upsert(dataSourceCVConfig);
     List<? extends DSConfig> dataSourceCVConfigs =
-        dsConfigService.list(accountId, connectorId, dataSourceCVConfig.getProductName());
+        dsConfigService.list(accountId, connectorIdentifier, dataSourceCVConfig.getProductName());
     assertThat(dataSourceCVConfigs).hasSize(2);
     Set<String> identifiers = new HashSet<>();
     dataSourceCVConfigs.forEach(dsConfig -> identifiers.add(dsConfig.getIdentifier()));
@@ -72,15 +72,15 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
     dataSourceCVConfig.setApplicationName("app1");
     dataSourceCVConfig.setIdentifier("app1");
     dsConfigService.upsert(dataSourceCVConfig);
-    assertThat(dsConfigService.list(accountId, connectorId, productName)).isNotEmpty();
-    dsConfigService.delete(accountId, connectorId, productName, dataSourceCVConfig.getIdentifier());
-    assertThat(dsConfigService.list(accountId, connectorId, productName)).isEmpty();
+    assertThat(dsConfigService.list(accountId, connectorIdentifier, productName)).isNotEmpty();
+    dsConfigService.delete(accountId, connectorIdentifier, productName, dataSourceCVConfig.getIdentifier());
+    assertThat(dsConfigService.list(accountId, connectorIdentifier, productName)).isEmpty();
   }
 
   private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier) {
     AppDynamicsDSConfig appDynamicsDSConfig = new AppDynamicsDSConfig();
     appDynamicsDSConfig.setIdentifier(identifier);
-    appDynamicsDSConfig.setConnectorId(connectorId);
+    appDynamicsDSConfig.setConnectorIdentifier(connectorIdentifier);
     appDynamicsDSConfig.setApplicationName(identifier);
     appDynamicsDSConfig.setProductName(productName);
     appDynamicsDSConfig.setEnvIdentifier("harnessProd");

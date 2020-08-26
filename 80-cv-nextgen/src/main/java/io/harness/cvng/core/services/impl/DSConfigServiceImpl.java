@@ -22,8 +22,8 @@ public class DSConfigServiceImpl implements DSConfigService {
   @Inject CVConfigService cvConfigService;
   @Inject private Injector injector;
   @Override
-  public List<DSConfig> list(String accountId, String connectorId, String productName) {
-    List<CVConfig> cvConfigs = cvConfigService.list(accountId, connectorId, productName);
+  public List<DSConfig> list(String accountId, String connectorIdentifier, String productName) {
+    List<CVConfig> cvConfigs = cvConfigService.list(accountId, connectorIdentifier, productName);
     if (cvConfigs.isEmpty()) {
       return Collections.emptyList();
     }
@@ -37,8 +37,8 @@ public class DSConfigServiceImpl implements DSConfigService {
 
   @Override
   public void upsert(DSConfig dsConfig) {
-    List<CVConfig> saved = cvConfigService.list(
-        dsConfig.getAccountId(), dsConfig.getConnectorId(), dsConfig.getProductName(), dsConfig.getIdentifier());
+    List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(),
+        dsConfig.getProductName(), dsConfig.getIdentifier());
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
     cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
     cvConfigService.update(cvConfigUpdateResult.getUpdated());
@@ -46,7 +46,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   }
 
   @Override
-  public void delete(String accountId, String connectorId, String productName, String identifier) {
-    cvConfigService.deleteByGroupId(accountId, connectorId, productName, identifier);
+  public void delete(String accountId, String connectorIdentifier, String productName, String identifier) {
+    cvConfigService.deleteByGroupId(accountId, connectorIdentifier, productName, identifier);
   }
 }

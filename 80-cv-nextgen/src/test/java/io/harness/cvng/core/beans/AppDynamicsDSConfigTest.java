@@ -33,7 +33,7 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
     metricPacks = IntStream.range(0, 5).mapToObj(i -> createMetricPack(i)).collect(Collectors.toList());
     appdApplicationName = "appd application name";
     appDynamicsDSConfig.setIdentifier(appdApplicationName);
-    appDynamicsDSConfig.setConnectorId(connectorId);
+    appDynamicsDSConfig.setConnectorIdentifier(connectorIdentifier);
     appDynamicsDSConfig.setApplicationName(appdApplicationName);
     appDynamicsDSConfig.setProductName("Application monitoring");
     appDynamicsDSConfig.setEnvIdentifier("harnessProd");

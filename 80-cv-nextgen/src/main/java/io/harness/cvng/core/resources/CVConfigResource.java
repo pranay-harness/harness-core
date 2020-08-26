@@ -89,18 +89,18 @@ public class CVConfigResource {
   @Path("/list")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<CVConfig>> listCVConfigs(
-      @QueryParam("accountId") @Valid final String accountId, @QueryParam("connectorId") String connectorId) {
+  public RestResponse<List<CVConfig>> listCVConfigs(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("connectorIdentifier") String connectorIdentifier) {
     // keeping it simple for now. We will improve and evolve it based on more requirement on list api.
-    return new RestResponse<>(cvConfigService.list(accountId, connectorId));
+    return new RestResponse<>(cvConfigService.list(accountId, connectorIdentifier));
   }
 
   @GET
   @Path("/product-names")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> getProductNames(
-      @QueryParam("accountId") @Valid final String accountId, @QueryParam("connectorId") String connectorId) {
-    return new RestResponse<>(cvConfigService.getProductNames(accountId, connectorId));
+  public RestResponse<List<String>> getProductNames(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("connectorIdentifier") String connectorIdentifier) {
+    return new RestResponse<>(cvConfigService.getProductNames(accountId, connectorIdentifier));
   }
 }

@@ -29,14 +29,14 @@ import java.util.stream.IntStream;
 public class CVConfigServiceImplTest extends CvNextGenTest {
   @Inject private CVConfigService cvConfigService;
   private String accountId;
-  private String connectorId;
+  private String connectorIdentifier;
   private String productName;
   private String groupId;
   private String serviceInstanceIdentifier;
   @Before
   public void setup() {
     this.accountId = generateUuid();
-    this.connectorId = generateUuid();
+    this.connectorIdentifier = generateUuid();
     this.productName = generateUuid();
     this.groupId = generateUuid();
     this.serviceInstanceIdentifier = generateUuid();
@@ -150,7 +150,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   public void testList_findSingleCVConfig() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
-    List<CVConfig> cvConfigs = cvConfigService.list(accountId, cvConfig.getConnectorId());
+    List<CVConfig> cvConfigs = cvConfigService.list(accountId, cvConfig.getConnectorIdentifier());
     assertCommons(cvConfigs.get(0), cvConfig);
   }
 
@@ -167,23 +167,23 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testList_multipleMatchMultipleConnectorIds() {
+  public void testList_multipleMatchMultipleConnectorIdentifiers() {
     List<CVConfig> cvConfigs1 = createCVConfigs(5);
-    String connectorId1 = generateUuid();
+    String connectorIdentifier1 = generateUuid();
     cvConfigs1.forEach(cvConfig -> {
-      cvConfig.setConnectorId(connectorId1);
+      cvConfig.setConnectorIdentifier(connectorIdentifier1);
       save(cvConfig);
     });
 
     List<CVConfig> cvConfigs2 = createCVConfigs(7);
-    String connectorId2 = generateUuid();
+    String connectorIdentifier2 = generateUuid();
     cvConfigs2.forEach(cvConfig -> {
-      cvConfig.setConnectorId(connectorId2);
+      cvConfig.setConnectorIdentifier(connectorIdentifier2);
       save(cvConfig);
     });
 
-    assertThat(cvConfigService.list(accountId, connectorId1)).hasSize(5);
-    assertThat(cvConfigService.list(accountId, connectorId2)).hasSize(7);
+    assertThat(cvConfigService.list(accountId, connectorIdentifier1)).hasSize(5);
+    assertThat(cvConfigService.list(accountId, connectorIdentifier2)).hasSize(7);
   }
 
   @Test
@@ -191,14 +191,14 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testList_withConnectorAndProductName() {
     List<CVConfig> cvConfigs = createCVConfigs(4);
-    String connectorId1 = generateUuid();
+    String connectorIdentifier1 = generateUuid();
     cvConfigs.forEach(cvConfig -> {
-      cvConfig.setConnectorId(connectorId1);
+      cvConfig.setConnectorIdentifier(connectorIdentifier1);
       cvConfig.setProductName("product1");
     });
     cvConfigs.get(0).setProductName("product2");
     save(cvConfigs);
-    assertThat(cvConfigService.list(accountId, connectorId1, "product1")).hasSize(3);
+    assertThat(cvConfigService.list(accountId, connectorIdentifier1, "product1")).hasSize(3);
   }
 
   @Test
@@ -206,15 +206,15 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testList_withConnectorAndProductNameGroupId() {
     List<CVConfig> cvConfigs = createCVConfigs(4);
-    String connectorId1 = generateUuid();
+    String connectorIdentifier1 = generateUuid();
     cvConfigs.forEach(cvConfig -> {
-      cvConfig.setConnectorId(connectorId1);
+      cvConfig.setConnectorIdentifier(connectorIdentifier1);
       cvConfig.setProductName("product1");
       cvConfig.setGroupId("group1");
     });
     cvConfigs.get(0).setProductName("product2");
     save(cvConfigs);
-    assertThat(cvConfigService.list(accountId, connectorId1, "product1", "group1")).hasSize(3);
+    assertThat(cvConfigService.list(accountId, connectorIdentifier1, "product1", "group1")).hasSize(3);
   }
 
   @Test
@@ -232,7 +232,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     List<String> projectNames = Arrays.asList("p2", "p1", "p2", "p3", "p3");
     IntStream.range(0, 5).forEach(index -> cvConfigs.get(index).setProductName(projectNames.get(index)));
     save(cvConfigs);
-    assertThat(cvConfigService.getProductNames(accountId, connectorId)).isEqualTo(Lists.newArrayList("p1", "p2", "p3"));
+    assertThat(cvConfigService.getProductNames(accountId, connectorIdentifier))
+        .isEqualTo(Lists.newArrayList("p1", "p2", "p3"));
   }
 
   @Test
@@ -243,7 +244,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     List<CVConfig> cvConfigs = createCVConfigs(5);
     cvConfigs.forEach(cvConfig -> cvConfig.setGroupId(groupName));
     save(cvConfigs);
-    cvConfigService.deleteByGroupId(accountId, connectorId, productName, groupName);
+    cvConfigService.deleteByGroupId(accountId, connectorIdentifier, productName, groupName);
     cvConfigs.forEach(cvConfig -> assertThat(cvConfigService.get(cvConfig.getUuid())).isNull());
   }
 
@@ -263,7 +264,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   private void assertCommons(CVConfig actual, CVConfig expected) {
     assertThat(actual.getVerificationType()).isEqualTo(expected.getVerificationType());
     assertThat(actual.getAccountId()).isEqualTo(expected.getAccountId());
-    assertThat(actual.getConnectorId()).isEqualTo(expected.getConnectorId());
+    assertThat(actual.getConnectorIdentifier()).isEqualTo(expected.getConnectorIdentifier());
     assertThat(actual.getServiceIdentifier()).isEqualTo(expected.getServiceIdentifier());
     assertThat(actual.getEnvIdentifier()).isEqualTo(expected.getEnvIdentifier());
     assertThat(actual.getProjectIdentifier()).isEqualTo(expected.getProjectIdentifier());
@@ -288,7 +289,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   private void fillCommon(CVConfig cvConfig) {
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());

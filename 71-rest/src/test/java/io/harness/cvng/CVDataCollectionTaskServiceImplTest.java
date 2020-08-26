@@ -32,13 +32,17 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   @Inject private PerpetualTaskService perpetualTaskService;
   private String accountId;
   private String cvConfigId;
-  private String connectorId;
+  private String connectorIdentifier;
+  private String orgIdentifier;
+  private String projectIdentifier;
   @Before
   public void setup() throws IllegalAccessException {
     initMocks(this);
     accountId = generateUuid();
     cvConfigId = generateUuid();
-    connectorId = generateUuid();
+    connectorIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
   }
 
   @Test
@@ -47,7 +51,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   public void create() {
     Map<String, String> params = new HashMap<>();
     params.put("cvConfigId", cvConfigId);
-    params.put("connectorId", connectorId);
+    params.put("connectorIdentifier", connectorIdentifier);
 
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
@@ -59,14 +63,14 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                           .build();
     DataCollectionConnectorBundle bundle =
         DataCollectionConnectorBundle.builder().params(params).connectorConfigDTO(appDynamicsConnectorDTO).build();
-    String taskId = dataCollectionTaskService.create(accountId, bundle);
+    String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
     PerpetualTaskClientContext perpetualTaskClientContext = perpetualTaskRecord.getClientContext();
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put("accountId", accountId);
     clientParamMap.put("cvConfigId", cvConfigId);
-    clientParamMap.put("connectorId", connectorId);
+    clientParamMap.put("connectorIdentifier", connectorIdentifier);
     assertThat(perpetualTaskClientContext.getClientParams()).isEqualTo(clientParamMap);
     assertThat(perpetualTaskService.getPerpetualTaskType(taskId)).isEqualTo(DATA_COLLECTION_TASK);
     assertThat(perpetualTaskRecord.getIntervalSeconds()).isEqualTo(60);
@@ -79,7 +83,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   public void delete() {
     Map<String, String> params = new HashMap<>();
     params.put("cvConfigId", cvConfigId);
-    params.put("connectorId", connectorId);
+    params.put("connectorIdentifier", connectorIdentifier);
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
                                                           .accountId(accountId)
@@ -90,7 +94,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                           .build();
     DataCollectionConnectorBundle bundle =
         DataCollectionConnectorBundle.builder().params(params).connectorConfigDTO(appDynamicsConnectorDTO).build();
-    String taskId = dataCollectionTaskService.create(accountId, bundle);
+    String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
     dataCollectionTaskService.delete(accountId, "some-other-id");
     assertThat(perpetualTaskService.getTaskRecord(taskId)).isNotNull();

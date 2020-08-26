@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface SplunkService {
   List<SplunkSavedSearch> getSavedSearches(
-      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, String requestGuid);
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String requestGuid);
 
-  SplunkValidationResponse getValidationResponse(String accountId, String connectorId, String orgIdentifier,
+  SplunkValidationResponse getValidationResponse(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String query, String requestGuid);
 }

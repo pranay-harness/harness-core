@@ -70,7 +70,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TimeSeriesServiceImplTest extends CvNextGenTest {
   private String cvConfigId;
   private String accountId;
-  private String connectorId;
+  private String connectorIdentifier;
   private String groupId;
   private Random random;
   private String projectIdentifier;
@@ -85,7 +85,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     cvConfigId = generateUuid();
     verificationTaskId = generateUuid();
     accountId = generateUuid();
-    connectorId = generateUuid();
+    connectorIdentifier = generateUuid();
     groupId = generateUuid();
     projectIdentifier = generateUuid();
     random = new Random(System.currentTimeMillis());
@@ -236,7 +236,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     appDynamicsCVConfig.setVerificationType(VerificationType.TIME_SERIES);
     appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsCVConfig.setAccountId(accountId);
-    appDynamicsCVConfig.setConnectorId(connectorId);
+    appDynamicsCVConfig.setConnectorIdentifier(connectorIdentifier);
     appDynamicsCVConfig.setServiceIdentifier("serviceIdentifier");
     appDynamicsCVConfig.setEnvIdentifier("environmentIdentifier");
     appDynamicsCVConfig.setGroupId(groupId);

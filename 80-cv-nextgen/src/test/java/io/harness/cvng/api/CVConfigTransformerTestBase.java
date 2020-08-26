@@ -12,7 +12,7 @@ public class CVConfigTransformerTestBase extends CvNextGenTest {
   protected String accountId;
   protected String projectIdentifier;
   protected String productName;
-  protected String connectorId;
+  protected String connectorIdentifier;
   protected String envIdentifier;
   protected String groupId;
   protected String serviceIdentifier;
@@ -30,7 +30,7 @@ public class CVConfigTransformerTestBase extends CvNextGenTest {
 
   protected void fillCommonFields(DSConfig dsConfig) {
     dsConfig.setAccountId(accountId);
-    dsConfig.setConnectorId(connectorId);
+    dsConfig.setConnectorIdentifier(connectorIdentifier);
     dsConfig.setEnvIdentifier(envIdentifier);
     dsConfig.setIdentifier(identifier);
     dsConfig.setProductName(productName);
@@ -39,7 +39,7 @@ public class CVConfigTransformerTestBase extends CvNextGenTest {
 
   protected void fillCommonFields(CVConfig cvConfig) {
     cvConfig.setEnvIdentifier(envIdentifier);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setProductName(productName);
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setAccountId(accountId);
