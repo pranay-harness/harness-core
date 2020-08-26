@@ -74,7 +74,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
 
     boolean canAssign = alertReconciliation.getDelegates().stream().anyMatch(delegateId
         -> assignDelegateService.canAssign(null, delegateId, alert.getAccountId(), data.getAppId(), data.getEnvId(),
-            data.getInfraMappingId(), data.getTaskGroup(), data.getTags(), null));
+            data.getInfraMappingId(), data.getTaskGroup(), data.getSelectors(), null));
 
     if (canAssign) {
       alertService.close(alert);

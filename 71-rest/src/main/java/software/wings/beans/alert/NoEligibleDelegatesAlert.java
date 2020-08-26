@@ -40,7 +40,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
   private String infraMappingId;
   private TaskGroup taskGroup;
   private TaskType taskType;
-  private List<String> tags;
+  private List<String> selectors;
 
   @Override
   public boolean matches(AlertData alertData) {
@@ -50,9 +50,10 @@ public class NoEligibleDelegatesAlert implements AlertData {
         && taskType == otherAlertData.getTaskType() && StringUtils.equals(appId, otherAlertData.getAppId())
         && StringUtils.equals(envId, otherAlertData.getEnvId())
         && StringUtils.equals(infraMappingId, otherAlertData.getInfraMappingId())
-        && ((isEmpty(tags) && isEmpty(otherAlertData.getTags()))
-               || (isNotEmpty(tags) && isNotEmpty(otherAlertData.getTags())
-                      && tags.containsAll(otherAlertData.getTags()) && otherAlertData.getTags().containsAll(tags)));
+        && ((isEmpty(selectors) && isEmpty(otherAlertData.getSelectors()))
+               || (isNotEmpty(selectors) && isNotEmpty(otherAlertData.getSelectors())
+                      && selectors.containsAll(otherAlertData.getSelectors())
+                      && otherAlertData.getSelectors().containsAll(selectors)));
   }
 
   @Override
@@ -75,8 +76,8 @@ public class NoEligibleDelegatesAlert implements AlertData {
         title.append("with service infrastructure ").append(infrastructureMapping.getDisplayName());
       }
     }
-    if (isNotEmpty(tags)) {
-      title.append(" with tags ").append(tags);
+    if (isNotEmpty(selectors)) {
+      title.append(" with selectors ").append(selectors);
     }
     return title.toString();
   }
@@ -99,6 +100,6 @@ public class NoEligibleDelegatesAlert implements AlertData {
     return "NoEligibleDelegatesAlert{"
         + "accountId='" + accountId + '\'' + ", appId='" + appId + '\'' + ", envId='" + envId + '\''
         + ", infraMappingId='" + infraMappingId + '\'' + ", taskGroup=" + taskGroup + ", taskType=" + taskType
-        + ", tags=" + tags + '}';
+        + ", selectors=" + selectors + '}';
   }
 }
