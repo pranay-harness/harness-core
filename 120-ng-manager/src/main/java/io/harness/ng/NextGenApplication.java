@@ -1,11 +1,9 @@
 package io.harness.ng;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
@@ -15,12 +13,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.Annotated;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -36,14 +28,13 @@ import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskServiceClient;
+import io.harness.ng.remote.NGObjectMapperHelper;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.JWTAuthenticationFilter;
-import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
-import io.harness.serializer.jackson.HarnessJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
@@ -57,14 +48,12 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import software.wings.app.CharsetResponseFilter;
-import software.wings.jersey.JsonViews;
 import software.wings.security.annotations.NextGenManagerAuth;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -107,24 +96,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
   }
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    final AnnotationAwareJsonSubtypeResolver subtypeResolver =
-        AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
-    mapper.setSubtypeResolver(subtypeResolver);
-    mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
-    mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
-      @Override
-      public List<NamedType> findSubtypes(Annotated a) {
-        final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
-        if (isNotEmpty(subtypesFromSuper)) {
-          return subtypesFromSuper;
-        }
-        return emptyIfNull(subtypeResolver.findSubtypes(a));
-      }
-    });
-    mapper.registerModule(new Jdk8Module());
-    mapper.registerModule(new GuavaModule());
-    mapper.registerModule(new JavaTimeModule());
-    mapper.registerModule(new HarnessJacksonModule());
+    NGObjectMapperHelper.configureNGObjectMapper(mapper);
   }
 
   @Override

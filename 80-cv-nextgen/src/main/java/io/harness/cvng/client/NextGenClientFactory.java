@@ -1,23 +1,18 @@
 package io.harness.cvng.client;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
+import io.harness.ng.remote.NGObjectMapperHelper;
 import io.harness.security.ServiceTokenGenerator;
-import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -28,7 +23,6 @@ import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.jersey.JsonViews;
 
 import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
@@ -53,12 +47,7 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
 
   private ObjectMapper getObjectMapper() {
     ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
-    objectMapper.setConfig(objectMapper.getSerializationConfig().withView(JsonViews.Public.class));
-    objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
-    objectMapper.registerModule(new Jdk8Module());
-    objectMapper.registerModule(new GuavaModule());
-    objectMapper.registerModule(new JavaTimeModule());
+    NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
     return objectMapper;
   }
 
