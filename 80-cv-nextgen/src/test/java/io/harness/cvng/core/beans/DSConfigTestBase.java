@@ -12,7 +12,7 @@ public class DSConfigTestBase extends CategoryTest {
   protected String accountId;
   protected String projectIdentifier;
   protected String productName;
-  protected String connectorId;
+  protected String connectorIdentifier;
   protected String envIdentifier;
   protected String groupId;
   protected String serviceIdentifier;
@@ -30,7 +30,7 @@ public class DSConfigTestBase extends CategoryTest {
 
   protected void fillCommonFields(DSConfig dsConfig) {
     dsConfig.setAccountId(accountId);
-    dsConfig.setConnectorId(connectorId);
+    dsConfig.setConnectorIdentifier(connectorIdentifier);
     dsConfig.setEnvIdentifier(envIdentifier);
     dsConfig.setIdentifier(identifier);
     dsConfig.setProductName(productName);
@@ -39,7 +39,7 @@ public class DSConfigTestBase extends CategoryTest {
 
   protected void fillCommonFields(CVConfig cvConfig) {
     cvConfig.setEnvIdentifier(envIdentifier);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setProductName(productName);
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setAccountId(accountId);
@@ -51,7 +51,7 @@ public class DSConfigTestBase extends CategoryTest {
     assertThat(cvConfig.getAccountId()).isEqualTo(dsConfig.getAccountId());
     assertThat(cvConfig.getGroupId()).isEqualTo(dsConfig.getIdentifier());
     assertThat(cvConfig.getProjectIdentifier()).isEqualTo(dsConfig.getProjectIdentifier());
-    assertThat(cvConfig.getConnectorId()).isEqualTo(dsConfig.getConnectorId());
+    assertThat(cvConfig.getConnectorIdentifier()).isEqualTo(dsConfig.getConnectorIdentifier());
     assertThat(cvConfig.getEnvIdentifier()).isEqualTo(dsConfig.getEnvIdentifier());
     assertThat(cvConfig.getProductName()).isEqualTo(dsConfig.getProductName());
   }

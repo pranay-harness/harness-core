@@ -224,7 +224,7 @@ public class AnomalyServiceImplTest extends CvNextGenTest {
                                           .identifier(PERFORMANCE_PACK_IDENTIFIER)
                                           .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder().build()))
                                           .build());
-    appDynamicsCVConfig.setConnectorId(generateUuid());
+    appDynamicsCVConfig.setConnectorIdentifier(generateUuid());
     appDynamicsCVConfig.setGroupId(generateUuid());
     appDynamicsCVConfig.setApplicationName(generateUuid());
     appDynamicsCVConfig.setTierName(generateUuid());

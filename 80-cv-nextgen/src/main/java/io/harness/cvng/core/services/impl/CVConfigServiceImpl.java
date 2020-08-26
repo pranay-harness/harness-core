@@ -90,45 +90,45 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void deleteByGroupId(String accountId, String connectorId, String productName, String groupId) {
+  public void deleteByGroupId(String accountId, String connectorIdentifier, String productName, String groupId) {
     hPersistence.delete(hPersistence.createQuery(CVConfig.class)
                             .filter(CVConfigKeys.accountId, accountId)
-                            .filter(CVConfigKeys.connectorId, connectorId)
+                            .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
                             .filter(CVConfigKeys.productName, productName)
                             .filter(CVConfigKeys.groupId, groupId));
   }
 
   @Override
-  public List<CVConfig> list(@NotNull String accountId, String connectorId) {
+  public List<CVConfig> list(@NotNull String accountId, String connectorIdentifier) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
                                 .filter(CVConfigKeys.accountId, accountId)
-                                .filter(CVConfigKeys.connectorId, connectorId);
+                                .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier);
     return query.asList();
   }
   @Override
-  public List<CVConfig> list(String accountId, String connectorId, String productName) {
+  public List<CVConfig> list(String accountId, String connectorIdentifier, String productName) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
                                 .filter(CVConfigKeys.accountId, accountId)
-                                .filter(CVConfigKeys.connectorId, connectorId)
+                                .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
                                 .filter(CVConfigKeys.productName, productName);
     return query.asList();
   }
   @Override
-  public List<CVConfig> list(String accountId, String connectorId, String productName, String groupId) {
+  public List<CVConfig> list(String accountId, String connectorIdentifier, String productName, String groupId) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
                                 .filter(CVConfigKeys.accountId, accountId)
-                                .filter(CVConfigKeys.connectorId, connectorId)
+                                .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
                                 .filter(CVConfigKeys.productName, productName)
                                 .filter(CVConfigKeys.groupId, groupId);
     return query.asList();
   }
 
   @Override
-  public List<String> getProductNames(String accountId, String connectorId) {
+  public List<String> getProductNames(String accountId, String connectorIdentifier) {
     checkNotNull(accountId, "accountId can not be null");
-    checkNotNull(connectorId, "ConnectorId can not be null");
+    checkNotNull(connectorIdentifier, "ConnectorIdentifier can not be null");
     return hPersistence.createQuery(CVConfig.class)
-        .filter(CVConfigKeys.connectorId, connectorId)
+        .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
         .filter(CVConfigKeys.accountId, accountId)
         .project(CVConfigKeys.productName, true)
         .asList()

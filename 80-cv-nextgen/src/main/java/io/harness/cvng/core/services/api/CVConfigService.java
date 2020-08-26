@@ -13,11 +13,11 @@ public interface CVConfigService {
   void update(List<CVConfig> cvConfigs);
   @Nullable CVConfig get(String cvConfigId);
   void delete(String cvConfigId);
-  void deleteByGroupId(String accountId, String connectorId, String productName, String groupId);
-  List<CVConfig> list(String accountId, String connectorId);
-  List<CVConfig> list(String accountId, String connectorId, String productName);
-  List<CVConfig> list(String accountId, String connectorId, String productName, String groupId);
-  List<String> getProductNames(String accountId, String connectorId);
+  void deleteByGroupId(String accountId, String connectorIdentifier, String productName, String groupId);
+  List<CVConfig> list(String accountId, String connectorIdentifier);
+  List<CVConfig> list(String accountId, String connectorIdentifier, String productName);
+  List<CVConfig> list(String accountId, String connectorIdentifier, String productName, String groupId);
+  List<String> getProductNames(String accountId, String connectorIdentifier);
 
   void setCollectionTaskId(String uuid, String dataCollectionTaskId);
   List<CVConfig> find(String accountId, List<DataSourceType> dataSourceTypes);

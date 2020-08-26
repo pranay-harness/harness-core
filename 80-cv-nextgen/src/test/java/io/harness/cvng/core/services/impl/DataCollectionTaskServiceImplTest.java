@@ -472,7 +472,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setApplicationName("cv-app");
     cvConfig.setTierName("docker-tier");
     cvConfig.setVerificationType(VerificationType.TIME_SERIES);
-    cvConfig.setConnectorId(generateUuid());
+    cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier("serviceIdentifier");
     cvConfig.setEnvIdentifier("envIdentifier");
     cvConfig.setGroupId(generateUuid());
@@ -490,7 +490,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setUuid(cvConfigId);
     cvConfig.setAccountId(accountId);
     cvConfig.setVerificationType(VerificationType.TIME_SERIES);
-    cvConfig.setConnectorId(generateUuid());
+    cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier("serviceIdentifier");
     cvConfig.setEnvIdentifier("envIdentifier");
     cvConfig.setGroupId(generateUuid());
@@ -541,7 +541,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   private void fillCommon(CVConfig cvConfig) {
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
-    cvConfig.setConnectorId(generateUuid());
+    cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());

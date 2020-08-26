@@ -22,9 +22,14 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NGSecretService ngSecretService;
   @Override
-  public String create(String accountId, DataCollectionConnectorBundle bundle) {
+  public String create(
+      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     bundle.getParams().put("accountId", accountId);
-    NGAccess basicNGAccessObject = BaseNGAccess.builder().accountIdentifier(accountId).build();
+    NGAccess basicNGAccessObject = BaseNGAccess.builder()
+                                       .accountIdentifier(accountId)
+                                       .projectIdentifier(projectIdentifier)
+                                       .orgIdentifier(orgIdentifier)
+                                       .build();
     List<EncryptedDataDetail> encryptedDataDetailList = ngSecretService.getEncryptionDetails(basicNGAccessObject,
         bundle.getConnectorConfigDTO() instanceof DecryptableEntity ? (DecryptableEntity) bundle.getConnectorConfigDTO()
                                                                     : null);

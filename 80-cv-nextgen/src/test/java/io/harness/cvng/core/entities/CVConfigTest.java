@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 
 public class CVConfigTest extends CategoryTest {
   private String accountId;
-  private String connectorId;
+  private String connectorIdentifier;
   private String productName;
   private String groupId;
   private String serviceInstanceIdentifier;
@@ -23,7 +23,7 @@ public class CVConfigTest extends CategoryTest {
   @Before
   public void setup() {
     this.accountId = generateUuid();
-    this.connectorId = generateUuid();
+    this.connectorIdentifier = generateUuid();
     this.productName = generateUuid();
     this.groupId = generateUuid();
     this.serviceInstanceIdentifier = generateUuid();
@@ -45,10 +45,10 @@ public class CVConfigTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidate_whenConnectorIdIsUndefined() {
     CVConfig cvConfig = createCVConfig();
-    cvConfig.setConnectorId(null);
+    cvConfig.setConnectorIdentifier(null);
     assertThatThrownBy(() -> cvConfig.validate())
         .isInstanceOf(NullPointerException.class)
-        .hasMessage("connectorId should not be null");
+        .hasMessage("connectorIdentifier should not be null");
   }
 
   @Test
@@ -106,7 +106,7 @@ public class CVConfigTest extends CategoryTest {
   private void fillCommon(CVConfig cvConfig) {
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
-    cvConfig.setConnectorId(connectorId);
+    cvConfig.setConnectorIdentifier(connectorIdentifier);
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());

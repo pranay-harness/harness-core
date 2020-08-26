@@ -17,47 +17,53 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
   @Override
-  public String createServiceGuardDataCollectionTask(String accountId, String cvConfigId, String connectorId,
+  public String createServiceGuardDataCollectionTask(String accountId, String cvConfigId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
     // Need to write this to handle retries, exception etc in a proper way.
 
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
+    Optional<ConnectorDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
-      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorId);
+      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }
 
     Map<String, String> params = new HashMap<>();
     params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
     params.put(DataCollectionTaskKeys.cvConfigId, cvConfigId);
-    params.put(CVConfigKeys.connectorId, connectorId);
+    params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
 
     DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
                                                .connectorConfigDTO(connectorDTO.get().getConnectorConfig())
                                                .params(params)
                                                .build();
 
-    return requestExecutor.execute(verificationManagerClient.create(accountId, bundle)).getResource();
+    return requestExecutor
+        .execute(verificationManagerClient.create(accountId, orgIdentifier, projectIdentifier, bundle))
+        .getResource();
   }
 
   @Override
-  public String createDeploymentVerificationDataCollectionTask(String accountId, String connectorId,
+  public String createDeploymentVerificationDataCollectionTask(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
+    Optional<ConnectorDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
 
     if (!connectorDTO.isPresent()) {
-      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorId);
+      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }
 
     Map<String, String> params = new HashMap<>();
     params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
-    params.put(CVConfigKeys.connectorId, connectorId);
+    params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
 
     DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
                                                .connectorConfigDTO(connectorDTO.get().getConnectorConfig())
                                                .params(params)
                                                .build();
 
-    return requestExecutor.execute(verificationManagerClient.create(accountId, bundle)).getResource();
+    return requestExecutor
+        .execute(verificationManagerClient.create(accountId, orgIdentifier, projectIdentifier, bundle))
+        .getResource();
   }
 
   @Override
