@@ -1983,6 +1983,15 @@ public class DelegateServiceImpl implements DelegateService {
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
 
+    // For forward compatibility set the wait id to the uuid
+    if (task.getUuid() == null) {
+      task.setUuid(generateUuid());
+    }
+
+    if (task.getWaitId() == null) {
+      task.setWaitId(task.getUuid());
+    }
+
     // For backward compatibility we base the queue task expiry on the execution timeout
     if (task.getExpiry() == 0) {
       task.setExpiry(currentTimeMillis() + task.getData().getTimeout());

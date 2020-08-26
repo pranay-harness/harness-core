@@ -84,7 +84,8 @@ public class DelegateTask
   private String version;
   private List<String> tags;
 
-  private String waitId;
+  // This extra field is pointless, we should use the task uuid.
+  @Deprecated private String waitId;
 
   private long createdAt;
   private long lastUpdatedAt;
