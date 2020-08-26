@@ -12,7 +12,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 
-public class ReleaseHistoryTest extends CategoryTest {
+public class ReleaseHistoryModelTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
