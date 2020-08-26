@@ -12,6 +12,8 @@ import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
+import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
+import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.cloudefficiencyevents.QLEventsDataPoint.QLEventsDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 public class EventsStatsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLEventsDataFilter,
         QLCCMGroupBy, QLEventsSortCriteria> {
+  @Inject QLBillingStatsHelper statsHelper;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private EventsDataQueryBuilder eventsDataQueryBuilder;
   private static String offsetAndLimitQuery = " OFFSET %s LIMIT %s";
@@ -124,6 +127,17 @@ public class EventsStatsDataFetcher
             break;
           case COST_CHANGE_PERCENT:
             eventDataBuilder.costChangePercentage(resultSet.getDouble(field.getFieldName()));
+            break;
+          case NAMESPACE:
+            eventDataBuilder.namespace(resultSet.getString(field.getFieldName()));
+            break;
+          case WORKLOADNAME:
+            eventDataBuilder.workloadName(resultSet.getString(field.getFieldName()));
+            break;
+          case CLUSTERID:
+            String clusterId = resultSet.getString(field.getFieldName());
+            eventDataBuilder.clusterId(clusterId);
+            eventDataBuilder.clusterName(statsHelper.getEntityName(BillingDataMetaDataFields.CLUSTERID, clusterId));
             break;
           default:
             break;
