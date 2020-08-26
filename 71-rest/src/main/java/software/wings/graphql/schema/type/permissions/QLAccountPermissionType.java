@@ -85,7 +85,12 @@ public enum QLAccountPermissionType implements QLEnum {
   /**
    * Manage Pipeline Governance Standards
    */
-  MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+  MANAGE_PIPELINE_GOVERNANCE_STANDARDS,
+
+  /**
+   * Manage API Keys
+   */
+  MANAGE_API_KEYS;
 
   @Override
   public String getStringValue() {

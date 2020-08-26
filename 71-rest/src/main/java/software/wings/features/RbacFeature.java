@@ -2,13 +2,6 @@ package software.wings.features;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
-import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
-import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
-import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -25,6 +18,7 @@ import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -36,6 +30,8 @@ import java.util.Set;
 
 @Singleton
 public class RbacFeature extends AbstractUsageLimitedFeature implements ComplianceByLimitingUsage {
+  @Inject private AuthHandler authHandler;
+
   public static final String FEATURE_NAME = "RBAC";
 
   private final UserService userService;
@@ -100,10 +96,7 @@ public class RbacFeature extends AbstractUsageLimitedFeature implements Complian
 
   private void assignAllPermissionsToUserGroup(UserGroup userGroup) {
     AccountPermissions accountPermissions =
-        AccountPermissions.builder()
-            .permissions(Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE,
-                TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER, TAG_MANAGEMENT))
-            .build();
+        AccountPermissions.builder().permissions(authHandler.getAllAccountPermissions()).build();
 
     Set<AppPermission> appPermissions = Sets.newHashSet();
     AppPermission appPermission = AppPermission.builder()

@@ -28,6 +28,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEW
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
@@ -187,6 +188,8 @@ public class UserGroupPermissionsController {
         return VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
       case MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS:
         return MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
+      case MANAGE_API_KEYS:
+        return MANAGE_API_KEYS;
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
@@ -409,6 +412,7 @@ public class UserGroupPermissionsController {
       qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_ALERT_NOTIFICATION_RULES);
       qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_AUTHENTICATION_SETTINGS);
       qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_IP_WHITELIST);
+      qlAccountPermissionTypes.add(QLAccountPermissionType.MANAGE_API_KEYS);
     }
   }
   // Populate the AccountPermission entity
@@ -487,6 +491,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_CLOUD_PROVIDERS;
       case MANAGE_SECRETS:
         return QLAccountPermissionType.MANAGE_SECRETS;
+      case MANAGE_API_KEYS:
+        return QLAccountPermissionType.MANAGE_API_KEYS;
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
