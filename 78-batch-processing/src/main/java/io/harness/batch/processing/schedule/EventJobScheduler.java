@@ -26,6 +26,7 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 
 @Slf4j
@@ -52,25 +53,31 @@ public class EventJobScheduler {
   // this job runs every 1 hours "0 0 * ? * *". For debugging, run every minute "* * * ? * *"
   @Scheduled(cron = "0 */20 * * * ?")
   public void runCloudEfficiencyInClusterJobs() {
-    runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER);
+    runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER, true);
   }
 
   @Scheduled(cron = "0 0 * ? * *")
   public void runCloudEfficiencyOutOfClusterJobs() {
-    runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER);
+    runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER, true);
   }
 
-  private void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket) {
+  private void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket, boolean runningMode) {
     accountShardService.getCeEnabledAccounts().forEach(account
         -> jobs.stream()
                .filter(job -> BatchJobType.fromJob(job).getBatchJobBucket() == batchJobBucket)
-               .forEach(job -> runJob(account.getUuid(), job)));
+               .forEach(job -> runJob(account.getUuid(), job, runningMode)));
+  }
+
+  @Scheduled(cron = "0 0 */6 ? * *")
+  public void scanDelayedJobs() {
+    logger.info("Inside scanning delayed jobs !! ");
+    Stream.of(BatchJobBucket.values()).forEach(batchJobBucket -> runCloudEfficiencyEventJobs(batchJobBucket, false));
   }
 
   // this job runs every 4 hours "0 0 */4 ? * *". For debugging, run every minute "* * * ? * *"
   @Scheduled(cron = "0 0 */4 ? * *")
   public void sendSegmentEvents() {
-    runCloudEfficiencyEventJobs(BatchJobBucket.OTHERS);
+    runCloudEfficiencyEventJobs(BatchJobBucket.OTHERS, true);
   }
 
   @Scheduled(cron = "0 * * ? * *")
@@ -130,7 +137,7 @@ public class EventJobScheduler {
   }
 
   @SuppressWarnings("squid:S1166") // not required to rethrow exceptions.
-  private void runJob(String accountId, Job job) {
+  private void runJob(String accountId, Job job, boolean runningMode) {
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
       if (BatchJobType.AWS_ECS_CLUSTER_DATA_SYNC == batchJobType && !accountId.equals("zEaak-FLS425IEO7OLzMUg")) {
@@ -140,7 +147,7 @@ public class EventJobScheduler {
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR)) {
-        batchJobRunner.runJob(accountId, job);
+        batchJobRunner.runJob(accountId, job, runningMode);
       }
     } catch (Exception ex) {
       logger.error("Exception while running job {}", job);
