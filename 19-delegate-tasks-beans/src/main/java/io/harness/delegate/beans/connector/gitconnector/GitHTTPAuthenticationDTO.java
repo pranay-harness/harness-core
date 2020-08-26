@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,6 +20,8 @@ public class GitHTTPAuthenticationDTO extends GitAuthenticationDTO {
   @JsonProperty("type") GitConnectionType gitConnectionType;
   @NotBlank String url;
   @NotBlank String username;
-  @NotNull @SecretReference SecretRefData passwordRef;
+
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
+
   String branchName;
 }

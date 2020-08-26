@@ -6,6 +6,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,5 +29,5 @@ public class SplunkConnectorDTO extends ConnectorConfigDTO implements Decryptabl
   String splunkUrl;
   String username;
   @NotNull String accountId;
-  @NotNull @SecretReference SecretRefData passwordRef;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 }
