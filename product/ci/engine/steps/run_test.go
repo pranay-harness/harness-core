@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -70,8 +71,9 @@ func TestExecuteFileNotFound(t *testing.T) {
 	}
 
 	fs.EXPECT().Create(gomock.Any()).Return(nil, os.ErrPermission)
-	err := e.execute(ctx, retryCount)
+	o, err := e.execute(ctx, retryCount)
 	assert.Equal(t, err, os.ErrPermission)
+	assert.Nil(t, o)
 }
 
 func TestExecuteDeadlineExceeded(t *testing.T) {
@@ -109,8 +111,9 @@ func TestExecuteDeadlineExceeded(t *testing.T) {
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	logFile.EXPECT().Close().Return(nil)
 
-	err := e.execute(ctx, retryCount)
+	o, err := e.execute(ctx, retryCount)
 	assert.Equal(t, err, context.DeadlineExceeded)
+	assert.Nil(t, o)
 }
 
 func TestExecuteNonZeroStatus(t *testing.T) {
@@ -148,13 +151,14 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	logFile.EXPECT().Close().Return(nil)
 
-	err := e.execute(ctx, retryCount)
+	o, err := e.execute(ctx, retryCount)
 	assert.NotNil(t, err)
 	if err, ok := err.(*exec.ExitError); ok {
 		assert.Equal(t, err.ExitCode(), mockedExitStatus)
 	} else {
 		t.Fatalf("Expected err of type exec.ExitError")
 	}
+	assert.Nil(t, o)
 }
 
 func TestExecuteSuccess(t *testing.T) {
@@ -194,8 +198,9 @@ func TestExecuteSuccess(t *testing.T) {
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	logFile.EXPECT().Close().Return(nil)
 
-	err := e.execute(ctx, retryCount)
+	o, err := e.execute(ctx, retryCount)
 	assert.Nil(t, err)
+	assert.Nil(t, o)
 }
 
 func TestExecuteErrorWithOutput(t *testing.T) {
@@ -238,8 +243,9 @@ func TestExecuteErrorWithOutput(t *testing.T) {
 		fmt.Sprintf("Error while opening file")))
 	logFile.EXPECT().Close().Return(nil)
 
-	err := e.execute(ctx, retryCount)
+	o, err := e.execute(ctx, retryCount)
 	assert.NotNil(t, err)
+	assert.Nil(t, o)
 }
 
 func TestExecuteSuccessWithOutput(t *testing.T) {
@@ -260,6 +266,9 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+
+	envVar := "abc"
+	envVal := "xyz"
 	f.WriteString("abc xyz\n")
 	f.WriteString("abc1")
 	f.Close()
@@ -291,8 +300,9 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
 	logFile.EXPECT().Close().Return(nil)
 
-	errExec := e.execute(ctx, retryCount)
+	o, errExec := e.execute(ctx, retryCount)
 	assert.Nil(t, errExec)
+	assert.Equal(t, o.Output[envVar], envVal)
 }
 
 func TestFetchOutputVariables(t *testing.T) {
@@ -340,9 +350,10 @@ func TestRunValidateErr(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	executor := NewRunStep(nil, logFilePath, tmpPath, fs, log.Sugar())
-	err := executor.Run(ctx)
+	executor := NewRunStep(nil, logFilePath, tmpPath, nil, fs, log.Sugar())
+	o, err := executor.Run(ctx)
 	assert.NotNil(t, err)
+	assert.Nil(t, o)
 }
 
 func TestRunExecuteErr(t *testing.T) {
@@ -363,7 +374,63 @@ func TestRunExecuteErr(t *testing.T) {
 
 	fs.EXPECT().Create(gomock.Any()).Return(nil, os.ErrPermission)
 
-	executor := NewRunStep(step, logFilePath, tmpPath, fs, log.Sugar())
-	err := executor.Run(ctx)
+	executor := NewRunStep(step, logFilePath, tmpPath, nil, fs, log.Sugar())
+	o, err := executor.Run(ctx)
 	assert.NotNil(t, err)
+	assert.Nil(t, o)
+}
+
+func TestRunStepResolveJEXL(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	jCmd1 := "${step1.output.foo}"
+	cmd1Val := "bar"
+
+	tests := []struct {
+		name         string
+		commands     []string
+		resolvedCmds []string
+		jexlEvalRet  map[string]string
+		jexlEvalErr  error
+		expectedErr  bool
+	}{
+		{
+			name:        "jexl evaluate error",
+			commands:    []string{jCmd1},
+			jexlEvalRet: nil,
+			jexlEvalErr: errors.New("evaluation failed"),
+			expectedErr: true,
+		},
+		{
+			name:         "jexl successfully evaluated",
+			commands:     []string{jCmd1},
+			jexlEvalRet:  map[string]string{jCmd1: cmd1Val},
+			jexlEvalErr:  nil,
+			resolvedCmds: []string{cmd1Val},
+			expectedErr:  false,
+		},
+	}
+	oldJEXLEval := evaluateJEXL
+	defer func() { evaluateJEXL = oldJEXLEval }()
+	for _, tc := range tests {
+		s := &runStep{
+			commands: tc.commands,
+			log:      log.Sugar(),
+		}
+		// Initialize a mock CI addon
+		evaluateJEXL = func(ctx context.Context, expressions []string, o output.StageOutput,
+			log *zap.SugaredLogger) (map[string]string, error) {
+			return tc.jexlEvalRet, tc.jexlEvalErr
+		}
+		got := s.resolveJEXL(ctx)
+		if tc.expectedErr == (got == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+
+		if got == nil {
+			assert.Equal(t, s.commands, tc.resolvedCmds)
+		}
+	}
 }

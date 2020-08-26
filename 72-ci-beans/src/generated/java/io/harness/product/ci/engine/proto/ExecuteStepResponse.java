@@ -36,6 +36,7 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
+    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -45,6 +46,16 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
           case 0:
             done = true;
             break;
+          case 10: {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+              output_ = com.google.protobuf.MapField.newMapField(OutputDefaultEntryHolder.defaultEntry);
+              mutable_bitField0_ |= 0x00000001;
+            }
+            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> output__ =
+                input.readMessage(OutputDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+            output_.getMutableMap().put(output__.getKey(), output__.getValue());
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -67,6 +78,17 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
         .internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_descriptor;
   }
 
+  @SuppressWarnings({"rawtypes"})
+  @java.
+  lang.Override
+  protected com.google.protobuf.MapField internalGetMapField(int number) {
+    switch (number) {
+      case 1:
+        return internalGetOutput();
+      default:
+        throw new RuntimeException("Invalid map field number: " + number);
+    }
+  }
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
@@ -74,6 +96,76 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
         .internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_fieldAccessorTable
         .ensureFieldAccessorsInitialized(io.harness.product.ci.engine.proto.ExecuteStepResponse.class,
             io.harness.product.ci.engine.proto.ExecuteStepResponse.Builder.class);
+  }
+
+  public static final int OUTPUT_FIELD_NUMBER = 1;
+  private static final class OutputDefaultEntryHolder {
+    static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String> defaultEntry =
+        com.google.protobuf.MapEntry.<java.lang.String, java.lang.String>newDefaultInstance(
+            io.harness.product.ci.engine.proto.ExecutionOuterClass
+                .internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_OutputEntry_descriptor,
+            com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.STRING, "");
+  }
+  private com.google.protobuf.MapField<java.lang.String, java.lang.String> output_;
+  private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetOutput() {
+    if (output_ == null) {
+      return com.google.protobuf.MapField.emptyMapField(OutputDefaultEntryHolder.defaultEntry);
+    }
+    return output_;
+  }
+
+  public int getOutputCount() {
+    return internalGetOutput().getMap().size();
+  }
+  /**
+   * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+   */
+
+  public boolean containsOutput(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    return internalGetOutput().getMap().containsKey(key);
+  }
+  /**
+   * Use {@link #getOutputMap()} instead.
+   */
+  @java.
+  lang.Deprecated
+  public java.util.Map<java.lang.String, java.lang.String> getOutput() {
+    return getOutputMap();
+  }
+  /**
+   * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+   */
+
+  public java.util.Map<java.lang.String, java.lang.String> getOutputMap() {
+    return internalGetOutput().getMap();
+  }
+  /**
+   * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+   */
+
+  public java.lang.String getOutputOrDefault(java.lang.String key, java.lang.String defaultValue) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, java.lang.String> map = internalGetOutput().getMap();
+    return map.containsKey(key) ? map.get(key) : defaultValue;
+  }
+  /**
+   * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+   */
+
+  public java.lang.String getOutputOrThrow(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, java.lang.String> map = internalGetOutput().getMap();
+    if (!map.containsKey(key)) {
+      throw new java.lang.IllegalArgumentException();
+    }
+    return map.get(key);
   }
 
   private byte memoizedIsInitialized = -1;
@@ -91,6 +183,8 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+        output, internalGetOutput(), OutputDefaultEntryHolder.defaultEntry, 1);
     unknownFields.writeTo(output);
   }
 
@@ -101,6 +195,14 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
       return size;
 
     size = 0;
+    for (java.util.Map.Entry<java.lang.String, java.lang.String> entry : internalGetOutput().getMap().entrySet()) {
+      com.google.protobuf.MapEntry<java.lang.String, java.lang.String> output__ =
+          OutputDefaultEntryHolder.defaultEntry.newBuilderForType()
+              .setKey(entry.getKey())
+              .setValue(entry.getValue())
+              .build();
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, output__);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -117,6 +219,8 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
     io.harness.product.ci.engine.proto.ExecuteStepResponse other =
         (io.harness.product.ci.engine.proto.ExecuteStepResponse) obj;
 
+    if (!internalGetOutput().equals(other.internalGetOutput()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -129,6 +233,10 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    if (!internalGetOutput().getMap().isEmpty()) {
+      hash = (37 * hash) + OUTPUT_FIELD_NUMBER;
+      hash = (53 * hash) + internalGetOutput().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -218,6 +326,24 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
           .internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_descriptor;
     }
 
+    @SuppressWarnings({"rawtypes"})
+    protected com.google.protobuf.MapField internalGetMapField(int number) {
+      switch (number) {
+        case 1:
+          return internalGetOutput();
+        default:
+          throw new RuntimeException("Invalid map field number: " + number);
+      }
+    }
+    @SuppressWarnings({"rawtypes"})
+    protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
+      switch (number) {
+        case 1:
+          return internalGetMutableOutput();
+        default:
+          throw new RuntimeException("Invalid map field number: " + number);
+      }
+    }
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
@@ -243,6 +369,7 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      internalGetMutableOutput().clear();
       return this;
     }
 
@@ -274,6 +401,9 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
     public io.harness.product.ci.engine.proto.ExecuteStepResponse buildPartial() {
       io.harness.product.ci.engine.proto.ExecuteStepResponse result =
           new io.harness.product.ci.engine.proto.ExecuteStepResponse(this);
+      int from_bitField0_ = bitField0_;
+      result.output_ = internalGetOutput();
+      result.output_.makeImmutable();
       onBuilt();
       return result;
     }
@@ -316,6 +446,7 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
     public Builder mergeFrom(io.harness.product.ci.engine.proto.ExecuteStepResponse other) {
       if (other == io.harness.product.ci.engine.proto.ExecuteStepResponse.getDefaultInstance())
         return this;
+      internalGetMutableOutput().mergeFrom(other.internalGetOutput());
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -340,6 +471,125 @@ public final class ExecuteStepResponse extends com.google.protobuf.GeneratedMess
           mergeFrom(parsedMessage);
         }
       }
+      return this;
+    }
+    private int bitField0_;
+
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> output_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetOutput() {
+      if (output_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(OutputDefaultEntryHolder.defaultEntry);
+      }
+      return output_;
+    }
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableOutput() {
+      onChanged();
+      ;
+      if (output_ == null) {
+        output_ = com.google.protobuf.MapField.newMapField(OutputDefaultEntryHolder.defaultEntry);
+      }
+      if (!output_.isMutable()) {
+        output_ = output_.copy();
+      }
+      return output_;
+    }
+
+    public int getOutputCount() {
+      return internalGetOutput().getMap().size();
+    }
+    /**
+     * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+     */
+
+    public boolean containsOutput(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      return internalGetOutput().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getOutputMap()} instead.
+     */
+    @java.
+    lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getOutput() {
+      return getOutputMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+     */
+
+    public java.util.Map<java.lang.String, java.lang.String> getOutputMap() {
+      return internalGetOutput().getMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+     */
+
+    public java.lang.String getOutputOrDefault(java.lang.String key, java.lang.String defaultValue) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.String> map = internalGetOutput().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+     */
+
+    public java.lang.String getOutputOrThrow(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.String> map = internalGetOutput().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    public Builder clearOutput() {
+      internalGetMutableOutput().getMutableMap().clear();
+      return this;
+    }
+    /**
+     * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+     */
+
+    public Builder removeOutput(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      internalGetMutableOutput().getMutableMap().remove(key);
+      return this;
+    }
+    /**
+     * Use alternate mutation accessors instead.
+     */
+    @java.
+    lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getMutableOutput() {
+      return internalGetMutableOutput().getMutableMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+     */
+    public Builder putOutput(java.lang.String key, java.lang.String value) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      if (value == null) {
+        throw new java.lang.NullPointerException();
+      }
+      internalGetMutableOutput().getMutableMap().put(key, value);
+      return this;
+    }
+    /**
+     * <code>map&lt;string, string&gt; output = 1[json_name = "output"];</code>
+     */
+
+    public Builder putAllOutput(java.util.Map<java.lang.String, java.lang.String> values) {
+      internalGetMutableOutput().getMutableMap().putAll(values);
       return this;
     }
     @java.lang.Override

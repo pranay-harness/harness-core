@@ -10,9 +10,13 @@ import (
 
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/engine/jexl"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
+
+//go:generate mockgen -source run.go -package=steps -destination mocks/run_mock.go RunStep
 
 const (
 	defaultTimeoutSecs int64  = 300 // 5 minutes
@@ -21,16 +25,15 @@ const (
 )
 
 var (
-	execCmdCtx  = exec.CommandContext
-	startTailFn = StartTail
-	stopTailFn  = StopTail
+	startTailFn  = StartTail
+	stopTailFn   = StopTail
+	evaluateJEXL = jexl.EvaluateJEXL
+	execCmdCtx   = exec.CommandContext
 )
-
-// go:generate mockgen -source run.go -package=steps -destination mocks/run_mock.go RunStep
 
 // RunStep represents interface to execute a run step
 type RunStep interface {
-	Run(ctx context.Context) error
+	Run(ctx context.Context) (*output.StepOutput, error)
 }
 
 type runStep struct {
@@ -42,12 +45,14 @@ type runStep struct {
 	timeoutSecs   int64
 	numRetries    int32
 	relLogPath    string
+	stageOutput   output.StageOutput
 	log           *zap.SugaredLogger
 	fs            filesystem.FileSystem
 }
 
 // NewRunStep creates a run step executor
-func NewRunStep(step *pb.UnitStep, relLogPath string, tmpFilePath string, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
+func NewRunStep(step *pb.UnitStep, relLogPath string, tmpFilePath string,
+	so output.StageOutput, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
 	r := step.GetRun()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
@@ -67,23 +72,28 @@ func NewRunStep(step *pb.UnitStep, relLogPath string, tmpFilePath string, fs fil
 		timeoutSecs:   timeoutSecs,
 		numRetries:    numRetries,
 		relLogPath:    relLogPath,
+		stageOutput:   so,
 		log:           log,
 		fs:            fs,
 	}
 }
 
 // Executes customer provided run step commands with retries and timeout handling
-func (e *runStep) Run(ctx context.Context) error {
+func (e *runStep) Run(ctx context.Context) (*output.StepOutput, error) {
 	var err error
+	var o *output.StepOutput
 	if err = e.validate(); err != nil {
-		return err
+		return nil, err
+	}
+	if err = e.resolveJEXL(ctx); err != nil {
+		return nil, err
 	}
 	for i := int32(1); i <= e.numRetries; i++ {
-		if err = e.execute(ctx, i); err == nil {
-			return nil
+		if o, err = e.execute(ctx, i); err == nil {
+			return o, nil
 		}
 	}
-	return err
+	return nil, err
 }
 
 func (e *runStep) validate() error {
@@ -95,6 +105,28 @@ func (e *runStep) validate() error {
 		)
 		return err
 	}
+	return nil
+}
+
+// resolveJEXL resolves JEXL expressions present in run step input
+func (e *runStep) resolveJEXL(ctx context.Context) error {
+	// JEXL expressions are only present in run step commands
+	s := e.commands
+	resolvedExprs, err := evaluateJEXL(ctx, s, e.stageOutput, e.log)
+	if err != nil {
+		return err
+	}
+
+	// Updating step commands with the resolved value of JEXL expressions
+	var resolvedCmds []string
+	for _, cmd := range e.commands {
+		if val, ok := resolvedExprs[cmd]; ok {
+			resolvedCmds = append(resolvedCmds, val)
+		} else {
+			resolvedCmds = append(resolvedCmds, cmd)
+		}
+	}
+	e.commands = resolvedCmds
 	return nil
 }
 
@@ -128,7 +160,7 @@ func (e *runStep) fetchOutputVariables(outputFile string) (map[string]string, er
 	return envVarMap, nil
 }
 
-func (e *runStep) execute(ctx context.Context, retryCount int32) error {
+func (e *runStep) execute(ctx context.Context, retryCount int32) (*output.StepOutput, error) {
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
 	defer cancel()
@@ -145,7 +177,7 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 	logFile, err := e.fs.Create(logFilePath)
 	if err != nil {
 		logFileCreateWarning(e.log, "failed to create log file", logFilePath, e.id, commands, start, err)
-		return err
+		return nil, err
 	}
 	defer logFile.Close()
 
@@ -162,34 +194,38 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 	err = cmd.Run()
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
 		logCommandExecWarning(e.log, "time out while executing run step", e.id, commands, retryCount, start, ctxErr)
-		return ctxErr
+		return nil, ctxErr
 	}
 
 	if err != nil {
 		logCommandExecWarning(e.log, "error encountered while executing run step", e.id, commands, retryCount, start, err)
-		return err
+		return nil, err
 	}
 
 	stopTailFn(ctx, e.log, logFilePath, true)
 
-	outputVars := make(map[string]string)
+	var stepOutput *output.StepOutput
 	if e.envVarOutputs != nil {
 		var err error
-		outputVars, err = e.fetchOutputVariables(outputFile)
+		outputVars, err := e.fetchOutputVariables(outputFile)
 		if err != nil {
 			logCommandExecWarning(e.log, "error encountered while fetching output of run step", e.id, commands, retryCount, start, err)
-			return err
+			return nil, err
+		}
+
+		stepOutput = &output.StepOutput{
+			Output: outputVars,
 		}
 	}
 
 	e.log.Infow(
 		"Successfully executed step",
 		"arguments", commands,
-		"output", outputVars,
+		"output", stepOutput,
 		"elapsed_time_ms", utils.TimeSince(start),
 		"owner", "user",
 	)
-	return nil
+	return stepOutput, nil
 }
 
 func logFileCreateWarning(log *zap.SugaredLogger, warnMsg, stepID, filePath, args string, startTime time.Time, err error) {

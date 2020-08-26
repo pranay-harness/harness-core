@@ -12,6 +12,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	cengine "github.com/wings-software/portal/product/ci/engine/grpc/client"
 	emgrpc "github.com/wings-software/portal/product/ci/engine/grpc/client/mocks"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/steps"
 	emsteps "github.com/wings-software/portal/product/ci/engine/steps/mocks"
@@ -101,15 +102,15 @@ func TestParallelExecutorRun(t *testing.T) {
 	oldRunStep := runStep
 	defer func() { runStep = oldRunStep }()
 	mockedRunStep := emsteps.NewMockRunStep(ctrl)
-	mockedRunStep.EXPECT().Run(ctx).Return(nil).AnyTimes()
+	mockedRunStep.EXPECT().Run(ctx).Return(nil, nil).AnyTimes()
 
 	runStep = func(step *pb.UnitStep, stepLogPath string, tmpFilePath string,
-		fs filesystem.FileSystem, log *zap.SugaredLogger) steps.RunStep {
+		so output.StageOutput, fs filesystem.FileSystem, log *zap.SugaredLogger) steps.RunStep {
 		return mockedRunStep
 	}
 	for _, tc := range tests {
 		e := NewParallelExecutor(logPath, tmpFilePath, nil, log.Sugar())
-		got := e.Run(ctx, tc.step)
+		_, got := e.Run(ctx, tc.step, nil)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -155,7 +156,7 @@ func TestRemoteStepClientCreateErr(t *testing.T) {
 		return nil, errors.New("Could not create client")
 	}
 
-	err := e.executeRemoteStep(ctx, worker{}, nil)
+	_, err := e.executeRemoteStep(ctx, worker{}, nil, nil)
 	assert.NotNil(t, err)
 }
 
@@ -190,6 +191,6 @@ func TestRemoteStepClientErr(t *testing.T) {
 		workerPorts: ports,
 		log:         log.Sugar(),
 	}
-	err = e.executeRemoteStep(ctx, worker{}, nil)
+	_, err = e.executeRemoteStep(ctx, worker{}, nil, nil)
 	assert.NotNil(t, err)
 }

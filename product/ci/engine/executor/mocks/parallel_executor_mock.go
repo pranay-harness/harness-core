@@ -7,6 +7,7 @@ package executor
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
+	output "github.com/wings-software/portal/product/ci/engine/output"
 	proto "github.com/wings-software/portal/product/ci/engine/proto"
 	reflect "reflect"
 )
@@ -35,15 +36,16 @@ func (m *MockParallelExecutor) EXPECT() *MockParallelExecutorMockRecorder {
 }
 
 // Run mocks base method.
-func (m *MockParallelExecutor) Run(ctx context.Context, step *proto.ParallelStep) error {
+func (m *MockParallelExecutor) Run(ctx context.Context, step *proto.ParallelStep, so output.StageOutput) (map[string]*output.StepOutput, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", ctx, step)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "Run", ctx, step, so)
+	ret0, _ := ret[0].(map[string]*output.StepOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Run indicates an expected call of Run.
-func (mr *MockParallelExecutorMockRecorder) Run(ctx, step interface{}) *gomock.Call {
+func (mr *MockParallelExecutorMockRecorder) Run(ctx, step, so interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockParallelExecutor)(nil).Run), ctx, step)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockParallelExecutor)(nil).Run), ctx, step, so)
 }

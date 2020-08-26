@@ -10,6 +10,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//product/ci/engine/executor:go_default_library",
+        "//product/ci/engine/output:go_default_library",
         "//product/ci/engine/proto:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_x_net//context:go_default_library",

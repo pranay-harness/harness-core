@@ -19,6 +19,7 @@ import (
 	uminio "github.com/wings-software/portal/commons/go/lib/minio"
 	mminio "github.com/wings-software/portal/commons/go/lib/minio/mocks"
 	mbackoff "github.com/wings-software/portal/commons/go/lib/utils/mocks"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -57,7 +58,7 @@ func TestNewRestoreCacheStep(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	step := getRestoreStep(id, key, false)
-	NewRestoreCacheStep(step, tmpFilePath, fs, log.Sugar())
+	NewRestoreCacheStep(step, tmpFilePath, nil, fs, log.Sugar())
 }
 
 func TestRestoreCacheMinioClientErr(t *testing.T) {
@@ -466,4 +467,59 @@ func TestRestoreCacheSuccess(t *testing.T) {
 	archiver.EXPECT().Unarchive(gomock.Any(), "").Return(nil)
 	err := s.Run(ctx)
 	assert.Equal(t, err, nil)
+}
+
+func TestRestoreCacheResolveJEXL(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	jKey := "${step1.output.foo}"
+	keyVal := "bar"
+
+	tests := []struct {
+		name        string
+		key         string
+		resolvedKey string
+		jexlEvalRet map[string]string
+		jexlEvalErr error
+		expectedErr bool
+	}{
+		{
+			name:        "jexl evaluate error",
+			key:         jKey,
+			jexlEvalRet: nil,
+			jexlEvalErr: errors.New("evaluation failed"),
+			expectedErr: true,
+		},
+		{
+			name:        "jexl successfully evaluated",
+			key:         jKey,
+			jexlEvalRet: map[string]string{jKey: keyVal},
+			jexlEvalErr: nil,
+			resolvedKey: keyVal,
+			expectedErr: false,
+		},
+	}
+	oldJEXLEval := evaluateJEXL
+	defer func() { evaluateJEXL = oldJEXLEval }()
+	for _, tc := range tests {
+		s := &restoreCacheStep{
+			key: tc.key,
+			log: log.Sugar(),
+		}
+		// Initialize a mock CI addon
+		evaluateJEXL = func(ctx context.Context, expressions []string, o output.StageOutput,
+			log *zap.SugaredLogger) (map[string]string, error) {
+			return tc.jexlEvalRet, tc.jexlEvalErr
+		}
+		got := s.resolveJEXL(ctx)
+		if tc.expectedErr == (got == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+
+		if got == nil {
+			assert.Equal(t, s.key, tc.resolvedKey)
+		}
+	}
 }

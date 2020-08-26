@@ -12,7 +12,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	pb2 "github.com/wings-software/portal/product/ci/addon/proto"
-
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/steps"
 	msteps "github.com/wings-software/portal/product/ci/engine/steps/mocks"
@@ -83,7 +83,7 @@ func TestStepRun(t *testing.T) {
 	}
 	for _, tc := range tests {
 		e := NewUnitExecutor(tc.logPath, tmpFilePath, log.Sugar())
-		got := e.Run(ctx, tc.step)
+		_, got := e.Run(ctx, tc.step, nil)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -110,15 +110,15 @@ func TestStepSaveCacheError(t *testing.T) {
 
 	oldStep := saveCacheStep
 	defer func() { saveCacheStep = oldStep }()
-	saveCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
-		log *zap.SugaredLogger) steps.SaveCacheStep {
+	saveCacheStep = func(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+		fs filesystem.FileSystem, log *zap.SugaredLogger) steps.SaveCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("caching failed"))
 
 	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
-	err := e.Run(ctx, stepProto)
+	_, err := e.Run(ctx, stepProto, nil)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -142,15 +142,15 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 
 	oldStep := saveCacheStep
 	defer func() { saveCacheStep = oldStep }()
-	saveCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
-		log *zap.SugaredLogger) steps.SaveCacheStep {
+	saveCacheStep = func(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+		fs filesystem.FileSystem, log *zap.SugaredLogger) steps.SaveCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
 	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
-	err := e.Run(ctx, stepProto)
+	_, err := e.Run(ctx, stepProto, nil)
 	assert.Equal(t, err, nil)
 }
 
@@ -173,15 +173,15 @@ func TestStepRestoreCacheErr(t *testing.T) {
 
 	oldStep := restoreCacheStep
 	defer func() { restoreCacheStep = oldStep }()
-	restoreCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
-		log *zap.SugaredLogger) steps.RestoreCacheStep {
+	restoreCacheStep = func(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+		fs filesystem.FileSystem, log *zap.SugaredLogger) steps.RestoreCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("restore failed"))
 
 	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
-	err := e.Run(ctx, stepProto)
+	_, err := e.Run(ctx, stepProto, nil)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -204,15 +204,15 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 
 	oldStep := restoreCacheStep
 	defer func() { restoreCacheStep = oldStep }()
-	restoreCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
-		log *zap.SugaredLogger) steps.RestoreCacheStep {
+	restoreCacheStep = func(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+		fs filesystem.FileSystem, log *zap.SugaredLogger) steps.RestoreCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
 	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
-	err := e.Run(ctx, stepProto)
+	_, err := e.Run(ctx, stepProto, nil)
 	assert.Equal(t, err, nil)
 }
 
@@ -236,14 +236,15 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 
 	oldStep := publishArtifactsStep
 	defer func() { publishArtifactsStep = oldStep }()
-	publishArtifactsStep = func(step *pb.UnitStep, log *zap.SugaredLogger) steps.PublishArtifactsStep {
+	publishArtifactsStep = func(step *pb.UnitStep, so output.StageOutput,
+		log *zap.SugaredLogger) steps.PublishArtifactsStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("Could not publish artifacts"))
 
 	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
-	err := e.Run(ctx, stepProto)
+	_, err := e.Run(ctx, stepProto, nil)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -267,14 +268,15 @@ func TestPublishArtifactsErr(t *testing.T) {
 
 	oldStep := publishArtifactsStep
 	defer func() { publishArtifactsStep = oldStep }()
-	publishArtifactsStep = func(step *pb.UnitStep, log *zap.SugaredLogger) steps.PublishArtifactsStep {
+	publishArtifactsStep = func(step *pb.UnitStep, so output.StageOutput,
+		log *zap.SugaredLogger) steps.PublishArtifactsStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
 	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
-	err := e.Run(ctx, stepProto)
+	_, err := e.Run(ctx, stepProto, nil)
 	assert.Equal(t, err, nil)
 }
 

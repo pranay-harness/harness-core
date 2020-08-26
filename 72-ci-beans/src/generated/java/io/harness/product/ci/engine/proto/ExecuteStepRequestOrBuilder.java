@@ -21,4 +21,19 @@ public interface ExecuteStepRequestOrBuilder extends
    * <code>.io.harness.product.ci.engine.proto.UnitStep step = 1[json_name = "step"];</code>
    */
   io.harness.product.ci.engine.proto.UnitStepOrBuilder getStepOrBuilder();
+
+  /**
+   * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+   * @return Whether the stageOutput field is set.
+   */
+  boolean hasStageOutput();
+  /**
+   * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+   * @return The stageOutput.
+   */
+  io.harness.product.ci.engine.proto.StageOutput getStageOutput();
+  /**
+   * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+   */
+  io.harness.product.ci.engine.proto.StageOutputOrBuilder getStageOutputOrBuilder();
 }

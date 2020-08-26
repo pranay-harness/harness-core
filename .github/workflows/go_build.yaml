@@ -13,9 +13,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Building expression service code
+        run: |
+          echo "Building golang expression service protobuf using bazel..."
+          bazel build //16-expression-service/src/main/proto/... --javacopt=' -XepDisableAllChecks'
+
       - name: Building commons code
         run: |
-          echo "Building golang code using bazel..."
+          echo "Building golang commons code using bazel..."
           bazel build //commons/...
 
       - name: Building product code
@@ -25,12 +30,12 @@ jobs:
 
       - name: Testing commons
         run: |
-          echo "Testing golang code using bazel..."
+          echo "Testing golang commons code using bazel..."
           bazel test --test_output=all //commons/...
 
       - name: Testing product
         run: |
-          echo "Testing golang code using bazel..."
+          echo "Testing golang product code using bazel..."
           bazel test --test_output=all //product/...
 
       - name: Coverage
