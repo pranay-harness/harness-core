@@ -7,6 +7,7 @@ package steps
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
+	output "github.com/wings-software/portal/product/ci/engine/output"
 	reflect "reflect"
 )
 
@@ -34,11 +35,12 @@ func (m *MockRunStep) EXPECT() *MockRunStepMockRecorder {
 }
 
 // Run mocks base method.
-func (m *MockRunStep) Run(ctx context.Context) error {
+func (m *MockRunStep) Run(ctx context.Context) (*output.StepOutput, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Run", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*output.StepOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Run indicates an expected call of Run.

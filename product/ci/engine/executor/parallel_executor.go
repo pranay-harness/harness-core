@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -14,7 +15,7 @@ import (
 
 // ParallelExecutor represents an interface to execute a parallel step
 type ParallelExecutor interface {
-	Run(ctx context.Context, step *pb.ParallelStep) error
+	Run(ctx context.Context, step *pb.ParallelStep, so output.StageOutput) (map[string]*output.StepOutput, error)
 }
 
 type parallelExecutor struct {
@@ -27,8 +28,9 @@ type parallelExecutor struct {
 }
 
 type unitStepResponse struct {
-	stepID string
-	err    error
+	stepID     string
+	stepOutput *output.StepOutput
+	err        error
 }
 
 type worker struct {
@@ -59,10 +61,10 @@ func NewParallelExecutor(stepLogPath, tmpFilePath string, workerPorts []uint, lo
 // 2. All the non-run steps i.e. save/restore & publish artifacts are executed in parallel on main lite-engine.
 //	  Publish artifacts is executed on CI-addon. Hence, there is no reason for sending them to worker lite-engines.
 //	  Save/restore cache are not memory/cpu intensive tasks. Hence, executing them on main lite-engine.
-func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep) error {
+func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so output.StageOutput) (map[string]*output.StepOutput, error) {
 	start := time.Now()
 	if err := e.validate(ps); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Figure out the run step tasks to run in parallel
@@ -78,10 +80,11 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep) error {
 			numRunSteps++
 		default:
 			go func() {
-				err := e.unitExecutor.Run(ctx, s)
+				stepOutput, err := e.unitExecutor.Run(ctx, s, so)
 				results <- unitStepResponse{
-					stepID: s.GetId(),
-					err:    err,
+					stepID:     s.GetId(),
+					stepOutput: stepOutput,
+					err:        err,
 				}
 			}()
 		}
@@ -94,33 +97,37 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep) error {
 		go func(w worker) {
 			for t := range tasks {
 				var err error
+				var stepOutput *output.StepOutput
 				if w.mainOnly {
-					err = e.unitExecutor.Run(ctx, t)
+					stepOutput, err = e.unitExecutor.Run(ctx, t, so)
 				} else {
-					err = e.executeRemoteStep(ctx, w, t)
+					stepOutput, err = e.executeRemoteStep(ctx, w, t, so)
 				}
 
 				results <- unitStepResponse{
-					stepID: t.GetId(),
-					err:    err,
+					stepID:     t.GetId(),
+					stepOutput: stepOutput,
+					err:        err,
 				}
 			}
 		}(w)
 	}
 
-	// // Evaluate the parallel step results
+	stepOutputByID := make(map[string]*output.StepOutput)
+	// Evaluate the parallel step results
 	for i := 0; i < numSteps; i++ {
 		result := <-results
 		if result.err != nil {
 			e.log.Warnw(
 				"failed to execute parallel step",
 				"step_id", ps.GetId(),
-				"elapsed_time_ms",
-				utils.TimeSince(start),
+				"elapsed_time_ms", utils.TimeSince(start),
 				zap.Error(result.err),
 			)
-			return result.err
+			return nil, result.err
 		}
+
+		stepOutputByID[result.stepID] = result.stepOutput
 	}
 
 	e.log.Infow(
@@ -128,7 +135,7 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep) error {
 		"step_id", ps.GetId(),
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
-	return nil
+	return stepOutputByID, nil
 }
 
 // Validates parallel step
@@ -158,17 +165,28 @@ func (e *parallelExecutor) getWorkers(numRunSteps int) []worker {
 }
 
 // Create worker lite-engine client and send task to execute run step
-func (e *parallelExecutor) executeRemoteStep(ctx context.Context, w worker, step *pb.UnitStep) error {
+func (e *parallelExecutor) executeRemoteStep(ctx context.Context, w worker, step *pb.UnitStep,
+	so output.StageOutput) (*output.StepOutput, error) {
 	c, err := newLiteEngineClient(w.port, e.log)
 	if err != nil {
-		return errors.Wrap(err, "Could not create worker lite engine client")
+		return nil, errors.Wrap(err, "Could not create worker lite engine client")
 	}
 	defer c.CloseConn()
 
-	_, err = c.Client().ExecuteStep(ctx, &pb.ExecuteStepRequest{Step: step})
+	// Tranform output.StageOutput format to pb.StageOutput format
+	var pbStepOutputs []*pb.StageOutput_StepOutput
+	for stepID, stepOutput := range so {
+		pbStepOutputs = append(pbStepOutputs, &pb.StageOutput_StepOutput{StepId: stepID, Output: stepOutput.Output})
+	}
+	request := &pb.ExecuteStepRequest{Step: step, StageOutput: &pb.StageOutput{StepOutputs: pbStepOutputs}}
+	response, err := c.Client().ExecuteStep(ctx, request)
 	if err != nil {
 		e.log.Warnw("Failed to execute remote step request", "error_msg", zap.Error(err))
-		return errors.Wrap(err, "Could not send execute step request")
+		return nil, errors.Wrap(err, "Could not send execute step request")
 	}
-	return nil
+
+	stepOutput := &output.StepOutput{
+		Output: response.GetOutput(),
+	}
+	return stepOutput, nil
 }

@@ -48,6 +48,18 @@ public final class ExecutionOuterClass {
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_Execution_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_engine_proto_StageOutput_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_StageOutput_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_OutputEntry_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_OutputEntry_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_product_ci_engine_proto_ExecuteStepRequest_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_ExecuteStepRequest_fieldAccessorTable;
@@ -55,6 +67,10 @@ public final class ExecutionOuterClass {
       .Descriptor internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_OutputEntry_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_OutputEntry_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_product_ci_engine_proto_SignalStopRequest_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
@@ -105,19 +121,32 @@ public final class ExecutionOuterClass {
         + "el\022B\n\004unit\030\002 \001(\0132,.io.harness.product.ci"
         + ".engine.proto.UnitStepH\000R\004unitB\006\n\004step\"K"
         + "\n\tExecution\022>\n\005steps\030\001 \003(\0132(.io.harness."
-        + "product.ci.engine.proto.StepR\005steps\"V\n\022E"
-        + "xecuteStepRequest\022@\n\004step\030\001 \001(\0132,.io.har"
-        + "ness.product.ci.engine.proto.UnitStepR\004s"
-        + "tep\"\025\n\023ExecuteStepResponse\"\023\n\021SignalStop"
-        + "Request\"\024\n\022SignalStopResponse2\211\002\n\nLiteEn"
-        + "gine\022~\n\013ExecuteStep\0226.io.harness.product"
-        + ".ci.engine.proto.ExecuteStepRequest\0327.io"
-        + ".harness.product.ci.engine.proto.Execute"
-        + "StepResponse\022{\n\nSignalStop\0225.io.harness."
-        + "product.ci.engine.proto.SignalStopReques"
-        + "t\0326.io.harness.product.ci.engine.proto.S"
-        + "ignalStopResponseB\016P\001Z\ncienginepbb\006proto"
-        + "3"};
+        + "product.ci.engine.proto.StepR\005steps\"\257\002\n\013"
+        + "StageOutput\022]\n\014step_outputs\030\001 \003(\0132:.io.h"
+        + "arness.product.ci.engine.proto.StageOutp"
+        + "ut.StepOutputR\013stepOutputs\032\300\001\n\nStepOutpu"
+        + "t\022\027\n\007step_id\030\001 \001(\tR\006stepId\022^\n\006output\030\002 \003"
+        + "(\0132F.io.harness.product.ci.engine.proto."
+        + "StageOutput.StepOutput.OutputEntryR\006outp"
+        + "ut\0329\n\013OutputEntry\022\020\n\003key\030\001 \001(\tR\003key\022\024\n\005v"
+        + "alue\030\002 \001(\tR\005value:\0028\001\"\252\001\n\022ExecuteStepReq"
+        + "uest\022@\n\004step\030\001 \001(\0132,.io.harness.product."
+        + "ci.engine.proto.UnitStepR\004step\022R\n\014stage_"
+        + "output\030\002 \001(\0132/.io.harness.product.ci.eng"
+        + "ine.proto.StageOutputR\013stageOutput\"\255\001\n\023E"
+        + "xecuteStepResponse\022[\n\006output\030\001 \003(\0132C.io."
+        + "harness.product.ci.engine.proto.ExecuteS"
+        + "tepResponse.OutputEntryR\006output\0329\n\013Outpu"
+        + "tEntry\022\020\n\003key\030\001 \001(\tR\003key\022\024\n\005value\030\002 \001(\tR"
+        + "\005value:\0028\001\"\023\n\021SignalStopRequest\"\024\n\022Signa"
+        + "lStopResponse2\211\002\n\nLiteEngine\022~\n\013ExecuteS"
+        + "tep\0226.io.harness.product.ci.engine.proto"
+        + ".ExecuteStepRequest\0327.io.harness.product"
+        + ".ci.engine.proto.ExecuteStepResponse\022{\n\n"
+        + "SignalStop\0225.io.harness.product.ci.engin"
+        + "e.proto.SignalStopRequest\0326.io.harness.p"
+        + "roduct.ci.engine.proto.SignalStopRespons"
+        + "eB\016P\001Z\ncienginepbb\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.product.ci.addon.proto.AddonOuterClass.getDescriptor(),
@@ -206,27 +235,65 @@ public final class ExecutionOuterClass {
             new java.lang.String[] {
                 "Steps",
             });
-    internal_static_io_harness_product_ci_engine_proto_ExecuteStepRequest_descriptor =
+    internal_static_io_harness_product_ci_engine_proto_StageOutput_descriptor =
         getDescriptor().getMessageTypes().get(9);
+    internal_static_io_harness_product_ci_engine_proto_StageOutput_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_engine_proto_StageOutput_descriptor,
+            new java.lang.String[] {
+                "StepOutputs",
+            });
+    internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_descriptor =
+        internal_static_io_harness_product_ci_engine_proto_StageOutput_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_descriptor,
+            new java.lang.String[] {
+                "StepId",
+                "Output",
+            });
+    internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_OutputEntry_descriptor =
+        internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_OutputEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_engine_proto_StageOutput_StepOutput_OutputEntry_descriptor,
+            new java.lang.String[] {
+                "Key",
+                "Value",
+            });
+    internal_static_io_harness_product_ci_engine_proto_ExecuteStepRequest_descriptor =
+        getDescriptor().getMessageTypes().get(10);
     internal_static_io_harness_product_ci_engine_proto_ExecuteStepRequest_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_ExecuteStepRequest_descriptor,
             new java.lang.String[] {
                 "Step",
+                "StageOutput",
             });
     internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_descriptor =
-        getDescriptor().getMessageTypes().get(10);
+        getDescriptor().getMessageTypes().get(11);
     internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_descriptor,
-            new java.lang.String[] {});
+            new java.lang.String[] {
+                "Output",
+            });
+    internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_OutputEntry_descriptor =
+        internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_OutputEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_engine_proto_ExecuteStepResponse_OutputEntry_descriptor,
+            new java.lang.String[] {
+                "Key",
+                "Value",
+            });
     internal_static_io_harness_product_ci_engine_proto_SignalStopRequest_descriptor =
-        getDescriptor().getMessageTypes().get(11);
+        getDescriptor().getMessageTypes().get(12);
     internal_static_io_harness_product_ci_engine_proto_SignalStopRequest_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_SignalStopRequest_descriptor, new java.lang.String[] {});
     internal_static_io_harness_product_ci_engine_proto_SignalStopResponse_descriptor =
-        getDescriptor().getMessageTypes().get(12);
+        getDescriptor().getMessageTypes().get(13);
     internal_static_io_harness_product_ci_engine_proto_SignalStopResponse_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_SignalStopResponse_descriptor,

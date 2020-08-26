@@ -58,6 +58,20 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
 
             break;
           }
+          case 18: {
+            io.harness.product.ci.engine.proto.StageOutput.Builder subBuilder = null;
+            if (stageOutput_ != null) {
+              subBuilder = stageOutput_.toBuilder();
+            }
+            stageOutput_ =
+                input.readMessage(io.harness.product.ci.engine.proto.StageOutput.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(stageOutput_);
+              stageOutput_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -112,6 +126,29 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
     return getStep();
   }
 
+  public static final int STAGE_OUTPUT_FIELD_NUMBER = 2;
+  private io.harness.product.ci.engine.proto.StageOutput stageOutput_;
+  /**
+   * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+   * @return Whether the stageOutput field is set.
+   */
+  public boolean hasStageOutput() {
+    return stageOutput_ != null;
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+   * @return The stageOutput.
+   */
+  public io.harness.product.ci.engine.proto.StageOutput getStageOutput() {
+    return stageOutput_ == null ? io.harness.product.ci.engine.proto.StageOutput.getDefaultInstance() : stageOutput_;
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+   */
+  public io.harness.product.ci.engine.proto.StageOutputOrBuilder getStageOutputOrBuilder() {
+    return getStageOutput();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -130,6 +167,9 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
     if (step_ != null) {
       output.writeMessage(1, getStep());
     }
+    if (stageOutput_ != null) {
+      output.writeMessage(2, getStageOutput());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -142,6 +182,9 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
     size = 0;
     if (step_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getStep());
+    }
+    if (stageOutput_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getStageOutput());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -165,6 +208,12 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
       if (!getStep().equals(other.getStep()))
         return false;
     }
+    if (hasStageOutput() != other.hasStageOutput())
+      return false;
+    if (hasStageOutput()) {
+      if (!getStageOutput().equals(other.getStageOutput()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -180,6 +229,10 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
     if (hasStep()) {
       hash = (37 * hash) + STEP_FIELD_NUMBER;
       hash = (53 * hash) + getStep().hashCode();
+    }
+    if (hasStageOutput()) {
+      hash = (37 * hash) + STAGE_OUTPUT_FIELD_NUMBER;
+      hash = (53 * hash) + getStageOutput().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -301,6 +354,12 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
         step_ = null;
         stepBuilder_ = null;
       }
+      if (stageOutputBuilder_ == null) {
+        stageOutput_ = null;
+      } else {
+        stageOutput_ = null;
+        stageOutputBuilder_ = null;
+      }
       return this;
     }
 
@@ -336,6 +395,11 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
         result.step_ = step_;
       } else {
         result.step_ = stepBuilder_.build();
+      }
+      if (stageOutputBuilder_ == null) {
+        result.stageOutput_ = stageOutput_;
+      } else {
+        result.stageOutput_ = stageOutputBuilder_.build();
       }
       onBuilt();
       return result;
@@ -381,6 +445,9 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
         return this;
       if (other.hasStep()) {
         mergeStep(other.getStep());
+      }
+      if (other.hasStageOutput()) {
+        mergeStageOutput(other.getStageOutput());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -521,6 +588,125 @@ public final class ExecuteStepRequest extends com.google.protobuf.GeneratedMessa
         step_ = null;
       }
       return stepBuilder_;
+    }
+
+    private io.harness.product.ci.engine.proto.StageOutput stageOutput_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.StageOutput,
+        io.harness.product.ci.engine.proto.StageOutput.Builder, io.harness.product.ci.engine.proto.StageOutputOrBuilder>
+        stageOutputBuilder_;
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     * @return Whether the stageOutput field is set.
+     */
+    public boolean hasStageOutput() {
+      return stageOutputBuilder_ != null || stageOutput_ != null;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     * @return The stageOutput.
+     */
+    public io.harness.product.ci.engine.proto.StageOutput getStageOutput() {
+      if (stageOutputBuilder_ == null) {
+        return stageOutput_ == null ? io.harness.product.ci.engine.proto.StageOutput.getDefaultInstance()
+                                    : stageOutput_;
+      } else {
+        return stageOutputBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     */
+    public Builder setStageOutput(io.harness.product.ci.engine.proto.StageOutput value) {
+      if (stageOutputBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        stageOutput_ = value;
+        onChanged();
+      } else {
+        stageOutputBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     */
+    public Builder setStageOutput(io.harness.product.ci.engine.proto.StageOutput.Builder builderForValue) {
+      if (stageOutputBuilder_ == null) {
+        stageOutput_ = builderForValue.build();
+        onChanged();
+      } else {
+        stageOutputBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     */
+    public Builder mergeStageOutput(io.harness.product.ci.engine.proto.StageOutput value) {
+      if (stageOutputBuilder_ == null) {
+        if (stageOutput_ != null) {
+          stageOutput_ =
+              io.harness.product.ci.engine.proto.StageOutput.newBuilder(stageOutput_).mergeFrom(value).buildPartial();
+        } else {
+          stageOutput_ = value;
+        }
+        onChanged();
+      } else {
+        stageOutputBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     */
+    public Builder clearStageOutput() {
+      if (stageOutputBuilder_ == null) {
+        stageOutput_ = null;
+        onChanged();
+      } else {
+        stageOutput_ = null;
+        stageOutputBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     */
+    public io.harness.product.ci.engine.proto.StageOutput.Builder getStageOutputBuilder() {
+      onChanged();
+      return getStageOutputFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     */
+    public io.harness.product.ci.engine.proto.StageOutputOrBuilder getStageOutputOrBuilder() {
+      if (stageOutputBuilder_ != null) {
+        return stageOutputBuilder_.getMessageOrBuilder();
+      } else {
+        return stageOutput_ == null ? io.harness.product.ci.engine.proto.StageOutput.getDefaultInstance()
+                                    : stageOutput_;
+      }
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.StageOutput stage_output = 2[json_name = "stageOutput"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.StageOutput,
+        io.harness.product.ci.engine.proto.StageOutput.Builder, io.harness.product.ci.engine.proto.StageOutputOrBuilder>
+    getStageOutputFieldBuilder() {
+      if (stageOutputBuilder_ == null) {
+        stageOutputBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.StageOutput,
+                io.harness.product.ci.engine.proto.StageOutput.Builder,
+                io.harness.product.ci.engine.proto.StageOutputOrBuilder>(
+                getStageOutput(), getParentForChildren(), isClean());
+        stageOutput_ = null;
+      }
+      return stageOutputBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

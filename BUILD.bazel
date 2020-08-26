@@ -2,7 +2,8 @@
 # gazelle:exclude src/vendor
 # gazelle:exclude vendor
 # gazelle:exclude build
-# gazelle:exclude */src
+# gazelle:exclude */target
+# gazelle:exclude {11-commons-test,13-grpc-api,19-delegate-tasks-beans,20-delegate-beans,21-delegate-agent-beans,22-delegate-service-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,71-rest,77-delegate-task-grpc-service}
 
 # gazelle:exclude .git/
 # gazelle:exclude pkg/

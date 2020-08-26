@@ -46,7 +46,7 @@ public class CIExecutionTestModule extends AbstractModule {
   @Provides
   @Named("serviceSecret")
   String serviceSecret() {
-    return "secret";
+    return "j6ErHMBlC2dn6WctNQKt0xfyo_PZuK7ls0Z4d6XCaBg";
   }
 
   @Provides

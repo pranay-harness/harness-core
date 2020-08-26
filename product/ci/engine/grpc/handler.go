@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/wings-software/portal/product/ci/engine/executor"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -26,8 +27,19 @@ func NewLiteEngineHandler(stepLogPath, tmpFilePath string, stopCh chan bool, log
 
 // ExecuteStep executes a unit step
 func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
-	err := h.unitExecutor.Run(ctx, in.GetStep())
-	return &pb.ExecuteStepResponse{}, err
+	// Tranform input stage-output to output.StageOutput format
+	stageOutput := output.StageOutput{}
+	for _, o := range in.GetStageOutput().GetStepOutputs() {
+		stageOutput[o.GetStepId()] = &output.StepOutput{
+			Output: o.GetOutput(),
+		}
+	}
+	stepOutput, err := h.unitExecutor.Run(ctx, in.GetStep(), stageOutput)
+	response := &pb.ExecuteStepResponse{}
+	if stepOutput != nil {
+		response.Output = stepOutput.Output
+	}
+	return response, err
 }
 
 // SignalStop sends a signal to stop the GRPC service.

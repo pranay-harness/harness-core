@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/steps"
 	"go.uber.org/zap"
@@ -23,7 +24,7 @@ var (
 
 // UnitExecutor represents an interface to execute a unit step
 type UnitExecutor interface {
-	Run(ctx context.Context, step *pb.UnitStep) error
+	Run(ctx context.Context, step *pb.UnitStep, so output.StageOutput) (*output.StepOutput, error)
 }
 
 type unitExecutor struct {
@@ -56,42 +57,45 @@ func (e *unitExecutor) validate(step *pb.UnitStep) error {
 }
 
 // Executes a unit step
-func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep) error {
+func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.StageOutput) (*output.StepOutput, error) {
 	// Ensure step_id is present as a parameter for all logs
 	e.log = e.log.With(zap.String("step_id", step.GetId()))
 	fs := filesystem.NewOSFileSystem(e.log)
 	if err := e.validate(step); err != nil {
-		return err
+		return nil, err
 	}
 
+	var err error
+	var stepOutput *output.StepOutput
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
 		e.log.Infow("Run step info", "step", x.Run.String())
-		if err := runStep(step, e.stepLogPath, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
-			return err
+		stepOutput, err = runStep(step, e.stepLogPath, e.tmpFilePath, so, fs, e.log).Run(ctx)
+		if err != nil {
+			return nil, err
 		}
 	case *pb.UnitStep_SaveCache:
 		e.log.Infow("Save cache step info", "step", x.SaveCache.String())
-		if err := saveCacheStep(step, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
-			return err
+		if err := saveCacheStep(step, e.tmpFilePath, so, fs, e.log).Run(ctx); err != nil {
+			return nil, err
 		}
 	case *pb.UnitStep_RestoreCache:
 		e.log.Infow("Restore cache step info", "step", x.RestoreCache.String())
-		if err := restoreCacheStep(step, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
-			return err
+		if err := restoreCacheStep(step, e.tmpFilePath, so, fs, e.log).Run(ctx); err != nil {
+			return nil, err
 		}
 	case *pb.UnitStep_PublishArtifacts:
 		e.log.Infow("Publishing artifact info", "step", x.PublishArtifacts.String())
-		if err := publishArtifactsStep(step, e.log).Run(ctx); err != nil {
-			return err
+		if err := publishArtifactsStep(step, so, e.log).Run(ctx); err != nil {
+			return nil, err
 		}
 	case nil:
 		e.log.Infow("Field is not set", "step", x)
 	default:
-		return fmt.Errorf("UnitStep has unexpected type %T", x)
+		return nil, fmt.Errorf("UnitStep has unexpected type %T", x)
 	}
 
-	return nil
+	return stepOutput, nil
 }
 
 // decodeUnitStep decodes base64 encoded unit step
@@ -128,7 +132,10 @@ func ExecuteStep(input, logpath, tmpFilePath string, log *zap.SugaredLogger) {
 
 	ctx := context.Background()
 	executor := NewUnitExecutor(logpath, tmpFilePath, log)
-	if err := executor.Run(ctx, step); err != nil {
+
+	// TODO: It is assumed that the stage output is nil. To fix this, lite engine execution
+	// parameters needs to be fixed as well. Currently this code path is not used.
+	if _, err := executor.Run(ctx, step, nil); err != nil {
 		log.Fatalw(
 			"error while executing step",
 			"step", step.String(),

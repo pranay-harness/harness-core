@@ -33,7 +33,7 @@ func Test_ExecuteStep(t *testing.T) {
 	stopCh := make(chan bool)
 	h := &handler{tmpPath, tmpPath, stopCh, mockExecutor, log.Sugar()}
 
-	mockExecutor.EXPECT().Run(ctx, in.GetStep()).Return(nil)
+	mockExecutor.EXPECT().Run(ctx, in.GetStep(), gomock.Any()).Return(nil, nil)
 	_, err := h.ExecuteStep(ctx, in)
 	assert.Nil(t, err)
 }

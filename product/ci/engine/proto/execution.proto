@@ -63,11 +63,24 @@ message Execution {
   repeated Step steps = 1;
 }
 
+// StageOutput is combination of outputs produced by steps in a stage. It can be referenced
+// by a step using expression values e.g. JEXL. At start of a stage, stage output is empty.
+message StageOutput {
+  // StepOutput is output produced by a step. Currently, only run step can produce outputs.
+  message StepOutput {
+    string step_id = 1;
+    map<string, string> output = 2;
+  }
+  repeated StepOutput step_outputs = 1;
+}
+
 message ExecuteStepRequest {
   UnitStep step = 1;
+  StageOutput stage_output = 2;
 }
 
 message ExecuteStepResponse {
+  map<string, string> output = 1;  // Step output
 }
 
 message SignalStopRequest {

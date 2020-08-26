@@ -9,6 +9,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/mock v1.4.3
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/opentracing/opentracing-go v1.1.0
@@ -17,5 +18,6 @@ require (
 	github.com/stretchr/testify v1.5.1
 	go.uber.org/zap v1.15.0
 	google.golang.org/api v0.24.0
+	google.golang.org/grpc v1.29.1
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 )

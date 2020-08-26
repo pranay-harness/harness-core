@@ -12,6 +12,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/archive"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -34,6 +35,7 @@ type restoreCacheStep struct {
 	failIfNotExist  bool
 	tmpFilePath     string
 	ignoreUnarchive bool
+	stageOutput     output.StageOutput
 	archiver        archive.Archiver
 	backoff         backoff.BackOff
 	log             *zap.SugaredLogger
@@ -41,8 +43,8 @@ type restoreCacheStep struct {
 }
 
 // NewRestoreCacheStep creates a restore cache step executor
-func NewRestoreCacheStep(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
-	log *zap.SugaredLogger) RestoreCacheStep {
+func NewRestoreCacheStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+	fs filesystem.FileSystem, log *zap.SugaredLogger) RestoreCacheStep {
 	archiver := archive.NewArchiver(archiveFormat, fs, log)
 	backoff := utils.WithMaxRetries(utils.NewExponentialBackOffFactory(), restoreCacheMaxRetries).NewBackOff()
 
@@ -54,6 +56,7 @@ func NewRestoreCacheStep(step *pb.UnitStep, tmpFilePath string, fs filesystem.Fi
 		failIfNotExist:  r.GetFailIfNotExist(),
 		tmpFilePath:     tmpFilePath,
 		ignoreUnarchive: false,
+		stageOutput:     so,
 		archiver:        archiver,
 		backoff:         backoff,
 		fs:              fs,
@@ -69,8 +72,25 @@ func (s *restoreCacheStep) unarchiveFiles(archivePath string) error {
 	return nil
 }
 
+// resolveJEXL resolves JEXL expressions present in restore cache step input
+func (s *restoreCacheStep) resolveJEXL(ctx context.Context) error {
+	// JEXL expressions are only present in key for restore cache
+	key := s.key
+	resolvedExprs, err := evaluateJEXL(ctx, []string{key}, s.stageOutput, s.log)
+	if err != nil {
+		return err
+	}
+
+	// Updating key with the resolved value of JEXL expression
+	if val, ok := resolvedExprs[key]; ok {
+		s.key = val
+	}
+	return nil
+}
+
 func (s *restoreCacheStep) Run(ctx context.Context) error {
 	start := time.Now()
+	s.resolveJEXL(ctx)
 	tmpArchivePath := filepath.Join(s.tmpFilePath, s.id)
 	err := s.downloadWithRetries(ctx, tmpArchivePath)
 	if err != nil {

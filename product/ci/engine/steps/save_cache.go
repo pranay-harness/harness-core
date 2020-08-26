@@ -11,6 +11,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/archive"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -33,6 +34,7 @@ type saveCacheStep struct {
 	paths       []string
 	partSize    uint64
 	tmpFilePath string
+	stageOutput output.StageOutput
 	archiver    archive.Archiver
 	backoff     backoff.BackOff
 	log         *zap.SugaredLogger
@@ -40,8 +42,8 @@ type saveCacheStep struct {
 }
 
 // NewSaveCacheStep creates a save cache step executor
-func NewSaveCacheStep(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
-	log *zap.SugaredLogger) SaveCacheStep {
+func NewSaveCacheStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
+	fs filesystem.FileSystem, log *zap.SugaredLogger) SaveCacheStep {
 	archiver := archive.NewArchiver(archiveFormat, fs, log)
 	backoff := utils.WithMaxRetries(utils.NewExponentialBackOffFactory(), saveCacheMaxRetries).NewBackOff()
 
@@ -53,6 +55,7 @@ func NewSaveCacheStep(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileS
 		key:         r.GetKey(),
 		partSize:    0,
 		tmpFilePath: tmpFilePath,
+		stageOutput: so,
 		archiver:    archiver,
 		backoff:     backoff,
 		fs:          fs,
@@ -60,8 +63,39 @@ func NewSaveCacheStep(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileS
 	}
 }
 
+// resolveJEXL resolves JEXL expressions present in save cache step input
+func (s *saveCacheStep) resolveJEXL(ctx context.Context) error {
+	// JEXL expressions are only present in key & paths for save cache
+	var exprsToResolve []string
+	exprsToResolve = append(exprsToResolve, s.key)
+	for _, path := range s.paths {
+		exprsToResolve = append(exprsToResolve, path)
+	}
+
+	resolvedExprs, err := evaluateJEXL(ctx, exprsToResolve, s.stageOutput, s.log)
+	if err != nil {
+		return err
+	}
+
+	// Updating key with the resolved value of JEXL expression
+	if val, ok := resolvedExprs[s.key]; ok {
+		s.key = val
+	}
+	var resolvedPaths []string
+	for _, path := range s.paths {
+		if val, ok := resolvedExprs[path]; ok {
+			resolvedPaths = append(resolvedPaths, val)
+		} else {
+			resolvedPaths = append(resolvedPaths, path)
+		}
+	}
+	s.paths = resolvedPaths
+	return nil
+}
+
 func (s *saveCacheStep) Run(ctx context.Context) error {
 	start := time.Now()
+	s.resolveJEXL(ctx)
 	tmpArchivePath := filepath.Join(s.tmpFilePath, s.id)
 	err := s.archiveFiles(tmpArchivePath)
 	if err != nil {

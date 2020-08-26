@@ -10,6 +10,7 @@ import (
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	cengine "github.com/wings-software/portal/product/ci/engine/grpc/client"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -27,6 +28,7 @@ type StageExecutor interface {
 // NewStageExecutor creates a stage executor
 func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts []uint, debug bool,
 	log *zap.SugaredLogger) StageExecutor {
+	o := make(output.StageOutput)
 	unitExecutor := NewUnitExecutor(stepLogPath, tmpFilePath, log)
 	parallelExecutor := NewParallelExecutor(stepLogPath, tmpFilePath, workerPorts, log)
 	return &stageExecutor{
@@ -35,6 +37,7 @@ func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts
 		tmpFilePath:      tmpFilePath,
 		workerPorts:      workerPorts,
 		debug:            debug,
+		stageOutput:      o,
 		unitExecutor:     unitExecutor,
 		parallelExecutor: parallelExecutor,
 		log:              log,
@@ -43,11 +46,12 @@ func NewStageExecutor(encodedStage, stepLogPath, tmpFilePath string, workerPorts
 
 type stageExecutor struct {
 	log              *zap.SugaredLogger
-	stepLogPath      string // File path to store logs of steps
-	tmpFilePath      string // File path to store generated temporary files
-	encodedStage     string // Stage in base64 encoded format
-	workerPorts      []uint // GRPC server ports for worker lite-engines that are used for parallel steps
-	debug            bool   //If true, enables debug mode for checking run step logs by not exitting CI-addon
+	stepLogPath      string             // File path to store logs of steps
+	tmpFilePath      string             // File path to store generated temporary files
+	encodedStage     string             // Stage in base64 encoded format
+	workerPorts      []uint             // GRPC server ports for worker lite-engines that are used for parallel steps
+	debug            bool               //If true, enables debug mode for checking run step logs by not exiting CI-addon
+	stageOutput      output.StageOutput // Stage output will store the output of steps in a stage
 	unitExecutor     UnitExecutor
 	parallelExecutor ParallelExecutor
 }
@@ -71,14 +75,18 @@ func (e *stageExecutor) Run() error {
 	for _, step := range execution.GetSteps() {
 		switch x := step.GetStep().(type) {
 		case *pb.Step_Unit:
-			err := e.unitExecutor.Run(ctx, step.GetUnit())
+			stepOutput, err := e.unitExecutor.Run(ctx, step.GetUnit(), e.stageOutput)
 			if err != nil {
 				return err
 			}
+			e.stageOutput[step.GetUnit().GetId()] = stepOutput
 		case *pb.Step_Parallel:
-			err := e.parallelExecutor.Run(ctx, step.GetParallel())
+			stepOutputByID, err := e.parallelExecutor.Run(ctx, step.GetParallel(), e.stageOutput)
 			if err != nil {
 				return err
+			}
+			for stepID, stepOutput := range stepOutputByID {
+				e.stageOutput[stepID] = stepOutput
 			}
 		default:
 			return fmt.Errorf("Step has unexpected type %T", x)

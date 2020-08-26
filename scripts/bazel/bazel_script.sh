@@ -43,12 +43,13 @@ build_bazel_module() {
 
 build_proto_module() {
   module=$1
-  bazel --bazelrc=${bazelrc} build //${module}/src/main/proto/... ${GCP} ${BAZEL_ARGUMENTS} --javacopt=' -XepDisableAllChecks'
+  modulePath=$2
+  bazel --bazelrc=${bazelrc} build //${module}/src/main/${modulePath}/... ${GCP} ${BAZEL_ARGUMENTS} --javacopt=' -XepDisableAllChecks'
 
   bazel_library=`echo ${module} | tr '-' '_'`
 
   mvn install:install-file \
-   -Dfile=../../bazel-bin/${module}/src/main/proto/lib${bazel_library}_java_proto.jar \
+   -Dfile=../../bazel-bin/${module}/src/main/${modulePath}/lib${bazel_library}_java_proto.jar \
    -DgroupId=software.wings \
    -DartifactId=${module}-proto \
    -Dversion=0.0.1-SNAPSHOT \
@@ -59,11 +60,11 @@ build_proto_module() {
 }
 
 build_bazel_module 11-commons-test
-build_proto_module 13-grpc-api
-build_proto_module 16-expression-service
-build_proto_module 19-delegate-tasks-beans
-build_proto_module 20-delegate-beans
-build_proto_module 21-delegate-agent-beans
-build_proto_module 22-delegate-service-beans
+build_proto_module 13-grpc-api proto
+build_proto_module 16-expression-service proto/io/harness/expression/service
+build_proto_module 19-delegate-tasks-beans proto
+build_proto_module 20-delegate-beans proto
+build_proto_module 21-delegate-agent-beans proto
+build_proto_module 22-delegate-service-beans proto
 
 rm -f bazel-bin bazel-out bazel-portal bazel-testlogs
