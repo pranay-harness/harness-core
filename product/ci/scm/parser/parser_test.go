@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestParseWebhookPRSuccess(t *testing.T) {
+func TestParsePRWebhookPRSuccess(t *testing.T) {
 	raw, _ := ioutil.ReadFile("testdata/pr.json")
 	in := &pb.ParseWebhookRequest{
 		Body: string(raw),
@@ -34,7 +34,7 @@ func TestParseWebhookPRSuccess(t *testing.T) {
 	assert.Equal(t, ret.GetPr().GetAction(), pb.Action_OPEN)
 }
 
-func TestParseWebhook_UnknownActionErr(t *testing.T) {
+func TestParsePRWebhook_UnknownActionErr(t *testing.T) {
 	raw, _ := ioutil.ReadFile("testdata/pr.json")
 	in := &pb.ParseWebhookRequest{
 		Body: string(raw),
@@ -55,7 +55,7 @@ func TestParseWebhook_UnknownActionErr(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestParseWebhook_UnknownErr(t *testing.T) {
+func TestParsePRWebhook_UnknownErr(t *testing.T) {
 	raw, _ := ioutil.ReadFile("testdata/pr.err.json")
 	in := &pb.ParseWebhookRequest{
 		Body: string(raw),
@@ -75,4 +75,26 @@ func TestParseWebhook_UnknownErr(t *testing.T) {
 	ret, err := ParseWebhook(context.Background(), in, log.Sugar())
 	assert.Nil(t, err)
 	assert.Equal(t, ret.GetPr().GetAction(), pb.Action_UNKNOWN)
+}
+
+func TestParsePushWebhookPRSuccess(t *testing.T) {
+	raw, _ := ioutil.ReadFile("testdata/push.json")
+	in := &pb.ParseWebhookRequest{
+		Body: string(raw),
+		Header: &pb.Header{
+			Fields: []*pb.Header_Pair{
+				{
+					Key:    "X-Github-Event",
+					Values: []string{"push"},
+				},
+			},
+		},
+		Secret:   "",
+		Provider: pb.GitProvider_GITHUB,
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	ret, err := ParseWebhook(context.Background(), in, log.Sugar())
+	assert.Nil(t, err)
+	assert.NotNil(t, ret.GetPush())
 }

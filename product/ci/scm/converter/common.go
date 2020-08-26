@@ -100,3 +100,38 @@ func convertRepo(r scm.Repository) (*pb.Repository, error) {
 		Updated:   updateTs,
 	}, nil
 }
+
+// convertSignature converts scm.Signature to protobuf object
+func convertSignature(s scm.Signature) (*pb.Signature, error) {
+	date, err := ptypes.TimestampProto(s.Date)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Signature{
+		Name:   s.Name,
+		Email:  s.Email,
+		Date:   date,
+		Login:  s.Login,
+		Avatar: s.Avatar,
+	}, nil
+}
+
+// convertCommit converts scm.Commit to protobuf object
+func convertCommit(c scm.Commit) (*pb.Commit, error) {
+	author, err := convertSignature(c.Author)
+	if err != nil {
+		return nil, err
+	}
+	committer, err := convertSignature(c.Committer)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Commit{
+		Sha:       c.Sha,
+		Message:   c.Message,
+		Author:    author,
+		Committer: committer,
+		Link:      c.Link,
+	}, nil
+}

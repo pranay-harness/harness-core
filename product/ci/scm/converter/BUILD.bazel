@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "common.go",
         "pr.go",
+        "push.go",
     ],
     importpath = "github.com/wings-software/portal/product/ci/scm/converter",
     visibility = ["//visibility:public"],
