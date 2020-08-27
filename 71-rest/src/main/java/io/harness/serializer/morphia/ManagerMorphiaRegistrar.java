@@ -199,7 +199,6 @@ import software.wings.beans.DatadogConfig;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateScope;
-import software.wings.beans.DelegateSelectionLog;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DeploymentPreference;
 import software.wings.beans.DeploymentSpecification;
@@ -901,7 +900,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateConnection.class);
     set.add(DelegateConnectionResult.class);
     set.add(DelegateScope.class);
-    set.add(DelegateSelectionLog.class);
     set.add(DelegateSequenceConfig.class);
     set.add(DeploymentEvent.class);
     set.add(DeploymentPreference.class);

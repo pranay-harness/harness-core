@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.selection.log.DelegateSelectionLog;
 import lombok.Builder;
 import lombok.Data;
 

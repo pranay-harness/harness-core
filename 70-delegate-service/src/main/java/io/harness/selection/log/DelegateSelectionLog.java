@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.selection.log;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -9,6 +9,7 @@ import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.DelegateSelectionLog.DelegateSelectionLogKeys;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
