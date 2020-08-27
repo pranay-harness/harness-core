@@ -782,6 +782,7 @@ public class AccountServiceImpl implements AccountService {
 
     wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
+    authService.evictUserPermissionCacheForAccount(account.getUuid(), true);
     Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
     LicenseUtils.decryptLicenseInfo(updatedAccount, false);
 
