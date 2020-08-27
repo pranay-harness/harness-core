@@ -57,6 +57,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.bson.types.ObjectId;
 import software.wings.alerts.AlertStatus;
+import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
@@ -95,6 +98,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -127,6 +131,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private CVTaskService cvTaskService;
   @Inject private CVActivityLogService cvActivityLogService;
   @Inject @Named("alertsCreationExecutor") protected ExecutorService executorService;
+
+  @Override
+  public boolean shouldPerformServiceGuardTasks(Account account) {
+    if (account.getLicenseInfo() == null
+        || (AccountStatus.ACTIVE.equals(account.getLicenseInfo().getAccountStatus())
+               && Arrays.asList(AccountType.PAID, AccountType.TRIAL)
+                      .contains(account.getLicenseInfo().getAccountType()))) {
+      return true;
+    }
+    return false;
+  }
 
   @Override
   @Counted
@@ -173,6 +188,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
    * @return
    */
   private boolean shouldCollectData(CVConfiguration cvConfiguration, Optional<Long> lastDataCollectionTime) {
+    if ((!lastDataCollectionTime.isPresent() || lastDataCollectionTime.get() <= 0)
+        && Instant.ofEpochMilli(cvConfiguration.getLastUpdatedAt())
+               .isBefore(Instant.now().minus(30, ChronoUnit.DAYS))) {
+      logger.info(
+          "The config {} for account {} has not collected any data for the past 30 days. We will be disabling that config now. ",
+          cvConfiguration.getUuid(), cvConfiguration.getAccountId());
+      cvConfigurationService.disableConfig(cvConfiguration.getUuid());
+      return false;
+    }
     if (learningEngineService.isTaskRunningOrQueued(cvConfiguration.getUuid())) {
       logger.info(
           "For {}, there are learning engine tasks that are still QUEUED or RUNNING. We will skip data collection for now.",

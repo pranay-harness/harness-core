@@ -51,8 +51,8 @@ import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob;
+import io.harness.jobs.sg247.logs.ServiceGuardAnalysisJob;
 import io.harness.jobs.sg247.logs.ServiceGuardCleanUpAlertsJob;
-import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
 import io.harness.jobs.workflow.WorkflowCVTaskCreationHandler;
 import io.harness.jobs.workflow.collection.CVDataCollectionJob;
 import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
@@ -439,7 +439,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
         new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(),
         AccountKeys.serviceGuardDataCollectionIteration, ofMinutes(1), 7);
-    registerIterator(injector, serviceGuardExecutor, new ServiceGuardLogAnalysisJob(),
+    registerIterator(injector, serviceGuardExecutor, new ServiceGuardAnalysisJob(),
         AccountKeys.serviceGuardDataAnalysisIteration, ofMinutes(1), 7);
     registerAlertsCleanupIterator(injector, serviceGuardExecutor, ofMinutes(2), 7);
   }

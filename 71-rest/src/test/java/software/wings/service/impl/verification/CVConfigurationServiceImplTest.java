@@ -1274,6 +1274,22 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     cvConfigurationService.updateConfiguration(apmcvConfigToUpdate, appId);
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDisableConfig() {
+    String cvConfigId = generateUuid();
+    LogsCVConfiguration logsCVConfiguration = createLogsCVConfig(true);
+    logsCVConfiguration.setUuid(cvConfigId);
+    assertThat(logsCVConfiguration.isEnabled24x7()).isTrue();
+    wingsPersistence.save(logsCVConfiguration);
+
+    cvConfigurationService.disableConfig(cvConfigId);
+    logsCVConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+
+    assertThat(logsCVConfiguration.isEnabled24x7()).isFalse();
+  }
+
   private long waitTillAlertsSteady(long numOfExpectedAlerts) {
     long numOfOpenAlerts;
     int numOfTrials = 0;

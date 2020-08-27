@@ -9,12 +9,15 @@ import software.wings.beans.Account;
 import software.wings.service.intfc.verification.CVConfigurationService;
 
 @Slf4j
-public class ServiceGuardLogAnalysisJob implements Handler<Account> {
+public class ServiceGuardAnalysisJob implements Handler<Account> {
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private CVConfigurationService cvConfigurationService;
 
   @Override
   public void handle(Account account) {
+    if (!continuousVerificationService.shouldPerformServiceGuardTasks(account)) {
+      return;
+    }
     final String accountId = account.getUuid();
     logger.info("triggering all analysis for account {}", accountId);
     long startTime = System.currentTimeMillis();
