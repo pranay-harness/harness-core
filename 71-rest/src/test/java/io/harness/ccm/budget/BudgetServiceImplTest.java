@@ -28,6 +28,7 @@ import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+import io.vavr.collection.Stream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,6 +59,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
@@ -78,7 +80,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   private String environment1 = "ENVIRONMENT_ID_1";
   private String[] environmentIds = {environment1};
   private String[] clusterIds = {"CLUSTER_ID"};
-  private String budgetId = "BUDGET_ID";
+  private String budgetId1 = "BUDGET_ID_1";
+  private String budgetId2 = "BUDGET_ID_2";
   private String budgetName = "BUDGET_NAME";
   private String entityName = "ENTITY_NAME";
   private BudgetType budgetType = BudgetType.SPECIFIED_AMOUNT;
@@ -93,7 +96,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   final long currentTime = System.currentTimeMillis();
   final long[] calendar = {currentTime};
   private AlertThreshold alertThreshold;
-  private Budget budget;
+  private Budget budget1;
+  private Budget budget2;
 
   @Mock BillingDataQueryMetadata queryData;
   @Mock Connection connection;
@@ -103,19 +107,30 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Before
   public void setUp() throws SQLException {
     alertThreshold = AlertThreshold.builder().percentage(0.5).basedOn(AlertThresholdBase.ACTUAL_COST).build();
-    budget = Budget.builder()
-                 .uuid(budgetId)
-                 .accountId(accountId)
-                 .name("test_budget")
-                 .scope(ApplicationBudgetScope.builder()
-                            .applicationIds(applicationIds)
-                            .environmentType(io.harness.ccm.budget.entities.EnvironmentType.ALL)
-                            .build())
-                 .type(SPECIFIED_AMOUNT)
-                 .budgetAmount(100.0)
-                 .alertThresholds(new AlertThreshold[] {alertThreshold})
-
-                 .build();
+    budget1 = Budget.builder()
+                  .uuid(budgetId1)
+                  .accountId(accountId)
+                  .name("test_budget_1")
+                  .scope(ApplicationBudgetScope.builder()
+                             .applicationIds(applicationIds)
+                             .environmentType(io.harness.ccm.budget.entities.EnvironmentType.ALL)
+                             .build())
+                  .type(SPECIFIED_AMOUNT)
+                  .budgetAmount(100.0)
+                  .alertThresholds(new AlertThreshold[] {alertThreshold})
+                  .build();
+    budget2 = Budget.builder()
+                  .uuid(budgetId2)
+                  .accountId(accountId)
+                  .name("test_budget_2")
+                  .scope(ApplicationBudgetScope.builder()
+                             .applicationIds(applicationIds)
+                             .environmentType(io.harness.ccm.budget.entities.EnvironmentType.ALL)
+                             .build())
+                  .type(SPECIFIED_AMOUNT)
+                  .budgetAmount(100.0)
+                  .alertThresholds(new AlertThreshold[] {alertThreshold})
+                  .build();
     when(billingDataQueryBuilder.formBudgetInsightQuery(anyString(), anyList(), any(QLCCMAggregationFunction.class),
              any(QLCCMTimeSeriesAggregation.class), anyList()))
         .thenReturn(queryData);
@@ -123,9 +138,11 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
     when(ceBudgetFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(100);
-    when(budgetDao.list(accountId)).thenReturn(Collections.singletonList(budget));
-    when(budgetDao.list(accountId, budget.getName())).thenReturn(Collections.singletonList(budget));
-    when(budgetDao.get(budget.getUuid())).thenReturn(budget);
+    when(budgetDao.list(accountId)).thenReturn(Stream.of(budget1, budget2).collect(Collectors.toList()));
+    when(budgetDao.list(accountId, budget1.getName())).thenReturn(Collections.singletonList(budget1));
+    when(budgetDao.list(accountId, budget2.getName())).thenReturn(Collections.singletonList(budget2));
+    when(budgetDao.get(budget1.getUuid())).thenReturn(budget1);
+    when(budgetDao.get(budget2.getUuid())).thenReturn(budget1);
     resetValues();
     mockResultSet();
   }
@@ -133,7 +150,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   private Budget mockBudget(String scope) {
     BudgetBuilder budgetBuilder =
         Budget.builder()
-            .uuid(budgetId)
+            .uuid(budgetId1)
             .accountId(accountId)
             .name(budgetName)
             .createdAt(createdAt)
@@ -185,25 +202,78 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreate() {
     Budget newBudget = Budget.builder()
-                           .accountId(budget.getAccountId())
+                           .accountId(budget1.getAccountId())
                            .name("newBudget")
-                           .scope(budget.getScope())
-                           .type(budget.getType())
-                           .budgetAmount(budget.getBudgetAmount())
-                           .alertThresholds(budget.getAlertThresholds())
-                           .userGroupIds(budget.getUserGroupIds())
+                           .scope(budget1.getScope())
+                           .type(budget1.getType())
+                           .budgetAmount(budget1.getBudgetAmount())
+                           .alertThresholds(budget1.getAlertThresholds())
+                           .userGroupIds(budget1.getUserGroupIds())
                            .build();
     budgetService.create(newBudget);
     verify(budgetDao).save(newBudget);
+  }
+  @Test
+  @Owner(developers = SANDESH)
+  @Category(UnitTests.class)
+  public void shouldUpdate() {
+    Budget updatedBudget = Budget.builder()
+                               .accountId(null)
+                               .name(budget1.getName())
+                               .scope(budget1.getScope())
+                               .type(budget1.getType())
+                               .budgetAmount(100.2)
+                               .alertThresholds(budget1.getAlertThresholds())
+                               .userGroupIds(budget1.getUserGroupIds())
+                               .build();
+    budgetService.update(budget1.getUuid(), updatedBudget);
+    ArgumentCaptor<Budget> argument = ArgumentCaptor.forClass(Budget.class);
+    verify(budgetDao).update(eq(budgetId1), argument.capture());
+    assertThat(argument.getValue().getBudgetAmount()).isEqualTo(100.2);
+  }
+  @Test
+  @Owner(developers = SANDESH)
+  @Category(UnitTests.class)
+  public void shouldRenameBudget() {
+    Budget updatedBudget = Budget.builder()
+                               .accountId(null)
+                               .name("updatedBudget")
+                               .scope(budget1.getScope())
+                               .type(budget1.getType())
+                               .budgetAmount(budget1.getBudgetAmount())
+                               .alertThresholds(budget1.getAlertThresholds())
+                               .userGroupIds(budget1.getUserGroupIds())
+                               .build();
+    budgetService.update(budget1.getUuid(), updatedBudget);
+    ArgumentCaptor<Budget> argument = ArgumentCaptor.forClass(Budget.class);
+    verify(budgetDao).update(eq(budgetId1), argument.capture());
+    assertThat(argument.getValue().getName()).isEqualTo("updatedBudget");
+  }
+
+  @Test
+  @Owner(developers = SANDESH)
+  @Category(UnitTests.class)
+  public void shouldStopRenameBudgetToExistingBudgetName() {
+    Budget updatedBudget = Budget.builder()
+                               .accountId(null)
+                               .name("test_budget_2")
+                               .scope(budget1.getScope())
+                               .type(budget1.getType())
+                               .budgetAmount(budget1.getBudgetAmount())
+                               .alertThresholds(budget1.getAlertThresholds())
+                               .userGroupIds(budget1.getUserGroupIds())
+                               .build();
+    assertThatThrownBy(() -> { budgetService.update(budgetId1, updatedBudget); })
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldIncAlertCount() {
-    budgetService.incAlertCount(budget, 0);
+    budgetService.incAlertCount(budget1, 0);
     ArgumentCaptor<Budget> argument = ArgumentCaptor.forClass(Budget.class);
-    verify(budgetDao).update(eq(budgetId), argument.capture());
+    verify(budgetDao).update(eq(budgetId1), argument.capture());
     assertThat(argument.getValue().getAlertThresholds()[0].getAlertsSent()).isEqualTo(1);
   }
 
@@ -212,13 +282,13 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldStopSavingSameBudgetTwice() {
     Budget duplicateBudget = Budget.builder()
-                                 .accountId(budget.getAccountId())
-                                 .name(budget.getName())
-                                 .scope(budget.getScope())
-                                 .type(budget.getType())
-                                 .budgetAmount(budget.getBudgetAmount())
-                                 .alertThresholds(budget.getAlertThresholds())
-                                 .userGroupIds(budget.getUserGroupIds())
+                                 .accountId(budget1.getAccountId())
+                                 .name(budget1.getName())
+                                 .scope(budget1.getScope())
+                                 .type(budget1.getType())
+                                 .budgetAmount(budget1.getBudgetAmount())
+                                 .alertThresholds(budget1.getAlertThresholds())
+                                 .userGroupIds(budget1.getUserGroupIds())
                                  .build();
     assertThatThrownBy(() -> { budgetService.create(duplicateBudget); }).isInstanceOf(InvalidRequestException.class);
   }
@@ -228,8 +298,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   public void testSetThresholdCrossedTimestamp() {
     ArgumentCaptor<Budget> argument = ArgumentCaptor.forClass(Budget.class);
     long timestamp1 = Instant.now().toEpochMilli();
-    budgetService.setThresholdCrossedTimestamp(budget, 0, timestamp1);
-    verify(budgetDao).update(eq(budgetId), argument.capture());
+    budgetService.setThresholdCrossedTimestamp(budget1, 0, timestamp1);
+    verify(budgetDao).update(eq(budgetId1), argument.capture());
     assertThat(argument.getValue().getAlertThresholds()[0].getCrossedAt()).isEqualTo(timestamp1);
   }
 
@@ -237,8 +307,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetBudgetDataForApplicationType() throws SQLException {
-    when(budgetDao.get(budgetId)).thenReturn(mockBudget("APPLICATION"));
-    QLBudgetDataList data = budgetService.getBudgetData(budget);
+    when(budgetDao.get(budgetId1)).thenReturn(mockBudget("APPLICATION"));
+    QLBudgetDataList data = budgetService.getBudgetData(budget1);
     verify(timeScaleDBService).getDBConnection();
   }
 
@@ -246,7 +316,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetActualCost() throws Exception {
-    budgetService.getActualCost(budget);
+    budgetService.getActualCost(budget1);
     verify(timeScaleDBService).getDBConnection();
   }
 
@@ -254,8 +324,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetForecastCost() {
-    budgetService.getForecastCost(budget);
-    verify(budgetUtils).getForecastCost(eq(budget));
+    budgetService.getForecastCost(budget1);
+    verify(budgetUtils).getForecastCost(eq(budget1));
   }
 
   @Test
@@ -265,7 +335,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(statsHelper.getEntityName(any(), any())).thenReturn(entityName);
     QLBudgetTableData budgetDetails = budgetService.getBudgetDetails(mockBudget("APPLICATION"));
     assertThat(budgetDetails.getName()).isEqualTo(budgetName);
-    assertThat(budgetDetails.getId()).isEqualTo(budgetId);
+    assertThat(budgetDetails.getId()).isEqualTo(budgetId1);
     assertThat(budgetDetails.getType()).isEqualTo(SPECIFIED_AMOUNT.toString());
     assertThat(budgetDetails.getActualAmount()).isEqualTo(0.0);
     assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(budgetAmount);
@@ -276,7 +346,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     // when budget scope is cluster
     budgetDetails = budgetService.getBudgetDetails(mockBudget("CLUSTER"));
     assertThat(budgetDetails.getName()).isEqualTo(budgetName);
-    assertThat(budgetDetails.getId()).isEqualTo(budgetId);
+    assertThat(budgetDetails.getId()).isEqualTo(budgetId1);
     assertThat(budgetDetails.getType()).isEqualTo(SPECIFIED_AMOUNT.toString());
     assertThat(budgetDetails.getActualAmount()).isEqualTo(0.0);
     assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(budgetAmount);
@@ -288,9 +358,9 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldCloneBudget() {
-    when(budgetDao.get(budgetId)).thenReturn(budget);
+    when(budgetDao.get(budgetId1)).thenReturn(budget1);
     when(budgetDao.save(any())).thenReturn(anyString());
-    String cloneBudgetId = budgetService.clone(budgetId, "CLONE");
+    String cloneBudgetId = budgetService.clone(budgetId1, "CLONE");
     assertThat(cloneBudgetId).isNotNull();
   }
 
