@@ -12,6 +12,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
 import io.harness.git.UsernamePasswordAuthRequest;
 import io.harness.git.model.AuthRequest;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.GitBaseRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -55,5 +57,9 @@ public class NGGitServiceImpl implements NGGitService {
       default:
         throw new InvalidRequestException("Unknown auth type.");
     }
+  }
+
+  private CommitAndPushResult commitAndPush(CommitAndPushRequest commitAndPushRequest) {
+    return gitClientV2.commitAndPush(commitAndPushRequest);
   }
 }

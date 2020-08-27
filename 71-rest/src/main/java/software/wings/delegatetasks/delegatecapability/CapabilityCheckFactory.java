@@ -8,6 +8,7 @@ import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabil
 import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.ChartMuseumCapabilityCheck;
+import io.harness.delegate.task.executioncapability.GitConnectionNGCapabilityChecker;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
@@ -48,6 +49,7 @@ public class CapabilityCheckFactory {
   @Inject GitConnectionCapabilityCheck gitConnectionCapabilityCheck;
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
+  @Inject GitConnectionNGCapabilityChecker gitConnectionNGCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -91,6 +93,8 @@ public class CapabilityCheckFactory {
         return kustomizeCapabilityCheck;
       case SMB:
         return smbConnectionCapabilityCheck;
+      case GIT_CONNECTION_NG:
+        return gitConnectionNGCapabilityCheck;
       default:
         return null;
     }

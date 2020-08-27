@@ -6,6 +6,7 @@ import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -13,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("Ssh")
 public class GitSSHAuthenticationDTO extends GitAuthenticationDTO {
   @JsonProperty("type") GitConnectionType gitConnectionType;
-  String url;
+  @NotBlank String url;
   @Encrypted(fieldName = "sshKey", isReference = true) char[] sshKey;
   @JsonProperty("sshKeyReference") String encryptedSshKey;
   String branchName;
