@@ -88,9 +88,29 @@ func (s *restoreCacheStep) resolveJEXL(ctx context.Context) error {
 	return nil
 }
 
+// resolveExpression resolves JEXL expressions & key checksum template present in
+// in restore cache step input
+func (s *restoreCacheStep) resolveExpression(ctx context.Context) error {
+	if err := s.resolveJEXL(ctx); err != nil {
+		return err
+	}
+
+	// Resolving checksum key template
+	val, err := parseCacheKeyTmpl(s.key, s.log)
+	if err != nil {
+		return err
+	}
+	s.key = val
+
+	return nil
+}
+
 func (s *restoreCacheStep) Run(ctx context.Context) error {
 	start := time.Now()
-	s.resolveJEXL(ctx)
+	if err := s.resolveExpression(ctx); err != nil {
+		return err
+	}
+
 	tmpArchivePath := filepath.Join(s.tmpFilePath, s.id)
 	err := s.downloadWithRetries(ctx, tmpArchivePath)
 	if err != nil {

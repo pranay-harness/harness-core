@@ -1,12 +1,19 @@
 package steps
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"go.uber.org/zap"
 )
+
+func testWriteFile(fileName, content string, t *testing.T) {
+	err := ioutil.WriteFile(fileName, []byte(content), 0644)
+	assert.Nil(t, err)
+}
 
 func TestNewMinioClient(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
@@ -66,4 +73,33 @@ func TestNewMinioClient(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestParseKeySuccess(t *testing.T) {
+	log := logs.NewBuilder().MustBuild().Sugar()
+	fname := "/tmp/tmpl_success"
+	content := "gopher"
+	testWriteFile(fname, content, t)
+	defer os.Remove(fname)
+
+	key := `Welcome_{{ checksum "/tmp/tmpl_success" }}_{{ arch }}_{{ os }}_{{ epoch }}`
+	s, err := parseCacheKeyTmpl(key, log)
+	assert.Nil(t, err)
+	assert.NotEqual(t, s, "")
+}
+
+// Checksum file not present.
+func TestParseKeyFileNotFoundErr(t *testing.T) {
+	log := logs.NewBuilder().MustBuild().Sugar()
+	key := `Welcome_{{ checksum "/tmp/tmpl_err" }}_{{ arch }}_{{ os }}`
+	_, err := parseCacheKeyTmpl(key, log)
+	assert.NotNil(t, err)
+}
+
+// Invalid template.
+func TestParseKeyFileTmplErr(t *testing.T) {
+	log := logs.NewBuilder().MustBuild().Sugar()
+	key := `Welcome_{{ checksum "/tmp/tmpl_err"`
+	_, err := parseCacheKeyTmpl(key, log)
+	assert.NotNil(t, err)
 }
