@@ -27,5 +27,6 @@ public enum CapabilityType {
   GIT_CONNECTION,
   KUSTOMIZE,
   SMB,
-  SELECTORS;
+  SELECTORS,
+  GIT_CONNECTION_NG;
 }

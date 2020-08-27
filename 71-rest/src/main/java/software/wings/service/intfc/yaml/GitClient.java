@@ -14,6 +14,7 @@ import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 /**
  * The interface Git client.
  */
+// Use git client V2 instead of this.
 public interface GitClient {
   void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 
