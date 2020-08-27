@@ -81,15 +81,7 @@ public class BudgetServiceImpl implements BudgetService {
   public String create(Budget budget) {
     validateBudget(budget);
     removeEmailDuplicates(budget);
-    checkBudgetName(budget.getAccountId(), budget);
     return budgetDao.save(budget);
-  }
-
-  private void checkBudgetName(String accountId, Budget budget) {
-    List<Budget> existingBudgets = budgetDao.list(accountId, budget.getName());
-    if (!existingBudgets.isEmpty() && (!existingBudgets.get(0).getUuid().equals(budget.getUuid()))) {
-      throw new InvalidRequestException(BUDGET_NAME_EXISTS_EXCEPTION);
-    }
   }
 
   @Override
@@ -113,12 +105,15 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public void update(String budgetId, Budget budget) {
+    if (budget.getAccountId() == null) {
+      Budget existingBudget = budgetDao.get(budgetId);
+      budget.setAccountId(existingBudget.getAccountId());
+    }
+    if (budget.getUuid() == null) {
+      budget.setUuid(budgetId);
+    }
     validateBudget(budget);
     removeEmailDuplicates(budget);
-    // Method argument Budget object is obtained from UI doesn't contain accountId field. hence need to fetch accountId
-    // from db inorder check for duplicate name
-    Budget existingBudget = budgetDao.get(budgetId);
-    checkBudgetName(existingBudget.getAccountId(), budget);
     budgetDao.update(budgetId, budget);
   }
 
@@ -368,12 +363,21 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   private void validateBudget(Budget budget) {
+    validateBudgetAmount(budget);
+    validateBudgetCount(budget);
+    validateBudgetName(budget);
+  }
+
+  private void validateBudgetAmount(Budget budget) {
     if (budget.getBudgetAmount() == null) {
       throw new InvalidRequestException(NO_BUDGET_AMOUNT_EXCEPTION);
     }
     if (budget.getBudgetAmount() < 0 || budget.getBudgetAmount() > BUDGET_AMOUNT_UPPER_LIMIT) {
       throw new InvalidRequestException(BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION);
     }
+  }
+
+  private void validateBudgetCount(Budget budget) {
     int maxBudgetsAllowed = ceBudgetFeature.getMaxUsageAllowedForAccount(budget.getAccountId());
     int currentBudgetCount = getBudgetCount(budget.getAccountId());
     logger.info("Max budgets allowed : {} Current Count : {}", maxBudgetsAllowed, currentBudgetCount);
@@ -382,6 +386,13 @@ public class BudgetServiceImpl implements BudgetService {
           budget.getAccountId());
       throw new InvalidRequestException(
           String.format("Cannot create budget. Max budgets allowed for trial: %d", maxBudgetsAllowed));
+    }
+  }
+
+  private void validateBudgetName(Budget budget) {
+    List<Budget> existingBudgets = budgetDao.list(budget.getAccountId(), budget.getName());
+    if (!existingBudgets.isEmpty() && (!existingBudgets.get(0).getUuid().equals(budget.getUuid()))) {
+      throw new InvalidRequestException(BUDGET_NAME_EXISTS_EXCEPTION);
     }
   }
 
