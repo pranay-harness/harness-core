@@ -368,8 +368,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldNotCloneBudget() {
-    when(budgetDao.get(budgetId)).thenReturn(budget);
+    when(budgetDao.get(budgetId1)).thenReturn(budget1);
     when(budgetDao.save(any())).thenReturn(anyString());
-    assertThatThrownBy(() -> budgetService.clone(budgetId, "undefined")).isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> budgetService.clone(budgetId1, "undefined")).isInstanceOf(InvalidRequestException.class);
   }
 }

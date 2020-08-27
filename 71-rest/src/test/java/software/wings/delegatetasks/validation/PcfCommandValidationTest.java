@@ -14,6 +14,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.PcfConfig;
@@ -120,6 +121,7 @@ public class PcfCommandValidationTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  @Ignore
   public void testGetCriteriaWithEncryptionDetails() {
     Consumer consumer = mock(Consumer.class);
     EncryptionService encryptionService = mock(EncryptionService.class);
