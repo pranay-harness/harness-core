@@ -54,4 +54,5 @@ public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironme
   boolean removeFromKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction);
   TimeSeriesKeyTransactions getKeyTransactionsForCVConfiguration(String cvConfigId);
   List<Boolean> is24x7GuardEnabledForAccounts(List<String> accountIdList);
+  void disableConfig(String cvConfigId);
 }

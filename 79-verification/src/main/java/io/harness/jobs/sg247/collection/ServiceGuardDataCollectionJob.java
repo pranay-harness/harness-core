@@ -17,6 +17,9 @@ public class ServiceGuardDataCollectionJob implements Handler<Account> {
 
   @Override
   public void handle(Account account) {
+    if (!continuousVerificationService.shouldPerformServiceGuardTasks(account)) {
+      return;
+    }
     final String accountId = account.getUuid();
     logger.info("Executing APM & Logs Data collection for {}", accountId);
     long startTime = System.currentTimeMillis();

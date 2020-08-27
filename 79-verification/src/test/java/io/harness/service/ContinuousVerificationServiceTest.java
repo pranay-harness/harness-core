@@ -604,6 +604,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testSplunkLogCollectionWithCVTask() {
     SplunkCVConfiguration splunkCVConfiguration = SplunkCVConfiguration.builder().build();
+    splunkCVConfiguration.setLastUpdatedAt(Instant.now().toEpochMilli());
     splunkCVConfiguration.setEnabled24x7(true);
     splunkCVConfiguration.setUuid(cvConfigId);
     splunkCVConfiguration.setAccountId(accountId);
@@ -3718,6 +3719,20 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     verify(delegateService, times(1)).queueTask(taskCaptor.capture());
     SumoDataCollectionInfo info = (SumoDataCollectionInfo) taskCaptor.getValue().getData().getParameters()[0];
     assertThat(info.getCvConfigId()).isEqualTo(cvConfigId);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testShouldCollectData_noDataInThePastMonth() {
+    LogsCVConfiguration cvConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    cvConfig.setLastUpdatedAt(Instant.now().minus(60, ChronoUnit.DAYS).toEpochMilli());
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfig));
+    continuousVerificationService.triggerLogDataCollection(accountId);
+
+    ArgumentCaptor<String> taskCaptor = ArgumentCaptor.forClass(String.class);
+    verify(cvConfigurationService).disableConfig(taskCaptor.capture());
+    assertThat(taskCaptor.getValue()).isEqualTo(cvConfigId);
   }
 
   @Test

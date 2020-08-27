@@ -1232,6 +1232,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return accountIdList.stream().map(accountIdSet::contains).collect(Collectors.toList());
   }
 
+  public void disableConfig(String cvConfigId) {
+    logger.info("Disabling the config: {}", cvConfigId);
+    wingsPersistence.updateField(CVConfiguration.class, cvConfigId, CVConfigurationKeys.enabled24x7, false);
+  }
+
   private void validateAlertOccurrenceCount(CVConfiguration cvConfiguration) {
     if (cvConfiguration.getNumOfOccurrencesForAlert() > MAX_NUM_ALERT_OCCURRENCES) {
       throw new DataCollectionException(
