@@ -454,7 +454,9 @@ public enum ErrorCode {
 
   NO_AVAILABLE_DELEGATES(NOT_FOUND),
 
-  NO_INSTALLED_DELEGATES(NOT_FOUND);
+  NO_INSTALLED_DELEGATES(NOT_FOUND),
+
+  DUPLICATE_DELEGATE_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

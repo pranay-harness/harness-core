@@ -10,6 +10,7 @@ import static io.harness.beans.DelegateTask.Status.runningStatuses;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.SizeFunction.size;
+import static io.harness.data.structure.UUIDGenerator.convertFromBase64;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
@@ -85,8 +86,10 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -99,6 +102,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskPackage.DelegateTaskPackageBuilder;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
@@ -164,6 +168,7 @@ import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
@@ -244,6 +249,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -316,7 +322,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
-  @Inject private DelegateDao delegateDao;
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateConnectionDao delegateConnectionDao;
@@ -2850,6 +2855,29 @@ public class DelegateServiceImpl implements DelegateService {
                                    .get());
   }
 
+  public void registerHeartbeat(
+      String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat, ConnectionMode connectionMode) {
+    DelegateConnection previousDelegateConnection = delegateConnectionDao.upsertCurrentConnection(
+        accountId, delegateId, heartbeat.getDelegateConnectionId(), heartbeat.getVersion());
+
+    if (previousDelegateConnection == null) {
+      DelegateConnection existingConnection = delegateConnectionDao.findAndDeletePreviousConnections(
+          accountId, delegateId, heartbeat.getDelegateConnectionId(), heartbeat.getVersion());
+      if (existingConnection != null) {
+        UUID currentUUID = convertFromBase64(heartbeat.getDelegateConnectionId());
+        UUID existingUUID = convertFromBase64(existingConnection.getUuid());
+        if (existingUUID.timestamp() > currentUUID.timestamp()) {
+          logger.error(
+              "Newer delegate connection found for the delegate id! Will initiate self destruct sequence for the current delegate.");
+          destroyTheCurrentDelegate(accountId, delegateId, heartbeat.getDelegateConnectionId(), connectionMode);
+          delegateConnectionDao.replaceWithNewerConnection(heartbeat.getDelegateConnectionId(), existingConnection);
+        } else {
+          logger.error("Delegate restarted");
+        }
+      }
+    }
+  }
+
   /**
    * ECS delegate sends keepAlive request every 20 secs. KeepAlive request is a frequent and light weight
    * mode for indicating that delegate is active.
@@ -3310,6 +3338,20 @@ public class DelegateServiceImpl implements DelegateService {
   @VisibleForTesting
   String getDelegateSeqNumFromHostName(Delegate delegate) {
     return delegate.getHostName().substring(delegate.getHostName().lastIndexOf('_') + 1);
+  }
+
+  private void destroyTheCurrentDelegate(
+      String accountId, String delegateId, String delegateConnectionId, ConnectionMode connectionMode) {
+    switch (connectionMode) {
+      case POLLING:
+        throw new DuplicateDelegateException();
+      case STREAMING:
+        broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
+            .broadcast(SELF_DESTRUCT + delegateId + "-" + delegateConnectionId);
+        break;
+      default:
+        throw new UnexpectedException("Non supported connection mode provided");
+    }
   }
   //------ END: ECS Delegate Specific Methods
 }

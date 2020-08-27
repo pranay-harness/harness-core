@@ -3,7 +3,9 @@ package software.wings.service.intfc;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
@@ -88,6 +90,9 @@ public interface DelegateService extends OwnedByAccount {
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
   DelegateRegisterResponse register(@Valid DelegateParams delegateParams);
+
+  void registerHeartbeat(
+      String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat, ConnectionMode mode);
 
   DelegateProfileParams checkForProfile(String accountId, String delegateId, String profileId, long lastUpdatedAt);
 

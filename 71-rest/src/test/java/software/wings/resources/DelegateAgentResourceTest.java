@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
@@ -58,7 +59,6 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
-import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
@@ -87,7 +87,6 @@ public class DelegateAgentResourceTest {
   private static InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static ArtifactCollectionResponseHandler artifactCollectionResponseHandler =
       mock(ArtifactCollectionResponseHandler.class);
-  private static DelegateConnectionDao delegateConnectionDao = mock(DelegateConnectionDao.class);
 
   @Parameter public String apiUrl;
 
@@ -99,9 +98,9 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
-              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
-              instanceSyncResponseHandler, delegateConnectionDao))
+          .instance(
+              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
+                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -143,8 +142,8 @@ public class DelegateAgentResourceTest {
                                             .request()
                                             .post(entity(delegateConnectionHeartbeat, MediaType.APPLICATION_JSON),
                                                 new GenericType<RestResponse<String>>() {});
-    verify(delegateConnectionDao, atLeastOnce())
-        .registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, delegateConnectionHeartbeat);
+    verify(delegateService, atLeastOnce())
+        .registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, delegateConnectionHeartbeat, ConnectionMode.POLLING);
   }
 
   @Test

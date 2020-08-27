@@ -37,7 +37,7 @@ public final class UUIDGenerator {
     return Base64.encodeBase64URLSafeString(bytes);
   }
 
-  protected static UUID convertFromBase64(String uuid) {
+  public static UUID convertFromBase64(String uuid) {
     byte[] bytes = decodeBase64(uuid);
     ByteBuffer bb = ByteBuffer.wrap(bytes);
     return new UUID(bb.getLong(), bb.getLong());

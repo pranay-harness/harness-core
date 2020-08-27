@@ -400,6 +400,12 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
+  public <T extends PersistentEntity> T findAndDelete(Query<T> query, FindAndModifyOptions findAndModifyOptions) {
+    AdvancedDatastore datastore = getDatastore(query.getEntityClass());
+    return HPersistence.retry(() -> datastore.findAndDelete(query, findAndModifyOptions));
+  }
+
+  @Override
   public <T extends PersistentEntity> String merge(T entity) {
     onEntityUpdate(entity, currentTimeMillis());
     AdvancedDatastore datastore = getDatastore(entity);
