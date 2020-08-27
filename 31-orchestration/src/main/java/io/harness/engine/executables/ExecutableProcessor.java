@@ -9,10 +9,10 @@ import lombok.AllArgsConstructor;
 @OwnedBy(CDC)
 @Redesign
 @AllArgsConstructor
-public class ExecutableInvoker {
-  InvokeStrategy invokeStrategy;
+public class ExecutableProcessor {
+  ExecuteStrategy executeStrategy;
 
   public void invokeExecutable(InvokerPackage invokerPackage) {
-    invokeStrategy.invoke(invokerPackage);
+    executeStrategy.invoke(invokerPackage);
   }
 }

@@ -34,8 +34,8 @@ import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
-import io.harness.engine.executables.ExecutableInvoker;
-import io.harness.engine.executables.ExecutableInvokerFactory;
+import io.harness.engine.executables.ExecutableProcessor;
+import io.harness.engine.executables.ExecutableProcessorFactory;
 import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -97,7 +97,7 @@ public class OrchestrationEngine {
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
-  @Inject private ExecutableInvokerFactory executableInvokerFactory;
+  @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -213,7 +213,7 @@ public class OrchestrationEngine {
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
     PlanNode node = nodeExecution.getNode();
     Step currentStep = stepRegistry.obtain(node.getStepType());
-    ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
+    ExecutableProcessor invoker = executableProcessorFactory.obtainProcessor(facilitatorResponse.getExecutionMode());
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .step(currentStep)
                                  .ambiance(ambiance)
@@ -378,7 +378,7 @@ public class OrchestrationEngine {
     PlanNode node = nodeExecution.getNode();
     StepInputPackage inputPackage =
         engineObtainmentHelper.obtainInputPackage(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
-    ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(nodeExecution.getMode());
+    ExecutableProcessor invoker = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .step(step)
                                  .ambiance(ambiance)

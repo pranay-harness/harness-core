@@ -16,8 +16,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvocationHelper;
-import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutorService;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
-public class ChildChainStrategy implements InvokeStrategy {
+public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private OrchestrationEngine engine;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;

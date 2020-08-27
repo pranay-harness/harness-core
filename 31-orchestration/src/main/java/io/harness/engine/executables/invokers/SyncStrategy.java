@@ -8,7 +8,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.engine.executables.InvokeStrategy;
+import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.io.StepResponse;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class SyncStrategy implements InvokeStrategy {
+public class SyncStrategy implements ExecuteStrategy {
   @Inject private OrchestrationEngine engine;
 
   @Override

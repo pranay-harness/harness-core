@@ -10,7 +10,7 @@ import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executables.InvokerPackage;
-import io.harness.engine.executables.TaskInvokeStrategy;
+import io.harness.engine.executables.TaskExecuteStrategy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
@@ -30,7 +30,7 @@ import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
-public class TaskStrategy implements TaskInvokeStrategy {
+public class TaskStrategy implements TaskExecuteStrategy {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
