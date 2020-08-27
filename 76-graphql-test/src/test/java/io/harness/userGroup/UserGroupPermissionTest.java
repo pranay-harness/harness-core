@@ -27,10 +27,10 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
-import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
@@ -124,7 +124,7 @@ public class UserGroupPermissionTest extends GraphQLTest {
 
   private Set<PermissionType> createAccountPermissions() {
     List<PermissionType> permissionTypeList = Arrays.asList(APPLICATION_CREATE_DELETE, USER_PERMISSION_READ,
-        USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT, ACCOUNT_MANAGEMENT, AUDIT_VIEWER, TAG_MANAGEMENT, CE_ADMIN,
+        USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT, ACCOUNT_MANAGEMENT, AUDIT_VIEWER, MANAGE_TAGS, CE_ADMIN,
         CE_VIEWER, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
         MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
         MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,

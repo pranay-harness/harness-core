@@ -43,7 +43,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_V
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
-import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
@@ -583,7 +583,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     UserGroup savedUserGroup = userGroupService.save(userGroup);
 
     Set<PermissionType> allPermissions = ImmutableSet.of(APPLICATION_CREATE_DELETE, USER_PERMISSION_READ,
-        USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT, ACCOUNT_MANAGEMENT, AUDIT_VIEWER, TAG_MANAGEMENT);
+        USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT, ACCOUNT_MANAGEMENT, AUDIT_VIEWER, MANAGE_TAGS);
     AccountPermissions accountPermissions =
         AccountPermissions.builder().permissions(new HashSet<>(allPermissions)).build();
     Set<AppPermission> appPermissions = new HashSet<>();

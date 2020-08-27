@@ -6,7 +6,6 @@ import static org.elasticsearch.common.util.set.Sets.newHashSet;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_CE;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_OTHER_ACCOUNT_FUNCTIONS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.CREATE_AND_DELETE_APPLICATION;
-import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.MANAGE_TAGS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.MANAGE_TEMPLATE_LIBRARY;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.MANAGE_USERS_AND_GROUPS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.READ_USERS_AND_GROUPS;
@@ -45,7 +44,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
-import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
@@ -153,7 +151,7 @@ public class UserGroupPermissionsController {
       case VIEW_AUDITS:
         return AUDIT_VIEWER;
       case MANAGE_TAGS:
-        return TAG_MANAGEMENT;
+        return PermissionType.MANAGE_TAGS;
       case ADMINISTER_CE:
         return CE_ADMIN;
       case VIEW_CE:
@@ -455,8 +453,8 @@ public class UserGroupPermissionsController {
         return ADMINISTER_OTHER_ACCOUNT_FUNCTIONS;
       case AUDIT_VIEWER:
         return VIEW_AUDITS;
-      case TAG_MANAGEMENT:
-        return MANAGE_TAGS;
+      case MANAGE_TAGS:
+        return QLAccountPermissionType.MANAGE_TAGS;
       case CE_ADMIN:
         return ADMINISTER_CE;
       case CE_VIEWER:

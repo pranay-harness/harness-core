@@ -116,7 +116,7 @@ public class UserGroupUtils {
     permissionTypes.add(PermissionType.USER_PERMISSION_READ);
     permissionTypes.add(PermissionType.USER_PERMISSION_MANAGEMENT);
     permissionTypes.add(PermissionType.ACCOUNT_MANAGEMENT);
-    permissionTypes.add(PermissionType.TAG_MANAGEMENT);
+    permissionTypes.add(PermissionType.MANAGE_TAGS);
     permissionTypes.add(PermissionType.AUDIT_VIEWER);
     AccountPermissions accountPermissions = AccountPermissions.builder().build();
     accountPermissions.setPermissions(permissionTypes);

@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 
 import com.google.inject.Inject;
 
@@ -40,7 +41,7 @@ public class HarnessTagResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_TAGS)
   public RestResponse<HarnessTag> create(@QueryParam("accountId") String accountId, HarnessTag tag) {
     tag.setAccountId(accountId);
     return new RestResponse<>(harnessTagService.create(tag));
@@ -49,7 +50,7 @@ public class HarnessTagResource {
   @PUT
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_TAGS)
   public RestResponse<HarnessTag> update(
       @QueryParam("accountId") String accountId, @NotNull @QueryParam("key") String key, @NotNull HarnessTag tag) {
     tag.setAccountId(accountId);
@@ -73,7 +74,7 @@ public class HarnessTagResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.TAG_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_TAGS)
   public RestResponse delete(@QueryParam("accountId") String accountId, @NotNull @QueryParam("key") String key) {
     harnessTagService.delete(accountId, key);
     return new RestResponse();

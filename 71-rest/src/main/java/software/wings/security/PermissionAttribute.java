@@ -393,10 +393,10 @@ public class PermissionAttribute {
     AUDIT_VIEWER,
 
     /**
-     * Manage tags
+     * Tag Management Deprecated
      */
 
-    TAG_MANAGEMENT,
+    @Deprecated TAG_MANAGEMENT,
 
     CE_ADMIN,
 
@@ -482,6 +482,11 @@ public class PermissionAttribute {
     /**
      * Manage API Keys
      */
-    MANAGE_API_KEYS
+    MANAGE_API_KEYS,
+
+    /**
+     * Manage Tags
+     */
+    MANAGE_TAGS;
   }
 }

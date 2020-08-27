@@ -11,6 +11,7 @@ import migrations.accountpermission.ManageCloudProvidersAndConnectorsPermissionM
 import migrations.accountpermission.ManageDelegatePermissionMigration;
 import migrations.accountpermission.ManageDelegateProfilesPermissionMigration;
 import migrations.accountpermission.ManageIPWhitelistPermissionMigration;
+import migrations.accountpermission.ManageTagsMigration;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
@@ -383,6 +384,7 @@ public class MigrationList {
         .add(Pair.of(335, AddValidUntilToDelegate.class))
         .add(Pair.of(336, ManageApiKeyPermissionMigration.class))
         .add(Pair.of(337, RemoveRedundantAccountPermissions.class))
+        .add(Pair.of(338, ManageTagsMigration.class))
         .build();
   }
 }
