@@ -8,11 +8,16 @@ import java.util.Calendar;
 @Getter
 public enum CeLicenseType {
   FULL_TRIAL(30, ChronoUnit.DAYS),
-  LIMITED_TRIAL(14, ChronoUnit.DAYS),
+  LIMITED_TRIAL(Constants.CE_TRIAL_PERIOD_DAYS, ChronoUnit.DAYS),
   PAID(1, ChronoUnit.YEARS);
 
   private final int defaultPeriod;
   private final ChronoUnit defaultPeriodUnit;
+
+  public static class Constants {
+    private Constants() {}
+    public static final int CE_TRIAL_PERIOD_DAYS = 15;
+  }
 
   CeLicenseType(int period, ChronoUnit periodUnit) {
     this.defaultPeriod = period;

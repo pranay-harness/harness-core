@@ -1,5 +1,6 @@
 package software.wings.licensing;
 
+import static io.harness.ccm.license.CeLicenseType.Constants.CE_TRIAL_PERIOD_DAYS;
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +69,7 @@ public class LicenseServiceImplTest extends CategoryTest {
     CeLicenseInfo updatedCeLicenseInfo = ceLicenseInfoArgumentCaptor.getValue();
     assertThat(updatedCeLicenseInfo.getLicenseType()).isEqualTo(LIMITED_TRIAL);
     assertThat(updatedCeLicenseInfo.getExpiryTime())
-        .isCloseTo(LocalDate.now().plusDays(14).toDate().toInstant().toEpochMilli(),
+        .isCloseTo(LocalDate.now().plusDays(CE_TRIAL_PERIOD_DAYS).toDate().toInstant().toEpochMilli(),
             offset(Duration.of(1, ChronoUnit.DAYS).toMillis()));
   }
 }
