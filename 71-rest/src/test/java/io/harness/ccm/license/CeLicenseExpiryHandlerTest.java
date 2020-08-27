@@ -1,5 +1,6 @@
 package io.harness.ccm.license;
 
+import static io.harness.ccm.license.CeLicenseInfo.CE_TRIAL_GRACE_PERIOD_DAYS;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -43,7 +44,9 @@ public class CeLicenseExpiryHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldDisableCeAfterGracePeriod() {
     CeLicenseInfo ceLicenseInfo =
-        CeLicenseInfo.builder().expiryTime(Instant.now().minus(15, ChronoUnit.DAYS).toEpochMilli()).build();
+        CeLicenseInfo.builder()
+            .expiryTime(Instant.now().minus(CE_TRIAL_GRACE_PERIOD_DAYS + 1, ChronoUnit.DAYS).toEpochMilli())
+            .build();
     account = Account.Builder.anAccount().withCloudCostEnabled(Boolean.TRUE).withCeLicenseInfo(ceLicenseInfo).build();
 
     ceLicenseExpiryHandler.handle(account);
@@ -57,7 +60,7 @@ public class CeLicenseExpiryHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotDisableCeDuringGracePeriod() {
     CeLicenseInfo ceLicenseInfo =
-        CeLicenseInfo.builder().expiryTime(Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli()).build();
+        CeLicenseInfo.builder().expiryTime(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli()).build();
     account = Account.Builder.anAccount().withCloudCostEnabled(Boolean.TRUE).withCeLicenseInfo(ceLicenseInfo).build();
 
     ceLicenseExpiryHandler.handle(account);
