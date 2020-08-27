@@ -416,4 +416,156 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
 
     assertThat(recommendation.isLastDayCostAvailable()).isFalse();
   }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldUseCurrentIfLessThanMinResources() throws Exception {
+    List<K8sWorkloadRecommendation> recommendations = ImmutableList.of(
+        K8sWorkloadRecommendation.builder()
+            .dirty(true)
+            .accountId(ACCOUNT_ID)
+            .clusterId(CLUSTER_ID)
+            .workloadType(WORKLOAD_TYPE)
+            .namespace(NAMESPACE)
+            .workloadName(WORKLOAD_NAME)
+            .containerRecommendation("harness-example",
+                ContainerRecommendation.builder()
+                    .current(ResourceRequirement.builder()
+                                 .request("cpu", "15m")
+                                 .limit("cpu", "15m")
+                                 .request("memory", "20M")
+                                 .limit("memory", "20M")
+                                 .build())
+                    .build())
+            .containerCheckpoint("harness-example",
+                ContainerCheckpoint.builder()
+                    .lastUpdateTime(Instant.parse("2020-08-13T01:02:36.879Z"))
+                    .cpuHistogram(HistogramCheckpoint.builder()
+                                      .referenceTimestamp(Instant.parse("2020-08-13T00:00:00.000Z"))
+                                      .bucketWeights(ImmutableMap.<Integer, Integer>builder().put(0, 10000).build())
+                                      .totalWeight(17.0708629762673)
+                                      .build())
+                    .memoryHistogram(HistogramCheckpoint.builder()
+                                         .referenceTimestamp(Instant.parse("2020-08-06T00:00:00.000Z"))
+                                         .bucketWeights(ImmutableMap.of(0, 10000))
+                                         .totalWeight(233.867887395115)
+                                         .build())
+                    .firstSampleStart(Instant.parse("2020-08-05T00:25:38.000Z"))
+                    .lastSampleStart(Instant.parse("2020-08-12T19:03:01.000Z"))
+                    .totalSamplesCount(453)
+                    .memoryPeak(3616768L)
+                    .windowEnd(Instant.parse("2020-08-13T00:25:38.000Z"))
+                    .version(1)
+                    .build())
+            .build());
+
+    computedRecommendationWriter.write(recommendations);
+    verify(workloadRecommendationDao).save(captor.capture());
+
+    assertThat(captor.getAllValues()).hasSize(1);
+    K8sWorkloadRecommendation recommendation = captor.getValue();
+
+    assertThat(recommendation.isDirty()).isFalse();
+    assertThat(recommendation.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(recommendation.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
+    assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
+    assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+
+    Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
+    assertThat(containerRecommendations).hasSize(1);
+
+    ContainerRecommendation containerRecommendation = containerRecommendations.get("harness-example");
+    assertThat(containerRecommendation.getCurrent())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "15m")
+                       .limit("cpu", "15m")
+                       .request("memory", "20M")
+                       .limit("memory", "20M")
+                       .build());
+    assertThat(containerRecommendation.getGuaranteed())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "15m")
+                       .limit("cpu", "15m")
+                       .request("memory", "20M")
+                       .limit("memory", "20M")
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldUseMinResourcesIfLessThanCurrent() throws Exception {
+    List<K8sWorkloadRecommendation> recommendations = ImmutableList.of(
+        K8sWorkloadRecommendation.builder()
+            .dirty(true)
+            .accountId(ACCOUNT_ID)
+            .clusterId(CLUSTER_ID)
+            .workloadType(WORKLOAD_TYPE)
+            .namespace(NAMESPACE)
+            .workloadName(WORKLOAD_NAME)
+            .containerRecommendation("harness-example",
+                ContainerRecommendation.builder()
+                    .current(ResourceRequirement.builder()
+                                 .request("cpu", "1")
+                                 .limit("cpu", "1")
+                                 .request("memory", "1G")
+                                 .limit("memory", "1G")
+                                 .build())
+                    .build())
+            .containerCheckpoint("harness-example",
+                ContainerCheckpoint.builder()
+                    .lastUpdateTime(Instant.parse("2020-08-13T01:02:36.879Z"))
+                    .cpuHistogram(HistogramCheckpoint.builder()
+                                      .referenceTimestamp(Instant.parse("2020-08-13T00:00:00.000Z"))
+                                      .bucketWeights(ImmutableMap.<Integer, Integer>builder().put(0, 10000).build())
+                                      .totalWeight(17.0708629762673)
+                                      .build())
+                    .memoryHistogram(HistogramCheckpoint.builder()
+                                         .referenceTimestamp(Instant.parse("2020-08-06T00:00:00.000Z"))
+                                         .bucketWeights(ImmutableMap.of(0, 10000))
+                                         .totalWeight(233.867887395115)
+                                         .build())
+                    .firstSampleStart(Instant.parse("2020-08-05T00:25:38.000Z"))
+                    .lastSampleStart(Instant.parse("2020-08-12T19:03:01.000Z"))
+                    .totalSamplesCount(453)
+                    .memoryPeak(3616768L)
+                    .windowEnd(Instant.parse("2020-08-13T00:25:38.000Z"))
+                    .version(1)
+                    .build())
+            .build());
+
+    computedRecommendationWriter.write(recommendations);
+    verify(workloadRecommendationDao).save(captor.capture());
+
+    assertThat(captor.getAllValues()).hasSize(1);
+    K8sWorkloadRecommendation recommendation = captor.getValue();
+
+    assertThat(recommendation.isDirty()).isFalse();
+    assertThat(recommendation.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(recommendation.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
+    assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
+    assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+
+    Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
+    assertThat(containerRecommendations).hasSize(1);
+
+    ContainerRecommendation containerRecommendation = containerRecommendations.get("harness-example");
+    assertThat(containerRecommendation.getCurrent())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "1")
+                       .limit("cpu", "1")
+                       .request("memory", "1G")
+                       .limit("memory", "1G")
+                       .build());
+    assertThat(containerRecommendation.getGuaranteed())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "25m")
+                       .limit("cpu", "25m")
+                       .request("memory", "250M")
+                       .limit("memory", "250M")
+                       .build());
+  }
 }

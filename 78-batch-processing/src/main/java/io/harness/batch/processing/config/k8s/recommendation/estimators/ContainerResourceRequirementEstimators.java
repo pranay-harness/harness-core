@@ -1,10 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation.estimators;
 
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils.convertToReadableForm;
-import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
-import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
-
-import com.google.common.collect.ImmutableMap;
 
 import lombok.experimental.UtilityClass;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
@@ -24,40 +20,34 @@ public class ContainerResourceRequirementEstimators {
   private static final double UPPER_BOUND_MEMORY_PERCENTILE = 0.95;
 
   private static final double SAFETY_MARGIN_FRACTION = 0.15; // bump all recommendations by 15%
-  private static final long MIN_CPU_MILLICORES = 25; // 25m
-  private static final long MIN_MEMORY_BYTES = 262144000; // 250Mi
-
-  private static final Map<String, Long> MIN_RESOURCES =
-      ImmutableMap.<String, Long>builder().put(CPU, MIN_CPU_MILLICORES).put(MEMORY, MIN_MEMORY_BYTES).build();
 
   private static final ResourceEstimator TARGET_ESTIMATOR =
-      PercentileEstimator.of(TARGET_CPU_PERCENTILE, TARGET_MEMORY_PERCENTILE)
-          .withMargin(SAFETY_MARGIN_FRACTION)
-          .withMinResources(MIN_RESOURCES);
+      PercentileEstimator.of(TARGET_CPU_PERCENTILE, TARGET_MEMORY_PERCENTILE).withMargin(SAFETY_MARGIN_FRACTION);
 
   private static final ResourceEstimator UPPER_BOUND_ESTIMATOR =
       PercentileEstimator.of(UPPER_BOUND_CPU_PERCENTILE, UPPER_BOUND_MEMORY_PERCENTILE)
           .withMargin(SAFETY_MARGIN_FRACTION)
-          .withConfidenceMultiplier(1.0, 1.0)
-          .withMinResources(MIN_RESOURCES);
+          .withConfidenceMultiplier(1.0, 1.0);
 
   static final ResourceEstimator LOWER_BOUND_ESTIMATOR =
       PercentileEstimator.of(LOWER_BOUND_CPU_PERCENTILE, LOWER_BOUND_MEMORY_PERCENTILE)
           .withMargin(SAFETY_MARGIN_FRACTION)
-          .withConfidenceMultiplier(0.001, -2.0)
-          .withMinResources(MIN_RESOURCES);
+          .withConfidenceMultiplier(0.001, -2.0);
 
-  public static ContainerResourceRequirementEstimator burstableRecommender() {
+  public static ContainerResourceRequirementEstimator burstableRecommender(Map<String, Long> minResources) {
     return cs
         -> ResourceRequirement.builder()
-               .requests(convertToReadableForm(LOWER_BOUND_ESTIMATOR.getResourceEstimation(cs)))
-               .limits(convertToReadableForm(UPPER_BOUND_ESTIMATOR.getResourceEstimation(cs)))
+               .requests(convertToReadableForm(
+                   LOWER_BOUND_ESTIMATOR.withMinResources(minResources).getResourceEstimation(cs)))
+               .limits(convertToReadableForm(
+                   UPPER_BOUND_ESTIMATOR.withMinResources(minResources).getResourceEstimation(cs)))
                .build();
   }
 
-  public static ContainerResourceRequirementEstimator guaranteedRecommender() {
+  public static ContainerResourceRequirementEstimator guaranteedRecommender(Map<String, Long> minResources) {
     return cs -> {
-      Map<String, String> resources = convertToReadableForm(TARGET_ESTIMATOR.getResourceEstimation(cs));
+      Map<String, String> resources =
+          convertToReadableForm(TARGET_ESTIMATOR.withMinResources(minResources).getResourceEstimation(cs));
       return ResourceRequirement.builder().requests(resources).limits(resources).build();
     };
   }
