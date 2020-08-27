@@ -8,6 +8,7 @@ import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.eraro.ErrorCode;
@@ -76,11 +77,12 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
 
           delegateService.register(delegate);
-          delegateConnectionDao.registerHeartbeat(accountId, delegateId,
+          delegateService.registerHeartbeat(accountId, delegateId,
               DelegateConnectionHeartbeat.builder()
                   .delegateConnectionId(delegateConnectionId)
                   .version(delegateVersion)
-                  .build());
+                  .build(),
+              ConnectionMode.STREAMING);
 
           resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
             @Override
@@ -113,11 +115,12 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
         delegate.setUuid(delegateId);
         delegateService.register(delegate);
-        delegateConnectionDao.registerHeartbeat(accountId, delegateId,
+        delegateService.registerHeartbeat(accountId, delegateId,
             DelegateConnectionHeartbeat.builder()
                 .delegateConnectionId(delegateConnectionId)
                 .version(delegateVersion)
-                .build());
+                .build(),
+            ConnectionMode.STREAMING);
       }
     }
   }

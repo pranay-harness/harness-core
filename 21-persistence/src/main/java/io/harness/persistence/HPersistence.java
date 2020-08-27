@@ -314,6 +314,15 @@ public interface HPersistence extends HealthMonitor {
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
 
   /**
+   * Find and delete.
+   *
+   * @param query                the query
+   * @param findAndModifyOptions the delete and modify options
+   * @return previous entity depending on options
+   */
+  <T extends PersistentEntity> T findAndDelete(Query<T> query, FindAndModifyOptions findAndModifyOptions);
+
+  /**
    * Merge.
    *
    * @param entity   the entity to merge

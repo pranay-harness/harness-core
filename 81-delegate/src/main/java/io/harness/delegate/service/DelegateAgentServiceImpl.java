@@ -2,7 +2,7 @@ package io.harness.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
 import static io.harness.delegate.app.DelegateApplication.getProcessId;
 import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
@@ -45,6 +45,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.eraro.ErrorCode.DUPLICATE_DELEGATE_EXCEPTION;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.expression.SecretString.SECRET_MASK;
@@ -156,7 +157,6 @@ import org.atmosphere.wasync.RequestBuilder;
 import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
 import org.atmosphere.wasync.transport.TransportNotSupported;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -289,7 +289,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
-  private final Set<String> currentlyAcquiringTasks = new ConcurrentHashSet<>();
+  private final Set<String> currentlyAcquiringTasks = ConcurrentHashMap.newKeySet();
   private final Map<String, DelegateTaskPackage> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final Map<String, DelegateTaskPackage> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyValidatingFutures = new ConcurrentHashMap<>();
@@ -323,7 +323,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private long watcherVersionMatchedAt = System.currentTimeMillis();
   private long delegateJreVersionChangedAt;
 
-  private final String delegateConnectionId = generateUuid();
+  private final String delegateConnectionId = generateTimeBasedUuid();
   private volatile boolean switchStorageMsgSent;
   private DelegateConnectionHeartbeat connectionHeartbeat;
   private String migrateToJreVersion = System.getProperty(JAVA_VERSION);
@@ -743,6 +743,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       initiateSelfDestruct();
     } else if (StringUtils.equals(message, SELF_DESTRUCT + delegateId)) {
       initiateSelfDestruct();
+    } else if (StringUtils.startsWith(message, SELF_DESTRUCT + delegateId + "-")) {
+      int len = (SELF_DESTRUCT + delegateId + "-").length();
+      if (message.substring(len).equals(delegateConnectionId)) {
+        initiateSelfDestruct();
+      }
     } else if (StringUtils.equals(message, USE_CDN)) {
       setSwitchStorage(true);
     } else if (StringUtils.equals(message, USE_STORAGE_PROXY)) {
@@ -837,7 +842,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return response.body();
     } finally {
       if (response != null && !response.isSuccessful()) {
-        if (response.errorBody().string().contains(INVALID_TOKEN.name())) {
+        String errorResponse = response.errorBody().string();
+        if (errorResponse.contains(INVALID_TOKEN.name())
+            || errorResponse.contains(DUPLICATE_DELEGATE_EXCEPTION.name())) {
           initiateSelfDestruct();
         } else if (response.code() == EXPIRED_TOKEN.getStatus().getStatusCode()) {
           logger.warn("Delegate was not authorized to invoke manager. New token should be generated.");
@@ -1493,9 +1500,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       setSwitchStorage(delegateReceived.isUseCdn());
       updateJreVersion(delegateReceived.getUseJreVersion());
 
-      timeLimiter.callWithTimeout(
-          ()
-              -> execute(delegateAgentManagerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)),
+      timeLimiter.callWithTimeout(()
+                                      -> delegateExecute(delegateAgentManagerClient.doConnectionHeartbeat(
+                                          delegateId, accountId, connectionHeartbeat)),
           15L, TimeUnit.SECONDS, true);
       lastHeartbeatSentAt.set(clock.millis());
 

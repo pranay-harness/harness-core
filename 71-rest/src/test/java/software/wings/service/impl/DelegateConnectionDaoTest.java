@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -22,6 +23,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateStatus;
+import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
 import java.util.Map;
@@ -30,14 +32,13 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
   private String delegateId = "DELEGATE_ID";
   private String delegateId2 = "DELEGATE_ID2";
   private Delegate delegate;
-  private DelegateConnection delegateConnection;
 
   @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private DelegateService delegateService;
 
   @Before
   public void setUp() {
     delegate = Delegate.builder().uuid(delegateId).build();
-    delegateConnection = DelegateConnection.builder().delegateId(delegateId).build();
   }
 
   @Test
@@ -53,8 +54,9 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDoConnectionHeartbeat() {
-    delegateConnectionDao.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID,
-        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build());
+    delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID,
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build(),
+        ConnectionMode.POLLING);
     DelegateConnection connection = wingsPersistence.createQuery(DelegateConnection.class)
                                         .filter(DelegateConnectionKeys.accountId, ACCOUNT_ID)
                                         .get();
@@ -65,12 +67,15 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldObtainActiveDelegateConnections() {
-    delegateConnectionDao.registerHeartbeat(ACCOUNT_ID, delegateId,
-        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build());
-    delegateConnectionDao.registerHeartbeat(ACCOUNT_ID, delegateId,
-        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.2").build());
-    delegateConnectionDao.registerHeartbeat(ACCOUNT_ID, delegateId2,
-        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build());
+    delegateService.registerHeartbeat(ACCOUNT_ID, delegateId,
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build(),
+        ConnectionMode.POLLING);
+    delegateService.registerHeartbeat(ACCOUNT_ID, delegateId,
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.2").build(),
+        ConnectionMode.POLLING);
+    delegateService.registerHeartbeat(ACCOUNT_ID, delegateId2,
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build(),
+        ConnectionMode.POLLING);
 
     Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> delegateConnections =
         delegateConnectionDao.obtainActiveDelegateConnections(ACCOUNT_ID);

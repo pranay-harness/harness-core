@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import freemarker.template.TemplateException;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
+import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
@@ -36,7 +37,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
@@ -69,13 +69,12 @@ public class DelegateAgentResource {
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private InstanceHelper instanceHelper;
-  private DelegateConnectionDao delegateConnectionDao;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
       SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
-      InstanceHelper instanceHelper, DelegateConnectionDao delegateConnectionDao) {
+      InstanceHelper instanceHelper) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -83,7 +82,6 @@ public class DelegateAgentResource {
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
-    this.delegateConnectionDao = delegateConnectionDao;
   }
 
   @DelegateAuth
@@ -139,7 +137,7 @@ public class DelegateAgentResource {
       @PathParam("delegateId") String delegateId, DelegateConnectionHeartbeat connectionHeartbeat) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateConnectionDao.registerHeartbeat(accountId, delegateId, connectionHeartbeat);
+      delegateService.registerHeartbeat(accountId, delegateId, connectionHeartbeat, ConnectionMode.POLLING);
     }
   }
 

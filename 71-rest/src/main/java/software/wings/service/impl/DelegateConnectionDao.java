@@ -12,7 +12,6 @@ import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -43,37 +42,6 @@ public class DelegateConnectionDao {
     UpdateOperations<DelegateConnection> updateOperations = persistence.createUpdateOperations(DelegateConnection.class)
                                                                 .set(DelegateConnectionKeys.disconnected, Boolean.TRUE);
     persistence.update(query, updateOperations);
-  }
-
-  public void registerHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat) {
-    Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)
-                                          .filter(DelegateConnectionKeys.accountId, accountId)
-                                          .filter(DelegateConnectionKeys.uuid, heartbeat.getDelegateConnectionId());
-
-    UpdateOperations<DelegateConnection> updateOperations =
-        persistence.createUpdateOperations(DelegateConnection.class)
-            .set(DelegateConnectionKeys.accountId, accountId)
-            .set(DelegateConnectionKeys.uuid, heartbeat.getDelegateConnectionId())
-            .set(DelegateConnectionKeys.delegateId, delegateId)
-            .set(DelegateConnectionKeys.version, heartbeat.getVersion())
-            .set(DelegateConnectionKeys.lastHeartbeat, currentTimeMillis())
-            .set(DelegateConnectionKeys.disconnected, Boolean.FALSE)
-            .set(DelegateConnectionKeys.validUntil,
-                Date.from(OffsetDateTime.now().plusMinutes(TTL.toMinutes()).toInstant()));
-
-    DelegateConnection previousDelegateConnection =
-        persistence.upsert(query, updateOperations, HPersistence.upsertReturnOldOptions);
-
-    if (previousDelegateConnection == null) {
-      if (persistence.deleteOnServer(persistence.createQuery(DelegateConnection.class)
-                                         .filter(DelegateConnectionKeys.accountId, accountId)
-                                         .filter(DelegateConnectionKeys.delegateId, delegateId)
-                                         .filter(DelegateConnectionKeys.version, heartbeat.getVersion())
-                                         .field(DelegateConnectionKeys.uuid)
-                                         .notEqual(heartbeat.getDelegateConnectionId()))) {
-        logger.error("Delegate restarted");
-      }
-    }
   }
 
   public Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> obtainActiveDelegateConnections(
@@ -137,5 +105,41 @@ public class DelegateConnectionDao {
                .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
                .count(upToOne)
         > 0;
+  }
+
+  public DelegateConnection upsertCurrentConnection(
+      String accountId, String delegateId, String delegateConnectionId, String version) {
+    Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)
+                                          .filter(DelegateConnectionKeys.accountId, accountId)
+                                          .filter(DelegateConnectionKeys.uuid, delegateConnectionId);
+
+    UpdateOperations<DelegateConnection> updateOperations =
+        persistence.createUpdateOperations(DelegateConnection.class)
+            .set(DelegateConnectionKeys.accountId, accountId)
+            .set(DelegateConnectionKeys.uuid, delegateConnectionId)
+            .set(DelegateConnectionKeys.delegateId, delegateId)
+            .set(DelegateConnectionKeys.version, version)
+            .set(DelegateConnectionKeys.lastHeartbeat, currentTimeMillis())
+            .set(DelegateConnectionKeys.disconnected, Boolean.FALSE)
+            .set(DelegateConnectionKeys.validUntil,
+                Date.from(OffsetDateTime.now().plusMinutes(TTL.toMinutes()).toInstant()));
+
+    return persistence.upsert(query, updateOperations, HPersistence.upsertReturnOldOptions);
+  }
+
+  public DelegateConnection findAndDeletePreviousConnections(
+      String accountId, String delegateId, String delegateConnectionId, String version) {
+    return persistence.findAndDelete(persistence.createQuery(DelegateConnection.class)
+                                         .filter(DelegateConnectionKeys.accountId, accountId)
+                                         .filter(DelegateConnectionKeys.delegateId, delegateId)
+                                         .filter(DelegateConnectionKeys.version, version)
+                                         .field(DelegateConnectionKeys.uuid)
+                                         .notEqual(delegateConnectionId),
+        HPersistence.returnOldOptions);
+  }
+
+  public void replaceWithNewerConnection(String delegateConnectionId, DelegateConnection existingConnection) {
+    persistence.delete(DelegateConnection.class, delegateConnectionId);
+    persistence.save(existingConnection);
   }
 }
