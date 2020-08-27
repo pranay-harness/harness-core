@@ -14,6 +14,8 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerBuilder;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeSpec;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeSpecBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1PodCondition;
@@ -128,6 +130,19 @@ public class K8sResourceUtilsTest extends CategoryTest {
   private V1Container makeContainer(String cpuLim, String memLim) {
     return makeContainer(cpuLim, memLim, cpuLim, memLim);
   }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetStorageCapacity() {
+    V1PersistentVolumeSpec spec =
+        new V1PersistentVolumeSpecBuilder()
+            .withCapacity(ImmutableMap.of("storage", new io.kubernetes.client.custom.Quantity("1Ki")))
+            .build();
+    assertThat(K8sResourceUtils.getStorageCapacity(spec))
+        .isEqualTo(Quantity.newBuilder().setAmount(1024L).setUnit("B").build());
+  }
+
   private V1Container makeContainer(String cpuReq, String memReq, String cpuLim, String memLim) {
     return new V1ContainerBuilder()
         .withNewResources()

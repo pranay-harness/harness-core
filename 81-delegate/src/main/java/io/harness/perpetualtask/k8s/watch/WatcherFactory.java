@@ -10,4 +10,5 @@ public interface WatcherFactory {
   NodeWatcher createNodeWatcher(
       ApiClient apiClient, ClusterDetails params, SharedInformerFactory sharedInformerFactory);
   PVCFetcher createPVCFetcher(ApiClient apiClient, SharedInformerFactory sharedInformerFactory);
+  PVWatcher createPVWatcher(ApiClient apiClient, ClusterDetails params, SharedInformerFactory sharedInformerFactory);
 }

@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.apiclient.ApiClientFactory;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -90,7 +91,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void shouldCreatePodNodeWatchPVCFetcher() throws Exception {
+  public void shouldCreateAllWatchersAndFetchers() throws Exception {
     String cloudProviderId = UUID.randomUUID().toString();
 
     ByteString k8sClusterConfig = ByteString.copyFrom(kryoSerializer.asBytes(
@@ -109,6 +110,8 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
     verify(watcherFactory, atLeastOnce()).createPodWatcher(any(), any(), any(), any(), any());
     verify(watcherFactory, atLeastOnce()).createNodeWatcher(any(), any(), any());
     verify(watcherFactory, atLeastOnce()).createPVCFetcher(any(ApiClient.class), any(SharedInformerFactory.class));
+    verify(watcherFactory, atLeastOnce())
+        .createPVWatcher(any(ApiClient.class), any(ClusterDetails.class), any(SharedInformerFactory.class));
   }
 
   @Test
