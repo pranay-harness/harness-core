@@ -185,7 +185,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecuteSimpleShellScriptPlan() {
     PlanExecution shellScriptResponse =
