@@ -121,7 +121,7 @@ public class PcfCommandValidationTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  @Ignore
+  @Ignore("Marked failing test intermittent")
   public void testGetCriteriaWithEncryptionDetails() {
     Consumer consumer = mock(Consumer.class);
     EncryptionService encryptionService = mock(EncryptionService.class);
