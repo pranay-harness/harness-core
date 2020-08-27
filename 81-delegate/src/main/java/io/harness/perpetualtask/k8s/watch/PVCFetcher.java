@@ -20,7 +20,7 @@ public class PVCFetcher {
 
   @Inject
   public PVCFetcher(@Assisted ApiClient apiClient, @Assisted SharedInformerFactory sharedInformerFactory) {
-    logger.info("Creating new PodWatcher for cluster: {}", apiClient.getBasePath());
+    logger.info("Creating new PVCFetcher for cluster: {}", apiClient.getBasePath());
     this.coreV1Api = new CoreV1Api(apiClient);
     this.store = sharedInformerFactory
                      .sharedIndexInformerFor(

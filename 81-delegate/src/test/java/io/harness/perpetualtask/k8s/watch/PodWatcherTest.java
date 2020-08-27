@@ -41,6 +41,7 @@ import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.JSON;
 import io.kubernetes.client.openapi.models.V1ContainerBuilder;
 import io.kubernetes.client.openapi.models.V1ListMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1PodConditionBuilder;
@@ -69,6 +70,7 @@ public class PodWatcherTest extends CategoryTest {
   private PodWatcher podWatcher;
   private EventPublisher eventPublisher;
   private SharedInformerFactory sharedInformerFactory;
+  private PVCFetcher pvcFetcher;
 
   final DateTime TIMESTAMP = DateTime.now();
   final DateTime DELETION_TIMESTAMP = TIMESTAMP.plusMinutes(5);
@@ -85,6 +87,7 @@ public class PodWatcherTest extends CategoryTest {
   public void setUp() throws Exception {
     sharedInformerFactory = new SharedInformerFactory();
     eventPublisher = mock(EventPublisher.class);
+    pvcFetcher = mock(PVCFetcher.class);
     MockitoAnnotations.initMocks(this);
     K8sControllerFetcher controllerFetcher = mock(K8sControllerFetcher.class);
 
@@ -97,6 +100,15 @@ public class PodWatcherTest extends CategoryTest {
                         .putLabels("harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1")
                         .build());
 
+    when(pvcFetcher.getPvcByKey(any(), any()))
+        .thenReturn(new V1PersistentVolumeClaimBuilder()
+                        .withNewSpec()
+                        .withNewResources()
+                        .addToRequests("storage", new io.kubernetes.client.custom.Quantity("1Ki"))
+                        .endResources()
+                        .endSpec()
+                        .build());
+
     podWatcher = new PodWatcher(new ClientBuilder().setBasePath("http://localhost:" + wireMockRule.port()).build(),
         ClusterDetails.builder()
             .clusterName("clusterName")
@@ -104,7 +116,7 @@ public class PodWatcherTest extends CategoryTest {
             .cloudProviderId("cloud-provider-id")
             .kubeSystemUid("cluster-uid")
             .build(),
-        controllerFetcher, sharedInformerFactory, null, eventPublisher);
+        controllerFetcher, sharedInformerFactory, pvcFetcher, eventPublisher);
   }
 
   @Test

@@ -116,6 +116,7 @@ public class K8sWatchServiceDelegate {
       K8sControllerFetcher controllerFetcher = new K8sControllerFetcher(stores);
 
       watcherFactory.createNodeWatcher(apiClient, clusterDetails, sharedInformerFactory);
+      watcherFactory.createPVWatcher(apiClient, clusterDetails, sharedInformerFactory);
 
       blockingWaitForPVCInformerSync(pvcInformer);
       watcherFactory.createPodWatcher(apiClient, clusterDetails, controllerFetcher, sharedInformerFactory, pvcFetcher);

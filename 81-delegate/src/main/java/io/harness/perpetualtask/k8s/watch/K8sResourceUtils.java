@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.perpetualtask.k8s.watch.Quantity.Builder;
 import io.kubernetes.client.openapi.models.V1Container;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeSpec;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import lombok.experimental.UtilityClass;
@@ -147,6 +148,18 @@ public class K8sResourceUtils {
     if (resources != null && resources.getRequests() != null) {
       storageRequestBuilder.setAmount(
           ofNullable(resources.getRequests().get(K8S_STORAGE_RESOURCE)).map(x -> x.getNumber().longValue()).orElse(0L));
+      return storageRequestBuilder.setUnit("B").build();
+    }
+    logger.warn("Returning default storge value");
+    // no unit when the value is default.
+    return storageRequestBuilder.setAmount(0L).build();
+  }
+
+  public static Quantity getStorageCapacity(V1PersistentVolumeSpec spec) {
+    Builder storageRequestBuilder = Quantity.newBuilder();
+    if (spec != null && spec.getCapacity() != null) {
+      storageRequestBuilder.setAmount(
+          ofNullable(spec.getCapacity().get(K8S_STORAGE_RESOURCE)).map(x -> x.getNumber().longValue()).orElse(0L));
       return storageRequestBuilder.setUnit("B").build();
     }
     logger.warn("Returning default storge value");

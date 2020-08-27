@@ -73,6 +73,51 @@ message PodEvent {
   string kube_system_uid = 7;
 }
 
+message PVInfo {
+  // pricing based on PVType
+  enum PVType {
+    PV_TYPE_UNSPECIFIED = 0;
+    PV_TYPE_GCE_PERSISTENT_DISK = 1;
+  }
+  PVType pv_type = 2;
+
+  google.protobuf.Timestamp creation_timestamp = 4;
+
+  // last pvc connected to this pv
+  string claim_name = 5;
+  string claim_namespace = 6;
+  // pv data
+  string pv_uid = 7;
+  string pv_name = 8;
+  string reclaim_policy = 9;
+  string storage_class_type = 10;  // can be empty
+  string status = 11;
+  Quantity capacity = 12;
+  map<string, string> labels = 13;
+
+  // cluster data
+  string cluster_id = 14;
+  string cluster_name = 15;
+  string cloud_provider_id = 16;
+  string kube_system_uid = 17;
+}
+
+message PVEvent {
+  string cloud_provider_id = 2;
+  string pv_uid = 3;
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_START = 1;
+    EVENT_TYPE_STOP = 2;
+    EVENT_TYPE_EXPANSION = 3;
+  }
+  EventType event_type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string pv_name = 6;
+  string cluster_id = 7;
+  string kube_system_uid = 8;
+}
+
 message NodeInfo {
   string cloud_provider_id = 2;
   string node_uid = 3;

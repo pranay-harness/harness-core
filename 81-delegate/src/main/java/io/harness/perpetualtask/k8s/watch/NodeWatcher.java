@@ -62,7 +62,6 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
                                   .build();
 
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
-
     sharedInformerFactory
         .sharedIndexInformerFor(
             (CallGeneratorParams callGeneratorParams)
