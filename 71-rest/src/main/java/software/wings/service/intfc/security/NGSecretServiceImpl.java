@@ -234,7 +234,7 @@ public class NGSecretServiceImpl implements NGSecretService {
         }
 
         // delete secret text finally in db
-        wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
+        return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
       }
     }
     throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
