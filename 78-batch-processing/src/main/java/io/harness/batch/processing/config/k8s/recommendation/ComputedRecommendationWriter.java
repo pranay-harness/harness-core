@@ -3,14 +3,18 @@ package io.harness.batch.processing.config.k8s.recommendation;
 import static com.google.common.base.Preconditions.checkState;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.burstableRecommender;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.guaranteedRecommender;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.Duration.between;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
 
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.batch.processing.config.k8s.recommendation.WorkloadCostService.Cost;
+import io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils;
 import io.kubernetes.client.custom.Quantity;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -26,11 +30,15 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendation> {
   public static final Duration RECOMMENDATION_TTL = Duration.ofDays(30);
+
+  private static final long podMinCpuMilliCores = 25L;
+  private static final long podMinMemoryBytes = 250_000_000L;
 
   private final WorkloadRecommendationDao workloadRecommendationDao;
   private final WorkloadCostService workloadCostService;
@@ -60,24 +68,54 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
       Map<String, ContainerState> containerStates = new WorkloadState(recommendation).getContainerStateMap();
       int minNumDays = Integer.MAX_VALUE;
-      for (Map.Entry<String, ContainerRecommendation> entry : containerRecommendations.entrySet()) {
-        String containerName = entry.getKey();
-        ContainerRecommendation containerRecommendation = entry.getValue();
-        ContainerState containerState = containerStates.get(containerName);
-        if (containerState != null) {
-          ResourceRequirement burstable = burstableRecommender().getEstimatedResourceRequirements(containerState);
-          ResourceRequirement guaranteed = guaranteedRecommender().getEstimatedResourceRequirements(containerState);
-          ResourceRequirement current = containerRecommendation.getCurrent();
-          if (current != null) {
-            burstable = copyExtendedResources(current, burstable);
-            guaranteed = copyExtendedResources(current, guaranteed);
+      if (isNotEmpty(containerRecommendations)) {
+        final double factor = 1.0 / containerRecommendations.size();
+        final long containerMinCpuMilliCores = ResourceAmountUtils.scaleResourceAmount(podMinCpuMilliCores, factor);
+        final long containerMinMemoryBytes = ResourceAmountUtils.scaleResourceAmount(podMinMemoryBytes, factor);
+        for (Map.Entry<String, ContainerRecommendation> entry : containerRecommendations.entrySet()) {
+          String containerName = entry.getKey();
+          ContainerRecommendation containerRecommendation = entry.getValue();
+          ContainerState containerState = containerStates.get(containerName);
+          if (containerState != null) {
+            ResourceRequirement current = containerRecommendation.getCurrent();
+            long curCpuMilliCores = Optional.ofNullable(current)
+                                        .map(ResourceRequirement::getRequests)
+                                        .map(s -> s.get(CPU))
+                                        .map(Quantity::fromString)
+                                        .map(Quantity::getNumber)
+                                        .map(BigDecimal::doubleValue)
+                                        .map(ResourceAmountUtils::cpuAmountFromCores)
+                                        .orElse(containerMinCpuMilliCores);
+            long curMemoryBytes = Optional.ofNullable(current)
+                                      .map(ResourceRequirement::getRequests)
+                                      .map(s -> s.get(MEMORY))
+                                      .map(Quantity::fromString)
+                                      .map(Quantity::getNumber)
+                                      .map(BigDecimal::doubleValue)
+                                      .map(ResourceAmountUtils::memoryAmountFromBytes)
+                                      .orElse(containerMinMemoryBytes);
+            // use cur if it's less than min.
+            Map<String, Long> minContainerResources =
+                ResourceAmountUtils.makeResourceMap(Math.min(containerMinCpuMilliCores, curCpuMilliCores),
+                    Math.min(containerMinMemoryBytes, curMemoryBytes));
+            ResourceRequirement burstable =
+                burstableRecommender(minContainerResources).getEstimatedResourceRequirements(containerState);
+            ResourceRequirement guaranteed =
+                guaranteedRecommender(minContainerResources).getEstimatedResourceRequirements(containerState);
+            if (current != null) {
+              burstable = copyExtendedResources(current, burstable);
+              guaranteed = copyExtendedResources(current, guaranteed);
+            }
+            containerRecommendation.setBurstable(burstable);
+            containerRecommendation.setGuaranteed(guaranteed);
+            int days =
+                (int) between(containerState.getFirstSampleStart(), containerState.getLastSampleStart()).toDays();
+            // upper bound by 8 days
+            days = Math.min(days, 8);
+            containerRecommendation.setNumDays(days);
+            minNumDays = Math.min(minNumDays, days);
+            containerRecommendation.setTotalSamplesCount(containerState.getTotalSamplesCount());
           }
-          containerRecommendation.setBurstable(burstable);
-          containerRecommendation.setGuaranteed(guaranteed);
-          int days = (int) between(containerState.getFirstSampleStart(), containerState.getLastSampleStart()).toDays();
-          containerRecommendation.setNumDays(days);
-          minNumDays = Math.min(minNumDays, days);
-          containerRecommendation.setTotalSamplesCount(containerState.getTotalSamplesCount());
         }
       }
       recommendation.setNumDays(minNumDays == Integer.MAX_VALUE ? 0 : minNumDays);

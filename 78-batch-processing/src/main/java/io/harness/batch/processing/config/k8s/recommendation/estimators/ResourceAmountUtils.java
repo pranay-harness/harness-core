@@ -18,23 +18,23 @@ import java.util.Optional;
 public class ResourceAmountUtils {
   static long MAX_RESOURCE_AMOUNT = (long) 1e14;
 
-  static Map<String, Long> makeResourceMap(long cpuAmount, long memoryAmount) {
+  public static Map<String, Long> makeResourceMap(long cpuAmount, long memoryAmount) {
     return ImmutableMap.of(CPU, cpuAmount, MEMORY, memoryAmount);
   }
 
-  static long cpuAmountFromCores(double cores) {
+  public static long cpuAmountFromCores(double cores) {
     return resourceAmountFromFloat(cores * 1000.0);
   }
 
-  static double coresFromCpuAmount(long cpuAmount) {
+  public static double coresFromCpuAmount(long cpuAmount) {
     return cpuAmount / 1000.0;
   }
 
-  static long memoryAmountFromBytes(double bytes) {
+  public static long memoryAmountFromBytes(double bytes) {
     return resourceAmountFromFloat(bytes);
   }
 
-  static double bytesFromMemoryAmount(long memoryAmount) {
+  public static double bytesFromMemoryAmount(long memoryAmount) {
     return (double) memoryAmount;
   }
 
@@ -48,7 +48,7 @@ public class ResourceAmountUtils {
     }
   }
 
-  static long scaleResourceAmount(long amount, double factor) {
+  public static long scaleResourceAmount(long amount, double factor) {
     return resourceAmountFromFloat(amount * factor);
   }
 
