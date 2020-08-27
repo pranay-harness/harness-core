@@ -1,9 +1,15 @@
 package steps
 
 import (
+	"crypto/md5"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
+	"strings"
+	"text/template"
 	"time"
 
 	"github.com/cespare/xxhash"
@@ -67,4 +73,60 @@ func getFileXXHash(filename string, fs filesystem.FileSystem, log *zap.SugaredLo
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
 	return hashSum, nil
+}
+
+// parseCacheKeyTmpl parses cache key template
+// Example: {{ checksum "go.mod" }}_{{ checksum "go.sum" }}_{{ arch }}_{{ os }}
+func parseCacheKeyTmpl(key string, log *zap.SugaredLogger) (string, error) {
+	f := template.FuncMap{
+		"checksum": checksumFunc(),
+		"epoch":    func() string { return strconv.FormatInt(time.Now().Unix(), 10) },
+		"arch":     func() string { return runtime.GOARCH },
+		"os":       func() string { return runtime.GOOS },
+	}
+	t, err := template.New("key").Funcs(f).Parse(key)
+	if err != nil {
+		log.Errorw("failed to parse template", "key", key, zap.Error(err))
+		return "", errors.Wrap(err, fmt.Sprintf("failed to parse template: %s", key))
+	}
+
+	var b strings.Builder
+	err = t.Execute(&b, nil)
+	if err != nil {
+		log.Errorw("failed to evaluate template", "key", key, zap.Error(err))
+		return "", errors.Wrap(err, fmt.Sprintf("failed to evaulate template: %s", key))
+	}
+
+	return b.String(), nil
+}
+
+// checksumFunc returns a method to generate checksum of a file
+func checksumFunc() func(string) (string, error) {
+	return func(p string) (string, error) {
+		path, err := filepath.Abs(filepath.Clean(p))
+		if err != nil {
+			return "", err
+		}
+
+		f, err := os.Open(path)
+		if err != nil {
+			return "", err
+		}
+		defer f.Close()
+
+		hashSum, err := readerHasher(f)
+		if err != nil {
+			return "", err
+		}
+		return hashSum, nil
+	}
+}
+
+// readerHasher generic md5 hash generater from io.Reader.
+func readerHasher(r io.Reader) (string, error) {
+	h := md5.New()
+	if _, err := io.Copy(h, r); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }

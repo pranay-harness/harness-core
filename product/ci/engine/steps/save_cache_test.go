@@ -2,6 +2,7 @@ package steps
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"testing"
@@ -358,5 +359,49 @@ func TestSaveCacheResolveJEXL(t *testing.T) {
 			assert.Equal(t, s.paths, tc.resolvedPaths)
 		}
 
+	}
+}
+
+func TestSaveCacheResolveExpression(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	tmplKey1 := "hello-{{world"
+	tmplKey2 := "hello-{{ epoch }}"
+	path := "/tmp/step"
+
+	tests := []struct {
+		name        string
+		key         string
+		paths       []string
+		expectedErr bool
+	}{
+		{
+			name:        "template error",
+			key:         tmplKey1,
+			paths:       []string{path},
+			expectedErr: true,
+		},
+		{
+			name:        "template cache key successfully evaluated",
+			key:         tmplKey2,
+			paths:       []string{path},
+			expectedErr: false,
+		},
+	}
+	for _, tc := range tests {
+		s := &saveCacheStep{
+			key:   tc.key,
+			paths: tc.paths,
+			log:   log.Sugar(),
+		}
+		got := s.resolveExpression(ctx)
+		if tc.expectedErr == (got == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+		if got == nil {
+			fmt.Println(s.key)
+		}
 	}
 }
