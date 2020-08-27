@@ -11,7 +11,7 @@ import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executables.InvokeStrategy;
+import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Redesign
-public class AsyncStrategy implements InvokeStrategy {
+public class AsyncStrategy implements ExecuteStrategy {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;

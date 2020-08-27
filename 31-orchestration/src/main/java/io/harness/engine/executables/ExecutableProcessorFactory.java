@@ -20,49 +20,49 @@ import io.harness.tasks.TaskMode;
 
 @OwnedBy(CDC)
 @Redesign
-public class ExecutableInvokerFactory {
+public class ExecutableProcessorFactory {
   @Inject Injector injector;
 
-  public ExecutableInvoker obtainInvoker(ExecutionMode mode) {
-    InvokeStrategy invokeStrategy;
+  public ExecutableProcessor obtainProcessor(ExecutionMode mode) {
+    ExecuteStrategy executeStrategy;
     switch (mode) {
       case ASYNC:
-        invokeStrategy = new AsyncStrategy();
+        executeStrategy = new AsyncStrategy();
         break;
       case SYNC:
-        invokeStrategy = new SyncStrategy();
+        executeStrategy = new SyncStrategy();
         break;
       case CHILDREN:
-        invokeStrategy = new ChildrenStrategy();
+        executeStrategy = new ChildrenStrategy();
         break;
       case CHILD:
-        invokeStrategy = new ChildStrategy();
+        executeStrategy = new ChildStrategy();
         break;
       case TASK:
-        invokeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V1);
+        executeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V1);
         break;
       case TASK_V2:
-        invokeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V2);
+        executeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V2);
         break;
       case TASK_V3:
-        invokeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V3);
+        executeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V3);
         break;
       case TASK_CHAIN:
-        invokeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V1);
+        executeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V1);
         break;
       case TASK_CHAIN_V2:
-        invokeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V2);
+        executeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V2);
         break;
       case TASK_CHAIN_V3:
-        invokeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V3);
+        executeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V3);
         break;
       case CHILD_CHAIN:
-        invokeStrategy = new ChildChainStrategy();
+        executeStrategy = new ChildChainStrategy();
         break;
       default:
         throw new InvalidRequestException("No Invoker present for execution mode :" + mode);
     }
-    injector.injectMembers(invokeStrategy);
-    return new ExecutableInvoker(invokeStrategy);
+    injector.injectMembers(executeStrategy);
+    return new ExecutableProcessor(executeStrategy);
   }
 }
