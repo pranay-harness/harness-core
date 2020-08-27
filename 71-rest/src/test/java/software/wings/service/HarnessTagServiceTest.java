@@ -462,7 +462,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
       fail("Expected an InvalidRequestException to be thrown");
     } catch (InvalidRequestException exception) {
       assertThat(exception.getParams().get("message"))
-          .isEqualTo("Unauthorized: User need to have TAG_MANAGEMENT permission to create system tags");
+          .isEqualTo("Unauthorized: User need to have MANAGE_TAGS permission to create system tags");
     }
   }
 

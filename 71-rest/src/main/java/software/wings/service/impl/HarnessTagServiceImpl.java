@@ -744,8 +744,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
   private void validateSystemTagNameCreation(HarnessTag tag, boolean allowSystemTagsCreate) {
     if (!allowSystemTagsCreate && tag.getKey().startsWith(SYSTEM_TAG_PREFIX)) {
-      throw new InvalidRequestException(
-          "Unauthorized: User need to have TAG_MANAGEMENT permission to create system tags");
+      throw new InvalidRequestException("Unauthorized: User need to have MANAGE_TAGS permission to create system tags");
     }
   }
 
