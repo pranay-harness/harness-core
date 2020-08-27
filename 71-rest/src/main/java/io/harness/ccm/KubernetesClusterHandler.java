@@ -40,6 +40,11 @@ public class KubernetesClusterHandler implements DelegateObserver {
                               .anonymousId(delegate.getAccountId()));
   }
 
+  @Override
+  public void onDisconnected(String accountId, String delegateId) {
+    // do nothing
+  }
+
   private void createKubernetes(Delegate delegate) {
     KubernetesClusterConfig kubernetesClusterConfig =
         KubernetesClusterConfig.builder()

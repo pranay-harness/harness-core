@@ -127,6 +127,7 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMo
 import io.harness.stream.GuiceObjectFactory;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
+import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
@@ -202,6 +203,7 @@ import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
+import software.wings.service.impl.PollingModeDelegateDisconnectedDetector;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskManager;
@@ -740,6 +742,11 @@ public class WingsApplication extends Application<MainConfiguration> {
         .scheduleWithFixedDelay(()
                                     -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(),
             0L, 10L, TimeUnit.SECONDS);
+
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(new Schedulable("Failed updating delegate connection disconnected flag to true",
+                                    injector.getInstance(PollingModeDelegateDisconnectedDetector.class)),
+            0L, 60L, TimeUnit.SECONDS);
   }
 
   public static void registerObservers(Injector injector) {

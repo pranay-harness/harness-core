@@ -23,7 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.eclipse.jetty.util.ConcurrentHashSet;
+import software.wings.beans.Delegate;
 import software.wings.beans.PerpetualTaskBroadcastEvent;
+import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
@@ -35,7 +37,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class PerpetualTaskServiceImpl implements PerpetualTaskService {
+public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateObserver {
   private Set<Pair<String, String>> broadcastAggregateSet = new ConcurrentHashSet<>();
 
   private PerpetualTaskRecordDao perpetualTaskRecordDao;
@@ -234,5 +236,15 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   @Override
   public void setTaskState(String taskId, PerpetualTaskState state) {
     perpetualTaskRecordDao.setTaskState(taskId, state);
+  }
+
+  @Override
+  public void onAdded(Delegate delegate) {
+    // do nothing
+  }
+
+  @Override
+  public void onDisconnected(String accountId, String delegateId) {
+    // do nothing, impl coming in next PR
   }
 }
