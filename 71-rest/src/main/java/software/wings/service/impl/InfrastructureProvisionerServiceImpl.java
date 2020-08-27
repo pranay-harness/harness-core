@@ -123,7 +123,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.validation.Valid;
@@ -799,7 +798,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                               .sourceRepoBranch(sourceRepoBranch)
                               .build()})
-                      .timeout(TimeUnit.SECONDS.toMillis(30))
+                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                       .build())
             .build();
 
@@ -868,7 +867,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                               .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
                               .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
                               .build()})
-                      .timeout(TimeUnit.SECONDS.toMillis(30))
+                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                       .build())
             .build();
     ResponseData responseData;
