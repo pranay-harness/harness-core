@@ -149,9 +149,6 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
   @VisibleForTesting
   String getCriteria(PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptionDetails) {
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
-    if (encryptionDetails != null) {
-      encryptionService.decrypt(pcfConfig, encryptionDetails);
-    }
 
     StringBuilder criteria = new StringBuilder(256);
     if (pcfCliValidationRequired(pcfCommandRequest)) {
@@ -162,7 +159,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
       criteria.append(CF_APP_AUTOSCALAR_VALIDATION).append('_');
     }
 
-    criteria.append("Pcf:").append(pcfConfig.getEndpointUrl()).append('/').append(pcfConfig.getUsername());
+    criteria.append("Pcf:").append(pcfConfig.getEndpointUrl());
 
     return criteria.toString();
   }

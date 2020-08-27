@@ -73,11 +73,11 @@ public class PcfCommandValidationTest extends CategoryTest {
     PcfConfig pcfConfig = PcfConfig.builder().endpointUrl("url").username("user".toCharArray()).build();
     PcfCommandRequest request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).build();
     String criteria = pcfCommandValidation.getCriteria(request, null);
-    assertThat(criteria).isEqualTo("Pcf:url/user");
+    assertThat(criteria).isEqualTo("Pcf:url");
 
     request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).useCLIForPcfAppCreation(true).build();
     criteria = pcfCommandValidation.getCriteria(request, null);
-    assertThat(criteria).isEqualTo("CF_CLI_INSTALLATION_REQUIRED_Pcf:url/user");
+    assertThat(criteria).isEqualTo("CF_CLI_INSTALLATION_REQUIRED_Pcf:url");
 
     request = PcfCommandSetupRequest.builder()
                   .pcfConfig(pcfConfig)
@@ -85,7 +85,7 @@ public class PcfCommandValidationTest extends CategoryTest {
                   .useAppAutoscalar(true)
                   .build();
     criteria = pcfCommandValidation.getCriteria(request, null);
-    assertThat(criteria).isEqualTo("CF_CLI_INSTALLATION_REQUIRED_cf_appautoscalar_Pcf:url/user");
+    assertThat(criteria).isEqualTo("CF_CLI_INSTALLATION_REQUIRED_cf_appautoscalar_Pcf:url");
   }
 
   @Test
@@ -132,6 +132,6 @@ public class PcfCommandValidationTest extends CategoryTest {
     PcfCommandRequest request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).build();
     String criteria = pcfCommandValidation.getCriteria(request, encryptedDetails);
     verify(encryptionService, times(1)).decrypt(pcfConfig, encryptedDetails);
-    assertThat(criteria).isEqualTo("Pcf:url/user");
+    assertThat(criteria).isEqualTo("Pcf:url");
   }
 }
