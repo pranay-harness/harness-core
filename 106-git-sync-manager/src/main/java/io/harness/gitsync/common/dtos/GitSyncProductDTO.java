@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.dtos;
 
-import io.harness.gitsync.core.EntityType;
+import io.harness.gitsync.core.Product;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -11,8 +11,7 @@ import java.util.List;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class GitSyncEntityListDTO {
-  private EntityType entityType;
-  private long count;
-  private List<GitSyncEntityDTO> gitSyncEntities;
+public class GitSyncProductDTO {
+  private Product productName;
+  private List<GitSyncEntityListDTO> gitSyncEntityListDTOList;
 }
