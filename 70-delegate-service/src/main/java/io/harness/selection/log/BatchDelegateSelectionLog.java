@@ -1,7 +1,5 @@
-package software.wings.beans;
+package io.harness.selection.log;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.selection.log.DelegateSelectionLog;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,7 +9,6 @@ import java.util.Optional;
 
 @Data
 @Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class BatchDelegateSelectionLog {
   private String taskId;
 

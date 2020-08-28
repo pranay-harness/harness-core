@@ -49,6 +49,7 @@ import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapa
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Value;
@@ -59,7 +60,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.DelegateScope;
