@@ -4,7 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.encryption.Scope;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

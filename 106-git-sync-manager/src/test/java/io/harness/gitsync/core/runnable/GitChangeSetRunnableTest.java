@@ -19,8 +19,8 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.GitSyncBaseTest;
-import io.harness.gitsync.common.beans.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitSyncMetadata;

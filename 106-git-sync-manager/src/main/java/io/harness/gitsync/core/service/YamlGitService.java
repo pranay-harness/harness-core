@@ -1,7 +1,7 @@
 package io.harness.gitsync.core.service;
 
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.gitsync.common.beans.GitFileChange;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.impl;
 
-import static io.harness.gitsync.common.ScopeHelper.getScope;
+import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.NGPageResponse;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.encryption.Scope;
 import io.harness.gitsync.common.GitFileLocationHelper;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
@@ -27,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -145,6 +146,6 @@ public class GitEntityServiceImpl implements GitEntityService {
   @NotNull
   @VisibleForTesting
   public List<EntityType> getEntityTypesFromProduct(Product product) {
-    return EntityType.getEntityTypes(product).stream().collect(Collectors.toList());
+    return new ArrayList<>(EntityType.getEntityTypes(product));
   }
 }

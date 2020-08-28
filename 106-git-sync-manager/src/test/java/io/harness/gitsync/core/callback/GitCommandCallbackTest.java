@@ -14,17 +14,15 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.beans.git.GitCheckoutResult;
-import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
-import io.harness.delegate.beans.git.GitCommitAndPushRequest;
-import io.harness.delegate.beans.git.GitCommitAndPushResult;
-import io.harness.delegate.beans.git.GitCommitResult;
+import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.git.model.ChangeType;
-import io.harness.gitsync.common.CommonsMapper;
-import io.harness.gitsync.common.beans.GitFileChange;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
+import io.harness.git.model.CommitResult;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.service.GitCommitService;
@@ -52,15 +50,15 @@ public class GitCommandCallbackTest extends CategoryTest {
   private static final String gitConnectorId = "gitConnectorId";
   private static final String repositoryName = "repositoryName";
   private static final String branchName = "branchName";
-
+  private final YamlGitConfigDTO yamlGitConfig = YamlGitConfigDTO.builder().build();
   @Mock private YamlGitService yamlGitService;
   @Mock private GitSyncService gitSyncService;
   @Mock private GitCommitService gitCommitService;
   @Mock private YamlChangeSetService yamlChangeSetService;
 
   @InjectMocks
-  private GitCommandCallback commandCallback = new GitCommandCallback(
-      ACCOUNT_ID, CHANGESET_ID, GitCommandType.COMMIT_AND_PUSH, gitConnectorId, repositoryName, branchName);
+  private GitCommandCallback commandCallback = new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID,
+      GitCommandType.COMMIT_AND_PUSH, gitConnectorId, repositoryName, branchName, yamlGitConfig);
 
   @Before
   public void setup() {
@@ -128,7 +126,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   public void testNotifyWithUnhandledGitCommandType() {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
                                           .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
-                                          .gitCommandResult(GitCheckoutResult.builder().build())
+                                          .gitCommandResult(CommitResult.builder().build())
                                           .build();
 
     Map<String, ResponseData> map = new HashMap<>();
@@ -160,33 +158,25 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testNotifyForGitCommitAndPush() {
-    io.harness.git.model.GitFileChange gitFileChange =
-        io.harness.git.model.GitFileChange.builder().changeType(ChangeType.ADD).build();
+    io.harness.git.model.GitFileChange gitFileChange = GitFileChange.builder().changeType(ChangeType.ADD).build();
     String commitId = "commitId";
-    GitCommitResult gitCommitResult = GitCommitResult.builder().commitId(commitId).build();
+    CommitResult gitCommitResult = CommitResult.builder().commitId(commitId).build();
     String yamlChangeSetId = "yamlChangeSetId";
-    GitCommitAndPushResult gitCommitAndPushResult = GitCommitAndPushResult.builder()
-                                                        .filesCommitedToGit(Arrays.asList(gitFileChange))
-                                                        .gitCommitResult(gitCommitResult)
-                                                        .yamlGitConfig(YamlGitConfigDTO.builder().build())
-                                                        .build();
+    CommitAndPushResult gitCommitAndPushResult = CommitAndPushResult.builder()
+                                                     .filesCommittedToGit(Arrays.asList(gitFileChange))
+                                                     .gitCommitResult(gitCommitResult)
+                                                     .build();
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
                                           .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
                                           .gitCommandResult(gitCommitAndPushResult)
-                                          .gitCommandRequest(GitCommitAndPushRequest.builder()
-                                                                 .yamlChangeSetId(yamlChangeSetId)
-                                                                 .yamlGitConfigs(YamlGitConfigDTO.builder().build())
-                                                                 .build())
+                                          .gitCommandRequest(CommitAndPushRequest.builder().build())
 
                                           .build();
 
     Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
-    doReturn(
-        Optional.of(YamlChangeSet.builder()
-                        .gitFileChanges(Collections.singletonList(CommonsMapper.toCoreGitFileChange(gitFileChange)))
-                        .build()))
+    doReturn(Optional.of(YamlChangeSet.builder().gitFileChanges(Collections.singletonList(gitFileChange)).build()))
         .when(yamlChangeSetService)
         .get(any(), any());
     GitCommit gitCommit = GitCommit.builder()
@@ -201,12 +191,11 @@ public class GitCommandCallbackTest extends CategoryTest {
     commandCallback.notify(map);
 
     verify(yamlGitService, times(1))
-        .removeGitSyncErrors(
-            ACCOUNT_ID, null, null, Collections.singletonList(CommonsMapper.toCoreGitFileChange(gitFileChange)), false);
+        .removeGitSyncErrors(ACCOUNT_ID, null, null, Collections.singletonList(gitFileChange), false);
 
     verify(gitSyncService, times(1))
-        .logActivityForGitOperation(Collections.singletonList(CommonsMapper.toCoreGitFileChange(gitFileChange)),
-            GitFileActivity.Status.SUCCESS, false, false, "", commitId, null);
+        .logActivityForGitOperation(Collections.singletonList(gitFileChange), GitFileActivity.Status.SUCCESS, false,
+            false, "", commitId, null, yamlGitConfig);
     verify(gitSyncService, times(1))
         .createGitFileActivitySummaryForCommit(commitId, ACCOUNT_ID, false, GitCommit.Status.COMPLETED);
   }

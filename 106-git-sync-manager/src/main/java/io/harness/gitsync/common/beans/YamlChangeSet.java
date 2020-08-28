@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.encryption.Scope;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.core.beans.GitSyncMetadata;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
 import io.harness.mongo.index.FdIndex;

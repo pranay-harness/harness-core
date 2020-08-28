@@ -1,5 +1,7 @@
 package io.harness.gitsync.core.dao.api.repositories.YamlChangeSet;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import com.google.inject.Inject;
 
 import com.mongodb.client.result.UpdateResult;
@@ -68,5 +70,12 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
   @Override
   public <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass) {
     return mongoTemplate.aggregate(aggregation, YamlChangeSet.class, castClass);
+  }
+
+  @Override
+  public List<String> findDistinctAccountIdByStatus(YamlChangeSet.Status status) {
+    Criteria criteria = Criteria.where(YamlChangeSetKeys.status).is(status);
+    Query query = query(criteria);
+    return mongoTemplate.findDistinct(query, YamlChangeSetKeys.accountId, YamlChangeSet.class, String.class);
   }
 }

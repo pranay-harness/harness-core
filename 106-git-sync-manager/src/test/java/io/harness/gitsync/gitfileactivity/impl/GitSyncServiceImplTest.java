@@ -3,14 +3,15 @@ package io.harness.gitsync.gitfileactivity.impl;
 import static io.harness.gitsync.core.beans.GitCommit.Status.COMPLETED;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.GitSyncBaseTest;
-import io.harness.gitsync.common.beans.GitFileChange;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.TriggeredBy;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
@@ -28,7 +29,6 @@ public class GitSyncServiceImplTest extends GitSyncBaseTest {
 
   private String accountId = "accountId";
   private String gitConnectorId = "gitConnectorId";
-  ;
 
   @Before
   public void setup() {
@@ -40,19 +40,18 @@ public class GitSyncServiceImplTest extends GitSyncBaseTest {
   @Category(UnitTests.class)
   public void test_shouldLogActivityForGitOperation() {
     final String commitId = "commitId";
-    final String filePath = "file1.yaml";
+    final String filePath = "rootpath/connector/file1.yaml";
     final String commitMessage = "commitMessage";
-    Iterable<GitFileActivity> gitFileActivities = gitSyncService.logActivityForGitOperation(
-        Collections.singletonList(
-            GitFileChange.builder()
-                .yamlGitConfig(YamlGitConfigDTO.builder().branch("branchName").gitConnectorId(gitConnectorId).build())
-                .filePath(filePath)
-                .commitMessage(commitMessage)
-                .accountId(accountId)
-                .commitId(commitId)
-                .changeFromAnotherCommit(Boolean.TRUE)
-                .build()),
-        GitFileActivity.Status.SUCCESS, false, false, accountId, commitId, commitMessage);
+    Iterable<GitFileActivity> gitFileActivities =
+        gitSyncService.logActivityForGitOperation(Collections.singletonList(GitFileChange.builder()
+                                                                                .filePath(filePath)
+                                                                                .commitMessage(commitMessage)
+                                                                                .accountId(accountId)
+                                                                                .commitId(commitId)
+                                                                                .changeFromAnotherCommit(Boolean.TRUE)
+                                                                                .build()),
+            GitFileActivity.Status.SUCCESS, false, false, accountId, commitId, commitMessage,
+            YamlGitConfigDTO.builder().branch("branchName").gitConnectorId(gitConnectorId).build());
 
     GitFileActivity fileActivity = gitFileActivities.iterator().next();
 
@@ -86,7 +85,7 @@ public class GitSyncServiceImplTest extends GitSyncBaseTest {
                                            .status(GitFileActivity.Status.SUCCESS)
                                            .build()))
         .when(gitSyncService)
-        .getFileActivitesForCommit(commitId, accountId);
+        .getFileActivitesForCommit(anyString(), anyString());
 
     GitFileActivitySummary fileActivitySummary =
         gitSyncService.createGitFileActivitySummaryForCommit(commitId, accountId, false, COMPLETED);

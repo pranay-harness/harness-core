@@ -54,18 +54,10 @@ import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.delegate.beans.git.EntityScope;
-import io.harness.delegate.beans.git.GitCommand;
-import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
-import io.harness.delegate.beans.git.GitCommandRequest;
-import io.harness.delegate.beans.git.GitCommandResult;
-import io.harness.delegate.beans.git.GitCommitAndPushRequest;
-import io.harness.delegate.beans.git.GitCommitAndPushResult;
-import io.harness.delegate.beans.git.GitCommitResult;
-import io.harness.delegate.beans.git.GitPushResult;
+import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -122,6 +114,7 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbSetupResponse;
 import io.harness.serializer.KryoRegistrar;
+import org.eclipse.jgit.api.GitCommand;
 
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
@@ -161,8 +154,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTaskResponse.class, 5006);
     kryo.register(DelegateTaskResponse.ResponseCode.class, 5520);
     kryo.register(DirectK8sInfraDelegateConfig.class, 19102);
-    kryo.register(EntityScope.class, 19091);
-    kryo.register(EntityScope.Scope.class, 19096);
     kryo.register(ErrorNotifyResponseData.class, 5213);
     kryo.register(FetchType.class, 8030);
     kryo.register(GitAuthenticationDTO.class, 19063);
@@ -170,18 +161,11 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitCommand.class, 19062);
     kryo.register(GitCommandExecutionResponse.class, 19067);
     kryo.register(GitCommandParams.class, 19061);
-    kryo.register(GitCommandRequest.class, 19073);
-    kryo.register(GitCommandResult.class, 19072);
     kryo.register(GitCommandStatus.class, 19074);
     kryo.register(GitCommandType.class, 19071);
-    kryo.register(GitCommitAndPushRequest.class, 19089);
-    kryo.register(GitCommitAndPushResult.class, 19090);
-    kryo.register(GitCommitResult.class, 19093);
     kryo.register(GitConfigDTO.class, 19060);
     kryo.register(GitConnectionType.class, 19068);
     kryo.register(GitHTTPAuthenticationDTO.class, 19064);
-    kryo.register(GitPushResult.class, 19092);
-    kryo.register(GitPushResult.RefUpdate.class, 19097);
     kryo.register(GitSSHAuthenticationDTO.class, 19065);
     kryo.register(GitStoreDelegateConfig.class, 19104);
     kryo.register(GitSyncConfig.class, 19069);

@@ -1,9 +1,10 @@
-package io.harness.gitsync.common;
+package io.harness.encryption;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class ScopeHelper {
   public static Scope getScope(String accountId, String orgId, String projectId) {
     if (isNotEmpty(projectId)) {

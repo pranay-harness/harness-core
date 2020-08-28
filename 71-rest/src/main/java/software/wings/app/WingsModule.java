@@ -37,8 +37,6 @@ import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
-import io.harness.cdng.gitclient.GitClientNG;
-import io.harness.cdng.gitclient.GitClientNGImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
@@ -1130,7 +1128,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(ServerlessDashboardService.class).to(ServerlessDashboardServiceImpl.class);
     bind(ScalyrService.class).to(ScalyrServiceImpl.class);
     bind(ApmVerificationService.class).to(ApmVerificationServiceImpl.class);
-    bind(GitClientNG.class).to(GitClientNGImpl.class);
     bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
 
     ApiBlocker apiBlocker = new ApiBlocker();

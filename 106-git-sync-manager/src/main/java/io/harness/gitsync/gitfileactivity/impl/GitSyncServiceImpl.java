@@ -10,7 +10,8 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
-import io.harness.gitsync.common.beans.GitFileChange;
+import io.harness.git.model.GitFileChange;
+import io.harness.gitsync.common.GitFileLocationHelper;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityBuilder;
@@ -52,27 +53,29 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   @Override
   public Iterable<GitFileActivity> logActivityForGitOperation(List<GitFileChange> changeList, Status status,
-      boolean isGitToHarness, boolean isFullSync, String message, String commitId, String commitMessage) {
+      boolean isGitToHarness, boolean isFullSync, String message, String commitId, String commitMessage,
+      YamlGitConfigDTO yamlGitConfig) {
     try {
       if (isEmpty(changeList)) {
         return null;
       }
-      final List<GitFileActivity> activities = changeList.stream()
-                                                   .map(change
-                                                       -> buildBaseGitFileActivity(change, commitId, commitMessage)
-                                                              .status(status)
-                                                              .errorMessage(message)
-                                                              .triggeredBy(getTriggeredBy(isGitToHarness, isFullSync))
-                                                              .build())
-                                                   .collect(toList());
+      final List<GitFileActivity> activities =
+          changeList.stream()
+              .map(change
+                  -> buildBaseGitFileActivity(change, commitId, commitMessage, yamlGitConfig)
+                         .status(status)
+                         .errorMessage(message)
+                         .triggeredBy(getTriggeredBy(isGitToHarness, isFullSync))
+                         .build())
+              .collect(toList());
       return gitFileActivityRepository.saveAll(activities);
     } catch (Exception ex) {
       throw new InvalidRequestException(format("Error while saving activities: %s", ex));
     }
   }
 
-  private GitFileActivityBuilder buildBaseGitFileActivity(GitFileChange change, String commitId, String commitMessage) {
-    YamlGitConfigDTO gitConfig = change.getYamlGitConfig();
+  private GitFileActivityBuilder buildBaseGitFileActivity(
+      GitFileChange change, String commitId, String commitMessage, YamlGitConfigDTO yamlGitConfig) {
     String commitIdToPersist = StringUtils.isEmpty(commitId) ? change.getCommitId() : commitId;
     String processingCommitIdToPersist = StringUtils.isEmpty(commitId) ? change.getProcessingCommitId() : commitId;
     String commitMessageToPersist = StringUtils.isEmpty(commitMessage) ? change.getCommitMessage() : commitMessage;
@@ -88,10 +91,10 @@ public class GitSyncServiceImpl implements GitSyncService {
         .commitMessage(commitMessageToPersist)
         .processingCommitMessage(processingCommitMessage)
         .changeType(change.getChangeType())
-        .gitConnectorId(gitConfig.getGitConnectorId())
-        .repo(gitConfig.getRepo())
-        .rootFolder(gitConfig.getDefaultRootFolder() != null ? gitConfig.getDefaultRootFolder().getRootFolder() : null)
-        .branchName(gitConfig.getBranch())
+        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .repo(yamlGitConfig.getRepo())
+        .rootFolder(GitFileLocationHelper.getRootPathSafely(change.getFilePath()))
+        .branchName(yamlGitConfig.getBranch())
         .changeFromAnotherCommit(changeFromAnotherCommit);
   }
 

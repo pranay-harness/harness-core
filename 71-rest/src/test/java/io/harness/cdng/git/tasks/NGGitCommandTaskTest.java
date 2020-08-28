@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.ResponseData;
@@ -16,14 +16,15 @@ import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
-import io.harness.delegate.beans.git.GitCommitAndPushRequest;
-import io.harness.delegate.beans.git.GitCommitAndPushResult;
+import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.encryption.SecretRefData;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
 import org.junit.Before;
@@ -32,14 +33,12 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
 
 import java.util.Collections;
 
-public class NGGitCommandTaskTest extends WingsBaseTest {
-  @Mock GitClientNG gitClient;
-  @Mock NGGitService ngGitService;
+public class NGGitCommandTaskTest extends CategoryTest {
+  @Mock NGGitService gitService;
   @Mock SecretDecryptionService encryptionService;
   String passwordIdentifier = "passwordIdentifier";
   String passwordReference = "acc." + passwordIdentifier;
@@ -84,7 +83,7 @@ public class NGGitCommandTaskTest extends WingsBaseTest {
                                 .encryptionDetails(Collections.emptyList())
                                 .gitCommandType(GitCommandType.VALIDATE)
                                 .build();
-    doReturn(null).when(ngGitService).validate(any(), any());
+    doReturn(null).when(gitService).validate(any(), any());
     doReturn(null).when(encryptionService).decrypt(any(), any());
     ResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);
@@ -98,10 +97,10 @@ public class NGGitCommandTaskTest extends WingsBaseTest {
     GitCommandParams task = GitCommandParams.builder()
                                 .gitConfig(gitConfig)
                                 .encryptionDetails(Collections.emptyList())
-                                .gitCommandRequest(GitCommitAndPushRequest.builder().build())
+                                .gitCommandRequest(CommitAndPushRequest.builder().build())
                                 .gitCommandType(GitCommandType.COMMIT_AND_PUSH)
                                 .build();
-    doReturn(GitCommitAndPushResult.builder().build()).when(gitClient).commitAndPush(any(), any(), any(), any());
+    doReturn(CommitAndPushResult.builder().build()).when(gitService).commitAndPush(any(), any(), any());
     doReturn(null).when(encryptionService).decrypt(any(), any());
     ResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);

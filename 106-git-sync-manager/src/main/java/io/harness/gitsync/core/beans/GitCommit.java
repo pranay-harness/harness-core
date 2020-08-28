@@ -3,7 +3,7 @@ package io.harness.gitsync.core.beans;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.delegate.beans.git.GitCommandResult;
+import io.harness.git.model.GitBaseResult;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -45,7 +45,7 @@ public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, C
   private List<String> yamlGitConfigId;
   private String commitId;
   private String yamlChangeSetId;
-  private GitCommandResult gitCommandResult;
+  private GitBaseResult gitCommandResult;
   @FdIndex private Status status;
   private FailureReason failureReason;
   private String yamlChangeSetsProcessed;

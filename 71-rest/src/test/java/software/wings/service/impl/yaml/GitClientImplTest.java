@@ -3,11 +3,11 @@ package software.wings.service.impl.yaml;
 import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -295,14 +295,10 @@ public class GitClientImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testCloneRepoWithSSH() throws Exception {
-    try {
-      Git gitResult = gitSyncCloneRepository();
-    } catch (Exception gae) {
-      logger.error("Git Clone with SSH failed for repository: " + gae.getMessage());
-    }
+    assertThatThrownBy(() -> gitSyncCloneRepository());
   }
 
   @Test

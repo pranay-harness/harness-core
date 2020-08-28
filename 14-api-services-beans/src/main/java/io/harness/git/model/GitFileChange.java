@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder(toBuilder = true)
+@FieldNameConstants(innerTypeName = "GitFileChangeKeys")
 public class GitFileChange {
   private String filePath;
   private String fileContent;

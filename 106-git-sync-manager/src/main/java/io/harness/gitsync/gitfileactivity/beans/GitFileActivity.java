@@ -1,10 +1,10 @@
 package io.harness.gitsync.gitfileactivity.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.git.model.ChangeType;
 import io.harness.mongo.index.FdIndex;
 import io.harness.ng.core.OrganizationAccess;
 import io.harness.ng.core.ProjectAccess;
-import io.harness.ng.core.gitsync.ChangeType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;

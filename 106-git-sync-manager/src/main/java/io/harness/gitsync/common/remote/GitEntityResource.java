@@ -34,7 +34,7 @@ public class GitEntityResource {
   @ApiOperation(value = "List Git Sync Entity by product", nickname = "listGitSyncEntitiesByProduct")
   public ResponseDTO<GitSyncProductDTO> list(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("size") int size, @QueryParam("product") @NotEmpty Product product) {
+      @QueryParam("size") int size, @QueryParam("product") Product product) {
     return ResponseDTO.newResponse(gitEntityService.list(projectId, organizationId, accountId, product, size));
   }
 
@@ -43,7 +43,7 @@ public class GitEntityResource {
   @ApiOperation(value = "Get Git Sync Entity By Type", nickname = "listGitSyncEntitiesByType")
   public ResponseDTO<NGPageResponse<GitSyncEntityListDTO>> listByType(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("entityType") @NotEmpty EntityType entityType, @QueryParam("page") @DefaultValue("0") int page,
+      @PathParam("entityType") EntityType entityType, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") int size) {
     return ResponseDTO.newResponse(
         gitEntityService.getPageByType(projectId, organizationId, accountId, entityType, page, size));

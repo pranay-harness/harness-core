@@ -1,7 +1,7 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
-import static io.harness.gitsync.common.ScopeHelper.getScope;
+import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfig;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitFolderConfig;
@@ -11,13 +11,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.amazonaws.services.eks.model.InvalidRequestException;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitConfig.YamlGitConfigRepository;
@@ -207,18 +205,14 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
-  public Optional<GitConfigDTO> getGitConfig(
+  public Optional<ConnectorDTO> getGitConnector(
       YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName) {
-    // TODO(abhinav): git connector refactor
     Optional<ConnectorDTO> connectorDTO =
         connectorService.get(ygs.getAccountId(), ygs.getOrganizationId(), ygs.getProjectId(), gitConnectorId);
-    Optional<ConnectorConfigDTO> configDTO = connectorDTO.map(connector -> {
-      if (connector.getConnectorConfig() instanceof GitConfigDTO) {
-        return connector.getConnectorConfig();
-      }
-      throw new InvalidRequestException("Git connector not found with identifier " + gitConnectorId);
-    });
-    return configDTO.map(config -> (GitConfigDTO) config);
+    if (connectorDTO.isPresent() && connectorDTO.get().getConnectorType() == ConnectorType.GIT) {
+      return connectorDTO;
+    }
+    return Optional.empty();
   }
 
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, boolean performFullSync) {

@@ -1,7 +1,7 @@
 package io.harness.gitsync.gitfileactivity.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.encryption.Scope;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.ng.core.OrganizationAccess;
 import io.harness.ng.core.ProjectAccess;

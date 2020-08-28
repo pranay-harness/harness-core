@@ -22,10 +22,13 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.git.EntityScope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.gitsync.common.beans.GitFileChange;
+import io.harness.encryption.Scope;
+import io.harness.git.model.ChangeType;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig.YamlGitFolderConfigRepository;
@@ -36,7 +39,6 @@ import io.harness.gitsync.core.callback.GitCommandCallback;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
-import io.harness.ng.core.gitsync.ChangeType;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.waiter.WaitNotifyEngine;
@@ -94,7 +96,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
                                       .build();
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
                                       .status(YamlChangeSet.Status.QUEUED)
-                                      .scope(EntityScope.Scope.ACCOUNT)
+                                      .scope(Scope.ACCOUNT)
                                       .accountId(ACCOUNTID)
                                       .gitToHarness(false)
                                       .gitFileChanges(Collections.singletonList(gitFileChange))
@@ -104,9 +106,12 @@ public class YamlGitServiceImplTest extends CategoryTest {
     doReturn(YamlGitConfigDTO.builder().build())
         .when(yamlGitConfigService)
         .getByFolderIdentifierAndIsEnabled(null, null, ACCOUNTID, null);
-    doReturn(Optional.of(GitConfigDTO.builder().build()))
+    doReturn(Optional.of(ConnectorDTO.builder()
+                             .connectorType(ConnectorType.GIT)
+                             .connectorConfig(GitConfigDTO.builder().build())
+                             .build()))
         .when(yamlGitConfigService)
-        .getGitConfig(any(), any(), any(), any());
+        .getGitConnector(any(), any(), any(), any());
     doReturn("1234").when(managerDelegateServiceDriver).sendTaskAsync(any(), any(), any());
     yamlGitService.handleHarnessChangeSet(yamlChangeSet, ACCOUNTID);
     verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
@@ -125,14 +130,14 @@ public class YamlGitServiceImplTest extends CategoryTest {
                                       .build();
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
                                       .status(YamlChangeSet.Status.QUEUED)
-                                      .scope(EntityScope.Scope.ACCOUNT)
+                                      .scope(Scope.ACCOUNT)
                                       .accountId(ACCOUNTID)
                                       .gitToHarness(false)
                                       .gitFileChanges(Collections.singletonList(gitFileChange))
                                       .build();
 
     yamlGitService.handleHarnessChangeSet(yamlChangeSet, ACCOUNTID);
-    verify(yamlGitConfigService, times(0)).getGitConfig(any(), any(), any(), any());
+    verify(yamlGitConfigService, times(0)).getGitConnector(any(), any(), any(), any());
   }
 
   @Test
@@ -209,9 +214,12 @@ public class YamlGitServiceImplTest extends CategoryTest {
         .when(gitCommitService)
         .findLastProcessedGitCommit(any(), any(), any());
     doReturn(null).when(ngSecretService).getEncryptionDetails(any(), any());
-    doReturn(Optional.of(GitConfigDTO.builder().build()))
+    doReturn(Optional.of(ConnectorDTO.builder()
+                             .connectorType(ConnectorType.GIT)
+                             .connectorConfig(GitConfigDTO.builder().build())
+                             .build()))
         .when(yamlGitConfigService)
-        .getGitConfig(any(), any(), any(), any());
+        .getGitConnector(any(), any(), any(), any());
 
     yamlGitService.handleGitChangeSet(yamlChangeSet, ACCOUNT_ID);
     verify(waitNotifyEngine, times(1)).waitForAllOn(eq(NG_ORCHESTRATION), any(GitCommandCallback.class), anyString());
