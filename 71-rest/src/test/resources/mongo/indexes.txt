@@ -169,7 +169,6 @@ delegateConnectionResults {"name": "delegateId_1", "background": true} {"delegat
 delegateConnectionResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateConnections {"name": "index2", "background": true} {"accountId": 1, "delegateId": 1, "version": 1}
 delegateConnections {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-delegateProfileScopingRules {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateProfiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 delegateScopes {"name": "createdAt_1", "background": true} {"createdAt": 1}
