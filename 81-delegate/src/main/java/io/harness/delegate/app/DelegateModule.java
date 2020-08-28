@@ -1,7 +1,7 @@
 package io.harness.delegate.app;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -37,7 +37,6 @@ import io.harness.delegate.service.MetricDataStoreServiceImpl;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
-import io.harness.govern.DependencyModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -283,13 +282,21 @@ import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
 import java.time.Clock;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class DelegateModule extends DependencyModule {
+public class DelegateModule extends AbstractModule {
+  private static volatile DelegateModule instance;
+
+  public static DelegateModule getInstance() {
+    if (instance == null) {
+      instance = new DelegateModule();
+    }
+    return instance;
+  }
+
   @Provides
   @Singleton
   @Named("heartbeatExecutor")
@@ -470,6 +477,7 @@ public class DelegateModule extends DependencyModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
+    install(NGDelegateModule.getInstance());
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
@@ -676,10 +684,5 @@ public class DelegateModule extends DependencyModule {
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(NGDelegateModule.getInstance());
   }
 }
