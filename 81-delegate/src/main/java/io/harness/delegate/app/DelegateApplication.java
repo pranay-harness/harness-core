@@ -175,7 +175,7 @@ public class DelegateApplication {
                                                           .orElse(EventPublisherConstants.DEFAULT_QUEUE_FILE_PATH))
                                        .build(),
         () -> getDelegateId().orElse("UNREGISTERED")));
-    modules.addAll(new DelegateModule().cumulativeDependencies());
+    modules.add(DelegateModule.getInstance());
 
     if (configuration.isGrpcServiceEnabled()) {
       modules.add(new DelegateGrpcServiceModule(
