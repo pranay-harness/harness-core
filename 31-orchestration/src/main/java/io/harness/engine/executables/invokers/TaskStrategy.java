@@ -9,7 +9,9 @@ import com.google.inject.name.Named;
 import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executables.TaskExecuteStrategy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -18,6 +20,9 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
+import io.harness.plan.PlanNode;
+import io.harness.registries.state.StepRegistry;
+import io.harness.state.io.StepResponse;
 import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
@@ -34,6 +39,8 @@ public class TaskStrategy implements TaskExecuteStrategy {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private StepRegistry stepRegistry;
+  @Inject private OrchestrationEngine engine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   private TaskMode mode;
@@ -44,11 +51,28 @@ public class TaskStrategy implements TaskExecuteStrategy {
   }
 
   @Override
-  public void invoke(InvokerPackage invokerPackage) {
-    TaskExecutable taskExecutable = (TaskExecutable) invokerPackage.getStep();
-    Ambiance ambiance = invokerPackage.getAmbiance();
-    Task task = taskExecutable.obtainTask(ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
+  public void start(InvokerPackage invokerPackage) {
+    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    Task task = taskExecutable.obtainTask(
+        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, task);
+  }
+
+  @Override
+  public void resume(ResumePackage resumePackage) {
+    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
+    StepResponse stepResponse = taskExecutable.handleTaskResult(
+        ambiance, nodeExecution.getResolvedStepParameters(), resumePackage.getResponseDataMap());
+    engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+  }
+
+  private TaskExecutable extractTaskExecutable(NodeExecution nodeExecution) {
+    PlanNode node = nodeExecution.getNode();
+    return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, Task task) {

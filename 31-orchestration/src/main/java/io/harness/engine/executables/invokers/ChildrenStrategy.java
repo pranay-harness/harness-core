@@ -16,6 +16,7 @@ import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -28,6 +29,8 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.registries.state.StepRegistry;
+import io.harness.state.io.StepResponse;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -44,16 +47,33 @@ public class ChildrenStrategy implements ExecuteStrategy {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private AmbianceUtils ambianceUtils;
+  @Inject private StepRegistry stepRegistry;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
-  public void invoke(InvokerPackage invokerPackage) {
-    Ambiance ambiance = invokerPackage.getAmbiance();
-    ChildrenExecutable childrenExecutable = (ChildrenExecutable) invokerPackage.getStep();
-    ChildrenExecutableResponse response =
-        childrenExecutable.obtainChildren(ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
+  public void start(InvokerPackage invokerPackage) {
+    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    ChildrenExecutable childrenExecutable = extractChildrenExecutable(nodeExecution);
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    ChildrenExecutableResponse response = childrenExecutable.obtainChildren(
+        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, response);
+  }
+
+  @Override
+  public void resume(ResumePackage resumePackage) {
+    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    ChildrenExecutable childrenExecutable = extractChildrenExecutable(nodeExecution);
+    StepResponse stepResponse = childrenExecutable.handleChildrenResponse(
+        ambiance, nodeExecution.getResolvedStepParameters(), resumePackage.getResponseDataMap());
+    engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+  }
+
+  private ChildrenExecutable extractChildrenExecutable(NodeExecution nodeExecution) {
+    PlanNode node = nodeExecution.getNode();
+    return (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(Ambiance ambiance, ChildrenExecutableResponse response) {

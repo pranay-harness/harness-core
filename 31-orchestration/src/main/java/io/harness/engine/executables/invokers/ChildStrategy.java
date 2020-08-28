@@ -12,10 +12,13 @@ import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -27,9 +30,12 @@ import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.registries.state.StepRegistry;
+import io.harness.state.io.StepResponse;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -40,17 +46,37 @@ public class ChildStrategy implements ExecuteStrategy {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private OrchestrationEngine engine;
+  @Inject private StepRegistry stepRegistry;
   @Inject private AmbianceUtils ambianceUtils;
+  @Inject private InvocationHelper invocationHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
-  public void invoke(InvokerPackage invokerPackage) {
-    Ambiance ambiance = invokerPackage.getAmbiance();
-    ChildExecutable childExecutable = (ChildExecutable) invokerPackage.getStep();
-    ChildExecutableResponse response =
-        childExecutable.obtainChild(ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
+  public void start(InvokerPackage invokerPackage) {
+    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
+    ChildExecutableResponse response = childExecutable.obtainChild(
+        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, response);
+  }
+
+  @Override
+  public void resume(ResumePackage resumePackage) {
+    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
+    Map<String, ResponseData> accumulateResponses = invocationHelper.accumulateResponses(
+        ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
+    StepResponse stepResponse =
+        childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), accumulateResponses);
+    engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+  }
+
+  private ChildExecutable extractChildExecutable(NodeExecution nodeExecution) {
+    PlanNode node = nodeExecution.getNode();
+    return (ChildExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(Ambiance ambiance, ChildExecutableResponse response) {

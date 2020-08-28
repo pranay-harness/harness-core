@@ -9,7 +9,10 @@ import com.google.inject.name.Named;
 import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.EngineObtainmentHelper;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executables.TaskExecuteStrategy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -19,6 +22,10 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
+import io.harness.plan.PlanNode;
+import io.harness.registries.state.StepRegistry;
+import io.harness.state.io.StepInputPackage;
+import io.harness.state.io.StepResponse;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.waiter.NotifyCallback;
@@ -33,6 +40,9 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private StepRegistry stepRegistry;
+  @Inject private OrchestrationEngine engine;
+  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   private TaskMode mode;
@@ -42,18 +52,41 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
   }
 
   @Override
-  public void invoke(InvokerPackage invokerPackage) {
-    TaskChainExecutable taskChainExecutable = (TaskChainExecutable) invokerPackage.getStep();
-    Ambiance ambiance = invokerPackage.getAmbiance();
+  public void start(InvokerPackage invokerPackage) {
+    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
+    Ambiance ambiance = nodeExecution.getAmbiance();
     TaskChainResponse taskChainResponse;
-    if (invokerPackage.isStart()) {
-      taskChainResponse = taskChainExecutable.startChainLink(
-          ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
-    } else {
-      taskChainResponse = taskChainExecutable.executeNextLink(ambiance, invokerPackage.getParameters(),
-          invokerPackage.getInputPackage(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
-    }
+    taskChainResponse = taskChainExecutable.startChainLink(
+        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, taskChainResponse);
+  }
+
+  @Override
+  public void resume(ResumePackage resumePackage) {
+    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
+    TaskChainExecutableResponse lastLinkResponse =
+        Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());
+    if (lastLinkResponse.isChainEnd()) {
+      StepResponse stepResponse =
+          taskChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
+              lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
+      engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+    } else {
+      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
+          ambiance, nodeExecution.getNode().getRefObjects(), nodeExecution.getAdditionalInputs());
+      TaskChainResponse chainResponse =
+          taskChainExecutable.executeNextLink(ambiance, nodeExecution.getResolvedStepParameters(), inputPackage,
+              lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
+      handleResponse(ambiance, chainResponse);
+    }
+  }
+
+  private TaskChainExecutable extractTaskChainExecutable(NodeExecution nodeExecution) {
+    PlanNode node = nodeExecution.getNode();
+    return (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, @NonNull TaskChainResponse taskChainResponse) {
