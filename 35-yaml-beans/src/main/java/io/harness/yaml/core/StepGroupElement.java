@@ -18,4 +18,5 @@ public class StepGroupElement implements ExecutionWrapper, WithIdentifier {
   String identifier;
   String name;
   @NotNull List<ExecutionWrapper> steps;
+  List<ExecutionWrapper> rollbackSteps;
 }

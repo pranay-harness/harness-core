@@ -1,7 +1,5 @@
 package software.wings.common;
 
-import java.util.regex.Pattern;
-
 /**
  * Common constants across application.
  */
@@ -14,53 +12,6 @@ public interface Constants {
    * The constant KUBERNETES_SWAP_SERVICE_SELECTORS.
    */
   String KUBERNETES_SWAP_SERVICE_SELECTORS = "Swap Service Selectors";
-  /**
-   * The constant SUB_WORKFLOW_ID.
-   */
-  String SUB_WORKFLOW_ID = "subWorkflowId";
-  /**
-   * The constant PHASE_NAME_PREFIX.
-   */
-  String PHASE_NAME_PREFIX = "Phase ";
-
-  /**
-   * The constant phaseNamePattern.
-   */
-  Pattern phaseNamePattern = Pattern.compile("Phase [0-9]+");
-
-  /**
-   * The constant PROVISION_NODE_NAME.
-   */
-  @Deprecated String PROVISION_NODE_NAME = "Provision Nodes";
-
-  /**
-   * The constant STEP_VALIDATION_MESSAGE.
-   */
-  String STEP_VALIDATION_MESSAGE = "Some fields %s are found to be invalid/incomplete.";
-  /**
-   * The constant PHASE_STEP_VALIDATION_MESSAGE.
-   */
-  String PHASE_STEP_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
-  /**
-   * The constant WORKFLOW_VALIDATION_MESSAGE.
-   */
-  String WORKFLOW_VALIDATION_MESSAGE = "Some phases/steps %s are found to be invalid/incomplete.";
-
-  /**
-   * The constant WORKFLOW_ENV_INFRAMAPPING_VALIDATION_MESSAGE.
-   */
-  String WORKFLOW_ENV_VALIDATION_MESSAGE = "Environment is found to be invalid/incomplete.";
-
-  /**
-   * The constant WORKFLOW_ENV_INFRAMAPPING_VALIDATION_MESSAGE.
-   */
-  String WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE =
-      "Some phases %s Service Infrastructure are found to be invalid/incomplete.";
-
-  /**
-   * The constant EXECUTE_WITH_PREVIOUS_STEPS.
-   */
-  String EXECUTE_WITH_PREVIOUS_STEPS = "executeWithPreviousSteps";
 
   /**
    * The constant HARNESS_NAME.

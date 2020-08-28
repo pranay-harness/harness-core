@@ -29,7 +29,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.workflow.StepSkipStrategy;
-import software.wings.common.Constants;
+import software.wings.common.WorkflowConstants;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
 import software.wings.yaml.BaseYamlWithType;
@@ -212,7 +212,7 @@ public class PhaseStep {
         .type(StateType.PHASE_STEP.name())
         .rollback(rollback)
         .properties(NullSafeImmutableMap.<String, Object>builder()
-                        .put(Constants.SUB_WORKFLOW_ID, uuid)
+                        .put(WorkflowConstants.SUB_WORKFLOW_ID, uuid)
                         .putIfNotNull("phaseStepType", phaseStepType)
                         .putIfNotNull("stepsInParallel", stepsInParallel)
                         .putIfNotNull("artifactNeeded", artifactNeeded)
@@ -227,7 +227,7 @@ public class PhaseStep {
     if (step.getProperties() == null) {
       return false;
     }
-    return Boolean.TRUE.equals(step.getProperties().get(Constants.EXECUTE_WITH_PREVIOUS_STEPS));
+    return Boolean.TRUE.equals(step.getProperties().get(WorkflowConstants.EXECUTE_WITH_PREVIOUS_STEPS));
   }
 
   public Graph generateSubworkflow(DeploymentType deploymentType) {
@@ -315,7 +315,7 @@ public class PhaseStep {
           steps.stream().filter(step -> !step.validate()).map(GraphNode::getName).collect(toList());
       if (isNotEmpty(invalidChildren)) {
         valid = false;
-        validationMessage = format(Constants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());
+        validationMessage = format(WorkflowConstants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());
       }
     }
     return valid;

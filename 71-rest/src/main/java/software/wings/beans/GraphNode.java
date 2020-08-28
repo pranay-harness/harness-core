@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.template.TemplateMetadata;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
-import software.wings.common.Constants;
+import software.wings.common.WorkflowConstants;
 import software.wings.sm.InstanceStatusSummary;
 
 import java.util.HashMap;
@@ -111,7 +111,7 @@ public class GraphNode {
       validationMessage = null;
     } else {
       valid = false;
-      validationMessage = format(Constants.STEP_VALIDATION_MESSAGE, inValidFieldMessages.keySet());
+      validationMessage = format(WorkflowConstants.STEP_VALIDATION_MESSAGE, inValidFieldMessages.keySet());
     }
     return valid;
   }
