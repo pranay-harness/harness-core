@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.Status.QUEUED;
 import static io.harness.execution.status.Status.SUSPENDED;
+import static io.harness.execution.status.Status.brokeStatuses;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -14,11 +16,13 @@ import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -29,6 +33,9 @@ import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.registries.state.StepRegistry;
+import io.harness.state.io.StepInputPackage;
+import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -45,30 +52,55 @@ public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private AmbianceUtils ambianceUtils;
   @Inject private InvocationHelper invocationHelper;
+  @Inject private StepRegistry stepRegistry;
+  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
-  public void invoke(InvokerPackage invokerPackage) {
-    ChildChainExecutable childChainExecutable = (ChildChainExecutable) invokerPackage.getStep();
-    Ambiance ambiance = invokerPackage.getAmbiance();
+  public void start(InvokerPackage invokerPackage) {
+    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
+    Ambiance ambiance = nodeExecution.getAmbiance();
     ChildChainResponse childChainResponse;
-    if (invokerPackage.isStart()) {
-      childChainResponse = childChainExecutable.executeFirstChild(
-          ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
-    } else {
-      Map<String, ResponseData> response =
-          accumulateResponse(ambiance.getPlanExecutionId(), invokerPackage.getResponseDataMap());
-      childChainResponse = childChainExecutable.executeNextChild(ambiance, invokerPackage.getParameters(),
-          invokerPackage.getInputPackage(), invokerPackage.getPassThroughData(), response);
-    }
+    childChainResponse = childChainExecutable.executeFirstChild(
+        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, childChainResponse);
   }
 
-  private Map<String, ResponseData> accumulateResponse(
-      String planExecutionId, Map<String, ResponseData> responseDataMap) {
-    String notifyId = responseDataMap.keySet().iterator().next();
-    return invocationHelper.accumulateResponses(planExecutionId, notifyId);
+  @Override
+  public void resume(ResumePackage resumePackage) {
+    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
+    ChildChainResponse lastChildChainExecutableResponse =
+        Preconditions.checkNotNull((ChildChainResponse) nodeExecution.obtainLatestExecutableResponse());
+    Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
+    if (!lastChildChainExecutableResponse.isSuspend()) {
+      accumulatedResponse = invocationHelper.accumulateResponses(
+          ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
+    }
+    if (lastChildChainExecutableResponse.isLastLink()
+        || accumulatedResponse.values().stream().anyMatch(stepNotifyResponse
+               -> brokeStatuses().contains(((StepResponseNotifyData) stepNotifyResponse).getStatus()))
+        || lastChildChainExecutableResponse.isSuspend()) {
+      StepResponse stepResponse =
+          childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
+              lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
+      engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+    } else {
+      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
+          ambiance, nodeExecution.getNode().getRefObjects(), nodeExecution.getAdditionalInputs());
+      ChildChainResponse chainResponse =
+          childChainExecutable.executeNextChild(ambiance, nodeExecution.getResolvedStepParameters(), inputPackage,
+              lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
+      handleResponse(ambiance, chainResponse);
+    }
+  }
+
+  ChildChainExecutable extractExecutable(NodeExecution nodeExecution) {
+    PlanNode node = nodeExecution.getNode();
+    return (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(Ambiance ambiance, ChildChainResponse childChainResponse) {

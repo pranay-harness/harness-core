@@ -10,7 +10,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.plan.PlanNode;
+import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,13 +23,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SyncStrategy implements ExecuteStrategy {
   @Inject private OrchestrationEngine engine;
+  @Inject private StepRegistry stepRegistry;
 
   @Override
-  public void invoke(InvokerPackage invokerPackage) {
-    SyncExecutable syncExecutable = (SyncExecutable) invokerPackage.getStep();
-    Ambiance ambiance = invokerPackage.getAmbiance();
-    StepResponse stepResponse = syncExecutable.executeSync(ambiance, invokerPackage.getParameters(),
+  public void start(InvokerPackage invokerPackage) {
+    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    Ambiance ambiance = nodeExecution.getAmbiance();
+    SyncExecutable syncExecutable = extractSyncExecutable(nodeExecution);
+    StepResponse stepResponse = syncExecutable.executeSync(ambiance, nodeExecution.getResolvedStepParameters(),
         invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
     engine.handleStepResponse(ambiance.obtainCurrentRuntimeId(), stepResponse);
+  }
+
+  SyncExecutable extractSyncExecutable(NodeExecution nodeExecution) {
+    PlanNode node = nodeExecution.getNode();
+    return (SyncExecutable) stepRegistry.obtain(node.getStepType());
   }
 }

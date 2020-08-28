@@ -12,7 +12,11 @@ import lombok.AllArgsConstructor;
 public class ExecutableProcessor {
   ExecuteStrategy executeStrategy;
 
-  public void invokeExecutable(InvokerPackage invokerPackage) {
-    executeStrategy.invoke(invokerPackage);
+  public void handleStart(InvokerPackage invokerPackage) {
+    executeStrategy.start(invokerPackage);
+  }
+
+  public void handleResume(ResumePackage resumePackage) {
+    executeStrategy.resume(resumePackage);
   }
 }

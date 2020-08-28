@@ -53,7 +53,6 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.PassThroughData;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.PlanNode;
 import io.harness.registries.adviser.AdviserRegistry;
@@ -61,7 +60,6 @@ import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
-import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
@@ -211,17 +209,12 @@ public class OrchestrationEngine {
   public void invokeExecutable(
       Ambiance ambiance, FacilitatorResponse facilitatorResponse, StepInputPackage inputPackage) {
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
-    PlanNode node = nodeExecution.getNode();
-    Step currentStep = stepRegistry.obtain(node.getStepType());
     ExecutableProcessor invoker = executableProcessorFactory.obtainProcessor(facilitatorResponse.getExecutionMode());
-    invoker.invokeExecutable(InvokerPackage.builder()
-                                 .step(currentStep)
-                                 .ambiance(ambiance)
-                                 .inputPackage(inputPackage)
-                                 .parameters(nodeExecution.getResolvedStepParameters())
-                                 .passThroughData(facilitatorResponse.getPassThroughData())
-                                 .start(true)
-                                 .build());
+    invoker.handleStart(InvokerPackage.builder()
+                            .inputPackage(inputPackage)
+                            .passThroughData(facilitatorResponse.getPassThroughData())
+                            .nodeExecution(nodeExecution)
+                            .build());
   }
 
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
@@ -360,34 +353,14 @@ public class OrchestrationEngine {
       }
       executorService.execute(EngineResumeExecutor.builder()
                                   .nodeExecution(nodeExecution)
-                                  .ambiance(ambiance)
                                   .response(response)
                                   .asyncError(asyncError)
                                   .orchestrationEngine(this)
-                                  .stepRegistry(stepRegistry)
-                                  .injector(injector)
-                                  .invocationHelper(invocationHelper)
+                                  .processor(executableProcessorFactory.obtainProcessor(nodeExecution.getMode()))
                                   .build());
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }
-  }
-
-  public void triggerLink(Step step, Ambiance ambiance, NodeExecution nodeExecution, PassThroughData passThroughData,
-      Map<String, ResponseData> response) {
-    PlanNode node = nodeExecution.getNode();
-    StepInputPackage inputPackage =
-        engineObtainmentHelper.obtainInputPackage(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
-    ExecutableProcessor invoker = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
-    invoker.invokeExecutable(InvokerPackage.builder()
-                                 .step(step)
-                                 .ambiance(ambiance)
-                                 .inputPackage(inputPackage)
-                                 .parameters(nodeExecution.getResolvedStepParameters())
-                                 .responseDataMap(response)
-                                 .passThroughData(passThroughData)
-                                 .start(false)
-                                 .build());
   }
 
   public void handleError(Ambiance ambiance, Exception exception) {
