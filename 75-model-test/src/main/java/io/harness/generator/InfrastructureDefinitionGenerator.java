@@ -339,15 +339,13 @@ public class InfrastructureDefinitionGenerator {
 
     final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
 
-    String namespaceUnique = namespace + '-' + System.currentTimeMillis();
-
     InfrastructureDefinition infrastructureDefinition =
         InfrastructureDefinition.builder()
-            .name("exploration-harness-test-" + namespaceUnique)
+            .name("exploration-harness-test-" + namespace)
             .infrastructure(GoogleKubernetesEngine.builder()
                                 .cloudProviderId(gcpCloudProvider.getUuid())
                                 .clusterName("us-central1-a/harness-test")
-                                .namespace(namespaceUnique)
+                                .namespace(namespace)
                                 .build())
             .deploymentType(DeploymentType.KUBERNETES)
             .cloudProviderType(CloudProviderType.GCP)

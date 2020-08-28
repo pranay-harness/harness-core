@@ -102,7 +102,6 @@ import javax.validation.ValidatorFactory;
 import javax.ws.rs.core.GenericType;
 
 public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
-  private int port;
   private ClosingFactory closingFactory;
 
   public FunctionalTestRule(ClosingFactory closingFactory) {
@@ -113,7 +112,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
   private ExecutorService executorService = new CurrentThreadExecutor();
   public static final String alpnJar =
       "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  public static String alpn = "/home/jenkins/maven-repositories/0/";
+  public static final String alpn = "/home/jenkins/maven-repositories/0/";
   @Getter private GraphQL graphQL;
 
   @Override
@@ -203,7 +202,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
       @Provides
       @Named("locksMongoClient")
       @Singleton
-      public MongoClient locksMongoClient(ClosingFactory closingFactory) throws Exception {
+      public MongoClient locksMongoClient(ClosingFactory closingFactory) {
         return mongoClient;
       }
 

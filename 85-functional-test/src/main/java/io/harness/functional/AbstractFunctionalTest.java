@@ -1,8 +1,6 @@
 package io.harness.functional;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.FunctionalTestRule.alpn;
-import static io.harness.rule.FunctionalTestRule.alpnJar;
 import static org.springframework.data.domain.Sort.Direction;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -103,9 +101,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     RestAssured.useRelaxedHTTPSValidation();
   }
 
-  //  @Inject private AccountGenerator accountGenerator;
   @Inject private DelegateExecutor delegateExecutor;
-  //  @Inject OwnerManager ownerManager;
   @Inject private AccountSetupService accountSetupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private UserService userService;
@@ -119,7 +115,8 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     bearerToken = adminUser.getToken();
     delegateExecutor.ensureDelegate(account, bearerToken, AbstractFunctionalTest.class);
     if (needCommandLibraryService()) {
-      commandLibraryServiceExecutor.ensureCommandLibraryService(AbstractFunctionalTest.class, alpn, alpnJar);
+      commandLibraryServiceExecutor.ensureCommandLibraryService(
+          AbstractFunctionalTest.class, FunctionalTestRule.alpn, FunctionalTestRule.alpnJar);
     }
     logger.info("Basic setup completed");
   }
@@ -131,17 +128,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   }
 
   public void resetCache(String accountId) {
-    //    Awaitility.await()
-    //        .atMost(120, TimeUnit.SECONDS)
-    //        .pollInterval(5, TimeUnit.SECONDS)
-    //        .until(()
-    //            -> Setup.portal()
-    //            .auth()
-    //            .oauth2(bearerToken)
-    //            .put("/users/reset-cache")
-    //            .jsonPath()
-    //            .equals(ExecutionStatus.SUCCESS.name()));
-
     RestResponse<Void> restResponse =
         Setup.portal()
             .auth()
@@ -150,7 +136,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
             //            .body(null, ObjectMapperType.GSON)
             .put("/users/reset-cache")
             .as(new GenericType<RestResponse<Void>>() {}.getType(), ObjectMapperType.GSON);
-    System.out.println(restResponse);
+    logger.info(restResponse.toString());
   }
 
   public static Void updateApiKey(String accountId, String bearerToken) {

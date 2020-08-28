@@ -7,6 +7,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.OwnerManager;
@@ -40,6 +41,6 @@ public class AccountSetupService {
     } finally {
       FileIo.releaseLock(lockfile);
     }
-    throw new RuntimeException("Unknown error occurred during account setup");
+    throw new GeneralException("Unknown error occurred during account setup");
   }
 }
