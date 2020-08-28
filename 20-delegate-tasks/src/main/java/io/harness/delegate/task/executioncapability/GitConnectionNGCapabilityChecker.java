@@ -8,6 +8,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
+import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.git.NGGitService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -19,6 +20,7 @@ import java.util.List;
 public class GitConnectionNGCapabilityChecker implements CapabilityCheck {
   @Inject private SecretDecryptionService decryptionService;
   @Inject private NGGitService gitService;
+  @Inject private DelegateConfiguration delegateConfiguration;
 
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
@@ -31,9 +33,8 @@ public class GitConnectionNGCapabilityChecker implements CapabilityCheck {
       logger.info("Failed to decrypt " + capability.getGitConfig(), e);
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
-    // todo @deepak: see how we can account ID here. connector ID and account Id is to be brought in view of delegate
-    // tasks and causing issues.
-    if (isNotEmpty(gitService.validate(gitConfig, "accountId"))) {
+    String accountId = delegateConfiguration.getAccountId();
+    if (isNotEmpty(gitService.validate(gitConfig, accountId))) {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     return CapabilityResponse.builder().delegateCapability(capability).validated(true).build();
