@@ -35,6 +35,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -88,6 +89,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DuplicateDelegateException;
@@ -115,6 +117,7 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -125,6 +128,7 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.BatchDelegateSelectionLog;
@@ -143,6 +147,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
+import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.api.UsageLimitedFeature;
@@ -245,6 +250,11 @@ public class DelegateServiceTest extends WingsBaseTest {
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
     when(mainConfiguration.getFileUploadLimits()).thenReturn(fileUploadLimit);
+
+    PortalConfig portalConfig = new PortalConfig();
+    portalConfig.setCriticalDelegateTaskRejectAtLimit(100000);
+    when(mainConfiguration.getPortal()).thenReturn(portalConfig);
+
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
@@ -1075,6 +1085,74 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskWhenRankLimitIsNotReached() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .uuid(generateUuid())
+                                    .accountId(ACCOUNT_ID)
+                                    .rank(DelegateTaskRank.OPTIONAL)
+                                    .waitId(generateUuid())
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+                                    .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
+                                    .version(VERSION)
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .taskType(TaskType.HTTP.name())
+                                              .parameters(new Object[] {})
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
+    when(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).thenReturn(true);
+
+    PortalConfig portalConfig = new PortalConfig();
+    portalConfig.setOptionalDelegateTaskRejectAtLimit(10000);
+    when(mainConfiguration.getPortal()).thenReturn(portalConfig);
+
+    delegateService.queueTask(delegateTask);
+    assertThat(
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
+        .isEqualTo(delegateTask);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  @Ignore("Ignore until we replace noop with real exception")
+  public void shouldNotSaveDelegateTaskWhenRankLimitIsReached() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .uuid(generateUuid())
+                                    .accountId(ACCOUNT_ID)
+                                    .rank(DelegateTaskRank.IMPORTANT)
+                                    .waitId(generateUuid())
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+                                    .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
+                                    .version(VERSION)
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .taskType(TaskType.HTTP.name())
+                                              .parameters(new Object[] {})
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
+    when(delegateProcessingController.canProcessAccount(ACCOUNT_ID)).thenReturn(true);
+
+    PortalConfig portalConfig = new PortalConfig();
+    portalConfig.setImportantDelegateTaskRejectAtLimit(0);
+    when(mainConfiguration.getPortal()).thenReturn(portalConfig);
+
+    assertThatThrownBy(() -> delegateService.queueTask(delegateTask))
+        .isInstanceOf(RateLimitExceededException.class)
+        .hasMessage("Rate limit exceeded for task rank IMPORTANT. Please try again later.");
   }
 
   @Test
