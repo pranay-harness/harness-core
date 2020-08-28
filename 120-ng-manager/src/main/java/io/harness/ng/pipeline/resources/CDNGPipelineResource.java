@@ -34,6 +34,7 @@ import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -45,8 +46,8 @@ import javax.ws.rs.QueryParam;
 
 @Api("pipelines")
 @Path("pipelines")
-@Produces({"application/json", "text/yaml"})
-@Consumes({"application/json", "text/yaml"})
+@Produces({"application/json", "text/yaml", "text/html"})
+@Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -143,5 +144,14 @@ public class CDNGPipelineResource {
     }
     return ResponseDTO.newResponse(
         ngPipelineExecutionService.triggerPipeline(yaml, accountId, orgId, projectId, EMBEDDED_USER));
+  }
+
+  @DELETE
+  @Path("/{pipelineIdentifier}")
+  @ApiOperation(value = "Delete a pipeline", nickname = "softDeletePipeline")
+  public ResponseDTO<Boolean> deletePipeline(@NotNull @QueryParam("accountIdentifier") String accountId,
+      @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
+      @PathParam("pipelineIdentifier") String pipelineId) {
+    return ResponseDTO.newResponse(ngPipelineService.deletePipeline(accountId, orgId, projectId, pipelineId));
   }
 }

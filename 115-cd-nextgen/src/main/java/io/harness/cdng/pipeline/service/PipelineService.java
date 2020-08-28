@@ -14,4 +14,5 @@ public interface PipelineService {
   Optional<CDPipelineResponseDTO> getPipeline(String pipelineId, String accountId, String orgId, String projectId);
   Page<CDPipelineSummaryResponseDTO> getPipelines(
       String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable);
+  boolean deletePipeline(String accountId, String orgId, String projectId, String pipelineId);
 }
