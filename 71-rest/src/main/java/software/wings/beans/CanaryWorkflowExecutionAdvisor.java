@@ -13,7 +13,7 @@ import static java.util.Collections.disjoint;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
-import static software.wings.common.Constants.PHASE_NAME_PREFIX;
+import static software.wings.common.WorkflowConstants.PHASE_NAME_PREFIX;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;

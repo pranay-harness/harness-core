@@ -45,8 +45,8 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
+import static software.wings.common.WorkflowConstants.PHASE_NAME_PREFIX;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_SERVICE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.RUNTIME;
