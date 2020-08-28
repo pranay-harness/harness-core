@@ -1096,7 +1096,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
 
       String errorMessage =
-          (context.getStateExecutionData().getErrorMsg() != null && isBlank(errorMsgBuilder.toString()))
+          (context.getStateExecutionData() != null && context.getStateExecutionData().getErrorMsg() != null
+              && isBlank(errorMsgBuilder.toString()))
           ? context.getStateExecutionData().getErrorMsg()
           : errorMsgBuilder.toString();
       updated = updateStateExecutionData(
