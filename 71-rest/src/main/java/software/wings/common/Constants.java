@@ -19,10 +19,6 @@ public interface Constants {
    */
   String SUB_WORKFLOW_ID = "subWorkflowId";
   /**
-   * The constant SUB_WORKFLOW.
-   */
-  String SUB_WORKFLOW = "SUB_WORKFLOW";
-  /**
    * The constant PHASE_NAME_PREFIX.
    */
   String PHASE_NAME_PREFIX = "Phase ";

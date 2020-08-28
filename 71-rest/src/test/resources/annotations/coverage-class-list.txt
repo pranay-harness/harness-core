@@ -87,6 +87,7 @@
 29-orchestration-beans/src/main/java/io/harness/state/io/StepOutcomeRef.java
 29-orchestration-beans/src/main/java/io/harness/state/io/StepResponse.java
 29-orchestration-beans/src/main/java/io/harness/state/io/StepResponseNotifyData.java
+29-orchestration-beans/src/main/java/io/harness/timeout/TimeoutDetails.java
 29-orchestration-beans/src/main/java/io/harness/timeout/trackers/active/ActiveTimeoutParameters.java
 29-orchestration-beans/src/main/java/io/harness/timeout/trackers/active/ActiveTimeoutTracker.java
 29-orchestration-beans/src/main/java/io/harness/timeout/trackers/events/StatusUpdateTimeoutEvent.java
