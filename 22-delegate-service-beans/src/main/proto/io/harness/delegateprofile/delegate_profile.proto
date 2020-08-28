@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package io.harness.delegateprofile;
+
+option java_multiple_files = true;
+
+import "io/harness/delegate/account.proto";
+
+// Profile global unique identifier
+message ProfileId {
+  string id = 1;
+}
+
+// Message representing the values for the given scope key
+message ScopingValues {
+  repeated string value = 1;
+}
+
+// Profile scoping rules will be used as one of the ways to decide which delegate can be assigned to the given task
+message ProfileScopingRule {
+  string description = 1;
+  map<string, ScopingValues> scoping_entities = 2;
+}
+
+// Profile selector will be used as one of the ways to decide which delegate can be assigned to the given task
+message ProfileSelector {
+  string selector = 1;
+}
+
+// Represents Delegate Profile
+message DelegateProfileGrpc {
+  ProfileId profile_id = 1;
+  delegate.AccountId account_id = 2;
+  string name = 3;
+  string description = 4;
+  bool primary = 5;
+  bool approval_required = 6;
+  string startup_script = 7;
+  repeated ProfileSelector selectors = 8;
+  repeated ProfileScopingRule scoping_rules = 9;
+}
