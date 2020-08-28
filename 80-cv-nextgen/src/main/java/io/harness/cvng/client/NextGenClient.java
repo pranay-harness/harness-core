@@ -14,7 +14,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 public interface NextGenClient {
-  String CONNECTOR_BASE_PATH = "/accounts/{accountIdentifier}/connectors";
+  String CONNECTOR_BASE_PATH = "accounts/{accountIdentifier}/connectors";
 
   @POST(CONNECTOR_BASE_PATH)
   Call<ResponseDTO<ConnectorDTO>> create(

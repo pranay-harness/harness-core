@@ -1,4 +1,3 @@
-managerUrl: https://localhost:9090/api/
 xxxxxxxx
   applicationConnectors:
     - type: https
@@ -50,7 +49,7 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
-secretManagerClient:
+managerClientConfig:
   baseUrl: http://localhost:3457
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
@@ -58,5 +57,3 @@ secretManagerClient:
 nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   ngManagerUrl: http://localhost:7457
-
-dataStorageMode: MONGO

@@ -181,10 +181,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(MorphiaModule.getInstance());
     modules.add(new CVServiceModule());
     modules.add(new MetricRegistryModule(metricRegistry));
-    modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
+    modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
-    modules.add(new SecretManagementClientModule(configuration.getServiceHttpClientConfig(),
-        configuration.getNgManagerServiceConfig().getManagerServiceSecret()));
+    modules.add(new SecretManagementClientModule(
+        configuration.getManagerClientConfig(), configuration.getNgManagerServiceConfig().getManagerServiceSecret()));
     modules.add(new CVNextGenCommonsServiceModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();

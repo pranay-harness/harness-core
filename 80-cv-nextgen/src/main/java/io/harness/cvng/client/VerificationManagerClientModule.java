@@ -12,7 +12,7 @@ public class VerificationManagerClientModule extends AbstractModule {
   private final String managerBaseUrl;
 
   public VerificationManagerClientModule(String managerBaseUrl) {
-    this.managerBaseUrl = managerBaseUrl;
+    this.managerBaseUrl = managerBaseUrl + (managerBaseUrl.endsWith("/") ? "api/" : "/api/");
   }
 
   @Override
