@@ -22,10 +22,16 @@ import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.compute.UpgradeMode;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet.UpdateStages.WithApply;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet.UpdateStages.WithPrimaryInternetFacingLoadBalancerBackendOrNatPool;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet.UpdateStages.WithPrimaryInternetFacingLoadBalancerNatPool;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet.UpdateStages.WithPrimaryLoadBalancer;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVMs;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSets;
+import com.microsoft.azure.management.network.LoadBalancer;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.ResourceGroups;
 import com.microsoft.azure.management.resources.Subscription;
@@ -148,13 +154,8 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetVirtualMachineScaleSetsByName() throws Exception {
     when(authenticated.withSubscription("subscriptionId")).thenReturn(azure);
-
-    VirtualMachineScaleSets virtualMachineScaleSets = mock(VirtualMachineScaleSets.class);
-    VirtualMachineScaleSet virtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
-
-    when(azure.virtualMachineScaleSets()).thenReturn(virtualMachineScaleSets);
-    when(virtualMachineScaleSets.getByResourceGroup("resourceGroupName", "virtualMachineScaleSetName"))
-        .thenReturn(virtualMachineScaleSet);
+    VirtualMachineScaleSet virtualMachineScaleSet =
+        mockVirtualMachineScaleSet("resourceGroupName", "virtualMachineScaleSetName");
 
     AzureConfig azureConfig =
         AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
@@ -222,6 +223,7 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(azure.virtualMachineScaleSets()).thenReturn(virtualMachineScaleSets);
     when(virtualMachineScaleSets.getByResourceGroup("resourceGroupName", "virtualMachineScaleSetName"))
         .thenReturn(virtualMachineScaleSet);
+
     doNothing().when(virtualMachineScaleSets).deleteByResourceGroup("resourceGroupName", "virtualMachineScaleSetName");
 
     AzureConfig azureConfig =
@@ -287,6 +289,104 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(result.get(HARNESS_AUTOSCALING_GROUP_TAG_NAME)).isEqualTo("infraMappingId__6");
     assertThat(result.get(NAME_TAG)).isEqualTo("newVirtualMachineScaleSetName");
     assertThat(result.get(VMSS_CREATED_TIME_STAMP_TAG_NAME)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testAttachVMSSToBackendPools() throws IOException {
+    when(authenticated.withDefaultSubscription()).thenReturn(azure);
+    when(authenticated.withSubscription("subscriptionId")).thenReturn(azure);
+
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    String virtualMachineScaleSetName = "virtualMachineScaleSetName";
+    String backendPools = "backendPools";
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
+
+    LoadBalancer primaryInternetFacingLoadBalancer = mock(LoadBalancer.class);
+    VirtualMachineScaleSet virtualMachineScaleSet =
+        mockVirtualMachineScaleSet(resourceGroupName, virtualMachineScaleSetName);
+    WithPrimaryLoadBalancer withPrimaryLoadBalancer = mock(WithPrimaryLoadBalancer.class);
+    WithPrimaryInternetFacingLoadBalancerBackendOrNatPool loadBalancerBackendOrNatPool =
+        mock(WithPrimaryInternetFacingLoadBalancerBackendOrNatPool.class);
+    WithPrimaryInternetFacingLoadBalancerNatPool loadBalancerNatPool =
+        mock(WithPrimaryInternetFacingLoadBalancerNatPool.class);
+
+    when(virtualMachineScaleSet.name()).thenReturn(virtualMachineScaleSetName);
+    when(virtualMachineScaleSet.update()).thenReturn(withPrimaryLoadBalancer);
+    when(withPrimaryLoadBalancer.withExistingPrimaryInternetFacingLoadBalancer(primaryInternetFacingLoadBalancer))
+        .thenReturn(loadBalancerBackendOrNatPool);
+    when(loadBalancerBackendOrNatPool.withPrimaryInternetFacingLoadBalancerBackends(backendPools))
+        .thenReturn(loadBalancerNatPool);
+    when(loadBalancerNatPool.apply()).thenReturn(virtualMachineScaleSet);
+
+    VirtualMachineScaleSet response = azureVMSSHelperServiceDelegateImpl.attachVMSSToBackendPools(azureConfig,
+        primaryInternetFacingLoadBalancer, subscriptionId, resourceGroupName, virtualMachineScaleSetName, backendPools);
+
+    assertThat(response).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testDeAttachVMSSFromBackendPools() throws IOException {
+    when(authenticated.withDefaultSubscription()).thenReturn(azure);
+    when(authenticated.withSubscription("subscriptionId")).thenReturn(azure);
+
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    String virtualMachineScaleSetName = "virtualMachineScaleSetName";
+    String backendPools = "backendPools";
+    AzureConfig azureConfig =
+        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
+
+    VirtualMachineScaleSet virtualMachineScaleSet =
+        mockVirtualMachineScaleSet(resourceGroupName, virtualMachineScaleSetName);
+    WithPrimaryLoadBalancer primaryLoadBalancer = mock(WithPrimaryLoadBalancer.class);
+    WithApply withoutPrimaryLoadBalancerBackend = mock(WithApply.class);
+
+    when(virtualMachineScaleSet.name()).thenReturn(virtualMachineScaleSetName);
+    when(virtualMachineScaleSet.update()).thenReturn(primaryLoadBalancer);
+    when(primaryLoadBalancer.withoutPrimaryInternetFacingLoadBalancerBackends(backendPools))
+        .thenReturn(withoutPrimaryLoadBalancerBackend);
+    when(withoutPrimaryLoadBalancerBackend.apply()).thenReturn(virtualMachineScaleSet);
+
+    VirtualMachineScaleSet response = azureVMSSHelperServiceDelegateImpl.deAttachVMSSFromBackendPools(
+        azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName, backendPools);
+
+    assertThat(response).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testUpdateVMInstances() {
+    String instanceIds = "*";
+    String virtualMachineScaleSetName = "virtualMachineScaleSetName";
+
+    VirtualMachineScaleSet virtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
+    VirtualMachineScaleSetVMs virtualMachines = mock(VirtualMachineScaleSetVMs.class);
+
+    when(virtualMachineScaleSet.upgradeModel()).thenReturn(UpgradeMode.MANUAL);
+    when(virtualMachineScaleSet.name()).thenReturn(virtualMachineScaleSetName);
+    when(virtualMachineScaleSet.virtualMachines()).thenReturn(virtualMachines);
+    doNothing().when(virtualMachines).updateInstances(instanceIds);
+
+    azureVMSSHelperServiceDelegateImpl.updateVMInstances(virtualMachineScaleSet, instanceIds);
+
+    verify(virtualMachines, times(1)).updateInstances(instanceIds);
+  }
+
+  public VirtualMachineScaleSet mockVirtualMachineScaleSet(
+      String resourceGroupName, String virtualMachineScaleSetName) {
+    VirtualMachineScaleSet virtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
+    VirtualMachineScaleSets virtualMachineScaleSets = mock(VirtualMachineScaleSets.class);
+    when(azure.virtualMachineScaleSets()).thenReturn(virtualMachineScaleSets);
+    when(virtualMachineScaleSets.getByResourceGroup(resourceGroupName, virtualMachineScaleSetName))
+        .thenReturn(virtualMachineScaleSet);
+    return virtualMachineScaleSet;
   }
 
   @NotNull
