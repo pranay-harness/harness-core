@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
 import com.google.inject.Inject;
@@ -112,7 +113,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   public SecretManagerConfig getGlobalSecretManager(String accountIdentifier) {
     SecretManagerConfig accountSecretManagerConfig =
         secretManagerConfigService.getGlobalSecretManager(accountIdentifier);
-    if (accountSecretManagerConfig == null) {
+    if (accountSecretManagerConfig == null || accountSecretManagerConfig.getEncryptionType() != GCP_KMS) {
       accountSecretManagerConfig = localEncryptionService.getEncryptionConfig(accountIdentifier);
       accountSecretManagerConfig.setUuid(null);
       accountSecretManagerConfig.setEncryptionType(LOCAL);
