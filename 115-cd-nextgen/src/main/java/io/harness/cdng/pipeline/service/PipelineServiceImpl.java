@@ -13,6 +13,7 @@ import io.harness.cdng.pipeline.repository.PipelineRepository;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.PipelineDoesNotExistException;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -45,23 +46,17 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public String updatePipeline(String yaml, String accountId, String orgId, String projectId, String pipelineId) {
     try {
-      Optional<CDPipelineEntity> cdPipelineEntityExisting =
-          pipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-              accountId, orgId, projectId, pipelineId);
-      if (cdPipelineEntityExisting.isPresent()) {
-        CDPipeline cdPipeline = YamlPipelineUtils.read(yaml, CDPipeline.class);
-        if (pipelineId.equalsIgnoreCase(cdPipeline.getIdentifier())) {
-          CDPipelineEntity cdPipelineEntity =
-              PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml, cdPipeline);
-          cdPipelineEntity.setUuid(cdPipelineEntityExisting.get().getUuid());
-          CDPipelineEntity savedCdPipeline = pipelineRepository.save(cdPipelineEntity);
-          return savedCdPipeline.getIdentifier();
-        } else {
-          throw new InvalidRequestException(
-              "Pipeline Identifier in the query Param & Identifier in the pipeline yaml are not matching");
-        }
+      CDPipelineEntity cdPipelineEntityExisting = get(pipelineId, accountId, orgId, projectId);
+      CDPipeline cdPipeline = YamlPipelineUtils.read(yaml, CDPipeline.class);
+      if (pipelineId.equalsIgnoreCase(cdPipeline.getIdentifier())) {
+        CDPipelineEntity cdPipelineEntity =
+            PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml, cdPipeline);
+        cdPipelineEntity.setUuid(cdPipelineEntityExisting.getUuid());
+        CDPipelineEntity savedCdPipeline = pipelineRepository.save(cdPipelineEntity);
+        return savedCdPipeline.getIdentifier();
       } else {
-        throw new GeneralException(String.format("Pipeline with Id: %s does not exist.", pipelineId));
+        throw new InvalidRequestException(
+            "Pipeline Identifier in the query Param & Identifier in the pipeline yaml are not matching");
       }
     } catch (IOException e) {
       throw new GeneralException("error while de-serializing pipeline. is this valid Yaml?", e);
@@ -73,14 +68,8 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public Optional<CDPipelineResponseDTO> getPipeline(
       String pipelineId, String accountId, String orgId, String projectId) {
-    Optional<CDPipelineEntity> cdPipeline =
-        pipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-            accountId, orgId, projectId, pipelineId);
-    if (cdPipeline.isPresent()) {
-      return cdPipeline.map(PipelineDtoMapper::writePipelineDto);
-    } else {
-      throw new GeneralException(String.format("Pipeline with ID [%s] Not found", pipelineId));
-    }
+    CDPipelineEntity cdPipeline = get(pipelineId, accountId, orgId, projectId);
+    return Optional.of(cdPipeline).map(PipelineDtoMapper::writePipelineDto);
   }
 
   @Override
@@ -92,8 +81,33 @@ public class PipelineServiceImpl implements PipelineService {
                    .and(CDPipelineEntity.PipelineNGKeys.projectIdentifier)
                    .is(projectId)
                    .and(CDPipelineEntity.PipelineNGKeys.orgIdentifier)
-                   .is(orgId);
+                   .is(orgId)
+                   .and(CDPipelineEntity.PipelineNGKeys.deleted)
+                   .is(false);
     Page<CDPipelineEntity> list = pipelineRepository.findAll(criteria, pageable);
     return list.map(PipelineDtoMapper::preparePipelineSummary);
+  }
+
+  @Override
+  public boolean deletePipeline(String accountId, String orgId, String projectId, String pipelineId) {
+    try {
+      CDPipelineEntity cdPipelineEntity = get(pipelineId, accountId, orgId, projectId);
+      cdPipelineEntity.setDeleted(true);
+      pipelineRepository.save(cdPipelineEntity);
+    } catch (PipelineDoesNotExistException e) {
+      // ignore exception
+    }
+    return true;
+  }
+
+  private CDPipelineEntity get(String pipelineId, String accountId, String orgId, String projectId) {
+    Optional<CDPipelineEntity> cdPipelineEntity =
+        pipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+            accountId, orgId, projectId, pipelineId, true);
+    if (cdPipelineEntity.isPresent()) {
+      return cdPipelineEntity.get();
+    } else {
+      throw new PipelineDoesNotExistException(pipelineId);
+    }
   }
 }

@@ -53,6 +53,7 @@ public class CDPipelineEntity implements PersistentEntity, AccountAccess, UuidAw
   @Trimmed @NotEmpty String projectIdentifier;
   @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
   @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
+  @Builder.Default Boolean deleted = Boolean.FALSE;
 
   @Override
   public String getAccountId() {
