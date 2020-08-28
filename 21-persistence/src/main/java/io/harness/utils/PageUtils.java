@@ -48,6 +48,17 @@ public class PageUtils {
         .build();
   }
 
+  public <T, C> NGPageResponse<C> getNGPageResponse(Page<T> page, List<C> content) {
+    return NGPageResponse.<C>builder()
+        .pageCount(page.getTotalPages())
+        .itemCount(page.getTotalElements())
+        .content(content)
+        .pageSize(page.getSize())
+        .pageIndex(page.getPageable().getPageNumber())
+        .empty(page.isEmpty())
+        .build();
+  }
+
   public <T> NGPageResponse<T> getNGPageResponse(PageResponse<T> page) {
     return NGPageResponse.<T>builder()
         .pageCount((page.getPageSize() == 0) ? 0 : (page.getTotal() + page.getPageSize() - 1) / page.getPageSize())
