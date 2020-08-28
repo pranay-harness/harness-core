@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
@@ -73,6 +74,8 @@ public class DelegateTask
   @Id private String uuid;
   @NotEmpty private String accountId;
   private String driverId;
+
+  private DelegateTaskRank rank;
 
   private String description;
   private boolean selectionLogsTrackingEnabled;

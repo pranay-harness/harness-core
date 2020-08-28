@@ -63,6 +63,7 @@ import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -100,6 +101,7 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskPackage.DelegateTaskPackageBuilder;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DuplicateDelegateException;
@@ -252,6 +254,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
@@ -356,6 +359,8 @@ public class DelegateServiceImpl implements DelegateService {
                   wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
             }
           });
+
+  private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this ::fetchTaskCount, 1, TimeUnit.MINUTES);
 
   @Override
   public List<Integer> getCountOfDelegatesForAccounts(List<String> accountIds) {
@@ -1903,7 +1908,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
-             TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
+             TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task);
       logger.info("Queueing async task");
@@ -1920,7 +1925,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
-             TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
+             TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
@@ -1933,6 +1938,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       }
 
+      logger.info("Processing sync task");
       broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
@@ -1946,6 +1952,35 @@ public class DelegateServiceImpl implements DelegateService {
     scheduleSyncTask(task);
     return delegateSyncService.waitForTask(
         task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout()));
+  }
+
+  @VisibleForTesting
+  protected void checkTaskRankRateLimit(DelegateTaskRank rank) {
+    if (rank == null) {
+      rank = DelegateTaskRank.CRITICAL;
+    }
+
+    if (rankLimitReached(rank)) {
+      // noop - we will add RateLimitException later
+    }
+  }
+
+  private boolean rankLimitReached(DelegateTaskRank rank) {
+    Long totalTaskCount = taskCountCache.get();
+    return totalTaskCount >= obtainRankLimit(rank);
+  }
+
+  private long obtainRankLimit(DelegateTaskRank rank) {
+    switch (rank) {
+      case OPTIONAL:
+        return mainConfiguration.getPortal().getOptionalDelegateTaskRejectAtLimit();
+      case IMPORTANT:
+        return mainConfiguration.getPortal().getImportantDelegateTaskRejectAtLimit();
+      case CRITICAL:
+        return mainConfiguration.getPortal().getCriticalDelegateTaskRejectAtLimit();
+      default:
+        throw new InvalidArgumentsException("Unsupported delegate task rank level " + rank);
+    }
   }
 
   @Override
@@ -2010,7 +2045,12 @@ public class DelegateServiceImpl implements DelegateService {
       task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
     }
 
+    checkTaskRankRateLimit(task.getRank());
     wingsPersistence.save(task);
+  }
+
+  private Long fetchTaskCount() {
+    return wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).count();
   }
 
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
