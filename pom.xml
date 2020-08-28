@@ -64,6 +64,7 @@
         <module>115-cd-nextgen</module>
         <module>120-ng-manager</module>
         <module>22-ng-core</module>
+        <module>86-deployment-functional-tests</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
