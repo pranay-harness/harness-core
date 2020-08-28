@@ -19,8 +19,8 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
-import io.harness.delegate.beans.DelegateProfileScopingRule.DelegateProfileScopingRuleKeys;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -183,11 +183,14 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return true;
     }
 
-    List<DelegateProfileScopingRule> delegateProfileScopingRules =
-        wingsPersistence.createQuery(DelegateProfileScopingRule.class)
-            .filter(DelegateProfileScopingRuleKeys.accountId, delegate.getAccountId())
-            .filter(DelegateProfileScopingRuleKeys.delegateProfileId, delegate.getDelegateProfileId())
-            .asList();
+    DelegateProfile delegateProfile = wingsPersistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
+    if (delegateProfile == null) {
+      logger.warn(
+          "Delegate profile {} not found. Considering this delegate profile matched", delegate.getDelegateProfileId());
+      return true;
+    }
+
+    List<DelegateProfileScopingRule> delegateProfileScopingRules = delegateProfile.getScopingRules();
 
     if (isEmpty(delegateProfileScopingRules)) {
       // selectionlogs here - matched-no scoping rules found for profile xxx

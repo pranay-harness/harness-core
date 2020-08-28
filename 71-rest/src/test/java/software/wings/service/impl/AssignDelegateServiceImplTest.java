@@ -41,7 +41,6 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.TaskData;
@@ -281,7 +280,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
                      .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .accountId(accountId)
+                                                     .description("rule1")
                                                      .scopingEntities(scopingRulesMap1)
                                                      .build()))
                      .assignable(false)
@@ -298,7 +297,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
                      .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .accountId(accountId)
+                                                     .description("rule2")
                                                      .scopingEntities(scopingRulesMap2)
                                                      .build()))
                      .assignable(true)
@@ -316,11 +315,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
                      .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .accountId(accountId)
+                                                     .description("rule3")
                                                      .scopingEntities(scopingRulesMap2)
                                                      .build(),
                          DelegateProfileScopingRule.builder()
-                             .accountId(accountId)
+                             .description("rule4")
                              .scopingEntities(scopingRulesMap3)
                              .build()))
                      .assignable(true)
@@ -337,7 +336,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                .build())
                      .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
-                                                     .accountId(accountId)
+                                                     .description("rule5")
                                                      .scopingEntities(scopingRulesMap4)
                                                      .build()))
                      .assignable(true)
@@ -347,20 +346,29 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     for (DelegateProfileScopeTestData test : tests) {
       when(delegateService.get(accountId, test.getDelegate().getUuid(), false)).thenReturn(test.getDelegate());
 
-      if (EmptyPredicate.isNotEmpty(test.getScopingRules())) {
-        wingsPersistence.save(test.getScopingRules()
-                                  .stream()
-                                  .map(scopingRule -> {
-                                    scopingRule.setDelegateProfileId(test.getDelegate().getDelegateProfileId());
-                                    return scopingRule;
-                                  })
-                                  .collect(Collectors.toList()));
-      }
+      wingsPersistence.save(DelegateProfile.builder()
+                                .uuid(test.getDelegate().getDelegateProfileId())
+                                .accountId(accountId)
+                                .scopingRules(test.getScopingRules())
+                                .build());
 
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(test.getTask().getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, test.getDelegate().getUuid(), test.getTask()))
           .isEqualTo(test.isAssignable());
     }
+
+    // Case to cover non-existing delegate profile
+    Delegate delegateWithNonExistingProfile =
+        Delegate.builder().accountId(accountId).uuid(generateUuid()).delegateProfileId(generateUuid()).build();
+    when(delegateService.get(accountId, delegateWithNonExistingProfile.getUuid(), false))
+        .thenReturn(delegateWithNonExistingProfile);
+    assertThat(assignDelegateService.canAssign(null, delegateWithNonExistingProfile.getUuid(),
+                   DelegateTask.builder()
+                       .accountId(accountId)
+                       .setupAbstraction("k1", "v13")
+                       .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                       .build()))
+        .isEqualTo(true);
   }
 
   @Value

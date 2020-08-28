@@ -23,6 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -48,6 +49,8 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
   private boolean approvalRequired;
 
   private String startupScript;
+
+  private List<DelegateProfileScopingRule> scopingRules;
 
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @FdIndex private long createdAt;
