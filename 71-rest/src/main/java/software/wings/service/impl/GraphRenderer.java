@@ -44,7 +44,6 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
-import software.wings.common.Constants;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
@@ -75,6 +74,8 @@ public class GraphRenderer {
   public static final int AGGREGATION_LIMIT = 10;
 
   public static final long algorithmId = 0;
+
+  private static final String SUB_WORKFLOW_DISPLAY_NAME = "SUB_WORKFLOW";
 
   @Inject private Injector injector;
 
@@ -290,7 +291,7 @@ public class GraphRenderer {
     }
 
     void generateElement(StateExecutionInstance instance, GraphGroup group, String element) {
-      if (element.equals(Constants.SUB_WORKFLOW)) {
+      if (element.equals(SUB_WORKFLOW_DISPLAY_NAME)) {
         StateExecutionInstance elementRepeatInstance = parentIdElementsMap.get(instance.getUuid()).get(element);
         if (elementRepeatInstance != null) {
           final GraphNode elementRepeatNode = generateNodeTree(elementRepeatInstance, null);
@@ -453,7 +454,7 @@ public class GraphRenderer {
             parentIdElementsMap.computeIfAbsent(parentInstanceId, key -> new HashMap<>());
 
         if (isSubWorkflow(instanceIdMap.get(parentInstanceId))) {
-          elementsMap.put(Constants.SUB_WORKFLOW, instance);
+          elementsMap.put(SUB_WORKFLOW_DISPLAY_NAME, instance);
           return;
         }
 

@@ -19,6 +19,7 @@ import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
+import io.harness.timeout.TimeoutDetails;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -82,6 +83,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   // Timeout
   List<String> timeoutInstanceIds;
+  TimeoutDetails timeoutDetails;
 
   List<StepOutcomeRef> outcomeRefs;
 
