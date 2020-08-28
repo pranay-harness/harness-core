@@ -123,8 +123,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
           semaphore.release();
         }
 
-        if (entity != null
-            && (entityProcessController == null || entityProcessController.shouldProcessEntity(entity))) {
+        if (entity != null) {
           // Make sure that if the object is updated we reset the scheduler for it
           if (schedulingType != REGULAR) {
             Long nextIteration = entity.obtainNextIteration(fieldName);
@@ -139,6 +138,10 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
             if (nextIteration == null) {
               continue;
             }
+          }
+
+          if (entityProcessController != null && !entityProcessController.shouldProcessEntity(entity)) {
+            continue;
           }
 
           T finalEntity = entity;
