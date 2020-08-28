@@ -1,9 +1,10 @@
 package io.harness.gitsync.core.callback;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.git.GitCommand.GitCommandType.COMMIT_AND_PUSH;
-import static io.harness.delegate.beans.git.GitCommand.GitCommandType.DIFF;
+import static io.harness.delegate.beans.git.GitCommandType.COMMIT_AND_PUSH;
+import static io.harness.delegate.beans.git.GitCommandType.DIFF;
 import static io.harness.gitsync.common.YamlProcessingLogContext.CHANGESET_ID;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -14,15 +15,12 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
-import io.harness.delegate.beans.git.GitCommandResult;
-import io.harness.delegate.beans.git.GitCommitAndPushRequest;
-import io.harness.delegate.beans.git.GitCommitAndPushResult;
+import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.exception.UnexpectedException;
-import io.harness.gitsync.common.CommonsMapper;
-import io.harness.gitsync.common.beans.GitFileChange;
+import io.harness.git.model.CommitAndPushResult;
+import io.harness.git.model.GitBaseResult;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -54,17 +52,19 @@ public class GitCommandCallback implements NotifyCallback {
   private String gitConnectorId;
   private String branchName;
   private String repo;
+  private YamlGitConfigDTO yamlGitConfig;
 
   public GitCommandCallback() {}
 
   public GitCommandCallback(String accountId, String changeSetId, GitCommandType gitCommandType, String gitConnectorId,
-      String repo, String branchName) {
+      String repo, String branchName, YamlGitConfigDTO yamlGitConfig) {
     this.accountId = accountId;
     this.changeSetId = changeSetId;
     this.gitCommandType = gitCommandType;
     this.gitConnectorId = gitConnectorId;
     this.repo = repo;
     this.branchName = branchName;
+    this.yamlGitConfig = yamlGitConfig;
   }
 
   @Inject private transient YamlChangeSetService yamlChangeSetService;
@@ -83,7 +83,7 @@ public class GitCommandCallback implements NotifyCallback {
       ResponseData notifyResponseData = response.values().iterator().next();
       if (notifyResponseData instanceof GitCommandExecutionResponse) {
         GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
-        GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
+        GitBaseResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
 
         if (gitCommandExecutionResponse.getGitCommandStatus() == GitCommandExecutionResponse.GitCommandStatus.FAILURE) {
           if (changeSetId != null) {
@@ -93,12 +93,12 @@ public class GitCommandCallback implements NotifyCallback {
           return;
         }
 
-        logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
+        logger.info("Git command [type: {}] request completed with status [{}]", gitCommandType,
             gitCommandExecutionResponse.getGitCommandStatus());
 
-        if (gitCommandResult.getGitCommandType() == GitCommandType.COMMIT_AND_PUSH) {
-          handleGitCommitAndPush(gitCommandExecutionResponse, (GitCommitAndPushResult) gitCommandResult);
-        } else if (gitCommandResult.getGitCommandType() == DIFF) {
+        if (gitCommandType == GitCommandType.COMMIT_AND_PUSH) {
+          handleGitCommitAndPush(gitCommandExecutionResponse, (CommitAndPushResult) gitCommandResult);
+        } else if (gitCommandType == DIFF) {
           // TODO(abhinav): add diff flow
         } else {
           logger.warn("Unexpected commandType result: [{}]", gitCommandExecutionResponse.getErrorMessage());
@@ -112,26 +112,21 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   private void handleGitCommitAndPush(
-      GitCommandExecutionResponse gitCommandExecutionResponse, GitCommitAndPushResult gitCommandResult) {
-    GitCommitAndPushResult gitCommitAndPushResult = gitCommandResult;
+      GitCommandExecutionResponse gitCommandExecutionResponse, CommitAndPushResult gitCommandResult) {
+    CommitAndPushResult gitCommitAndPushResult = gitCommandResult;
     Optional<YamlChangeSet> yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
     List<GitFileChange> filesCommited = Collections.emptyList();
     if (yamlChangeSet.isPresent()) {
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
       if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
-        String yamlSetIdsProcessed =
-            ((GitCommitAndPushRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetId();
+        String yamlSetIdProcessed = changeSetId;
 
-        saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet.get(), yamlSetIdsProcessed);
+        saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet.get(), yamlSetIdProcessed, yamlGitConfig);
         final String processingCommitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
         final String processingCommitMessage = gitCommitAndPushResult.getGitCommitResult().getCommitMessage();
-        filesCommited = gitCommitAndPushResult.getFilesCommitedToGit()
-                            .stream()
-                            .map(CommonsMapper::toCoreGitFileChange)
-                            .collect(Collectors.toList());
-        addYamlChangeSetToFilesCommited(filesCommited, gitCommitAndPushResult.getYamlGitConfig());
+        filesCommited = new ArrayList<>(emptyIfNull(gitCommitAndPushResult.getFilesCommittedToGit()));
         gitSyncService.logActivityForGitOperation(filesCommited, GitFileActivity.Status.SUCCESS, false,
-            yamlChangeSet.get().isFullSync(), "", processingCommitId, processingCommitMessage);
+            yamlChangeSet.get().isFullSync(), "", processingCommitId, processingCommitMessage, yamlGitConfig);
         gitSyncService.createGitFileActivitySummaryForCommit(
             processingCommitId, accountId, false, GitCommit.Status.COMPLETED);
       }
@@ -141,22 +136,10 @@ public class GitCommandCallback implements NotifyCallback {
     }
   }
 
-  private void addYamlChangeSetToFilesCommited(List<GitFileChange> gitFileChanges, YamlGitConfigDTO yamlGitConfig) {
-    if (isEmpty(gitFileChanges)) {
-      return;
-    }
-    gitFileChanges.forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
-  }
-
-  private void saveCommitFromHarness(
-      GitCommitAndPushResult gitCommitAndPushResult, YamlChangeSet yamlChangeSet, String yamlSetIdsProcessed) {
+  private void saveCommitFromHarness(CommitAndPushResult gitCommitAndPushResult, YamlChangeSet yamlChangeSet,
+      String yamlSetIdsProcessed, YamlGitConfigDTO yamlGitConfig) {
     String commitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
-    YamlGitConfigDTO yamlGitConfig = gitCommitAndPushResult.getYamlGitConfig();
-    if (yamlGitConfig == null) {
-      throw new UnexpectedException(String.format(
-          "Error while saving commit for commitId=[%s],yamlChangeSetId=[%s] as the yamlGitConfig is null ", commitId,
-          yamlChangeSet.getUuid()));
-    }
+
     saveGitCommit(GitCommit.builder()
                       .accountId(accountId)
                       .yamlChangeSetId(yamlChangeSet.getUuid())

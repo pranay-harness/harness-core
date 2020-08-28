@@ -10,6 +10,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.List;
+
 public interface YamlChangeSetRepositoryCustom {
   UpdateResult updateYamlChangeSetStatus(YamlChangeSet.Status status, String yamlChangeSetId);
 
@@ -24,4 +26,6 @@ public interface YamlChangeSetRepositoryCustom {
   Page<YamlChangeSet> findAll(Criteria criteria, Pageable pageable);
 
   <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass);
+
+  List<String> findDistinctAccountIdByStatus(YamlChangeSet.Status status);
 }

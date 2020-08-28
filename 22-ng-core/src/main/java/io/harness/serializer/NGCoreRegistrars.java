@@ -12,6 +12,7 @@ public class NGCoreRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
           .add(NGCoreKryoRegistrar.class)
           .build();
 

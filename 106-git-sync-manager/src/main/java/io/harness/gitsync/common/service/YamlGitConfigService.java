@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.service;
 
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -11,7 +11,8 @@ import java.util.Optional;
 import javax.validation.Valid;
 
 public interface YamlGitConfigService {
-  Optional<GitConfigDTO> getGitConfig(YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName);
+  Optional<ConnectorDTO> getGitConnector(
+      YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName);
 
   YamlGitConfigDTO getByFolderIdentifier(
       String projectIdentifier, String orgIdentifier, String accountId, String identifier);

@@ -15,8 +15,6 @@ import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.artifacts.docker.service.DockerRegistryService;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl;
-import io.harness.cdng.gitclient.GitClientNG;
-import io.harness.cdng.gitclient.GitClientNGImpl;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.git.NGGitService;
@@ -669,7 +667,6 @@ public class DelegateModule extends DependencyModule {
     bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
     bind(AzureVMSSHelperServiceDelegate.class).to(AzureVMSSHelperServiceDelegateImpl.class);
     bind(AzureAutoScaleSettingsHelperServiceDelegate.class).to(AzureAutoScaleSettingsHelperServiceDelegateImpl.class);
-    bind(GitClientNG.class).to(GitClientNGImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
 
     // NG Delegate

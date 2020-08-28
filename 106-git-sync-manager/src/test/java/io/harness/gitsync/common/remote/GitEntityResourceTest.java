@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.encryption.Scope;
 import io.harness.gitsync.GitSyncBaseTest;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;

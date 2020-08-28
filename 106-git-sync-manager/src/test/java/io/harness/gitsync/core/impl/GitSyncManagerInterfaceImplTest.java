@@ -12,12 +12,12 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.git.model.ChangeType;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.GitSyncBaseTest;
-import io.harness.gitsync.common.beans.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
-import io.harness.ng.core.gitsync.ChangeType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

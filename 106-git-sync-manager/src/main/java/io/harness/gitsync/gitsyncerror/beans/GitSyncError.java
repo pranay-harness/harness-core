@@ -2,7 +2,7 @@ package io.harness.gitsync.gitsyncerror.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.encryption.Scope;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;

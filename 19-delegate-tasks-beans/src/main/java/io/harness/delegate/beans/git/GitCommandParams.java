@@ -4,8 +4,8 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
-import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.git.model.GitBaseRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
@@ -19,7 +19,7 @@ public class GitCommandParams implements TaskParameters, ExecutionCapabilityDema
   GitConfigDTO gitConfig;
   GitCommandType gitCommandType;
   List<EncryptedDataDetail> encryptionDetails;
-  GitCommandRequest gitCommandRequest;
+  GitBaseRequest gitCommandRequest;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

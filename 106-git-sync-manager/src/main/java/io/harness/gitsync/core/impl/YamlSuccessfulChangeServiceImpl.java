@@ -5,7 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.gitsync.common.beans.GitFileChange;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.core.beans.HarnessSuccessFulChangeDetail;
 import io.harness.gitsync.core.beans.YamlSuccessfulChange;

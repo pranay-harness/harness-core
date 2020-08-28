@@ -14,6 +14,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.encryption.SecretRefData;
 import io.harness.git.GitClientV2;
 import io.harness.git.model.GitBaseRequest;
+import io.harness.git.model.GitRepositoryType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,11 @@ public class NGGitServiceImplTest extends CategoryTest implements MockableTestMi
                                     .gitAuthType(GitAuthType.HTTP)
                                     .accountId(accountId)
                                     .build();
-    final GitBaseRequest gitBaseRequest = ngGitService.getGitBaseRequest(gitConfigDTO, accountId);
+    final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
+    ngGitService.setGitBaseRequest(gitConfigDTO, accountId, gitBaseRequest, GitRepositoryType.YAML);
     assertThat(gitBaseRequest).isNotNull();
+    assertThat(gitBaseRequest.getRepoType()).isNotNull();
+    assertThat(gitBaseRequest.getAccountId()).isNotNull();
+    assertThat(gitBaseRequest.getAuthRequest()).isNotNull();
   }
 }

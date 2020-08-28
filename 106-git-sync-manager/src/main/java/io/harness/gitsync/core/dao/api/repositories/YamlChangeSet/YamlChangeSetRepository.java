@@ -26,8 +26,4 @@ public interface YamlChangeSetRepository
 
   List<YamlChangeSet> findByAccountIdAndStatusAndLastUpdatedAtLessThan(
       List<String> accountIds, Status status, Long lastUpdatedCutOff);
-
-  List<String> deleteByUuidIn(List<String> uuid);
-
-  List<String> findDistinctAccountIdByStatus(YamlChangeSet.Status status);
 }

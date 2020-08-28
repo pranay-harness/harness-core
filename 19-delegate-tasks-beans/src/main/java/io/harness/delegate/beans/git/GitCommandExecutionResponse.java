@@ -3,14 +3,16 @@ package io.harness.delegate.beans.git;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.git.model.GitBaseRequest;
+import io.harness.git.model.GitBaseResult;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
 public class GitCommandExecutionResponse implements DelegateTaskNotifyResponseData {
-  private GitCommandResult gitCommandResult;
-  private GitCommandRequest gitCommandRequest;
+  private GitBaseResult gitCommandResult;
+  private GitBaseRequest gitCommandRequest;
   private GitCommandStatus gitCommandStatus;
   private String errorMessage;
   private ErrorCode errorCode;

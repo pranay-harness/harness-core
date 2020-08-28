@@ -4,8 +4,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.git.GitCommand.GitCommandType.COMMIT_AND_PUSH;
-import static io.harness.delegate.beans.git.GitCommand.GitCommandType.DIFF;
+import static io.harness.delegate.beans.git.GitCommandType.COMMIT_AND_PUSH;
+import static io.harness.delegate.beans.git.GitCommandType.DIFF;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.gitsync.common.YamlProcessingLogContext.BRANCH_NAME;
 import static io.harness.gitsync.common.YamlProcessingLogContext.CHANGESET_ID;
@@ -35,14 +35,13 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandParams;
-import io.harness.delegate.beans.git.GitCommitAndPushRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.gitsync.common.CommonsMapper;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.YamlProcessingLogContext;
-import io.harness.gitsync.common.beans.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitCommit;
@@ -130,23 +129,22 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (yamlGitConfig == null) {
       throw new InvalidRequestException(String.format("No git sync configured for [%s]", gitFileChange.getFilePath()));
     }
-    Optional<GitConfigDTO> gitConfig = getGitConfig(yamlGitConfig);
+    Optional<ConnectorDTO> connector = getGitConnector(yamlGitConfig);
 
-    if (!gitConfig.isPresent()) {
+    if (!connector.isPresent()) {
       throw new GeneralException(
-          format(GIT_YAML_LOG_PREFIX + "YamlGitConfig: [%s] and gitConfig: [%s]  shouldn't be null for accountId [%s]",
-              yamlGitConfig, gitConfig, accountId));
+          format(GIT_YAML_LOG_PREFIX + "GitConfig shouldn't be null for accountId [%s]", yamlGitConfig, accountId));
     }
 
     logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for entity");
-    TaskData taskData = getTaskDataForCommitAndPush(yamlChangeSet, gitFileChange, yamlGitConfig, gitConfig.get(),
+    TaskData taskData = getTaskDataForCommitAndPush(yamlChangeSet, gitFileChange, yamlGitConfig, connector.get(),
         accountId, yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId());
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
     String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
 
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
         new GitCommandCallback(accountId, yamlChangeSet.getUuid(), COMMIT_AND_PUSH, yamlGitConfig.getGitConnectorId(),
-            yamlGitConfig.getRepo(), yamlGitConfig.getBranch()),
+            yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
         taskId);
 
     logger.info(
@@ -155,9 +153,9 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private TaskData getTaskDataForCommitAndPush(YamlChangeSet yamlChangeSet, GitFileChange gitFileChange,
-      YamlGitConfigDTO yamlGitConfig, GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier,
+      YamlGitConfigDTO yamlGitConfig, ConnectorDTO connector, String accountIdentifier, String orgIdentifier,
       String projectIdentifier) {
-    io.harness.git.model.GitFileChange gitFileChangeDelegate = CommonsMapper.toDelegateGitFileChange(gitFileChange);
+    GitConfigDTO gitConfig = (GitConfigDTO) connector.getConnectorConfig();
     GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountIdentifier)
@@ -167,7 +165,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     List<EncryptedDataDetail> encryptedDataDetailList =
         ngSecretService.getEncryptionDetails(basicNGAccessObject, gitAuthenticationDecryptableEntity);
     GitCommandParams gitCommandParams = buildGitCommandParamsForCommitAndPush(
-        yamlGitConfig, gitConfig, yamlChangeSet.getUuid(), gitFileChangeDelegate, encryptedDataDetailList);
+        gitConfig, gitFileChange, encryptedDataDetailList, connector.getIdentifier());
     return TaskData.builder()
         .taskType(TaskType.NG_GIT_COMMAND.name())
         .async(true)
@@ -176,28 +174,29 @@ public class YamlGitServiceImpl implements YamlGitService {
         .build();
   }
 
-  private GitCommandParams buildGitCommandParamsForCommitAndPush(YamlGitConfigDTO yamlGitConfig, GitConfigDTO gitConfig,
-      String yamlChangeSetIds, io.harness.git.model.GitFileChange gitFileChangeDelegate,
-      List<EncryptedDataDetail> encryptedDataDetailList) {
+  private GitCommandParams buildGitCommandParamsForCommitAndPush(GitConfigDTO gitConfig,
+      io.harness.git.model.GitFileChange gitFileChangeDelegate, List<EncryptedDataDetail> encryptedDataDetailList,
+      String connectorId) {
+    // todo(abhinav): refactor push Only If head seen
     return GitCommandParams.builder()
         .encryptionDetails(encryptedDataDetailList)
         .gitCommandType(COMMIT_AND_PUSH)
-        .gitCommandRequest(GitCommitAndPushRequest.builder()
+        .gitCommandRequest(CommitAndPushRequest.builder()
                                .gitFileChanges(Collections.singletonList(gitFileChangeDelegate))
-                               .yamlGitConfigs(yamlGitConfig)
                                .forcePush(false)
-                               .yamlChangeSetId(yamlChangeSetIds)
+                               .connectorId(connectorId)
+                               .pushOnlyIfHeadSeen(false)
                                .build())
         .gitConfig(gitConfig)
         .build();
   }
 
-  private Optional<GitConfigDTO> getGitConfig(YamlGitConfigDTO yamlGitConfig) {
+  private Optional<ConnectorDTO> getGitConnector(YamlGitConfigDTO yamlGitConfig) {
     if (yamlGitConfig != null) {
       String branchName = yamlGitConfig.getBranch();
       String gitConnectorIdentifier = yamlGitConfig.getGitConnectorId();
       String repoName = yamlGitConfig.getRepo();
-      return yamlGitConfigService.getGitConfig(yamlGitConfig, gitConnectorIdentifier, repoName, branchName);
+      return yamlGitConfigService.getGitConnector(yamlGitConfig, gitConnectorIdentifier, repoName, branchName);
     }
     return Optional.empty();
   }
@@ -404,23 +403,23 @@ public class YamlGitServiceImpl implements YamlGitService {
   private String createDelegateTaskForDiff(
       YamlChangeSet yamlChangeSet, String accountId, List<YamlGitConfigDTO> yamlGitConfigs) {
     YamlGitConfigDTO yamlGitConfig = yamlGitConfigs.get(0);
-    Optional<GitConfigDTO> gitConfig = getGitConfig(yamlGitConfig);
+    final Optional<ConnectorDTO> connector = getGitConnector(yamlGitConfig);
 
-    if (!gitConfig.isPresent()) {
+    if (!connector.isPresent()) {
       throw new GeneralException(
           format(GIT_YAML_LOG_PREFIX + "No git sync configured for accountId [{%s}], orgId [{%s}], projectId [{%s}]",
               yamlChangeSet.getAccountId(), yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId()));
     }
 
     logger.info(GIT_YAML_LOG_PREFIX + "Creating DIFF git delegate task for entity");
-    TaskData taskData = getTaskDataForDiff(yamlChangeSet, yamlGitConfig, gitConfig.get(), accountId,
+    TaskData taskData = getTaskDataForDiff(yamlChangeSet, yamlGitConfig, connector.get(), accountId,
         yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId());
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
     String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
 
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
         new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorId(),
-            yamlGitConfig.getRepo(), yamlGitConfig.getBranch()),
+            yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
         taskId);
 
     logger.info(
@@ -430,7 +429,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private TaskData getTaskDataForDiff(YamlChangeSet yamlChangeSet, YamlGitConfigDTO yamlGitConfig,
-      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      ConnectorDTO connector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    GitConfigDTO gitConfig = (GitConfigDTO) connector.getConnectorConfig();
     GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountIdentifier)

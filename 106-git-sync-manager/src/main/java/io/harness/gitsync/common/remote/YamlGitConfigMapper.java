@@ -2,11 +2,11 @@ package io.harness.gitsync.common.remote;
 
 import static io.fabric8.utils.Strings.nullIfEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.gitsync.common.ScopeHelper.getScope;
+import static io.harness.encryption.ScopeHelper.getScope;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.delegate.beans.git.EntityScope.Scope;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;

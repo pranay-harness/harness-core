@@ -1,5 +1,7 @@
 package io.harness.gitsync.core;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,9 +9,9 @@ import java.util.stream.Collectors;
 // todo(abhinav): refactor/adapt this according to needs later depending on how service registration comes in
 // one more enum might come in here for product types.
 public enum EntityType {
-  PROJECTS(Product.CORE),
-  PIPELINES(Product.CD),
-  CONNECTORS(Product.CORE);
+  @JsonProperty("projects") PROJECTS(Product.CORE),
+  @JsonProperty("pipelines") PIPELINES(Product.CD),
+  @JsonProperty("connectors") CONNECTORS(Product.CORE);
 
   private final Product product;
 

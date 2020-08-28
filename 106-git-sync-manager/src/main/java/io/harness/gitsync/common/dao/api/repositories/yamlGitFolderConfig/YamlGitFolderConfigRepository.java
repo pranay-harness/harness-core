@@ -3,7 +3,7 @@ package io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig;
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

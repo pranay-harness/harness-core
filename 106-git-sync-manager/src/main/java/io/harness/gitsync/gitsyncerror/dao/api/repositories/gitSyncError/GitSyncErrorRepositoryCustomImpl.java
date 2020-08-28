@@ -8,12 +8,12 @@ import com.google.inject.Inject;
 
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
-import io.harness.ng.core.gitsync.ChangeType;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;

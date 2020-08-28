@@ -1,21 +1,21 @@
 package io.harness.gitsync.core.impl;
 
-import static io.harness.gitsync.common.ScopeHelper.getScope;
+import static io.harness.encryption.ScopeHelper.getScope;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
+import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.GitFileLocationHelper;
-import io.harness.gitsync.common.beans.GitFileChange;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
 import io.harness.gitsync.core.service.YamlChangeSetService;
-import io.harness.ng.core.gitsync.ChangeType;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +63,6 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
   private GitFileChange buildGitFileChange(
       ChangeType changeType, String yamlContent, GitFileLocation gitFileLocation, YamlGitConfigDTO yamlGitConfig) {
     return GitFileChange.builder()
-        .yamlGitConfig(yamlGitConfig)
         .fileContent(yamlContent)
         .filePath(gitFileLocation.getEntityGitPath())
         .oldFilePath(gitFileLocation.getEntityGitPath())

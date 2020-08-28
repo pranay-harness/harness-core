@@ -1,29 +1,29 @@
-package io.harness.cdng.git.tasks;
+package io.harness.delegate.task.git;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
-import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static io.harness.eraro.ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT;
+import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.gitclient.GitClientNG;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.git.GitCommand.GitCommandType;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
-import io.harness.delegate.beans.git.GitCommandRequest;
-import io.harness.delegate.beans.git.GitCommitAndPushRequest;
-import io.harness.delegate.beans.git.GitCommitAndPushResult;
+import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
+import io.harness.git.model.GitBaseRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,6 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class NGGitCommandTask extends AbstractDelegateRunnableTask {
-  @Inject private GitClientNG gitClient;
   @Inject private SecretDecryptionService decryptionService;
   @Inject private NGGitService gitService;
 
@@ -56,7 +55,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
     List<EncryptedDataDetail> encryptionDetails = gitCommandParams.getEncryptionDetails();
     decryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
     GitCommandType gitCommandType = gitCommandParams.getGitCommandType();
-    GitCommandRequest gitCommandRequest = gitCommandParams.getGitCommandRequest();
+    GitBaseRequest gitCommandRequest = gitCommandParams.getGitCommandRequest();
 
     try {
       switch (gitCommandType) {
@@ -82,11 +81,9 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   }
 
   private ResponseData handleCommitAndPush(GitCommandParams gitCommandParams, GitConfigDTO gitConfig) {
-    GitCommitAndPushRequest gitCommitRequest = (GitCommitAndPushRequest) gitCommandParams.getGitCommandRequest();
+    CommitAndPushRequest gitCommitRequest = (CommitAndPushRequest) gitCommandParams.getGitCommandRequest();
     logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
-    GitCommitAndPushResult gitCommitAndPushResult =
-        gitClient.commitAndPush(gitConfig, gitCommitRequest, getAccountId(), null);
-    gitCommitAndPushResult.setYamlGitConfig(gitCommitRequest.getYamlGitConfigs());
+    CommitAndPushResult gitCommitAndPushResult = gitService.commitAndPush(gitConfig, gitCommitRequest, getAccountId());
 
     return GitCommandExecutionResponse.builder()
         .gitCommandRequest(gitCommitRequest)
@@ -111,10 +108,15 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   private ErrorCode getErrorCode(Exception ex) {
     if (ex instanceof WingsException) {
       final WingsException we = (WingsException) ex;
-      if (GIT_CONNECTION_ERROR == we.getCode()) {
-        return GIT_CONNECTION_ERROR;
-      } else if (GIT_DIFF_COMMIT_NOT_IN_ORDER == we.getCode()) {
-        return GIT_DIFF_COMMIT_NOT_IN_ORDER;
+      switch (we.getCode()) {
+        case GIT_CONNECTION_ERROR:
+          return GIT_CONNECTION_ERROR;
+        case GIT_DIFF_COMMIT_NOT_IN_ORDER:
+          return GIT_DIFF_COMMIT_NOT_IN_ORDER;
+        case GIT_UNSEEN_REMOTE_HEAD_COMMIT:
+          return GIT_UNSEEN_REMOTE_HEAD_COMMIT;
+        default:
+          return null;
       }
     }
     return null;
