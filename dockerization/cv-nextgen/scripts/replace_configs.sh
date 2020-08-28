@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+CONFIG_FILE=/opt/harness/cv-nextgen-config.yml
 
 yq delete -i /opt/harness/cv-nextgen-config.yml server.adminConnectors
 yq delete -i /opt/harness/cv-nextgen-config.yml server.applicationConnectors[0]
@@ -17,9 +18,12 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
+fi
 
-if [[ "" != "$MANAGER_URL" ]]; then
-  yq write -i /opt/harness/cv-nextgen-config.yml managerUrl "$MANAGER_URL"
+if [[ "" != "$NG_MANAGER_URL" ]]; then
+  yq write -i $CONFIG_FILE nextGen.ngManagerUrl "$NG_MANAGER_URL"
 fi
 
   yq write -i /opt/harness/cv-nextgen-config.yml server.requestLog.appenders[0].type "console"

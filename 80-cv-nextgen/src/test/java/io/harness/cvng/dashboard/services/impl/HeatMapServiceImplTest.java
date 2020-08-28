@@ -83,7 +83,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         hPersistence.createQuery(HeatMap.class, excludeAuthority)
             .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
             .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
-            .filter(HeatMapKeys.envIdentifier, null)
+            .filter(HeatMapKeys.envIdentifier, envIdentifier)
             .asList());
     verifyHeatMaps(instant, riskScore,
         hPersistence.createQuery(HeatMap.class, excludeAuthority)
@@ -141,7 +141,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
                                    .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
                                    .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                    .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
-                                   .filter(HeatMapKeys.envIdentifier, null)
+                                   .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                    .asList();
       assertThat(heatMaps.size())
           .isEqualTo((int) Math.ceil(numOfUnits * TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES)
@@ -175,7 +175,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
                                    .filter(HeatMapKeys.heatMapBucketStartTime, bucketBoundary)
                                    .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                    .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
-                                   .filter(HeatMapKeys.envIdentifier, null)
+                                   .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                    .asList();
       assertThat(heatMaps.size()).isEqualTo(1);
       HeatMap heatMap = heatMaps.get(0);

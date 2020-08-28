@@ -34,8 +34,8 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Override
   public void updateRiskScore(String accountId, String projectIdentifier, String serviceIdentifier,
       String envIdentifier, CVMonitoringCategory category, Instant timeStamp, double riskScore) {
-    // update for service
-    updateRiskScore(category, accountId, projectIdentifier, serviceIdentifier, null, timeStamp, riskScore);
+    // update for service/env
+    updateRiskScore(category, accountId, projectIdentifier, serviceIdentifier, envIdentifier, timeStamp, riskScore);
 
     // update for env
     updateRiskScore(category, accountId, projectIdentifier, null, envIdentifier, timeStamp, riskScore);
