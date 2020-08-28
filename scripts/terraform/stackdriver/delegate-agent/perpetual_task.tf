@@ -17,7 +17,7 @@ resource "google_logging_metric" "perpetual_task_delay" {
   }
 }
 
-resource "google_monitoring_dashboard" "delegate_tasks_dashboard" {
+resource "google_monitoring_dashboard" "delegate_perpetual_tasks_dashboard" {
   dashboard_json = <<EOF
 
 {
