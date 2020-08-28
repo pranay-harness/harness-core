@@ -93,7 +93,7 @@ public class CeProductMetricsTasklet implements Tasklet {
 
     analytics.enqueue(GroupMessage.builder(accountId)
                           .anonymousId(accountId)
-                          .timestamp(Date.from(end))
+                          .timestamp(Date.from(start))
                           .traits(groupTraitsMapBuilder.build()));
     logger.info("Sent CE account traits through Segment group call.");
   }

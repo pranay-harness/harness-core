@@ -35,28 +35,30 @@ import java.time.Instant;
 @Slf4j
 public class ProductMetricsServiceImpl implements ProductMetricsService {
   private static final String TOTAL_CLUSTER_COST_QUERY =
-      "SELECT SUM(billingamount) AS COST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
+      "SELECT SUM(billingamount) AS COST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime >= '%s' and starttime <'%s'";
   private static final String TOTAL_UNALLOCATED_COST_QUERY =
-      "SELECT SUM(unallocatedcost) AS UNALLOCATEDCOST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
+      "SELECT SUM(unallocatedcost) AS UNALLOCATEDCOST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime >= '%s' and starttime < '%s'";
   private static final String TOTAL_IDLE_COST_QUERY =
-      "SELECT SUM(actualIdleCost) AS IDLECOST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
+      "SELECT SUM(actualIdleCost) AS IDLECOST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND starttime >= '%s' and starttime < '%s'";
   private static final String TOTAL_K8S_SPEND_IN_CE_QUERY =
-      "SELECT SUM(billingamount) AS COST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND (t0.instancetype IN ('K8S_NODE') ) AND starttime BETWEEN '%s' and '%s'";
+      "SELECT SUM(billingamount) AS COST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND (t0.instancetype IN ('K8S_NODE') ) AND starttime >= '%s' and starttime < '%s'";
   private static final String TOTAL_ECS_SPEND_IN_CE_QUERY =
-      "SELECT SUM(billingamount) AS COST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE') ) AND starttime BETWEEN '%s' and '%s'";
+      "SELECT SUM(billingamount) AS COST FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE') ) AND starttime >= '%s' and starttime < '%s'";
   private static final String TOTAL_K8S_NAMESPACES_QUERY =
-      "SELECT COUNT(DISTINCT \"namespace\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+      "SELECT COUNT(DISTINCT \"namespace\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime >= '%s' and starttime < '%s'";
   private static final String TOTAL_K8S_WORKFLOWS_QUERY =
-      "SELECT COUNT(DISTINCT \"workloadname\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+      "SELECT COUNT(DISTINCT \"workloadname\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime >= '%s' and starttime <'%s'";
   private static final String TOTAL_K8S_NODES_QUERY =
-      "SELECT COUNT(DISTINCT \"instanceid\") AS NUM FROM billing_data t0 WHERE instancetype='K8S_NODE' AND (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+      "SELECT COUNT(DISTINCT \"instanceid\") AS NUM FROM billing_data t0 WHERE instancetype='K8S_NODE' AND (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime >= '%s' and starttime < '%s'";
   private static final String TOTAL_K8S_PODS_QUERY =
-      "SELECT COUNT(DISTINCT \"instanceid\") AS NUM FROM billing_data t0 WHERE instancetype='K8S_POD' AND (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime BETWEEN '%s' and '%s'";
+      "SELECT COUNT(DISTINCT \"instanceid\") AS NUM FROM billing_data t0 WHERE instancetype='K8S_POD' AND (t0.accountid = '%s') AND (t0.clustertype = 'K8S') AND starttime >= '%s' and starttime < '%s'";
 
   private static final String TOTAL_ECS_CLUSTERS_QUERY =
-      "SELECT COUNT(DISTINCT \"clusterid\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND starttime BETWEEN '%s' and '%s'";
+      "SELECT COUNT(DISTINCT \"clusterid\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND starttime >= '%s' and starttime < '%s'";
   private static final String TOTAL_ECS_TASKS_QUERY =
-      "SELECT COUNT(DISTINCT \"taskid\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND starttime BETWEEN '2020-05-28' and '2020-06-01'";
+      "SELECT COUNT(DISTINCT \"taskid\") AS NUM FROM billing_data t0 WHERE (t0.accountid = '%s') AND (t0.clustertype = 'AWS') AND starttime >= '%s' and starttime < '%s'";
+
+  private static final int MAX_RETRY = 3;
 
   @Autowired @Inject private HPersistence persistence;
   @Autowired @Inject private TimeScaleDBService timeScaleDBService;
@@ -118,18 +120,31 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
   @Override
   public double getTotalClusterCost(String accountId, Instant start, Instant end) {
     double totalClusterCost = 0;
+    String query = format(TOTAL_CLUSTER_COST_QUERY, accountId, start, end);
     ResultSet resultSet = null;
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      String query = format(TOTAL_CLUSTER_COST_QUERY, accountId, start, end);
-      resultSet = statement.executeQuery(query);
-      while (resultSet.next()) {
-        totalClusterCost = resultSet.getDouble("COST");
+
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        successful = true;
+        while (resultSet.next()) {
+          totalClusterCost = resultSet.getDouble("COST");
+        }
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query to getTotalClusterCost , max retry count reached, query=[{}], accountId=[{}]",
+              query, accountId, e);
+        } else {
+          logger.error("Error while fetching total cluster cost : exception", e);
+        }
+      } finally {
+        DBUtils.close(resultSet);
       }
-    } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
-    } finally {
-      DBUtils.close(resultSet);
     }
     return totalClusterCost;
   }
@@ -137,18 +152,31 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
   @Override
   public double getTotalUnallocatedCost(String accountId, Instant start, Instant end) {
     double totalUnallocatedCost = 0;
+    String query = format(TOTAL_UNALLOCATED_COST_QUERY, accountId, start, end);
     ResultSet resultSet = null;
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      String query = format(TOTAL_UNALLOCATED_COST_QUERY, accountId, start, end);
-      resultSet = statement.executeQuery(query);
-      while (resultSet.next()) {
-        totalUnallocatedCost = resultSet.getDouble("UNALLOCATEDCOST");
+
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        successful = true;
+        while (resultSet.next()) {
+          totalUnallocatedCost = resultSet.getDouble("UNALLOCATEDCOST");
+        }
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query to getTotalUnallocatedCost , max retry count reached, query=[{}], accountId=[{}]",
+              query, accountId, e);
+        } else {
+          logger.error("Error while fetching total unallocated cost : exception", e);
+        }
+      } finally {
+        DBUtils.close(resultSet);
       }
-    } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
-    } finally {
-      DBUtils.close(resultSet);
     }
     return totalUnallocatedCost;
   }
@@ -182,18 +210,31 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
   @Override
   public double getTotalIdleCost(String accountId, Instant start, Instant end) {
     double totalIdleCost = 0;
+    String query = format(TOTAL_IDLE_COST_QUERY, accountId, start, end);
     ResultSet resultSet = null;
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      String query = format(TOTAL_IDLE_COST_QUERY, accountId, start, end);
-      resultSet = statement.executeQuery(query);
-      while (resultSet.next()) {
-        totalIdleCost = resultSet.getDouble("IDLECOST");
+
+    boolean successful = false;
+    int retryCount = 0;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        successful = true;
+        while (resultSet.next()) {
+          totalIdleCost = resultSet.getDouble("IDLECOST");
+        }
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query to getTotalUnallocatedCost , max retry count reached, query=[{}], accountId=[{}]",
+              query, accountId, e);
+        } else {
+          logger.error("Error while fetching total idle cost : exception", e);
+        }
+      } finally {
+        DBUtils.close(resultSet);
       }
-    } catch (SQLException e) {
-      logger.error("Error while fetching Common Fields : exception", e);
-    } finally {
-      DBUtils.close(resultSet);
     }
     return totalIdleCost;
   }
