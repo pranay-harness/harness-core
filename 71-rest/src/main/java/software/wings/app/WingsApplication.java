@@ -178,7 +178,6 @@ import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.VaultSecretManagerRenewalHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
-import software.wings.scheduler.account.AccountBackgroundJobHandler;
 import software.wings.scheduler.account.LicenseCheckHandler;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
 import software.wings.scheduler.audit.EntityAuditRecordHandler;
@@ -841,7 +840,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
-    injector.getInstance(AccountBackgroundJobHandler.class).registerIterators();
     injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();

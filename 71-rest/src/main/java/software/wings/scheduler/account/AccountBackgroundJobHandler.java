@@ -27,7 +27,7 @@ public class AccountBackgroundJobHandler implements Handler<Account> {
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("AccountBackgroundJobCheck")
             .poolSize(2)
-            .interval(ofSeconds(30))
+            .interval(ofMinutes(1))
             .build(),
         AccountBackgroundJobHandler.class,
         MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
@@ -35,7 +35,7 @@ public class AccountBackgroundJobHandler implements Handler<Account> {
             .fieldName(AccountKeys.accountBackgroundJobCheckIteration)
             .targetInterval(ofMinutes(jobsFrequencyConfig.getAccountBackgroundJobFrequencyInMinutes()))
             .acceptableNoAlertDelay(ofMinutes(60))
-            .acceptableExecutionTime(ofSeconds(60))
+            .acceptableExecutionTime(ofSeconds(180))
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
