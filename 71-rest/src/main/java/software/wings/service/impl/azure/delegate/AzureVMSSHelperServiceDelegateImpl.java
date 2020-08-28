@@ -1,6 +1,7 @@
 package software.wings.service.impl.azure.delegate;
 
 import static io.harness.azure.model.AzureConstants.AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.BASE_VIRTUAL_MACHINE_SCALE_SET_IS_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.BG_GREEN_TAG_VALUE;
 import static io.harness.azure.model.AzureConstants.BG_VERSION_TAG_NAME;
@@ -9,14 +10,18 @@ import static io.harness.azure.model.AzureConstants.HARNESS_REVISION_IS_NULL_VAL
 import static io.harness.azure.model.AzureConstants.NAME_TAG;
 import static io.harness.azure.model.AzureConstants.NEW_VIRTUAL_MACHINE_SCALE_SET_NAME_IS_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.NUMBER_OF_VM_INSTANCES_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.PRIMARY_INTERNET_FACING_LOAD_BALANCER_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.SUBSCRIPTION_ID_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.VIRTUAL_MACHINE_SCALE_SET_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VIRTUAL_SCALE_SET_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_DEFAULT;
 import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_SSH_PUBLIC_KEY;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.VMSS_IDS_IS_NULL_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_LIST_EMPTY_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_NOT_NUMBERS_VALIDATION_MSG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.utils.AzureVMSSUtils.dateToISO8601BasicStr;
 import static java.lang.String.format;
@@ -34,6 +39,7 @@ import com.microsoft.azure.management.compute.CachingTypes;
 import com.microsoft.azure.management.compute.DataDisk;
 import com.microsoft.azure.management.compute.ImageReference;
 import com.microsoft.azure.management.compute.StorageAccountTypes;
+import com.microsoft.azure.management.compute.UpgradeMode;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet.DefinitionStages.WithLinuxCreateManagedOrUnmanaged;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet.DefinitionStages.WithLinuxRootUsernameManagedOrUnmanaged;
@@ -308,7 +314,7 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
         baseVirtualMachineScaleSet, infraMappingId, harnessRevision, newVirtualMachineScaleSetName, false);
 
     // Need for image reference and data disk
-    VirtualMachineScaleSetVM virtualMachineScaleSetVM =
+    VirtualMachineScaleSetVM baseVirtualMachineScaleSetVM =
         baseVirtualMachineScaleSet.virtualMachines().list().stream().findFirst().orElseThrow(
             ()
                 -> new InvalidRequestException(
@@ -343,7 +349,7 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
 
       // Image artifact will be provided by CDC team, until then getting the image from existing VM inside VMSS
       WithLinuxRootUsernameManagedOrUnmanaged vmssWithImageBuilder =
-          setImageReference(vmssBuilder, virtualMachineScaleSetVM);
+          setImageReference(vmssBuilder, baseVirtualMachineScaleSetVM);
 
       WithLinuxCreateManagedOrUnmanaged vmssWithImageAndVMUserBuilder =
           setVMUserCredentials(vmssWithImageBuilder, baseVirtualMachineScaleSet, azureUserAuthVMInstanceData);
@@ -351,8 +357,8 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
       WithManagedCreate vmssWithImageAndVMUserAndZoneBuilder =
           setAvailabilityZone(vmssWithImageAndVMUserBuilder, baseVirtualMachineScaleSet);
 
-      WithManagedCreate vmssWithImageAndVMUserAndDataDiskBuilder =
-          setDataDisk(vmssWithImageAndVMUserAndZoneBuilder, baseVirtualMachineScaleSet, virtualMachineScaleSetVM);
+      WithManagedCreate vmssWithImageAndVMUserAndDataDiskBuilder = setDataDisk(vmssWithImageAndVMUserAndZoneBuilder,
+          baseVirtualMachineScaleSet.managedOSDiskStorageAccountType(), baseVirtualMachineScaleSetVM);
 
       // add tags and create new VMSS
       vmssWithImageAndVMUserAndDataDiskBuilder.withTags(baseVMSSTags).withCapacity(0).create();
@@ -418,19 +424,24 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
   private WithManagedCreate setAvailabilityZone(WithLinuxCreateManagedOrUnmanaged vmssWithImageAndVMUserBuilder,
       VirtualMachineScaleSet baseVirtualMachineScaleSet) {
     Set<AvailabilityZoneId> availabilityZones = baseVirtualMachineScaleSet.availabilityZones();
-    AvailabilityZoneId availabilityZoneId = availabilityZones.iterator().next();
-    return vmssWithImageAndVMUserBuilder.withAvailabilityZone(availabilityZoneId);
+    if (availabilityZones.iterator().hasNext()) {
+      AvailabilityZoneId availabilityZoneId = availabilityZones.iterator().next();
+      vmssWithImageAndVMUserBuilder.withAvailabilityZone(availabilityZoneId);
+    }
+    return vmssWithImageAndVMUserBuilder;
   }
 
   private WithManagedCreate setDataDisk(WithManagedCreate vmssWithImageReferenceAndVMUserBuilder,
-      VirtualMachineScaleSet baseVirtualMachineScaleSet, VirtualMachineScaleSetVM virtualMachineScaleSetVM) {
-    DataDisk dataDisk = virtualMachineScaleSetVM.storageProfile().dataDisks().get(0);
-    CachingTypes cachingType = dataDisk.caching();
-    Integer diskSizeGB = dataDisk.diskSizeGB();
-    int lun = dataDisk.lun();
-    // Storage Account Types
-    StorageAccountTypes storageAccountType = baseVirtualMachineScaleSet.managedOSDiskStorageAccountType();
-    return vmssWithImageReferenceAndVMUserBuilder.withNewDataDisk(diskSizeGB, lun, cachingType, storageAccountType);
+      StorageAccountTypes storageAccountType, VirtualMachineScaleSetVM baseVirtualMachineScaleSetVM) {
+    List<DataDisk> dataDisks = baseVirtualMachineScaleSetVM.storageProfile().dataDisks();
+    for (DataDisk dataDisk : dataDisks) {
+      CachingTypes cachingType = dataDisk.caching();
+      Integer diskSizeGB = dataDisk.diskSizeGB();
+      int lun = dataDisk.lun();
+      // Storage Account Types
+      vmssWithImageReferenceAndVMUserBuilder.withNewDataDisk(diskSizeGB, lun, cachingType, storageAccountType);
+    }
+    return vmssWithImageReferenceAndVMUserBuilder;
   }
 
   private String[] getNatPoolNames(Map<String, LoadBalancerInboundNatPool> loadBalancerInboundNatPoolMap) {
@@ -439,5 +450,119 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
       natPoolNames.add(natPool.name());
     }
     return natPoolNames.toArray(new String[0]);
+  }
+
+  @Override
+  public VirtualMachineScaleSet attachVMSSToBackendPools(AzureConfig azureConfig,
+      LoadBalancer primaryInternetFacingLoadBalancer, final String subscriptionId, final String resourceGroupName,
+      final String virtualMachineScaleSetName, final String... backendPools) {
+    Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp =
+        getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
+
+    return virtualMachineScaleSetOp
+        .map(vmss -> attachVMSSToBackendPools(azureConfig, vmss, primaryInternetFacingLoadBalancer, backendPools))
+        .orElseThrow(()
+                         -> new InvalidRequestException(
+                             format("Virtual machine scale set cannot be found with virtualMachineScaleSetName: %s,"
+                                     + "on subscriptionId: %s, resourceGroupName: %s",
+                                 virtualMachineScaleSetName, subscriptionId, resourceGroupName)));
+  }
+
+  @Override
+  public VirtualMachineScaleSet attachVMSSToBackendPools(AzureConfig azureConfig,
+      VirtualMachineScaleSet virtualMachineScaleSet, LoadBalancer primaryInternetFacingLoadBalancer,
+      final String... backendPools) {
+    Objects.notNull(virtualMachineScaleSet, VIRTUAL_MACHINE_SCALE_SET_NULL_VALIDATION_MSG);
+    Objects.notNull(primaryInternetFacingLoadBalancer, PRIMARY_INTERNET_FACING_LOAD_BALANCER_NULL_VALIDATION_MSG);
+    if (backendPools.length == 0) {
+      throw new IllegalArgumentException(BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG);
+    }
+
+    Azure azure = getAzureClient(azureConfig);
+    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+
+    logger.debug("Start attaching virtual machine scale set with name {}, to backendPools: {}",
+        virtualMachineScaleSet.name(), backendPools);
+    return virtualMachineScaleSet.update()
+        .withExistingPrimaryInternetFacingLoadBalancer(primaryInternetFacingLoadBalancer)
+        .withPrimaryInternetFacingLoadBalancerBackends(backendPools)
+        .apply();
+  }
+
+  @Override
+  public VirtualMachineScaleSet deAttachVMSSFromBackendPools(AzureConfig azureConfig, final String subscriptionId,
+      final String resourceGroupName, final String virtualMachineScaleSetName, final String... backendPools) {
+    Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp =
+        getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
+
+    return virtualMachineScaleSetOp.map(vmss -> deAttachVMSSFromBackendPools(azureConfig, vmss, backendPools))
+        .orElseThrow(()
+                         -> new InvalidRequestException(
+                             format("Virtual machine scale set cannot be found with virtualMachineScaleSetName: %s,"
+                                     + "on subscriptionId: %s, resourceGroupName: %s",
+                                 virtualMachineScaleSetName, subscriptionId, resourceGroupName)));
+  }
+
+  @Override
+  public VirtualMachineScaleSet deAttachVMSSFromBackendPools(
+      AzureConfig azureConfig, VirtualMachineScaleSet virtualMachineScaleSet, final String... backendPools) {
+    Objects.notNull(virtualMachineScaleSet, VIRTUAL_MACHINE_SCALE_SET_NULL_VALIDATION_MSG);
+    if (backendPools.length == 0) {
+      throw new IllegalArgumentException(BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG);
+    }
+
+    Azure azure = getAzureClient(azureConfig);
+    Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
+
+    logger.debug("Start de-attaching virtual machine scale set with name {}, from backendPools: {}",
+        virtualMachineScaleSet.name(), backendPools);
+    return virtualMachineScaleSet.update().withoutPrimaryInternetFacingLoadBalancerBackends(backendPools).apply();
+  }
+
+  @Override
+  public void updateVMInstances(VirtualMachineScaleSet virtualMachineScaleSet, final String... instanceIds) {
+    if (instanceIds.length == 0) {
+      throw new IllegalArgumentException(VM_INSTANCE_IDS_LIST_EMPTY_VALIDATION_MSG);
+    }
+    if (!validateVMInstanceIds(instanceIds)) {
+      throw new IllegalArgumentException(VM_INSTANCE_IDS_NOT_NUMBERS_VALIDATION_MSG);
+    }
+
+    if (virtualMachineScaleSet.upgradeModel() == UpgradeMode.MANUAL) {
+      logger.debug("Start updating VM instances of virtual machine scale set with name {}, instanceId: {}",
+          virtualMachineScaleSet.name(), instanceIds);
+      virtualMachineScaleSet.virtualMachines().updateInstances(instanceIds);
+    }
+  }
+
+  private boolean validateVMInstanceIds(String[] instanceIds) {
+    for (String id : instanceIds) {
+      if (id.equals("*")) {
+        continue;
+      }
+      try {
+        Integer.parseInt(id);
+      } catch (NumberFormatException e) {
+        logger.error(
+            format("Unable to convert VM instance id to numeric type, id: %s instanceIds: %s", id, instanceIds), e);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public void forceDeAttachVMSSFromBackendPools(
+      AzureConfig azureConfig, VirtualMachineScaleSet virtualMachineScaleSet, final String... backendPools) {
+    VirtualMachineScaleSet deAttachedVMSS =
+        deAttachVMSSFromBackendPools(azureConfig, virtualMachineScaleSet, backendPools);
+    updateVMInstances(deAttachedVMSS, "*");
+  }
+
+  public void forceAttachVMSSToBackendPools(AzureConfig azureConfig, VirtualMachineScaleSet virtualMachineScaleSet,
+      LoadBalancer primaryInternetFacingLoadBalancer, final String... backendPools) {
+    VirtualMachineScaleSet attachedVMSS =
+        attachVMSSToBackendPools(azureConfig, virtualMachineScaleSet, primaryInternetFacingLoadBalancer, backendPools);
+    updateVMInstances(attachedVMSS, "*");
   }
 }
