@@ -24,6 +24,10 @@ public class CIExecutionServiceModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .build()));
+
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
@@ -32,10 +36,6 @@ public class CIExecutionServiceModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(ExecutionPlanModule.getInstance(),
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()),
-        CIBeansModule.getInstance());
+    return ImmutableSet.of(ExecutionPlanModule.getInstance(), CIBeansModule.getInstance());
   }
 }

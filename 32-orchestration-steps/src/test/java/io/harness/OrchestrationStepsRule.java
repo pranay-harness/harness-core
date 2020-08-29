@@ -113,10 +113,10 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationStepsPersistenceTestModule());
-    modules.addAll(new OrchestrationModule(OrchestrationModuleConfig.builder()
-                                               .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                               .build())
-                       .cumulativeDependencies());
+    modules.add(
+        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .build()));
     modules.add(OrchestrationStepsModule.getInstance());
     return modules;
   }

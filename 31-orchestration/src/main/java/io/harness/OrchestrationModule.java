@@ -3,8 +3,8 @@ package io.harness;
 import static java.util.Arrays.asList;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
@@ -27,7 +27,6 @@ import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outcomes.OutcomeServiceImpl;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
-import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
@@ -47,18 +46,11 @@ import io.harness.waiter.WaiterModule;
 
 import java.io.Closeable;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class OrchestrationModule extends DependencyModule implements ServersModule {
+public class OrchestrationModule extends AbstractModule implements ServersModule {
   private static OrchestrationModule instance;
-
-  private final OrchestrationModuleConfig config;
-
-  public OrchestrationModule(OrchestrationModuleConfig config) {
-    this.config = Preconditions.checkNotNull(config);
-  }
 
   public static OrchestrationModule getInstance(OrchestrationModuleConfig config) {
     if (instance == null) {
@@ -67,10 +59,17 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
     return instance;
   }
 
+  private final OrchestrationModuleConfig config;
+
+  public OrchestrationModule(OrchestrationModuleConfig config) {
+    this.config = Preconditions.checkNotNull(config);
+  }
+
   @Override
   protected void configure() {
     install(WaiterModule.getInstance());
     install(OrchestrationBeansModule.getInstance());
+    install(OrchestrationQueueModule.getInstance());
 
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
@@ -110,11 +109,6 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
     bind(String.class)
         .annotatedWith(Names.named(OrchestrationPublisherName.PUBLISHER_NAME))
         .toInstance(config.getPublisherName());
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(OrchestrationQueueModule.getInstance());
   }
 
   @Override

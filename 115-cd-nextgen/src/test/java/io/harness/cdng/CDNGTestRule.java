@@ -79,10 +79,10 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(TimeModule.getInstance());
     modules.add(NGModule.getInstance());
     modules.add(new CDNGPersistenceTestModule());
-    modules.addAll(new OrchestrationModule(OrchestrationModuleConfig.builder()
-                                               .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                               .build())
-                       .cumulativeDependencies());
+    modules.add(
+        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .build()));
     modules.add(new ExecutionPlanModule());
     modules.add(mongoTypeModule(annotations));
 
