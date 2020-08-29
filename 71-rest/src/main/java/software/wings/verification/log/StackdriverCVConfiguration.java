@@ -45,6 +45,8 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
   public static class StackdriverCVConfigurationYaml extends LogsCVConfigurationYaml {
+    private String hostnameField;
+    private String messageField;
     private boolean isLogsConfiguration;
   }
 }
