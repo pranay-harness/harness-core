@@ -1,9 +1,8 @@
 package io.harness;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
-import io.harness.govern.DependencyModule;
 import io.harness.registrars.OrchestrationBeansTimeoutRegistrar;
 import io.harness.registries.OrchestrationRegistryModule;
 import io.harness.registries.registrar.AdviserRegistrar;
@@ -15,10 +14,8 @@ import io.harness.registries.registrar.TimeoutRegistrar;
 import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
-
 @Slf4j
-public class OrchestrationBeansModule extends DependencyModule {
+public class OrchestrationBeansModule extends AbstractModule {
   private static OrchestrationBeansModule instance;
 
   public static OrchestrationBeansModule getInstance() {
@@ -46,10 +43,5 @@ public class OrchestrationBeansModule extends DependencyModule {
         MapBinder.newMapBinder(binder(), String.class, TimeoutRegistrar.class);
     timeoutRegistrarMapBinder.addBinding(OrchestrationBeansTimeoutRegistrar.class.getName())
         .to(OrchestrationBeansTimeoutRegistrar.class);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of();
   }
 }
