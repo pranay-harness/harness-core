@@ -1840,7 +1840,7 @@ public class VaultTest extends WingsBaseTest {
     long currentTime = System.currentTimeMillis();
     vaultService.renewToken(savedVaultConfig);
     savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-    assertThat(savedVaultConfig.getRenewedAt()).isGreaterThan(currentTime);
+    assertThat(savedVaultConfig.getRenewedAt()).isGreaterThanOrEqualTo(currentTime);
   }
 
   @Test
