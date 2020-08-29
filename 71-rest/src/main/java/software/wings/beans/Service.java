@@ -53,8 +53,6 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @CdUniqueIndex(name = "yaml", fields = { @Field("appId")
                                          , @Field("name") })
-@CdUniqueIndex(name = "accountIdUUIDIdx", fields = { @Field(ServiceKeys.accountId)
-                                                     , @Field("_id") })
 @CdIndex(name = "accountCreatedAtIndex",
     fields = { @Field(ServiceKeys.accountId)
                , @Field(value = ServiceKeys.createdAt, type = IndexType.DESC) })
