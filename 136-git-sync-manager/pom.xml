@@ -6,20 +6,8 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>115-cd-nextgen</artifactId>
+    <artifactId>136-git-sync-manager</artifactId>
     <dependencies>
-        <dependency>
-            <groupId>com.openpojo</groupId>
-            <artifactId>openpojo</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-inmemory</artifactId>
-        </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
@@ -27,12 +15,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
+            <artifactId>19-delegate-tasks-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-ng-core</artifactId>
+            <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -45,12 +33,6 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- TEST -->
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>de.bwaldvogel</groupId>
             <artifactId>mongo-java-server-core</artifactId>
@@ -61,6 +43,12 @@
             <artifactId>mongo-java-server-memory-backend</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- TEST -->
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>11-commons-test</artifactId>

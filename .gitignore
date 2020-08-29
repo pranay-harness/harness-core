@@ -9,6 +9,7 @@
 
 portal.iml
 /target
+/repository
 jacoco-it.exec
 
 *.ipr
@@ -40,7 +41,6 @@ python/**/*-checkpoint.ipynb
 python/**/*.pyc
 python/**/.pyenv
 python/splunk_intelligence/dist/
-repository/
 queue.db
 node_modules/
 package-lock.json

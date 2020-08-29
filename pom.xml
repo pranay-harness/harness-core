@@ -62,11 +62,11 @@
         <module>85-functional-test</module>
         <module>86-deployment-functional-tests</module>
         <module>91-model-gen-tool</module>
-        <module>106-git-sync-manager</module>
-        <module>115-cd-nextgen</module>
 
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
+        <module>125-cd-nextgen</module>
+        <module>136-git-sync-manager</module>
 
     </modules>
     <scm>
