@@ -30,7 +30,7 @@ build_bazel_module() {
     bazel --bazelrc=${bazelrc} test //${module}/... ${GCP} ${BAZEL_ARGUMENTS}
   fi
 
-  mvn install:install-file \
+  mvn -B install:install-file \
    -Dfile=bazel-bin/${module}/libmodule.jar \
    -DgroupId=software.wings \
    -DartifactId=${module} \
@@ -48,7 +48,7 @@ build_proto_module() {
 
   bazel_library=`echo ${module} | tr '-' '_'`
 
-  mvn install:install-file \
+  mvn -B install:install-file \
    -Dfile=../../bazel-bin/${module}/src/main/${modulePath}/lib${bazel_library}_java_proto.jar \
    -DgroupId=software.wings \
    -DartifactId=${module}-proto \

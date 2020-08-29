@@ -13,15 +13,16 @@
         <module>15-api-services</module>
         <module>16-expression-service</module>
         <module>19-delegate-tasks-beans</module>
-        <module>20-delegate-tasks</module>
         <module>20-delegate-beans</module>
-        <module>21-delegate-agent-beans</module>
+        <module>20-delegate-tasks</module>
         <module>20-ng-core-beans</module>
+        <module>21-delegate-agent-beans</module>
         <module>21-persistence</module>
         <module>22-delegate-service-beans</module>
+        <module>22-ng-core</module>
         <module>22-ng-delegate-service-beans</module>
-        <module>22-ng-project-n-orgs</module>
         <module>22-ng-project-n-orgs-client</module>
+        <module>22-ng-project-n-orgs</module>
         <module>22-secret-manager-client</module>
         <module>22-timeout-engine</module>
         <module>22-wait-engine</module>
@@ -42,9 +43,9 @@
         <module>64-events-framework</module>
         <module>68-cd-nextgen</module>
         <module>69-connector-nextgen</module>
+        <module>70-cv-nextgen-commons</module>
         <module>70-delegate-agent</module>
         <module>70-delegate-service</module>
-        <module>70-cv-nextgen-commons</module>
         <module>71-rest</module>
         <module>72-ci-beans</module>
         <module>72-event-server</module>
@@ -59,12 +60,14 @@
         <module>82-watcher</module>
         <module>84-command-library-server</module>
         <module>85-functional-test</module>
+        <module>86-deployment-functional-tests</module>
         <module>91-model-gen-tool</module>
         <module>106-git-sync-manager</module>
         <module>115-cd-nextgen</module>
+
+        <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
-        <module>22-ng-core</module>
-        <module>86-deployment-functional-tests</module>
+
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

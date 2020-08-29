@@ -11,7 +11,8 @@ RUN cd /root \
     && git clone https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/wings-software/portal.git \
     && cd portal \
     && source /etc/profile.d/maven.sh \
-    && mvn -T 2C -Dmaven.repo.local=/root/.m2/repository -s /root/.m2/settings.xml clean install -DskipTests \
+    && mvn -B -T 2C -Dmaven.repo.local=/root/.m2/repository -s /root/.m2/settings.xml \
+       compile test-compile dependency:go-offline \
     && rm -rf `find . -type d -name target` \
     && rm -rf /home/jenkins/.cache
 
