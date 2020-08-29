@@ -232,8 +232,9 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   }
 
   @Override
-  public Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String taskId) {
+  public Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String accountId, String taskId) {
     DelegateSelectionLog delegateSelectionLog = wingsPersistence.createQuery(DelegateSelectionLog.class)
+                                                    .filter(DelegateSelectionLogKeys.accountId, accountId)
                                                     .filter(DelegateSelectionLogKeys.taskId, taskId)
                                                     .filter(DelegateSelectionLogKeys.conclusion, SELECTED)
                                                     .get();

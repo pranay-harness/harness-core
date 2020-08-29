@@ -182,7 +182,9 @@ public class GraphRendererTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testConvertToNode() {
+    String accountId = generateUuid();
     final StateExecutionInstance instance = aStateExecutionInstance()
+                                                .accountId(accountId)
                                                 .displayName("state name")
                                                 .uuid("uuid")
                                                 .stateType(PHASE_STEP.name())
@@ -202,7 +204,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                                                 .delegateName(delegateName)
                                                                 .delegateHostName(delegateHostname)
                                                                 .build();
-    when(delegateSelectionLogsService.fetchSelectedDelegateForTask(taskId))
+    when(delegateSelectionLogsService.fetchSelectedDelegateForTask(accountId, taskId))
         .thenReturn(Optional.of(delegateSelectionLogParams));
 
     instance.setStateParams(ImmutableMap.of("key", "value"));

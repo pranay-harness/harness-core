@@ -529,7 +529,8 @@ public class GraphRenderer {
           .stream()
           .map(delegateTaskDetails -> {
             Optional<DelegateSelectionLogParams> logParamsOptional =
-                delegateSelectionLogsService.fetchSelectedDelegateForTask(delegateTaskDetails.getDelegateTaskId());
+                delegateSelectionLogsService.fetchSelectedDelegateForTask(
+                    instance.getAccountId(), delegateTaskDetails.getDelegateTaskId());
             if (logParamsOptional.isPresent()) {
               delegateTaskDetails.setSelectedDelegateId(logParamsOptional.get().getDelegateId());
               delegateTaskDetails.setSelectedDelegateName(logParamsOptional.get().getDelegateName());

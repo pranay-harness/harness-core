@@ -29,7 +29,7 @@ public interface DelegateSelectionLogsService {
 
   List<DelegateSelectionLogParams> fetchTaskSelectionLogs(String accountId, String taskId);
 
-  Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String taskId);
+  Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String accountId, String taskId);
 
   void logDisconnectedDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
 

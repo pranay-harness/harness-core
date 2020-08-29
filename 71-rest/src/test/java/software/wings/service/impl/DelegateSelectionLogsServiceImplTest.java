@@ -619,7 +619,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchSelectedDelegateForTaskWithEmptyOptional() {
     Optional<DelegateSelectionLogParams> logParamsOptional =
-        delegateSelectionLogsService.fetchSelectedDelegateForTask(generateUuid());
+        delegateSelectionLogsService.fetchSelectedDelegateForTask(generateUuid(), generateUuid());
 
     assertThat(logParamsOptional.isPresent()).isFalse();
   }
@@ -657,7 +657,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(delegateSelectionLog2);
 
     Optional<DelegateSelectionLogParams> logParamsOptional =
-        delegateSelectionLogsService.fetchSelectedDelegateForTask(taskId);
+        delegateSelectionLogsService.fetchSelectedDelegateForTask(accountId, taskId);
 
     assertThat(logParamsOptional.isPresent()).isTrue();
     assertThat(logParamsOptional.get().getConclusion()).isEqualTo(delegateSelectionLog1.getConclusion());
