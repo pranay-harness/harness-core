@@ -45,12 +45,14 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -154,6 +156,14 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
 
+    closingFactory.addServer(new Closeable() {
+      @SneakyThrows
+      @Override
+      public void close() {
+        queueListenerController.stop();
+      }
+    });
+
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
@@ -161,8 +171,16 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     notifyQueuePublisherRegister.register(
         ORCHESTRATION, payload -> publisher.send(Collections.singletonList(ORCHESTRATION), payload));
 
-    injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+    NotifierScheduledExecutorService notifierScheduledExecutorService =
+        injector.getInstance(NotifierScheduledExecutorService.class);
+    notifierScheduledExecutorService.scheduleWithFixedDelay(
+        injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+    closingFactory.addServer(new Closeable() {
+      @Override
+      public void close() throws IOException {
+        notifierScheduledExecutorService.shutdown();
+      }
+    });
   }
 
   @Override

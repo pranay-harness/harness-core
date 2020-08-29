@@ -43,12 +43,14 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.TestNotifyEventListener;
 import io.harness.waiter.WaiterModule;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -146,6 +148,13 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(TestNotifyEventListener.class), 1);
+    closingFactory.addServer(new Closeable() {
+      @SneakyThrows
+      @Override
+      public void close() {
+        queueListenerController.stop();
+      }
+    });
 
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
@@ -154,8 +163,16 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
     notifyQueuePublisherRegister.register(
         TEST_PUBLISHER, payload -> publisher.send(Collections.singletonList(TEST_PUBLISHER), payload));
 
-    injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+    NotifierScheduledExecutorService notifierScheduledExecutorService =
+        injector.getInstance(NotifierScheduledExecutorService.class);
+    notifierScheduledExecutorService.scheduleWithFixedDelay(
+        injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+    closingFactory.addServer(new Closeable() {
+      @Override
+      public void close() throws IOException {
+        notifierScheduledExecutorService.shutdown();
+      }
+    });
   }
 
   @Override
