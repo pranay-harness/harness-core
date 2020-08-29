@@ -2,7 +2,6 @@ package software.wings.service.intfc.azure.delegate;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
-import com.microsoft.azure.management.network.LoadBalancer;
 import com.microsoft.azure.management.resources.Subscription;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
 import software.wings.beans.AzureConfig;
@@ -137,87 +136,4 @@ public interface AzureVMSSHelperServiceDelegate {
   void createVirtualMachineScaleSet(AzureConfig azureConfig, VirtualMachineScaleSet baseVirtualMachineScaleSet,
       String infraMappingId, String newVirtualMachineScaleSetName, Integer harnessRevision,
       AzureUserAuthVMInstanceData azureUserAuthVMInstanceData, boolean isBlueGreen);
-
-  /**
-   * Attach virtual machine scale set to load balancer backend pools.
-   *
-   * @param azureConfig
-   * @param primaryInternetFacingLoadBalancer
-   * @param subscriptionId
-   * @param resourceGroupName
-   * @param virtualMachineScaleSetName
-   * @param backendPools
-   * @return
-   */
-  VirtualMachineScaleSet attachVMSSToBackendPools(AzureConfig azureConfig,
-      LoadBalancer primaryInternetFacingLoadBalancer, String subscriptionId, String resourceGroupName,
-      String virtualMachineScaleSetName, String... backendPools);
-
-  /**
-   * Attach virtual machine scale set to load balancer backend pools.
-   *
-   * @param azureConfig
-   * @param virtualMachineScaleSet
-   * @param primaryInternetFacingLoadBalancer
-   * @param backendPools
-   * @return
-   */
-  VirtualMachineScaleSet attachVMSSToBackendPools(AzureConfig azureConfig,
-      VirtualMachineScaleSet virtualMachineScaleSet, LoadBalancer primaryInternetFacingLoadBalancer,
-      String... backendPools);
-
-  /**
-   * De-attache virtual machine scale set from load balancer backend pools.
-   *
-   * @param azureConfig
-   * @param subscriptionId
-   * @param resourceGroupName
-   * @param virtualMachineScaleSetName
-   * @param backendPools
-   * @return
-   */
-  VirtualMachineScaleSet deAttachVMSSFromBackendPools(AzureConfig azureConfig, String subscriptionId,
-      String resourceGroupName, String virtualMachineScaleSetName, String... backendPools);
-
-  /**
-   * De-attache virtual machine scale set from load balancer backend pools.
-   *
-   * @param azureConfig
-   * @param virtualMachineScaleSet
-   * @param backendPools
-   * @return
-   */
-  VirtualMachineScaleSet deAttachVMSSFromBackendPools(
-      AzureConfig azureConfig, VirtualMachineScaleSet virtualMachineScaleSet, String... backendPools);
-
-  /**
-   * Update virtual machine scale set VM instances to apply the latest network or configuration changes.
-   *
-   * @param virtualMachineScaleSet
-   * @param instanceIds
-   */
-  void updateVMInstances(VirtualMachineScaleSet virtualMachineScaleSet, String... instanceIds);
-
-  /**
-   * Attach virtual machine scale set to load balancer backend pools and update VMSS VMs to apply network changes
-   * immediately. This is time consuming operation.
-   *
-   * @param azureConfig
-   * @param virtualMachineScaleSet
-   * @param backendPools
-   */
-  void forceDeAttachVMSSFromBackendPools(
-      AzureConfig azureConfig, VirtualMachineScaleSet virtualMachineScaleSet, String... backendPools);
-
-  /**
-   * De-attach virtual machine scale set from load balancer backend pools and update VMSS VMs to apply network changes
-   * immediately. This is time consuming operation.
-   *
-   * @param azureConfig
-   * @param virtualMachineScaleSet
-   * @param primaryInternetFacingLoadBalancer
-   * @param backendPools
-   */
-  void forceAttachVMSSToBackendPools(AzureConfig azureConfig, VirtualMachineScaleSet virtualMachineScaleSet,
-      LoadBalancer primaryInternetFacingLoadBalancer, String... backendPools);
 }
