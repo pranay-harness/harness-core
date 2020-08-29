@@ -47,15 +47,35 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void testGetTerraformConfigInspectDownloadUrlPathMac() throws Exception {
-    setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
-
+  public void testGetTerraformConfigInspectDownloadUrlPath() throws Exception {
     boolean useCdn = delegateConfiguration.isUseCdn();
-
     assertThat(useCdn).isFalse();
-    assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
-        .isEqualTo(
-            "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/darwin/amd64/terraform-config-inspect");
+
+    boolean win = SystemUtils.IS_OS_MAC;
+    boolean mac = SystemUtils.IS_OS_WINDOWS;
+
+    try {
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
+      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+          .isEqualTo(
+              "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/linux/amd64/terraform-config-inspect");
+
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
+      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+          .isEqualTo(
+              "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/darwin/amd64/terraform-config-inspect");
+
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", true);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
+      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+          .isEqualTo(
+              "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/windows/amd64/terraform-config-inspect");
+    } finally {
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", win);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", mac);
+    }
   }
 
   @Test
