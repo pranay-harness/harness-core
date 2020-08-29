@@ -22,6 +22,8 @@ public class StackdriverCVConfigurationYamlHandler extends LogsCVConfigurationYa
 
     StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) bean;
     yaml.setQuery(stackdriverCVConfiguration.getQuery());
+    yaml.setHostnameField(stackdriverCVConfiguration.getHostnameField());
+    yaml.setMessageField(stackdriverCVConfiguration.getMessageField());
     yaml.setLogsConfiguration(stackdriverCVConfiguration.isLogsConfiguration());
     return yaml;
   }
@@ -37,6 +39,8 @@ public class StackdriverCVConfigurationYamlHandler extends LogsCVConfigurationYa
 
     StackdriverCVConfigurationYaml yaml = (StackdriverCVConfigurationYaml) changeContext.getYaml();
     bean.setQuery(yaml.getQuery());
+    bean.setHostnameField(yaml.getHostnameField());
+    bean.setMessageField(yaml.getMessageField());
     bean.setLogsConfiguration(yaml.isLogsConfiguration());
 
     saveToDatabase(bean, previous, appId);
