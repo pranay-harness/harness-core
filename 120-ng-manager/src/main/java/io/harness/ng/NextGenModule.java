@@ -184,6 +184,12 @@ public class NextGenModule extends DependencyModule {
         });
       }
     });
+
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
+                                                .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
+                                                .build()));
+
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
@@ -214,11 +220,6 @@ public class NextGenModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
-                                            .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
-                                            .build()),
-        ExecutionPlanModule.getInstance(), DelegateServiceDriverModule.getInstance());
+    return ImmutableSet.of(ExecutionPlanModule.getInstance(), DelegateServiceDriverModule.getInstance());
   }
 }

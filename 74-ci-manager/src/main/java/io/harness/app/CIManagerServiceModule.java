@@ -55,6 +55,10 @@ public class CIManagerServiceModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .build()));
+
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(EmptyTaskExecutor.class);
@@ -70,10 +74,6 @@ public class CIManagerServiceModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()),
-        CIExecutionServiceModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(CIExecutionServiceModule.getInstance());
   }
 }

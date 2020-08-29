@@ -744,6 +744,9 @@ public class WingsModule extends DependencyModule implements ServersModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .build()));
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(SchedulerConfig.class)
@@ -1323,11 +1326,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()),
-        PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(),
+    return ImmutableSet.<DependencyModule>of(PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(),
         DelegateServiceDriverModule.getInstance());
   }
 
