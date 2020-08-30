@@ -27,6 +27,8 @@ extend type Query {
   ): CloudTrendStats @dataFetcher(name: cloudTrendStats)
 
   cloudFilterValues(
+    limit: Int
+    offset: Int
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CloudBillingGroupBy]

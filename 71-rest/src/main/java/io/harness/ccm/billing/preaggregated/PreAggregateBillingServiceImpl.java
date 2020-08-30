@@ -9,6 +9,8 @@ import com.google.inject.Singleton;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.SqlObject;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
@@ -160,8 +162,10 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
 
   @Override
   public PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(String accountId, List<Object> groupByObjects,
-      List<Condition> conditions, String queryTableName, SqlObject leftJoin) {
+      List<Condition> conditions, String queryTableName, SqlObject leftJoin, Integer limit, Integer offset) {
     SelectQuery query = dataHelper.getQuery(null, groupByObjects, conditions, null, false);
+    query.addCustomization(new PgLimitClause(limit));
+    query.addCustomization(new PgOffsetClause(offset));
     if (leftJoin != null) {
       query.addFromTable(RawBillingTableSchema.table);
       query.addCustomJoin(leftJoin);

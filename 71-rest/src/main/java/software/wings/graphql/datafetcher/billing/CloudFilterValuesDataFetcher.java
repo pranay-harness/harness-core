@@ -3,12 +3,13 @@ package software.wings.graphql.datafetcher.billing;
 import com.google.inject.Inject;
 
 import com.healthmarketscience.sqlbuilder.SqlObject;
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingSortCriteria;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingService;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
@@ -19,15 +20,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
-    CloudBillingGroupBy, CloudBillingSortCriteria> {
+public class CloudFilterValuesDataFetcher
+    extends AbstractStatsDataFetcherWithAggregationListAndLimit<CloudBillingAggregate, CloudBillingFilter,
+        CloudBillingGroupBy, CloudBillingSortCriteria> {
   @Inject PreAggregateBillingService preAggregateBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
-  protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
-      List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort) {
+  protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
+      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
+      Integer limit, Integer offset) {
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
     boolean isAWSCloudProvider = false;
     SqlObject leftJoin = null;
@@ -58,16 +61,25 @@ public class CloudFilterValuesDataFetcher extends AbstractStatsDataFetcher<Cloud
             .map(cloudBillingHelper.getFiltersMapper(isAWSCloudProvider, isQueryRawTableRequired))
             .filter(condition -> condition != null)
             .collect(Collectors.toList()),
-        queryTableName, leftJoin);
-  }
-
-  @Override
-  protected QLData postFetch(String accountId, List<CloudBillingGroupBy> groupByList, QLData qlData) {
-    return null;
+        queryTableName, leftJoin, limit, offset);
   }
 
   @Override
   public String getEntityType() {
+    return null;
+  }
+
+  @Override
+  protected QLData postFetch(String accountId, List<CloudBillingGroupBy> groupByList,
+      List<CloudBillingAggregate> aggregations, List<CloudBillingSortCriteria> sort, QLData qlData, Integer limit,
+      boolean includeOthers) {
+    return null;
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<CloudBillingAggregate> aggregateFunction,
+      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort,
+      Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 }
