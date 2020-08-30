@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -102,7 +103,7 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
         getCloudProviderFilter(new String[] {CLOUD_PROVIDER_GCP}), getLabelsKeyFilter(new String[] {LABELS_KEY}));
 
     when(preAggregateBillingService.getPreAggregateFilterValueStats(
-             anyString(), anyList(), anyList(), anyString(), any()))
+             anyString(), anyList(), anyList(), anyString(), any(), anyInt(), anyInt()))
         .thenReturn(null);
     PreAggregateBillingTrendStatsDTO data = (PreAggregateBillingTrendStatsDTO) cloudTrendStatsDataFetcher.fetch(
         ACCOUNT1_ID, Collections.singletonList(getBillingAggregate(QLCCMAggregateOperation.SUM, DISCOUNTS)),

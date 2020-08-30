@@ -213,6 +213,9 @@ public class CloudBillingIdFilter implements Filter {
       case NOT_NULL:
         condition = UnaryCondition.isNotNull(dbColumn);
         break;
+      case LIKE:
+        condition = BinaryCondition.like(dbColumn, "%" + values[0] + "%");
+        break;
       default:
         return null;
     }

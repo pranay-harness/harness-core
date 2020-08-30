@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -65,7 +66,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
     awsRegionSet.add(entityData);
 
     when(preAggregateBillingService.getPreAggregateFilterValueStats(
-             anyString(), anyList(), anyList(), anyString(), any()))
+             anyString(), anyList(), anyList(), anyString(), any(), anyInt(), anyInt()))
         .thenReturn(PreAggregateFilterValuesDTO.builder()
                         .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder()
                                                 .region(awsRegionSet)
@@ -83,8 +84,8 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void fetch() {
     doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
-    PreAggregateFilterValuesDTO data =
-        (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(ACCOUNT1_ID, null, filters, groupBy, sort);
+    PreAggregateFilterValuesDTO data = (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(
+        ACCOUNT1_ID, null, filters, groupBy, sort, 10, 0);
     assertThat(data.getData()).isNotNull();
     assertThat(data.getData().get(0).getRegion()).contains(entityData);
   }
@@ -99,11 +100,11 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
 
     when(preAggregateBillingService.getPreAggregateFilterValueStats(
-             anyString(), anyList(), anyList(), anyString(), any()))
+             anyString(), anyList(), anyList(), anyString(), any(), anyInt(), anyInt()))
         .thenReturn(null);
     PreAggregateFilterValuesDTO data = (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(ACCOUNT1_ID,
         null, Arrays.asList(getCloudProviderFilter(new String[] {"GCP"})),
-        Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null);
+        Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null, 10, 0);
     assertThat(data).isNull();
   }
 
@@ -117,12 +118,12 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
 
     when(preAggregateBillingService.getPreAggregateFilterValueStats(
-             anyString(), anyList(), anyList(), anyString(), any()))
+             anyString(), anyList(), anyList(), anyString(), any(), anyInt(), anyInt()))
         .thenReturn(null);
 
     PreAggregateFilterValuesDTO data = (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(ACCOUNT1_ID,
         null, Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER})),
-        Arrays.asList(getTagsKeyGroupBy(), getTagsValueGroupBy()), null);
+        Arrays.asList(getTagsKeyGroupBy(), getTagsValueGroupBy()), null, 10, 0);
     assertThat(data).isNull();
   }
 
@@ -130,7 +131,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void postFetch() {
-    QLData postFetchData = cloudFilterValuesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, null);
+    QLData postFetchData = cloudFilterValuesDataFetcher.postFetch(ACCOUNT1_ID, groupBy, null, null, null, 10, true);
     assertThat(postFetchData).isNull();
   }
 

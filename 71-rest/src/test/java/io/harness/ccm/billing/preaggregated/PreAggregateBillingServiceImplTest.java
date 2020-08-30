@@ -290,8 +290,8 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void getPreAggregateFilterValueStatsTest() {
-    PreAggregateFilterValuesDTO stats =
-        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME, null);
+    PreAggregateFilterValuesDTO stats = preAggregateBillingService.getPreAggregateFilterValueStats(
+        ACCOUNT_ID, groupByObjects, null, TABLE_NAME, null, 10, 0);
     assertThat(stats.getData().get(0)).isNotNull();
     assertThat(stats.getData().get(0).getRegion().size()).isEqualTo(1);
   }
@@ -301,8 +301,8 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateFilterValueStatsTestNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
-    PreAggregateFilterValuesDTO stats =
-        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME, null);
+    PreAggregateFilterValuesDTO stats = preAggregateBillingService.getPreAggregateFilterValueStats(
+        ACCOUNT_ID, groupByObjects, null, TABLE_NAME, null, 10, 0);
     assertThat(stats).isNull();
   }
 
