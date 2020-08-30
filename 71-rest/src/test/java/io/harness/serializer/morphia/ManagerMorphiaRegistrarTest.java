@@ -8,10 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
-import io.harness.mongo.HObjectFactory;
 import io.harness.rule.Owner;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -43,13 +43,13 @@ import java.util.Map;
 import java.util.Set;
 @Slf4j
 public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
-  @Inject HObjectFactory objectFactory;
+  @Inject @Named("morphiaInterfaceImplementersClasses") Map<String, Class> morphiaInterfaceImplementers;
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testManagerImplementationClasses() {
-    Map<String, Class> classes = new HashedMap(objectFactory.getMorphiaInterfaceImplementers());
+    Map<String, Class> classes = new HashedMap(morphiaInterfaceImplementers);
 
     classes.put("software.wings.common.PartitionProcessorTest$SampleElement", SampleElement.class);
     classes.put("software.wings.sm.StateMachineTest$StateSync", StateSync.class);
@@ -86,8 +86,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   public void testManagerKnownMovements() {
     ImmutableMap<Object, Object> known = ImmutableMap.builder().build();
 
-    Map<String, String> myModuleMovements =
-        movementsToMyModule(this.getClass(), objectFactory.getMorphiaInterfaceImplementers());
+    Map<String, String> myModuleMovements = movementsToMyModule(this.getClass(), morphiaInterfaceImplementers);
 
     assertThat(myModuleMovements).isEqualTo(known);
   }

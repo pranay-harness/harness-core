@@ -23,6 +23,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
 
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -81,7 +82,8 @@ public class MongoModule extends AbstractModule {
   @Named("primaryDatastore")
   @Singleton
   public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, @Named("morphiaClasses") Set<Class> classes,
-      Morphia morphia, ObjectFactory objectFactory, IndexManager indexManager) {
+      @Named("morphiaInterfaceImplementersClasses") Map<String, Class> morphiaInterfaceImplementers, Morphia morphia,
+      ObjectFactory objectFactory, IndexManager indexManager) {
     for (Class clazz : classes) {
       if (morphia.getMapper().getMCMap().get(clazz.getName()).getCollectionName().startsWith("!!!custom_")) {
         throw new UnexpectedException(format("The custom collection name for %s is not provided", clazz.getName()));
@@ -107,7 +109,7 @@ public class MongoModule extends AbstractModule {
 
     HObjectFactory hObjectFactory = (HObjectFactory) objectFactory;
 
-    ClassRefactoringManager.updateMovedClasses(primaryDatastore, hObjectFactory.getMorphiaInterfaceImplementers());
+    ClassRefactoringManager.updateMovedClasses(primaryDatastore, morphiaInterfaceImplementers);
     hObjectFactory.setDatastore(primaryDatastore);
 
     return primaryDatastore;

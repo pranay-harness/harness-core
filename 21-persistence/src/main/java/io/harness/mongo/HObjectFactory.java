@@ -9,7 +9,6 @@ import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar.NotFoundClass;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -58,7 +57,7 @@ public class HObjectFactory extends DefaultCreator {
     return map;
   }
 
-  @Getter private Map<String, Class> morphiaInterfaceImplementers = collectMorphiaInterfaceImplementers();
+  private Map<String, Class> morphiaInterfaceImplementers = collectMorphiaInterfaceImplementers();
 
   private static final Objenesis objenesis = new ObjenesisStd(true);
 
