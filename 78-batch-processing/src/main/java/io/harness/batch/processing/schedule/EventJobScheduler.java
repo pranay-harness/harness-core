@@ -140,9 +140,6 @@ public class EventJobScheduler {
   private void runJob(String accountId, Job job, boolean runningMode) {
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
-      if (BatchJobType.AWS_ECS_CLUSTER_DATA_SYNC == batchJobType && !accountId.equals("zEaak-FLS425IEO7OLzMUg")) {
-        return;
-      }
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
