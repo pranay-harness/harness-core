@@ -47,6 +47,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String DISCONNECTED_GROUP_ID = "DISCONNECTED_GROUP_ID";
   private static final String WAITING_ON_APPROVAL_GROUP_ID = "WAITING_ON_APPROVAL_GROUP_ID";
   private static final String TASK_ASSIGNED_GROUP_ID = "TASK_ASSIGNED_GROUP_ID";
+  private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
 
   @Override
   public void save(BatchDelegateSelectionLog batch) {
@@ -147,6 +148,25 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
                      .message("Matched exclude scope " + scope.getName())
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(EXCLUDE_SCOPE_MATCHED_GROUP_ID)
+                     .build());
+  }
+
+  @Override
+  public void logProfileScopeRuleNotMatched(
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopingRuleDescription) {
+    if (batch == null) {
+      return;
+    }
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
+                     .message("Delegate profile scoping rule not matched: " + scopingRuleDescription)
+                     .eventTimestamp(System.currentTimeMillis())
+                     .groupId(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID)
                      .build());
   }
 

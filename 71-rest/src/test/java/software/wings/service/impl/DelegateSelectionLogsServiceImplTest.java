@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -55,6 +56,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String MISSING_ALL_SELECTORS_GROUP_ID = "MISSING_ALL_SELECTORS_GROUP_ID";
   private static final String DISCONNECTED_GROUP_ID = "DISCONNECTED_GROUP_ID";
   private static final String WAITING_ON_APPROVAL_GROUP_ID = "WAITING_ON_APPROVAL_GROUP_ID";
+  private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
   private static final String TASK_ASSIGNED_GROUP_ID = "TASK_ASSIGNED_GROUP_ID";
   private static final String MISSING_SELECTOR_MESSAGE = "missing selector";
 
@@ -298,6 +300,51 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Matched exclude scope testScope");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(EXCLUDE_SCOPE_MATCHED_GROUP_ID);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldNotLogProfileScopeRuleNotMatched() {
+    assertThatCode(() -> delegateSelectionLogsService.logProfileScopeRuleNotMatched(null, null, null, null))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldLogProfileScopeMatched() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1Id = generateUuid();
+    String delegate2Id = generateUuid();
+    String scopingRuleDescription = "rule description";
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logProfileScopeRuleNotMatched(batch, accountId, delegate1Id, scopingRuleDescription);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Delegate profile scoping rule not matched: rule description");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
+
+    delegateSelectionLogsService.logProfileScopeRuleNotMatched(batch, accountId, delegate2Id, scopingRuleDescription);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Delegate profile scoping rule not matched: rule description");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
   }
 
   @Test
