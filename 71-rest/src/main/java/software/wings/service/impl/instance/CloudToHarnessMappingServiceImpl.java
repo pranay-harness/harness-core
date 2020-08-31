@@ -127,6 +127,14 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
+  public List<SettingAttribute> getCEConnectors(String accountId) {
+    return persistence.createQuery(SettingAttribute.class)
+        .filter(SettingAttributeKeys.accountId, accountId)
+        .filter(SettingAttributeKeys.category, SettingCategory.CE_CONNECTOR)
+        .asList();
+  }
+
+  @Override
   public List<HarnessServiceInfo> getHarnessServiceInfoList(List<DeploymentSummary> deploymentSummaryList) {
     List<String> infraMappingIds =
         deploymentSummaryList.stream().map(DeploymentSummary::getInfraMappingId).collect(Collectors.toList());
