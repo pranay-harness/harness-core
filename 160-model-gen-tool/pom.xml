@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>91-model-gen-tool</artifactId>
+    <artifactId>160-model-gen-tool</artifactId>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>

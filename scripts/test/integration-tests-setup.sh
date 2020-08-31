@@ -91,9 +91,9 @@ echo "Running data gen"
 # run data gen to load test data
 #run datagen
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
-    java -Xmx1024m -jar 91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml
+    java -Xmx1024m -jar 160-model-gen-tool/target/model-gen-tool-capsule.jar 160-model-gen-tool/config-datagen.yml
 else
-    java -Xmx1024m -jar $SERVER_BUILD_DIR/91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml
+    java -Xmx1024m -jar $SERVER_BUILD_DIR/160-model-gen-tool/target/model-gen-tool-capsule.jar 160-model-gen-tool/config-datagen.yml
 fi
 
 echo "datagen finished"
