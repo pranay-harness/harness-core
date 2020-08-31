@@ -37,6 +37,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -1235,6 +1236,21 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   public void disableConfig(String cvConfigId) {
     logger.info("Disabling the config: {}", cvConfigId);
     wingsPersistence.updateField(CVConfiguration.class, cvConfigId, CVConfigurationKeys.enabled24x7, false);
+  }
+
+  @Override
+  public List<CVConfiguration> obtainCVConfigurationsReferencedByService(String appId, String serviceId) {
+    return wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+        .filter(ServiceKeys.appId, appId)
+        .filter(CVConfigurationKeys.serviceId, serviceId)
+        .asList();
+  }
+
+  @Override
+  public void deleteConfigurationsForEnvironment(String appId, String envId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+                                .filter(ServiceKeys.appId, appId)
+                                .filter(CVConfigurationKeys.envId, envId));
   }
 
   private void validateAlertOccurrenceCount(CVConfiguration cvConfiguration) {

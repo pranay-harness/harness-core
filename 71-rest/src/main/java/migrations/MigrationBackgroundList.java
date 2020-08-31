@@ -69,6 +69,7 @@ import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
 import migrations.all.InitWorkflowCounters;
+import migrations.all.InvalidCVConfigDeletionMigration;
 import migrations.all.K8sStatesTimeoutMigration;
 import migrations.all.LogAnalysisAddExecutionIdMigration;
 import migrations.all.LogAnalysisBaselineMigration;
@@ -280,6 +281,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(166, AddAccountIdToEntityVersion.class))
         .add(Pair.of(167, AddAccountIdToTriggerExecutions.class))
         .add(Pair.of(168, AddAccountIdToTriggers.class))
+        .add(Pair.of(169, InvalidCVConfigDeletionMigration.class))
         .build();
   }
 }

@@ -426,6 +426,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
     environment.setSyncFromGit(syncFromGit);
     ensureEnvironmentSafeToDelete(environment);
+    cvConfigurationService.deleteConfigurationsForEnvironment(appId, envId);
     delete(environment);
   }
 

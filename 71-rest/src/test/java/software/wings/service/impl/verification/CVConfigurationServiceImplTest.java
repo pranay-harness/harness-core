@@ -14,6 +14,7 @@ import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
@@ -45,6 +46,8 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -69,7 +72,9 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
@@ -111,6 +116,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Inject private ContinuousVerificationService continuousVerificationService;
   @Inject private SettingsService settingsService;
   @Inject private AccountService accountService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private String accountId;
   private String appId;
@@ -1288,6 +1295,45 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     logsCVConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
 
     assertThat(logsCVConfiguration.isEnabled24x7()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testDeleteCvConfig_whenEnvironmentDeleted() {
+    Environment environment =
+        environmentService.save(anEnvironment().appId(appId).accountId(accountId).name(generateUuid()).build());
+    APMCVServiceConfiguration apmcvConfig = createAPMCVConfig(true, appId, accountId);
+    apmcvConfig.setEnvId(environment.getUuid());
+    cvConfigurationService.saveConfiguration(accountId, appId, APM_VERIFICATION, apmcvConfig);
+    apmcvConfig = createAPMCVConfig(true, appId, accountId);
+    apmcvConfig.setEnvId(environment.getUuid());
+    cvConfigurationService.saveConfiguration(accountId, appId, APM_VERIFICATION, apmcvConfig);
+    List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
+    assertThat(cvConfigurations.size()).isEqualTo(2);
+
+    // delete env and ensure that cvConfigs have been deleted
+    environmentService.delete(appId, environment.getUuid());
+    cvConfigurations = cvConfigurationService.listConfigurations(accountId);
+    assertThat(cvConfigurations.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testDeleteCvConfig_whenServiceDeleted() {
+    Service service =
+        serviceResourceService.save(Service.builder().appId(appId).accountId(accountId).name(generateUuid()).build());
+    APMCVServiceConfiguration apmcvConfig = createAPMCVConfig(true, appId, accountId);
+    apmcvConfig.setServiceId(service.getUuid());
+    cvConfigurationService.saveConfiguration(accountId, appId, APM_VERIFICATION, apmcvConfig);
+
+    // delete service and ensure throws exception
+    assertThatThrownBy(() -> serviceResourceService.delete(appId, service.getUuid()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Service [" + service.getName()
+            + "] couldn't be deleted. Remove Service reference from the following service guards ["
+            + apmcvConfig.getName() + "] ");
   }
 
   private long waitTillAlertsSteady(long numOfExpectedAlerts) {

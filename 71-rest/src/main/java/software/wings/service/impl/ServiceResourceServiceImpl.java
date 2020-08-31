@@ -198,6 +198,7 @@ import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.service.intfc.template.TemplateService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ContextElement;
 import software.wings.stencils.DataProvider;
@@ -206,6 +207,7 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.ArtifactType;
+import software.wings.verification.CVConfiguration;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -323,6 +325,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
+  @Inject private CVConfigurationService cvConfigurationService;
 
   /**
    * {@inheritDoc}
@@ -1235,6 +1238,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException(
           format("Service is referenced by %d %s [%s] as a workflow variable.", refTriggers.size(),
               plural("trigger", refTriggers.size()), join(", ", refTriggers)),
+          USER);
+    }
+
+    List<CVConfiguration> cvConfigurations =
+        cvConfigurationService.obtainCVConfigurationsReferencedByService(service.getAppId(), service.getUuid());
+    if (isNotEmpty(cvConfigurations)) {
+      String cvConfigurationsNames = cvConfigurations.stream().map(CVConfiguration::getName).collect(joining(","));
+      throw new InvalidRequestException(
+          format("Service [%s] couldn't be deleted. Remove Service reference from the following "
+                  + plural("service guards", cvConfigurations.size()) + " [" + cvConfigurationsNames + "] ",
+              service.getName()),
           USER);
     }
   }
