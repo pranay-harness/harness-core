@@ -5,7 +5,6 @@ import static org.joor.Reflect.on;
 import com.google.inject.Injector;
 
 import io.harness.beans.DelegateTask;
-import io.harness.cdng.artifact.delegate.task.ArtifactCollectTask;
 import io.harness.cdng.connector.tasks.KubernetesConnectionDelegateValidation;
 import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.git.tasks.NGGitConnectionValidation;
@@ -19,6 +18,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
@@ -425,7 +425,7 @@ public enum TaskType {
   GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class),
   GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT, GitFetchTaskNG.class, GitFetchValidationNG.class),
   BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class),
-  ARTIFACT_COLLECT_TASK(TaskGroup.ARTIFACT_COLLECT, ArtifactCollectTask.class, AlwaysTrueValidation.class),
+  DOCKER_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, DockerArtifactTaskNG.class, AlwaysTrueValidation.class),
   AWS_ROUTE53_TASK(TaskGroup.AWS, AwsRoute53Task.class, AwsConnectionValidation.class),
   SHELL_SCRIPT_APPROVAL(TaskGroup.SCRIPT, ShellScriptApprovalTask.class, ShellScriptApprovalValidation.class),
   CUSTOM_GET_BUILDS(TaskGroup.CUSTOM, ServiceImplDelegateTask.class, CustomArtifactSourceValidation.class),

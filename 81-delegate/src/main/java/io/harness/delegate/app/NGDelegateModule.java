@@ -2,9 +2,9 @@ package io.harness.delegate.app;
 
 import com.google.inject.AbstractModule;
 
-import io.harness.cdng.artifact.delegate.DockerArtifactServiceImpl;
-import io.harness.cdng.artifact.delegate.resource.DockerRegistryService;
-import io.harness.cdng.artifact.delegate.resource.DockerRegistryServiceImpl;
+import io.harness.artifacts.docker.service.DockerRegistryService;
+import io.harness.artifacts.docker.service.DockerRegistryServiceImpl;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 
 public class NGDelegateModule extends AbstractModule {
   private static volatile NGDelegateModule instance;
@@ -19,6 +19,6 @@ public class NGDelegateModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
-    bind(DockerArtifactServiceImpl.class);
+    bind(DockerArtifactTaskHandler.class);
   }
 }

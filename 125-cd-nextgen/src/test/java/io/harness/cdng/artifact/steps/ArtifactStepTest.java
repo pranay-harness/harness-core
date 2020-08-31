@@ -2,8 +2,6 @@ package io.harness.cdng.artifact.steps;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -12,16 +10,18 @@ import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
-import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
-import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
-import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
-import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
-import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
-import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.SimpleHDelegateTask;
+import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
+import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
+import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.execution.status.Status;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -47,6 +47,7 @@ public class ArtifactStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) Ambiance ambiance;
+  @Mock ArtifactStepHelper artifactStepHelper;
   @Spy @InjectMocks ArtifactStep artifactStep;
 
   Map<String, ResponseData> responseDataMap = new HashMap<>();
@@ -62,23 +63,22 @@ public class ArtifactStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testObtainingArtifactTaskForDocker() {
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
-    DockerArtifactSource source = DockerArtifactSource.builder()
-                                      .accountId(ACCOUNT_ID)
-                                      .dockerHubConnector("CONNECTOR")
-                                      .imagePath("imagePath")
-                                      .build();
-    doReturn(source).when(artifactStep).getArtifactSource(any(), any());
+    when(artifactStepHelper.toSourceDelegateRequest(artifactStep.applyArtifactsOverlay(stepParameters), ambiance))
+        .thenReturn(getDelegateRequest());
+    when(artifactStepHelper.getArtifactStepTaskType(artifactStep.applyArtifactsOverlay(stepParameters)))
+        .thenReturn(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
     Task task = artifactStep.obtainTask(ambiance, stepParameters, null);
     assertThat(task).isInstanceOf(SimpleHDelegateTask.class);
     SimpleHDelegateTask delegateTask = (SimpleHDelegateTask) task;
-    assertThat(delegateTask.getAccountId()).isEqualTo(source.getAccountId());
-    assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.ARTIFACT_COLLECT_TASK.name());
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
     assertThat(delegateTask.getData().getParameters()[0]).isInstanceOf(ArtifactTaskParameters.class);
     ArtifactTaskParameters taskParams = (ArtifactTaskParameters) delegateTask.getData().getParameters()[0];
 
-    assertThat(taskParams.getAttributes()).isInstanceOf(DockerArtifactSourceAttributes.class);
-    DockerArtifactSourceAttributes attributes = (DockerArtifactSourceAttributes) taskParams.getAttributes();
-    assertThat(attributes).isEqualTo(stepParameters.getArtifact().getSourceAttributes());
+    assertThat(taskParams.getAttributes()).isInstanceOf(DockerArtifactDelegateRequest.class);
+    DockerArtifactDelegateRequest attributes = (DockerArtifactDelegateRequest) taskParams.getAttributes();
+    assertThat(attributes.getImagePath()).isEqualTo("imagePath");
+    assertThat(attributes.getTag()).isEqualTo("tag");
   }
 
   private ArtifactStepParameters getStepParametersForDocker() {
@@ -88,17 +88,27 @@ public class ArtifactStepTest extends CategoryTest {
         .build();
   }
 
+  private ArtifactSourceDelegateRequest getDelegateRequest() {
+    return DockerArtifactDelegateRequest.builder()
+        .imagePath("imagePath")
+        .tag("tag")
+        .sourceType(ArtifactSourceType.DOCKER_HUB)
+        .build();
+  }
+
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testHandleResultForDocker() {
-    DockerArtifactAttributes dockerArtifactAttributes =
-        DockerArtifactAttributes.builder().imagePath("imagePath").tag("tag").dockerHubConnector("CONNECTOR").build();
+    DockerArtifactDelegateResponse dockerArtifactAttributes =
+        DockerArtifactDelegateResponse.builder().imagePath("imagePath").tag("tag").build();
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
-    ArtifactTaskResponse taskResponse = ArtifactTaskResponse.builder()
-                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                            .artifactAttributes(dockerArtifactAttributes)
-                                            .build();
+    ArtifactTaskResponse taskResponse =
+        ArtifactTaskResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .artifactTaskExecutionResponse(
+                ArtifactTaskExecutionResponse.builder().artifactDelegateResponse(dockerArtifactAttributes).build())
+            .build();
     responseDataMap.put("KEY", taskResponse);
     StepResponse stepResponse = artifactStep.handleTaskResult(null, stepParameters, responseDataMap);
     assertThat(stepResponse).isInstanceOf(StepResponse.class);
@@ -136,7 +146,7 @@ public class ArtifactStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testApplyArtifactOverrides() {
     DockerHubArtifactConfig dockerHubArtifactConfig = DockerHubArtifactConfig.builder()
-                                                          .artifactType(ArtifactUtils.PRIMARY_ARTIFACT)
+                                                          .primaryArtifact(true)
                                                           .dockerhubConnector("CONNECTOR")
                                                           .imagePath("IMAGE")
                                                           .tag("TAG1")
@@ -151,7 +161,7 @@ public class ArtifactStepTest extends CategoryTest {
     ArtifactConfig finalArtifact = artifactStep.applyArtifactsOverlay(stepParameters);
     assertThat(finalArtifact).isInstanceOf(DockerHubArtifactConfig.class);
     DockerHubArtifactConfig artifact = (DockerHubArtifactConfig) finalArtifact;
-    assertThat(artifact.getArtifactType()).isEqualTo(ArtifactUtils.PRIMARY_ARTIFACT);
+    assertThat(artifact.isPrimaryArtifact()).isTrue();
     assertThat(artifact.getDockerhubConnector()).isEqualTo("CONNECTOR");
     assertThat(artifact.getTag()).isEqualTo("TAG2");
     assertThat(artifact.getImagePath()).isEqualTo("IMAGE2");

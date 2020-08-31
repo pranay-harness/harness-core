@@ -13,6 +13,10 @@ import io.harness.delegate.beans.executioncapability.SocketConnectivityExecution
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.HDelegateTask;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
+import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
@@ -47,5 +51,9 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.task.spotinst.request.SpotInstSetupTaskParameters", SpotInstSetupTaskParameters.class);
     h.put("delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters", SpotInstSwapRoutesTaskParameters.class);
     h.put("waiter.ErrorNotifyResponseData", ErrorNotifyResponseData.class);
+    h.put("delegate.task.artifacts.docker.DockerArtifactDelegateResponse", DockerArtifactDelegateResponse.class);
+    h.put("delegate.task.artifacts.response.ArtifactTaskResponse", ArtifactTaskResponse.class);
+    h.put("delegate.task.artifacts.request.ArtifactTaskParameters", ArtifactTaskParameters.class);
+    h.put("delegate.task.artifacts.docker.DockerArtifactDelegateRequest", DockerArtifactDelegateRequest.class);
   }
 }

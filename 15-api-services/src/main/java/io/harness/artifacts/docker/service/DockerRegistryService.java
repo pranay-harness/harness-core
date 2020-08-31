@@ -46,11 +46,28 @@ public interface DockerRegistryService {
   BuildDetailsInternal getLastSuccessfulBuild(DockerInternalConfig dockerConfig, String imageName);
 
   /**
+   * Gets the last successful build with input as tag regex.
+   * @param dockerConfig the docker config
+   * @param imageName the image name
+   * @param tagRegex tag regex
+   * @return the last successful build
+   */
+  BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      DockerInternalConfig dockerConfig, String imageName, String tagRegex);
+
+  /**
    * Validates the Image
    * @param dockerConfig the docker config
    * @param imageName the image name
    */
   boolean verifyImageName(DockerInternalConfig dockerConfig, String imageName);
+
+  /**
+   * Validates the Image Tag
+   * @param dockerConfig the docker config
+   * @param imageName the image name
+   */
+  BuildDetailsInternal verifyBuildNumber(DockerInternalConfig dockerConfig, String imageName, String tag);
 
   /**
    * Validate the credentials

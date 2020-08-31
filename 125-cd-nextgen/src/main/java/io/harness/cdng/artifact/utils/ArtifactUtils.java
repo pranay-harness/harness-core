@@ -6,14 +6,8 @@ import static software.wings.common.VerificationConstants.CONNECTOR;
 import com.google.common.hash.Hashing;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
-import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
-import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
-import io.harness.cdng.artifact.delegate.beans.connector.ConnectorConfig;
-import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
-import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import lombok.experimental.UtilityClass;
@@ -29,17 +23,9 @@ public class ArtifactUtils {
   public final String PRIMARY_ARTIFACT = "primary";
   public final String SIDECAR_ARTIFACT = "sidecars";
 
-  public boolean isPrimaryArtifact(ArtifactConfig artifactConfig) {
-    return artifactConfig.getArtifactType().equals(PRIMARY_ARTIFACT);
-  }
-
   public String getArtifactKey(ArtifactConfig artifactConfig) {
-    return isPrimaryArtifact(artifactConfig) ? artifactConfig.getIdentifier()
-                                             : artifactConfig.getArtifactType() + "." + artifactConfig.getIdentifier();
-  }
-
-  public boolean isPrimaryArtifact(ArtifactOutcome artifactOutcome) {
-    return artifactOutcome.getArtifactType().equals(PRIMARY_ARTIFACT);
+    return artifactConfig.isPrimaryArtifact() ? artifactConfig.getIdentifier()
+                                              : SIDECAR_ARTIFACT + "." + artifactConfig.getIdentifier();
   }
 
   public List<ArtifactConfig> convertArtifactListIntoArtifacts(ArtifactListConfig artifactListConfig) {
@@ -74,22 +60,5 @@ public class ArtifactUtils {
     StringBuilder keyBuilder = new StringBuilder();
     valuesList.forEach(s -> appendIfNecessary(keyBuilder, s));
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
-  }
-
-  public ArtifactTaskParameters getArtifactTaskParameters(String accountId, ArtifactSourceAttributes sourceAttributes) {
-    return ArtifactTaskParameters.builder()
-        .accountId(accountId)
-        .attributes(sourceAttributes)
-        .connectorConfig(getConnectorConfig(sourceAttributes))
-        .build();
-  }
-
-  // TODO(archit): will call connector corresponding to connector identifier, accountID, projectId.
-  ConnectorConfig getConnectorConfig(ArtifactSourceAttributes artifactSourceAttributes) {
-    DockerArtifactSourceAttributes sourceAttributes = (DockerArtifactSourceAttributes) artifactSourceAttributes;
-    return DockerhubConnectorConfig.builder()
-        .registryUrl(sourceAttributes.getDockerhubConnector())
-        .identifier(sourceAttributes.getDockerhubConnector())
-        .build();
   }
 }

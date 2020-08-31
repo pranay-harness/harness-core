@@ -3,7 +3,6 @@ package io.harness.cdng.artifact.utils;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -14,8 +13,6 @@ import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
-import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
-import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -25,14 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ArtifactUtilsTest extends CategoryTest {
-  private final DockerArtifactSourceAttributes dockerArtifactSourceAttributes =
-      DockerArtifactSourceAttributes.builder()
-          .dockerhubConnector("DOCKER_CONNECTOR")
-          .imagePath("DOCKER_IMAGE")
-          .tag("tag")
-          .tagRegex("tagRegex")
-          .build();
-
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
@@ -81,37 +70,19 @@ public class ArtifactUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void shouldGetArtifactTaskParametersForDocker() {
-    ArtifactTaskParameters taskParameters =
-        ArtifactUtils.getArtifactTaskParameters(ACCOUNT_ID, dockerArtifactSourceAttributes);
-    assertThat(taskParameters.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(taskParameters.getAttributes()).isInstanceOf(DockerArtifactSourceAttributes.class);
-
-    DockerArtifactSourceAttributes attributes = (DockerArtifactSourceAttributes) taskParameters.getAttributes();
-    assertThat(attributes.getDockerhubConnector()).isEqualTo("DOCKER_CONNECTOR");
-    assertThat(attributes.getImagePath()).isEqualTo("DOCKER_IMAGE");
-    assertThat(attributes.getTag()).isEqualTo("tag");
-    assertThat(attributes.getTagRegex()).isEqualTo("tagRegex");
-  }
-
-  @Test
-  @Owner(developers = ARCHIT)
-  @Category(UnitTests.class)
   public void testIsPrimaryArtifact() {
-    DockerHubArtifactConfig config =
-        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).build();
-    boolean primaryArtifact = ArtifactUtils.isPrimaryArtifact(config);
+    DockerHubArtifactConfig config = DockerHubArtifactConfig.builder().primaryArtifact(true).build();
+    boolean primaryArtifact = config.isPrimaryArtifact();
     assertThat(primaryArtifact).isTrue();
-    config = DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).build();
-    primaryArtifact = ArtifactUtils.isPrimaryArtifact(config);
+    config = DockerHubArtifactConfig.builder().primaryArtifact(false).build();
+    primaryArtifact = config.isPrimaryArtifact();
     assertThat(primaryArtifact).isFalse();
 
-    ArtifactOutcome artifactOutcome =
-        DockerArtifactOutcome.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).build();
-    primaryArtifact = ArtifactUtils.isPrimaryArtifact(artifactOutcome);
+    ArtifactOutcome artifactOutcome = DockerArtifactOutcome.builder().primaryArtifact(true).build();
+    primaryArtifact = artifactOutcome.isPrimaryArtifact();
     assertThat(primaryArtifact).isTrue();
-    artifactOutcome = DockerArtifactOutcome.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).build();
-    primaryArtifact = ArtifactUtils.isPrimaryArtifact(artifactOutcome);
+    artifactOutcome = DockerArtifactOutcome.builder().primaryArtifact(false).build();
+    primaryArtifact = artifactOutcome.isPrimaryArtifact();
     assertThat(primaryArtifact).isFalse();
   }
 
@@ -120,11 +91,10 @@ public class ArtifactUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetArtifactKey() {
     DockerHubArtifactConfig artifactConfig =
-        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).identifier("ARTIFACT1").build();
+        DockerHubArtifactConfig.builder().primaryArtifact(true).identifier("ARTIFACT1").build();
     String artifactKey = ArtifactUtils.getArtifactKey(artifactConfig);
     assertThat(artifactKey).isEqualTo("ARTIFACT1");
-    artifactConfig =
-        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).identifier("ARTIFACT1").build();
+    artifactConfig = DockerHubArtifactConfig.builder().primaryArtifact(false).identifier("ARTIFACT1").build();
     artifactKey = ArtifactUtils.getArtifactKey(artifactConfig);
     assertThat(artifactKey).isEqualTo("sidecars.ARTIFACT1");
   }
@@ -134,9 +104,9 @@ public class ArtifactUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConvertArtifactListConfig() {
     DockerHubArtifactConfig primaryArtifact =
-        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).identifier("ARTIFACT1").build();
+        DockerHubArtifactConfig.builder().primaryArtifact(true).identifier("ARTIFACT1").build();
     DockerHubArtifactConfig sidecarArtifact =
-        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).identifier("ARTIFACT2").build();
+        DockerHubArtifactConfig.builder().primaryArtifact(false).identifier("ARTIFACT2").build();
     ArtifactListConfig artifactListConfig =
         ArtifactListConfig.builder()
             .primary(ArtifactSpecWrapper.builder().artifactConfig(primaryArtifact).build())

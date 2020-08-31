@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
-import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Builder;
 import lombok.Singular;
@@ -30,13 +29,13 @@ public class ArtifactListConfig {
     this.primary = primary;
     if (primary != null) {
       this.primary.getArtifactConfig().setIdentifier("primary");
-      this.primary.getArtifactConfig().setArtifactType(ArtifactUtils.PRIMARY_ARTIFACT);
+      this.primary.getArtifactConfig().setPrimaryArtifact(true);
     }
     this.sidecars = sidecars;
     if (EmptyPredicate.isNotEmpty(sidecars)) {
       for (SidecarArtifactWrapper sidecar : this.sidecars) {
         sidecar.getArtifactConfig().setIdentifier(sidecar.getIdentifier());
-        sidecar.getArtifactConfig().setArtifactType(ArtifactUtils.SIDECAR_ARTIFACT);
+        sidecar.getArtifactConfig().setPrimaryArtifact(false);
       }
     }
   }

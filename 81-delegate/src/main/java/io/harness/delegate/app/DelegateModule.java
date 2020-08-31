@@ -34,6 +34,10 @@ import io.harness.delegate.service.DelegateLogServiceImpl;
 import io.harness.delegate.service.K8sGlobalConfigServiceImpl;
 import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
+import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
+import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
@@ -684,5 +688,12 @@ public class DelegateModule extends AbstractModule {
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
+
+    MapBinder<Class<? extends ArtifactSourceDelegateRequest>, Class<? extends DelegateArtifactTaskHandler>>
+        artifactServiceMapBinder =
+            MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends ArtifactSourceDelegateRequest>>() {},
+                new TypeLiteral<Class<? extends DelegateArtifactTaskHandler>>() {});
+    artifactServiceMapBinder.addBinding(DockerArtifactDelegateRequest.class)
+        .toInstance(DockerArtifactTaskHandler.class);
   }
 }

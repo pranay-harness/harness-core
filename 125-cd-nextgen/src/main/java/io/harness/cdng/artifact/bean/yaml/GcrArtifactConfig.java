@@ -3,13 +3,10 @@ package io.harness.cdng.artifact.bean.yaml;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
-import io.harness.cdng.artifact.bean.ArtifactSourceType;
-import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
-import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +22,7 @@ import java.util.List;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName(ArtifactSourceType.GCR)
+@JsonTypeName(ArtifactSourceConstants.GCR_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GcrArtifactConfig implements ArtifactConfig {
   /** GCP connector to connect to Google Container Registry. */
@@ -36,11 +33,11 @@ public class GcrArtifactConfig implements ArtifactConfig {
   @Wither String imagePath;
   /** Identifier for artifact. */
   String identifier;
-  /** Type to identify whether primary and sidecars artifact. */
-  String artifactType;
+  /** Whether this config corresponds to primary artifact.*/
+  boolean isPrimaryArtifact;
 
   @Override
-  public String getSourceType() {
+  public ArtifactSourceType getSourceType() {
     return ArtifactSourceType.GCR;
   }
 
@@ -48,21 +45,6 @@ public class GcrArtifactConfig implements ArtifactConfig {
   public String getUniqueHash() {
     List<String> valuesList = Arrays.asList(gcrConnector, registryHostname, imagePath);
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
-  }
-
-  @Override
-  public ArtifactSource getArtifactSource(String accountId) {
-    return null;
-  }
-
-  @Override
-  public ArtifactSourceAttributes getSourceAttributes() {
-    return null;
-  }
-
-  @Override
-  public ArtifactOutcome getArtifactOutcome(ArtifactAttributes artifactAttributes) {
-    return null;
   }
 
   @Override

@@ -1,5 +1,6 @@
 package io.harness.cdng.artifact.bean.artifactsource;
 
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -16,9 +17,9 @@ public class DockerArtifactSource extends ArtifactSource {
   @NotEmpty String imagePath;
 
   @Builder
-  public DockerArtifactSource(String uuid, String accountId, long createdAt, long lastUpdatedAt, String sourceType,
-      String uniqueHash, String dockerHubConnector, String imagePath) {
-    super(uuid, accountId, createdAt, lastUpdatedAt, sourceType, uniqueHash);
+  public DockerArtifactSource(String uuid, String accountId, ArtifactSourceType sourceType, String uniqueHash,
+      long createdAt, long lastUpdatedAt, Long version, String dockerHubConnector, String imagePath) {
+    super(uuid, accountId, sourceType, uniqueHash, createdAt, lastUpdatedAt, version);
     this.dockerHubConnector = dockerHubConnector;
     this.imagePath = imagePath;
   }

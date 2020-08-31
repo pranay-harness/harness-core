@@ -20,4 +20,6 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   String identifier;
   /** Type to identify whether primary and sidecars artifact. */
   String artifactType;
+  /** Whether this config corresponds to primary artifact.*/
+  boolean primaryArtifact;
 }

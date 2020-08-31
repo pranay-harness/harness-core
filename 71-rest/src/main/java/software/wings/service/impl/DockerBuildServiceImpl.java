@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.validation.Validator.equalCheck;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
@@ -13,7 +12,6 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.docker.service.DockerRegistryService;
-import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -90,10 +88,6 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public boolean validateArtifactServer(DockerConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
-      throw new InvalidArtifactServerException(
-          "Could not reach Docker Registry at : " + config.getDockerRegistryUrl(), USER);
-    }
     encryptionService.decrypt(config, encryptedDataDetails);
     return dockerRegistryService.validateCredentials(DockerConfigToInternalMapper.toDockerInternalConfig(config));
   }
