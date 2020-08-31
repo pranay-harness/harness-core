@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.CD_EXECUTION_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.INFRA_PLAN_CREATOR;
+import static io.harness.cdng.executionplan.CDPlanCreatorType.ROLLBACK_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
@@ -10,6 +11,9 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.adviser.AdviserObtainment;
+import io.harness.adviser.AdviserType;
+import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -63,16 +67,28 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
     CreateExecutionPlanResponse planForService = planForChildrenMap.get("SERVICE").get(0);
     CreateExecutionPlanResponse planForInfrastructure = planForChildrenMap.get("INFRA").get(0);
     CreateExecutionPlanResponse planForExecution = planForChildrenMap.get("EXECUTION").get(0);
-    final PlanNode deploymentStageNode =
-        prepareDeploymentNode(deploymentStage, planForExecution, planForService, planForInfrastructure);
+
+    CreateExecutionPlanResponse rollbackExecutionPlan = createPlanForRollbackNode(deploymentStage, context);
+
+    final PlanNode deploymentStageNode = prepareDeploymentNode(
+        deploymentStage, planForExecution, planForService, planForInfrastructure, rollbackExecutionPlan);
 
     return CreateExecutionPlanResponse.builder()
         .planNode(deploymentStageNode)
         .planNodes(planForService.getPlanNodes())
         .planNodes(planForInfrastructure.getPlanNodes())
         .planNodes(planForExecution.getPlanNodes())
+        .planNodes(rollbackExecutionPlan.getPlanNodes())
         .startingNodeId(deploymentStageNode.getUuid())
         .build();
+  }
+
+  private CreateExecutionPlanResponse createPlanForRollbackNode(
+      DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+    final ExecutionPlanCreator<DeploymentStage> executionPlanCreator =
+        executionPlanCreatorHelper.getExecutionPlanCreator(
+            ROLLBACK_PLAN_CREATOR.getName(), deploymentStage, context, "No execution plan creator found for Rollback");
+    return executionPlanCreator.createPlan(deploymentStage, context);
   }
 
   private CreateExecutionPlanResponse createPlanForInfrastructure(
@@ -84,7 +100,8 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
   }
 
   private PlanNode prepareDeploymentNode(DeploymentStage deploymentStage, CreateExecutionPlanResponse planForExecution,
-      CreateExecutionPlanResponse planForService, CreateExecutionPlanResponse planForInfrastructure) {
+      CreateExecutionPlanResponse planForService, CreateExecutionPlanResponse planForInfrastructure,
+      CreateExecutionPlanResponse rollbackExecutionPlan) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
@@ -101,6 +118,12 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
                                    .build())
+        .adviserObtainment(
+            AdviserObtainment.builder()
+                .type(AdviserType.builder().type(AdviserType.ON_FAIL).build())
+                .parameters(
+                    OnFailAdviserParameters.builder().nextNodeId(rollbackExecutionPlan.getStartingNodeId()).build())
+                .build())
         .build();
   }
 

@@ -11,6 +11,7 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanCreatorType;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
@@ -98,11 +99,10 @@ public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<Stag
 
   private PlanNode prepareStagesNode(List<CreateExecutionPlanResponse> planForStages) {
     final String nodeId = generateUuid();
-    final String STAGES = "stages";
     return PlanNode.builder()
         .uuid(nodeId)
-        .name(STAGES)
-        .identifier(STAGES)
+        .name(PlanCreatorConstants.STAGES_NODE_IDENTIFIER)
+        .identifier(PlanCreatorConstants.STAGES_NODE_IDENTIFIER)
         .stepType(StepType.builder().type(SectionChainStep.STEP_TYPE.getType()).build())
         .group(StepOutcomeGroup.STAGES.name())
         .stepParameters(SectionChainStepParameters.builder()

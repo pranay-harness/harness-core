@@ -59,4 +59,6 @@ public interface CustomExecutionService {
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);
+
+  PlanExecution executeSkipChildren();
 }

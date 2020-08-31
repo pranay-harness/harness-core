@@ -7,10 +7,14 @@ import io.harness.cdng.pipeline.plancreators.ArtifactForkPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ArtifactStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.CDExecutionPlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStagePlanCreator;
+import io.harness.cdng.pipeline.plancreators.DeploymentStageRollbackPlanCreator;
+import io.harness.cdng.pipeline.plancreators.ExecutionRollbackPlanCreator;
 import io.harness.cdng.pipeline.plancreators.InfraPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ManifestStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ServiceStepPlanCreator;
+import io.harness.cdng.pipeline.plancreators.StepGroupRollbackPlanCreator;
+import io.harness.cdng.pipeline.plancreators.StepGroupsRollbackPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
@@ -37,6 +41,10 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private ServiceStepPlanCreator serviceStepPlanCreator;
   @Inject private InfraPlanCreator infraPlanCreator;
   @Inject private ArtifactForkPlanCreator artifactForkPlanCreator;
+  @Inject private DeploymentStageRollbackPlanCreator deploymentStageRollbackPlanCreator;
+  @Inject private StepGroupsRollbackPlanCreator stepGroupsRollbackPlanCreator;
+  @Inject private StepGroupRollbackPlanCreator stepGroupRollbackPlanCreator;
+  @Inject private ExecutionRollbackPlanCreator executionRollbackPlanCreator;
 
   public void register() {
     logger.info("Start: register execution plan creators");
@@ -53,6 +61,10 @@ public class ExecutionPlanCreatorRegistrar {
     register(genericStepPlanCreator);
     register(stepGroupPlanCreator);
     register(parallelStagePlanCreator);
+    register(deploymentStageRollbackPlanCreator);
+    register(stepGroupsRollbackPlanCreator);
+    register(stepGroupRollbackPlanCreator);
+    register(executionRollbackPlanCreator);
     logger.info("Done: register execution plan creators");
   }
   private void register(SupportDefinedExecutorPlanCreator<?> executionPlanCreator) {

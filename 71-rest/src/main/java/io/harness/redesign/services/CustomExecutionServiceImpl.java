@@ -160,6 +160,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeSkipChildren() {
+    return orchestrationService.startExecution(
+        customExecutionProvider.getSkipChildrenPlan(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
   public Graph getGraph(String planExecutionId) {
     return graphGenerationService.generateGraph(planExecutionId);
   }

@@ -1594,4 +1594,90 @@ public class CustomExecutionProvider {
     MockServerConfig mockServerConfig = configuration.getMockServerConfig();
     return mockServerConfig.getBaseUrl() + ":" + mockServerConfig.getPort() + '/';
   }
+
+  public Plan getSkipChildrenPlan() {
+    PlanNode httpAdvisor =
+        PlanNode.builder()
+            .uuid(generateUuid())
+            .name("http4")
+            .identifier("http4")
+            .stepType(BasicHttpStep.STEP_TYPE)
+            .stepParameters(BasicHttpStepParameters.builder().url("http://httpstat.us/201").method("GET").build())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                       .build())
+            .build();
+
+    PlanNode http1 =
+        PlanNode.builder()
+            .uuid(generateUuid())
+            .name("Http1")
+            .identifier("http1")
+            .stepType(BasicHttpStep.STEP_TYPE)
+            .stepParameters(BasicHttpStepParameters.builder().url("http://httpstat.us/200").method("GET").build())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                       .build())
+            .build();
+
+    PlanNode http2 =
+        PlanNode.builder()
+            .uuid(generateUuid())
+            .name("http2")
+            .identifier("http2")
+            .stepType(BasicHttpStep.STEP_TYPE)
+            .stepParameters(BasicHttpStepParameters.builder().url("wrong").method("GET").build())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                       .build())
+            .adviserObtainment(
+                AdviserObtainment.builder()
+                    .type(AdviserType.builder().type(AdviserType.ON_FAIL).build())
+                    .parameters(OnFailAdviserParameters.builder().nextNodeId(httpAdvisor.getUuid()).build())
+                    .build())
+            .build();
+
+    PlanNode http3 =
+        PlanNode.builder()
+            .uuid(generateUuid())
+            .name("http3")
+            .identifier("http3")
+            .stepType(BasicHttpStep.STEP_TYPE)
+            .stepParameters(BasicHttpStepParameters.builder().url("http://httpstat.us/202").method("GET").build())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                       .build())
+            .adviserObtainment(AdviserObtainment.builder()
+                                   .type(AdviserType.builder().type(AdviserType.ON_FAIL).build())
+                                   .parameters(OnFailAdviserParameters.builder().nextNodeId(http2.getUuid()).build())
+                                   .build())
+            .build();
+
+    SectionChainStepParameters sectionChainStepParameters = SectionChainStepParameters.builder()
+                                                                .childNodeId(http1.getUuid())
+                                                                .childNodeId(http2.getUuid())
+                                                                .childNodeId(http3.getUuid())
+                                                                .build();
+
+    PlanNode optionalSectionNode =
+        PlanNode.builder()
+            .uuid(generateUuid())
+            .name("Parent Section Node")
+            .identifier("parentSectionNode")
+            .stepType(SectionChainStep.STEP_TYPE)
+            .stepParameters(sectionChainStepParameters)
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
+                                       .build())
+            .build();
+
+    return Plan.builder()
+        .node(http1)
+        .node(http2)
+        .node(http3)
+        .node(httpAdvisor)
+        .node(optionalSectionNode)
+        .startingNodeId(optionalSectionNode.getUuid())
+        .build();
+  }
 }

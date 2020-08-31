@@ -22,6 +22,7 @@ import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -118,12 +119,11 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
 
   private PlanNode getInfraSectionNode(PlanNode infraStepNode, PlanNode envNode) {
     final String infraSectionNodeId = generateUuid();
-    final String infraSectionIdentifier = "infrastructure";
 
     return PlanNode.builder()
         .uuid(infraSectionNodeId)
-        .name(infraSectionIdentifier)
-        .identifier(infraSectionIdentifier)
+        .name(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
+        .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
         .stepType(SectionChainStep.STEP_TYPE)
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeId(envNode.getUuid())
