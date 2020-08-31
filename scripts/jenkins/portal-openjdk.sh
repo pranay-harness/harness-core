@@ -156,8 +156,8 @@ cp dist/disconnected_on_prem_k8s/disconnected_on_prem_k8s_installer_builder.tar.
 
 mkdir -p dist/test
 cd dist/test
-cp ../../91-model-gen-tool/target/model-gen-tool-capsule.jar .
-cp ../../91-model-gen-tool/config-datagen.yml .
+cp ../../160-model-gen-tool/target/model-gen-tool-capsule.jar .
+cp ../../160-model-gen-tool/config-datagen.yml .
 cd ../..
 
 mkdir -p dist/delegate-proxy

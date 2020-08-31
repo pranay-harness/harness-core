@@ -199,7 +199,7 @@ cd to `portal` directory
 2. Generate sample data required to run the services locally by running the following step only once.
    DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
 
-   * `java -Xmx1024m -jar 91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml`
+   * `java -Xmx1024m -jar 160-model-gen-tool/target/model-gen-tool-capsule.jar 160-model-gen-tool/config-datagen.yml`
 
 3. Start Delegate 
 
