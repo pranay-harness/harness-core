@@ -128,7 +128,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     List<String> taskSelectors = extractSelectors(task);
     boolean canAssign = canAssignDelegateScopes(batch, delegate, task)
-        && canAssignDelegateProfileScopes(delegate, task.getSetupAbstractions())
+        && canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions())
         && canAssignSelectors(batch, delegate, taskSelectors);
 
     if (canAssign) {
@@ -165,7 +165,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return false;
     }
     return canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
-        && canAssignDelegateProfileScopes(delegate, taskSetupAbstractions) && canAssignSelectors(batch, delegate, tags);
+        && canAssignDelegateProfileScopes(batch, delegate, taskSetupAbstractions)
+        && canAssignSelectors(batch, delegate, tags);
   }
 
   private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {
@@ -176,7 +177,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   @VisibleForTesting
-  protected boolean canAssignDelegateProfileScopes(Delegate delegate, Map<String, String> taskSetupAbstractions) {
+  protected boolean canAssignDelegateProfileScopes(
+      BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
     if (isEmpty(taskSetupAbstractions)) {
       logger.warn(
           "No setup abstractions have been passed in from delegate task. Considering this delegate profile matched");
@@ -193,27 +195,28 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     List<DelegateProfileScopingRule> delegateProfileScopingRules = delegateProfile.getScopingRules();
 
     if (isEmpty(delegateProfileScopingRules)) {
-      // selectionlogs here - matched-no scoping rules found for profile xxx
       return true;
     }
 
+    String failedRuleDescription = null;
     for (DelegateProfileScopingRule scopingRule : delegateProfileScopingRules) {
       boolean scopingRuleMatched = true;
       for (Map.Entry<String, String> setupAbstraction : taskSetupAbstractions.entrySet()) {
         Set<String> entityIds = scopingRule.getScopingEntities().get(setupAbstraction.getKey());
         if (isNotEmpty(entityIds) && !entityIds.contains(setupAbstraction.getValue())) {
+          failedRuleDescription = scopingRule.getDescription();
           scopingRuleMatched = false;
           break;
         }
       }
 
       if (scopingRuleMatched) {
-        // selectionlogs here - matched-scope name yyyy from profile xxxx
         return true;
       }
     }
 
-    // selectionlogs here - not matched-no matching rules found for profile xxxx
+    delegateSelectionLogsService.logProfileScopeRuleNotMatched(
+        batch, delegate.getAccountId(), delegate.getUuid(), failedRuleDescription);
     return false;
   }
 
