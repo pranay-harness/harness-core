@@ -723,7 +723,6 @@ public class AuthServiceImpl implements AuthService {
     if (requiredPermissionAttribute.isSkipAuth()) {
       return true;
     }
-
     Action requiredAction = requiredPermissionAttribute.getAction();
     PermissionType requiredPermissionType = requiredPermissionAttribute.getPermissionType();
 
