@@ -1,7 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATE_PROFILES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
 import com.google.inject.Inject;
@@ -69,7 +69,7 @@ public class DelegateProfileResource {
   @Path("{delegateProfileId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Void> delete(@PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
       @QueryParam("accountId") @NotEmpty String accountId) {
     delegateProfileService.delete(accountId, delegateProfileId);
@@ -80,7 +80,7 @@ public class DelegateProfileResource {
   @Path("{delegateProfileId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<DelegateProfile> update(@PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateProfile delegateProfile) {
     delegateProfile.setAccountId(accountId);
@@ -89,7 +89,7 @@ public class DelegateProfileResource {
   }
 
   @POST
-  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<DelegateProfile> add(
       @QueryParam("accountId") @NotEmpty String accountId, DelegateProfile delegateProfile) {
     delegateProfile.setAccountId(accountId);
