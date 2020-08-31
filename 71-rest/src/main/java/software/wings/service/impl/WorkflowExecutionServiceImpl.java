@@ -4279,7 +4279,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               appId, resourceConstraint.getUuid(), unit, HoldingScope.WORKFLOW.name());
       responseBuilder.state(extractState(workflowExecutionId, instances));
       responseBuilder.executions(fetchWorkflowExecutionsForResourceConstraint(
-          appId, instances.stream().map(ResourceConstraintInstance::getReleaseEntityId).collect(Collectors.toList())));
+          instances.stream().map(ResourceConstraintInstance::getReleaseEntityId).collect(Collectors.toList())));
     }
     return responseBuilder.build();
   }
@@ -4331,7 +4331,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds) {
+  public List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(List<String> entityIds) {
     if (EmptyPredicate.isEmpty(entityIds)) {
       return Collections.emptyList();
     }
@@ -4345,7 +4345,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                            .project(WorkflowExecutionKeys.endTs, true)
                                                            .project(WorkflowExecutionKeys.name, true)
                                                            .project(WorkflowExecutionKeys.envId, true)
-                                                           .filter(WorkflowExecutionKeys.appId, appId)
                                                            .field(WorkflowExecutionKeys.uuid)
                                                            .in(entityIds)
                                                            .asList();

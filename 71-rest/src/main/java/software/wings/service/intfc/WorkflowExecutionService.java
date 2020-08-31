@@ -251,7 +251,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   List<String> getCloudProviderIdsForExecution(WorkflowExecution workflowExecution);
 
-  List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds);
+  List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(List<String> entityIds);
 
   boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastSuccessfulWE);
 
