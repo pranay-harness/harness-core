@@ -70,6 +70,15 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(false)
           .addInterceptor(getAuthorizationInterceptor())
+          .addInterceptor(chain -> {
+            Request original = chain.request();
+
+            // Request customization: add connection close headers
+            Request.Builder requestBuilder = original.newBuilder().header("Connection", "close");
+
+            Request request = requestBuilder.build();
+            return chain.proceed(request);
+          })
           .build();
     } catch (Exception e) {
       throw new GeneralException("error while creating okhttp client for Command library service", e);

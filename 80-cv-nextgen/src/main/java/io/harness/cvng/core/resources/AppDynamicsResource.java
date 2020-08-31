@@ -37,11 +37,11 @@ public class AppDynamicsResource {
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("connectorId") @NotNull String connectorId, @QueryParam("appdAppId") @NotNull long appdAppId,
-      @QueryParam("appdTierId") @NotNull long appdTierId, @QueryParam("requestGuid") @NotNull String requestGuid,
-      @NotNull @Valid @Body List<MetricPack> metricPacks) {
-    return new RestResponse<>(appDynamicsService.getMetricPackData(
-        accountId, connectorId, orgIdentifier, projectIdentifier, appdAppId, appdTierId, requestGuid, metricPacks));
+      @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
+      @QueryParam("appdAppId") @NotNull long appdAppId, @QueryParam("appdTierId") @NotNull long appdTierId,
+      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPack> metricPacks) {
+    return new RestResponse<>(appDynamicsService.getMetricPackData(accountId, connectorIdentifier, orgIdentifier,
+        projectIdentifier, appdAppId, appdTierId, requestGuid, metricPacks));
   }
 
   @GET
@@ -49,11 +49,12 @@ public class AppDynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<AppDynamicsApplication>> getAllApplications(
-      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("connectorId") final String connectorId,
+      @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier) {
     return new RestResponse<>(
-        appDynamicsService.getApplications(accountId, connectorId, orgIdentifier, projectIdentifier));
+        appDynamicsService.getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier));
   }
 
   @GET
@@ -61,11 +62,11 @@ public class AppDynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Set<AppDynamicsTier>> getAllTiers(@NotNull @QueryParam("accountId") String accountId,
-      @NotNull @QueryParam("connectorId") final String connectorId,
+      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @NotNull @QueryParam("appDynamicsAppId") long appdynamicsAppId) {
-    return new RestResponse<>(
-        appDynamicsService.getTiers(accountId, connectorId, orgIdentifier, projectIdentifier, appdynamicsAppId));
+    return new RestResponse<>(appDynamicsService.getTiers(
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appdynamicsAppId));
   }
 }
