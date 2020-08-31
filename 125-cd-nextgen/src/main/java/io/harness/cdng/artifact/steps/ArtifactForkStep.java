@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
-import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -103,7 +102,7 @@ public class ArtifactForkStep implements Step, ChildrenExecutable<ForkStepParame
   }
 
   private void handleArtifactOutcome(ArtifactsOutcomeBuilder artifactsBuilder, ArtifactOutcome artifactOutcome) {
-    if (ArtifactUtils.isPrimaryArtifact(artifactOutcome)) {
+    if (artifactOutcome.isPrimaryArtifact()) {
       artifactsBuilder.primary(artifactOutcome);
     } else {
       artifactsBuilder.sidecar(artifactOutcome.getIdentifier(), artifactOutcome);

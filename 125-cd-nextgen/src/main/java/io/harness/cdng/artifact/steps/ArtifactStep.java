@@ -2,13 +2,13 @@ package io.harness.cdng.artifact.steps;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
-import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
-import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
+import io.harness.cdng.artifact.mappers.ArtifactResponseToOutcomeMapper;
+import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.orchestration.StepUtils;
@@ -16,6 +16,10 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
+import io.harness.delegate.task.artifacts.ArtifactTaskType;
+import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
+import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.execution.status.Status;
@@ -29,18 +33,20 @@ import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.Task;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.TaskType;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();
-
+  private final ArtifactStepHelper artifactStepHelper;
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
@@ -48,19 +54,23 @@ public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters
   public Task obtainTask(Ambiance ambiance, ArtifactStepParameters stepParameters, StepInputPackage inputPackage) {
     logger.info("Executing deployment stage with params [{}]", stepParameters);
     ArtifactConfig finalArtifact = applyArtifactsOverlay(stepParameters);
-    ArtifactSource artifactSource = getArtifactSource(finalArtifact, AmbianceHelper.getAccountId(ambiance));
-
-    final ArtifactTaskParameters taskParameters =
-        ArtifactUtils.getArtifactTaskParameters(artifactSource.getAccountId(), finalArtifact.getSourceAttributes());
+    String accountId = AmbianceHelper.getAccountId(ambiance);
+    ArtifactSourceDelegateRequest artifactSourceDelegateRequest =
+        artifactStepHelper.toSourceDelegateRequest(finalArtifact, ambiance);
+    final ArtifactTaskParameters taskParameters = ArtifactTaskParameters.builder()
+                                                      .accountId(accountId)
+                                                      .artifactTaskType(ArtifactTaskType.GET_LAST_SUCCESSFUL_BUILD)
+                                                      .attributes(artifactSourceDelegateRequest)
+                                                      .build();
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .taskType(TaskType.ARTIFACT_COLLECT_TASK.name())
+                                  .taskType(artifactStepHelper.getArtifactStepTaskType(finalArtifact))
                                   .parameters(new Object[] {taskParameters})
                                   .timeout(DEFAULT_TIMEOUT)
                                   .build();
 
-    return StepUtils.prepareDelegateTaskInput(artifactSource.getAccountId(), taskData,
-        ImmutableMap.of(Cd1SetupFields.APP_ID_FIELD, artifactSource.getAccountId()));
+    return StepUtils.prepareDelegateTaskInput(
+        accountId, taskData, ImmutableMap.of(Cd1SetupFields.APP_ID_FIELD, accountId));
   }
 
   @Override
@@ -97,15 +107,13 @@ public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters
   }
 
   @VisibleForTesting
-  ArtifactSource getArtifactSource(ArtifactConfig artifactConfig, String accountId) {
-    return artifactConfig.getArtifactSource(accountId);
-  }
-
-  @VisibleForTesting
   StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
-    ArtifactOutcome artifact =
-        applyArtifactsOverlay(stepParameters).getArtifactOutcome(taskResponse.getArtifactAttributes());
-    String outcomeKey = artifact.getArtifactType() + ":" + artifact.getIdentifier();
+    ArtifactOutcome artifact = ArtifactResponseToOutcomeMapper.toArtifactOutcome(applyArtifactsOverlay(stepParameters),
+        taskResponse.getArtifactTaskExecutionResponse().getArtifactDelegateResponses().get(0));
+    String outcomeKey = ArtifactUtils.SIDECAR_ARTIFACT + "." + artifact.getIdentifier();
+    if (artifact.isPrimaryArtifact()) {
+      outcomeKey = ArtifactUtils.PRIMARY_ARTIFACT;
+    }
     return StepOutcome.builder().name(outcomeKey).outcome(artifact).build();
   }
 

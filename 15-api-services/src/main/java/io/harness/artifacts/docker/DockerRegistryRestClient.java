@@ -47,4 +47,9 @@ public interface DockerRegistryRestClient {
   @GET("/v2/repositories/{imageName}/tags")
   Call<DockerPublicImageTagResponse> listPublicImageTags(@Path(value = "imageName", encoded = true) String imageName,
       @Query("page") Integer pageNum, @Query("page_size") int pageSize);
+
+  @GET("/v2/repositories/{imageName}/tags/{tagNumber}")
+  Call<DockerPublicImageTagResponse.Result> getPublicImageTag(
+      @Path(value = "imageName", encoded = true) String imageName,
+      @Path(value = "tagNumber", encoded = true) String tagNumber);
 }

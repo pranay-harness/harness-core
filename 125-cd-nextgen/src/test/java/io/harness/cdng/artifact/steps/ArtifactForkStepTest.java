@@ -9,7 +9,6 @@ import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
-import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.outcomes.OutcomeService;
@@ -70,9 +69,8 @@ public class ArtifactForkStepTest extends CategoryTest {
     Map<String, ResponseData> responseDataMap = new HashMap<>();
 
     DockerArtifactOutcome artifactOutcome =
-        DockerArtifactOutcome.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).identifier("ARTIFACT1").build();
-    DockerArtifactOutcome artifactOutcome2 =
-        DockerArtifactOutcome.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).identifier("ARTIFACT2").build();
+        DockerArtifactOutcome.builder().primaryArtifact(true).identifier("ARTIFACT1").build();
+    DockerArtifactOutcome artifactOutcome2 = DockerArtifactOutcome.builder().identifier("ARTIFACT2").build();
     doReturn(Arrays.asList(artifactOutcome, artifactOutcome2)).when(outcomeService).fetchOutcomes(any());
 
     Ambiance ambiance = Ambiance.builder().build();

@@ -5,9 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
-import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.yaml.core.intfc.OverridesApplier;
 import io.harness.yaml.core.intfc.WithIdentifier;
 
@@ -25,13 +23,10 @@ import io.harness.yaml.core.intfc.WithIdentifier;
  */
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 public interface ArtifactConfig extends WithIdentifier, OverridesApplier<ArtifactConfig> {
-  @JsonIgnore String getSourceType();
+  @JsonIgnore ArtifactSourceType getSourceType();
   @JsonIgnore String getUniqueHash();
-  @JsonIgnore ArtifactSource getArtifactSource(String accountId);
-  @JsonIgnore ArtifactSourceAttributes getSourceAttributes();
-  @JsonIgnore String getArtifactType();
-  @JsonIgnore void setArtifactType(String artifactType);
+  @JsonIgnore boolean isPrimaryArtifact();
+  @JsonIgnore void setPrimaryArtifact(boolean primaryArtifact);
   void setIdentifier(String identifier);
   @Override @JsonIgnore String getIdentifier();
-  @JsonIgnore ArtifactOutcome getArtifactOutcome(ArtifactAttributes artifactAttributes);
 }

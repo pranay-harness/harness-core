@@ -64,6 +64,15 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.delegate.task.artifacts.ArtifactTaskType;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
+import io.harness.delegate.task.artifacts.response.ArtifactBuildDetailsNG;
+import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
+import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
@@ -234,5 +243,14 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DockerAuthType.class, 19114);
     kryo.register(DockerConnectorDTO.class, 19115);
     kryo.register(DockerUserNamePasswordDTO.class, 19116);
+    kryo.register(ArtifactTaskParameters.class, 19300);
+    kryo.register(ArtifactTaskResponse.class, 19301);
+    kryo.register(DockerArtifactDelegateRequest.class, 19302);
+    kryo.register(DockerArtifactDelegateResponse.class, 19303);
+    kryo.register(ArtifactTaskType.class, 19304);
+    kryo.register(ArtifactDelegateResponse.class, 19305);
+    kryo.register(ArtifactTaskExecutionResponse.class, 19306);
+    kryo.register(ArtifactBuildDetailsNG.class, 19307);
+    kryo.register(ArtifactSourceType.class, 19308);
   }
 }

@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.artifacts.docker.beans.DockerPublicImageTagResponse;
@@ -20,6 +21,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.expression.RegexFunctor;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.expiringmap.ExpirationPolicy;
@@ -46,6 +48,31 @@ public class DockerPublicRegistryProcessor {
   @Inject private DockerRegistryUtils dockerRegistryUtils;
 
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
+
+  public BuildDetailsInternal verifyBuildNumber(DockerInternalConfig dockerConfig, String imageName, String tag)
+      throws IOException {
+    DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
+    Response<DockerPublicImageTagResponse.Result> response =
+        registryRestClient.getPublicImageTag(imageName, tag).execute();
+    if (!isSuccessful(response)) {
+      throw new InvalidArtifactServerException(response.message(), USER);
+    }
+    return processSingleResultResponse(response.body(), imageName, dockerConfig);
+  }
+
+  public BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      DockerInternalConfig dockerConfig, String imageName, String tagRegex, int maxNumberOfBuilds) throws IOException {
+    List<BuildDetailsInternal> builds = getBuilds(dockerConfig, imageName, maxNumberOfBuilds);
+    builds = builds.stream()
+                 .filter(build -> new RegexFunctor().match(tagRegex, build.getNumber()))
+                 .sorted(new BuildDetailsInternalComparatorAscending())
+                 .collect(Collectors.toList());
+
+    if (builds.isEmpty()) {
+      throw new InvalidArtifactServerException("Didn't get last successful build", USER);
+    }
+    return builds.get(0);
+  }
 
   public boolean verifyImageName(DockerInternalConfig dockerConfig, String imageName) {
     try {
@@ -127,26 +154,10 @@ public class DockerPublicRegistryProcessor {
 
   private List<BuildDetailsInternal> processPage(
       DockerPublicImageTagResponse publicImageTags, DockerInternalConfig dockerConfig, String imageName) {
-    String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
-        ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
-        : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
-
-    String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
-
     if (publicImageTags != null && EmptyPredicate.isNotEmpty(publicImageTags.getResults())) {
       return publicImageTags.getResults()
           .stream()
-          .map(tag -> {
-            Map<String, String> metadata = new HashMap<>();
-            metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag.getName());
-            metadata.put(ArtifactMetadataKeys.TAG, tag.getName());
-            return BuildDetailsInternal.builder()
-                .number(tag.getName())
-                .buildUrl(tagUrl + tag.getName())
-                .uiDisplayName("Tag# " + tag.getName())
-                .metadata(metadata)
-                .build();
-          })
+          .map(tag -> processSingleResultResponse(tag, imageName, dockerConfig))
           .collect(Collectors.toList());
 
     } else {
@@ -157,6 +168,24 @@ public class DockerPublicRegistryProcessor {
       }
       return Collections.emptyList();
     }
+  }
+
+  private BuildDetailsInternal processSingleResultResponse(
+      DockerPublicImageTagResponse.Result publicImageTag, String imageName, DockerInternalConfig dockerConfig) {
+    String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
+        ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
+        : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
+
+    String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + publicImageTag.getName());
+    metadata.put(ArtifactMetadataKeys.TAG, publicImageTag.getName());
+    return BuildDetailsInternal.builder()
+        .number(publicImageTag.getName())
+        .buildUrl(tagUrl + publicImageTag.getName())
+        .uiDisplayName("Tag# " + publicImageTag.getName())
+        .metadata(metadata)
+        .build();
   }
 
   public List<Map<String, String>> getLabels(

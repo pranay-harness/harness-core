@@ -13,7 +13,7 @@ import java.util.Map;
 
 @UtilityClass
 public class StepUtils {
-  public static StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
+  public StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
     StepResponseNotifyData statusNotifyResponseData =
         (StepResponseNotifyData) responseDataMap.values().iterator().next();
@@ -21,8 +21,7 @@ public class StepUtils {
     return responseBuilder.build();
   }
 
-  public static Task prepareDelegateTaskInput(
-      String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
+  public Task prepareDelegateTaskInput(String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
     return createHDelegateTask(accountId, taskData, setupAbstractions);
   }
 

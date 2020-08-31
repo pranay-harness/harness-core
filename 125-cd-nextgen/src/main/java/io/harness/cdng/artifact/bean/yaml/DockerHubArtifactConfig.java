@@ -3,17 +3,10 @@ package io.harness.cdng.artifact.bean.yaml;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
-import io.harness.cdng.artifact.bean.ArtifactSourceType;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
-import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
-import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
-import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
-import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
-import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +24,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName(ArtifactSourceType.DOCKER_HUB)
+@JsonTypeName(ArtifactSourceConstants.DOCKER_HUB_NAME)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DockerHubArtifactConfig implements ArtifactConfig {
   /** Docker hub registry connector. */
@@ -44,11 +37,11 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
   @Wither String tagRegex;
   /** Identifier for artifact. */
   String identifier;
-  /** Type to identify whether primary and sidecars artifact. */
-  String artifactType;
+  /** Whether this config corresponds to primary artifact.*/
+  boolean primaryArtifact;
 
   @Override
-  public String getSourceType() {
+  public ArtifactSourceType getSourceType() {
     return ArtifactSourceType.DOCKER_HUB;
   }
 
@@ -56,44 +49,6 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
   public String getUniqueHash() {
     List<String> valuesList = Arrays.asList(dockerhubConnector, imagePath);
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
-  }
-
-  @Override
-  public ArtifactSource getArtifactSource(String accountId) {
-    return DockerArtifactSource.builder()
-        .accountId(accountId)
-        .sourceType(getSourceType())
-        .dockerHubConnector(dockerhubConnector)
-        .imagePath(imagePath)
-        .uniqueHash(getUniqueHash())
-        .build();
-  }
-
-  @Override
-  public ArtifactSourceAttributes getSourceAttributes() {
-    // If both are empty, regex is latest among all docker artifacts.
-    if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
-      tagRegex = "*";
-    }
-    return DockerArtifactSourceAttributes.builder()
-        .dockerhubConnector(dockerhubConnector)
-        .imagePath(imagePath)
-        .tag(tag)
-        .tagRegex(tagRegex)
-        .build();
-  }
-
-  @Override
-  public ArtifactOutcome getArtifactOutcome(ArtifactAttributes artifactAttributes) {
-    DockerArtifactAttributes dockerArtifactAttributes = (DockerArtifactAttributes) artifactAttributes;
-    return DockerArtifactOutcome.builder()
-        .dockerhubConnector(dockerArtifactAttributes.getDockerHubConnector())
-        .imagePath(dockerArtifactAttributes.getImagePath())
-        .tag(dockerArtifactAttributes.getTag())
-        .tagRegex(tagRegex)
-        .identifier(identifier)
-        .artifactType(artifactType)
-        .build();
   }
 
   @Override

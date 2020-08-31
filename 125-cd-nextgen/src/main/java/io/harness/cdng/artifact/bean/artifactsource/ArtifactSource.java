@@ -2,6 +2,7 @@ package io.harness.cdng.artifact.bean.artifactsource;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
@@ -19,6 +20,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
@@ -40,10 +42,12 @@ public abstract class ArtifactSource
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @NotNull private String accountId;
-  @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
-  @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
   /** It gives the artifact source type.*/
-  @NotNull private String sourceType;
+  @NotNull private ArtifactSourceType sourceType;
   /** This uniquely identifies one artifact stream based on its parameters.*/
   @NotNull private String uniqueHash;
+
+  @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
+  @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
+  @Version Long version;
 }
