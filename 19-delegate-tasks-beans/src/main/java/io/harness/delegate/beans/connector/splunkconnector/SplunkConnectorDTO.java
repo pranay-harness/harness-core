@@ -29,5 +29,11 @@ public class SplunkConnectorDTO extends ConnectorConfigDTO implements Decryptabl
   String splunkUrl;
   String username;
   @NotNull String accountId;
+  public String getSplunkUrl() {
+    if (splunkUrl.endsWith("/")) {
+      return splunkUrl;
+    }
+    return splunkUrl + "/";
+  }
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 }

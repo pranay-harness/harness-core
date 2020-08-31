@@ -44,8 +44,10 @@ import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
@@ -72,6 +74,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private CVConfigService cvConfigService;
   @Inject private AnomalyService anomalyService;
   @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject
   private DeploymentVerificationTaskTimeSeriesAnalysisService deploymentVerificationTaskTimeSeriesAnalysisService;
@@ -101,6 +104,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     String taskId = generateUuid();
     DeploymentVerificationTask deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(
         verificationTaskService.getDeploymentVerificationTaskId(input.getVerificationTaskId()));
+    CanaryVerificationJob verificationJob =
+        (CanaryVerificationJob) verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
     Preconditions.checkNotNull(deploymentVerificationTask, "deploymentVerificationTask can not be null");
     TimeSeriesCanaryLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesCanaryLearningEngineTask.builder()
@@ -109,6 +114,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .dataLength(
                 (int) Duration.between(deploymentVerificationTask.getStartTime(), input.getStartTime()).toMinutes() + 1)
             .metricTemplateUrl(createMetricTemplateUrl(input))
+            .tolerance(verificationJob.getSensitivity().getTolerance())
             .build();
 
     timeSeriesLearningEngineTask.setVerificationTaskId(input.getVerificationTaskId());

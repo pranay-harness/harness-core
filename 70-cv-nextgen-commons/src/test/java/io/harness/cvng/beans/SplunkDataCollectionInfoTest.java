@@ -28,6 +28,7 @@ public class SplunkDataCollectionInfoTest extends CategoryTest {
     expected.put("query", "exception");
     expected.put("serviceInstanceIdentifier", "$.host");
     expected.put("maxCount", 10000);
+    expected.put("hostCollectionQuery", "host=*|stats values(host) as hosts");
     assertThat(splunkDataCollectionInfo.getDslEnvVariables()).isEqualTo(expected);
   }
 }

@@ -45,9 +45,9 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Override
   public String createDeploymentVerificationDataCollectionTask(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
+    // TODO(telemetry): counter
     Optional<ConnectorDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
-
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }

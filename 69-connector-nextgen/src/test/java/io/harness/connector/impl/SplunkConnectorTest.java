@@ -133,7 +133,7 @@ public class SplunkConnectorTest extends CategoryTest {
     assertThat(splunkConnectorDTO.getUsername()).isEqualTo(userName);
     assertThat(splunkConnectorDTO.getPasswordRef()).isNotNull();
     assertThat(splunkConnectorDTO.getPasswordRef().getIdentifier()).isEqualTo(secretIdentifier);
-    assertThat(splunkConnectorDTO.getSplunkUrl()).isEqualTo(splunkUrl);
+    assertThat(splunkConnectorDTO.getSplunkUrl()).isEqualTo(splunkUrl + "/");
     assertThat(splunkConnectorDTO.getAccountId()).isEqualTo(accountIdentifier);
   }
 

@@ -28,7 +28,7 @@ public class SplunkEntityToDTOTest extends CategoryTest {
   public void testCreateSplunkConnectorDTO() {
     String username = "username";
     String encryptedPassword = "encryptedPassword";
-    String splunkUrl = "splunkUrl";
+    String splunkUrl = "https://splunk.dev.harness.io:8089";
     String accountId = "accountId";
 
     SplunkConnector splunkConnector = SplunkConnector.builder()
@@ -42,7 +42,7 @@ public class SplunkEntityToDTOTest extends CategoryTest {
     assertThat(splunkConnectorDTO).isNotNull();
     assertThat(splunkConnectorDTO.getUsername()).isEqualTo(splunkConnector.getUsername());
     assertThat(splunkConnectorDTO.getPasswordRef().getIdentifier()).isEqualTo(splunkConnector.getPasswordRef());
-    assertThat(splunkConnectorDTO.getSplunkUrl()).isEqualTo(splunkConnector.getSplunkUrl());
+    assertThat(splunkConnectorDTO.getSplunkUrl()).isEqualTo("https://splunk.dev.harness.io:8089/");
     assertThat(splunkConnectorDTO.getAccountId()).isEqualTo(splunkConnector.getAccountId());
   }
 }

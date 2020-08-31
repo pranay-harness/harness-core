@@ -28,7 +28,7 @@ public class SplunkConnectorSummaryTest extends CategoryTest {
   public void testCreateSplunkConnectorSummaryDTO() {
     String username = "username";
     String encryptedPassword = "encryptedPassword";
-    String splunkUrl = "splunkUrl";
+    String splunkUrl = "https://splunk.dev.harness.io:8089";
     String accountId = "accountId";
 
     SplunkConnector splunkConnector = SplunkConnector.builder()
@@ -43,6 +43,6 @@ public class SplunkConnectorSummaryTest extends CategoryTest {
 
     assertThat(splunkConnectorSummaryDTO).isNotNull();
     assertThat(splunkConnectorSummaryDTO.getUsername()).isEqualTo(splunkConnector.getUsername());
-    assertThat(splunkConnectorSummaryDTO.getSplunkUrl()).isEqualTo(splunkConnector.getSplunkUrl());
+    assertThat(splunkConnectorSummaryDTO.getSplunkUrl()).isEqualTo("https://splunk.dev.harness.io:8089");
   }
 }

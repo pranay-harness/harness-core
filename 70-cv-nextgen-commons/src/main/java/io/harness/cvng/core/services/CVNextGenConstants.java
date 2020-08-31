@@ -8,6 +8,7 @@ public interface CVNextGenConstants {
   String APPD_METRIC_DATA_NOT_FOUND = "METRIC DATA NOT FOUND";
   String DELEGATE_DATA_COLLECTION = "delegate-data-collection";
   String LOG_RECORD_RESOURCE_PATH = "log-record";
+  String HOST_RECORD_RESOURCE_PATH = "host-record";
   String DELEGATE_DATA_COLLECTION_TASK = "delegate-data-collection-task";
   String VERIFICATION_SERVICE_SECRET = "VERIFICATION_SERVICE_SECRET";
   String CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX = CV_NEXTGEN_RESOURCE_PREFIX + "/service";
@@ -20,7 +21,5 @@ public interface CVNextGenConstants {
   String RESOURCE_PACK_IDENTIFIER = "Resources";
   String SPLUNK_RESOURCE_PATH = "cv-nextgen/splunk/";
   String SPLUNK_SAVED_SEARCH_PATH = "saved-searches";
-  String SPLUNK_HISTOGRAM_PATH = "histogram";
-  String SPLUNK_SAMPLE_PATH = "samples";
   String SPLUNK_VALIDATION_RESPONSE_PATH = "validation";
 }

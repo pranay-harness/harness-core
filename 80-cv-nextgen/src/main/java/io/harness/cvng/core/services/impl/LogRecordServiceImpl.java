@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class LogRecordServiceImpl implements LogRecordService {
   @Inject private HPersistence hPersistence;
-
+  @Override
   public void save(List<LogRecordDTO> logRecords) {
     saveRecords(logRecords.stream().map(this ::toLogRecord).collect(Collectors.toList()));
   }
