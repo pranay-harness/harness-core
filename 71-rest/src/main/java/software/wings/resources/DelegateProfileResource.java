@@ -20,6 +20,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.DelegateProfileService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -94,5 +95,17 @@ public class DelegateProfileResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateProfile delegateProfile) {
     delegateProfile.setAccountId(accountId);
     return new RestResponse<>(delegateProfileService.add(delegateProfile));
+  }
+
+  @PUT
+  @Path("{delegateProfileId}/selectors")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
+  public RestResponse<DelegateProfile> updateDelegateProfileSelector(
+      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selectors") List<String> selectors) {
+    return new RestResponse<>(
+        delegateProfileService.updateDelegateProfileSelectors(delegateProfileId, accountId, selectors));
   }
 }
