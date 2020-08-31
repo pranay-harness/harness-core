@@ -52,6 +52,8 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
 
   private List<DelegateProfileScopingRule> scopingRules;
 
+  private List<String> selectors;
+
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @FdIndex private long createdAt;
 

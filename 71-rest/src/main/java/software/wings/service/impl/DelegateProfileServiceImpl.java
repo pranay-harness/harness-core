@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HPersistence.returnNewOptions;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -80,6 +81,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     setUnset(updateOperations, DelegateProfileKeys.description, delegateProfile.getDescription());
     setUnset(updateOperations, DelegateProfileKeys.startupScript, delegateProfile.getStartupScript());
     setUnset(updateOperations, DelegateProfileKeys.approvalRequired, delegateProfile.isApprovalRequired());
+    setUnset(updateOperations, DelegateProfileKeys.selectors, delegateProfile.getSelectors());
 
     Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
@@ -91,6 +93,21 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
     logger.info("Auditing update of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     return updatedDelegateProfile;
+  }
+
+  @Override
+  public DelegateProfile updateDelegateProfileSelectors(
+      String delegateProfileId, String accountId, List<String> selectors) {
+    Query<DelegateProfile> delegateProfileQuery = wingsPersistence.createQuery(DelegateProfile.class)
+                                                      .filter(DelegateProfileKeys.accountId, accountId)
+                                                      .filter(DelegateProfileKeys.uuid, delegateProfileId);
+    UpdateOperations<DelegateProfile> updateOperations =
+        wingsPersistence.createUpdateOperations(DelegateProfile.class).set(DelegateProfileKeys.selectors, selectors);
+
+    DelegateProfile delegateProfileSelectorsUpdated =
+        wingsPersistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
+    logger.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
+    return delegateProfileSelectorsUpdated;
   }
 
   @Override
