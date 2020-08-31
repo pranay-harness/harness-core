@@ -58,8 +58,8 @@ public class ExportExecutionsRequest
   private List<String> userGroupIds;
 
   @NonNull private Status status;
-  @NonNull private long totalExecutions;
-  @NonNull private long expiresAt;
+  private long totalExecutions;
+  private long expiresAt;
 
   // For status = READY
   private String fileId;

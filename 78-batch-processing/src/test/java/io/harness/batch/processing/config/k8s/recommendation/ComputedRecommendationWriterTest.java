@@ -3,6 +3,9 @@ package io.harness.batch.processing.config.k8s.recommendation;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -12,13 +15,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.service.intfc.WorkloadRepository;
+import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
@@ -30,6 +37,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ComputedRecommendationWriterTest extends CategoryTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -46,13 +54,19 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   private WorkloadRecommendationDao workloadRecommendationDao;
 
   private ArgumentCaptor<K8sWorkloadRecommendation> captor;
+  private WorkloadRepository workloadRepository;
+  private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
 
   @Before
   public void setUp() throws Exception {
     workloadCostService = mock(WorkloadCostService.class);
     workloadRecommendationDao = mock(WorkloadRecommendationDao.class);
-    computedRecommendationWriter =
-        new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, JOB_START_DATE);
+    workloadRepository = mock(WorkloadRepository.class);
+    k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
+    when(workloadRepository.getWorkload(any())).thenReturn(Optional.empty());
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(anyString(), anyMap())).thenReturn(Optional.empty());
+    computedRecommendationWriter = new ComputedRecommendationWriter(
+        workloadRecommendationDao, workloadCostService, workloadRepository, k8sLabelServiceInfoFetcher, JOB_START_DATE);
     captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
   }
 
@@ -566,6 +580,36 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .limit("cpu", "25m")
                        .request("memory", "250M")
                        .limit("memory", "250M")
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldAttachHarnessServiceInfo() throws Exception {
+    K8sWorkloadRecommendation k8sWorkloadRecommendation = K8sWorkloadRecommendation.builder().build();
+    ResourceId workloadId = ResourceId.builder().accountId("account_id").build();
+    when(workloadRepository.getWorkload(workloadId))
+        .thenReturn(Optional.of(K8sWorkload.builder().labels(ImmutableMap.of("k1", "v1", "k2", "v2")).build()));
+    when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(
+             eq("account_id"), eq(ImmutableMap.of("k1", "v1", "k2", "v2"))))
+        .thenReturn(Optional.of(HarnessServiceInfo.builder()
+                                    .serviceId("app_id")
+                                    .appId("app_id")
+                                    .cloudProviderId("cloud_provider_id")
+                                    .envId("env_id")
+                                    .infraMappingId("infra_mapping_id")
+                                    .deploymentSummaryId("deployment_summary_id")
+                                    .build()));
+    computedRecommendationWriter.addHarnessSvcInfo(workloadId, k8sWorkloadRecommendation);
+    assertThat(k8sWorkloadRecommendation.getHarnessServiceInfo())
+        .isEqualTo(HarnessServiceInfo.builder()
+                       .serviceId("app_id")
+                       .appId("app_id")
+                       .cloudProviderId("cloud_provider_id")
+                       .envId("env_id")
+                       .infraMappingId("infra_mapping_id")
+                       .deploymentSummaryId("deployment_summary_id")
                        .build());
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.harness.batch.processing.config.k8s.recommendation.ResourceId;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
@@ -12,6 +13,7 @@ import io.harness.perpetualtask.k8s.watch.Owner;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.persistence.HPersistence;
 import lombok.Value;
+import org.mongodb.morphia.query.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +71,28 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
                                    .equal(clusterId)
                                    .field(K8sWorkloadKeys.uid)
                                    .equal(uid)
+                                   .get());
+  }
+
+  /**
+   * Fetch workload matching given parameters. If there are multiple matches (different uid), fetch the latest.
+   * @param workloadId details to id the workload uniquely.
+   * @return the workload.
+   */
+  @Override
+  public Optional<K8sWorkload> getWorkload(ResourceId workloadId) {
+    return Optional.ofNullable(hPersistence.createQuery(K8sWorkload.class)
+                                   .field(K8sWorkloadKeys.accountId)
+                                   .equal(workloadId.getAccountId())
+                                   .field(K8sWorkloadKeys.clusterId)
+                                   .equal(workloadId.getClusterId())
+                                   .field(K8sWorkloadKeys.namespace)
+                                   .equal(workloadId.getNamespace())
+                                   .field(K8sWorkloadKeys.name)
+                                   .equal(workloadId.getName())
+                                   .field(K8sWorkloadKeys.kind)
+                                   .equal(workloadId.getKind())
+                                   .order(Sort.descending(K8sWorkloadKeys.lastUpdatedAt))
                                    .get());
   }
 }

@@ -3,6 +3,8 @@ package io.harness.batch.processing.config.k8s.recommendation;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.CloseableIteratorItemReader;
 import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.service.intfc.WorkloadRepository;
+import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.persistence.HIterator;
@@ -112,9 +114,12 @@ public class K8sWorkloadRecommendationConfig {
   @Bean
   @StepScope
   public ComputedRecommendationWriter computedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
-      WorkloadCostService workloadCostService, @Value("#{jobParameters[startDate]}") Long startDateMillis) {
+      WorkloadCostService workloadCostService, WorkloadRepository workloadRepository,
+      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher,
+      @Value("#{jobParameters[startDate]}") Long startDateMillis) {
     Instant jobStartDate = Instant.ofEpochMilli(startDateMillis);
-    return new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, jobStartDate);
+    return new ComputedRecommendationWriter(
+        workloadRecommendationDao, workloadCostService, workloadRepository, k8sLabelServiceInfoFetcher, jobStartDate);
   }
 
   @Bean

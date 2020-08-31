@@ -25,6 +25,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.PrePersist;
+import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -80,6 +81,8 @@ public final class K8sWorkloadRecommendation
 
   // number of days of data (min across containers)
   int numDays;
+
+  HarnessServiceInfo harnessServiceInfo;
 
   @PostLoad
   public void postLoad() {
