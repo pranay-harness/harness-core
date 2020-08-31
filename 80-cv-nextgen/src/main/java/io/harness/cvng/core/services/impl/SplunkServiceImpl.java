@@ -21,30 +21,31 @@ public class SplunkServiceImpl implements SplunkService {
   @Inject private NextGenService nextGenService;
 
   @Override
-  public List<SplunkSavedSearch> getSavedSearches(
-      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, String requestGuid) {
+  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorIdentifier, String orgIdentifier,
+      String projectIdentifier, String requestGuid) {
     SplunkConnectorDTO splunkConnectorDTO =
-        retrieveSplunkConnectorDTO(accountId, connectorId, orgIdentifier, projectIdentifier);
+        retrieveSplunkConnectorDTO(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     return requestExecutor
         .execute(verificationManagerClient.getSavedSearches(
-            accountId, connectorId, orgIdentifier, projectIdentifier, requestGuid, splunkConnectorDTO))
+            accountId, connectorIdentifier, orgIdentifier, projectIdentifier, requestGuid, splunkConnectorDTO))
         .getResource();
   }
 
   @Override
-  public SplunkValidationResponse getValidationResponse(String accountId, String connectorId, String orgIdentifier,
-      String projectIdentifier, String query, String requestGuid) {
+  public SplunkValidationResponse getValidationResponse(String accountId, String connectorIdentifier,
+      String orgIdentifier, String projectIdentifier, String query, String requestGuid) {
     SplunkConnectorDTO splunkConnectorDTO =
-        retrieveSplunkConnectorDTO(accountId, connectorId, orgIdentifier, projectIdentifier);
+        retrieveSplunkConnectorDTO(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     return requestExecutor
         .execute(verificationManagerClient.getSamples(
-            accountId, connectorId, orgIdentifier, projectIdentifier, query, requestGuid, splunkConnectorDTO))
+            accountId, connectorIdentifier, orgIdentifier, projectIdentifier, query, requestGuid, splunkConnectorDTO))
         .getResource();
   }
 
   private SplunkConnectorDTO retrieveSplunkConnectorDTO(
-      String accountId, String connectorId, String orgIdentifier, String projectIdentifier) {
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
+    Optional<ConnectorDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof SplunkConnectorDTO,
         "ConnectorConfig should be of type Splunk");

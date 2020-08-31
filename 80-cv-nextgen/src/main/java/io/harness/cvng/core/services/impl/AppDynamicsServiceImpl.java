@@ -30,10 +30,11 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   @Inject private NextGenService nextGenService;
   @Override
   // TODO: We need to find a testing strategy for Retrofit interfaces. The current way of mocking Call is too cumbersome
-  public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorId,
+  public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
       List<MetricPack> metricPacks) {
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
+    Optional<ConnectorDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,
         "ConnectorConfig should be of type AppDynamics");
@@ -53,8 +54,9 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
 
   @Override
   public List<AppDynamicsApplication> getApplications(
-      String accountId, String connectorId, String orgIdentifier, String projectIdentifier) {
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
+    Optional<ConnectorDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,
         "ConnectorConfig should be of type AppDynamics");
@@ -66,9 +68,10 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
-  public Set<AppDynamicsTier> getTiers(
-      String accountId, String connectorId, String orgIdentifier, String projectIdentifier, long appDynamicsAppId) {
-    Optional<ConnectorDTO> connectorDTO = nextGenService.get(accountId, connectorId, orgIdentifier, projectIdentifier);
+  public Set<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
+      String projectIdentifier, long appDynamicsAppId) {
+    Optional<ConnectorDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,
         "ConnectorConfig should be of type AppDynamics");
