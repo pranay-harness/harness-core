@@ -16,6 +16,7 @@ import io.harness.batch.processing.service.intfc.AccountExpiryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import software.wings.beans.Account;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@Service
 public class AccountExpiryServiceImpl implements AccountExpiryService {
   private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
@@ -38,35 +40,38 @@ public class AccountExpiryServiceImpl implements AccountExpiryService {
     List<BillingDataPipelineRecord> billingDataPipelineRecordList =
         billingDataPipelineRecordDao.getAllRecordsByAccountId(accountId);
 
-    billingDataPipelineRecordList.forEach(billingDataPipelineRecord -> {
-      String settingId = billingDataPipelineRecord.getSettingId();
-      String cloudProvider = billingDataPipelineRecord.getCloudProvider();
-      List<String> listOfPipelineJobs = new ArrayList<>();
-      listOfPipelineJobs.add(billingDataPipelineRecord.getDataTransferJobName());
-      listOfPipelineJobs.add(billingDataPipelineRecord.getPreAggregatedScheduledQueryName());
-
-      if (cloudProvider.equals(CloudProvider.AWS.name())) {
-        listOfPipelineJobs.add(billingDataPipelineRecord.getAwsFallbackTableScheduledQueryName());
-      }
-
-      // Delete associated Data Pipeline Jobs
-      try {
-        DataTransferServiceClient dataTransferClient = getDataTransferClient();
-        for (String job : listOfPipelineJobs) {
-          deleteDataTransfer(dataTransferClient, job);
-        }
-      } catch (IOException e) {
-        logger.error("Error Deleting Data Pipeline Jobs: {}", e);
-      }
-
-      // Delete the Data (DataSet, Tables)
-      BigQuery bigquery = getBigQueryClient();
-      bigquery.delete(billingDataPipelineRecord.getDataSetId(), BigQuery.DatasetDeleteOption.deleteContents());
-
-      // Delete Data Pipeline Record
-      billingDataPipelineRecordDao.removeBillingDataPipelineRecord(accountId, settingId);
-    });
+    billingDataPipelineRecordList.forEach(
+        billingDataPipelineRecord -> deletePipelinePerRecord(accountId, billingDataPipelineRecord));
     return true;
+  }
+
+  public void deletePipelinePerRecord(String accountId, BillingDataPipelineRecord billingDataPipelineRecord) {
+    String settingId = billingDataPipelineRecord.getSettingId();
+    String cloudProvider = billingDataPipelineRecord.getCloudProvider();
+    List<String> listOfPipelineJobs = new ArrayList<>();
+    listOfPipelineJobs.add(billingDataPipelineRecord.getDataTransferJobName());
+    listOfPipelineJobs.add(billingDataPipelineRecord.getPreAggregatedScheduledQueryName());
+
+    if (cloudProvider.equals(CloudProvider.AWS.name())) {
+      listOfPipelineJobs.add(billingDataPipelineRecord.getAwsFallbackTableScheduledQueryName());
+    }
+
+    // Delete associated Data Pipeline Jobs
+    try {
+      DataTransferServiceClient dataTransferClient = getDataTransferClient();
+      for (String job : listOfPipelineJobs) {
+        deleteDataTransfer(dataTransferClient, job);
+      }
+    } catch (IOException e) {
+      logger.error("Error Deleting Data Pipeline Jobs: {}", e);
+    }
+
+    // Delete the Data (DataSet, Tables)
+    BigQuery bigquery = getBigQueryClient();
+    bigquery.delete(billingDataPipelineRecord.getDataSetId(), BigQuery.DatasetDeleteOption.deleteContents());
+
+    // Delete Data Pipeline Record
+    billingDataPipelineRecordDao.removeBillingDataPipelineRecord(accountId, settingId);
   }
 
   protected void deleteDataTransfer(DataTransferServiceClient dataTransferClient, String job) {

@@ -10,6 +10,7 @@ import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
 import io.harness.batch.processing.metrics.ProductMetricsService;
+import io.harness.batch.processing.service.AccountExpiryCleanupService;
 import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.impl.BatchJobTypeLogContext;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
@@ -44,6 +45,7 @@ public class EventJobScheduler {
   @Autowired private GcpScheduledQueryTriggerAction gcpScheduledQueryTriggerAction;
   @Autowired private ProductMetricsService productMetricsService;
   @Autowired private BudgetAlertsServiceImpl budgetAlertsService;
+  @Autowired private AccountExpiryCleanupService accountExpiryCleanupService;
 
   @PostConstruct
   public void orderJobs() {
@@ -112,6 +114,18 @@ public class EventJobScheduler {
         billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
       } catch (Exception ex) {
         logger.error("Exception while running runConnectorsHealthStatusJob {}", ex);
+      }
+    }
+  }
+
+  @Scheduled(cron = "0 0 6 * * ?")
+  public void runAccountExpiryCleanup() {
+    boolean masterPod = accountShardService.isMasterPod();
+    if (masterPod) {
+      try {
+        accountExpiryCleanupService.execute();
+      } catch (Exception ex) {
+        logger.error("Exception while running runAccountExpiryCleanup {}", ex);
       }
     }
   }
