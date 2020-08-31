@@ -143,4 +143,10 @@ public class CustomExecutionResource {
   public RestResponse<PlanExecution> executeResourceRestraintWithWaitPlan() {
     return new RestResponse<>(customExecutionService.executeResourceRestraintWithWaitPlan());
   }
+
+  @GET
+  @Path("/skip-children")
+  public RestResponse<PlanExecution> executeSkipChildren() {
+    return new RestResponse<>(customExecutionService.executeSkipChildren());
+  }
 }
