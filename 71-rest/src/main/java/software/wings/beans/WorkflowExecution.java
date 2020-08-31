@@ -154,6 +154,12 @@ import javax.validation.constraints.NotNull;
       , @Field(WorkflowExecutionKeys.pipelineExecutionId), @Field(WorkflowExecutionKeys.keywords),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
     })
+@CdIndex(name = "accountId_cdPageCandidate_appId",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.accountId)
+      , @Field(WorkflowExecutionKeys.cdPageCandidate), @Field(WorkflowExecutionKeys.appId),
+    })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
