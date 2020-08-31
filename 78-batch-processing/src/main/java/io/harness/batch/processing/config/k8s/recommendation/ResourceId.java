@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-class ResourceId {
+public class ResourceId {
   static final ResourceId NOT_FOUND = ResourceId.builder().build();
 
   String accountId;

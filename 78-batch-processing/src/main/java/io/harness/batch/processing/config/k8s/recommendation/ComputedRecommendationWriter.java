@@ -15,6 +15,9 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.batch.processing.config.k8s.recommendation.WorkloadCostService.Cost;
 import io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils;
+import io.harness.batch.processing.service.intfc.WorkloadRepository;
+import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.kubernetes.client.custom.Quantity;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -42,13 +45,28 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
   private final WorkloadRecommendationDao workloadRecommendationDao;
   private final WorkloadCostService workloadCostService;
+  private final WorkloadRepository workloadRepository;
+  private final K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
+
   private final Instant jobStartDate;
 
   ComputedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
-      WorkloadCostService workloadCostService, Instant jobStartDate) {
+      WorkloadCostService workloadCostService, WorkloadRepository workloadRepository,
+      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, Instant jobStartDate) {
     this.workloadRecommendationDao = workloadRecommendationDao;
     this.workloadCostService = workloadCostService;
+    this.workloadRepository = workloadRepository;
+    this.k8sLabelServiceInfoFetcher = k8sLabelServiceInfoFetcher;
     this.jobStartDate = jobStartDate;
+  }
+
+  void addHarnessSvcInfo(ResourceId workloadId, K8sWorkloadRecommendation k8sWorkloadRecommendation) {
+    Map<String, String> labels = workloadRepository.getWorkload(workloadId)
+                                     .map(K8sWorkload::getLabels)
+                                     .map(K8sWorkload::decodeDotsInKey)
+                                     .orElse(emptyMap());
+    k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(workloadId.getAccountId(), labels)
+        .ifPresent(k8sWorkloadRecommendation::setHarnessServiceInfo);
   }
 
   @Override
@@ -62,6 +80,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
                                   .namespace(recommendation.getNamespace())
                                   .name(recommendation.getWorkloadName())
                                   .build();
+      addHarnessSvcInfo(workloadId, recommendation);
       Map<String, ContainerRecommendation> containerRecommendations =
           ofNullable(recommendation.getContainerRecommendations()).orElseGet(HashMap::new);
       recommendation.setContainerRecommendations(containerRecommendations);
