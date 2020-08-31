@@ -2470,7 +2470,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Collections.sort(ids);
 
     final List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.fetchWorkflowExecutionsForResourceConstraint(APP_ID, ids);
+        workflowExecutionService.fetchWorkflowExecutionsForResourceConstraint(ids);
 
     List<String> wIds = workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(toList());
     assertThat(wIds).isEqualTo(ids);
