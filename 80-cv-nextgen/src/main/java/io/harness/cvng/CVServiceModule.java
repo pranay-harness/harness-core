@@ -28,6 +28,7 @@ import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
+import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.SplunkService;
@@ -43,6 +44,7 @@ import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
+import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
@@ -153,7 +155,7 @@ public class CVServiceModule extends AbstractModule {
       bind(DeploymentVerificationTaskTimeSeriesAnalysisService.class)
           .to(DeploymentVerificationTaskTimeSeriesAnalysisServiceImpl.class);
       bind(NextGenService.class).to(NextGenServiceImpl.class);
-
+      bind(HostRecordService.class).to(HostRecordServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

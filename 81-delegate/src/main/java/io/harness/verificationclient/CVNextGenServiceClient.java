@@ -2,10 +2,12 @@ package io.harness.verificationclient;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION_TASK;
+import static io.harness.cvng.core.services.CVNextGenConstants.HOST_RECORD_RESOURCE_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.LOG_RECORD_RESOURCE_PATH;
 
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
+import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.rest.RestResponse;
@@ -27,6 +29,9 @@ public interface CVNextGenServiceClient {
 
   @POST(LOG_RECORD_RESOURCE_PATH)
   Call<RestResponse<Void>> saveLogRecords(@Query("accountId") String accountId, @Body List<LogRecordDTO> logRecords);
+
+  @POST(HOST_RECORD_RESOURCE_PATH)
+  Call<RestResponse<Void>> saveHostRecords(@Query("accountId") String accountId, @Body List<HostRecordDTO> hostRecords);
 
   @GET(DELEGATE_DATA_COLLECTION_TASK + "/next-task")
   Call<RestResponse<DataCollectionTaskDTO>> getNextDataCollectionTask(

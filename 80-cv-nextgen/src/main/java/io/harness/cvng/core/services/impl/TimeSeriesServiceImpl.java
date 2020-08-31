@@ -4,6 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDO
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.util.Comparator.comparingLong;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
+import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
@@ -21,6 +23,7 @@ import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesGroupValue;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesRecordKeys;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.utils.DateTimeUtils;
@@ -38,13 +41,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class TimeSeriesServiceImpl implements TimeSeriesService {
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private MetricPackService metricPackService;
+  @Inject private HostRecordService hostRecordService;
 
   @Override
   public boolean save(List<TimeSeriesDataCollectionRecord> dataRecords) {
@@ -75,6 +81,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
               options);
     });
 
+    saveHosts(dataRecords);
     return true;
   }
   @Value
@@ -83,6 +90,36 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     String host;
     long timestamp;
     String metricName;
+  }
+
+  private void saveHosts(List<TimeSeriesDataCollectionRecord> dataRecords) {
+    if (isNotEmpty(dataRecords)) {
+      Preconditions.checkState(
+          dataRecords.stream().map(dataRecord -> dataRecord.getVerificationTaskId()).distinct().count() == 1,
+          "All the verificationIds should be same");
+      String verificationTaskId = dataRecords.get(0).getVerificationTaskId();
+      long minTimestamp = dataRecords.stream()
+                              .map(dataRecord -> dataRecord.getTimeStamp())
+                              .min(comparingLong(timestamp -> timestamp))
+                              .get();
+      long maxTimeStamp = dataRecords.stream()
+                              .map(dataRecord -> dataRecord.getTimeStamp())
+                              .max(comparingLong(timestamp -> timestamp))
+                              .get();
+      Set<String> hosts = dataRecords.stream()
+                              .map(dataRecord -> dataRecord.getHost())
+                              .filter(host -> host != null)
+                              .collect(Collectors.toSet());
+      if (isNotEmpty(hosts)) {
+        HostRecordDTO hostRecordDTO = HostRecordDTO.builder()
+                                          .verificationTaskId(verificationTaskId)
+                                          .startTime(Instant.ofEpochMilli(minTimestamp))
+                                          .endTime(Instant.ofEpochMilli(maxTimeStamp))
+                                          .hosts(hosts)
+                                          .build();
+        hostRecordService.save(hostRecordDTO);
+      }
+    }
   }
 
   private Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> bucketTimeSeriesRecords(

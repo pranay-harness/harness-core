@@ -41,6 +41,7 @@ public abstract class LogCVConfig extends CVConfig {
     return VerificationType.LOG;
   }
 
+  public abstract String getHostCollectionDSL();
   @Override
   public void validate() {
     super.validate();

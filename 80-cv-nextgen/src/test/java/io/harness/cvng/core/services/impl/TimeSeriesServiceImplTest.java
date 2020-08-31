@@ -38,6 +38,7 @@ import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesRecordKeys;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.models.VerificationType;
@@ -75,10 +76,12 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   private Random random;
   private String projectIdentifier;
   private String verificationTaskId;
+
   @Inject private TimeSeriesService timeSeriesService;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private MetricPackService metricPackService;
+  @Inject private HostRecordService hostRecordService;
 
   @Before
   public void setUp() {
@@ -135,6 +138,74 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
                             .asList();
     assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
     validateSavedRecords(numOfMetrics, numOfTxnx, numOfMins, timeSeriesRecords);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSave_hostRecords() {
+    int numOfMetrics = 4;
+    int numOfTxnx = 5;
+    long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
+    Instant timestamp = Instant.now();
+    List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
+    for (int i = 0; i < numOfMins; i++) {
+      TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
+                                                            .accountId(accountId)
+                                                            .verificationTaskId(verificationTaskId)
+                                                            .host("h" + i)
+                                                            .timeStamp(timestamp.toEpochMilli())
+                                                            .metricValues(new HashSet<>())
+                                                            .build();
+      for (int j = 0; j < numOfMetrics; j++) {
+        TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
+                                                          .metricName("metric-" + j)
+                                                          .timeSeriesValues(new HashSet<>())
+                                                          .build();
+        for (int k = 0; k < numOfTxnx; k++) {
+          metricValue.getTimeSeriesValues().add(
+              TimeSeriesDataRecordGroupValue.builder().value(random.nextDouble()).groupName("group-" + k).build());
+        }
+        collectionRecord.getMetricValues().add(metricValue);
+      }
+      collectionRecords.add(collectionRecord);
+    }
+    timeSeriesService.save(collectionRecords);
+    assertThat(hostRecordService.get(verificationTaskId, timestamp, timestamp))
+        .isEqualTo(Sets.newHashSet("h0", "h1", "h2", "h3", "h4"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSave_hostRecordWithoutHost() {
+    int numOfMetrics = 4;
+    int numOfTxnx = 5;
+    long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
+    Instant timestamp = Instant.now();
+    List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
+    for (int i = 0; i < numOfMins; i++) {
+      TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
+                                                            .accountId(accountId)
+                                                            .verificationTaskId(verificationTaskId)
+                                                            .timeStamp(timestamp.toEpochMilli())
+                                                            .metricValues(new HashSet<>())
+                                                            .build();
+      for (int j = 0; j < numOfMetrics; j++) {
+        TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
+                                                          .metricName("metric-" + j)
+                                                          .timeSeriesValues(new HashSet<>())
+                                                          .build();
+        for (int k = 0; k < numOfTxnx; k++) {
+          metricValue.getTimeSeriesValues().add(
+              TimeSeriesDataRecordGroupValue.builder().value(random.nextDouble()).groupName("group-" + k).build());
+        }
+        collectionRecord.getMetricValues().add(metricValue);
+      }
+      collectionRecords.add(collectionRecord);
+    }
+    timeSeriesService.save(collectionRecords);
+    assertThat(hostRecordService.get(verificationTaskId, timestamp, timestamp)).isEmpty();
   }
 
   private void validateSavedRecords(

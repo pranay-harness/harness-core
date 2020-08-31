@@ -20,6 +20,7 @@ public class TimeSeriesCanaryLearningEngineTask extends LearningEngineTask {
   private String metricTemplateUrl;
   private DeploymentVerificationTaskInfo deploymentVerificationTaskInfo;
   private int dataLength;
+  private int tolerance;
   @Override
   public LearningEngineTaskType getType() {
     return LearningEngineTaskType.TIME_SERIES_CANARY;

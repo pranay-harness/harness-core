@@ -26,6 +26,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public class CanaryVerificationJob extends VerificationJob {
   public static final Duration PRE_DEPLOYMENT_DATA_COLLECTION_DURATION = Duration.ofMinutes(15);
+  // TODO: move sensitivity to common base class.
   private Sensitivity sensitivity;
   private Integer trafficSplitPercentage;
   @Override

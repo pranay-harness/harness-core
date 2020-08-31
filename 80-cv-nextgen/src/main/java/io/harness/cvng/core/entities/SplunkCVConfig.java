@@ -23,7 +23,8 @@ import java.nio.charset.StandardCharsets;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class SplunkCVConfig extends LogCVConfig {
-  @VisibleForTesting static final String DSL = readDSL();
+  @VisibleForTesting static final String DSL = readDSL("splunk.datacollection");
+  static final String HOST_COLLECTION_DSL = readDSL("splunk_host_collection.datacollection");
   private String serviceInstanceIdentifier;
 
   @Override
@@ -50,11 +51,16 @@ public class SplunkCVConfig extends LogCVConfig {
     return getDataCollectionDsl();
   }
 
-  private static String readDSL() {
+  private static String readDSL(String fileName) {
     try {
-      return Resources.toString(SplunkCVConfig.class.getResource("splunk.datacollection"), StandardCharsets.UTF_8);
+      return Resources.toString(SplunkCVConfig.class.getResource(fileName), StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  @Override
+  public String getHostCollectionDSL() {
+    return HOST_COLLECTION_DSL;
   }
 }
