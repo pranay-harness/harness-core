@@ -36,6 +36,7 @@ import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.ccm.setup.CECloudAccountDao;
@@ -73,6 +74,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -261,15 +263,30 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
     ArgumentCaptor<InstanceData> captor = ArgumentCaptor.forClass(InstanceData.class);
     then(instanceDataService).should().create(captor.capture());
     InstanceData instanceData = captor.getValue();
+    Map<String, String> instanceDataMetaData = instanceData.getMetaData();
     assertThat(instanceData.getInstanceId()).isEqualTo("0fcd0a44-b82f-4f23-84ee-3ad8b40625a2");
     assertThat(instanceData.getInstanceType()).isEqualTo(InstanceType.ECS_TASK_EC2);
     assertThat(instanceData.getAllocatableResource())
         .isEqualTo(io.harness.batch.processing.ccm.Resource.builder().cpuUnits(1.0).memoryMb(512.0).build());
     assertThat(instanceData.getUsageStartTime()).isEqualTo(instant);
+    assertThat(instanceDataMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY))
+        .isEqualTo(InstanceMetaDataConstants.INSTANCE_FAMILY);
   }
 
   private InstanceData getInstanceData() {
-    return InstanceData.builder().build();
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceMetaDataConstants.INSTANCE_CATEGORY);
+    metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    metaData.put(InstanceMetaDataConstants.CONTAINER_INSTANCE_ARN, InstanceMetaDataConstants.CONTAINER_INSTANCE_ARN);
+    metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, InstanceMetaDataConstants.PARENT_RESOURCE_ID);
+    metaData.put(
+        InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID);
+    return InstanceData.builder()
+        .instanceId("ce-ecs-ec2-test")
+        .metaData(metaData)
+        .totalResource(io.harness.batch.processing.ccm.Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build())
+        .build();
   }
 
   private Task getTask() {

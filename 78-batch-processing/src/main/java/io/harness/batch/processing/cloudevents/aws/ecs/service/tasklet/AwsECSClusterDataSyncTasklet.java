@@ -277,7 +277,10 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
         if (null != task.getContainerInstanceArn()) {
           containerInstantData = instanceDataMap.get(getIdFromArn(task.getContainerInstanceArn()));
         }
-        if (InstanceType.ECS_TASK_EC2 == instanceType && null != containerInstantData) {
+
+        if (InstanceType.ECS_TASK_EC2 == instanceType && null == containerInstantData) {
+          return;
+        } else if (InstanceType.ECS_TASK_EC2 == instanceType && null != containerInstantData) {
           String containerInstanceId = getIdFromArn(task.getContainerInstanceArn());
 
           metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY,
