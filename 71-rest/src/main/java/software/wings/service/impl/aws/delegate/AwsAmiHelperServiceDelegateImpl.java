@@ -811,7 +811,7 @@ public class AwsAmiHelperServiceDelegateImpl
                 classicLB, newAutoScalingGroupName, autoScalingSteadyStateTimeout, executionLogCallback);
           });
         }
-        if (newAsgFinalDesiredCount == desiredInstances) {
+        if (newAsgFinalDesiredCount >= desiredInstances) {
           awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(awsConfig, encryptionDetails, region,
               newAutoScalingGroupName, baseScalingPolicyJSONs, executionLogCallback);
         }
