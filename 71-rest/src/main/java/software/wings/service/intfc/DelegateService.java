@@ -149,4 +149,6 @@ public interface DelegateService extends OwnedByAccount {
   void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response);
 
   boolean validateThatDelegateNameIsUnique(String accountId, String delegateName);
+
+  void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId);
 }

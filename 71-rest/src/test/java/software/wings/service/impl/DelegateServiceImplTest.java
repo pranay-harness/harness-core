@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.any;
@@ -58,6 +59,8 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.TaskType;
 import software.wings.processingcontrollers.DelegateProcessingController;
 import software.wings.service.intfc.AssignDelegateService;
@@ -383,5 +386,40 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateService.handleDriverResponse(delegateTask, delegateTaskResponse);
 
     verify(delegateCallbackService).publishAsyncTaskResponse(delegateTask.getUuid(), responseData);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDelegateDisconnected() {
+    DelegateObserver delegateObserver = mock(DelegateObserver.class);
+    delegateService.getSubject().register(delegateObserver);
+
+    String delegateId = generateUuid();
+    String delegateConnectionId = generateUuid();
+    String accountId = generateUuid();
+
+    DelegateConnection delegateConnection = DelegateConnection.builder()
+                                                .accountId(accountId)
+                                                .uuid(delegateConnectionId)
+                                                .delegateId(delegateId)
+                                                .disconnected(false)
+                                                .build();
+
+    wingsPersistence.save(delegateConnection);
+
+    delegateService.delegateDisconnected(accountId, delegateId, delegateConnectionId);
+
+    DelegateConnection retrievedDelegateConnection =
+        wingsPersistence.createQuery(DelegateConnection.class)
+            .filter(DelegateConnectionKeys.uuid, delegateConnection.getUuid())
+            .get();
+
+    assertThat(retrievedDelegateConnection).isNotNull();
+    assertThat(retrievedDelegateConnection.getDelegateId()).isEqualTo(delegateId);
+    assertThat(retrievedDelegateConnection.getAccountId()).isEqualTo(accountId);
+    assertThat(retrievedDelegateConnection.isDisconnected()).isTrue();
+
+    verify(delegateObserver).onDisconnected(accountId, delegateId);
   }
 }

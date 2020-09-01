@@ -10,6 +10,7 @@ import com.google.protobuf.Any;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
@@ -160,6 +161,29 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
     assertThat(savedPerpetualTaskRecord).isNotNull();
     assertThat(savedPerpetualTaskRecord.getClientContext().getClientParams())
         .isEqualTo(clientContext.getClientParams());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDetachTaskFromDelegate() {
+    PerpetualTaskClientContext clientContext = getClientContext();
+    PerpetualTaskRecord perpetualTaskRecord = PerpetualTaskRecord.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
+                                                  .clientContext(clientContext)
+                                                  .delegateId(DELEGATE_ID)
+                                                  .state(PerpetualTaskState.TASK_ASSIGNED)
+                                                  .build();
+
+    String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
+    perpetualTaskRecordDao.detachTaskFromDelegate(ACCOUNT_ID, DELEGATE_ID);
+    PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
+
+    assertThat(task).isNotNull();
+    assertThat(task.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED);
+    assertThat(task.getDelegateId()).isEqualTo("");
+    assertThat(task.getClientContext()).isEqualTo(clientContext);
   }
 
   public PerpetualTaskClientContext getClientContext() {

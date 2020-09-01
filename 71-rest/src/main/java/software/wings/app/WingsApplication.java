@@ -105,7 +105,6 @@ import io.harness.perpetualtask.instancesync.AzureVMSSInstanceSyncPerpetualTaskC
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.internal.DisconnectedDelegateHandler;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
@@ -794,6 +793,14 @@ public class WingsApplication extends Application<MainConfiguration> {
     perpetualTaskService.getPerpetualTaskCrudSubject().register(
         injector.getInstance(Key.get(PerpetualTaskRecordHandler.class)));
 
+    DelegateServiceImpl delegateServiceImpl =
+        (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
+    delegateServiceImpl.getSubject().register(perpetualTaskService);
+
+    PollingModeDelegateDisconnectedDetector pollingModeDelegateDisconnectedDetector =
+        injector.getInstance(Key.get(PollingModeDelegateDisconnectedDetector.class));
+    pollingModeDelegateDisconnectedDetector.getSubject().register(perpetualTaskService);
+
     registerSharedObservers(injector);
   }
 
@@ -833,7 +840,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators();
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
-    injector.getInstance(DisconnectedDelegateHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(EncryptedDataAwsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();

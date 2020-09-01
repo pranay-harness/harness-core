@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -83,5 +84,35 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
     assertThat(delegateConnections).hasSize(2);
     assertThat(delegateConnections.get(delegateId)).hasSize(2);
     assertThat(delegateConnections.get(delegateId2)).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDelegateDisconnected() {
+    String delegateId = generateUuid();
+    String delegateConnectionId = generateUuid();
+    String accountId = generateUuid();
+
+    DelegateConnection delegateConnection = DelegateConnection.builder()
+                                                .accountId(accountId)
+                                                .uuid(delegateConnectionId)
+                                                .delegateId(delegateId)
+                                                .disconnected(false)
+                                                .build();
+
+    wingsPersistence.save(delegateConnection);
+
+    delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
+
+    DelegateConnection retrievedDelegateConnection =
+        wingsPersistence.createQuery(DelegateConnection.class)
+            .filter(DelegateConnectionKeys.uuid, delegateConnection.getUuid())
+            .get();
+
+    assertThat(retrievedDelegateConnection).isNotNull();
+    assertThat(retrievedDelegateConnection.getDelegateId()).isEqualTo(delegateId);
+    assertThat(retrievedDelegateConnection.getAccountId()).isEqualTo(accountId);
+    assertThat(retrievedDelegateConnection.isDisconnected()).isTrue();
   }
 }

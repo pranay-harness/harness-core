@@ -154,4 +154,18 @@ public class PerpetualTaskRecordDao {
     UpdateResults update = persistence.update(task, taskUpdateOperations);
     return update.getUpdatedCount() > 0;
   }
+
+  public void detachTaskFromDelegate(String accountId, String delegateId) {
+    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
+                                           .filter(PerpetualTaskRecordKeys.accountId, accountId)
+                                           .filter(PerpetualTaskRecordKeys.delegateId, delegateId);
+
+    UpdateOperations<PerpetualTaskRecord> updateOperations =
+        persistence.createUpdateOperations(PerpetualTaskRecord.class)
+            .set(PerpetualTaskRecordKeys.delegateId, "")
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
+            .unset(PerpetualTaskRecordKeys.assignerIterations);
+
+    persistence.update(query, updateOperations);
+  }
 }

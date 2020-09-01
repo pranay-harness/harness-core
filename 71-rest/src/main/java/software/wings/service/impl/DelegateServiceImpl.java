@@ -2591,6 +2591,12 @@ public class DelegateServiceImpl implements DelegateService {
     return false;
   }
 
+  @Override
+  public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
+    delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
+    subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
+  }
+
   @VisibleForTesting
   DelegateTaskPackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning.
