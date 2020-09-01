@@ -56,6 +56,7 @@ public class GcbStepCompletionYamlValidatorTest {
     gcbOptions.put("specSource", null);
     propertiesWithoutSpecSource.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithoutSpecSource.put("gcbOptions", gcbOptions);
+    propertiesWithoutSpecSource.put("timeoutMillis", 1000);
     // parameter
     Map<String, Object> propertiesWithNullInlineSpec = new HashMap<>();
     Map<String, Object> inlineOptions = new HashMap<>();
@@ -64,6 +65,7 @@ public class GcbStepCompletionYamlValidatorTest {
     inlineOptions.put("inlineSpec", null);
     propertiesWithNullInlineSpec.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithNullInlineSpec.put("gcbOptions", inlineOptions);
+    propertiesWithNullInlineSpec.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithNullTriggerSpec = new HashMap<>();
@@ -73,6 +75,7 @@ public class GcbStepCompletionYamlValidatorTest {
     triggerOptions.put("triggerSpec", null);
     propertiesWithNullTriggerSpec.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithNullTriggerSpec.put("gcbOptions", triggerOptions);
+    propertiesWithNullTriggerSpec.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesTriggerSpecWithoutSource = new HashMap<>();
@@ -82,6 +85,7 @@ public class GcbStepCompletionYamlValidatorTest {
     triggerOptionsWithoutSource.put("triggerSpec", singletonMap("source", null));
     propertiesTriggerSpecWithoutSource.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesTriggerSpecWithoutSource.put("gcbOptions", triggerOptionsWithoutSource);
+    propertiesTriggerSpecWithoutSource.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesTriggerSpecWithoutName = new HashMap<>();
@@ -94,6 +98,7 @@ public class GcbStepCompletionYamlValidatorTest {
     triggerOptionsWithoutName.put("triggerSpec", triggerSpec);
     propertiesTriggerSpecWithoutName.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesTriggerSpecWithoutName.put("gcbOptions", triggerOptionsWithoutName);
+    propertiesTriggerSpecWithoutName.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesTriggerSpecWithoutSourceId = new HashMap<>();
@@ -107,6 +112,7 @@ public class GcbStepCompletionYamlValidatorTest {
     triggerOptionsWithoutSourceId.put("triggerSpec", triggerSpecWithoutId);
     propertiesTriggerSpecWithoutSourceId.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesTriggerSpecWithoutSourceId.put("gcbOptions", triggerOptionsWithoutSourceId);
+    propertiesTriggerSpecWithoutSourceId.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithNullRepoSpec = new HashMap<>();
@@ -116,6 +122,7 @@ public class GcbStepCompletionYamlValidatorTest {
     repoOptions.put("repositorySpec", null);
     propertiesWithNullRepoSpec.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithNullRepoSpec.put("gcbOptions", repoOptions);
+    propertiesWithNullRepoSpec.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithNullGitConfig = new HashMap<>();
@@ -125,6 +132,7 @@ public class GcbStepCompletionYamlValidatorTest {
     repoOptionsWithoutGitConfig.put("repositorySpec", EMPTY_MAP);
     propertiesWithNullGitConfig.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithNullGitConfig.put("gcbOptions", repoOptionsWithoutGitConfig);
+    propertiesWithNullGitConfig.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithoutFileSource = new HashMap<>();
@@ -137,6 +145,7 @@ public class GcbStepCompletionYamlValidatorTest {
     repoOptionsWithoutFileSource.put("repositorySpec", repositorySpecWithoutFileSource);
     propertiesWithoutFileSource.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithoutFileSource.put("gcbOptions", repoOptionsWithoutFileSource);
+    propertiesWithoutFileSource.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithoutFilePath = new HashMap<>();
@@ -150,6 +159,7 @@ public class GcbStepCompletionYamlValidatorTest {
     repoOptionsWithoutFilePath.put("repositorySpec", repositorySpecWithoutFilePath);
     propertiesWithoutFilePath.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithoutFilePath.put("gcbOptions", repoOptionsWithoutFilePath);
+    propertiesWithoutFilePath.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithoutSourceId = new HashMap<>();
@@ -164,6 +174,7 @@ public class GcbStepCompletionYamlValidatorTest {
     repoOptionsWithoutSourceId.put("repositorySpec", repositorySpecWithoutSourceId);
     propertiesWithoutSourceId.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithoutSourceId.put("gcbOptions", repoOptionsWithoutSourceId);
+    propertiesWithoutSourceId.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithValidInlineSpec = new HashMap<>();
@@ -173,6 +184,7 @@ public class GcbStepCompletionYamlValidatorTest {
     inline.put("inlineSpec", "inlineSpec");
     propertiesWithValidInlineSpec.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithValidInlineSpec.put("gcbOptions", inline);
+    propertiesWithValidInlineSpec.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithValidRemoteSpec = new HashMap<>();
@@ -187,6 +199,7 @@ public class GcbStepCompletionYamlValidatorTest {
     validRepoOptions.put("repositorySpec", validRepoSpec);
     propertiesWithValidRemoteSpec.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithValidRemoteSpec.put("gcbOptions", validRepoOptions);
+    propertiesWithValidRemoteSpec.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithValidTriggerSpec = new HashMap<>();
@@ -200,6 +213,7 @@ public class GcbStepCompletionYamlValidatorTest {
     validTriggerOptions.put("triggerSpec", validTriggerSpec);
     propertiesWithValidTriggerSpec.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithValidTriggerSpec.put("gcbOptions", validTriggerOptions);
+    propertiesWithValidTriggerSpec.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithInvalidExpression = new HashMap<>();
@@ -213,6 +227,7 @@ public class GcbStepCompletionYamlValidatorTest {
     triggerOptionsExpressions.put("triggerSpec", triggerSpecExpressions);
     propertiesWithInvalidExpression.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithInvalidExpression.put("gcbOptions", triggerOptionsExpressions);
+    propertiesWithInvalidExpression.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithInvalidTriggerSourceIdExpression = new HashMap<>();
@@ -226,6 +241,7 @@ public class GcbStepCompletionYamlValidatorTest {
     triggerOptionsSourceIdExpressions.put("triggerSpec", triggerSpecSourceIdExpressions);
     propertiesWithInvalidTriggerSourceIdExpression.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithInvalidTriggerSourceIdExpression.put("gcbOptions", triggerOptionsSourceIdExpressions);
+    propertiesWithInvalidTriggerSourceIdExpression.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithInvalidRemoteSpecNameExpression = new HashMap<>();
@@ -240,6 +256,7 @@ public class GcbStepCompletionYamlValidatorTest {
     invalidRepoExpressionOptions.put("repositorySpec", invalidRepoSpecExpression);
     propertiesWithInvalidRemoteSpecNameExpression.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithInvalidRemoteSpecNameExpression.put("gcbOptions", invalidRepoExpressionOptions);
+    propertiesWithInvalidRemoteSpecNameExpression.put("timeoutMillis", 1000);
 
     // parameter
     Map<String, Object> propertiesWithInvalidRemoteSpecSourceIdExpression = new HashMap<>();
@@ -254,6 +271,7 @@ public class GcbStepCompletionYamlValidatorTest {
     invalidRepoSourceIdExpressionOptions.put("repositorySpec", invalidRepoSpecSourceIdExpression);
     propertiesWithInvalidRemoteSpecSourceIdExpression.put("templateExpressions", Collections.EMPTY_LIST);
     propertiesWithInvalidRemoteSpecSourceIdExpression.put("gcbOptions", invalidRepoSourceIdExpressionOptions);
+    propertiesWithInvalidRemoteSpecSourceIdExpression.put("timeoutMillis", 1000);
 
     return Arrays.asList(new Object[][] {
         {StepYaml.builder().properties(propertiesWithoutGcbOptions).build(),

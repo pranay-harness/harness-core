@@ -2,7 +2,10 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.NameValuePair;
 import software.wings.exception.IncompleteStateException;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
@@ -14,7 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidator {
+  private static final String SWEEPING_OUTPUT_SCOPE = "sweepingOutputScope";
+  private static final String SWEEPING_OUTPUT_NAME = "sweepingOutputName";
+  private static final String TEMPLATE_EXPRESSIONS = "templateExpressions";
+
   @Override
   public void validate(StepYaml stepYaml) {
     if (stepYaml.getProperties().get("gcbOptions") == null) {
@@ -25,19 +33,59 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
                                  .replace("gcpConfigName", "gcpConfigId")
                                  .replace("gitConfigName", "gitConfigId"),
               GcbOptions.class));
+      validateTimeout(stepYaml);
+      validateSweepingOutput(stepYaml);
+    }
+  }
+
+  private void validateSweepingOutput(StepYaml stepYaml) {
+    if (!isBlank((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_NAME))
+        && (isBlank((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_SCOPE)))) {
+      throw new IncompleteStateException(
+          "\"sweepingOutputScope\" could not be null or empty. Please, provide value (PIPELINE, WORKFLOW, PHASE, STATE)");
+    } else if (isBlank((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_NAME))
+        && (!isBlank((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_SCOPE)))) {
+      throw new IncompleteStateException("\"sweepingOutputName\" could not be null or empty. Please, provide value");
+    } else if (!isBlank((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_NAME))
+        && (!isBlank((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_SCOPE)))) {
+      try {
+        SweepingOutputInstance.Scope.valueOf((String) stepYaml.getProperties().get(SWEEPING_OUTPUT_SCOPE));
+      } catch (IllegalArgumentException e) {
+        logger.error("Invalid sweepingOutputScope", e);
+        throw new IncompleteStateException(
+            "Invalid value for \"sweepingOutputScope\". Please, provide value (PIPELINE, WORKFLOW, PHASE, STATE)");
+      }
+    }
+  }
+
+  private void validateTimeout(StepYaml stepYaml) {
+    if (!(stepYaml.getProperties().get("timeoutMillis") instanceof Integer)
+        || ((Integer) stepYaml.getProperties().get("timeoutMillis")) < 1000) {
+      throw new IncompleteStateException(
+          "\"timeoutMillis\" could not be empty or less than 1000 . Please, provide the corresponding numeric value");
     }
   }
 
   private void validateGcbOptions(StepYaml stepYaml, GcbOptions gcbOptions) {
-    List<String> templatizedFields = stepYaml.getProperties().get("templateExpressions") == null
+    List<String> templatizedFields = stepYaml.getProperties().get(TEMPLATE_EXPRESSIONS) == null
         ? Collections.emptyList()
-        : ((List<Map<String, Object>>) stepYaml.getProperties().get("templateExpressions"))
+        : ((List<Map<String, Object>>) stepYaml.getProperties().get(TEMPLATE_EXPRESSIONS))
               .stream()
               .map(map -> (String) map.get("fieldName"))
               .collect(Collectors.toList());
     if (isBlank(gcbOptions.getGcpConfigId()) && !templatizedFields.contains("gcpConfigId")) {
       throw new IncompleteStateException(
           "\"gcpConfigName\" could not be empty or null. Please, provide gcpConfigName or add templateExpression");
+    }
+    if (!templatizedFields.isEmpty()) {
+      ((List<Map<String, Object>>) stepYaml.getProperties().get(TEMPLATE_EXPRESSIONS))
+          .stream()
+          .map(map -> (String) map.get("expression"))
+          .forEach(expression -> {
+            if (!ExpressionEvaluator.containsVariablePattern(expression)) {
+              throw new IncompleteStateException("Invalid template expression.");
+            }
+          });
     }
 
     if (gcbOptions.getSpecSource() != null) {
@@ -82,14 +130,14 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
       if (isBlank(gcbOptions.getRepositorySpec().getFilePath())) {
         throw new IncompleteStateException("\"filePath\" could not be empty or null. Please, provide value");
       } else if (gcbOptions.getRepositorySpec().getFilePath().startsWith("${")
-          && !isValidExpression(gcbOptions.getRepositorySpec().getFilePath())) {
+          && !ExpressionEvaluator.containsVariablePattern(gcbOptions.getRepositorySpec().getFilePath())) {
         throw new IncompleteStateException(
             "Invalid expression for \"filePath\". Please, provide value or valid expression");
       }
       if (isBlank(gcbOptions.getRepositorySpec().getSourceId())) {
         throw new IncompleteStateException("\"sourceId\" could not be empty or null. Please, provide value");
       } else if (gcbOptions.getRepositorySpec().getSourceId().startsWith("${")
-          && !isValidExpression(gcbOptions.getRepositorySpec().getSourceId())) {
+          && !ExpressionEvaluator.containsVariablePattern(gcbOptions.getRepositorySpec().getSourceId())) {
         throw new IncompleteStateException(
             "Invalid expression for \"sourceId\". Please, provide value or valid expression");
       }
@@ -108,14 +156,14 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
       if (isBlank(gcbOptions.getTriggerSpec().getName())) {
         throw new IncompleteStateException("\"name\" could not be empty or null. Please, provide value");
       } else if (gcbOptions.getTriggerSpec().getName().startsWith("${")
-          && !isValidExpression(gcbOptions.getTriggerSpec().getName())) {
+          && !ExpressionEvaluator.containsVariablePattern(gcbOptions.getTriggerSpec().getName())) {
         throw new IncompleteStateException(
             "Invalid expression for \"name\". Please, provide value or valid expression");
       }
       if (isBlank(gcbOptions.getTriggerSpec().getSourceId())) {
         throw new IncompleteStateException("\"sourceId\" could not be empty or null. Please, provide value");
       } else if (gcbOptions.getTriggerSpec().getSourceId().startsWith("${")
-          && !isValidExpression(gcbOptions.getTriggerSpec().getSourceId())) {
+          && !ExpressionEvaluator.containsVariablePattern(gcbOptions.getTriggerSpec().getSourceId())) {
         throw new IncompleteStateException(
             "Invalid expression for \"sourceId\". Please, provide value or valid expression");
       }
@@ -127,15 +175,11 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
       for (NameValuePair pair : triggerSpec.getSubstitutions()) {
         if (isBlank(pair.getValue())) {
           throw new IncompleteStateException("value of substitution could not be empty or null. Please, provide value");
-        } else if (pair.getValue().startsWith("${") && !isValidExpression(pair.getValue())) {
+        } else if (pair.getValue().startsWith("${") && !ExpressionEvaluator.containsVariablePattern(pair.getValue())) {
           throw new IncompleteStateException(
               "Invalid expression for substitution value. Please, provide value or valid expression");
         }
       }
     }
-  }
-
-  private boolean isValidExpression(String expression) {
-    return expression.matches("^\\$\\{\\w.+}");
   }
 }
