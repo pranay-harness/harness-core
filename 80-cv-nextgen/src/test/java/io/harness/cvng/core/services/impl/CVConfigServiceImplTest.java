@@ -2,25 +2,39 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.DSConfigService;
+import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.models.VerificationType;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,18 +42,46 @@ import java.util.stream.IntStream;
 
 public class CVConfigServiceImplTest extends CvNextGenTest {
   @Inject private CVConfigService cvConfigService;
+  @Inject private DSConfigService dsConfigService;
+  @Mock private NextGenService nextGenService;
   private String accountId;
   private String connectorIdentifier;
   private String productName;
   private String groupId;
   private String serviceInstanceIdentifier;
+  private String projectIdentifier;
+  private String orgIdentifier;
+
   @Before
-  public void setup() {
-    this.accountId = generateUuid();
-    this.connectorIdentifier = generateUuid();
-    this.productName = generateUuid();
-    this.groupId = generateUuid();
-    this.serviceInstanceIdentifier = generateUuid();
+  public void setup() throws IllegalAccessException {
+    accountId = generateUuid();
+    connectorIdentifier = generateUuid();
+    productName = generateUuid();
+    groupId = generateUuid();
+    serviceInstanceIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
+    when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return EnvironmentResponseDTO.builder()
+          .identifier((String) args[0])
+          .accountId((String) args[1])
+          .orgIdentifier((String) args[2])
+          .projectIdentifier((String) args[3])
+          .name((String) args[0])
+          .build();
+    });
+    when(nextGenService.getService(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return ServiceResponseDTO.builder()
+          .identifier((String) args[0])
+          .accountId((String) args[1])
+          .orgIdentifier((String) args[2])
+          .projectIdentifier((String) args[3])
+          .name((String) args[0])
+          .build();
+    });
+    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
   }
 
   @Test
@@ -259,6 +301,67 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), taskId);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
     assertThat(updated.getDataCollectionTaskId()).isEqualTo(taskId);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetEnvToServicesList() {
+    int numOfEnv = 3;
+    for (int i = 0; i < numOfEnv; i++) {
+      AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd-" + i);
+      dataSourceCVConfig.setEnvIdentifier("env-" + i);
+      dsConfigService.upsert(dataSourceCVConfig);
+    }
+
+    List<EnvToServicesDTO> envToServicesList =
+        cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier);
+    assertThat(envToServicesList.size()).isEqualTo(numOfEnv);
+
+    for (int i = 0; i < numOfEnv; i++) {
+      EnvToServicesDTO envToServicesDTO = envToServicesList.get(i);
+      int envIndex = numOfEnv - i - 1;
+      assertThat(envToServicesDTO.getEnvironment().getIdentifier()).isEqualTo("env-" + envIndex);
+      assertThat(envToServicesDTO.getEnvironment().getName()).isEqualTo("env-" + envIndex);
+      assertThat(envToServicesDTO.getEnvironment().getProjectIdentifier()).isEqualTo(projectIdentifier);
+      assertThat(envToServicesDTO.getEnvironment().getOrgIdentifier()).isEqualTo(orgIdentifier);
+      assertThat(envToServicesDTO.getEnvironment().getAccountId()).isEqualTo(accountId);
+
+      assertThat(envToServicesDTO.getServices().size()).isEqualTo(2);
+      List<ServiceResponseDTO> services = new ArrayList<>(envToServicesDTO.getServices());
+      ServiceResponseDTO serviceResponseDTO = services.get(0);
+      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getIdentifier());
+      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getName());
+      assertThat(serviceResponseDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
+      assertThat(serviceResponseDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
+      assertThat(serviceResponseDTO.getAccountId()).isEqualTo(accountId);
+
+      serviceResponseDTO = services.get(1);
+      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getIdentifier());
+      assertThat(Sets.newHashSet("harness-qa", "harness-manager")).containsOnlyOnce(serviceResponseDTO.getName());
+      assertThat(serviceResponseDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
+      assertThat(serviceResponseDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
+      assertThat(serviceResponseDTO.getAccountId()).isEqualTo(accountId);
+    }
+  }
+
+  private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier) {
+    AppDynamicsDSConfig appDynamicsDSConfig = new AppDynamicsDSConfig();
+    appDynamicsDSConfig.setIdentifier(identifier);
+    appDynamicsDSConfig.setConnectorIdentifier(connectorIdentifier);
+    appDynamicsDSConfig.setApplicationName(identifier);
+    appDynamicsDSConfig.setProductName(productName);
+    appDynamicsDSConfig.setEnvIdentifier("harnessProd");
+    appDynamicsDSConfig.setAccountId(accountId);
+    appDynamicsDSConfig.setProjectIdentifier(projectIdentifier);
+    appDynamicsDSConfig.setOrgIdentifier(orgIdentifier);
+    appDynamicsDSConfig.setMetricPacks(
+        Sets.newHashSet(MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()));
+    appDynamicsDSConfig.setServiceMappings(Sets.newHashSet(
+        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("harness-manager").tierName("manager").build(),
+        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("harness-qa").tierName("manager-qa").build()));
+
+    return appDynamicsDSConfig;
   }
 
   private void assertCommons(CVConfig actual, CVConfig expected) {

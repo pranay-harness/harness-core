@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,4 +22,5 @@ public interface CVConfigService {
 
   void setCollectionTaskId(String uuid, String dataCollectionTaskId);
   List<CVConfig> find(String accountId, List<DataSourceType> dataSourceTypes);
+  List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier);
 }
