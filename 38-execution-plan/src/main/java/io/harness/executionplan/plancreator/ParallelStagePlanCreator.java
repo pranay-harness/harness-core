@@ -5,9 +5,9 @@ import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_P
 
 import com.google.inject.Inject;
 
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorType;
@@ -32,12 +32,12 @@ public class ParallelStagePlanCreator implements SupportDefinedExecutorPlanCreat
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(
-      ParallelStageElement parallelStageElement, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, parallelStageElement.getSections());
+  public ExecutionPlanCreatorResponse createPlan(
+      ParallelStageElement parallelStageElement, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> planForStages = getPlanForStages(context, parallelStageElement.getSections());
     PlanNode parallelExecutionNode = prepareParallelExecutionNode(
-        planForStages.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList()));
-    return CreateExecutionPlanResponse.builder()
+        planForStages.stream().map(ExecutionPlanCreatorResponse::getStartingNodeId).collect(Collectors.toList()));
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(parallelExecutionNode)
         .planNodes(planForStages.stream()
                        .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
@@ -46,8 +46,8 @@ public class ParallelStagePlanCreator implements SupportDefinedExecutorPlanCreat
         .build();
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForStages(
-      CreateExecutionPlanContext context, List<StageElementWrapper> stages) {
+  private List<ExecutionPlanCreatorResponse> getPlanForStages(
+      ExecutionPlanCreationContext context, List<StageElementWrapper> stages) {
     return stages.stream()
         .map(stageElementWrapper -> (StageElement) stageElementWrapper)
         .map(stageElement
@@ -56,7 +56,8 @@ public class ParallelStagePlanCreator implements SupportDefinedExecutorPlanCreat
         .collect(Collectors.toList());
   }
 
-  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(CreateExecutionPlanContext context, StageType stage) {
+  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(
+      ExecutionPlanCreationContext context, StageType stage) {
     return planCreatorHelper.getExecutionPlanCreator(
         PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for stage");
   }

@@ -13,12 +13,12 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters.Rollbac
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.core.impl.CreateExecutionPlanResponseImpl.CreateExecutionPlanResponseImplBuilder;
+import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.ExecutionPlanCreatorResponseImplBuilder;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -45,31 +45,31 @@ public class ParallelStepGroupRollbackPlanCreator extends AbstractPlanCreatorWit
   }
 
   @Override
-  protected Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      ParallelStepElement parallelStepElement, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> stepGroupsRollbackPlanList = new ArrayList<>();
+  protected Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      ParallelStepElement parallelStepElement, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> stepGroupsRollbackPlanList = new ArrayList<>();
     for (ExecutionWrapper section : parallelStepElement.getSections()) {
       if (section instanceof StepGroupElement && isNotEmpty(((StepGroupElement) section).getRollbackSteps())) {
         final ExecutionPlanCreator<StepGroupElement> executionRollbackPlanCreator =
             executionPlanCreatorHelper.getExecutionPlanCreator(
                 CDPlanCreatorType.STEP_GROUP_ROLLBACK_PLAN_CREATOR.getName(), (StepGroupElement) section, context,
                 "No execution plan creator found for Step Group Rollback Plan Creator");
-        CreateExecutionPlanResponse stepGroupRollbackPlan =
+        ExecutionPlanCreatorResponse stepGroupRollbackPlan =
             executionRollbackPlanCreator.createPlan((StepGroupElement) section, context);
         stepGroupsRollbackPlanList.add(stepGroupRollbackPlan);
       }
     }
 
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
     childrenPlanMap.put("STEP_GROUPS_ROLLBACK", stepGroupsRollbackPlanList);
     return childrenPlanMap;
   }
 
   @Override
-  protected CreateExecutionPlanResponse createPlanForSelf(ParallelStepElement parallelStepElement,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> stepGroupsRollbackPlanList = planForChildrenMap.get("STEP_GROUPS_ROLLBACK");
-    Iterator<CreateExecutionPlanResponse> iterator = stepGroupsRollbackPlanList.iterator();
+  protected ExecutionPlanCreatorResponse createPlanForSelf(ParallelStepElement parallelStepElement,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> stepGroupsRollbackPlanList = planForChildrenMap.get("STEP_GROUPS_ROLLBACK");
+    Iterator<ExecutionPlanCreatorResponse> iterator = stepGroupsRollbackPlanList.iterator();
     RollbackOptionalChildrenParametersBuilder rollbackOptionalChildrenParametersBuilder =
         RollbackOptionalChildrenParameters.builder();
     for (ExecutionWrapper section : parallelStepElement.getSections()) {
@@ -98,8 +98,8 @@ public class ParallelStepGroupRollbackPlanCreator extends AbstractPlanCreatorWit
                                        .build())
             .build();
 
-    CreateExecutionPlanResponseImplBuilder createExecutionPlanResponseImplBuilder =
-        CreateExecutionPlanResponse.builder()
+    ExecutionPlanCreatorResponseImplBuilder createExecutionPlanResponseImplBuilder =
+        ExecutionPlanCreatorResponse.builder()
             .planNode(parallelStepGroupsRollbackNode)
             .startingNodeId(parallelStepGroupsRollbackNode.getUuid());
 

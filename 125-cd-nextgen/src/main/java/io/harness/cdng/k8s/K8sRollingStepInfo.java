@@ -9,7 +9,7 @@ import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.pipeline.stepinfo.StepSpecType;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
@@ -57,7 +57,7 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
   }
 
   @Override
-  public Map<String, StepDependencySpec> getInputStepDependencyList(CreateExecutionPlanContext context) {
+  public Map<String, StepDependencySpec> getInputStepDependencyList(ExecutionPlanCreationContext context) {
     KeyAwareStepDependencySpec serviceSpec =
         KeyAwareStepDependencySpec.builder().key(CDStepDependencyUtils.getServiceKey(context)).build();
     KeyAwareStepDependencySpec infraSpec =
@@ -70,7 +70,7 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
 
   @Override
   public void registerStepDependencyInstructors(
-      StepDependencyService stepDependencyService, CreateExecutionPlanContext context, String nodeId) {
+      StepDependencyService stepDependencyService, ExecutionPlanCreationContext context, String nodeId) {
     OutcomeRefStepDependencyInstructor instructor =
         OutcomeRefStepDependencyInstructor.builder()
             .key(ParentPathInfoUtils.getParentPath(context) + "." + CDStepDependencyKey.K8S_ROLL_OUT.name())

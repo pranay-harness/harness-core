@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import io.harness.executionplan.stepsdependency.StepDependencyResolver;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
@@ -22,7 +22,7 @@ public class StepDependencyServiceImpl implements StepDependencyService {
 
   @Override
   public void attachDependency(
-      StepDependencySpec spec, PlanNodeBuilder planNodeBuilder, CreateExecutionPlanContext context) {
+      StepDependencySpec spec, PlanNodeBuilder planNodeBuilder, ExecutionPlanCreationContext context) {
     List<StepDependencyInstructor> instructorsList = StepDependencyInfoUtils.getInstructorsList(context);
 
     // Select the right providers.
@@ -40,7 +40,7 @@ public class StepDependencyServiceImpl implements StepDependencyService {
 
   @Override
   public void registerStepDependencyInstructor(
-      StepDependencyInstructor instructor, CreateExecutionPlanContext context) {
+      StepDependencyInstructor instructor, ExecutionPlanCreationContext context) {
     StepDependencyInfoUtils.addInstructor(instructor, context);
   }
 

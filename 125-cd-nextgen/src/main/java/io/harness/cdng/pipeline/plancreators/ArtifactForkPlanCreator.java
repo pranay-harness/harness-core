@@ -20,9 +20,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -45,36 +45,36 @@ public class ArtifactForkPlanCreator
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
-  protected Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    final List<CreateExecutionPlanResponse> planForArtifacts = getPlanForArtifacts(context, serviceConfig);
+  protected Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      ServiceConfig serviceConfig, ExecutionPlanCreationContext context) {
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
+    final List<ExecutionPlanCreatorResponse> planForArtifacts = getPlanForArtifacts(context, serviceConfig);
     childrenPlanMap.put("ARTIFACTS", planForArtifacts);
     return childrenPlanMap;
   }
 
   @Override
-  protected CreateExecutionPlanResponse createPlanForSelf(ServiceConfig serviceConfig,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForArtifacts = planForChildrenMap.get("ARTIFACTS");
+  protected ExecutionPlanCreatorResponse createPlanForSelf(ServiceConfig serviceConfig,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> planForArtifacts = planForChildrenMap.get("ARTIFACTS");
 
     List<String> childNodeIds =
-        planForArtifacts.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList());
+        planForArtifacts.stream().map(ExecutionPlanCreatorResponse::getStartingNodeId).collect(Collectors.toList());
     List<PlanNode> planNodes = getPlanNodes(planForArtifacts);
     if (EmptyPredicate.isEmpty(planNodes)) {
-      return CreateExecutionPlanResponse.builder().build();
+      return ExecutionPlanCreatorResponse.builder().build();
     }
 
     final PlanNode artifactForkNode = prepareArtifactForkNode(childNodeIds);
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(artifactForkNode)
         .planNodes(planNodes)
         .startingNodeId(artifactForkNode.getUuid())
         .build();
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForArtifacts(
-      CreateExecutionPlanContext context, ServiceConfig serviceConfig) {
+  private List<ExecutionPlanCreatorResponse> getPlanForArtifacts(
+      ExecutionPlanCreationContext context, ServiceConfig serviceConfig) {
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
         getArtifactsWithCorrespondingOverrides(serviceConfig);
     if (EmptyPredicate.isEmpty(artifactsWithCorrespondingOverrides)) {
@@ -86,7 +86,7 @@ public class ArtifactForkPlanCreator
   }
 
   private ExecutionPlanCreator<ArtifactStepParameters> getPlanCreatorForArtifact(
-      ArtifactStepParameters artifactStepParameters, CreateExecutionPlanContext context) {
+      ArtifactStepParameters artifactStepParameters, ExecutionPlanCreationContext context) {
     return executionPlanCreatorHelper.getExecutionPlanCreator(ARTIFACT_PLAN_CREATOR.getName(), artifactStepParameters,
         context, "No execution plan creator found for artifact execution");
   }
@@ -108,7 +108,7 @@ public class ArtifactForkPlanCreator
   }
 
   @NotNull
-  private List<PlanNode> getPlanNodes(List<CreateExecutionPlanResponse> planForChild) {
+  private List<PlanNode> getPlanNodes(List<ExecutionPlanCreatorResponse> planForChild) {
     return planForChild.stream()
         .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
         .collect(Collectors.toList());

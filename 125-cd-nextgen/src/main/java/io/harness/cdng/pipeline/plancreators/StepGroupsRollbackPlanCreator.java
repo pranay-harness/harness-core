@@ -12,12 +12,12 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.R
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.core.impl.CreateExecutionPlanResponseImpl.CreateExecutionPlanResponseImplBuilder;
+import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.ExecutionPlanCreatorResponseImplBuilder;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -45,9 +45,9 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
   }
 
   @Override
-  protected Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      ExecutionElement executionElement, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> stepGroupsRollbackPlanList = new ArrayList<>();
+  protected Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      ExecutionElement executionElement, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> stepGroupsRollbackPlanList = new ArrayList<>();
 
     List<ExecutionWrapper> steps = executionElement.getSteps();
     for (int i = steps.size() - 1; i >= 0; i--) {
@@ -57,7 +57,7 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
             executionPlanCreatorHelper.getExecutionPlanCreator(
                 CDPlanCreatorType.STEP_GROUP_ROLLBACK_PLAN_CREATOR.getName(), (StepGroupElement) executionWrapper,
                 context, "No execution plan creator found for Step Group Rollback Plan Creator");
-        CreateExecutionPlanResponse stepGroupRollbackPlan =
+        ExecutionPlanCreatorResponse stepGroupRollbackPlan =
             executionRollbackPlanCreator.createPlan((StepGroupElement) executionWrapper, context);
         stepGroupsRollbackPlanList.add(stepGroupRollbackPlan);
       } else if (executionWrapper instanceof ParallelStepElement) {
@@ -68,7 +68,7 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
                     CDPlanCreatorType.PARALLEL_STEP_GROUP_ROLLBACK_PLAN_CREATOR.getName(),
                     (ParallelStepElement) executionWrapper, context,
                     "No execution plan creator found for Parallel Step Group Rollback Plan Creator");
-            CreateExecutionPlanResponse parallelStepGroupRollbackPlan =
+            ExecutionPlanCreatorResponse parallelStepGroupRollbackPlan =
                 executionRollbackPlanCreator.createPlan((ParallelStepElement) executionWrapper, context);
             stepGroupsRollbackPlanList.add(parallelStepGroupRollbackPlan);
             break;
@@ -77,21 +77,21 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
       }
     }
 
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
     childrenPlanMap.put("STEP_GROUPS_ROLLBACK", stepGroupsRollbackPlanList);
     return childrenPlanMap;
   }
 
   @Override
-  protected CreateExecutionPlanResponse createPlanForSelf(ExecutionElement executionElement,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> stepGroupsRollbackPlanList = planForChildrenMap.get("STEP_GROUPS_ROLLBACK");
+  protected ExecutionPlanCreatorResponse createPlanForSelf(ExecutionElement executionElement,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> stepGroupsRollbackPlanList = planForChildrenMap.get("STEP_GROUPS_ROLLBACK");
 
     RollbackOptionalChildChainStepParametersBuilder sectionOptionalChildChainStepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
     List<ExecutionWrapper> steps = executionElement.getSteps();
-    Iterator<CreateExecutionPlanResponse> iterator = stepGroupsRollbackPlanList.iterator();
+    Iterator<ExecutionPlanCreatorResponse> iterator = stepGroupsRollbackPlanList.iterator();
     for (int i = steps.size() - 1; i >= 0; i--) {
       ExecutionWrapper executionWrapper = steps.get(i);
       if (PlanCreatorHelper.isStepGroupWithRollbacks(executionWrapper)) {
@@ -133,8 +133,8 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
                                        .build())
             .build();
 
-    CreateExecutionPlanResponseImplBuilder createExecutionPlanResponseImplBuilder =
-        CreateExecutionPlanResponse.builder()
+    ExecutionPlanCreatorResponseImplBuilder createExecutionPlanResponseImplBuilder =
+        ExecutionPlanCreatorResponse.builder()
             .planNode(stepGroupsRollbackNode)
             .startingNodeId(stepGroupsRollbackNode.getUuid());
 

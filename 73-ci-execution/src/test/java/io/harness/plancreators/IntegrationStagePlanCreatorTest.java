@@ -12,8 +12,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
@@ -29,7 +29,7 @@ public class IntegrationStagePlanCreatorTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
 
-  @Mock private CreateExecutionPlanContext createExecutionPlanContext;
+  @Mock private ExecutionPlanCreationContext executionPlanCreationContext;
   @Mock private PlanCreatorSearchContext<IntegrationStage> planCreatorSearchContext;
   private IntegrationStage integrationStage;
   @Before
@@ -41,8 +41,8 @@ public class IntegrationStagePlanCreatorTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void createPlan() {
-    CreateExecutionPlanResponse plan =
-        integrationStagePlanCreator.createPlan(integrationStage, createExecutionPlanContext);
+    ExecutionPlanCreatorResponse plan =
+        integrationStagePlanCreator.createPlan(integrationStage, executionPlanCreationContext);
     assertThat(plan.getPlanNodes()).isNotNull();
     List<PlanNode> planNodes = plan.getPlanNodes();
     assertThat(planNodes.get(0).getIdentifier()).isEqualTo(integrationStage.getIdentifier());

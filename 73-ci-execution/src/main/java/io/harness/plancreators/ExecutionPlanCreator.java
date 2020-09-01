@@ -9,8 +9,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import graph.StepInfoGraphConverter;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -37,13 +37,13 @@ public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<E
   @Inject private BasicStepToExecutionNodeConverter basicStepToExecutionNodeConverter;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(ExecutionElement execution, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForExecutionSections =
+  public ExecutionPlanCreatorResponse createPlan(ExecutionElement execution, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> planForExecutionSections =
         getPlanForExecutionSections(context, execution.getSteps());
 
     final PlanNode executionPlanNode = prepareExecutionNode(planForExecutionSections);
 
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(executionPlanNode)
         .planNodes(getPlanNodes(planForExecutionSections))
         .startingNodeId(executionPlanNode.getUuid())
@@ -51,26 +51,26 @@ public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<E
   }
 
   @NotNull
-  private List<PlanNode> getPlanNodes(List<CreateExecutionPlanResponse> planForExecutionSections) {
+  private List<PlanNode> getPlanNodes(List<ExecutionPlanCreatorResponse> planForExecutionSections) {
     return planForExecutionSections.stream()
         .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
         .collect(Collectors.toList());
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForExecutionSections(
-      CreateExecutionPlanContext context, List<ExecutionWrapper> executionWrappers) {
+  private List<ExecutionPlanCreatorResponse> getPlanForExecutionSections(
+      ExecutionPlanCreationContext context, List<ExecutionWrapper> executionWrappers) {
     return executionWrappers.stream()
         .map(executionWrapper -> getPlanCreatorForStep(context, executionWrapper).createPlan(executionWrapper, context))
         .collect(Collectors.toList());
   }
 
   private io.harness.executionplan.core.ExecutionPlanCreator<ExecutionWrapper> getPlanCreatorForStep(
-      CreateExecutionPlanContext context, ExecutionWrapper step) {
+      ExecutionPlanCreationContext context, ExecutionWrapper step) {
     return planCreatorHelper.getExecutionPlanCreator(
         STEP_PLAN_CREATOR.getName(), step, context, format("no execution plan creator found for step [%s]", step));
   }
 
-  private PlanNode prepareExecutionNode(List<CreateExecutionPlanResponse> planForExecutionSections) {
+  private PlanNode prepareExecutionNode(List<ExecutionPlanCreatorResponse> planForExecutionSections) {
     final String nodeId = generateUuid();
 
     final String EXECUTION = "EXECUTION";
@@ -81,7 +81,7 @@ public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<E
         .stepType(SectionChainStep.STEP_TYPE)
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForExecutionSections.stream()
-                                              .map(CreateExecutionPlanResponse::getStartingNodeId)
+                                              .map(ExecutionPlanCreatorResponse::getStartingNodeId)
                                               .collect(Collectors.toList()))
                             .build())
         .facilitatorObtainment(FacilitatorObtainment.builder()

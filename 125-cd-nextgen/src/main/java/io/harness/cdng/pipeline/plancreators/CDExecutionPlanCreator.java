@@ -10,12 +10,12 @@ import com.google.inject.Singleton;
 
 import io.harness.cdng.executionplan.CDPlanCreatorType;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.core.impl.CreateExecutionPlanResponseImpl.CreateExecutionPlanResponseImplBuilder;
+import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.ExecutionPlanCreatorResponseImplBuilder;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -42,49 +42,49 @@ public class CDExecutionPlanCreator extends AbstractPlanCreatorWithChildren<Exec
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      ExecutionElement execution, CreateExecutionPlanContext context) {
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, execution.getSteps());
+  public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      ExecutionElement execution, ExecutionPlanCreationContext context) {
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
+    final List<ExecutionPlanCreatorResponse> planForSteps = getPlanForSteps(context, execution.getSteps());
     childrenPlanMap.put("STEPS", planForSteps);
     return childrenPlanMap;
   }
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(ExecutionElement execution,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForSteps = planForChildrenMap.get("STEPS");
+  public ExecutionPlanCreatorResponse createPlanForSelf(ExecutionElement execution,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> planForSteps = planForChildrenMap.get("STEPS");
     final PlanNode executionNode = prepareExecutionNode(planForSteps);
 
-    CreateExecutionPlanResponseImplBuilder planResponseImplBuilder = CreateExecutionPlanResponse.builder()
-                                                                         .planNode(executionNode)
-                                                                         .planNodes(getPlanNodes(planForSteps))
-                                                                         .startingNodeId(executionNode.getUuid());
+    ExecutionPlanCreatorResponseImplBuilder planResponseImplBuilder = ExecutionPlanCreatorResponse.builder()
+                                                                          .planNode(executionNode)
+                                                                          .planNodes(getPlanNodes(planForSteps))
+                                                                          .startingNodeId(executionNode.getUuid());
 
     return planResponseImplBuilder.build();
   }
 
   @NotNull
-  private List<PlanNode> getPlanNodes(List<CreateExecutionPlanResponse> planForSteps) {
+  private List<PlanNode> getPlanNodes(List<ExecutionPlanCreatorResponse> planForSteps) {
     return planForSteps.stream()
         .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
         .collect(Collectors.toList());
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForSteps(
-      CreateExecutionPlanContext context, List<ExecutionWrapper> executionSections) {
+  private List<ExecutionPlanCreatorResponse> getPlanForSteps(
+      ExecutionPlanCreationContext context, List<ExecutionWrapper> executionSections) {
     return executionSections.stream()
         .map(step -> getPlanCreatorForStep(context, step).createPlan(step, context))
         .collect(Collectors.toList());
   }
 
   private ExecutionPlanCreator<ExecutionWrapper> getPlanCreatorForStep(
-      CreateExecutionPlanContext context, ExecutionWrapper step) {
+      ExecutionPlanCreationContext context, ExecutionWrapper step) {
     return planCreatorHelper.getExecutionPlanCreator(
         STEP_PLAN_CREATOR.getName(), step, context, format("no execution plan creator found for step [%s]", step));
   }
 
-  private PlanNode prepareExecutionNode(List<CreateExecutionPlanResponse> planForSteps) {
+  private PlanNode prepareExecutionNode(List<ExecutionPlanCreatorResponse> planForSteps) {
     final String nodeId = generateUuid();
     return PlanNode.builder()
         .uuid(nodeId)
@@ -94,7 +94,7 @@ public class CDExecutionPlanCreator extends AbstractPlanCreatorWithChildren<Exec
         .group(StepOutcomeGroup.EXECUTION.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForSteps.stream()
-                                              .map(CreateExecutionPlanResponse::getStartingNodeId)
+                                              .map(ExecutionPlanCreatorResponse::getStartingNodeId)
                                               .collect(Collectors.toList()))
                             .build())
         .facilitatorObtainment(FacilitatorObtainment.builder()

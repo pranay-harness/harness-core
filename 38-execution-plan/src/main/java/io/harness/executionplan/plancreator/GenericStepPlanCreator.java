@@ -6,8 +6,8 @@ import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PL
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
@@ -31,16 +31,16 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
   @Inject private StepDependencyService stepDependencyService;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(StepElement stepElement, CreateExecutionPlanContext context) {
+  public ExecutionPlanCreatorResponse createPlan(StepElement stepElement, ExecutionPlanCreationContext context) {
     final PlanNode genericStepPlanNode = prepareStepExecutionNode(stepElement, context);
 
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(genericStepPlanNode)
         .startingNodeId(genericStepPlanNode.getUuid())
         .build();
   }
 
-  private PlanNode prepareStepExecutionNode(StepElement stepElement, CreateExecutionPlanContext context) {
+  private PlanNode prepareStepExecutionNode(StepElement stepElement, ExecutionPlanCreationContext context) {
     final String nodeId = generateUuid();
     String nodeName;
 

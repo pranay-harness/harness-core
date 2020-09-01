@@ -11,8 +11,8 @@ import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -28,10 +28,10 @@ import java.util.List;
 @Slf4j
 public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreator<ServiceConfig> {
   @Override
-  public CreateExecutionPlanResponse createPlan(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+  public ExecutionPlanCreatorResponse createPlan(ServiceConfig serviceConfig, ExecutionPlanCreationContext context) {
     final PlanNode manifestExecutionNode = prepareManifestStepExecutionNode(serviceConfig);
 
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(manifestExecutionNode)
         .startingNodeId(manifestExecutionNode.getUuid())
         .build();

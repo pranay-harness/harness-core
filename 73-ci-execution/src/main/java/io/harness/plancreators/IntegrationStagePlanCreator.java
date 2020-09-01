@@ -11,9 +11,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -33,26 +33,27 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
   private static final SecureRandom random = new SecureRandom();
   @Override
-  public CreateExecutionPlanResponse createPlan(IntegrationStage integrationStage, CreateExecutionPlanContext context) {
+  public ExecutionPlanCreatorResponse createPlan(
+      IntegrationStage integrationStage, ExecutionPlanCreationContext context) {
     final String podName = generatePodName(integrationStage);
 
     ExecutionElement execution = integrationStage.getExecution();
     ExecutionElement modifiedExecutionPlan =
         ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage);
 
-    final CreateExecutionPlanResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
+    final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
     final PlanNode deploymentStageNode = prepareDeploymentNode(integrationStage, context, planForExecution, podName);
 
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(deploymentStageNode)
         .planNodes(planForExecution.getPlanNodes())
         .startingNodeId(deploymentStageNode.getUuid())
         .build();
   }
 
-  private CreateExecutionPlanResponse createPlanForExecution(
-      ExecutionElement execution, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForExecution(
+      ExecutionElement execution, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<ExecutionElement> executionPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(
             EXECUTION_PLAN_CREATOR.getName(), execution, context, "no execution plan creator found for execution");
@@ -60,8 +61,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     return executionPlanCreator.createPlan(execution, context);
   }
 
-  private PlanNode prepareDeploymentNode(IntegrationStage integrationStage, CreateExecutionPlanContext context,
-      CreateExecutionPlanResponse planForExecution, String podName) {
+  private PlanNode prepareDeploymentNode(IntegrationStage integrationStage, ExecutionPlanCreationContext context,
+      ExecutionPlanCreatorResponse planForExecution, String podName) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()

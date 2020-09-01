@@ -1,7 +1,7 @@
 package io.harness.executionplan.stepsdependency;
 
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 
 public interface StepDependencyProviderRegistrar {
-  void registerStepDependencyInstructor(StepDependencyInstructor instructor, CreateExecutionPlanContext context);
+  void registerStepDependencyInstructor(StepDependencyInstructor instructor, ExecutionPlanCreationContext context);
 }

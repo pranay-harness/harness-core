@@ -7,9 +7,9 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
@@ -37,20 +37,20 @@ public class StepGroupPlanCreator extends AbstractPlanCreatorWithChildren<StepGr
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  protected Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      StepGroupElement stepGroupElement, CreateExecutionPlanContext context) {
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, stepGroupElement.getSteps());
+  protected Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      StepGroupElement stepGroupElement, ExecutionPlanCreationContext context) {
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
+    final List<ExecutionPlanCreatorResponse> planForSteps = getPlanForSteps(context, stepGroupElement.getSteps());
     childrenPlanMap.put("STEPS", planForSteps);
     return childrenPlanMap;
   }
 
   @Override
-  protected CreateExecutionPlanResponse createPlanForSelf(StepGroupElement stepGroupElement,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForSteps = planForChildrenMap.get("STEPS");
+  protected ExecutionPlanCreatorResponse createPlanForSelf(StepGroupElement stepGroupElement,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> planForSteps = planForChildrenMap.get("STEPS");
     final PlanNode stepGroupNode = prepareStepGroupNode(stepGroupElement, planForSteps);
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(stepGroupNode)
         .planNodes(getPlanNodes(planForSteps))
         .startingNodeId(stepGroupNode.getUuid())
@@ -58,27 +58,27 @@ public class StepGroupPlanCreator extends AbstractPlanCreatorWithChildren<StepGr
   }
 
   @NotNull
-  private List<PlanNode> getPlanNodes(List<CreateExecutionPlanResponse> planForSteps) {
+  private List<PlanNode> getPlanNodes(List<ExecutionPlanCreatorResponse> planForSteps) {
     return planForSteps.stream()
         .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
         .collect(Collectors.toList());
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForSteps(
-      CreateExecutionPlanContext context, List<ExecutionWrapper> stepsSection) {
+  private List<ExecutionPlanCreatorResponse> getPlanForSteps(
+      ExecutionPlanCreationContext context, List<ExecutionWrapper> stepsSection) {
     return stepsSection.stream()
         .map(step -> getPlanCreatorForStep(context, step).createPlan(step, context))
         .collect(Collectors.toList());
   }
 
   private ExecutionPlanCreator<ExecutionWrapper> getPlanCreatorForStep(
-      CreateExecutionPlanContext context, ExecutionWrapper step) {
+      ExecutionPlanCreationContext context, ExecutionWrapper step) {
     return planCreatorHelper.getExecutionPlanCreator(
         STEP_PLAN_CREATOR.getName(), step, context, format("No execution plan creator found for step [%s]", step));
   }
 
   private PlanNode prepareStepGroupNode(
-      StepGroupElement stepGroupElement, List<CreateExecutionPlanResponse> planForSteps) {
+      StepGroupElement stepGroupElement, List<ExecutionPlanCreatorResponse> planForSteps) {
     final String nodeId = generateUuid();
     return PlanNode.builder()
         .uuid(nodeId)
@@ -88,7 +88,7 @@ public class StepGroupPlanCreator extends AbstractPlanCreatorWithChildren<StepGr
         .group(StepOutcomeGroup.STEP.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForSteps.stream()
-                                              .map(CreateExecutionPlanResponse::getStartingNodeId)
+                                              .map(ExecutionPlanCreatorResponse::getStartingNodeId)
                                               .collect(Collectors.toList()))
                             .build())
         .facilitatorObtainment(FacilitatorObtainment.builder()

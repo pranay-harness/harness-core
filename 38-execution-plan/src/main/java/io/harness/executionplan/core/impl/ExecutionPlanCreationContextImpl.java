@@ -1,6 +1,6 @@
 package io.harness.executionplan.core.impl;
 
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Value
 @Builder
-public class CreateExecutionPlanContextImpl implements CreateExecutionPlanContext {
+public class ExecutionPlanCreationContextImpl implements ExecutionPlanCreationContext {
   String accountId;
   @Default @Getter(AccessLevel.NONE) Map<String, Object> attributes = new ConcurrentHashMap<>();
 

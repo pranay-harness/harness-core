@@ -13,7 +13,7 @@ public abstract class AbstractPlanCreatorWithChildren<T>
   protected abstract String getPlanNodeType(T input);
 
   /** Add parent path to the context. */
-  private void addParentPathToContext(T input, CreateExecutionPlanContext context) {
+  private void addParentPathToContext(T input, ExecutionPlanCreationContext context) {
     if (input instanceof WithIdentifier) {
       WithIdentifier withIdentifier = (WithIdentifier) input;
       ParentPathInfoUtils.addToParentPath(context,
@@ -25,24 +25,24 @@ public abstract class AbstractPlanCreatorWithChildren<T>
   }
 
   /** Remove parent path from the context. */
-  private void removeParentPathFromContext(T input, CreateExecutionPlanContext context) {
+  private void removeParentPathFromContext(T input, ExecutionPlanCreationContext context) {
     if (input instanceof WithIdentifier) {
       ParentPathInfoUtils.removeFromParentPath(context);
     }
   }
 
   /** Create plan for children. */
-  protected abstract Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      T input, CreateExecutionPlanContext context);
+  protected abstract Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      T input, ExecutionPlanCreationContext context);
 
   /** Create PlanNode for self. */
-  protected abstract CreateExecutionPlanResponse createPlanForSelf(
-      T input, Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context);
+  protected abstract ExecutionPlanCreatorResponse createPlanForSelf(T input,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context);
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(T input, CreateExecutionPlanContext context) {
+  public ExecutionPlanCreatorResponse createPlanForSelf(T input, ExecutionPlanCreationContext context) {
     addParentPathToContext(input, context);
-    Map<String, List<CreateExecutionPlanResponse>> planForChildren = createPlanForChildren(input, context);
+    Map<String, List<ExecutionPlanCreatorResponse>> planForChildren = createPlanForChildren(input, context);
     removeParentPathFromContext(input, context);
     return createPlanForSelf(input, planForChildren, context);
   }

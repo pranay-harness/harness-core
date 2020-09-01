@@ -1,6 +1,6 @@
 package io.harness.executionplan.stepsdependency;
 
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 
 public interface StepDependencyInstructor {
@@ -10,8 +10,8 @@ public interface StepDependencyInstructor {
    * @param planNodeBuilder
    * @param context
    */
-  void attachDependency(StepDependencySpec spec, PlanNodeBuilder planNodeBuilder, CreateExecutionPlanContext context);
+  void attachDependency(StepDependencySpec spec, PlanNodeBuilder planNodeBuilder, ExecutionPlanCreationContext context);
 
   /** Support function to identify which spec is applicable for which provider. */
-  boolean supports(StepDependencySpec spec, CreateExecutionPlanContext context);
+  boolean supports(StepDependencySpec spec, ExecutionPlanCreationContext context);
 }

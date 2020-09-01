@@ -11,9 +11,9 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineSetupParameters;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -35,24 +35,24 @@ import java.util.List;
 public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CIPipeline> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Override
-  public CreateExecutionPlanResponse createPlan(CIPipeline ciPipeline, CreateExecutionPlanContext context) {
+  public ExecutionPlanCreatorResponse createPlan(CIPipeline ciPipeline, ExecutionPlanCreationContext context) {
     addArgumentsToContext(ciPipeline, context);
-    final CreateExecutionPlanResponse planForStages = createPlanForStages(ciPipeline.getStages(), context);
+    final ExecutionPlanCreatorResponse planForStages = createPlanForStages(ciPipeline.getStages(), context);
 
     final PlanNode pipelineExecutionNode = preparePipelineNode(ciPipeline, planForStages);
 
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(pipelineExecutionNode)
         .planNodes(planForStages.getPlanNodes())
         .startingNodeId(pipelineExecutionNode.getUuid())
         .build();
   }
 
-  private void addArgumentsToContext(CIPipeline pipeline, CreateExecutionPlanContext context) {
+  private void addArgumentsToContext(CIPipeline pipeline, ExecutionPlanCreationContext context) {
     context.addAttribute("CI_PIPELINE_CONFIG", pipeline);
   }
 
-  private PlanNode preparePipelineNode(CIPipeline pipeline, CreateExecutionPlanResponse planForStages) {
+  private PlanNode preparePipelineNode(CIPipeline pipeline, ExecutionPlanCreatorResponse planForStages) {
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -69,8 +69,8 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
         .build();
   }
 
-  private CreateExecutionPlanResponse createPlanForStages(
-      List<? extends StageElementWrapper> stages, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForStages(
+      List<? extends StageElementWrapper> stages, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<List<? extends StageElementWrapper>> stagesPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(
             STAGES_PLAN_CREATOR.getName(), stages, context, "no execution plan creator found for ci pipeline stages");

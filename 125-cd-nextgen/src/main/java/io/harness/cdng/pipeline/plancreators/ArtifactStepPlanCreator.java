@@ -8,8 +8,8 @@ import com.google.inject.Singleton;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -24,11 +24,11 @@ import java.util.List;
 @Slf4j
 public class ArtifactStepPlanCreator implements SupportDefinedExecutorPlanCreator<ArtifactStepParameters> {
   @Override
-  public CreateExecutionPlanResponse createPlan(
-      ArtifactStepParameters artifactStepParameters, CreateExecutionPlanContext context) {
+  public ExecutionPlanCreatorResponse createPlan(
+      ArtifactStepParameters artifactStepParameters, ExecutionPlanCreationContext context) {
     final PlanNode artifactExecutionNode = prepareArtifactStepExecutionNode(artifactStepParameters);
 
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(artifactExecutionNode)
         .startingNodeId(artifactExecutionNode.getUuid())
         .build();

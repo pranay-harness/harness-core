@@ -15,12 +15,12 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.R
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.core.impl.CreateExecutionPlanResponseImpl.CreateExecutionPlanResponseImplBuilder;
+import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.ExecutionPlanCreatorResponseImplBuilder;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -45,38 +45,38 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
   }
 
   @Override
-  protected Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
+  protected Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      DeploymentStage deploymentStage, ExecutionPlanCreationContext context) {
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
 
     // TODO VS: Add Infra Rollback Node conditionally based on dynamic infra or not
 
     if (containsStepGroupsWithRollbackSteps(deploymentStage.getExecution().getSteps())) {
       context.addAttribute("stageIdentifier", deploymentStage.getIdentifier());
-      CreateExecutionPlanResponse stepGroupRollbackPlan =
+      ExecutionPlanCreatorResponse stepGroupRollbackPlan =
           createPlanForStepGroupsRollback(deploymentStage.getExecution(), context);
       childrenPlanMap.put("STEP_GROUP_ROLLBACK", singletonList(stepGroupRollbackPlan));
       context.removeAttribute("stageIdentifier");
     }
 
     if (isNotEmpty(deploymentStage.getExecution().getRollbackSteps())) {
-      CreateExecutionPlanResponse executionRollbackPlan =
+      ExecutionPlanCreatorResponse executionRollbackPlan =
           createPlanForExecutionRollback(deploymentStage.getExecution(), context);
       childrenPlanMap.put("EXECUTION_ROLLBACK", singletonList(executionRollbackPlan));
     }
     return childrenPlanMap;
   }
 
-  private CreateExecutionPlanResponse createPlanForExecutionRollback(
-      ExecutionElement executionElement, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForExecutionRollback(
+      ExecutionElement executionElement, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<ExecutionElement> executionRollbackPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(EXECUTION_ROLLBACK_PLAN_CREATOR.getName(), executionElement,
             context, "No execution plan creator found for Execution Rollback Plan Creator");
     return executionRollbackPlanCreator.createPlan(executionElement, context);
   }
 
-  private CreateExecutionPlanResponse createPlanForStepGroupsRollback(
-      ExecutionElement executionElement, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForStepGroupsRollback(
+      ExecutionElement executionElement, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<ExecutionElement> stepGroupRollbackPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(STEP_GROUPS_ROLLBACK_PLAN_CREATOR.getName(),
             executionElement, context, "No execution plan creator found for Step Group Rollback Plan Creator");
@@ -100,17 +100,17 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
   }
 
   @Override
-  protected CreateExecutionPlanResponse createPlanForSelf(DeploymentStage deploymentStage,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> infraRollbackPlan = planForChildrenMap.get("INFRA_ROLLBACK");
-    List<CreateExecutionPlanResponse> stepGroupRollbackPlan = planForChildrenMap.get("STEP_GROUP_ROLLBACK");
-    List<CreateExecutionPlanResponse> executionRollbackPlan = planForChildrenMap.get("EXECUTION_ROLLBACK");
+  protected ExecutionPlanCreatorResponse createPlanForSelf(DeploymentStage deploymentStage,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> infraRollbackPlan = planForChildrenMap.get("INFRA_ROLLBACK");
+    List<ExecutionPlanCreatorResponse> stepGroupRollbackPlan = planForChildrenMap.get("STEP_GROUP_ROLLBACK");
+    List<ExecutionPlanCreatorResponse> executionRollbackPlan = planForChildrenMap.get("EXECUTION_ROLLBACK");
 
     RollbackOptionalChildChainStepParametersBuilder stepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
-    CreateExecutionPlanResponseImplBuilder createExecutionPlanResponseImplBuilder =
-        CreateExecutionPlanResponse.builder();
+    ExecutionPlanCreatorResponseImplBuilder createExecutionPlanResponseImplBuilder =
+        ExecutionPlanCreatorResponse.builder();
 
     if (infraRollbackPlan != null) {
       stepParametersBuilder.childNode(
