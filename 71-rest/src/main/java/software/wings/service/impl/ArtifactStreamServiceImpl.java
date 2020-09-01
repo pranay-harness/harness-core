@@ -466,6 +466,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
     // Set collection status initially to UNSTABLE.
     artifactStream.setCollectionStatus(ArtifactStreamCollectionStatus.UNSTABLE.name());
+    // Trim out whitespaces
+    artifactStream.setName(artifactStream.getName().trim());
 
     String id = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
