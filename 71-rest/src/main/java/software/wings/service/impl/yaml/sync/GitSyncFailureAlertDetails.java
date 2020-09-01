@@ -11,4 +11,5 @@ public class GitSyncFailureAlertDetails {
   private ErrorCode errorCode;
   private String gitConnectorId;
   private String branchName;
+  private String repositoryName;
 }

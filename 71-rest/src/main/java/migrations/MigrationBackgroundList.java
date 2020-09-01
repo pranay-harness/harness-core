@@ -62,7 +62,6 @@ import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
 import migrations.all.FixDuplicatedHarnessGroups;
-import migrations.all.GitSyncErrorGitDetailsMigration;
 import migrations.all.HelmStateTimeoutMigration;
 import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
@@ -207,7 +206,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(92, UpdateInstanceInfoWithLastArtifactIdMigration.class))
         .add(Pair.of(93, K8sStatesTimeoutMigration.class))
         .add(Pair.of(94, BaseMigration.class))
-        .add(Pair.of(95, GitSyncErrorGitDetailsMigration.class))
+        .add(Pair.of(95, BaseMigration.class))
         .add(Pair.of(96, BaseMigration.class))
         .add(Pair.of(97, BaseMigration.class))
         .add(Pair.of(98, BaseMigration.class))

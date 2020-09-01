@@ -143,6 +143,14 @@ public class GitChangeSetProcesser {
     gitFileChanges.forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
   }
 
+  /**
+   * - Setting up commit details to gitFileChanges
+   * - Update git file activity of current commit file changes to QUEUED
+   * @param processingCommitId current commit id
+   * @param processingCommitTimeMs current time in ms
+   * @param commitMessage commit message
+   * @param gitFileChanges file change list
+   */
   private void preProcessGitFileActivityChanges(String processingCommitId, Long processingCommitTimeMs,
       String commitMessage, List<GitFileChange> gitFileChanges) {
     addProcessingCommitDetailsToChangeList(processingCommitId, processingCommitTimeMs, commitMessage, gitFileChanges);

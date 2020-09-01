@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class GitDiffResult extends GitCommandResult {
-  private String repoName;
+  private String repoName; // Note: this is actually repoUrl
   private String branch;
   private String commitId;
   private List<GitFileChange> gitFileChanges = new ArrayList<>();

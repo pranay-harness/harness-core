@@ -204,14 +204,17 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
       List<GitCommit> gitCommits = gitCommitsQuery.asList(new FindOptions().limit(1000));
       // Removing topmost (as it can be head).
       List<GitCommit> gitCommitsToBeDeleted = new ArrayList<>();
-      Set<Pair> connectorBranchSet = new HashSet<>();
+      Set<Pair<String, Pair<String, String>>> connectorRepoBranchSet = new HashSet<>();
+
       for (GitCommit gitCommit : gitCommits) {
-        if (connectorBranchSet.contains(Pair.of(gitCommit.getGitConnectorId(), gitCommit.getBranchName()))) {
+        Pair<String, Pair<String, String>> pair =
+            Pair.of(gitCommit.getGitConnectorId(), Pair.of(gitCommit.getRepositoryName(), gitCommit.getBranchName()));
+        if (connectorRepoBranchSet.contains(pair)) {
           gitCommitsToBeDeleted.add(gitCommit);
         } else {
           // Adding first successful commit to set and hence will delete all the commits post this.
           if (GitCommit.GIT_COMMIT_PROCESSED_STATUS.contains(gitCommit.getStatus())) {
-            connectorBranchSet.add(Pair.of(gitCommit.getGitConnectorId(), gitCommit.getBranchName()));
+            connectorRepoBranchSet.add(pair);
           }
         }
       }

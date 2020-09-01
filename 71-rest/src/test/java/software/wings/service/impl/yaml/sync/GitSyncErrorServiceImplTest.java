@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.MODIFY;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
@@ -12,6 +13,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.REPOSITORY_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
@@ -57,8 +59,10 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
   String yamlFilePath = "filePath";
   String errorMessage = "errorMessage";
   String branchName = "branchName";
+  String repositoryName = "repositoryName";
   String gitConnectorId = "gitConnectorId";
   String newBranchName = "newBranchName";
+  String newRepositoryName = "newRepositoryName";
   String newGitConnectorId = "newGitConnectorId";
   String previousCommitId = "previousCommitId";
   String newCommitId = "newCommitId";
@@ -70,10 +74,23 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
   YamlGitConfig newYamlGitConfig =
       YamlGitConfig.builder().branchName(newBranchName).gitConnectorId(newGitConnectorId).build();
 
+  YamlGitConfig yamlGitConfigAccount = YamlGitConfig.builder()
+                                           .branchName(branchName)
+                                           .repositoryName(repositoryName)
+                                           .gitConnectorId(gitConnectorId)
+                                           .build();
+  YamlGitConfig newYamlGitConfigAccount = YamlGitConfig.builder()
+                                              .branchName(newBranchName)
+                                              .repositoryName(newRepositoryName)
+                                              .gitConnectorId(newGitConnectorId)
+                                              .build();
+
   @Before
   public void setUp() throws Exception {
     yamlGitConfig.setUuid("uuid");
     newYamlGitConfig.setUuid("newUuid");
+    yamlGitConfigAccount.setUuid("uuid1");
+    newYamlGitConfigAccount.setUuid("newUuid1");
   }
 
   @Test
@@ -104,7 +121,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                           .additionalErrorDetails(gitSyncErrorDetails)
                                           .build();
     gitSyncError.setAppId(appId);
-    String id = wingsPersistence.save(gitSyncError);
+    wingsPersistence.save(gitSyncError);
 
     PageRequest<GitToHarnessErrorCommitStats> req = aPageRequest().withLimit("2").withOffset("0").build();
     List<GitToHarnessErrorCommitStats> errorsList =
@@ -112,6 +129,65 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
     assertThat(errorsList.size()).isEqualTo(1);
     GitToHarnessErrorCommitStats error = errorsList.get(0);
     assertThat(error.getFailedCount()).isEqualTo(1);
+
+    final GitSyncError gitSyncError2 = GitSyncError.builder()
+                                           .accountId(accountId)
+                                           .yamlFilePath(yamlFilePath)
+                                           .gitSyncDirection(GIT_TO_HARNESS.toString())
+                                           .gitConnectorId(gitConnectorId)
+                                           .branchName(branchName)
+                                           .repositoryName(repositoryName)
+                                           .failureReason("failureReason")
+                                           .additionalErrorDetails(gitSyncErrorDetails)
+                                           .build();
+    gitSyncError2.setAppId(appId);
+    wingsPersistence.save(gitSyncError2);
+
+    errorsList = gitSyncErrorService.listGitToHarnessErrorsCommits(req, accountId, appId, 2).getResponse();
+    assertThat(errorsList.size()).isEqualTo(1);
+    error = errorsList.get(0);
+    assertThat(error.getFailedCount()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_fetchGitToHarnessErrorsAccount() {
+    final String commitId = "gitCommitId";
+    // Saving GitSyncError
+    SettingAttribute gitConnector = aSettingAttribute()
+                                        .withAccountId(accountId)
+                                        .withName("settingName")
+                                        .withCategory(CONNECTOR)
+                                        .withValue(GitConfig.builder().build())
+                                        .build();
+    String gitConnectorId = wingsPersistence.save(gitConnector);
+    final GitToHarnessErrorDetails gitSyncErrorDetails = GitToHarnessErrorDetails.builder()
+                                                             .gitCommitId(commitId)
+                                                             .commitTime(Long.valueOf(123))
+                                                             .commitMessage("commitMessage")
+                                                             .build();
+    final GitSyncError gitSyncError = GitSyncError.builder()
+                                          .accountId(accountId)
+                                          .yamlFilePath(yamlFilePath)
+                                          .gitSyncDirection(GIT_TO_HARNESS.toString())
+                                          .gitConnectorId(gitConnectorId)
+                                          .branchName(branchName)
+                                          .repositoryName(repositoryName)
+                                          .failureReason("failureReason")
+                                          .additionalErrorDetails(gitSyncErrorDetails)
+                                          .build();
+    gitSyncError.setAppId(appId);
+    wingsPersistence.save(gitSyncError);
+
+    PageRequest<GitToHarnessErrorCommitStats> req = aPageRequest().withLimit("2").withOffset("0").build();
+    List<GitToHarnessErrorCommitStats> errorsList =
+        gitSyncErrorService.listGitToHarnessErrorsCommits(req, accountId, appId, 2).getResponse();
+    assertThat(errorsList.size()).isEqualTo(1);
+    GitToHarnessErrorCommitStats error = errorsList.get(0);
+    assertThat(error.getFailedCount()).isEqualTo(1);
+    assertThat(error.getRepositoryName()).isEqualTo(repositoryName);
+    assertThat(error.getBranchName()).isEqualTo(branchName);
   }
 
   @Test
@@ -159,6 +235,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                        .accountId(ACCOUNT_ID)
                                        .gitConnectorId(SETTING_ID)
                                        .branchName("branchName")
+                                       .repositoryName(REPOSITORY_NAME)
                                        .enabled(true)
                                        .build();
 
@@ -168,6 +245,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                        .accountId(ACCOUNT_ID)
                                        .gitConnectorId(SETTING_ID)
                                        .branchName("branchName")
+                                       .repositoryName(REPOSITORY_NAME)
                                        .enabled(true)
                                        .build();
 
@@ -177,6 +255,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                        .accountId(ACCOUNT_ID)
                                        .gitConnectorId(SETTING_ID)
                                        .branchName("branchName123")
+                                       .repositoryName(REPOSITORY_NAME)
                                        .enabled(true)
                                        .build();
     yamlGitConfig1.setAppId("appid");
@@ -192,6 +271,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                            .changeType("MODIFY")
                                            .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .branchName("branchName")
+                                           .repositoryName(REPOSITORY_NAME)
                                            .gitConnectorId(SETTING_ID)
                                            .build();
     gitSyncError1.setAppId("appid");
@@ -205,6 +285,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                            .gitSyncDirection(GIT_TO_HARNESS.toString())
                                            .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .branchName("branchName")
+                                           .repositoryName(REPOSITORY_NAME)
                                            .gitConnectorId(SETTING_ID)
                                            .build();
     gitSyncError2.setAppId(Application.GLOBAL_APP_ID);
@@ -218,6 +299,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                            .gitSyncDirection(GIT_TO_HARNESS.toString())
                                            .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .branchName("branchName")
+                                           .repositoryName(REPOSITORY_NAME)
                                            .gitConnectorId(SETTING_ID)
                                            .build();
     gitSyncError3.setAppId(Application.GLOBAL_APP_ID);
@@ -230,6 +312,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                            .changeType("MODIFY")
                                            .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .branchName("branchName")
+                                           .repositoryName(REPOSITORY_NAME)
                                            .gitConnectorId(SETTING_ID)
                                            .build();
     gitSyncError4.setAppId("appid1");
@@ -243,6 +326,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                            .changeType("MODIFY")
                                            .additionalErrorDetails(gitToHarnessErrorDetails)
                                            .branchName("branchName")
+                                           .repositoryName(REPOSITORY_NAME)
                                            .gitConnectorId(SETTING_ID)
                                            .build();
     gitSyncError5.setStatus(GitSyncErrorStatus.EXPIRED);
@@ -256,6 +340,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
             .changeType("MODIFY")
             .additionalErrorDetails(HarnessToGitErrorDetails.builder().fullSyncPath(true).build())
             .branchName("branchName")
+            .repositoryName(REPOSITORY_NAME)
             .gitConnectorId(SETTING_ID)
             .build();
     gitSyncError6.setAppId(Application.GLOBAL_APP_ID);
@@ -269,6 +354,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
             .changeType("MODIFY")
             .additionalErrorDetails(HarnessToGitErrorDetails.builder().fullSyncPath(false).build())
             .branchName("branchName")
+            .repositoryName(REPOSITORY_NAME)
             .gitConnectorId(SETTING_ID)
             .build();
     gitSyncError7.setAppId(Application.GLOBAL_APP_ID);
@@ -276,8 +362,8 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
 
     final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
 
-    final List<GitSyncError> activeGitToHarnessSyncErrors =
-        gitSyncErrorService.getActiveGitToHarnessSyncErrors(ACCOUNT_ID, SETTING_ID, "branchName", _30_days_millis);
+    final List<GitSyncError> activeGitToHarnessSyncErrors = gitSyncErrorService.getActiveGitToHarnessSyncErrors(
+        ACCOUNT_ID, SETTING_ID, "branchName", REPOSITORY_NAME, _30_days_millis);
 
     assertThat(activeGitToHarnessSyncErrors.stream().map(GitSyncError::getUuid))
         .contains(savedGitSyncError1, savedGitSyncError2, savedGitSyncError3);
@@ -314,6 +400,12 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
     assertThat(gitSyncError.getBranchName()).isEqualTo(branchName);
   }
 
+  private void verifyGitConnectorDetails(
+      GitSyncError gitSyncError, String gitConnectorId, String branchName, String repositoryName) {
+    verifyGitConnectorDetails(gitSyncError, gitConnectorId, branchName);
+    assertThat(gitSyncError.getRepositoryName()).isEqualTo(repositoryName);
+  }
+
   @Test
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
@@ -339,9 +431,69 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_AddingNewErrorUsingUpsertHarnessToGitErrorAccount() {
+    // Inserting a new error
+    GitFileChange gitFileChange = aGitFileChange()
+                                      .withFilePath(yamlFilePath)
+                                      .withAccountId(accountId)
+                                      .withChangeType(ADD)
+                                      .withYamlGitConfig(yamlGitConfigAccount)
+                                      .build();
+    gitSyncErrorService.upsertGitSyncErrors(gitFileChange, errorMessage, false, false);
+    GitSyncError gitSyncError =
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.yamlFilePath, yamlFilePath).get();
+
+    verifyGitErrorDetails(gitSyncError, errorMessage);
+    assertThat(gitSyncError.getGitSyncDirection()).isEqualTo(HARNESS_TO_GIT.toString());
+    assertThat(gitSyncError.getChangeType()).isEqualTo("ADD");
+    HarnessToGitErrorDetails harnessToGitErrorDetails =
+        (HarnessToGitErrorDetails) gitSyncError.getAdditionalErrorDetails();
+    assertThat(harnessToGitErrorDetails.isFullSyncPath()).isFalse();
+    verifyGitConnectorDetails(gitSyncError, gitConnectorId, branchName, repositoryName);
+  }
+
+  @Test
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void test_UpdatingErrorUsingUpsertHarnessToGitError() {
+    // Inserting a new error
+    GitSyncError gitSyncError = GitSyncError.builder()
+                                    .gitSyncDirection(HARNESS_TO_GIT.toString())
+                                    .failureReason(errorMessage)
+                                    .yamlFilePath(yamlFilePath)
+                                    .changeType("ADD")
+                                    .accountId(accountId)
+                                    .branchName(branchName)
+                                    .gitConnectorId(gitConnectorId)
+                                    .build();
+    yamlGitConfig.setUuid("uuid");
+    wingsPersistence.save(gitSyncError);
+    GitFileChange gitFileChange = aGitFileChange()
+                                      .withFilePath(yamlFilePath)
+                                      .withAccountId(accountId)
+                                      .withChangeType(MODIFY)
+                                      .withYamlGitConfig(newYamlGitConfig)
+                                      .build();
+    gitSyncErrorService.upsertGitSyncErrors(gitFileChange, "NewErrorMessage", true, false);
+    GitSyncError updatedGitSyncError =
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.yamlFilePath, yamlFilePath).get();
+    assertThat(updatedGitSyncError).isNotNull();
+    verifyGitErrorDetails(updatedGitSyncError, "NewErrorMessage");
+    assertThat(updatedGitSyncError.getGitSyncDirection()).isEqualTo(HARNESS_TO_GIT.toString());
+    assertThat(updatedGitSyncError.getChangeType()).isEqualTo("MODIFY");
+    verifyGitConnectorDetails(updatedGitSyncError, newGitConnectorId, newBranchName);
+    assertThat(updatedGitSyncError.getYamlContent()).isEqualTo(null);
+    HarnessToGitErrorDetails harnessToGitErrorDetails =
+        (HarnessToGitErrorDetails) updatedGitSyncError.getAdditionalErrorDetails();
+    assertThat(harnessToGitErrorDetails.isFullSyncPath()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_UpdatingErrorUsingUpsertHarnessToGitErrorAccount() {
     // Inserting a new error
     GitSyncError gitSyncError = GitSyncError.builder()
                                     .gitSyncDirection(HARNESS_TO_GIT.toString())
@@ -447,6 +599,45 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_UpdatingErrorUsingUpsertGitToHarnessErrorAccount() {
+    // Inserting a new error
+    GitSyncError gitSyncError =
+        GitSyncError.builder()
+            .gitSyncDirection(GIT_TO_HARNESS.toString())
+            .failureReason(errorMessage)
+            .yamlFilePath(yamlFilePath)
+            .changeType("ADD")
+            .additionalErrorDetails(GitToHarnessErrorDetails.builder().gitCommitId(previousCommitId).build())
+            .accountId(accountId)
+            .branchName(branchName)
+            .repositoryName(repositoryName)
+            .gitConnectorId(gitConnectorId)
+            .build();
+    wingsPersistence.save(gitSyncError);
+    GitFileChange gitFileChange = aGitFileChange()
+                                      .withFilePath(yamlFilePath)
+                                      .withAccountId(accountId)
+                                      .withChangeType(MODIFY)
+                                      .withChangeFromAnotherCommit(false)
+                                      .withYamlGitConfig(newYamlGitConfigAccount)
+                                      .build();
+    gitSyncErrorService.upsertGitSyncErrors(gitFileChange, "NewErrorMessage", false, true);
+    GitSyncError updatedGitSyncError =
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.yamlFilePath, yamlFilePath).get();
+    assertThat(updatedGitSyncError).isNotNull();
+    verifyGitErrorDetails(updatedGitSyncError, "NewErrorMessage");
+    assertThat(updatedGitSyncError.getGitSyncDirection()).isEqualTo(GIT_TO_HARNESS.toString());
+    assertThat(updatedGitSyncError.getChangeType()).isEqualTo("MODIFY");
+    verifyGitConnectorDetails(updatedGitSyncError, newGitConnectorId, newBranchName, newRepositoryName);
+    assertThat(updatedGitSyncError.getYamlContent()).isEqualTo(null);
+    GitToHarnessErrorDetails gitToHarnessErrorDetails =
+        (GitToHarnessErrorDetails) updatedGitSyncError.getAdditionalErrorDetails();
+    assertThat(gitToHarnessErrorDetails.getPreviousErrors().size()).isEqualTo(1);
+  }
+
+  @Test
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void test_fetchGitConnectivityIssues() {
@@ -471,18 +662,44 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
                                                   .branchName(branchName)
                                                   .accountId(accountId)
                                                   .gitConnectorId(connectorId)
+                                                  .repositoryName(REPOSITORY_NAME)
                                                   .build())
                                    .build();
     wingsPersistence.save(gitConnectionAlert);
+    wingsPersistence.save(Alert.builder()
+                              .accountId(accountId)
+                              .status(AlertStatus.Open)
+                              .type(AlertType.GitConnectionError)
+                              .title(errorMessage)
+                              .alertData(GitConnectionErrorAlert.builder()
+                                             .message(errorMessage)
+                                             .branchName(branchName)
+                                             .accountId(accountId)
+                                             .gitConnectorId("random_connector_id")
+                                             .repositoryName(REPOSITORY_NAME)
+                                             .build())
+                              .build());
+
     PageRequest<GitProcessingError> req = aPageRequest().build();
     List<GitProcessingError> gitErrors = gitSyncErrorService.fetchGitConnectivityIssues(req, accountId);
     assertThat(gitErrors).isNotEmpty();
-    GitProcessingError error = gitErrors.get(0);
-    assertThat(error.getGitConnectorId()).isEqualTo(connectorId);
-    assertThat(error.getBranchName()).isEqualTo(branchName);
-    assertThat(error.getAccountId()).isEqualTo(accountId);
-    assertThat(error.getConnectorName()).isEqualTo(settingName);
-    assertThat(error.getMessage()).isEqualTo(errorMessage);
+    assertThat(gitErrors.size()).isEqualTo(2);
+    GitProcessingError error1 = gitErrors.get(0);
+    GitProcessingError error2 = gitErrors.get(1);
+    if (null == error1.getRepositoryName()) {
+      error1 = gitErrors.get(1);
+      error2 = gitErrors.get(0);
+    }
+    assertThat(error1.getGitConnectorId()).isEqualTo(connectorId);
+    assertThat(error1.getBranchName()).isEqualTo(branchName);
+    assertThat(error1.getRepositoryName()).isEqualTo(REPOSITORY_NAME);
+    assertThat(error1.getAccountId()).isEqualTo(accountId);
+    assertThat(error1.getConnectorName()).isEqualTo(settingName);
+    assertThat(error1.getMessage()).isEqualTo(errorMessage);
+
+    assertThat(error2.getConnectorName()).isNull();
+    assertThat(error2.getBranchName()).isNull();
+    assertThat(error2.getRepositoryName()).isNull();
   }
 
   @Test

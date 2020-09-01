@@ -50,6 +50,7 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.service.impl.yaml.sync.GitSyncFailureAlertDetails;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
@@ -96,10 +97,11 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionFailure() throws Exception {
+    String errorMessage = "cant connect to git";
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
                                           .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
                                           .gitCommandStatus(GitCommandStatus.FAILURE)
-                                          .errorMessage("cant connect ot git")
+                                          .errorMessage(errorMessage)
                                           .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
@@ -108,7 +110,15 @@ public class GitCommandCallbackTest extends CategoryTest {
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
-    verify(yamlGitService, times(1)).raiseAlertForGitFailure(anyString(), anyString(), any());
+    verify(yamlGitService, times(1))
+        .raiseAlertForGitFailure(ACCOUNT_ID, GLOBAL_APP_ID,
+            GitSyncFailureAlertDetails.builder()
+                .errorMessage(errorMessage)
+                .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
+                .gitConnectorId(gitConnectorId)
+                .branchName(branchName)
+                .repositoryName(repositoryName)
+                .build());
   }
 
   @Test
@@ -172,6 +182,7 @@ public class GitCommandCallbackTest extends CategoryTest {
                 .accountId(ACCOUNT_ID)
                 .gitConnectorId("gitConnectorId")
                 .branchName("branchName")
+                .repositoryName(repositoryName)
                 .build());
     verify(yamlChangeSetService, times(1)).updateStatus(ACCOUNT_ID, CHANGESET_ID, Status.FAILED);
   }
@@ -221,7 +232,8 @@ public class GitCommandCallbackTest extends CategoryTest {
                                            .build();
     doReturn(Arrays.asList(gitSyncError1, gitSyncError2))
         .when(gitSyncErrorService)
-        .getActiveGitToHarnessSyncErrors(eq(ACCOUNT_ID), eq("gitconnectorid"), eq("branchname"), anyLong());
+        .getActiveGitToHarnessSyncErrors(
+            eq(ACCOUNT_ID), eq("gitconnectorid"), eq("branchname"), anyString(), anyLong());
 
     diffCommandCallback.addActiveGitSyncErrorsToProcessAgain(gitDiffResult, ACCOUNT_ID);
     final List<GitFileChange> modifiedGitFileChangeSetList = gitDiffResult.getGitFileChanges();
@@ -245,7 +257,7 @@ public class GitCommandCallbackTest extends CategoryTest {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
                                           .errorCode(ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER)
                                           .gitCommandStatus(GitCommandStatus.FAILURE)
-                                          .errorMessage("cant connect ot git")
+                                          .errorMessage("cant connect to git")
                                           .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
@@ -260,7 +272,7 @@ public class GitCommandCallbackTest extends CategoryTest {
     doReturn(yamlChangeSet).when(yamlChangeSetService).get(ACCOUNT_ID, CHANGESET_ID);
     doReturn(ImmutableList.of("yamlgitconfig1", "yamlgitconfig2"))
         .when(diffCommandCallback)
-        .obtainYamlGitConfigIds(anyString(), anyString(), anyString());
+        .obtainYamlGitConfigIds(anyString(), anyString(), anyString(), anyString());
     doReturn(GitCommit.builder().build()).when(yamlGitService).saveCommit(any(GitCommit.class));
     Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);

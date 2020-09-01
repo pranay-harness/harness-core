@@ -3,6 +3,7 @@ package software.wings.beans.alert;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder
@@ -11,6 +12,7 @@ public class GitConnectionErrorAlert implements AlertData {
   private String message;
   @NonNull private String gitConnectorId;
   @NonNull private String branchName;
+  private String repositoryName;
 
   @Override
   public boolean matches(AlertData alertData) {
@@ -18,7 +20,8 @@ public class GitConnectionErrorAlert implements AlertData {
       GitConnectionErrorAlert gitConnectionErrorAlert = (GitConnectionErrorAlert) alertData;
       return accountId.equals(gitConnectionErrorAlert.accountId)
           && gitConnectorId.equals(gitConnectionErrorAlert.gitConnectorId)
-          && branchName.equals(gitConnectionErrorAlert.branchName);
+          && branchName.equals(gitConnectionErrorAlert.branchName)
+          && StringUtils.equals(repositoryName, gitConnectionErrorAlert.getRepositoryName());
     } catch (Exception ex) {
       return false;
     }

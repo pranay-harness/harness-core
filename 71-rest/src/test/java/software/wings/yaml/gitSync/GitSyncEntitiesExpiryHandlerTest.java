@@ -2,6 +2,7 @@ package software.wings.yaml.gitSync;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -33,6 +34,7 @@ import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitSyncError;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
@@ -74,7 +76,7 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV, intermittent = true)
+  @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testGitCommits() {
     final String connectorId = "gitConnectorId";
@@ -114,13 +116,44 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
     testGitCommitsForExpiredCommits(account, 2, gitCommit_2.getCreatedAt() + 1);
   }
 
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGitCommitsMixed() {
+    final String connectorId = "gitConnectorId";
+    final String branchName = "branchName";
+    final String repository = "repository";
+    final String accountId = account.getUuid();
+
+    List<GitCommit> commits = new LinkedList<>();
+    commits.add(buildGitCommit(connectorId, branchName, repository, GitCommit.Status.COMPLETED, accountId, 1L));
+    commits.add(buildGitCommit(connectorId, branchName, repository, GitCommit.Status.COMPLETED, accountId, 2L));
+    commits.add(buildGitCommit(connectorId, branchName, null, GitCommit.Status.COMPLETED, accountId, 3L));
+    commits.add(buildGitCommit(connectorId, branchName, null, GitCommit.Status.COMPLETED, accountId, 4L));
+    commits.add(buildGitCommit(connectorId, branchName, null, GitCommit.Status.FAILED, accountId, 5L));
+    commits.add(
+        buildGitCommit(connectorId, branchName, repository, GitCommit.Status.COMPLETED_WITH_ERRORS, accountId, 6L));
+    commits.add(buildGitCommit(connectorId, branchName, repository, GitCommit.Status.FAILED, accountId, 7L));
+    wingsPersistence.save(commits);
+    testGitCommitsForExpiredCommits(account, 4, 8L);
+  }
+
   private GitCommit buildGitCommit(String connectorId, String branchName, GitCommit.Status status, String accountId) {
-    return GitCommit.builder()
-        .gitConnectorId(connectorId)
-        .branchName(branchName)
-        .status(status)
-        .accountId(accountId)
-        .build();
+    GitCommit commit = GitCommit.builder()
+                           .gitConnectorId(connectorId)
+                           .branchName(branchName)
+                           .status(status)
+                           .accountId(accountId)
+                           .build();
+    return commit;
+  }
+
+  private GitCommit buildGitCommit(String connectorId, String branchName, String repoName, GitCommit.Status status,
+      String accountId, long createdAt) {
+    GitCommit gitCommit = buildGitCommit(connectorId, branchName, status, accountId);
+    gitCommit.setRepositoryName(repoName);
+    gitCommit.setCreatedAt(createdAt);
+    return gitCommit;
   }
 
   private void testGitCommitsForExpiredCommits(Account account, int expectedNotDeletedCount, long expiryTime) {

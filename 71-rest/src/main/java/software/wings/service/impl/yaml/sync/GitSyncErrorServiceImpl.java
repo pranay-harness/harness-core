@@ -221,6 +221,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .group(GitSyncErrorKeys.gitCommitId, grouping("failedCount", accumulator("$sum", 1)),
             grouping(GitToHarnessErrorCommitStatsKeys.commitTime, first(GitSyncErrorKeys.commitTime)),
             grouping(GitSyncErrorKeys.gitConnectorId, first(GitSyncErrorKeys.gitConnectorId)),
+            grouping(GitSyncErrorKeys.repositoryName, first(GitSyncErrorKeys.repositoryName)),
             grouping(GitSyncErrorKeys.branchName, first(GitSyncErrorKeys.branchName)),
             grouping(GitToHarnessErrorCommitStatsKeys.commitMessage, first(GitSyncErrorKeys.commitMessage)),
             grouping(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView,
@@ -229,7 +230,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                     projection(APP_ID_KEY, APP_ID_KEY))))
         .project(projection("gitCommitId", "_id"), projection("failedCount"),
             projection(GitToHarnessErrorCommitStatsKeys.commitTime), projection(GitSyncErrorKeys.gitConnectorId),
-            projection(GitSyncErrorKeys.branchName), projection(GitToHarnessErrorCommitStatsKeys.commitMessage),
+            projection(GitSyncErrorKeys.repositoryName), projection(GitSyncErrorKeys.branchName),
+            projection(GitToHarnessErrorCommitStatsKeys.commitMessage),
             projection(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView))
         .sort(Sort.descending(GitToHarnessErrorCommitStatsKeys.commitTime))
         .skip(offset)
@@ -662,9 +664,13 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     if (yamlGitConfig != null) {
       final String gitConnectorId = Strings.emptyIfNull(yamlGitConfig.getGitConnectorId());
       final String branchName = Strings.emptyIfNull(yamlGitConfig.getBranchName());
+      final String repositoryName = Strings.nullIfEmpty(yamlGitConfig.getRepositoryName());
       failedUpdateOperations.set(GitSyncErrorKeys.gitConnectorId, gitConnectorId);
       failedUpdateOperations.set(GitSyncErrorKeys.branchName, branchName);
       failedUpdateOperations.set(GitSyncErrorKeys.yamlGitConfigId, yamlGitConfig.getUuid());
+      if (null != repositoryName) {
+        failedUpdateOperations.set(GitSyncErrorKeys.repositoryName, repositoryName);
+      }
     }
   }
 
@@ -722,9 +728,9 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   @Override
   public List<GitSyncError> getActiveGitToHarnessSyncErrors(
-      String accountId, String gitConnectorId, String branchName, long fromTimestamp) {
+      String accountId, String gitConnectorId, String branchName, String repositoryName, long fromTimestamp) {
     //  get all app ids sharing same repo and branch name
-    final Set<String> allowedAppIdSet = appIdsSharingRepoBranch(accountId, gitConnectorId, branchName);
+    final Set<String> allowedAppIdSet = appIdsSharingRepoBranch(accountId, gitConnectorId, branchName, repositoryName);
     if (isEmpty(allowedAppIdSet)) {
       return Collections.emptyList();
     }
@@ -734,7 +740,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                           .greaterThan(fromTimestamp);
 
     addGitToHarnessErrorFilter(query);
-    addGitRepositoryFilter(query, gitConnectorId, branchName);
+    addGitRepositoryFilter(query, gitConnectorId, branchName, repositoryName);
     addActiveErrorFilter(query);
 
     final List<GitSyncError> gitSyncErrorList = emptyIfNull(query.asList());
@@ -750,9 +756,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   private Query<GitSyncError> addGitRepositoryFilter(
-      Query<GitSyncError> query, String gitConnectorId, String branchName) {
+      Query<GitSyncError> query, String gitConnectorId, String branchName, String repositoryName) {
     return query.filter(GitSyncErrorKeys.branchName, branchName)
-        .filter(GitSyncErrorKeys.gitConnectorId, gitConnectorId);
+        .filter(GitSyncErrorKeys.gitConnectorId, gitConnectorId)
+        .filter(GitSyncErrorKeys.repositoryName, repositoryName);
   }
 
   private boolean isNewAppError(GitSyncError error) {
@@ -763,7 +770,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     return allowedAppIdSet.contains(error.getAppId());
   }
 
-  private Set<String> appIdsSharingRepoBranch(String accountId, String gitConnectorId, String branchName) {
+  private Set<String> appIdsSharingRepoBranch(
+      String accountId, String gitConnectorId, String branchName, String repositoryName) {
     final List<YamlGitConfig> yamlGitConfigList = wingsPersistence.createQuery(YamlGitConfig.class)
                                                       .project(YamlGitConfigKeys.entityId, true)
                                                       .project(YamlGitConfigKeys.entityType, true)
@@ -771,6 +779,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                                       .filter(YamlGitConfigKeys.enabled, Boolean.TRUE)
                                                       .filter(YamlGitConfigKeys.gitConnectorId, gitConnectorId)
                                                       .filter(YamlGitConfigKeys.branchName, branchName)
+                                                      .filter(YamlGitConfigKeys.repositoryName, repositoryName)
                                                       .asList();
 
     return emptyIfNull(yamlGitConfigList)
@@ -827,6 +836,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .createdAt(alert.getCreatedAt())
         .branchName(alertData.getBranchName())
         .gitConnectorId(alertData.getGitConnectorId())
+        .repositoryName(alertData.getRepositoryName())
         .build();
   }
 
@@ -839,6 +849,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     if (isBlank(gitProcessingError.getGitConnectorId()) || !connectorNameIdMap.containsKey(gitConnectorId)) {
       gitProcessingError.setConnectorName(null);
       gitProcessingError.setBranchName(null);
+      gitProcessingError.setRepositoryName(null);
     } else {
       gitProcessingError.setConnectorName(connectorNameIdMap.get(gitConnectorId));
     }

@@ -14,6 +14,7 @@ public class GitToHarnessErrorCommitStats {
   Long commitTime;
   String gitConnectorId;
   String branchName;
+  String repositoryName;
   String gitConnectorName;
   String commitMessage;
   List<GitSyncError> errorsForSummaryView;

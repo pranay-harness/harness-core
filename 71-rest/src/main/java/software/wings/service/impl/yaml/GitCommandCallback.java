@@ -16,6 +16,7 @@ import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitT
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
+import static software.wings.yaml.gitSync.YamlGitConfig.REPOSITORY_NAME_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -151,7 +152,8 @@ public class GitCommandCallback implements NotifyCallback {
             if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
               List<String> yamlSetIdsProcessed =
                   ((GitCommitRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetIds();
-              List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId, branchName, gitConnectorId);
+              List<String> yamlGitConfigIds =
+                  obtainYamlGitConfigIds(accountId, branchName, repositoryName, gitConnectorId);
 
               saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
               final String processingCommitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
@@ -214,6 +216,7 @@ public class GitCommandCallback implements NotifyCallback {
         .accountId(accountId)
         .gitConnectorId(gitConnectorId)
         .branchName(branchName)
+        .repositoryName(repositoryName)
         .build();
   }
 
@@ -224,12 +227,15 @@ public class GitCommandCallback implements NotifyCallback {
         .errorMessage(gitCommandExecutionResponse.getErrorMessage())
         .gitConnectorId(gitConnectorId)
         .branchName(branchName)
+        .repositoryName(repositoryName)
         .build();
   }
 
-  private List<GitFileChange> getActiveGitSyncErrorFiles(String accountId, String branchName, String gitConnectorId) {
+  private List<GitFileChange> getActiveGitSyncErrorFiles(
+      String accountId, String branchName, String repositoryName, String gitConnectorId) {
     final long _30_days_millis = System.currentTimeMillis() - Duration.ofDays(30).toMillis();
-    return gitSyncErrorService.getActiveGitToHarnessSyncErrors(accountId, gitConnectorId, branchName, _30_days_millis)
+    return gitSyncErrorService
+        .getActiveGitToHarnessSyncErrors(accountId, gitConnectorId, branchName, repositoryName, _30_days_millis)
         .stream()
         .map(this ::convertToGitFileChange)
         .collect(Collectors.toList());
@@ -251,7 +257,8 @@ public class GitCommandCallback implements NotifyCallback {
   @VisibleForTesting
   void addActiveGitSyncErrorsToProcessAgain(final GitDiffResult gitDiffResult, final String accountId) {
     final List<GitFileChange> activeGitSyncErrorFiles = emptyIfNull(getActiveGitSyncErrorFiles(accountId,
-        gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId()));
+        gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getRepositoryName(),
+        gitDiffResult.getYamlGitConfig().getGitConnectorId()));
 
     logger.info("Active git sync error files =[{}]",
         activeGitSyncErrorFiles.stream().map(GitFileChange::getFilePath).collect(Collectors.toList()));
@@ -338,11 +345,13 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   @VisibleForTesting
-  List<String> obtainYamlGitConfigIds(String accountId, String branchName, String gitConnectorId) {
+  List<String> obtainYamlGitConfigIds(
+      String accountId, String branchName, String repositoryName, String gitConnectorId) {
     return wingsPersistence.createQuery(YamlGitConfig.class)
         .filter(YamlGitConfig.ACCOUNT_ID_KEY, accountId)
         .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
         .filter(BRANCH_NAME_KEY, branchName)
+        .filter(REPOSITORY_NAME_KEY, repositoryName)
         .project(YamlGitConfig.ID_KEY, true)
         .asList()
         .stream()
@@ -371,7 +380,8 @@ public class GitCommandCallback implements NotifyCallback {
       final GitWebhookRequestAttributes gitWebhookRequestAttributes = yamlChangeSet.getGitWebhookRequestAttributes();
       if (isValid(gitWebhookRequestAttributes)) {
         final String headCommitId = gitWebhookRequestAttributes.getHeadCommitId();
-        final List<String> yamlConfigIds = obtainYamlGitConfigIds(accountId, branchName, gitConnectorId);
+        final List<String> yamlConfigIds =
+            obtainYamlGitConfigIds(accountId, branchName, repositoryName, gitConnectorId);
 
         GitCommit.Status gitCommitStatus = GitCommit.Status.FAILED;
         if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == errorCode) {
