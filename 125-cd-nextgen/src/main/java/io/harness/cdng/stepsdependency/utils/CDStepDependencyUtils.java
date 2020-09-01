@@ -8,7 +8,7 @@ import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
@@ -41,12 +41,12 @@ public class CDStepDependencyUtils {
     return resultMap;
   }
 
-  public String getServiceKey(CreateExecutionPlanContext context) {
+  public String getServiceKey(ExecutionPlanCreationContext context) {
     return ParentPathInfoUtils.getParentPath(PlanNodeType.STAGE.name(), context) + "."
         + CDStepDependencyKey.SERVICE.name();
   }
 
-  public String getInfraKey(CreateExecutionPlanContext context) {
+  public String getInfraKey(ExecutionPlanCreationContext context) {
     return ParentPathInfoUtils.getParentPath(PlanNodeType.STAGE.name(), context) + "."
         + CDStepDependencyKey.INFRASTRUCTURE.name();
   }

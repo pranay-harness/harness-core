@@ -19,9 +19,9 @@ import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
@@ -47,13 +47,13 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
-  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    final CreateExecutionPlanResponse planForService = createPlanForService(deploymentStage.getService(), context);
-    final CreateExecutionPlanResponse planForInfrastructure =
+  public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      DeploymentStage deploymentStage, ExecutionPlanCreationContext context) {
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
+    final ExecutionPlanCreatorResponse planForService = createPlanForService(deploymentStage.getService(), context);
+    final ExecutionPlanCreatorResponse planForInfrastructure =
         createPlanForInfrastructure(deploymentStage.getInfrastructure(), context);
-    final CreateExecutionPlanResponse planForExecution =
+    final ExecutionPlanCreatorResponse planForExecution =
         createPlanForExecution(deploymentStage.getExecution(), context);
     childrenPlanMap.put("SERVICE", singletonList(planForService));
     childrenPlanMap.put("INFRA", singletonList(planForInfrastructure));
@@ -62,18 +62,18 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
   }
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(DeploymentStage deploymentStage,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    CreateExecutionPlanResponse planForService = planForChildrenMap.get("SERVICE").get(0);
-    CreateExecutionPlanResponse planForInfrastructure = planForChildrenMap.get("INFRA").get(0);
-    CreateExecutionPlanResponse planForExecution = planForChildrenMap.get("EXECUTION").get(0);
+  public ExecutionPlanCreatorResponse createPlanForSelf(DeploymentStage deploymentStage,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    ExecutionPlanCreatorResponse planForService = planForChildrenMap.get("SERVICE").get(0);
+    ExecutionPlanCreatorResponse planForInfrastructure = planForChildrenMap.get("INFRA").get(0);
+    ExecutionPlanCreatorResponse planForExecution = planForChildrenMap.get("EXECUTION").get(0);
 
-    CreateExecutionPlanResponse rollbackExecutionPlan = createPlanForRollbackNode(deploymentStage, context);
+    ExecutionPlanCreatorResponse rollbackExecutionPlan = createPlanForRollbackNode(deploymentStage, context);
 
     final PlanNode deploymentStageNode = prepareDeploymentNode(
         deploymentStage, planForExecution, planForService, planForInfrastructure, rollbackExecutionPlan);
 
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(deploymentStageNode)
         .planNodes(planForService.getPlanNodes())
         .planNodes(planForInfrastructure.getPlanNodes())
@@ -83,25 +83,25 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
         .build();
   }
 
-  private CreateExecutionPlanResponse createPlanForRollbackNode(
-      DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForRollbackNode(
+      DeploymentStage deploymentStage, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<DeploymentStage> executionPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(
             ROLLBACK_PLAN_CREATOR.getName(), deploymentStage, context, "No execution plan creator found for Rollback");
     return executionPlanCreator.createPlan(deploymentStage, context);
   }
 
-  private CreateExecutionPlanResponse createPlanForInfrastructure(
-      PipelineInfrastructure pipelineInfrastructure, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForInfrastructure(
+      PipelineInfrastructure pipelineInfrastructure, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<PipelineInfrastructure> executionPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(INFRA_PLAN_CREATOR.getName(), pipelineInfrastructure,
             context, "No execution plan creator found for Infra Execution.");
     return executionPlanCreator.createPlan(pipelineInfrastructure, context);
   }
 
-  private PlanNode prepareDeploymentNode(DeploymentStage deploymentStage, CreateExecutionPlanResponse planForExecution,
-      CreateExecutionPlanResponse planForService, CreateExecutionPlanResponse planForInfrastructure,
-      CreateExecutionPlanResponse rollbackExecutionPlan) {
+  private PlanNode prepareDeploymentNode(DeploymentStage deploymentStage, ExecutionPlanCreatorResponse planForExecution,
+      ExecutionPlanCreatorResponse planForService, ExecutionPlanCreatorResponse planForInfrastructure,
+      ExecutionPlanCreatorResponse rollbackExecutionPlan) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
@@ -127,16 +127,16 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
         .build();
   }
 
-  private CreateExecutionPlanResponse createPlanForService(
-      ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForService(
+      ServiceConfig serviceConfig, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<ServiceConfig> executionPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(SERVICE_PLAN_CREATOR.getName(), serviceConfig, context,
             "No execution plan creator found for Service Execution.");
     return executionPlanCreator.createPlan(serviceConfig, context);
   }
 
-  private CreateExecutionPlanResponse createPlanForExecution(
-      ExecutionElement execution, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForExecution(
+      ExecutionElement execution, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<ExecutionElement> executionPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(CD_EXECUTION_PLAN_CREATOR.getName(), execution, context,
             "no execution plan creator found for stage execution");
@@ -156,13 +156,13 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
   }
 
   @Override
-  public void prePlanCreation(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+  public void prePlanCreation(DeploymentStage deploymentStage, ExecutionPlanCreationContext context) {
     super.prePlanCreation(deploymentStage, context);
     PlanCreatorConfigUtils.setCurrentStageConfig(deploymentStage, context);
   }
 
   @Override
-  public void postPlanCreation(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+  public void postPlanCreation(DeploymentStage deploymentStage, ExecutionPlanCreationContext context) {
     super.postPlanCreation(deploymentStage, context);
     PlanCreatorConfigUtils.setCurrentStageConfig(null, context);
   }

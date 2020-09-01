@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.impl.CreateExecutionPlanContextImpl;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class ExpressionStepDependencyInstructorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSupports() {
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("TEST").build();
-    CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+    ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
     boolean supports = instructor.supports(spec, context);
     assertThat(supports).isEqualTo(true);
     assertThat(instructor.supports(null, context)).isEqualTo(false);

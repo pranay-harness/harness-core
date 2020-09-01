@@ -1,6 +1,6 @@
 package io.harness.executionplan.utils;
 
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import lombok.experimental.UtilityClass;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
 public class StepDependencyInfoUtils {
   public final String STEP_DEPENDENCY_PROVIDER_LIST = "STEP_DEPENDENCY_PROVIDER_LIST";
 
-  private <T> void setConfig(String key, T config, CreateExecutionPlanContext context) {
+  private <T> void setConfig(String key, T config, ExecutionPlanCreationContext context) {
     if (config == null) {
       context.removeAttribute(key);
     } else {
@@ -20,11 +20,11 @@ public class StepDependencyInfoUtils {
     }
   }
 
-  private <T> Optional<T> getConfig(String key, CreateExecutionPlanContext context) {
+  private <T> Optional<T> getConfig(String key, ExecutionPlanCreationContext context) {
     return context.getAttribute(key);
   }
 
-  public void addInstructor(StepDependencyInstructor instructor, CreateExecutionPlanContext context) {
+  public void addInstructor(StepDependencyInstructor instructor, ExecutionPlanCreationContext context) {
     Optional<LinkedList<StepDependencyInstructor>> stepDependencyProviders =
         getConfig(STEP_DEPENDENCY_PROVIDER_LIST, context);
     LinkedList<StepDependencyInstructor> instructors = stepDependencyProviders.orElse(new LinkedList<>());
@@ -32,7 +32,7 @@ public class StepDependencyInfoUtils {
     setConfig(STEP_DEPENDENCY_PROVIDER_LIST, instructors, context);
   }
 
-  public List<StepDependencyInstructor> getInstructorsList(CreateExecutionPlanContext context) {
+  public List<StepDependencyInstructor> getInstructorsList(ExecutionPlanCreationContext context) {
     Optional<LinkedList<StepDependencyInstructor>> instructors = getConfig(STEP_DEPENDENCY_PROVIDER_LIST, context);
     return instructors.orElse(new LinkedList<>());
   }

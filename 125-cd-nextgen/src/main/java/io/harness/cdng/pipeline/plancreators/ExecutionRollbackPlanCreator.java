@@ -7,12 +7,12 @@ import com.google.inject.Inject;
 
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.core.impl.CreateExecutionPlanResponseImpl.CreateExecutionPlanResponseImplBuilder;
+import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.ExecutionPlanCreatorResponseImplBuilder;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanCreatorType;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
@@ -41,26 +41,26 @@ public class ExecutionRollbackPlanCreator extends AbstractPlanCreatorWithChildre
   }
 
   @Override
-  protected Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      ExecutionElement executionElement, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> stepsPlanList = new ArrayList<>();
+  protected Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      ExecutionElement executionElement, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> stepsPlanList = new ArrayList<>();
     for (ExecutionWrapper rollbackStep : executionElement.getRollbackSteps()) {
       final ExecutionPlanCreator<ExecutionWrapper> executionRollbackPlanCreator =
           executionPlanCreatorHelper.getExecutionPlanCreator(PlanCreatorType.STEP_PLAN_CREATOR.getName(), rollbackStep,
               context, "No execution plan creator found for Step Plan Creator");
-      CreateExecutionPlanResponse rollbackStepPlan = executionRollbackPlanCreator.createPlan(rollbackStep, context);
+      ExecutionPlanCreatorResponse rollbackStepPlan = executionRollbackPlanCreator.createPlan(rollbackStep, context);
       stepsPlanList.add(rollbackStepPlan);
     }
 
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
     childrenPlanMap.put("ROLLBACK_STEPS", stepsPlanList);
     return childrenPlanMap;
   }
 
   @Override
-  protected CreateExecutionPlanResponse createPlanForSelf(ExecutionElement input,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> rollbackStepsPlan = planForChildrenMap.get("ROLLBACK_STEPS");
+  protected ExecutionPlanCreatorResponse createPlanForSelf(ExecutionElement input,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> rollbackStepsPlan = planForChildrenMap.get("ROLLBACK_STEPS");
 
     PlanNode executionRollbackNode =
         PlanNode.builder()
@@ -70,7 +70,7 @@ public class ExecutionRollbackPlanCreator extends AbstractPlanCreatorWithChildre
             .stepType(SectionChainStep.STEP_TYPE)
             .stepParameters(SectionChainStepParameters.builder()
                                 .childNodeIds(rollbackStepsPlan.stream()
-                                                  .map(CreateExecutionPlanResponse::getStartingNodeId)
+                                                  .map(ExecutionPlanCreatorResponse::getStartingNodeId)
                                                   .collect(Collectors.toList()))
                                 .build())
             .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -78,14 +78,14 @@ public class ExecutionRollbackPlanCreator extends AbstractPlanCreatorWithChildre
                                        .build())
             .build();
 
-    CreateExecutionPlanResponseImplBuilder createExecutionPlanResponseImplBuilder =
-        CreateExecutionPlanResponse.builder()
+    ExecutionPlanCreatorResponseImplBuilder executionPlanCreatorResponseImplBuilder =
+        ExecutionPlanCreatorResponse.builder()
             .planNode(executionRollbackNode)
             .startingNodeId(executionRollbackNode.getUuid());
 
     rollbackStepsPlan.forEach(
-        rollbackStepPlan -> createExecutionPlanResponseImplBuilder.planNodes(rollbackStepPlan.getPlanNodes()));
-    return createExecutionPlanResponseImplBuilder.build();
+        rollbackStepPlan -> executionPlanCreatorResponseImplBuilder.planNodes(rollbackStepPlan.getPlanNodes()));
+    return executionPlanCreatorResponseImplBuilder.build();
   }
 
   @Override

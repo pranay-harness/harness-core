@@ -1,7 +1,7 @@
 package io.harness.executionplan.plancreator.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.state.StepType;
@@ -22,14 +22,14 @@ public interface GenericStepInfo extends StepParameters, WithIdentifier {
 
   @JsonIgnore
   /** Get the input step dependencies for the current step. */
-  default Map<String, StepDependencySpec> getInputStepDependencyList(CreateExecutionPlanContext context) {
+  default Map<String, StepDependencySpec> getInputStepDependencyList(ExecutionPlanCreationContext context) {
     return new HashMap<>();
   }
 
   @JsonIgnore
   /** Register instructors from this step, to be available for other steps. */
   default void registerStepDependencyInstructors(
-      StepDependencyService stepDependencyService, CreateExecutionPlanContext context, String nodeId) {
+      StepDependencyService stepDependencyService, ExecutionPlanCreationContext context, String nodeId) {
     // Do nothing.
   }
 }

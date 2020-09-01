@@ -6,5 +6,5 @@ package io.harness.executionplan.core;
  * @param <T> object type to plan for
  */
 public interface ExecutionPlanCreator<T> {
-  CreateExecutionPlanResponse createPlan(T objectToPlan, CreateExecutionPlanContext context);
+  ExecutionPlanCreatorResponse createPlan(T objectToPlan, ExecutionPlanCreationContext context);
 }

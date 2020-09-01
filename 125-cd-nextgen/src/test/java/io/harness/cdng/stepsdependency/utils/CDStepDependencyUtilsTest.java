@@ -14,8 +14,8 @@ import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.Outcome;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.impl.CreateExecutionPlanContextImpl;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.plancreator.beans.PlanLevelNode;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
@@ -72,7 +72,7 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetServiceKey() {
-    CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+    ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
     PlanLevelNode planLevelNode = PlanLevelNode.builder()
                                       .planNodeType(PlanNodeType.PIPELINE.name())
                                       .identifier(PlanNodeType.PIPELINE.name())
@@ -89,7 +89,7 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetInfraKey() {
-    CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+    ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
     PlanLevelNode planLevelNode = PlanLevelNode.builder()
                                       .planNodeType(PlanNodeType.PIPELINE.name())
                                       .identifier(PlanNodeType.PIPELINE.name())

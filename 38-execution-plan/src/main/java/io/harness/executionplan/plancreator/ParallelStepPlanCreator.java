@@ -6,9 +6,9 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
@@ -32,12 +32,12 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(
-      ParallelStepElement parallelStepElement, CreateExecutionPlanContext context) {
-    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, parallelStepElement);
+  public ExecutionPlanCreatorResponse createPlan(
+      ParallelStepElement parallelStepElement, ExecutionPlanCreationContext context) {
+    final List<ExecutionPlanCreatorResponse> planForSteps = getPlanForSteps(context, parallelStepElement);
     final PlanNode parallelExecutionNode = prepareParallelExecutionNode(
-        planForSteps.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList()));
-    return CreateExecutionPlanResponse.builder()
+        planForSteps.stream().map(ExecutionPlanCreatorResponse::getStartingNodeId).collect(Collectors.toList()));
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(parallelExecutionNode)
         .planNodes(planForSteps.stream()
                        .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
@@ -46,8 +46,8 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .build();
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForSteps(
-      CreateExecutionPlanContext context, ParallelStepElement parallelStepElement) {
+  private List<ExecutionPlanCreatorResponse> getPlanForSteps(
+      ExecutionPlanCreationContext context, ParallelStepElement parallelStepElement) {
     return parallelStepElement.getSections()
         .stream()
         .map(step -> getPlanCreatorForStep(context, step).createPlan(step, context))
@@ -55,7 +55,7 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
   }
 
   private ExecutionPlanCreator<ExecutionWrapper> getPlanCreatorForStep(
-      CreateExecutionPlanContext context, ExecutionWrapper step) {
+      ExecutionPlanCreationContext context, ExecutionWrapper step) {
     return planCreatorHelper.getExecutionPlanCreator(
         STEP_PLAN_CREATOR.getName(), step, context, format("no execution plan creator found for step [%s]", step));
   }

@@ -10,8 +10,8 @@ import com.google.inject.Inject;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTest;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
 import io.harness.facilitator.FacilitatorType;
@@ -26,7 +26,7 @@ import org.mockito.Mock;
 public class GenericStepPlanCreatorTest extends CIExecutionTest {
   @Inject GenericStepPlanCreator genericStepPlanCreator;
 
-  @Mock CreateExecutionPlanContext createExecutionPlanContext;
+  @Mock ExecutionPlanCreationContext executionPlanCreationContext;
   @Mock PlanCreatorSearchContext<StepElement> planCreatorSearchContext;
 
   private GitCloneStepInfo stepInfo;
@@ -51,7 +51,7 @@ public class GenericStepPlanCreatorTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void createPlan() {
     StepElement stepElement = StepElement.builder().identifier("testIdentifier").stepSpecType(stepInfo).build();
-    CreateExecutionPlanResponse plan = genericStepPlanCreator.createPlan(stepElement, createExecutionPlanContext);
+    ExecutionPlanCreatorResponse plan = genericStepPlanCreator.createPlan(stepElement, executionPlanCreationContext);
     assertThat(plan.getPlanNodes()).isNotNull();
     PlanNode planNode = plan.getPlanNodes().get(0);
     assertThat(planNode.getUuid()).isNotNull();

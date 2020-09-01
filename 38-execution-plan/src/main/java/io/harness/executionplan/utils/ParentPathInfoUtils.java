@@ -1,7 +1,7 @@
 package io.harness.executionplan.utils;
 
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.plancreator.beans.PlanLevelNode;
 import lombok.experimental.UtilityClass;
 
@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 public class ParentPathInfoUtils {
   public final String PARENT_PATH_INFO = "PARENT_PATH_INFO";
 
-  private <T> void setConfig(String key, T config, CreateExecutionPlanContext context) {
+  private <T> void setConfig(String key, T config, ExecutionPlanCreationContext context) {
     if (config == null) {
       context.removeAttribute(key);
     } else {
@@ -23,11 +23,11 @@ public class ParentPathInfoUtils {
     }
   }
 
-  private <T> Optional<T> getConfig(String key, CreateExecutionPlanContext context) {
+  private <T> Optional<T> getConfig(String key, ExecutionPlanCreationContext context) {
     return context.getAttribute(key);
   }
 
-  public void addToParentPath(CreateExecutionPlanContext context, PlanLevelNode planLevelNode) {
+  public void addToParentPath(ExecutionPlanCreationContext context, PlanLevelNode planLevelNode) {
     Optional<LinkedList<PlanLevelNode>> parentPath = getConfig(PARENT_PATH_INFO, context);
     LinkedList<PlanLevelNode> planLevelNodes = parentPath.orElse(new LinkedList<>());
     planLevelNodes.addLast(planLevelNode);
@@ -38,7 +38,7 @@ public class ParentPathInfoUtils {
    * Removes the last levelNode from path.
    * @param context
    */
-  public void removeFromParentPath(CreateExecutionPlanContext context) {
+  public void removeFromParentPath(ExecutionPlanCreationContext context) {
     Optional<LinkedList<PlanLevelNode>> parentPath = getConfig(PARENT_PATH_INFO, context);
     LinkedList<PlanLevelNode> planLevelNodes =
         parentPath.orElseThrow(() -> new InvalidArgumentsException("Parent Path has not been initialised."));
@@ -51,7 +51,7 @@ public class ParentPathInfoUtils {
    * @param context
    * @return Parent path string.
    */
-  public String getParentPath(CreateExecutionPlanContext context) {
+  public String getParentPath(ExecutionPlanCreationContext context) {
     Optional<LinkedList<PlanLevelNode>> parentPathOptional = getConfig(PARENT_PATH_INFO, context);
     LinkedList<PlanLevelNode> planLevelNodes = parentPathOptional.orElse(new LinkedList<>());
     return planLevelNodes.stream().map(PlanLevelNode::getIdentifier).collect(Collectors.joining("."));
@@ -63,7 +63,7 @@ public class ParentPathInfoUtils {
    * @param context
    * @return Parent path string upto last occurrence of given planNodeType.
    */
-  public String getParentPath(String planNodeType, CreateExecutionPlanContext context) {
+  public String getParentPath(String planNodeType, ExecutionPlanCreationContext context) {
     Optional<List<PlanLevelNode>> parentPathOptional = getConfig(PARENT_PATH_INFO, context);
     if (parentPathOptional.isPresent()) {
       List<PlanLevelNode> planLevelNodes = parentPathOptional.get();

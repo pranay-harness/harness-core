@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.impl.CreateExecutionPlanContextImpl;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
@@ -30,7 +30,7 @@ public class OutcomeRefStepDependencyInstructorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSupports() {
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("TEST").build();
-    CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+    ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
     boolean supports = instructor.supports(spec, context);
     assertThat(supports).isEqualTo(true);
     assertThat(instructor.supports(null, context)).isEqualTo(false);
@@ -45,7 +45,7 @@ public class OutcomeRefStepDependencyInstructorTest extends CategoryTest {
   public void testAttachDependency() {
     PlanNodeBuilder builder = PlanNode.builder();
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("TEST").build();
-    CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+    ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
     instructor.attachDependency(spec, builder, context);
     PlanNode planNode = builder.build();
     List<RefObject> refObjects = planNode.getRefObjects();

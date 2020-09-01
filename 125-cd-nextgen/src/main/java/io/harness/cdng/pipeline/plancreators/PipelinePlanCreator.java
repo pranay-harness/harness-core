@@ -14,9 +14,9 @@ import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
@@ -39,28 +39,28 @@ public class PipelinePlanCreator
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
-  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      CDPipeline cdPipeline, CreateExecutionPlanContext context) {
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    CreateExecutionPlanResponse planForStages = createPlanForStages(cdPipeline.getStages(), context);
+  public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      CDPipeline cdPipeline, ExecutionPlanCreationContext context) {
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
+    ExecutionPlanCreatorResponse planForStages = createPlanForStages(cdPipeline.getStages(), context);
     childrenPlanMap.put("STAGES", singletonList(planForStages));
     return childrenPlanMap;
   }
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(CDPipeline cdPipeline,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    CreateExecutionPlanResponse planForStages = planForChildrenMap.get("STAGES").get(0);
+  public ExecutionPlanCreatorResponse createPlanForSelf(CDPipeline cdPipeline,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    ExecutionPlanCreatorResponse planForStages = planForChildrenMap.get("STAGES").get(0);
     final PlanNode pipelineExecutionNode = preparePipelineNode(cdPipeline, planForStages);
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(pipelineExecutionNode)
         .planNodes(planForStages.getPlanNodes())
         .startingNodeId(pipelineExecutionNode.getUuid())
         .build();
   }
 
-  private CreateExecutionPlanResponse createPlanForStages(
-      List<? extends StageElementWrapper> stages, CreateExecutionPlanContext context) {
+  private ExecutionPlanCreatorResponse createPlanForStages(
+      List<? extends StageElementWrapper> stages, ExecutionPlanCreationContext context) {
     final ExecutionPlanCreator<List<? extends StageElementWrapper>> stagesPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(
             STAGES_PLAN_CREATOR.getName(), stages, context, "no execution plan creator found for pipeline stages");
@@ -68,7 +68,7 @@ public class PipelinePlanCreator
     return stagesPlanCreator.createPlan(stages, context);
   }
 
-  private PlanNode preparePipelineNode(CDPipeline pipeline, CreateExecutionPlanResponse planForStages) {
+  private PlanNode preparePipelineNode(CDPipeline pipeline, ExecutionPlanCreatorResponse planForStages) {
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
@@ -105,7 +105,7 @@ public class PipelinePlanCreator
   }
 
   @Override
-  public void prePlanCreation(CDPipeline cdPipeline, CreateExecutionPlanContext context) {
+  public void prePlanCreation(CDPipeline cdPipeline, ExecutionPlanCreationContext context) {
     super.prePlanCreation(cdPipeline, context);
     PlanCreatorConfigUtils.setPipelineConfig(cdPipeline, context);
   }

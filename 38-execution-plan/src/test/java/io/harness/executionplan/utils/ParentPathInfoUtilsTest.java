@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.impl.CreateExecutionPlanContextImpl;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.plancreator.beans.PlanLevelNode;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.rule.Owner;
@@ -19,7 +19,7 @@ public class ParentPathInfoUtilsTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetParentPath() {
-    CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+    ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
     String parentPath = ParentPathInfoUtils.getParentPath(context);
     assertThat(parentPath).isEqualTo("");
     assertThatThrownBy(() -> ParentPathInfoUtils.getParentPath(PlanNodeType.STAGE.name(), context))

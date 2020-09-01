@@ -10,7 +10,7 @@ import io.harness.executionplan.core.impl.PlanCreatorSearchContextImpl.PlanCreat
 public interface PlanCreatorSearchContext<T> {
   T getObjectToPlan();
   String getType();
-  CreateExecutionPlanContext getCreateExecutionPlanContext();
+  ExecutionPlanCreationContext getCreateExecutionPlanContext();
 
   static <T> PlanCreatorSearchContextImplBuilder<T> builder() {
     return PlanCreatorSearchContextImpl.builder();

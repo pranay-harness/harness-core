@@ -1,6 +1,6 @@
 package io.harness.executionplan.core.impl;
 
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.plan.PlanNode;
 import lombok.Builder;
 import lombok.Singular;
@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
-public class CreateExecutionPlanResponseImpl implements CreateExecutionPlanResponse {
+public class ExecutionPlanCreatorResponseImpl implements ExecutionPlanCreatorResponse {
   @Singular List<PlanNode> planNodes;
   @NotNull String startingNodeId;
 }

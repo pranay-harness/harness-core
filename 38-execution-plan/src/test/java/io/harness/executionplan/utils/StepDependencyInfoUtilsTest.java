@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.impl.CreateExecutionPlanContextImpl;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import io.harness.executionplan.stepsdependency.instructors.ExpressionStepDependencyInstructor;
 import io.harness.rule.Owner;
@@ -20,7 +20,7 @@ public class StepDependencyInfoUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetInstructorsList() {
-    CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+    ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
     List<StepDependencyInstructor> instructorsList = StepDependencyInfoUtils.getInstructorsList(context);
 
     assertThat(instructorsList.isEmpty()).isEqualTo(true);

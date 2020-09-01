@@ -6,9 +6,9 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
@@ -41,20 +41,20 @@ public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<Stag
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      List<StageElementWrapper> stagesList, CreateExecutionPlanContext context) {
-    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, stagesList);
+  public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
+      List<StageElementWrapper> stagesList, ExecutionPlanCreationContext context) {
+    Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
+    List<ExecutionPlanCreatorResponse> planForStages = getPlanForStages(context, stagesList);
     childrenPlanMap.put("STAGES", planForStages);
     return childrenPlanMap;
   }
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(List<StageElementWrapper> input,
-      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForStages = planForChildrenMap.get("STAGES");
+  public ExecutionPlanCreatorResponse createPlanForSelf(List<StageElementWrapper> input,
+      Map<String, List<ExecutionPlanCreatorResponse>> planForChildrenMap, ExecutionPlanCreationContext context) {
+    List<ExecutionPlanCreatorResponse> planForStages = planForChildrenMap.get("STAGES");
     final PlanNode stagesPlanNode = prepareStagesNode(planForStages);
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(stagesPlanNode)
         .planNodes(getPlanNodes(planForStages))
         .startingNodeId(stagesPlanNode.getUuid())
@@ -62,17 +62,17 @@ public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<Stag
   }
 
   @NotNull
-  private List<PlanNode> getPlanNodes(List<CreateExecutionPlanResponse> planForSteps) {
+  private List<PlanNode> getPlanNodes(List<ExecutionPlanCreatorResponse> planForSteps) {
     return planForSteps.stream()
         .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
         .collect(Collectors.toList());
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForStages(
-      CreateExecutionPlanContext context, List<StageElementWrapper> stages) {
-    List<CreateExecutionPlanResponse> list = new ArrayList<>();
+  private List<ExecutionPlanCreatorResponse> getPlanForStages(
+      ExecutionPlanCreationContext context, List<StageElementWrapper> stages) {
+    List<ExecutionPlanCreatorResponse> list = new ArrayList<>();
     for (StageElementWrapper stage : stages) {
-      CreateExecutionPlanResponse plan;
+      ExecutionPlanCreatorResponse plan;
       if (stage instanceof ParallelStageElement) {
         ParallelStageElement parallelStage = (ParallelStageElement) stage;
         plan = getPlanCreatorForParallelStage(context, parallelStage).createPlan(parallelStage, context);
@@ -86,18 +86,19 @@ public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<Stag
     return list;
   }
 
-  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(CreateExecutionPlanContext context, StageType stage) {
+  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(
+      ExecutionPlanCreationContext context, StageType stage) {
     return planCreatorHelper.getExecutionPlanCreator(
         PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for stage");
   }
 
   private ExecutionPlanCreator<ParallelStageElement> getPlanCreatorForParallelStage(
-      CreateExecutionPlanContext context, ParallelStageElement parallelStage) {
+      ExecutionPlanCreationContext context, ParallelStageElement parallelStage) {
     return planCreatorHelper.getExecutionPlanCreator(PlanCreatorType.STAGE_PLAN_CREATOR.getName(), parallelStage,
         context, "no execution plan creator found for  parallelStage");
   }
 
-  private PlanNode prepareStagesNode(List<CreateExecutionPlanResponse> planForStages) {
+  private PlanNode prepareStagesNode(List<ExecutionPlanCreatorResponse> planForStages) {
     final String nodeId = generateUuid();
     return PlanNode.builder()
         .uuid(nodeId)
@@ -107,7 +108,7 @@ public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<Stag
         .group(StepOutcomeGroup.STAGES.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForStages.stream()
-                                              .map(CreateExecutionPlanResponse::getStartingNodeId)
+                                              .map(ExecutionPlanCreatorResponse::getStartingNodeId)
                                               .collect(Collectors.toList()))
                             .build())
         .facilitatorObtainment(FacilitatorObtainment.builder()

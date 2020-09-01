@@ -18,8 +18,8 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
@@ -40,13 +40,13 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
   @Inject private StepDependencyService stepDependencyService;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(
-      PipelineInfrastructure pipelineInfrastructure, CreateExecutionPlanContext context) {
+  public ExecutionPlanCreatorResponse createPlan(
+      PipelineInfrastructure pipelineInfrastructure, ExecutionPlanCreationContext context) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(pipelineInfrastructure, context);
     PlanNode infraStepNode = getInfraStepNode(actualInfraConfig, context);
     PlanNode envStepNode = getEnvStepNode(actualInfraConfig);
     PlanNode infraSectionNode = getInfraSectionNode(infraStepNode, envStepNode);
-    return CreateExecutionPlanResponse.builder()
+    return ExecutionPlanCreatorResponse.builder()
         .planNode(envStepNode)
         .planNode(infraStepNode)
         .planNode(infraSectionNode)
@@ -79,7 +79,8 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
         .build();
   }
 
-  private PlanNode getInfraStepNode(PipelineInfrastructure pipelineInfrastructure, CreateExecutionPlanContext context) {
+  private PlanNode getInfraStepNode(
+      PipelineInfrastructure pipelineInfrastructure, ExecutionPlanCreationContext context) {
     final String infraNodeId = generateUuid();
     final String infraIdentifier = "infrastructureSpecification";
 
@@ -137,7 +138,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
 
   /** Method returns actual Infra object by resolving useFromStage if present. */
   private PipelineInfrastructure getActualInfraConfig(
-      PipelineInfrastructure infrastructure, CreateExecutionPlanContext context) {
+      PipelineInfrastructure infrastructure, ExecutionPlanCreationContext context) {
     if (infrastructure.getUseFromStage() != null) {
       if (infrastructure.getInfrastructureDefinition() != null) {
         throw new InvalidArgumentsException("Infrastructure should not exist with UseFromStage.");

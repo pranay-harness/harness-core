@@ -12,8 +12,8 @@ import com.google.inject.name.Named;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.impl.CreateExecutionPlanContextImpl;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import io.harness.executionplan.stepsdependency.StepDependencyResolver;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
@@ -40,7 +40,7 @@ public class StepDependencyServiceImplTest extends CategoryTest {
 
   @InjectMocks StepDependencyServiceImpl dependencyService;
 
-  CreateExecutionPlanContext context = CreateExecutionPlanContextImpl.builder().build();
+  ExecutionPlanCreationContext context = ExecutionPlanCreationContextImpl.builder().build();
 
   @Test
   @Owner(developers = ARCHIT)

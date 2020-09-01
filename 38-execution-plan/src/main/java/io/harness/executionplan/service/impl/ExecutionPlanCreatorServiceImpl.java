@@ -5,12 +5,12 @@ import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELIN
 import com.google.inject.Inject;
 
 import io.harness.exception.NoResultFoundException;
-import io.harness.executionplan.core.CreateExecutionPlanContext;
-import io.harness.executionplan.core.CreateExecutionPlanResponse;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
+import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
-import io.harness.executionplan.core.impl.CreateExecutionPlanContextImpl;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.plan.Plan;
 import io.harness.yaml.core.intfc.Pipeline;
@@ -25,14 +25,15 @@ public class ExecutionPlanCreatorServiceImpl implements ExecutionPlanCreatorServ
 
   @Override
   public Plan createPlanForPipeline(Pipeline pipeline, String accountId) {
-    final CreateExecutionPlanContext createExecutionPlanContext =
-        CreateExecutionPlanContextImpl.builder().accountId(accountId).build();
+    final ExecutionPlanCreationContext executionPlanCreationContext =
+        ExecutionPlanCreationContextImpl.builder().accountId(accountId).build();
 
-    final PlanCreatorSearchContext<Pipeline> searchContext = PlanCreatorSearchContext.<Pipeline>builder()
-                                                                 .objectToPlan(pipeline)
-                                                                 .type(PIPELINE_PLAN_CREATOR.getName())
-                                                                 .createExecutionPlanContext(createExecutionPlanContext)
-                                                                 .build();
+    final PlanCreatorSearchContext<Pipeline> searchContext =
+        PlanCreatorSearchContext.<Pipeline>builder()
+            .objectToPlan(pipeline)
+            .type(PIPELINE_PLAN_CREATOR.getName())
+            .createExecutionPlanContext(executionPlanCreationContext)
+            .build();
 
     final ExecutionPlanCreator<Pipeline> planCreator =
         executionPlanCreatorRegistry.obtainCreator(searchContext)
@@ -41,7 +42,7 @@ public class ExecutionPlanCreatorServiceImpl implements ExecutionPlanCreatorServ
                                     .message("no execution plan creator found for pipeline")
                                     .build());
 
-    final CreateExecutionPlanResponse response = planCreator.createPlan(pipeline, createExecutionPlanContext);
+    final ExecutionPlanCreatorResponse response = planCreator.createPlan(pipeline, executionPlanCreationContext);
 
     return Plan.builder().nodes(response.getPlanNodes()).startingNodeId(response.getStartingNodeId()).build();
   }
