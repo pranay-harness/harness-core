@@ -3,6 +3,8 @@ package software.wings.core.winrm.executors;
 import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 import static java.lang.String.format;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import com.jcraft.jsch.JSchException;
 import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
@@ -32,7 +34,7 @@ import java.util.Map.Entry;
 @Slf4j
 public class WinRmSession implements AutoCloseable {
   private static final int retryCount = 1;
-  private static final String COMMAND_PLACEHOLDER = "%s %s";
+  @VisibleForTesting static final String COMMAND_PLACEHOLDER = "%s %s";
 
   private final ShellCommand shell;
   private final WinRmTool winRmTool;
@@ -167,7 +169,8 @@ public class WinRmSession implements AutoCloseable {
     }
   }
 
-  private String getUserPrincipal(String username, String domain) {
+  @VisibleForTesting
+  String getUserPrincipal(String username, String domain) {
     if (username == null || domain == null) {
       throw new InvalidRequestException("Username or domain cannot be null", WingsException.USER);
     }

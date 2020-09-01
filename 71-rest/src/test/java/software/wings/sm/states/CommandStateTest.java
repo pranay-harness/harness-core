@@ -62,6 +62,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.sun.tools.javac.util.List;
@@ -81,7 +82,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -93,6 +93,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
+import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.Builder;
@@ -1026,7 +1027,6 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI, intermittent = true)
   @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFailWhenNestedCommandNotFound() {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand()
@@ -1187,6 +1187,39 @@ public class CommandStateTest extends WingsBaseTest {
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
     Command command = createCommand();
     testRenderCommandStringWithoutArtifact(commandState, commandStateExecutionData, command);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetPatternsForRequiredContextElementTypeExecuteOnDelegate() {
+    commandState.setExecuteOnDelegate(true);
+    assertThat(commandState.getPatternsForRequiredContextElementType()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetPatternsForRequiredContextElementType() {
+    commandState.setHost("localhost");
+    commandState.setExecuteOnDelegate(false);
+    assertThat(commandState.getPatternsForRequiredContextElementType()).isEqualTo(asList("localhost"));
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetPatternsForRequiredContextElementTypeHostNull() {
+    commandState.setExecuteOnDelegate(false);
+    assertThat(commandState.getPatternsForRequiredContextElementType()).isEqualTo(asList("${instance}"));
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetRequiredExecutionArgumentTypes() {
+    assertThat(commandState.getRequiredExecutionArgumentTypes())
+        .isEqualTo(Lists.newArrayList(EntityType.SERVICE, EntityType.INSTANCE));
   }
 
   private void testRenderCommandStringWithoutArtifact(
