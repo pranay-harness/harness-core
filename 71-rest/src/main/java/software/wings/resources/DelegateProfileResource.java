@@ -101,7 +101,7 @@ public class DelegateProfileResource {
   @Path("{delegateProfileId}/selectors")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<DelegateProfile> updateDelegateProfileSelector(
       @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selectors") List<String> selectors) {
