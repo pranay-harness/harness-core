@@ -1005,9 +1005,6 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public String generateSampleDelegate(String accountId) {
     assertTrialAccount(accountId);
-
-    sampleDataProviderService.createK8sV2SampleApp(get(accountId));
-
     if (isBlank(mainConfiguration.getSampleTargetEnv())) {
       String err = "Sample target env not configured";
       logger.warn(err);

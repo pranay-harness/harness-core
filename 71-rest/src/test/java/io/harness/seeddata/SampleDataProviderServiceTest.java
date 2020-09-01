@@ -40,7 +40,7 @@ import software.wings.utils.WingsTestConstants;
 public class SampleDataProviderServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
-  @Inject private SampleDataProviderService sampleDataProviderService;
+  @Inject private SampleDataProviderServiceImpl sampleDataProviderService;
   @Inject private SettingsService settingsService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;

@@ -26,6 +26,7 @@ import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
+import io.harness.seeddata.SampleDataProviderService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -86,12 +87,14 @@ public class AccountResource {
   private final FeatureService featureService;
   private final PersistentScheduler jobScheduler;
   private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
+  private final Provider<SampleDataProviderService> sampleDataProviderServiceProvider;
 
   @Inject
   public AccountResource(AccountService accountService, UserService userService,
       Provider<LicenseService> licenseServiceProvider, AccountPermissionUtils accountPermissionUtils,
       FeatureService featureService, @Named("BackgroundJobScheduler") PersistentScheduler jobScheduler,
-      GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler) {
+      GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler,
+      Provider<SampleDataProviderService> sampleDataProviderServiceProvider) {
     this.accountService = accountService;
     this.userService = userService;
     this.licenseServiceProvider = licenseServiceProvider;
@@ -99,6 +102,7 @@ public class AccountResource {
     this.featureService = featureService;
     this.jobScheduler = jobScheduler;
     this.gcpMarketPlaceApiHandler = gcpMarketPlaceApiHandler;
+    this.sampleDataProviderServiceProvider = sampleDataProviderServiceProvider;
   }
 
   @GET
@@ -368,6 +372,18 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<String> generateSampleDelegate(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.generateSampleDelegate(accountId));
+  }
+
+  @POST
+  @Path("/createSampleApplication")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> createSampleApplication(@QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Creating sample cloud provider and sample application..");
+      sampleDataProviderServiceProvider.get().createK8sV2SampleApp(accountService.get(accountId));
+      return new RestResponse<>(Boolean.TRUE);
+    }
   }
 
   @DELETE

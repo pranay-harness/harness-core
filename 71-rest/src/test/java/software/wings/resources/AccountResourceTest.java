@@ -16,6 +16,8 @@ import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.seeddata.SampleDataProviderService;
+
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -47,12 +49,15 @@ public class AccountResourceTest extends CategoryTest {
   private static FeatureService featureService = mock(FeatureService.class);
   private static PersistentScheduler jobScheduler = mock(PersistentScheduler.class);
   private static GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler = mock(GcpMarketPlaceApiHandler.class);
+  private static SampleDataProviderService sampleDataProviderService = mock(SampleDataProviderService.class);
+  private static Provider<SampleDataProviderService> sampleDataProviderServiceProvider =
+      (Provider<SampleDataProviderService>) mock(Provider.class);
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .instance(new AccountResource(accountService, userService, licenseServiceProvider, accountPermissionUtils,
-              featureService, jobScheduler, gcpMarketPlaceApiHandler))
+              featureService, jobScheduler, gcpMarketPlaceApiHandler, sampleDataProviderServiceProvider))
           .build();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -60,6 +65,7 @@ public class AccountResourceTest extends CategoryTest {
   public void setUp() {
     when(accountService.get(eq(accountId))).thenReturn(account);
     when(licenseServiceProvider.get()).thenReturn(licenseService);
+    when(sampleDataProviderServiceProvider.get()).thenReturn(sampleDataProviderService);
   }
 
   @Test
@@ -71,5 +77,16 @@ public class AccountResourceTest extends CategoryTest {
         .request()
         .post(entity(Entity.json(""), MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     verify(licenseService).startCeLimitedTrial(eq(accountId));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCreateSampleApplication() {
+    RESOURCES.client()
+        .target(format("/account/createSampleApplication?accountId=%s", accountId))
+        .request()
+        .post(entity(Entity.json(""), MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    verify(sampleDataProviderService).createK8sV2SampleApp(eq(account));
   }
 }
