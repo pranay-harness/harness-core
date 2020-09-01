@@ -1,9 +1,11 @@
 package io.harness.delegate.beans.connector.docker;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DockerAuthType {
-  USER_PASSWORD("UsernamePassword");
+  @JsonProperty("UsernamePassword") USER_PASSWORD("UsernamePassword"),
+  NO_AUTH("NoAuth");
 
   private final String displayName;
 

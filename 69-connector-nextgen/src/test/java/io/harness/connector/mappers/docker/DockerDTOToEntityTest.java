@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
+import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
@@ -47,8 +48,11 @@ public class DockerDTOToEntityTest extends CategoryTest {
     DockerConnector dockerConectorEntity = dockerDTOToEntity.toConnectorEntity(dockerConnectorDTO);
     assertThat(dockerConectorEntity).isNotNull();
     assertThat(dockerConectorEntity.getUrl()).isEqualTo(dockerRegistryUrl);
-    assertThat(dockerConectorEntity.getUsername()).isEqualTo(dockerUserName);
-    assertThat(dockerConectorEntity.getPasswordRef()).isEqualTo(passwordSecretRef.toSecretRefStringValue());
+    assertThat(((DockerUserNamePasswordAuthentication) (dockerConectorEntity.getDockerAuthentication())).getUsername())
+        .isEqualTo(dockerUserName);
+    assertThat(
+        ((DockerUserNamePasswordAuthentication) (dockerConectorEntity.getDockerAuthentication())).getPasswordRef())
+        .isEqualTo(passwordSecretRef.toSecretRefStringValue());
     assertThat(dockerConectorEntity.getAuthType()).isEqualTo(USER_PASSWORD);
   }
 }
