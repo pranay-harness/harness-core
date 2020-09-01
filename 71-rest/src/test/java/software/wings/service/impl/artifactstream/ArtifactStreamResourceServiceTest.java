@@ -1,6 +1,7 @@
 package software.wings.service.impl.artifactstream;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -37,7 +38,7 @@ import java.util.List;
 public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   private static final JenkinsArtifactStream artifactStream = JenkinsArtifactStream.builder()
                                                                   .appId(APP_ID)
-                                                                  .name("Jenkins artifact")
+                                                                  .name("     Jenkins artifact    ")
                                                                   .sourceName("job1")
                                                                   .jobname("job1")
                                                                   .settingId("JENKINS_SETTING_ID")
@@ -66,10 +67,13 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should create artifact stream.
    */
   @Test
-  @Owner(developers = ANUBHAW)
+  @Owner(developers = {ANUBHAW, DEEPAK_PUTHRAYA})
   @Category(UnitTests.class)
   public void shouldCreateArtifactStream() {
-    assertThat(artifactStreamService.create(artifactStream)).isNotNull();
+    ArtifactStream stream = artifactStreamService.create(artifactStream);
+    assertThat(stream).isNotNull();
+    // Checking that the name has been saved after Normalization
+    assertThat(stream.getName()).isEqualTo("Jenkins artifact");
   }
 
   /**
