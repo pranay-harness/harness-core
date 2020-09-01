@@ -19,6 +19,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
+import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
@@ -130,6 +131,7 @@ import software.wings.delegatetasks.validation.KubernetesSwapServiceSelectorsVal
 import software.wings.delegatetasks.validation.LDAPValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.MasterUrlFetchValidation;
+import software.wings.delegatetasks.validation.NGDockerValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
 import software.wings.delegatetasks.validation.PCFCommandValidation;
@@ -444,10 +446,11 @@ public enum TaskType {
   EXECUTE_COMMAND(TaskGroup.CI, ExecuteCommandTask.class, AlwaysTrueValidation.class),
   CI_CLEANUP(TaskGroup.CI, CICleanupTask.class, AlwaysTrueValidation.class),
   AWS_S3_TASK(TaskGroup.AWS, AwsS3Task.class, AwsConnectionValidation.class),
-  // This task if only for  next gen experience
+  // This task is only for  next gen experience
   VALIDATE_KUBERNETES_CONFIG(
       TaskGroup.CONTAINER, KubernetesTestConnectionDelegateTask.class, KubernetesConnectionDelegateValidation.class),
-  NG_GIT_COMMAND(TaskGroup.GIT, NGGitCommandTask.class, NGGitConnectionValidation.class);
+  NG_GIT_COMMAND(TaskGroup.GIT, NGGitCommandTask.class, NGGitConnectionValidation.class),
+  DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.GIT, DockerTestConnectionDelegateTask.class, NGDockerValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
