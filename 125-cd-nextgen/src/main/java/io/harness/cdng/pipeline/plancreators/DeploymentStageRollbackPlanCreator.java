@@ -9,6 +9,10 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 
 import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.pipeline.beans.RollbackNode;
+import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
+import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
+import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
@@ -23,11 +27,8 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.state.core.section.chain.RollbackOptionalChildChainStep;
-import io.harness.state.core.section.chain.RollbackOptionalChildChainStepParameters;
-import io.harness.state.core.section.chain.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.core.StepGroupElement;
+import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
 import java.util.HashMap;
@@ -83,8 +84,19 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
   }
 
   private boolean containsStepGroupsWithRollbackSteps(List<ExecutionWrapper> steps) {
-    return steps.stream().anyMatch(
-        step -> step instanceof StepGroupElement && isNotEmpty(((StepGroupElement) step).getRollbackSteps()));
+    for (ExecutionWrapper step : steps) {
+      if (PlanCreatorHelper.isStepGroupWithRollbacks(step)) {
+        return true;
+      } else if (step instanceof ParallelStepElement) {
+        List<ExecutionWrapper> sections = ((ParallelStepElement) step).getSections();
+        for (ExecutionWrapper section : sections) {
+          if (PlanCreatorHelper.isStepGroupWithRollbacks(section)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   @Override
@@ -102,7 +114,7 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
 
     if (infraRollbackPlan != null) {
       stepParametersBuilder.childNode(
-          RollbackOptionalChildChainStepParameters.Node.builder()
+          RollbackNode.builder()
               .nodeId(infraRollbackPlan.get(0).getStartingNodeId())
               .dependentNodeIdentifier(PlanCreatorConstants.STAGES_NODE_IDENTIFIER + deploymentStage.getIdentifier()
                   + "." + PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
@@ -113,7 +125,7 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
     String executionNodeFullIdentifier = String.join(".", PlanCreatorConstants.STAGES_NODE_IDENTIFIER,
         deploymentStage.getIdentifier(), PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER);
     if (stepGroupRollbackPlan != null) {
-      stepParametersBuilder.childNode(RollbackOptionalChildChainStepParameters.Node.builder()
+      stepParametersBuilder.childNode(RollbackNode.builder()
                                           .nodeId(stepGroupRollbackPlan.get(0).getStartingNodeId())
                                           .dependentNodeIdentifier(executionNodeFullIdentifier)
                                           .build());
@@ -121,7 +133,7 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
     }
 
     if (executionRollbackPlan != null) {
-      stepParametersBuilder.childNode(RollbackOptionalChildChainStepParameters.Node.builder()
+      stepParametersBuilder.childNode(RollbackNode.builder()
                                           .nodeId(executionRollbackPlan.get(0).getStartingNodeId())
                                           .dependentNodeIdentifier(executionNodeFullIdentifier)
                                           .build());
@@ -131,8 +143,8 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
     PlanNode deploymentStageRollbackNode =
         PlanNode.builder()
             .uuid(UUIDGenerator.generateUuid())
-            .name("rollback" + deploymentStage.getName())
-            .identifier("rollback" + deploymentStage.getIdentifier())
+            .name(deploymentStage.getName() + ":Rollback")
+            .identifier(deploymentStage.getIdentifier() + "Rollback")
             .stepType(RollbackOptionalChildChainStep.STEP_TYPE)
             .stepParameters(stepParametersBuilder.build())
             .facilitatorObtainment(FacilitatorObtainment.builder()

@@ -13,6 +13,8 @@ import io.harness.cdng.k8s.K8sRollingStep;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
+import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
+import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchStep;
 import io.harness.redesign.states.email.EmailStep;
@@ -36,6 +38,8 @@ public class NgStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(ShellScriptStep.STEP_TYPE, ShellScriptStep.class));
     stateClasses.add(Pair.of(EmailStep.STEP_TYPE, EmailStep.class));
     stateClasses.add(Pair.of(BasicHttpChainStep.STEP_TYPE, BasicHttpChainStep.class));
+    stateClasses.add(Pair.of(RollbackOptionalChildChainStep.STEP_TYPE, RollbackOptionalChildChainStep.class));
+    stateClasses.add(Pair.of(RollbackOptionalChildrenStep.STEP_TYPE, RollbackOptionalChildrenStep.class));
 
     // Add CDNG steps here
     stateClasses.add(Pair.of(ArtifactStep.STEP_TYPE, ArtifactStep.class));

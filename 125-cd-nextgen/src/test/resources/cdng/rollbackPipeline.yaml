@@ -102,6 +102,60 @@ pipeline:
                           socketTimeoutMillis: 1000
                           method: GET
                           url: http://httpstat.us/200
+              - stepGroup:
+                  name: StepGroup3
+                  identifier: StepGroup3
+                  steps:
+                    - step:
+                        name: http sg3 step 1
+                        identifier: httpStep9
+                        type: Http
+                        spec:
+                          socketTimeoutMillis: 1000
+                          method: GET
+                          url: http://httpstat.us/200
+              - parallel:
+                  - step:
+                      name: http step 10
+                      identifier: httpStep10
+                      type: Http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: http://httpstat.us/500
+                  - stepGroup:
+                      name: StepGroup4
+                      identifier: StepGroup4
+                      steps:
+                        - step:
+                            name: http sg4 step 1
+                            identifier: httpStep11
+                            type: Http
+                            spec:
+                              socketTimeoutMillis: 1000
+                              method: GET
+                              url: http://httpstat.us/500
+                      rollbackSteps:
+                        - step:
+                            name: http sg4 rollback step 1
+                            identifier: httpStep12
+                            type: Http
+                            spec:
+                              socketTimeoutMillis: 1000
+                              method: GET
+                              url: http://httpstat.us/200
+                  - stepGroup:
+                      name: StepGroup5
+                      identifier: StepGroup5
+                      steps:
+                        - step:
+                            name: http sg5 step 1
+                            identifier: httpStep12
+                            type: Http
+                            spec:
+                              socketTimeoutMillis: 1000
+                              method: GET
+                              url: http://httpstat.us/500
               - step:
                   name: http step 2
                   identifier: httpStep2

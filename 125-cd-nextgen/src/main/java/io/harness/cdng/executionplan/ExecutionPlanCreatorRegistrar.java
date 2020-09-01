@@ -11,6 +11,7 @@ import io.harness.cdng.pipeline.plancreators.DeploymentStageRollbackPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ExecutionRollbackPlanCreator;
 import io.harness.cdng.pipeline.plancreators.InfraPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ManifestStepPlanCreator;
+import io.harness.cdng.pipeline.plancreators.ParallelStepGroupRollbackPlanCreator;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ServiceStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.StepGroupRollbackPlanCreator;
@@ -45,6 +46,7 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private StepGroupsRollbackPlanCreator stepGroupsRollbackPlanCreator;
   @Inject private StepGroupRollbackPlanCreator stepGroupRollbackPlanCreator;
   @Inject private ExecutionRollbackPlanCreator executionRollbackPlanCreator;
+  @Inject private ParallelStepGroupRollbackPlanCreator parallelStepGroupRollbackPlanCreator;
 
   public void register() {
     logger.info("Start: register execution plan creators");
@@ -65,6 +67,7 @@ public class ExecutionPlanCreatorRegistrar {
     register(stepGroupsRollbackPlanCreator);
     register(stepGroupRollbackPlanCreator);
     register(executionRollbackPlanCreator);
+    register(parallelStepGroupRollbackPlanCreator);
     logger.info("Done: register execution plan creators");
   }
   private void register(SupportDefinedExecutorPlanCreator<?> executionPlanCreator) {
