@@ -44,7 +44,8 @@ public class GitEntityResource {
   public ResponseDTO<NGPageResponse<GitSyncEntityListDTO>> listByType(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("entityType") EntityType entityType, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") int size) {
+      @QueryParam("size") int size, @QueryParam("product") String product) {
+    // Added product for now if in future we want to support product filter in entities as well.
     return ResponseDTO.newResponse(
         gitEntityService.getPageByType(projectId, organizationId, accountId, entityType, page, size));
   }

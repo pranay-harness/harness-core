@@ -1,5 +1,6 @@
 package io.harness.gitsync.core;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
@@ -15,13 +16,23 @@ public enum EntityType {
 
   private final Product product;
 
+  @JsonCreator
+  public static EntityType fromString(@JsonProperty("entityType") String entityType) {
+    for (EntityType entityTypeEnum : EntityType.values()) {
+      if (entityTypeEnum.name().equalsIgnoreCase(entityType)) {
+        return entityTypeEnum;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + entityType);
+  }
+
   public static List<EntityType> getEntityTypes(Product product) {
     return Arrays.stream(EntityType.values())
         .filter(entityType -> entityType.product.name().equalsIgnoreCase(product.name()))
         .collect(Collectors.toList());
   }
 
-  public static EntityType getEntityName(String entityType) {
+  public static EntityType getEntityDisplayName(String entityType) {
     return EntityType.valueOf(entityType.toUpperCase());
   }
 
@@ -33,7 +44,7 @@ public enum EntityType {
     this.product = product;
   }
 
-  public String getEntityName() {
+  public String getEntityDisplayName() {
     return this.name().toLowerCase();
   }
 }

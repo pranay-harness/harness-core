@@ -16,17 +16,21 @@ import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
+import io.harness.gitsync.common.dtos.RepoProviders;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.core.EntityType;
 import io.harness.gitsync.core.Product;
 import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.transport.URIish;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +78,7 @@ public class GitEntityServiceImpl implements GitEntityService {
       String projectId, String orgId, String accountId, Scope scope, EntityType entityTypes) {
     return getCriteriaWithScopeMatch(projectId, orgId, accountId, scope)
         .and(GitFileLocationKeys.entityType)
-        .is(entityTypes.getEntityName());
+        .is(entityTypes.getEntityDisplayName());
   }
 
   @NotNull
@@ -94,11 +98,43 @@ public class GitEntityServiceImpl implements GitEntityService {
         .branch(entity.getBranch())
         .entityIdentifier(entity.getEntityIdentifier())
         .entityName(entity.getEntityName())
-        .entityType(EntityType.getEntityName(entity.getEntityType()))
+        .entityType(EntityType.getEntityDisplayName(entity.getEntityType()))
         .gitConnectorId(entity.getGitConnectorId())
-        .repo(entity.getRepo())
+        .repo(getDisplayRepositoryUrl(entity.getRepo()))
+        .repoProviderType(getGitProvider(entity.getRepo()))
         .filePath(getEntityPath(entity))
         .build();
+  }
+
+  private RepoProviders getGitProvider(String repositoryUrl) {
+    try {
+      URIish uri = new URIish(repositoryUrl);
+      String host = uri.getHost();
+      if (null != host) {
+        for (RepoProviders repoProvider : RepoProviders.values()) {
+          if (StringUtils.containsIgnoreCase(host, repoProvider.name())) {
+            return repoProvider;
+          }
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Failed to generate Git Provider Repository Url {}", repositoryUrl, e);
+    }
+    return RepoProviders.UNKNOWN;
+  }
+
+  private String getDisplayRepositoryUrl(String repositoryUrl) {
+    try {
+      URIish uri = new URIish(repositoryUrl);
+      String path = uri.getPath();
+      path = StringUtils.removeEnd(path, "/");
+      path = StringUtils.removeEnd(path, ".git");
+      path = StringUtils.removeStart(path, "/");
+      return path;
+    } catch (URISyntaxException e) {
+      logger.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
+    }
+    return repositoryUrl;
   }
 
   @NotNull
@@ -133,7 +169,7 @@ public class GitEntityServiceImpl implements GitEntityService {
 
   private long countByType(String projectId, String orgId, String accountId, Scope scope, EntityType entityType) {
     return gitFileLocationRepository.countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
-        projectId, orgId, accountId, scope, entityType.getEntityName());
+        projectId, orgId, accountId, scope, entityType.getEntityDisplayName());
   }
 
   private Page<GitFileLocation> gitSyncEntityDTOPageByType(

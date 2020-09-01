@@ -1,5 +1,6 @@
 package io.harness.gitsync.common.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.gitsync.core.EntityType;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,7 +15,8 @@ public class GitSyncEntityDTO {
   private EntityType entityType;
   private String entityIdentifier;
   private String gitConnectorId;
-  private String repo;
+  @JsonProperty("repositoryName") private String repo;
   private String branch;
   private String filePath;
+  private RepoProviders repoProviderType;
 }
