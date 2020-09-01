@@ -100,6 +100,8 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.seeddata.SampleDataProviderService;
+import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
@@ -758,6 +760,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(AppService.class).to(AppServiceImpl.class);
     bind(HarnessSampleAppService.class).to(HarnessSampleAppServiceImpl.class);
+    bind(SampleDataProviderService.class).to(SampleDataProviderServiceImpl.class);
     bind(ApplicationManifestService.class).to(ApplicationManifestServiceImpl.class);
     bind(ArtifactService.class).to(ArtifactServiceImpl.class);
     bind(AuditService.class).to(AuditServiceImpl.class);
