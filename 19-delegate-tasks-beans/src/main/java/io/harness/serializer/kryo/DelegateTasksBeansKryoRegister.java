@@ -19,6 +19,8 @@ import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
+import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
@@ -243,6 +245,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DockerAuthType.class, 19114);
     kryo.register(DockerConnectorDTO.class, 19115);
     kryo.register(DockerUserNamePasswordDTO.class, 19116);
+    kryo.register(DockerTestConnectionTaskParams.class, 19117);
+    kryo.register(DockerTestConnectionTaskResponse.class, 19118);
     kryo.register(ArtifactTaskParameters.class, 19300);
     kryo.register(ArtifactTaskResponse.class, 19301);
     kryo.register(DockerArtifactDelegateRequest.class, 19302);
