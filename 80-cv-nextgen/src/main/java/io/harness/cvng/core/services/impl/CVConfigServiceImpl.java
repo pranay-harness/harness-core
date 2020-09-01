@@ -8,19 +8,28 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -30,6 +39,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private AnomalyService anomalyService;
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
@@ -121,6 +131,38 @@ public class CVConfigServiceImpl implements CVConfigService {
                                 .filter(CVConfigKeys.productName, productName)
                                 .filter(CVConfigKeys.groupId, groupId);
     return query.asList();
+  }
+
+  @Override
+  public List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier) {
+    List<CVConfig> cvConfigs = listConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+    Map<String, Set<String>> envToServicesMap = new HashMap<>();
+    cvConfigs.forEach(cvConfig -> {
+      if (!envToServicesMap.containsKey(cvConfig.getEnvIdentifier())) {
+        envToServicesMap.put(cvConfig.getEnvIdentifier(), new HashSet<>());
+      }
+      envToServicesMap.get(cvConfig.getEnvIdentifier()).add(cvConfig.getServiceIdentifier());
+    });
+
+    List<EnvToServicesDTO> envToServicesDTOS = new ArrayList<>();
+    envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
+      EnvironmentResponseDTO environment =
+          nextGenService.getEnvironment(envIdentifier, accountId, orgIdentifier, projectIdentifier);
+      Set<ServiceResponseDTO> services = new HashSet<>();
+      serviceIdentifiers.forEach(serviceIdentifier
+          -> services.add(nextGenService.getService(serviceIdentifier, accountId, orgIdentifier, projectIdentifier)));
+
+      envToServicesDTOS.add(EnvToServicesDTO.builder().environment(environment).services(services).build());
+    });
+    return envToServicesDTOS;
+  }
+
+  private List<CVConfig> listConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier) {
+    return hPersistence.createQuery(CVConfig.class)
+        .filter(CVConfigKeys.accountId, accountId)
+        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+        .asList();
   }
 
   @Override
