@@ -5,6 +5,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_RESOURCE
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_LOG_ANALYSIS_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TEST_DATA_PATH;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
@@ -14,10 +15,10 @@ import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
-import io.harness.cvng.analysis.entities.LogAnalysisFrequencyPattern;
-import io.harness.cvng.analysis.entities.LogAnalysisFrequencyPattern.FrequencyPattern;
-import io.harness.cvng.analysis.entities.LogAnalysisRecord;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisRecord.LogAnalysisRecordKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
@@ -87,16 +88,19 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public List<FrequencyPattern> getFrequencyPattern(
+  public List<LogAnalysisCluster> getPreviousAnalysis(
       String cvConfigId, Instant analysisStartTime, Instant analysisEndTime) {
-    LogAnalysisFrequencyPattern frequencyPattern =
-        hPersistence.createQuery(LogAnalysisFrequencyPattern.class)
-            .filter(LogAnalysisRecordKeys.cvConfigId, cvConfigId)
-            .filter(LogAnalysisRecordKeys.analysisStartTime, analysisStartTime)
-            .filter(LogAnalysisRecordKeys.analysisEndTime, analysisEndTime)
-            .get();
-    if (frequencyPattern != null) {
-      return frequencyPattern.getFrequencyPatterns();
+    List<LogAnalysisCluster> analysisClusters = hPersistence.createQuery(LogAnalysisCluster.class)
+                                                    .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
+                                                    .filter(LogAnalysisClusterKeys.isEvicted, false)
+                                                    .project(LogAnalysisClusterKeys.cvConfigId, true)
+                                                    .project(LogAnalysisClusterKeys.analysisMinute, true)
+                                                    .project(LogAnalysisClusterKeys.label, true)
+                                                    .project(LogAnalysisClusterKeys.text, true)
+                                                    .project(LogAnalysisClusterKeys.trend, true)
+                                                    .asList();
+    if (isNotEmpty(analysisClusters)) {
+      return analysisClusters;
     }
     return new ArrayList<>();
   }
@@ -105,23 +109,25 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public void saveAnalysis(String cvConfigId, String taskId, Instant analysisStartTime, Instant analysisEndTime,
       LogAnalysisDTO analysisBody) {
     logger.info("Saving service guard log analysis for config {} and taskId {}", cvConfigId, taskId);
-    LogAnalysisFrequencyPattern analysisFrequencyPattern = LogAnalysisFrequencyPattern.builder()
-                                                               .cvConfigId(cvConfigId)
-                                                               .analysisEndTime(analysisEndTime)
-                                                               .analysisStartTime(analysisStartTime)
-                                                               .frequencyPatterns(analysisBody.getFrequencyPatterns())
-                                                               .build();
 
-    hPersistence.save(analysisFrequencyPattern);
+    List<LogAnalysisCluster> analysisClusters =
+        analysisBody.toAnalysisClusters(cvConfigId, analysisStartTime, analysisEndTime);
+    LogAnalysisResult analysisResult = analysisBody.toAnalysisResult(cvConfigId, analysisStartTime, analysisEndTime);
+    logger.info("Saving {} analyzed log clusters for config {}, start time {} and end time {}", analysisClusters.size(),
+        cvConfigId, analysisStartTime, analysisEndTime);
+    // first delete the existing records which have not been evicted.
+    hPersistence.delete(hPersistence.createQuery(LogAnalysisCluster.class)
+                            .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
+                            .filter(LogAnalysisClusterKeys.isEvicted, false));
+    // next, save the new records.
+    hPersistence.save(analysisClusters);
 
-    LogAnalysisRecord analysisRecord = analysisBody.toAnalysisRecord();
-    analysisRecord.setAnalysisStartTime(analysisStartTime);
-    analysisRecord.setAnalysisEndTime(analysisEndTime);
-
-    hPersistence.save(analysisRecord);
+    hPersistence.save(analysisResult);
 
     learningEngineTaskService.markCompleted(taskId);
+
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
+
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
         cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), CVMonitoringCategory.PERFORMANCE, analysisEndTime,
         analysisBody.getScore());

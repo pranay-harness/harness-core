@@ -11,7 +11,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
-import io.harness.cvng.analysis.entities.LogAnalysisFrequencyPattern.FrequencyPattern;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -50,10 +50,10 @@ public class LogAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<List<FrequencyPattern>> getPreviousAnalysis(@QueryParam("cvConfigId") String cvConfigId,
+  public RestResponse<List<LogAnalysisCluster>> getPreviousAnalysis(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("analysisStartTime") String analysisStartTime,
       @QueryParam("analysisEndTime") String analysisEndTime) {
-    return new RestResponse<>(logAnalysisService.getFrequencyPattern(
+    return new RestResponse<>(logAnalysisService.getPreviousAnalysis(
         cvConfigId, Instant.parse(analysisStartTime), Instant.parse(analysisEndTime)));
   }
 

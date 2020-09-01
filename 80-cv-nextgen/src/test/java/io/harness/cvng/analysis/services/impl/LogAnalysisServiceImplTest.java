@@ -9,17 +9,17 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.beans.LogAnalysisCluster;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
-import io.harness.cvng.analysis.entities.LogAnalysisFrequencyPattern;
-import io.harness.cvng.analysis.entities.LogAnalysisFrequencyPattern.FrequencyPattern;
-import io.harness.cvng.analysis.entities.LogAnalysisRecord;
-import io.harness.cvng.analysis.entities.LogAnalysisRecord.LogAnalysisRecordKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster.LogAnalysisClusterKeys;
+import io.harness.cvng.analysis.entities.LogAnalysisResult;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -105,7 +105,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   public void getFrequencyPattern_firstAnalysis() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
-    List<FrequencyPattern> patterns = logAnalysisService.getFrequencyPattern(cvConfigId, start, end);
+    List<LogAnalysisCluster> patterns = logAnalysisService.getPreviousAnalysis(cvConfigId, start, end);
 
     assertThat(patterns).isNotNull();
     assertThat(patterns.isEmpty()).isTrue();
@@ -117,17 +117,16 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   public void getFrequencyPattern_hasPreviousAnalysis() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
-    List<FrequencyPattern> frequencyPatterns = createAnalysisDTO(end).getFrequencyPatterns();
+    List<LogAnalysisCluster> analysisClusters = buildAnalysisClusters(12345l);
 
-    LogAnalysisFrequencyPattern patternsInDb = LogAnalysisFrequencyPattern.builder()
-                                                   .cvConfigId(cvConfigId)
-                                                   .analysisStartTime(start)
-                                                   .analysisEndTime(end)
-                                                   .frequencyPatterns(frequencyPatterns)
-                                                   .build();
-    hPersistence.save(patternsInDb);
+    analysisClusters.forEach(cluster -> {
+      cluster.setCvConfigId(cvConfigId);
+      cluster.setAnalysisStartTime(start);
+      cluster.setAnalysisEndTime(end);
+    });
+    hPersistence.save(analysisClusters);
 
-    List<FrequencyPattern> patterns = logAnalysisService.getFrequencyPattern(cvConfigId, start, end);
+    List<LogAnalysisCluster> patterns = logAnalysisService.getPreviousAnalysis(cvConfigId, start, end);
 
     assertThat(patterns).isNotNull();
     assertThat(patterns.size()).isEqualTo(1);
@@ -142,29 +141,30 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     LogAnalysisDTO analysisDTO = createAnalysisDTO(end);
 
-    LogAnalysisFrequencyPattern frequencyPattern = hPersistence.createQuery(LogAnalysisFrequencyPattern.class)
-                                                       .filter(LogAnalysisRecordKeys.cvConfigId, cvConfigId)
-                                                       .get();
+    LogAnalysisCluster frequencyPattern =
+        hPersistence.createQuery(LogAnalysisCluster.class).filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId).get();
     assertThat(frequencyPattern).isNull();
 
-    LogAnalysisRecord record =
-        hPersistence.createQuery(LogAnalysisRecord.class).filter(LogAnalysisRecordKeys.cvConfigId, cvConfigId).get();
+    LogAnalysisResult result =
+        hPersistence.createQuery(LogAnalysisResult.class).filter(LogAnalysisResultKeys.cvConfigId, cvConfigId).get();
 
-    assertThat(record).isNull();
+    assertThat(result).isNull();
 
     logAnalysisService.saveAnalysis(cvConfigId, "taskId", start, end, analysisDTO);
 
     Mockito.verify(learningEngineTaskService).markCompleted("taskId");
 
-    frequencyPattern = hPersistence.createQuery(LogAnalysisFrequencyPattern.class)
-                           .filter(LogAnalysisRecordKeys.cvConfigId, cvConfigId)
-                           .get();
-    assertThat(frequencyPattern).isNotNull();
+    List<LogAnalysisCluster> analysisClusters = hPersistence.createQuery(LogAnalysisCluster.class)
+                                                    .filter(LogAnalysisClusterKeys.cvConfigId, cvConfigId)
+                                                    .asList();
+    assertThat(analysisClusters).isNotNull();
+    assertThat(analysisClusters.size()).isEqualTo(2);
 
-    record =
-        hPersistence.createQuery(LogAnalysisRecord.class).filter(LogAnalysisRecordKeys.cvConfigId, cvConfigId).get();
+    result =
+        hPersistence.createQuery(LogAnalysisResult.class).filter(LogAnalysisResultKeys.cvConfigId, cvConfigId).get();
 
-    assertThat(record).isNotNull();
+    assertThat(result).isNotNull();
+    assertThat(result.getLogAnalysisResults().size()).isEqualTo(2);
   }
 
   @Test
@@ -199,32 +199,41 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
 
     return logRecords;
   }
-
+  //
   private LogAnalysisDTO createAnalysisDTO(Instant endTime) {
+    List<LogAnalysisCluster> clusters = buildAnalysisClusters(1234l, 23456l);
+    LogAnalysisResult result = LogAnalysisResult.builder().logAnalysisResults(getResults(12345l, 23456l)).build();
     return LogAnalysisDTO.builder()
         .cvConfigId(cvConfigId)
-        .testClusters(buildAnalysisClusters())
-        .controlClusters(buildAnalysisClusters())
-        .unknownClusters(buildAnalysisClusters())
+        .logClusters(clusters)
+        .logAnalysisResults(result.getLogAnalysisResults())
         .analysisMinute(endTime.getEpochSecond() / 60)
-        .frequencyPatterns(getFrequencePatterns())
         .build();
   }
-
-  private List<LogAnalysisCluster> buildAnalysisClusters() {
-    LogAnalysisCluster cluster =
-        LogAnalysisCluster.builder().host("host1").clusterLabel("1").text("exception message").build();
-
-    return Arrays.asList(cluster);
+  private List<AnalysisResult> getResults(long... labels) {
+    List<AnalysisResult> results = new ArrayList<>();
+    for (int i = 0; i < labels.length; i++) {
+      AnalysisResult analysisResult =
+          AnalysisResult.builder().count(3).label(labels[i]).tag(i % 2 == 0 ? "KNOWN" : "UNKNOWN").build();
+      results.add(analysisResult);
+    }
+    return results;
   }
 
-  private List<FrequencyPattern> getFrequencePatterns() {
-    FrequencyPattern.Pattern pattern = FrequencyPattern.Pattern.builder()
-                                           .sequence(Arrays.asList(1, 2, 3, 4))
-                                           .timestamps(Arrays.asList(12353453l, 132312l, 132213l))
-                                           .build();
-    FrequencyPattern frequencyPattern =
-        FrequencyPattern.builder().patterns(Arrays.asList(pattern)).label(12).text("exception message").build();
-    return Arrays.asList(frequencyPattern);
+  private List<LogAnalysisCluster> buildAnalysisClusters(long... labels) {
+    List<LogAnalysisCluster> clusters = new ArrayList<>();
+    for (int i = 0; i < labels.length; i++) {
+      LogAnalysisCluster cluster = LogAnalysisCluster.builder()
+                                       .label(labels[i])
+                                       .isEvicted(false)
+                                       .text("exception message")
+                                       .trend(LogAnalysisCluster.Trend.builder()
+                                                  .count(Arrays.asList(1, 2, 3, 4))
+                                                  .timestamp(Arrays.asList(12353453l, 132312l, 132213l))
+                                                  .build())
+                                       .build();
+      clusters.add(cluster);
+    }
+    return clusters;
   }
 }

@@ -1,7 +1,8 @@
 package io.harness.cvng.analysis.beans;
 
-import io.harness.cvng.analysis.entities.LogAnalysisFrequencyPattern.FrequencyPattern;
-import io.harness.cvng.analysis.entities.LogAnalysisRecord;
+import io.harness.cvng.analysis.entities.LogAnalysisCluster;
+import io.harness.cvng.analysis.entities.LogAnalysisResult;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.mongo.index.FdIndex;
 import lombok.Builder;
 import lombok.Value;
@@ -20,30 +21,32 @@ public class LogAnalysisDTO {
   private double score;
   private long analysisMinute;
 
-  private List<List<LogAnalysisCluster>> unknownEvents;
-  private List<LogAnalysisCluster> testEvents;
-  private List<LogAnalysisCluster> controlEvents;
-  private List<LogAnalysisCluster> controlClusters;
-  private List<LogAnalysisCluster> unknownClusters;
-  private List<LogAnalysisCluster> testClusters;
+  private List<LogAnalysisCluster> logClusters;
+  private List<AnalysisResult> logAnalysisResults;
 
-  private List<FrequencyPattern> frequencyPatterns;
+  public List<LogAnalysisCluster> toAnalysisClusters(
+      String cvConfigId, Instant analysisStartTime, Instant analysisEndTime) {
+    if (logClusters != null) {
+      logClusters.forEach(cluster -> {
+        cluster.setCvConfigId(cvConfigId);
+        cluster.setAnalysisStartTime(analysisStartTime);
+        cluster.setAnalysisEndTime(analysisEndTime);
+        cluster.setAccountId(accountId);
+        cluster.setAnalysisMinute(analysisMinute);
+      });
+      return logClusters;
+    }
+    return null;
+  }
 
-  public LogAnalysisRecord toAnalysisRecord() {
-    return LogAnalysisRecord.builder()
-        .accountId(accountId)
+  public LogAnalysisResult toAnalysisResult(String cvConfigId, Instant analysisStartTime, Instant analysisEndTime) {
+    return LogAnalysisResult.builder()
         .cvConfigId(cvConfigId)
         .analysisStartTime(analysisStartTime)
         .analysisEndTime(analysisEndTime)
-        .analysisSummaryMessage(analysisSummaryMessage)
-        .score(score)
-        .analysisMinute(analysisMinute)
-        .unknownClusters(unknownClusters)
-        .controlClusters(controlClusters)
-        .testClusters(testClusters)
-        .unknownEvents(unknownEvents)
-        .testEvents(testEvents)
-        .controlEvents(controlEvents)
+        .accountId(accountId)
+        .verificationTaskId(cvConfigId)
+        .logAnalysisResults(logAnalysisResults)
         .build();
   }
 }

@@ -1,7 +1,5 @@
 package io.harness.cvng.analysis.entities;
 
-import static io.harness.cvng.analysis.CVAnalysisConstants.ML_RECORDS_TTL_MONTHS;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -19,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PrePersist;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -29,40 +28,38 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldNameConstants(innerTypeName = "LogAnalysisFrequencyPatternKeys")
+@FieldNameConstants(innerTypeName = "LogAnalysisClusterKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "logAnalysisFrequencyPatterns", noClassnameStored = true)
+@Entity(value = "analyzedLogClusters", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogAnalysisFrequencyPattern implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
   @FdIndex private String cvConfigId;
+  @FdIndex private String verificationTaskId;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   @FdIndex private String accountId;
-  private List<FrequencyPattern> frequencyPatterns;
+  private long analysisMinute;
+  private long label;
+  private Trend trend;
+  private String text;
+  private boolean isEvicted;
 
-  @JsonIgnore
-  @SchemaIgnore
-  @FdTtlIndex
-  @Builder.Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+  @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
 
   @Data
   @Builder
-  @AllArgsConstructor
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class FrequencyPattern {
-    int label;
-    List<Pattern> patterns;
-    String text;
+  public static class Trend {
+    private List<Integer> count;
+    private List<Long> timestamp;
+  }
 
-    @Data
-    @Builder
-    public static class Pattern {
-      private List<Integer> sequence;
-      private List<Long> timestamps;
+  @PrePersist
+  public void updateValidUntil() {
+    if (isEvicted) {
+      validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
     }
   }
 }
