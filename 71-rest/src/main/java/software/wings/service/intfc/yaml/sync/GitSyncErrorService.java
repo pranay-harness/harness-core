@@ -24,7 +24,7 @@ public interface GitSyncErrorService {
       T failedChange, String errorMessage, boolean fullSyncPath, boolean gitToHarness);
 
   List<GitSyncError> getActiveGitToHarnessSyncErrors(
-      String accountId, String gitConnectorId, String branchName, long fromTimestamp);
+      String accountId, String gitConnectorId, String branchName, String repositoryName, long fromTimestamp);
 
   PageResponse<GitSyncError> fetchHarnessToGitErrors(PageRequest<GitSyncError> req, String accountId, String appId);
 

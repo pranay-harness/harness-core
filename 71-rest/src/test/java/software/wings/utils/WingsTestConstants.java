@@ -23,6 +23,8 @@ public interface WingsTestConstants {
 
   String REPOSITORY_FORMAT = "REPOSITORY_FORMAT";
 
+  String REPOSITORY_NAME = "REPOSITORY_NAME";
+
   String TARGET_APP_ID = "TARGET_APP_ID";
 
   String APP_NAME = "APP_NAME";

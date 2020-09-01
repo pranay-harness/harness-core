@@ -58,6 +58,7 @@ public class RefactorTheFieldsInGitSyncError implements OnPrimaryManagerMigratio
                                            .accountId(gitSyncError.getAccountId())
                                            .changeType(gitSyncError.getChangeType())
                                            .branchName(gitSyncError.getBranchName())
+                                           .repositoryName(gitSyncError.getRepositoryName())
                                            .gitConnectorId(gitSyncError.getGitConnectorId())
                                            .yamlGitConfigId(gitSyncError.getYamlGitConfigId())
                                            .failureReason(gitSyncError.getFailureReason())

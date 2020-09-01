@@ -11,5 +11,6 @@ public class GitProcessingError {
   private Long createdAt;
   private String gitConnectorId;
   private String branchName;
+  private String repositoryName;
   private String connectorName;
 }

@@ -15,13 +15,16 @@ import static software.wings.beans.GitCommit.Status.COMPLETED;
 import static software.wings.beans.GitCommit.Status.COMPLETED_WITH_ERRORS;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
+import static software.wings.yaml.gitSync.YamlGitConfig.REPOSITORY_NAME_KEY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.exception.UnexpectedException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -144,8 +147,9 @@ public class GitChangeSetHandler {
   }
 
   private void saveProcessedCommit(GitDiffResult gitDiffResult, String accountId, GitCommit.Status gitCommitStatus) {
-    final List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
-        gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
+    final List<String> yamlGitConfigIds =
+        obtainYamlGitConfigIds(accountId, gitDiffResult.getYamlGitConfig().getBranchName(),
+            gitDiffResult.getYamlGitConfig().getRepositoryName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
 
     saveCommitFromGit(gitDiffResult, yamlGitConfigIds, accountId, gitCommitStatus);
   }
@@ -220,7 +224,8 @@ public class GitChangeSetHandler {
 
       if (currentEntityYamlGitConfig != null
           && yamlGitConfig.getGitConnectorId().equals(currentEntityYamlGitConfig.getGitConnectorId())
-          && yamlGitConfig.getBranchName().equals(currentEntityYamlGitConfig.getBranchName())) {
+          && yamlGitConfig.getBranchName().equals(currentEntityYamlGitConfig.getBranchName())
+          && StringUtils.equals(yamlGitConfig.getRepositoryName(), currentEntityYamlGitConfig.getRepositoryName())) {
         gitFileChangeList.add(gitFileChange);
       }
     }
@@ -239,11 +244,14 @@ public class GitChangeSetHandler {
     }
   }
 
-  private List<String> obtainYamlGitConfigIds(String accountId, String branchName, String gitConnectorId) {
+  @VisibleForTesting
+  List<String> obtainYamlGitConfigIds(
+      String accountId, String branchName, String repositoryName, String gitConnectorId) {
     return wingsPersistence.createQuery(YamlGitConfig.class)
         .filter(YamlGitConfig.ACCOUNT_ID_KEY, accountId)
         .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
         .filter(BRANCH_NAME_KEY, branchName)
+        .filter(REPOSITORY_NAME_KEY, repositoryName)
         .project(YamlGitConfig.ID_KEY, true)
         .asList()
         .stream()

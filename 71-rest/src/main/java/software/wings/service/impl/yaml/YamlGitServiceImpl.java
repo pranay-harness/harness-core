@@ -223,6 +223,10 @@ public class YamlGitServiceImpl implements YamlGitService {
       throw new GeneralException("Repository level git connector must not have repository name set");
     }
 
+    if (UrlType.ACCOUNT != gitConfig.getUrlType() && null != ygs.getRepositoryName()) {
+      ygs.setRepositoryName(null);
+    }
+
     ygs.setSyncMode(SyncMode.BOTH);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     if (performFullSync) {
@@ -1022,6 +1026,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         .gitConnectorId(gitFailureDetails.getGitConnectorId())
         .branchName(gitFailureDetails.getBranchName())
         .message(gitFailureDetails.getErrorMessage())
+        .repositoryName(gitFailureDetails.getRepositoryName())
         .build();
   }
 
