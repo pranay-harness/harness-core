@@ -4,6 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VUK;
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
@@ -25,6 +27,9 @@ public class PollingModeDelegateDisconnectedDetectorTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldUpdateDelegateConnection() {
+    DelegateObserver delegateObserver = mock(DelegateObserver.class);
+    pollingModeDelegateDisconnectedDetector.getSubject().register(delegateObserver);
+
     String accountId = generateUuid();
 
     Delegate delegate1 = Delegate.builder().accountId(accountId).polllingModeEnabled(true).build();
@@ -77,5 +82,7 @@ public class PollingModeDelegateDisconnectedDetectorTest extends WingsBaseTest {
         .isTrue();
     assertThat(wingsPersistence.get(DelegateConnection.class, delegateConnection3.getUuid()).isDisconnected())
         .isFalse();
+
+    verify(delegateObserver).onDisconnected(accountId, delegate1.getUuid());
   }
 }

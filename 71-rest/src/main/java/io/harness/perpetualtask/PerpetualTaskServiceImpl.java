@@ -245,6 +245,6 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public void onDisconnected(String accountId, String delegateId) {
-    // do nothing, impl coming in next PR
+    perpetualTaskRecordDao.detachTaskFromDelegate(accountId, delegateId);
   }
 }

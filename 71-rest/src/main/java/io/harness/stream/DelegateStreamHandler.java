@@ -90,7 +90,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
               try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
                 Delegate delegate = delegateService.get(accountId, delegateId, true);
                 delegateService.register(delegate);
-                delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
+                delegateService.delegateDisconnected(accountId, delegateId, delegateConnectionId);
               }
             }
           });

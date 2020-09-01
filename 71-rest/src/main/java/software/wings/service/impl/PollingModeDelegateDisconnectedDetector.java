@@ -7,6 +7,8 @@ import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 
 import com.google.inject.Inject;
 
+import io.harness.observer.Subject;
+import lombok.Getter;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
@@ -19,6 +21,8 @@ import java.util.List;
 
 public class PollingModeDelegateDisconnectedDetector implements Runnable {
   @Inject private WingsPersistence wingsPersistence;
+
+  @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
 
   @Override
   public void run() {
@@ -45,6 +49,7 @@ public class PollingModeDelegateDisconnectedDetector implements Runnable {
         delegateConnection =
             wingsPersistence.findAndModify(delegateConnectionQuery, updateOperations, returnNewOptions);
       } while (delegateConnection != null);
+      subject.fireInform(DelegateObxxxxxxxx:onDisconnected, delegate.getAccountId(), delegate.getUuid());
     }
   }
 }
