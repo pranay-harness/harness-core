@@ -234,7 +234,11 @@ public class BudgetUtils {
     ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
     LocalDate today = LocalDate.now(zoneId);
     ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
-    long startOfMonth = zdtStart.toEpochSecond() * 1000 - ONE_DAY_MILLIS;
+    long startOfMonth = zdtStart.toEpochSecond() * 1000;
+    long startOfDay = getStartOfCurrentDay();
+    if (startOfDay == startOfMonth) {
+      return true;
+    }
     crossedAt -= ONE_DAY_MILLIS;
     return startOfMonth <= crossedAt;
   }
