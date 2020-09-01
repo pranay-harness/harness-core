@@ -33,7 +33,7 @@ if (required.length) {
     .reject(username => approvals[username] === 'approved')
     .reject(
       username => pendingReviewers.length && approvals[username])
-    .map(username => {username})
+	  .map(username=>({username}))
     .concat(pendingReviewers)
     .value();
 }
