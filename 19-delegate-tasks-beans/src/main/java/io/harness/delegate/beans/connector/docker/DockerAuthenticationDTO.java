@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.docker;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DockerAuthenticationDTO {
-  @NotNull @JsonProperty("type") DockerAuthType authType;
+  @ApiModelProperty(allowableValues = "UsernamePassword") @NotNull @JsonProperty("type") DockerAuthType authType;
 
   @Builder
   public DockerAuthenticationDTO(DockerAuthType authType, DockerAuthCredentialsDTO credentials) {

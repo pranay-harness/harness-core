@@ -21,6 +21,5 @@ import org.springframework.data.annotation.TypeAlias;
 public class DockerConnector extends Connector {
   String url;
   DockerAuthType authType;
-  String username;
-  String passwordRef;
+  DockerAuthentication dockerAuthentication;
 }

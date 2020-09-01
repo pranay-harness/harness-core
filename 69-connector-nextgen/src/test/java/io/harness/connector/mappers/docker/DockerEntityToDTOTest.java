@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
+import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -37,8 +38,10 @@ public class DockerEntityToDTOTest extends CategoryTest {
     DockerConnector dockerConnector = DockerConnector.builder()
                                           .authType(DockerAuthType.USER_PASSWORD)
                                           .url(dockerRegistryUrl)
-                                          .username(dockerUserName)
-                                          .passwordRef(passwordRef)
+                                          .dockerAuthentication(DockerUserNamePasswordAuthentication.builder()
+                                                                    .username(dockerUserName)
+                                                                    .passwordRef(passwordRef)
+                                                                    .build())
                                           .build();
     DockerConnectorDTO dockerConnectorDTO = dockerEntityToDTO.createConnectorDTO(dockerConnector);
     assertThat(dockerConnectorDTO).isNotNull();
