@@ -43,9 +43,9 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
     final String repo = "repo";
     final String branch = "branch";
     final String accountId = "accountId";
-    final String pipeline = EntityType.PIPELINES.getEntityName();
+    final String pipeline = EntityType.PIPELINES.getEntityDisplayName();
     final String id = "id";
-    final String connector = EntityType.CONNECTORS.getEntityName();
+    final String connector = EntityType.CONNECTORS.getEntityDisplayName();
     final String id1 = "id1";
     final GitFileLocation gitFileLocation = buildGitFileLocation(repo, branch, accountId, pipeline, id);
     final GitFileLocation gitFileLocation1 = buildGitFileLocation(repo, branch, accountId, connector, id1);
@@ -78,16 +78,16 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
     final String repo = "repo";
     final String branch = "branch";
     final String accountId = "accountId";
-    final String pipeline = EntityType.PIPELINES.getEntityName();
+    final String pipeline = EntityType.PIPELINES.getEntityDisplayName();
     final String id = "id";
-    final String connector = EntityType.CONNECTORS.getEntityName();
+    final String connector = EntityType.CONNECTORS.getEntityDisplayName();
     final String id1 = "id1";
     final GitFileLocation gitFileLocation = buildGitFileLocation(repo, branch, accountId, pipeline, id);
     final GitFileLocation gitFileLocation1 = buildGitFileLocation(repo, branch, accountId, connector, id1);
     gitFileLocationRepository.saveAll(Arrays.asList(gitFileLocation, gitFileLocation, gitFileLocation1));
 
     final ResponseDTO<NGPageResponse<GitSyncEntityListDTO>> ngPageResponseResponseDTO =
-        gitEntityResource.listByType(null, null, accountId, EntityType.PIPELINES, 0, 5);
+        gitEntityResource.listByType(null, null, accountId, EntityType.PIPELINES, 0, 5, "cd");
     final NGPageResponse<GitSyncEntityListDTO> data = ngPageResponseResponseDTO.getData();
     assertThat(data).isNotNull();
     assertThat(data.getContent()
