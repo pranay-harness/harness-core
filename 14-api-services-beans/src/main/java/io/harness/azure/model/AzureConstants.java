@@ -4,6 +4,10 @@ import java.util.concurrent.TimeUnit;
 
 public interface AzureConstants {
   int DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN = 2;
+  String NEW_VIRTUAL_MACHINE_SCALE_SET = "New Virtual Machine Scale Set";
+  String OLD_VIRTUAL_MACHINE_SCALE_SET = "Old Virtual Machine Scale Set";
+  String STAGE_BACKEND_POOL = "Stage Backend Pool";
+  String PROD_BACKEND_POOL = "Production Backend Pool";
   String MIN_INSTANCES = "minInstancesExpr";
   String MAX_INSTANCES = "maxInstancesExpr";
   String DESIRED_INSTANCES = "targetInstancesExpr";
@@ -11,6 +15,7 @@ public interface AzureConstants {
   String BLUE_GREEN = "blueGreen";
   String AZURE_VMSS_SETUP_COMMAND_NAME = "Azure VMSS Setup";
   String AZURE_VMSS_DEPLOY_COMMAND_NAME = "Resize Azure Virtual Machine Scale Set";
+  String AZURE_VMSS_SWAP_BACKEND_POOL = "Swap VMSS Backend Pool";
   String ACTIVITY_ID = "activityId";
   int NUMBER_OF_LATEST_VERSIONS_TO_KEEP = 3;
 
@@ -48,6 +53,8 @@ public interface AzureConstants {
   String SKIP_RESIZE_SCALE_SET = "No scale set found with the name = [%s], hence skipping";
   String REQUEST_DELETE_SCALE_SET = "Sending request to delete newly created Virtual Machine Scale Set: [%s]";
   String SUCCESS_DELETE_SCALE_SET = "Virtual Machine Scale Set: [%s] deleted successfully";
+  String SWAP_ROUTE_FAILURE = "Azure Virtual Machine Scale Set swap route failed with error ";
+  String SETUP_ELEMENT_NOT_FOUND = "Did not find Setup element of class AzureVMSSSetupContextElement";
 
   // Validation messages
   String RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG = "Parameter resourceGroupName is required and cannot be null";
