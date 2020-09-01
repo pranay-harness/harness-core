@@ -1,0 +1,16 @@
+execution:
+  steps:
+    - step:
+        name: "Rollout Deployment"
+        identifier: rolloutDeployment
+        type: K8sRolloutDeploy
+        spec:
+          timeout: 10m
+          skipDryRun: false
+  rollbackSteps:
+    - step:
+        name: "Rollback Rollout Deployment"
+        identifier: rollbackRolloutDeployment
+        type: K8sRollingRollback
+        spec:
+          timeout: 10m

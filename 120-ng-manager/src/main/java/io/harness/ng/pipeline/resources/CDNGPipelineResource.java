@@ -7,12 +7,15 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineRequestDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineResponseDTO;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineSummaryResponseDTO;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.PipelineService;
+import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -29,7 +32,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -144,6 +149,48 @@ public class CDNGPipelineResource {
     }
     return ResponseDTO.newResponse(
         ngPipelineExecutionService.triggerPipeline(yaml, accountId, orgId, projectId, EMBEDDED_USER));
+  }
+
+  @GET
+  @Path("/strategies")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Gets Execution Strategy list", nickname = "getExecutionStrategyList")
+  public ResponseDTO<Map<ServiceDefinitionType, List<ExecutionStrategyType>>> getExecutionStrategyList() {
+    logger.info("Get List of execution Strategy");
+    return ResponseDTO.newResponse(ngPipelineService.getExecutionStrategyList());
+  }
+
+  @GET
+  @Path("/strategies/yaml-snippets")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Gets Yaml for Execution Strategy based on deployment type and selected strategy",
+      nickname = "getExecutionStrategyYaml")
+  public ResponseDTO<String>
+  getExecutionStrategyYaml(@NotNull @QueryParam("serviceDefinitionType") ServiceDefinitionType serviceDefinitionType,
+      @NotNull @QueryParam("strategyType") ExecutionStrategyType executionStrategyType) throws IOException {
+    return ResponseDTO.newResponse(
+        ngPipelineService.getExecutionStrategyYaml(serviceDefinitionType, executionStrategyType));
+  }
+
+  @GET
+  @Path("/serviceDefinitionTypes")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Git list of service definition types", nickname = "getServiceDefinitionTypes")
+  public ResponseDTO<List<ServiceDefinitionType>> getServiceDefinitionTypes() {
+    return ResponseDTO.newResponse(ngPipelineService.getServiceDefinitionTypes());
+  }
+
+  @GET
+  @Path("/steps")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get steps for given service definition type", nickname = "getSteps")
+  public ResponseDTO<StepCategory> getSteps(
+      @NotNull @QueryParam("serviceDefinitionType") ServiceDefinitionType serviceDefinitionType) {
+    return ResponseDTO.newResponse(ngPipelineService.getSteps(serviceDefinitionType));
   }
 
   @DELETE
