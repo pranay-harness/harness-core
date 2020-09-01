@@ -112,9 +112,13 @@ public class AzureVMSSStateHelper {
   }
 
   public Service getServiceByAppId(ExecutionContext context, String appId) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
-    String serviceId = phaseElement.getServiceElement().getUuid();
+    String serviceId = getServiceId(context);
     return serviceResourceService.getWithDetails(appId, serviceId);
+  }
+
+  private String getServiceId(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    return phaseElement.getServiceElement().getUuid();
   }
 
   public Application getApplication(ExecutionContext context) {
@@ -354,5 +358,27 @@ public class AzureVMSSStateHelper {
   public List<CommandUnit> generateSetupCommandUnits() {
     return ImmutableList.of(
         new AzureVMSSDummyCommandUnit(SETUP_COMMAND_UNIT), new AzureVMSSDummyCommandUnit(DEPLOYMENT_STATUS));
+  }
+
+  public AzureVMSSStateData populateStateData(ExecutionContext context) {
+    Application application = getApplication(context);
+    Service service = getServiceByAppId(context, application.getUuid());
+    String serviceId = getServiceId(context);
+    Artifact artifact = getArtifact((DeploymentExecutionContext) context, service.getUuid());
+    AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping =
+        getAzureVMSSInfrastructureMapping(context.fetchInfraMappingId(), application.getUuid());
+    AzureConfig azureConfig = getAzureConfig(azureVMSSInfrastructureMapping.getComputeProviderSettingId());
+    List<EncryptedDataDetail> encryptedDataDetails =
+        getEncryptedDataDetails(context, azureVMSSInfrastructureMapping.getComputeProviderSettingId());
+
+    return AzureVMSSStateData.builder()
+        .application(application)
+        .service(service)
+        .serviceId(serviceId)
+        .artifact(artifact)
+        .infrastructureMapping(azureVMSSInfrastructureMapping)
+        .azureConfig(azureConfig)
+        .azureEncryptedDataDetails(encryptedDataDetails)
+        .build();
   }
 }
