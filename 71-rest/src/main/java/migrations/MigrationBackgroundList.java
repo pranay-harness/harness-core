@@ -21,6 +21,7 @@ import migrations.all.AddAccountIdToServiceCommands;
 import migrations.all.AddAccountIdToServiceInstance;
 import migrations.all.AddAccountIdToServiceTemplates;
 import migrations.all.AddAccountIdToServiceVariables;
+import migrations.all.AddAccountIdToStateExecutionInstance;
 import migrations.all.AddAccountIdToStateMachine;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
@@ -281,6 +282,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(167, AddAccountIdToTriggerExecutions.class))
         .add(Pair.of(168, AddAccountIdToTriggers.class))
         .add(Pair.of(169, InvalidCVConfigDeletionMigration.class))
+        .add(Pair.of(170, AddAccountIdToStateExecutionInstance.class))
         .build();
   }
 }
