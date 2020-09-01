@@ -14,7 +14,7 @@ import java.util.List;
 
 @Value
 @Builder
-@JsonTypeName(ServiceDefinitionType.KUBERNETES)
+@JsonTypeName("Kubernetes")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesServiceSpec implements ServiceSpec {
   ArtifactListConfig artifacts;
@@ -24,6 +24,6 @@ public class KubernetesServiceSpec implements ServiceSpec {
 
   @Override
   public String getType() {
-    return ServiceDefinitionType.KUBERNETES;
+    return ServiceDefinitionType.KUBERNETES.getDisplayName();
   }
 }
