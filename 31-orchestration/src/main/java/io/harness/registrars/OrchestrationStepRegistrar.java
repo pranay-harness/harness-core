@@ -10,7 +10,6 @@ import io.harness.state.core.dummy.DummySectionStep;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.section.SectionStep;
-import io.harness.state.core.section.chain.RollbackOptionalChildChainStep;
 import io.harness.state.core.section.chain.SectionChainStep;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -24,7 +23,6 @@ public class OrchestrationStepRegistrar implements StepRegistrar {
     stepClasses.add(Pair.of(SectionStep.STEP_TYPE, SectionStep.class));
     stepClasses.add(Pair.of(DummyStep.STEP_TYPE, DummyStep.class));
     stepClasses.add(Pair.of(SectionChainStep.STEP_TYPE, SectionChainStep.class));
-    stepClasses.add(Pair.of(RollbackOptionalChildChainStep.STEP_TYPE, RollbackOptionalChildChainStep.class));
     stepClasses.add(Pair.of(DummySectionStep.STEP_TYPE, DummySectionStep.class));
   }
 }

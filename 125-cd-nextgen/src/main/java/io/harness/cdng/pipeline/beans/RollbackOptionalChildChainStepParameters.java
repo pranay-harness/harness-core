@@ -1,4 +1,4 @@
-package io.harness.state.core.section.chain;
+package io.harness.cdng.pipeline.beans;
 
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
@@ -10,12 +10,5 @@ import java.util.List;
 @Value
 @Builder
 public class RollbackOptionalChildChainStepParameters implements StepParameters {
-  @Singular List<Node> childNodes;
-
-  @Value
-  @Builder
-  public static class Node {
-    String nodeId;
-    String dependentNodeIdentifier;
-  }
+  @Singular List<RollbackNode> childNodes;
 }

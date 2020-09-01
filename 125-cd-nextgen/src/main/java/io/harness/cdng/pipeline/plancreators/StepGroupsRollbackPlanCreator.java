@@ -1,12 +1,15 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.STEP_GROUPS_ROLLBACK_PLAN_CREATOR;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
 import io.harness.cdng.executionplan.CDPlanCreatorType;
+import io.harness.cdng.pipeline.beans.RollbackNode;
+import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
+import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
+import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
@@ -21,10 +24,8 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.state.core.section.chain.RollbackOptionalChildChainStep;
-import io.harness.state.core.section.chain.RollbackOptionalChildChainStepParameters;
-import io.harness.state.core.section.chain.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
@@ -51,8 +52,7 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
     List<ExecutionWrapper> steps = executionElement.getSteps();
     for (int i = steps.size() - 1; i >= 0; i--) {
       ExecutionWrapper executionWrapper = steps.get(i);
-      if (executionWrapper instanceof StepGroupElement
-          && isNotEmpty(((StepGroupElement) executionWrapper).getRollbackSteps())) {
+      if (PlanCreatorHelper.isStepGroupWithRollbacks(executionWrapper)) {
         final ExecutionPlanCreator<StepGroupElement> executionRollbackPlanCreator =
             executionPlanCreatorHelper.getExecutionPlanCreator(
                 CDPlanCreatorType.STEP_GROUP_ROLLBACK_PLAN_CREATOR.getName(), (StepGroupElement) executionWrapper,
@@ -60,6 +60,20 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
         CreateExecutionPlanResponse stepGroupRollbackPlan =
             executionRollbackPlanCreator.createPlan((StepGroupElement) executionWrapper, context);
         stepGroupsRollbackPlanList.add(stepGroupRollbackPlan);
+      } else if (executionWrapper instanceof ParallelStepElement) {
+        for (ExecutionWrapper section : ((ParallelStepElement) executionWrapper).getSections()) {
+          if (PlanCreatorHelper.isStepGroupWithRollbacks(section)) {
+            final ExecutionPlanCreator<ParallelStepElement> executionRollbackPlanCreator =
+                executionPlanCreatorHelper.getExecutionPlanCreator(
+                    CDPlanCreatorType.PARALLEL_STEP_GROUP_ROLLBACK_PLAN_CREATOR.getName(),
+                    (ParallelStepElement) executionWrapper, context,
+                    "No execution plan creator found for Parallel Step Group Rollback Plan Creator");
+            CreateExecutionPlanResponse parallelStepGroupRollbackPlan =
+                executionRollbackPlanCreator.createPlan((ParallelStepElement) executionWrapper, context);
+            stepGroupsRollbackPlanList.add(parallelStepGroupRollbackPlan);
+            break;
+          }
+        }
       }
     }
 
@@ -80,16 +94,30 @@ public class StepGroupsRollbackPlanCreator extends AbstractPlanCreatorWithChildr
     Iterator<CreateExecutionPlanResponse> iterator = stepGroupsRollbackPlanList.iterator();
     for (int i = steps.size() - 1; i >= 0; i--) {
       ExecutionWrapper executionWrapper = steps.get(i);
-      if (executionWrapper instanceof StepGroupElement
-          && isNotEmpty(((StepGroupElement) executionWrapper).getRollbackSteps())) {
+      if (PlanCreatorHelper.isStepGroupWithRollbacks(executionWrapper)) {
         sectionOptionalChildChainStepParametersBuilder.childNode(
-            RollbackOptionalChildChainStepParameters.Node.builder()
+            RollbackNode.builder()
                 .nodeId(iterator.next().getStartingNodeId())
                 .dependentNodeIdentifier(PlanCreatorConstants.STAGES_NODE_IDENTIFIER + "."
                     + context.getAttribute("stageIdentifier").get() + "."
                     + PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER + "."
                     + ((StepGroupElement) executionWrapper).getIdentifier())
                 .build());
+      } else if (executionWrapper instanceof ParallelStepElement) {
+        for (ExecutionWrapper section : ((ParallelStepElement) executionWrapper).getSections()) {
+          if (PlanCreatorHelper.isStepGroupWithRollbacks(section)) {
+            sectionOptionalChildChainStepParametersBuilder.childNode(
+                RollbackNode.builder()
+                    .nodeId(iterator.next().getStartingNodeId())
+                    .dependentNodeIdentifier(String.join(".",
+                        PlanCreatorConstants.STAGES_NODE_IDENTIFIER + "."
+                            + context.getAttribute("stageIdentifier").get() + "."
+                            + PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER + "."
+                            + ((StepGroupElement) section).getIdentifier()))
+                    .build());
+            break;
+          }
+        }
       }
     }
 
