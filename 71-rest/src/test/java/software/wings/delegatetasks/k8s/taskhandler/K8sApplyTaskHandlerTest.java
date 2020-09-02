@@ -4,6 +4,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.EMPTY_LIST;
@@ -42,6 +43,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -67,6 +69,8 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper k8sTaskHelper;
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @InjectMocks private K8sApplyTaskHandler k8sApplyTaskHandler;
+
+  @Captor ArgumentCaptor<List<KubernetesResource>> kubernetesResourceListCaptor;
 
   @Before
   public void setup() {
@@ -253,6 +257,42 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class), mock(K8sApplyTaskParameters.class)))
         .isTrue();
     assertThat(Reflect.on(k8sApplyTaskHandler).<List>get("workloads")).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void prepareWorkloadsFound() throws IOException {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    K8sApplyTaskParameters k8sApplyTaskParameters = mock(K8sApplyTaskParameters.class);
+    KubernetesResource customWorkload = ManifestHelper
+                                            .processYaml("apiVersion: apps/v1\n"
+                                                + "kind: Foo\n"
+                                                + "metadata:\n"
+                                                + "  name: foo\n"
+                                                + "  annotations:\n"
+                                                + "    harness.io/managed-workload: true\n"
+                                                + "spec:\n"
+                                                + "  replicas: 1")
+                                            .get(0);
+    List<KubernetesResource> resources = asList(K8sTestHelper.deployment(), K8sTestHelper.configMap(), customWorkload);
+    Reflect.on(k8sApplyTaskHandler).set("resources", resources);
+
+    boolean success = k8sApplyTaskHandler.prepare(executionLogCallback, k8sApplyTaskParameters);
+    assertThat(success).isTrue();
+    assertThat(Reflect.on(k8sApplyTaskHandler).<List>get("workloads")).hasSize(1);
+    assertThat(Reflect.on(k8sApplyTaskHandler).<List>get("customWorkloads")).hasSize(1);
+    verify(k8sTaskHelperBase, times(2)).getResourcesInTableFormat(kubernetesResourceListCaptor.capture());
+    List<List<KubernetesResource>> kubernetesResourcesList = kubernetesResourceListCaptor.getAllValues();
+    // first time it retrieves all
+    List<KubernetesResource> workloadsFound = kubernetesResourcesList.get(0);
+    assertThat(workloadsFound.size()).isEqualTo(3);
+    // second time workload and custom workloads are filtered
+    workloadsFound = kubernetesResourcesList.get(1);
+    // one workload and one custom workload
+    assertThat(workloadsFound.size()).isEqualTo(2);
+    assertThat(workloadsFound.get(0).getResourceId().getName()).isEqualTo("nginx-deployment");
+    assertThat(workloadsFound.get(1).getResourceId().getName()).isEqualTo("foo");
   }
 
   @Test
