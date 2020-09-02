@@ -285,6 +285,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(170, AddAccountIdToStateExecutionInstance.class))
         .add(Pair.of(171, AddAccountIdToCommandCollection.class))
         .add(Pair.of(172, AddAccountIdToStateMachine.class))
+        .add(Pair.of(173, InfraMappingToDefinitionMigration.class))
         .build();
   }
 }
