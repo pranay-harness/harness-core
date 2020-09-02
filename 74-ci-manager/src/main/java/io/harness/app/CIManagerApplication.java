@@ -23,7 +23,6 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.harness.app.resources.CIPipelineResource;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
@@ -57,6 +56,7 @@ import software.wings.service.impl.ci.CIServiceAuthSecretKey;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,6 +70,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   public static final Store HARNESS_STORE = Store.builder().name("harness").build();
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CIManagerApplication.class);
   private static String APPNAME = "CI Manager Service Application";
+  public static final String BASE_PACKAGE = "io.harness.app.resources";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -77,6 +78,11 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       MaintenanceController.forceMaintenance(true);
     }));
     new CIManagerApplication().run(args);
+  }
+
+  public static Collection<Class<?>> getResourceClasses() {
+    Reflections reflections = new Reflections(BASE_PACKAGE);
+    return reflections.getTypesAnnotatedWith(Path.class);
   }
 
   @Override
@@ -94,6 +100,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     logger.info("Leaving startup maintenance mode");
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
+    modules.add(new SCMGrpcClientModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -176,6 +183,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     logger.info("bootstrapping done.");
   }
 
+  private void registerResources(Environment environment, Injector injector) {
+    for (Class<?> resource : getResourceClasses()) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
+  }
+
   private void scheduleJobs(Injector injector) {
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
@@ -219,17 +234,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private void initializeServiceSecretKeys(Injector injector) {
     // TODO change it to CI token, we have to write authentication
     VERIFICATION_SERVICE_SECRET.set(injector.getInstance(CIServiceAuthSecretKey.class).getCIAuthServiceSecretKey());
-  }
-
-  private void registerResources(Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(CIPipelineResource.class.getPackage().getName());
-
-    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
-    for (Class<?> resource : resourceClasses) {
-      if (Resource.isAcceptable(resource)) {
-        environment.jersey().register(injector.getInstance(resource));
-      }
-    }
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

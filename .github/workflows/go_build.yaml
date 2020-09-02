@@ -26,7 +26,7 @@ jobs:
       - name: Building product code
         run: |
           echo "Building golang product code using bazel..."
-          bazel build //product/...
+          bazel build //product/... --javacopt=' -XepDisableAllChecks'
 
       - name: Testing commons
         run: |
@@ -36,7 +36,7 @@ jobs:
       - name: Testing product
         run: |
           echo "Testing golang product code using bazel..."
-          bazel test --test_output=all //product/...
+          bazel test --test_output=all //product/... --javacopt=' -XepDisableAllChecks'
 
       - name: Coverage
         run: |
