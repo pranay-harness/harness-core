@@ -36,6 +36,18 @@ public class SecretManagerConfigTest extends CategoryTest {
     assertThat(vaultConfig.obtainNextIteration(SecretManagerConfigKeys.nextTokenRenewIteration))
         .isEqualTo(nextTokenRenewIteration);
 
+    long nextIteration = random.nextLong();
+    FieldUtils.writeField(
+        vaultConfig, SecretManagerConfigKeys.manuallyEnteredSecretEngineMigrationIteration, nextIteration, true);
+    assertThat(vaultConfig.obtainNextIteration(SecretManagerConfigKeys.manuallyEnteredSecretEngineMigrationIteration))
+        .isEqualTo(nextIteration);
+
+    nextIteration = random.nextLong();
+    vaultConfig.updateNextIteration(
+        SecretManagerConfigKeys.manuallyEnteredSecretEngineMigrationIteration, nextIteration);
+    assertThat(vaultConfig.obtainNextIteration(SecretManagerConfigKeys.manuallyEnteredSecretEngineMigrationIteration))
+        .isEqualTo(nextIteration);
+
     try {
       vaultConfig.updateNextIteration(generateUuid(), random.nextLong());
       fail("Did not throw exception");

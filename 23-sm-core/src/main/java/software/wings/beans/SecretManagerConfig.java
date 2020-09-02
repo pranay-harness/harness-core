@@ -81,6 +81,8 @@ public abstract class SecretManagerConfig
 
   @FdIndex private Long nextTokenRenewIteration;
 
+  @FdIndex private Long manuallyEnteredSecretEngineMigrationIteration;
+
   @JsonIgnore private NGSecretManagerMetadata ngMetadata;
 
   private List<String> templatizedFields;
@@ -96,6 +98,9 @@ public abstract class SecretManagerConfig
     if (SecretManagerConfigKeys.nextTokenRenewIteration.equals(fieldName)) {
       this.nextTokenRenewIteration = nextIteration;
       return;
+    } else if (SecretManagerConfigKeys.manuallyEnteredSecretEngineMigrationIteration.equals(fieldName)) {
+      this.manuallyEnteredSecretEngineMigrationIteration = nextIteration;
+      return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -104,6 +109,8 @@ public abstract class SecretManagerConfig
   public Long obtainNextIteration(String fieldName) {
     if (SecretManagerConfigKeys.nextTokenRenewIteration.equals(fieldName)) {
       return nextTokenRenewIteration;
+    } else if (SecretManagerConfigKeys.manuallyEnteredSecretEngineMigrationIteration.equals(fieldName)) {
+      return manuallyEnteredSecretEngineMigrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
