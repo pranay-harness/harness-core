@@ -23,6 +23,8 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.provision.TerraformConstants.INHERIT_APPROVED_PLAN;
+import static io.harness.provision.TerraformConstants.RUN_PLAN_ONLY_KEY;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -78,8 +80,6 @@ import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
 import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
-import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
-import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
 import com.google.common.annotations.VisibleForTesting;

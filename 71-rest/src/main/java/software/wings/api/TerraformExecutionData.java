@@ -38,6 +38,7 @@ public class TerraformExecutionData extends StateExecutionData implements Delega
   private String delegateTag;
 
   private byte[] tfPlanFile;
+  private String tfPlanJson;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

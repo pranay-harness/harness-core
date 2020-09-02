@@ -8,4 +8,5 @@ import lombok.Data;
 @Builder
 public class TerraformPlanParam implements SweepingOutput {
   private String terraformPlanSecretManagerId;
+  private String tfplan;
 }

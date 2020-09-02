@@ -103,6 +103,7 @@ public enum FeatureName {
   WEEKLY_WINDOW,
   YAML_RBAC,
   ROLLBACK_NONE_ARTIFACT,
+  EXPORT_TF_PLAN,
   ;
 
   FeatureName() {
