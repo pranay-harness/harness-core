@@ -154,6 +154,7 @@ message K8SClusterSyncEvent {
   repeated string active_node_uids = 5;
   google.protobuf.Timestamp last_processed_timestamp = 6;
   string kube_system_uid = 7;
+  repeated string active_pv_uids = 8;
 }
 
 // uniquely identify a k8s resource within a cluster

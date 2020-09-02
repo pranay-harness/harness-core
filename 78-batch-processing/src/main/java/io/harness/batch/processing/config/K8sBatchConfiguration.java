@@ -4,6 +4,8 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeInfoTasklet;
+import io.harness.batch.processing.tasklet.K8sPVEventTasklet;
+import io.harness.batch.processing.tasklet.K8sPVInfoTasklet;
 import io.harness.batch.processing.tasklet.K8sPodEventTasklet;
 import io.harness.batch.processing.tasklet.K8sPodInfoTasklet;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +51,16 @@ public class K8sBatchConfiguration {
   }
 
   @Bean
+  public Tasklet k8sPVInfoTasklet() {
+    return new K8sPVInfoTasklet();
+  }
+
+  @Bean
+  public Tasklet k8sPVEventTasklet() {
+    return new K8sPVEventTasklet();
+  }
+
+  @Bean
   public Step k8sSyncEventStep(StepBuilderFactory stepBuilderFactory) {
     return stepBuilderFactory.get("k8sSyncEventStep").tasklet(k8SSyncEventTasklet()).build();
   }
@@ -74,16 +86,28 @@ public class K8sBatchConfiguration {
   }
 
   @Bean
+  public Step k8sPVInfoStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("k8sPVInfoStep").tasklet(k8sPVInfoTasklet()).build();
+  }
+
+  @Bean
+  public Step k8sPVEventStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("k8sPVEventStep").tasklet(k8sPVEventTasklet()).build();
+  }
+
+  @Bean
   @Autowired
   @Qualifier(value = "k8sJob")
   public Job k8sJob(JobBuilderFactory jobBuilderFactory, Step k8sNodeInfoStep, Step k8sNodeEventStep,
-      Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sSyncEventStep) {
+      Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sPVInfoStep, Step k8sPVEventStep, Step k8sSyncEventStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_EVENT.name())
         .incrementer(new RunIdIncrementer())
         .start(k8sNodeInfoStep)
         .next(k8sNodeEventStep)
         .next(k8sPodInfoStep)
         .next(k8sPodEventStep)
+        .next(k8sPVInfoStep)
+        .next(k8sPVEventStep)
         .next(k8sSyncEventStep)
         .build();
   }

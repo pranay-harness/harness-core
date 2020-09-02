@@ -1,6 +1,7 @@
 package io.harness.batch.processing.tasklet.util;
 
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.ccm.StorageResource;
 import io.harness.perpetualtask.k8s.watch.Quantity;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -37,5 +38,9 @@ public class K8sResourceUtils {
 
   public static Resource getResource(double vCPU, double memoryGB) {
     return Resource.builder().cpuUnits(vCPU * CPU_UNITS).memoryMb(memoryGB * GBI_TO_MBI).build();
+  }
+
+  public static StorageResource getCapacity(Quantity capacity) {
+    return StorageResource.builder().capacity(getMemoryMb(capacity.getAmount())).build();
   }
 }

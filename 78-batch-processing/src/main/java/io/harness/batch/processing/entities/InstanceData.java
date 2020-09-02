@@ -7,6 +7,7 @@ import io.harness.batch.processing.ccm.Container;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.ccm.StorageResource;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -69,6 +70,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   Resource totalResource;
   Resource limitResource;
   Resource allocatableResource;
+  StorageResource storageResource;
   List<Container> containerList;
   Map<String, String> labels;
   Map<String, String> metaData;

@@ -122,6 +122,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
           firstInstanceData.getSettingId(), firstInstanceData.getClusterId());
 
       instanceDataList.stream()
+          .filter(
+              instanceData -> instanceData.getInstanceType() != InstanceType.K8S_PV) // currently not billing for K8S_PV
           .filter(instanceData
               -> billingDataGenerationValidator.shouldGenerateBillingData(
                   instanceData.getAccountId(), instanceData.getClusterId(), startTime))

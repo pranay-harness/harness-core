@@ -3,6 +3,7 @@ package io.harness.perpetualtask.k8s.watch;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.rule.OwnerRule.AVMOHAN;
@@ -48,6 +49,10 @@ import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.openapi.models.V1NodeListBuilder;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
+import io.kubernetes.client.openapi.models.V1PersistentVolume;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeBuilder;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeList;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeListBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1PodList;
@@ -93,6 +98,8 @@ public class K8SWatchTaskExecutorTest extends DelegateTest {
   private final String POD_TWO_UID = "pod-2-uid";
   private final String NODE_ONE_UID = "node-1-uid";
   private final String NODE_TWO_UID = "node-2-uid";
+  private final String PV_ONE_UID = "pv-1-uid";
+  private final String PV_TWO_UID = "pv-2-uid";
   private final String CLUSTER_NAME = "cluster-name";
   private final String CLOUD_PROVIDER_ID = "cloud-provider-id";
   private final String PERPETUAL_TASK_ID = "perpetualTaskId";
@@ -139,6 +146,8 @@ public class K8SWatchTaskExecutorTest extends DelegateTest {
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getNodeList()))));
     stubFor(get(urlPathEqualTo("/api/v1/pods"))
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getPodList()))));
+    stubFor(get(urlMatching("^/api/v1/persistentvolumes.*"))
+                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getPVList()))));
 
     stubFor(get(urlPathEqualTo("/apis/metrics.k8s.io/v1beta1/pods"))
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
@@ -217,6 +226,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTest {
                       .setKubeSystemUid(KUBE_SYSTEM_ID)
                       .addAllActivePodUids(ImmutableList.of(POD_ONE_UID, POD_TWO_UID))
                       .addAllActiveNodeUids(ImmutableList.of(NODE_ONE_UID, NODE_TWO_UID))
+                      .addAllActivePvUids(ImmutableList.of(PV_ONE_UID, PV_TWO_UID))
                       .setLastProcessedTimestamp(HTimestamps.fromInstant(pollTime))
                       .build());
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
@@ -228,6 +238,16 @@ public class K8SWatchTaskExecutorTest extends DelegateTest {
 
   private V1PodList getPodList() {
     return new V1PodListBuilder().withItems(ImmutableList.of(getPod(POD_ONE_UID), getPod(POD_TWO_UID))).build();
+  }
+
+  private V1PersistentVolumeList getPVList() {
+    return new V1PersistentVolumeListBuilder()
+        .withItems(ImmutableList.of(getPV(PV_ONE_UID), getPV(PV_TWO_UID)))
+        .build();
+  }
+
+  private V1PersistentVolume getPV(String pv_uid) {
+    return new V1PersistentVolumeBuilder().withMetadata(getObjectMeta(pv_uid)).build();
   }
 
   private V1Node getNode(String nodeUid) {
