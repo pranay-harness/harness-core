@@ -199,7 +199,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                    .node(PlanNode.builder()
                                              .uuid("node1_plan")
                                              .name("name")
-                                             .stepType(DummyStep.STEP_TYPE)
+                                             .stepType(StepType.builder().type("DUMMY").build())
                                              .identifier("identifier1")
                                              .build())
                                    .build();
