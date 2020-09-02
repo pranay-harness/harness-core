@@ -1,7 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.beans.ResourceConstraint.builder;
+import static io.harness.steps.resourcerestraint.beans.ResourceConstraint.builder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -12,9 +12,9 @@ import io.github.benas.randombeans.randomizers.range.IntegerRangeRandomizer;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
+import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+import io.harness.steps.resourcerestraint.beans.ResourceConstraint.ResourceConstraintBuilder;
 import software.wings.beans.Account;
-import software.wings.beans.ResourceConstraint;
-import software.wings.beans.ResourceConstraint.ResourceConstraintBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ResourceConstraintService;
 

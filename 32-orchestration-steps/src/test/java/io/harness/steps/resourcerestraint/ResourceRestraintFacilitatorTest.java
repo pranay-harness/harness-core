@@ -26,7 +26,7 @@ import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
+import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
@@ -45,7 +45,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTest {
   private static final String RESOURCE_UNIT = generateUuid();
 
   @Mock private ResourceRestraintService resourceRestraintService;
-  @Mock private RestraintService<? extends ResourceRestraint> restraintService;
+  @Mock private RestraintService restraintService;
   @Mock private EngineExpressionService engineExpressionService;
   @Inject @InjectMocks private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject @InjectMocks private ResourceRestraintFacilitator resourceRestraintFacilitator;
@@ -53,7 +53,13 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTest {
   @Before
   public void setUp() {
     ConstraintId constraintId = new ConstraintId(RESOURCE_RESTRAINT_ID);
-    when(restraintService.get(any(), any())).thenReturn(getMockedResourceRestraint());
+    when(restraintService.get(any(), any()))
+        .thenReturn(ResourceConstraint.builder()
+                        .accountId(generateUuid())
+                        .capacity(1)
+                        .strategy(Constraint.Strategy.FIFO)
+                        .uuid(generateUuid())
+                        .build());
     doReturn(Constraint.builder()
                  .id(constraintId)
                  .spec(Constraint.Spec.builder().limits(1).strategy(Constraint.Strategy.FIFO).build())
@@ -128,34 +134,5 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTest {
     FacilitatorResponse response = resourceRestraintFacilitator.facilitate(ambiance, stepParameters, parameters, null);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionMode()).isEqualTo(SYNC);
-  }
-
-  private <T extends ResourceRestraint> T getMockedResourceRestraint() {
-    return (T) new ResourceRestraint() {
-      @Override
-      public String getUuid() {
-        return "1234324";
-      }
-
-      @Override
-      public String getName() {
-        return "resource restraint";
-      }
-
-      @Override
-      public int getCapacity() {
-        return 1;
-      }
-
-      @Override
-      public String getClaimant() {
-        return CLAIMANT_ID;
-      }
-
-      @Override
-      public Constraint.Strategy getStrategy() {
-        return Constraint.Strategy.FIFO;
-      }
-    };
   }
 }

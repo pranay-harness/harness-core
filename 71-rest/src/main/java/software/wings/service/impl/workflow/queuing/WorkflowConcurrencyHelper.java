@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -26,7 +27,6 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.ResourceConstraint;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;

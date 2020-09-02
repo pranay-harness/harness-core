@@ -257,7 +257,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.Preference;
 import software.wings.beans.PrometheusConfig;
-import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintNotification;
 import software.wings.beans.ResourceLookup;
@@ -1020,7 +1019,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PrometheusCVServiceConfiguration.class);
     set.add(ProvisionerWithOnlyAuditNeededData.class);
     set.add(PruneEvent.class);
-    set.add(ResourceConstraint.class);
     set.add(ResourceConstraintInstance.class);
     set.add(ResourceConstraintNotification.class);
     set.add(ResourceLookup.class);
