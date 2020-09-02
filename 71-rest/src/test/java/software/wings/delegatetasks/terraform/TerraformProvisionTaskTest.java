@@ -171,10 +171,31 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-ENTITY_ID"), new byte[] {});
     FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-ENTITY_ID.tfvars"), new byte[] {});
 
-    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
-        TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformProvisionParameters.TerraformCommand.APPLY);
+    // regular apply
+    TerraformProvisionParameters terraformProvisionParameters =
+        createTerraformProvisionParameters(false, false, null, TerraformProvisionParameters.TerraformCommandUnit.Apply,
+            TerraformProvisionParameters.TerraformCommand.APPLY, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY, 1);
+
+    // use approved plan
+    byte[] terraformPlan = "terraformPlan".getBytes();
+    terraformProvisionParameters = createTerraformProvisionParameters(false, false, terraformPlan,
+        TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformProvisionParameters.TerraformCommand.APPLY,
+        false);
+    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY, 2);
+
+    // run plan only and execute terraform show command
+    terraformProvisionParameters =
+        createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Apply,
+            TerraformProvisionParameters.TerraformCommand.APPLY, true);
+    doReturn(terraformPlan)
+        .when(terraformProvisionTaskSpy)
+        .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY, 3);
+    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformPlan);
 
     FileIo.deleteDirectoryAndItsContentIfExists(GIT_REPO_DIRECTORY);
     FileIo.deleteDirectoryAndItsContentIfExists("./terraform-working-dir");
@@ -220,7 +241,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     // regular destroy with no plan exported
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
         TerraformProvisionParameters.TerraformCommandUnit.Destroy,
-        TerraformProvisionParameters.TerraformCommand.DESTROY);
+        TerraformProvisionParameters.TerraformCommand.DESTROY, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 1);
 
@@ -228,14 +249,14 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
     terraformProvisionParameters = createTerraformProvisionParameters(false, false, terraformDestroyPlan,
         TerraformProvisionParameters.TerraformCommandUnit.Destroy,
-        TerraformProvisionParameters.TerraformCommand.DESTROY);
+        TerraformProvisionParameters.TerraformCommand.DESTROY, false);
     terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY, 2);
 
     // run destroy plan only
     terraformProvisionParameters =
         createTerraformProvisionParameters(true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
-            TerraformProvisionParameters.TerraformCommand.DESTROY);
+            TerraformProvisionParameters.TerraformCommand.DESTROY, true);
     doReturn(terraformDestroyPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
@@ -252,7 +273,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     Mockito.verify(mockEncryptionService, times(i)).decrypt(gitConfig, sourceRepoEncryptyonDetails);
     Mockito.verify(gitClient, times(i)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
     Mockito.verify(gitClientHelper, times(i)).getRepoDirectory(any(GitOperationContext.class));
-    int uploadTimes = TerraformProvisionParameters.TerraformCommand.DESTROY.equals(command) ? i : i + 1;
+    int uploadTimes = TerraformProvisionParameters.TerraformCommand.DESTROY.equals(command) ? i : i * 2;
     Mockito.verify(delegateFileManager, times(uploadTimes)).upload(any(DelegateFile.class), any(InputStream.class));
     assertThat(terraformExecutionData.getWorkspace()).isEqualTo(WORKSPACE);
     assertThat(terraformExecutionData.getEntityId()).isEqualTo(ENTITY_ID);
@@ -265,7 +286,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   private TerraformProvisionParameters createTerraformProvisionParameters(boolean runPlanOnly,
       boolean exportPlanToApplyStep, byte[] terraformPlan,
       TerraformProvisionParameters.TerraformCommandUnit commandUnit,
-      TerraformProvisionParameters.TerraformCommand command) {
+      TerraformProvisionParameters.TerraformCommand command, boolean saveTerraformJson) {
     Map<String, String> backendConfigs = new HashMap<>();
     backendConfigs.put("var1", "value1");
 
@@ -291,6 +312,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .exportPlanToApplyStep(exportPlanToApplyStep)
         .variables(variables)
         .tfVarFiles(tfVarFiles)
+        .saveTerraformJson(saveTerraformJson)
         .build();
   }
 

@@ -61,6 +61,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final String delegateTag;
 
   private final byte[] terraformPlan;
+  private final boolean saveTerraformJson;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

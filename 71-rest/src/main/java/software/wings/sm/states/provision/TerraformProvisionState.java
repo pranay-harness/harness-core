@@ -8,6 +8,18 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.TERRAFORM_STATE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.provision.TerraformConstants.BACKEND_CONFIGS_KEY;
+import static io.harness.provision.TerraformConstants.ENCRYPTED_BACKEND_CONFIGS_KEY;
+import static io.harness.provision.TerraformConstants.ENCRYPTED_VARIABLES_KEY;
+import static io.harness.provision.TerraformConstants.QUALIFIER_APPLY;
+import static io.harness.provision.TerraformConstants.TARGETS_KEY;
+import static io.harness.provision.TerraformConstants.TF_APPLY_VAR_NAME;
+import static io.harness.provision.TerraformConstants.TF_DESTROY_NAME_PREFIX;
+import static io.harness.provision.TerraformConstants.TF_DESTROY_VAR_NAME;
+import static io.harness.provision.TerraformConstants.TF_NAME_PREFIX;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_KEY;
+import static io.harness.provision.TerraformConstants.VARIABLES_KEY;
+import static io.harness.provision.TerraformConstants.WORKSPACE_KEY;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -61,6 +73,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
@@ -112,20 +125,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class TerraformProvisionState extends State {
-  public static final String RUN_PLAN_ONLY_KEY = "runPlanOnly";
-  public static final String INHERIT_APPROVED_PLAN = "inheritApprovedPlan";
-
-  private static final String VARIABLES_KEY = "variables";
-  private static final String BACKEND_CONFIGS_KEY = "backend_configs";
-  private static final String TARGETS_KEY = "targets";
-  private static final String TF_VAR_FILES_KEY = "tf_var_files";
-  private static final String WORKSPACE_KEY = "tf_workspace";
-  private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
-  private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
-  private static final String TF_NAME_PREFIX = "tfPlan_%s";
-  private static final String TF_DESTROY_NAME_PREFIX = "tfDestroyPlan_%s";
-  private static final String QUALIFIER_APPLY = "apply";
-
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;
   @Inject protected transient InfrastructureProvisionerService infrastructureProvisionerService;
@@ -227,6 +226,7 @@ public abstract class TerraformProvisionState extends State {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
           terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
     }
+    saveTerraformPlanJson(terraformExecutionData.getTfPlanJson(), context, command());
 
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
@@ -249,6 +249,24 @@ public abstract class TerraformProvisionState extends State {
         .executionStatus(terraformExecutionData.getExecutionStatus())
         .errorMessage(terraformExecutionData.getErrorMessage())
         .build();
+  }
+
+  private void saveTerraformPlanJson(
+      String terraformPlan, ExecutionContext context, TerraformCommand terraformCommand) {
+    if (featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId())) {
+      String variableName = terraformCommand == TerraformCommand.APPLY ? TF_APPLY_VAR_NAME : TF_DESTROY_VAR_NAME;
+      // if the plan variable exists overwrite it
+      SweepingOutputInstance sweepingOutputInstance =
+          sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(variableName).build());
+      if (sweepingOutputInstance != null) {
+        sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
+      }
+
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PIPELINE)
+                                     .name(variableName)
+                                     .value(TerraformPlanParam.builder().tfplan(format("'%s'", terraformPlan)).build())
+                                     .build());
+    }
   }
 
   private void saveTerraformPlanToSecretManager(byte[] terraformPlan, ExecutionContext context) {
@@ -724,6 +742,7 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .runPlanOnly(runPlanOnly)
             .exportPlanToApplyStep(exportPlanToApplyStep)
+            .saveTerraformJson(featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId()))
             .terraformPlan(null)
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)

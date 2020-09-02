@@ -79,6 +79,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
@@ -90,6 +91,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.security.SecretManager;
@@ -129,6 +131,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private GitConfigHelperService gitConfigHelperService;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
 
@@ -170,6 +173,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     doReturn(null).when(executionContext).getContextElement(ContextElementType.TERRAFORM_PROVISION);
     doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
     doReturn(builder()).when(executionContext).prepareSweepingOutputBuilder(any(Scope.class));
+
+    when(featureFlagService.isEnabled(eq(FeatureName.EXPORT_TF_PLAN), anyString())).thenReturn(true);
   }
 
   @Test
@@ -550,6 +555,9 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     response.put("activityId", terraformExecutionData);
     TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn(SweepingOutputInstance.builder())
+        .when(executionContext)
+        .prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class));
 
     ExecutionResponse executionResponse = state.handleAsyncResponse(executionContext, response);
     assertThat(executionResponse.getStateExecutionData()).isEqualTo(terraformExecutionData);
@@ -558,6 +566,9 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         ((TerraformProvisionInheritPlanElement) executionResponse.getContextElements().get(0)).getProvisionerId())
         .isEqualTo(PROVISIONER_ID);
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
+    // once for saving the tf plan json variable
+    verify(sweepingOutputService, times(1)).save(any(SweepingOutputInstance.class));
+    verify(executionContext, times(1)).prepareSweepingOutputBuilder(eq(Scope.PIPELINE));
   }
 
   @Test
@@ -576,7 +587,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         .get(APP_ID, PROVISIONER_ID);
     doReturn(SweepingOutputInstance.builder())
         .when(executionContext)
-        .prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
+        .prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class));
     ExecutionResponse executionResponse = state.handleAsyncResponse(executionContext, response);
     assertThat(
         ((TerraformProvisionInheritPlanElement) executionResponse.getContextElements().get(0)).getProvisionerId())
@@ -584,8 +595,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     verify(secretManager, times(1))
         .saveFile(anyString(), anyString(), anyString(), any(UsageRestrictions.class), any(BoundedInputStream.class),
             anyBoolean(), anyBoolean());
-    verify(sweepingOutputService, times(1)).save(any(SweepingOutputInstance.class));
-    verify(executionContext, times(1)).prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class));
+    // once for saving the tfplan content, once for saving the tfplan json variable
+    verify(sweepingOutputService, times(2)).save(any(SweepingOutputInstance.class));
+    verify(executionContext, times(1)).prepareSweepingOutputBuilder(eq(Scope.WORKFLOW));
+    verify(executionContext, times(1)).prepareSweepingOutputBuilder(eq(Scope.PIPELINE));
   }
 
   @Test

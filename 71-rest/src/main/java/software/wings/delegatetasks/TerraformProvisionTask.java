@@ -7,11 +7,29 @@ import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.provision.TerraformConstants.RESOURCE_READY_WAIT_TIME_SECONDS;
+import static io.harness.provision.TerraformConstants.TERRAFORM_APPLY_PLAN_FILE_VAR_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_BACKEND_CONFIGS_FILE_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_INTERNAL_FOLDER;
+import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
+import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
+import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
+import static io.harness.provision.TerraformConstants.VAR_FILE_FORMAT;
+import static io.harness.provision.TerraformConstants.WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT;
+import static io.harness.provision.TerraformConstants.WORKSPACE_DIR_BASE;
+import static io.harness.provision.TerraformConstants.WORKSPACE_PLAN_FILE_PATH_FORMAT;
+import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand.APPLY;
+import static software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand.DESTROY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -84,23 +102,6 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
-  private static final String USER_DIR_KEY = "user.dir";
-  private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
-  private static final String WORKSPACE_DIR_BASE = "terraform.tfstate.d";
-  private static final String WORKSPACE_STATE_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/%s/terraform.tfstate";
-  private static final String WORKSPACE_PLAN_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/$WORKSPACE_NAME/tfplan";
-  private static final String WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT =
-      WORKSPACE_DIR_BASE + "/$WORKSPACE_NAME/tfdestroyplan";
-  private static final String TERRAFORM_PLAN_FILE_OUTPUT_NAME = "tfplan";
-  private static final String TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME = "tfdestroyplan";
-  private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
-  private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
-  private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs-%s";
-  private static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";
-  private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
-  private static final String VAR_FILE_FORMAT = " -var-file=\"%s\" ";
-  private static final String TF_WORKING_DIR = "./terraform-working-dir/${ACCOUNT_ID}/${ENTITY_ID}";
-
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
   @Inject private EncryptionService encryptionService;
@@ -158,6 +159,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     String sourceRepoSettingId = parameters.getSourceRepoSettingId();
+    String tfPlanJson = null;
 
     GitOperationContext gitOperationContext =
         GitOperationContext.builder().gitConfig(gitConfig).gitConnectorId(sourceRepoSettingId).build();
@@ -200,7 +202,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     File tfVariablesFile = null, tfBackendConfigsFile = null;
 
     try (ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters);
-         PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>())) {
+         PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>());
+         PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream();) {
       ensureLocalCleanup(scriptDirectory);
       String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitOperationContext);
 
@@ -278,10 +281,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             commandToLog = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
             code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
+
+            if (code == 0 && parameters.isSaveTerraformJson()) {
+              code = executeTerraformShowCommand(parameters, scriptDirectory, APPLY, planJsonLogOutputStream);
+            }
           } else if (code == 0 && parameters.getTerraformPlan() != null) {
             // case when we are inheriting the approved  plan
             saveTerraformPlanContentToFile(parameters, scriptDirectory);
-            saveExecutionLog(parameters, "Using approved terraform plan", CommandExecutionStatus.RUNNING, INFO);
+            saveExecutionLog(parameters, "\nUsing approved terraform plan \n", CommandExecutionStatus.RUNNING, INFO);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             command = "terraform apply -input=false tfplan";
@@ -328,6 +335,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                   format("terraform plan -destroy -out=tfdestroyplan -input=false %s %s ", targetArgs, uiLogs);
               saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
               code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
+
+              if (code == 0 && parameters.isSaveTerraformJson()) {
+                code = executeTerraformShowCommand(parameters, scriptDirectory, DESTROY, planJsonLogOutputStream);
+              }
             } else {
               if (parameters.getTerraformPlan() == null) {
                 command = format("terraform destroy -force %s %s", targetArgs, varParams);
@@ -425,6 +436,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .stateFileId(delegateFile.getFileId())
               .planLogFileId(APPLY == parameters.getCommand() ? planLogFile.getFileId() : null)
               .tfPlanFile(terraformPlan)
+              .tfPlanJson(planJsonLogOutputStream.getPlanJson())
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(parameters.getRawVariables())
@@ -458,6 +470,25 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(tfVariablesFile);
       FileUtils.deleteQuietly(tfBackendConfigsFile);
     }
+  }
+
+  private int executeTerraformShowCommand(TerraformProvisionParameters parameters, String scriptDirectory,
+      TerraformProvisionParameters.TerraformCommand terraformCommand, PlanJsonLogOutputStream planJsonLogOutputStream)
+      throws IOException, InterruptedException, TimeoutException {
+    String planName =
+        terraformCommand == APPLY ? TERRAFORM_PLAN_FILE_OUTPUT_NAME : TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
+    saveExecutionLog(parameters, format("%nGenerating json representation of %s %n", planName),
+        CommandExecutionStatus.RUNNING, INFO);
+    String command = format("terraform show -json %s", planName);
+    saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING, INFO);
+    int code = executeShellCommand(command, scriptDirectory, parameters, planJsonLogOutputStream);
+    if (code == 0) {
+      saveExecutionLog(parameters,
+          format("%nJson representation of %s is exported as a variable %s %n", planName,
+              terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
+          CommandExecutionStatus.RUNNING, INFO);
+    }
+    return code;
   }
 
   private TerraformExecutionData logErrorAndGetFailureResponse(
@@ -722,6 +753,20 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         return on("\n").join(logs);
       }
       return "";
+    }
+  }
+
+  @EqualsAndHashCode(callSuper = false)
+  private class PlanJsonLogOutputStream extends LogOutputStream {
+    private String planJson;
+
+    @Override
+    protected void processLine(String line) {
+      planJson = line;
+    }
+
+    protected String getPlanJson() {
+      return planJson;
     }
   }
 }
