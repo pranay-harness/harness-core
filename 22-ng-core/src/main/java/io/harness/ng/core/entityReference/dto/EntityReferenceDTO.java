@@ -1,6 +1,6 @@
 package io.harness.ng.core.entityReference.dto;
 
-import io.harness.ng.core.entityReference.ReferenceEntityType;
+import io.harness.ng.EntityType;
 import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotBlank;
@@ -13,9 +13,9 @@ public class EntityReferenceDTO {
   String accountIdentifier;
   @NotBlank String referredEntityFQN;
   String referredEntityName;
-  @NotNull ReferenceEntityType referredEntityType;
+  @NotNull EntityType referredEntityType;
   @NotBlank String referredByEntityFQN;
-  @NotNull ReferenceEntityType referredByEntityType;
+  @NotNull EntityType referredByEntityType;
   String referredByEntityName;
   // todo @deepak: Add the support for setup usage
   Long createdAt;

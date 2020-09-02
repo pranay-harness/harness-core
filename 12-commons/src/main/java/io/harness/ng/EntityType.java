@@ -1,4 +1,4 @@
-package io.harness.gitsync.core;
+package io.harness.ng;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +12,8 @@ import java.util.stream.Collectors;
 public enum EntityType {
   @JsonProperty("projects") PROJECTS(Product.CORE),
   @JsonProperty("pipelines") PIPELINES(Product.CD),
-  @JsonProperty("connectors") CONNECTORS(Product.CORE);
+  @JsonProperty("connectors") CONNECTORS(Product.CORE),
+  @JsonProperty("secrets") SECRETS(Product.CORE);
 
   private final Product product;
 

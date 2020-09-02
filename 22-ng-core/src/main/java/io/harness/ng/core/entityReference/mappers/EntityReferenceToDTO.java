@@ -2,7 +2,7 @@ package io.harness.ng.core.entityReference.mappers;
 
 import com.google.inject.Singleton;
 
-import io.harness.ng.core.entityReference.ReferenceEntityType;
+import io.harness.ng.EntityType;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.entity.EntityReference;
 
@@ -13,8 +13,8 @@ public class EntityReferenceToDTO {
         .accountIdentifier(entityReference.getAccountIdentifier())
         .referredByEntityFQN(entityReference.getReferredByEntityFQN())
         .referredEntityFQN(entityReference.getReferredEntityFQN())
-        .referredByEntityType(ReferenceEntityType.valueOf(entityReference.getReferredByEntityType()))
-        .referredEntityType(ReferenceEntityType.valueOf(entityReference.getReferredEntityType()))
+        .referredByEntityType(EntityType.valueOf(entityReference.getReferredByEntityType()))
+        .referredEntityType(EntityType.valueOf(entityReference.getReferredEntityType()))
         .referredEntityName(entityReference.getReferredEntityName())
         .referredByEntityName(entityReference.getReferredByEntityName())
         .createdAt(entityReference.getCreatedAt())

@@ -8,4 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 @HarnessRepo
 @Transactional
 public interface EntityReferenceRepository
-    extends PagingAndSortingRepository<EntityReference, String>, EntityReferenceCustomRepository {}
+    extends PagingAndSortingRepository<EntityReference, String>, EntityReferenceCustomRepository {
+  long deleteByReferredEntityFQNAndReferredByEntityFQN(String referredEntityFQN, String referredByEntityFQN);
+}

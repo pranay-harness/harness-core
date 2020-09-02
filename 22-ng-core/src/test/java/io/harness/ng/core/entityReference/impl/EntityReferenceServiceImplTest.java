@@ -1,14 +1,14 @@
 package io.harness.ng.core.entityReference.impl;
 
-import static io.harness.ng.core.entityReference.ReferenceEntityType.CONNECTOR;
-import static io.harness.ng.core.entityReference.ReferenceEntityType.PIPELINE;
+import static io.harness.ng.EntityType.CONNECTORS;
+import static io.harness.ng.EntityType.SECRETS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ng.EntityType;
 import io.harness.ng.core.NGCoreBaseTest;
-import io.harness.ng.core.entityReference.ReferenceEntityType;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.service.EntityReferenceService;
 import io.harness.rule.Owner;
@@ -23,8 +23,8 @@ public class EntityReferenceServiceImplTest extends NGCoreBaseTest {
   @Inject @InjectMocks EntityReferenceService entityReferenceService;
 
   private EntityReferenceDTO createEntityReference(String accountIdentifier, String referredEntityFQN,
-      ReferenceEntityType referredEntityType, String referredEntityName, String referredByEntityFQN,
-      ReferenceEntityType referredByEntityType, String referredByEntityName) {
+      EntityType referredEntityType, String referredEntityName, String referredByEntityFQN,
+      EntityType referredByEntityType, String referredByEntityName) {
     return EntityReferenceDTO.builder()
         .accountIdentifier(accountIdentifier)
         .referredEntityFQN(referredEntityFQN)
@@ -70,12 +70,12 @@ public class EntityReferenceServiceImplTest extends NGCoreBaseTest {
     String referredByEntityName2 = "Pipeline 2";
     String referredByEntityName3 = "Pipeline 3";
 
-    EntityReferenceDTO entityReferenceDTO1 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTOR,
-        referredEntityName1, referredByEntityFQN1, PIPELINE, referredByEntityName1);
-    EntityReferenceDTO entityReferenceDTO2 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTOR,
-        referredEntityName1, referredByEntityFQN2, PIPELINE, referredByEntityName2);
-    EntityReferenceDTO entityReferenceDTO3 = createEntityReference(accountIdentifier, referredEntityFQN2, CONNECTOR,
-        referredEntityName2, referredByEntityFQN1, PIPELINE, referredByEntityName1);
+    EntityReferenceDTO entityReferenceDTO1 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTORS,
+        referredEntityName1, referredByEntityFQN1, SECRETS, referredByEntityName1);
+    EntityReferenceDTO entityReferenceDTO2 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTORS,
+        referredEntityName1, referredByEntityFQN2, SECRETS, referredByEntityName2);
+    EntityReferenceDTO entityReferenceDTO3 = createEntityReference(accountIdentifier, referredEntityFQN2, CONNECTORS,
+        referredEntityName2, referredByEntityFQN1, SECRETS, referredByEntityName1);
     entityReferenceService.save(entityReferenceDTO1);
     entityReferenceService.save(entityReferenceDTO2);
     entityReferenceService.save(entityReferenceDTO3);
@@ -103,8 +103,8 @@ public class EntityReferenceServiceImplTest extends NGCoreBaseTest {
     String referredByEntityFQN1 = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier1);
 
-    EntityReferenceDTO entityReferenceDTO1 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTOR,
-        referredEntityName1, referredByEntityFQN1, PIPELINE, referredByEntityName1);
+    EntityReferenceDTO entityReferenceDTO1 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTORS,
+        referredEntityName1, referredByEntityFQN1, SECRETS, referredByEntityName1);
     EntityReferenceDTO savedEntityReferenceDTO = entityReferenceService.save(entityReferenceDTO1);
     verifyTheValuesAreCorrect(savedEntityReferenceDTO, entityReferenceDTO1);
   }
@@ -127,5 +127,38 @@ public class EntityReferenceServiceImplTest extends NGCoreBaseTest {
         .isEqualTo(expectedEntityReferenceDTO.getReferredEntityName());
 
     assertThat(actualEntityReferenceDTO.getCreatedAt()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void deleteTest() {
+    String accountIdentifier = "accountIdentifier";
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    String referredIdentifier1 = "referredIdentifier1";
+    String referredByIdentifier1 = "referredByIdentifier1";
+    String referredEntityName1 = "Connector 1";
+    String referredByEntityName1 = "Pipeline 1";
+
+    String referredEntityFQN1 = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier1);
+    String referredByEntityFQN1 = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier1);
+
+    EntityReferenceDTO entityReferenceDTO1 = createEntityReference(accountIdentifier, referredEntityFQN1, CONNECTORS,
+        referredEntityName1, referredByEntityFQN1, SECRETS, referredByEntityName1);
+    EntityReferenceDTO savedEntityReferenceDTO = entityReferenceService.save(entityReferenceDTO1);
+
+    boolean isDeleted = entityReferenceService.delete(referredEntityFQN1, referredByEntityFQN1);
+    assertThat(isDeleted).isTrue();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void deleteTestWhenRecordDoesnNotExists() {
+    boolean isDeleted = entityReferenceService.delete("referredEntityFQN1", "referredByEntityFQN1");
+    assertThat(isDeleted).isFalse();
   }
 }

@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.entityreferenceclient.NGManagerClientConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
@@ -35,6 +36,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
+  @JsonProperty("ngManagerClientConfig") private NGManagerClientConfig ngManagerClientConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database

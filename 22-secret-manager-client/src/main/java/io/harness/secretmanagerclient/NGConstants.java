@@ -17,4 +17,5 @@ public class NGConstants {
   public static final String TYPE_KEY = "type";
   public static final String DESCRIPTION_KEY = "description";
   public static final String HARNESS_SECRET_MANAGER_IDENTIFIER = "harnessSecretManager";
+  public static final String ENTITY_REFERENCE_LOG_PREFIX = "ENTITY_REFERENCE :";
 }

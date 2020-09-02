@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DockerConnectorToDockerInternalConfigMapper {
   public DockerInternalConfig toDockerInternalConfig(DockerConnectorDTO dockerConnectorDTO) {
     DockerInternalConfigBuilder dockerInternalConfigBuilder =
-        DockerInternalConfig.builder().dockerRegistryUrl(dockerConnectorDTO.getUrl());
+        DockerInternalConfig.builder().dockerRegistryUrl(dockerConnectorDTO.getDockerRegistryUrl());
     if (dockerConnectorDTO.getAuthScheme() != null
         && dockerConnectorDTO.getAuthScheme().getAuthType() == DockerAuthType.USER_PASSWORD) {
       DockerUserNamePasswordDTO dockerAuthCredentialsDTO =

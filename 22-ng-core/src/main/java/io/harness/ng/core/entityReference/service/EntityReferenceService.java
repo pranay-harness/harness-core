@@ -8,4 +8,6 @@ public interface EntityReferenceService {
       String projectIdentifier, String referredEntityIdentifier, String searchTerm);
 
   EntityReferenceDTO save(EntityReferenceDTO entityReferenceDTO);
+
+  Boolean delete(String referredEntityFQN, String referredByEntityFQN);
 }

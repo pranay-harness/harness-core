@@ -17,10 +17,11 @@ public class NGDockerValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof DockerTestConnectionTaskParams)
-                             .map(config -> (((DockerTestConnectionTaskParams) config).getDockerConnector()).getUrl())
-                             .findFirst()
-                             .orElse(null));
+    return singletonList(
+        Arrays.stream(getParameters())
+            .filter(o -> o instanceof DockerTestConnectionTaskParams)
+            .map(config -> (((DockerTestConnectionTaskParams) config).getDockerConnector()).getDockerRegistryUrl())
+            .findFirst()
+            .orElse(null));
   }
 }

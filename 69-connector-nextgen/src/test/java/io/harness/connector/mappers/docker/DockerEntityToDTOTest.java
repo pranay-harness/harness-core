@@ -45,7 +45,7 @@ public class DockerEntityToDTOTest extends CategoryTest {
                                           .build();
     DockerConnectorDTO dockerConnectorDTO = dockerEntityToDTO.createConnectorDTO(dockerConnector);
     assertThat(dockerConnectorDTO).isNotNull();
-    assertThat(dockerConnectorDTO.getUrl()).isEqualTo(dockerRegistryUrl);
+    assertThat(dockerConnectorDTO.getDockerRegistryUrl()).isEqualTo(dockerRegistryUrl);
     DockerAuthenticationDTO dockerAuthenticationDTO = dockerConnectorDTO.getAuthScheme();
     assertThat(dockerAuthenticationDTO).isNotNull();
     assertThat(dockerAuthenticationDTO.getAuthType()).isEqualTo(DockerAuthType.USER_PASSWORD);
