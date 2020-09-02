@@ -189,7 +189,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
 
   private ServiceNowConfig getSnowConfig(String snowConnectorId) {
     SettingAttribute snowSettingAttribute = wingsPersistence.get(SettingAttribute.class, snowConnectorId);
-    notNullCheck("snowSettingAttribute", snowSettingAttribute);
+    notNullCheck("Service Now connector may be deleted.", snowSettingAttribute);
 
     if (!(snowSettingAttribute.getValue() instanceof ServiceNowConfig)) {
       throw new InvalidRequestException("Type of Setting Attribute Value is not SnowConfig");

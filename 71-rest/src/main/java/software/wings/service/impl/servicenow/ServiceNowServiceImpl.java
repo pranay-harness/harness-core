@@ -3,6 +3,7 @@ package software.wings.service.impl.servicenow;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.ApprovalUtils.checkApproval;
 
@@ -196,7 +197,9 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   public ServiceNowExecutionData getIssueUrl(String appId, String accountId, ServiceNowApprovalParams approvalParams) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(approvalParams.getSnowConnectorId()).getValue();
+      SettingAttribute settingAttribute = settingService.get(approvalParams.getSnowConnectorId());
+      notNullCheck("Service Now connector may be deleted.", settingAttribute, USER);
+      serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);

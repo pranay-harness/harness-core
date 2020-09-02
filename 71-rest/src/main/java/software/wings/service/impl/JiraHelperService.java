@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.delegatetasks.jira.JiraAction.CHECK_APPROVAL;
 import static software.wings.delegatetasks.jira.JiraAction.FETCH_ISSUE;
 import static software.wings.service.ApprovalUtils.checkApproval;
@@ -25,6 +27,7 @@ import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.JiraConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.JiraApprovalParams;
@@ -208,7 +211,9 @@ public class JiraHelperService {
 
   private JiraExecutionData runTask(
       String accountId, String appId, String connectorId, JiraTaskParameters jiraTaskParameters) {
-    JiraConfig jiraConfig = (JiraConfig) settingService.get(connectorId).getValue();
+    SettingAttribute settingAttribute = settingService.get(connectorId);
+    notNullCheck("Jira connector may be deleted.", settingAttribute, USER);
+    JiraConfig jiraConfig = (JiraConfig) settingAttribute.getValue();
     jiraTaskParameters.setJiraConfig(jiraConfig);
     jiraTaskParameters.setEncryptionDetails(
         secretManager.getEncryptionDetails(jiraConfig, appId, WORKFLOW_EXECUTION_ID));
