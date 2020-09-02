@@ -19,7 +19,7 @@ import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
-import io.harness.state.core.section.chain.SectionChainStepParameters;
+import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Before;
 import org.junit.Test;

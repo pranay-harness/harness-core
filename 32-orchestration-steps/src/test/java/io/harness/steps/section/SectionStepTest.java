@@ -1,4 +1,4 @@
-package io.harness.state.core.section;
+package io.harness.steps.section;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationStepsTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Map;
 
-public class SectionStepTest extends OrchestrationTest {
+public class SectionStepTest extends OrchestrationStepsTest {
   @Inject private SectionStep sectionState;
 
   private static final String CHILD_ID = generateUuid();

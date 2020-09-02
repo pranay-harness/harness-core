@@ -21,13 +21,13 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.state.Step;
 import io.harness.state.StepType;
-import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.steps.fork.ForkStepParameters;
 
 import java.util.ArrayList;
 import java.util.EnumSet;

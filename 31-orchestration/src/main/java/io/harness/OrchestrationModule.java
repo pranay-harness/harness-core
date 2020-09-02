@@ -31,12 +31,10 @@ import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationFacilitatorRegistrar;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationResolverRegistrar;
-import io.harness.registrars.OrchestrationStepRegistrar;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
-import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.threading.ThreadPool;
@@ -84,9 +82,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
             TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("EngineExecutorService-%d").build()));
     bind(ExpressionEvaluatorProvider.class).toInstance(config.getExpressionEvaluatorProvider());
 
-    MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
-    stepRegistrarMapBinder.addBinding(OrchestrationStepRegistrar.class.getName()).to(OrchestrationStepRegistrar.class);
     MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
     adviserRegistrarMapBinder.addBinding(OrchestrationAdviserRegistrar.class.getName())

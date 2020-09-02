@@ -25,7 +25,7 @@ import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rule.Owner;
-import io.harness.state.core.dummy.DummyStep;
+import io.harness.steps.dummy.DummyStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;

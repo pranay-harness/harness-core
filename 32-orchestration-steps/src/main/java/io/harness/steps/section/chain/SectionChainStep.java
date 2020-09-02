@@ -1,4 +1,4 @@
-package io.harness.state.core.section.chain;
+package io.harness.steps.section.chain;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;

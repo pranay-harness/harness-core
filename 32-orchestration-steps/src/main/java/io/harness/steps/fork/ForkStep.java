@@ -1,4 +1,4 @@
-package io.harness.state.core.fork;
+package io.harness.steps.fork;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

@@ -27,7 +27,7 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
-import io.harness.state.core.dummy.DummyStep;
+import io.harness.state.StepType;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.testlib.RealMongo;
 import org.junit.Test;
@@ -204,7 +204,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTest {
                         .ambiance(ambiance)
                         .node(PlanNode.builder()
                                   .uuid(generateUuid())
-                                  .stepType(DummyStep.STEP_TYPE)
+                                  .stepType(StepType.builder().type("DUMMY").build())
                                   .name("dummy")
                                   .identifier("dummy")
                                   .build())

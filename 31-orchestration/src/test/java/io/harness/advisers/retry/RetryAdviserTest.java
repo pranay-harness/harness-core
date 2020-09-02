@@ -22,7 +22,7 @@ import io.harness.execution.status.Status;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
-import io.harness.state.core.dummy.DummyStep;
+import io.harness.state.StepType;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +38,7 @@ public class RetryAdviserTest extends OrchestrationTest {
   public static final String NODE_SETUP_ID = generateUuid();
   public static final String NODE_NAME = generateUuid();
   public static final String NODE_IDENTIFIER = "DUMMY";
+  public static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @InjectMocks @Inject RetryAdviser retryAdviser;
 
@@ -52,7 +53,7 @@ public class RetryAdviserTest extends OrchestrationTest {
                           .setupId(NODE_SETUP_ID)
                           .runtimeId(NODE_EXECUTION_ID)
                           .identifier(NODE_IDENTIFIER)
-                          .stepType(DummyStep.STEP_TYPE)
+                          .stepType(DUMMY_STEP_TYPE)
                           .build());
   }
 
@@ -77,7 +78,7 @@ public class RetryAdviserTest extends OrchestrationTest {
                                                 .uuid(NODE_SETUP_ID)
                                                 .name(NODE_NAME)
                                                 .identifier("dummy")
-                                                .stepType(DummyStep.STEP_TYPE)
+                                                .stepType(DUMMY_STEP_TYPE)
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)
@@ -107,7 +108,7 @@ public class RetryAdviserTest extends OrchestrationTest {
                       .uuid(NODE_SETUP_ID)
                       .name(NODE_NAME)
                       .identifier("dummy")
-                      .stepType(DummyStep.STEP_TYPE)
+                      .stepType(DUMMY_STEP_TYPE)
                       .build())
             .startTs(System.currentTimeMillis())
             .status(Status.FAILED)
@@ -138,7 +139,7 @@ public class RetryAdviserTest extends OrchestrationTest {
                       .uuid(NODE_SETUP_ID)
                       .name(NODE_NAME)
                       .identifier("dummy")
-                      .stepType(DummyStep.STEP_TYPE)
+                      .stepType(DUMMY_STEP_TYPE)
                       .build())
             .startTs(System.currentTimeMillis())
             .status(Status.FAILED)

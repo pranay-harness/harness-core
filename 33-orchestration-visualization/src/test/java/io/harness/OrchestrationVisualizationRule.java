@@ -28,6 +28,7 @@ import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationVisualizationModuleRegistrars;
+import io.harness.serializer.kryo.OrchestrationVisualizationTestKryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -70,6 +71,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
+            .add(OrchestrationVisualizationTestKryoRegistrar.class)
             .build();
       }
 

@@ -29,7 +29,7 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.state.core.fork.ForkStepParameters;
+import io.harness.steps.fork.ForkStepParameters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;

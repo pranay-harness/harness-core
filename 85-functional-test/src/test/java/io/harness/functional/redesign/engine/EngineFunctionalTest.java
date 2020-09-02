@@ -23,7 +23,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
-import io.harness.state.core.section.chain.SectionChainStep;
+import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.testframework.framework.MockServerExecutor;
 import org.junit.After;
 import org.junit.Before;

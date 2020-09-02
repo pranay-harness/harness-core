@@ -29,8 +29,8 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
-import io.harness.state.core.section.chain.SectionChainStep;
-import io.harness.state.core.section.chain.SectionChainStepParameters;
+import io.harness.steps.section.chain.SectionChainStep;
+import io.harness.steps.section.chain.SectionChainStepParameters;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;

@@ -16,12 +16,6 @@ import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.state.core.dummy.DummySectionOutcome;
-import io.harness.state.core.dummy.DummySectionStepParameters;
-import io.harness.state.core.fork.ForkStepParameters;
-import io.harness.state.core.section.SectionStepParameters;
-import io.harness.state.core.section.chain.SectionChainPassThroughData;
-import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 
@@ -54,13 +48,5 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
 
     // Facilitator related classes
     h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);
-
-    // State Related Classes
-    h.put("state.core.dummy.DummySectionOutcome", DummySectionOutcome.class);
-    h.put("state.core.dummy.DummySectionStepParameters", DummySectionStepParameters.class);
-    h.put("state.core.fork.ForkStepParameters", ForkStepParameters.class);
-    h.put("state.core.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
-    h.put("state.core.section.chain.SectionStepParameters", SectionChainStepParameters.class);
-    h.put("state.core.section.SectionStepParameters", SectionStepParameters.class);
   }
 }

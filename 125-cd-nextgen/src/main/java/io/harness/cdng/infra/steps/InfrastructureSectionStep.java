@@ -7,9 +7,9 @@ import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.state.Step;
 import io.harness.state.StepType;
-import io.harness.state.core.section.SectionStepParameters;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.steps.section.SectionStepParameters;
 
 import java.util.Map;
 

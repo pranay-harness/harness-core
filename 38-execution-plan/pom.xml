@@ -20,6 +20,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>32-orchestration-steps</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>35-yaml-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
