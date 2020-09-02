@@ -21,6 +21,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 
 @Singleton
@@ -38,6 +39,7 @@ public class SampleDataProviderServiceImpl implements SampleDataProviderService 
   @Inject private PipelineSampleDataProvider pipelineSampleDataProvider;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private AuthService authService;
 
   @Override
   public void createHarnessSampleApp(Account account) {
@@ -125,7 +127,7 @@ public class SampleDataProviderServiceImpl implements SampleDataProviderService 
       SettingAttribute dockerConnector = connectorGenerator.createDockerConnector(account.getUuid());
 
       createK8sV2SampleApp(account, kubernetesClusterConfig, dockerConnector, HARNESS_SAMPLE_APP);
-
+      authService.evictUserPermissionCacheForAccount(account.getUuid(), true);
     } catch (Exception ex) {
       String errorMessage = "Failed to create Sample Application for the account [" + account.getUuid() + "]";
       throw new WingsException(ErrorCode.GENERAL_ERROR, errorMessage, WingsException.USER, ex)
