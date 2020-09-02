@@ -104,7 +104,7 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private boolean oauthEnabled;
 
-  @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed;
+  @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed = true;
 
   @FdIndex private Long serviceGuardDataCollectionIteration;
   @FdIndex private Long serviceGuardDataAnalysisIteration;
@@ -476,7 +476,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean cloudCostEnabled;
     private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
-    private boolean isHarnessSupportAccessAllowed;
+    private boolean isHarnessSupportAccessAllowed = true;
 
     private Builder() {}
 

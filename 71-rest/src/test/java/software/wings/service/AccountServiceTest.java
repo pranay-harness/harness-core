@@ -1190,9 +1190,9 @@ public class AccountServiceTest extends WingsBaseTest {
 
     Set<String> restrictedAccounts = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
 
-    assertThat(restrictedAccounts.size()).isEqualTo(2);
+    assertThat(restrictedAccounts.size()).isEqualTo(1);
     assertThat(restrictedAccounts.contains("222")).isTrue();
-    assertThat(restrictedAccounts.contains("333")).isTrue();
+    assertThat(restrictedAccounts.contains("333")).isFalse();
     assertThat(restrictedAccounts.contains("111")).isFalse();
   }
 }
