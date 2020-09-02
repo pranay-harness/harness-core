@@ -60,11 +60,12 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       }
       switch (secretManagerConfig.getEncryptionType()) {
         case VAULT:
-          vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
+          vaultService.saveOrUpdateVaultConfig(
+              secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig, false);
           return secretManagerConfig;
         case GCP_KMS:
           gcpSecretsManagerService.saveGcpKmsConfig(
-              secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig);
+              secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
           return secretManagerConfig;
         case LOCAL:
           localEncryptionService.saveLocalEncryptionConfig(
@@ -125,11 +126,12 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   public SecretManagerConfig updateSecretManager(SecretManagerConfig secretManagerConfig) {
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
-        vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
+        vaultService.saveOrUpdateVaultConfig(
+            secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig, false);
         return secretManagerConfig;
       case GCP_KMS:
         gcpSecretsManagerService.updateGcpKmsConfig(
-            secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig);
+            secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
         return secretManagerConfig;
       default:
         throw new UnsupportedOperationException("Secret Manager not supported in NG");

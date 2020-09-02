@@ -72,7 +72,7 @@ public class GcpSecretsManagerResource {
 
       RestResponse<String> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to save global KMS");
       if (response == null) {
-        response = new RestResponse<>(gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig));
+        response = new RestResponse<>(gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig, true));
       }
       return response;
     }
@@ -112,7 +112,7 @@ public class GcpSecretsManagerResource {
       GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
-      return new RestResponse<>(gcpSecretsManagerService.saveGcpKmsConfig(accountId, gcpKmsConfig));
+      return new RestResponse<>(gcpSecretsManagerService.saveGcpKmsConfig(accountId, gcpKmsConfig, true));
     }
   }
 

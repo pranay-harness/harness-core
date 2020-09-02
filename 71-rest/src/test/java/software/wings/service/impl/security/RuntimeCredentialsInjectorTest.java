@@ -51,13 +51,13 @@ public class RuntimeCredentialsInjectorTest extends WingsBaseTest {
     Reflect.on(spyVaultService).set("kryoSerializer", kryoSerializer);
     vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
 
-    doReturn("vaultId").when(spyVaultService).updateVaultConfig(any(), any(), anyBoolean());
+    doReturn("vaultId").when(spyVaultService).updateVaultConfig(any(), any(), anyBoolean(), anyBoolean());
 
     Optional<SecretManagerConfig> updatedVaultConfig = spyVaultService.updateRuntimeCredentials(
         vaultConfig, Maps.newHashMap(ImmutableMap.of("authToken", "abcde")), true);
 
     assertThat(updatedVaultConfig).isPresent();
-    verify(spyVaultService).updateVaultConfig(any(), any(), anyBoolean());
+    verify(spyVaultService).updateVaultConfig(any(), any(), anyBoolean(), anyBoolean());
   }
 
   @Test
@@ -71,21 +71,21 @@ public class RuntimeCredentialsInjectorTest extends WingsBaseTest {
     Optional<SecretManagerConfig> updatedVaultConfig = spyVaultService.updateRuntimeCredentials(
         vaultConfig, Maps.newHashMap(ImmutableMap.of("authToken", "abcde")), true);
     assertThat(updatedVaultConfig).isNotPresent();
-    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean());
+    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean(), anyBoolean());
 
     vaultConfig.setTemplatizedFields(Lists.newArrayList("authRole"));
     updatedVaultConfig = spyVaultService.updateRuntimeCredentials(vaultConfig, null, true);
     assertThat(updatedVaultConfig).isNotPresent();
-    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean());
+    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean(), anyBoolean());
 
     updatedVaultConfig = spyVaultService.updateRuntimeCredentials(vaultConfig, Maps.newHashMap(), true);
     assertThat(updatedVaultConfig).isNotPresent();
-    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean());
+    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean(), anyBoolean());
 
     vaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
     updatedVaultConfig = spyVaultService.updateRuntimeCredentials(
         vaultConfig, Maps.newHashMap(ImmutableMap.of("authToken", "abc")), true);
     assertThat(updatedVaultConfig).isNotPresent();
-    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean());
+    verify(spyVaultService, times(0)).updateVaultConfig(any(), any(), anyBoolean(), anyBoolean());
   }
 }

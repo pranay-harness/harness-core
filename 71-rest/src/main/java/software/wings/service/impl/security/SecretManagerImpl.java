@@ -1444,7 +1444,7 @@ public class SecretManagerImpl implements SecretManager {
         case VAULT:
           VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, config.getUuid());
           vaultConfig.setDefault(false);
-          vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+          vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
           break;
         case LOCAL:
           break;
@@ -1459,7 +1459,7 @@ public class SecretManagerImpl implements SecretManager {
           GcpKmsConfig gcpKmsConfig = gcpSecretsManagerService.getGcpKmsConfig(accountId, config.getUuid());
           if (!gcpKmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID) && gcpKmsConfig.isDefault()) {
             gcpKmsConfig.setDefault(false);
-            gcpSecretsManagerService.saveGcpKmsConfig(accountId, gcpKmsConfig);
+            gcpSecretsManagerService.saveGcpKmsConfig(accountId, gcpKmsConfig, true);
           }
           break;
         case AWS_SECRETS_MANAGER:
