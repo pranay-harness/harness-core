@@ -16,6 +16,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
+import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -82,6 +83,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     setUnset(updateOperations, DelegateProfileKeys.startupScript, delegateProfile.getStartupScript());
     setUnset(updateOperations, DelegateProfileKeys.approvalRequired, delegateProfile.isApprovalRequired());
     setUnset(updateOperations, DelegateProfileKeys.selectors, delegateProfile.getSelectors());
+    setUnset(updateOperations, DelegateProfileKeys.scopingRules, delegateProfile.getScopingRules());
 
     Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
@@ -108,6 +110,19 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         wingsPersistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
     logger.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
     return delegateProfileSelectorsUpdated;
+  }
+
+  @Override
+  public DelegateProfile updateScopingRules(
+      String accountId, String delegateProfileId, List<DelegateProfileScopingRule> scopingRules) {
+    UpdateOperations<DelegateProfile> updateOperations = wingsPersistence.createUpdateOperations(DelegateProfile.class);
+    setUnset(updateOperations, DelegateProfileKeys.scopingRules, scopingRules);
+    Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
+                                       .filter(DelegateProfileKeys.accountId, accountId)
+                                       .filter(DelegateProfileKeys.uuid, delegateProfileId);
+    DelegateProfile updatedDelegateProfile = wingsPersistence.findAndModify(query, updateOperations, returnNewOptions);
+    logger.info("Updated profile scoping rules for accountId={}", accountId);
+    return updatedDelegateProfile;
   }
 
   @Override
