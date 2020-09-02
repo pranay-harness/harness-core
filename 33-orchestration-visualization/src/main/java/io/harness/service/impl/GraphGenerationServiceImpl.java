@@ -1,5 +1,7 @@
 package io.harness.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -8,8 +10,11 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Graph;
+import io.harness.beans.OrchestrationGraphInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.dto.OrchestrationGraph;
+import io.harness.dto.converter.OrchestrationGraphConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
@@ -61,6 +66,41 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
     executorService.submit(() -> mongoStore.upsert(graphToBeCached, Duration.ofDays(10)));
     return graphToBeCached;
+  }
+
+  @Override
+  public OrchestrationGraph generateOrchestrationGraph(String planExecutionId) {
+    PlanExecution planExecution = planExecutionService.get(planExecutionId);
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
+    if (isEmpty(nodeExecutions)) {
+      throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
+    }
+
+    long lastUpdated = nodeExecutions.stream().map(NodeExecution::getLastUpdatedAt).max(Long::compare).orElse(0L);
+
+    OrchestrationGraphInternal cachedGraph = mongoStore.get(
+        OrchestrationGraphInternal.ALGORITHM_ID, OrchestrationGraphInternal.STRUCTURE_HASH, planExecutionId, null);
+    if (cachedGraph != null && cachedGraph.getCacheContextOrder() >= lastUpdated) {
+      return OrchestrationGraphConverter.convertFrom(cachedGraph);
+    }
+
+    String rootNodeId = obtainStartingNodeExId(nodeExecutions);
+
+    OrchestrationGraphInternal orchestrationGraphInternal =
+        OrchestrationGraphInternal.builder()
+            .cacheKey(planExecutionId)
+            .cacheContextOrder(lastUpdated)
+            .cacheParams(null)
+            .planExecutionId(planExecution.getUuid())
+            .startTs(planExecution.getStartTs())
+            .endTs(planExecution.getEndTs())
+            .status(planExecution.getStatus())
+            .rootNodeId(rootNodeId)
+            .adjacencyList(graphGenerator.generateAdjacencyList(rootNodeId, nodeExecutions))
+            .build();
+
+    executorService.submit(() -> mongoStore.upsert(orchestrationGraphInternal, Duration.ofDays(10)));
+    return OrchestrationGraphConverter.convertFrom(orchestrationGraphInternal);
   }
 
   private String obtainStartingNodeExId(List<NodeExecution> nodeExecutions) {

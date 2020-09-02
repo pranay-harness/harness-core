@@ -6,6 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
+import io.harness.dto.OrchestrationGraph;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
@@ -43,6 +44,8 @@ public interface CustomExecutionService {
   PlanExecution testGraphPlan();
 
   Graph getGraph(String executionPlanId);
+
+  OrchestrationGraph getOrchestrationGraph(String executionPlanId);
 
   void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException;
 
