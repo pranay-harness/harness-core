@@ -62,6 +62,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
@@ -155,6 +156,16 @@ public class EnvState extends State {
 
     if (isNotEmpty(disableAssertion)) {
       try {
+        ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
+        if (contextImpl.getStateExecutionInstance() != null
+            && isNotEmpty(contextImpl.getStateExecutionInstance().getContextElements())) {
+          WorkflowStandardParams stdParams =
+              (WorkflowStandardParams) contextImpl.getStateExecutionInstance().getContextElements().get(0);
+          if (stdParams.getWorkflowElement() != null) {
+            stdParams.getWorkflowElement().setName(workflow.getName());
+            stdParams.getWorkflowElement().setDescription(workflow.getDescription());
+          }
+        }
         boolean assertionResult = (boolean) context.evaluateExpression(
             disableAssertion, StateExecutionContext.builder().stateExecutionData(envStateExecutionData).build());
         if (assertionResult) {
