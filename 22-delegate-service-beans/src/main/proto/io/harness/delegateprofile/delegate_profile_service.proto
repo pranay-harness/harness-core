@@ -17,7 +17,6 @@ service DelegateProfileService {
   rpc UpdateProfileScopingRules(UpdateProfileScopingRulesRequest) returns (UpdateProfileScopingRulesResponse);
 
   rpc UpdateProfileSelectors(UpdateProfileSelectorsRequest) returns (UpdateProfileSelectorsResponse);
-  rpc DeleteProfileSelector(DeleteProfileSelectorRequest) returns (DeleteProfileSelectorResponse);
 }
 
 message ListProfilesRequest {
@@ -77,13 +76,4 @@ message UpdateProfileSelectorsRequest {
 }
 
 message UpdateProfileSelectorsResponse {
-}
-
-message DeleteProfileSelectorRequest {
-  delegate.AccountId account_id = 1;
-  ProfileId profile_id = 2;
-  ProfileSelector selector = 3;
-}
-
-message DeleteProfileSelectorResponse {
 }
