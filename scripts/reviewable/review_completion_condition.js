@@ -4,6 +4,8 @@ let numApprovalsRequired = 1;
 const approvals = review.pullRequest.approvals;
 const requestedTeams = _.pluck(review.pullRequest.requestedTeams, 'slug');
 
+const restAddReviewer = ["george-harness"];
+
 
 let numApprovals = _.where(approvals, 'approved').length;
 const numRejections = _.where(approvals, 'changes_requested').length;
@@ -20,7 +22,19 @@ let pendingReviewers = _(discussionBlockers)
   .map(user => _.pick(user, 'username'))
   .value();
 
-const required = _.pluck(review.pullRequest.assignees, 'username');
+let required = _.pluck(review.pullRequest.assignees, 'username');
+
+let reviewBigModule = false
+
+_.forEach(review.files, function(file) {
+  if (file.path.startsWith('71-rest/') && file.revisions[file.revisions.length - 1].action === 'added') {
+    reviewBigModule = true;
+  }
+})
+
+if (reviewBigModule) {
+  required = required.concat(restAddReviewer);
+}
 
 _.pull(required, review.pullRequest.author.username);
 if (required.length) {
@@ -31,9 +45,8 @@ if (required.length) {
     _.min([numApprovals, numApprovalsRequired - required.length]);
   pendingReviewers = _(required)
     .reject(username => approvals[username] === 'approved')
-    .reject(
-      username => pendingReviewers.length && approvals[username])
-	  .map(username=>({username}))
+    .reject(username => pendingReviewers.length && approvals[username])
+    .map(username=>({username}))
     .concat(pendingReviewers)
     .value();
 }
