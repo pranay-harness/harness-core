@@ -76,15 +76,20 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   @Override
-  public String saveGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig) {
+  public String saveGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig, boolean validate) {
     validateUserInput(gcpKmsConfig, accountId);
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     gcpKmsConfig.setAccountId(accountId);
-    return saveOrUpdateInternal(gcpKmsConfig, null);
+    return saveOrUpdateInternal(gcpKmsConfig, null, validate);
   }
 
   @Override
   public String updateGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig) {
+    return updateGcpKmsConfig(accountId, gcpKmsConfig, true);
+  }
+
+  @Override
+  public String updateGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig, boolean validate) {
     if (isEmpty(gcpKmsConfig.getUuid())) {
       String message = "Cannot have id as empty when updating secret manager configuration";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
@@ -126,11 +131,13 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       return secretManagerConfigService.save(savedGcpKmsConfig);
     }
 
-    return saveOrUpdateInternal(savedGcpKmsConfig, oldConfigForAudit);
+    return saveOrUpdateInternal(savedGcpKmsConfig, oldConfigForAudit, validate);
   }
 
-  private String saveOrUpdateInternal(GcpKmsConfig gcpKmsConfig, GcpKmsConfig oldKmsConfig) {
-    validateSecretsManagerConfig(gcpKmsConfig);
+  private String saveOrUpdateInternal(GcpKmsConfig gcpKmsConfig, GcpKmsConfig oldKmsConfig, boolean validate) {
+    if (validate) {
+      validateSecretsManagerConfig(gcpKmsConfig);
+    }
     EncryptedData credentialEncryptedData = getEncryptedDataForSecretField(gcpKmsConfig, gcpKmsConfig.getCredentials());
     gcpKmsConfig.setCredentials(null);
     String gcpKmsConfigId;

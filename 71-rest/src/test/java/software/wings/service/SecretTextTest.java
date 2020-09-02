@@ -236,7 +236,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       case VAULT:
         VaultConfig vaultConfig = getVaultConfigWithAuthToken();
-        kmsId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+        kmsId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
         encryptedBy = vaultConfig.getName();
         break;
 

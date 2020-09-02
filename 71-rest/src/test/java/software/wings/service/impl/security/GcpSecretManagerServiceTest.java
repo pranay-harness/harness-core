@@ -84,7 +84,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     when(accountService.get(account.getUuid())).thenReturn(account);
     when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
 
-    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     assertThat(result).isNotNull();
 
     verify(accountService, times(1)).get(account.getUuid());
@@ -109,7 +109,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
     }
@@ -134,7 +134,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
     }
@@ -159,7 +159,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
     }
@@ -184,7 +184,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
     }
@@ -209,7 +209,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
     }
@@ -233,7 +233,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
       logger.error(e.getMessage(), e);
@@ -258,7 +258,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
       logger.error(e.getMessage(), e);
@@ -283,7 +283,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
 
     String result = null;
     try {
-      result = gcpSecretsManagerService.saveGcpKmsConfig(UUIDGenerator.generateUuid(), gcpKmsConfig);
+      result = gcpSecretsManagerService.saveGcpKmsConfig(UUIDGenerator.generateUuid(), gcpKmsConfig, true);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
       logger.error(e.getMessage(), e);
@@ -307,7 +307,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     when(accountService.get(account.getUuid())).thenReturn(account);
     when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
 
-    String configId = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    String configId = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     assertThat(configId).isNotNull();
 
     GcpKmsConfig savedGcpKmsConfig = gcpSecretsManagerService.getGcpKmsConfig(account.getUuid(), configId);
@@ -412,7 +412,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     when(accountService.get(account.getUuid())).thenReturn(account);
     when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
 
-    String configId = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    String configId = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     assertThat(configId).isNotNull();
 
     EncryptedData encryptedData = EncryptedData.builder()
@@ -471,7 +471,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     when(accountService.get(GLOBAL_ACCOUNT_ID)).thenReturn(account);
     when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
 
-    String result = gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig);
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig, true);
     assertThat(result).isNotNull();
     gcpKmsConfig.setUuid(result);
 

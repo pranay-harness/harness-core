@@ -282,7 +282,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
-  String updateVaultConfig(String accountId, VaultConfig vaultConfig, boolean auditChanges) {
+  String updateVaultConfig(String accountId, VaultConfig vaultConfig, boolean auditChanges, boolean validate) {
     VaultConfig savedVaultConfigWithCredentials = getVaultConfig(accountId, vaultConfig.getUuid());
     VaultConfig oldConfigForAudit = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
     VaultConfig savedVaultConfig = kryoSerializer.clone(oldConfigForAudit);
@@ -299,7 +299,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         || !Objects.equals(savedVaultConfigWithCredentials.getSecretId(), vaultConfig.getSecretId());
 
     // Validate every time when secret manager config change submitted
-    validateVaultConfig(accountId, vaultConfig);
+    if (validate) {
+      validateVaultConfig(accountId, vaultConfig);
+    }
 
     if (credentialChanged) {
       updateVaultCredentials(savedVaultConfig, vaultConfig.getAuthToken(), vaultConfig.getSecretId());
@@ -327,13 +329,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     return configId;
   }
 
-  private String updateVaultConfig(String accountId, VaultConfig vaultConfig) {
-    return updateVaultConfig(accountId, vaultConfig, true);
-  }
-
-  private String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
+  private String saveVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate) {
     // Validate every time when secret manager config change submitted
-    validateVaultConfig(accountId, vaultConfig);
+    if (validate) {
+      validateVaultConfig(accountId, vaultConfig);
+    }
     String authToken = vaultConfig.getAuthToken();
     String secretId = vaultConfig.getSecretId();
 
@@ -368,7 +368,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig) {
+  public String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath = isEmpty(vaultConfig.getBasePath()) ? DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
@@ -382,8 +382,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     checkIfTemplatizedSecretManagerCanBeCreatedOrUpdated(vaultConfig);
 
-    return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig)
-                                          : updateVaultConfig(accountId, vaultConfig);
+    return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig, validate)
+                                          : updateVaultConfig(accountId, vaultConfig, true, validate);
   }
 
   private Optional<String> getTemplatizedField(String templatizedField, VaultConfig vaultConfig) {
@@ -641,7 +641,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       }
     }
     if (shouldUpdateVaultConfig) {
-      updateVaultConfig(vaultConfig.getAccountId(), vaultConfig, false);
+      updateVaultConfig(vaultConfig.getAccountId(), vaultConfig, false, true);
     } else if (secretManagerConfig.getTemplatizedFields().contains(VaultConfigKeys.appRoleId)
         || secretManagerConfig.getTemplatizedFields().contains(VaultConfigKeys.secretId)) {
       VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);

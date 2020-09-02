@@ -5,7 +5,9 @@ import software.wings.beans.GcpKmsConfig;
 public interface GcpSecretsManagerService {
   GcpKmsConfig getGcpKmsConfig(String accountId, String configId);
 
-  String saveGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig);
+  String saveGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig, boolean validate);
+
+  String updateGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig, boolean validate);
 
   String updateGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig);
 

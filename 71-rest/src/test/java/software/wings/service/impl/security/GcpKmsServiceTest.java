@@ -96,7 +96,7 @@ public class GcpKmsServiceTest extends WingsBaseTest {
     gcpKmsConfig.setDefault(true);
     gcpKmsConfig.setAccountId(account.getUuid());
 
-    String configId = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    String configId = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     assertThat(configId).isNotNull();
     gcpKmsConfig = gcpSecretsManagerService.getGcpKmsConfig(account.getUuid(), configId);
   }

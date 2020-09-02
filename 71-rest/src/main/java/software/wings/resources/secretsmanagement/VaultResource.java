@@ -45,7 +45,7 @@ public class VaultResource {
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Adding a vault config");
-      return new RestResponse<>(vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig));
+      return new RestResponse<>(vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true));
     }
   }
 

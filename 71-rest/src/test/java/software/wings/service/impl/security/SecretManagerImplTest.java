@@ -127,7 +127,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     when(harnessUserGroupService.isHarnessSupportUser(user.getUuid())).thenReturn(true);
 
     when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
-    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig, true);
     assertThat(result).isNotNull();
     gcpKmsConfig.setUuid(result);
   }
@@ -168,7 +168,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     gcpKmsConfig1.setAccountId(account.getUuid());
     gcpKmsConfig1.setDefault(true);
 
-    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig1);
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig1, true);
     assertThat(result).isNotNull();
     gcpKmsConfig1.setUuid(result);
 
@@ -212,7 +212,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     gcpKmsConfig1.setAccountId(account.getUuid());
     gcpKmsConfig1.setDefault(true);
 
-    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig1);
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig1, true);
     assertThat(result).isNotNull();
     gcpKmsConfig1.setUuid(result);
 
@@ -253,7 +253,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     gcpKmsConfig.setDefault(true);
 
-    String result = gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig);
+    String result = gcpSecretsManagerService.saveGcpKmsConfig(GLOBAL_ACCOUNT_ID, gcpKmsConfig, true);
     assertThat(result).isNotNull();
     gcpKmsConfig.setUuid(result);
 
