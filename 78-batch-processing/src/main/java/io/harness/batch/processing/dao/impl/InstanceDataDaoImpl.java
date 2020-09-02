@@ -320,6 +320,17 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
+  public List<InstanceData> fetchInstanceDataForGivenInstances(
+      String accountId, String clusterId, List<String> instanceIds) {
+    return hPersistence.createQuery(InstanceData.class)
+        .filter(InstanceDataKeys.accountId, accountId)
+        .filter(InstanceDataKeys.clusterId, clusterId)
+        .field(InstanceDataKeys.instanceId)
+        .in(instanceIds)
+        .asList();
+  }
+
+  @Override
   public List<InstanceData> getInstanceDataLists(
       String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate) {
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
