@@ -228,6 +228,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfrastructureDefinitionServiceImpl implements InfrastructureDefinitionService {
   public static final String NULL = "null";
   public static final String DEFAULT = "default";
+  private static final String REGION = "region";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -1104,7 +1105,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (provider instanceof AwsEcsInfrastructure) {
-      String region = ((AwsEcsInfrastructure) provider).getRegion();
+      String region = getRegion(infrastructureDefinition, (AwsEcsInfrastructure) provider);
+      if (ExpressionEvaluator.containsVariablePattern(region)) {
+        return emptyList();
+      }
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, appId, null);
       return awsRoute53HelperServiceManager.listHostedZones(awsConfig, encryptionDetails, region, appId);
@@ -1969,5 +1973,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
                 plural(format("%s workflow", keyValue.getKey().name().toLowerCase()), keyValue.getValue().size()),
                 HarnessStringUtils.join(", ", keyValue.getValue())))
         .collect(Collectors.toList());
+  }
+
+  private String getRegion(InfrastructureDefinition infrastructureDefinition, AwsEcsInfrastructure provider) {
+    if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+      return provider.getExpressions().get(REGION);
+    } else {
+      return provider.getRegion();
+    }
   }
 }
