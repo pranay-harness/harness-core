@@ -2,6 +2,7 @@ package io.harness.batch.processing.service.impl;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import io.harness.batch.processing.billing.timeseries.data.InstanceLifecycleInfo;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
@@ -19,7 +20,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -97,6 +100,19 @@ public class InstanceDataServiceImpl implements InstanceDataService {
   public InstanceData getActiveInstance(
       String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider) {
     return instanceDataDao.getActiveInstance(accountId, startTime, endTime, cloudProvider);
+  }
+
+  @Override
+  public List<InstanceLifecycleInfo> fetchInstanceDataForGivenInstances(Set<String> instanceIds) {
+    List<InstanceData> instanceDataList = instanceDataDao.fetchInstanceData(instanceIds);
+    return instanceDataList.stream()
+        .map(instanceData
+            -> InstanceLifecycleInfo.builder()
+                   .instanceId(instanceData.getInstanceId())
+                   .usageStartTime(instanceData.getUsageStartTime())
+                   .usageStopTime(instanceData.getUsageStopTime())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   public PrunedInstanceData fetchPrunedInstanceDataWithName(
