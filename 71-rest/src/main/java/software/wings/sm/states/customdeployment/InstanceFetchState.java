@@ -22,6 +22,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -93,6 +94,7 @@ public class InstanceFetchState extends State {
   @Inject private LogService logService;
 
   @Getter @Setter @DefaultValue("10") String stateTimeoutInMinutes;
+  @Getter @Setter private List<String> tags;
 
   static Function<String, InstanceElement> instanceElementMapper = hostName
       -> anInstanceElement()
@@ -165,6 +167,7 @@ public class InstanceFetchState extends State {
                                     .description("Fetch Instances")
                                     .waitId(activityId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+                                    .tags(getRenderedTags(context))
                                     .data(TaskData.builder()
                                               .async(true)
                                               .parameters(new Object[] {taskParameters})
@@ -341,5 +344,17 @@ public class InstanceFetchState extends State {
         .map(instanceElement
             -> anInstanceStatusSummary().withInstanceElement(instanceElement).withStatus(executionStatus).build())
         .collect(Collectors.toList());
+  }
+
+  private List<String> getRenderedTags(ExecutionContext context) {
+    if (EmptyPredicate.isNotEmpty(tags)) {
+      return tags.stream()
+          .map(context::renderExpression)
+          .filter(StringUtils::isNotBlank)
+          .map(StringUtils::trim)
+          .distinct()
+          .collect(Collectors.toList());
+    }
+    return Collections.emptyList();
   }
 }
