@@ -75,5 +75,6 @@ build_java_proto_module 22-delegate-service-beans
 
 build_proto_module 16-expression-service 16-expression-service/src/main/proto/io/harness/expression/service
 build_proto_module ciscm product/ci/scm/proto
+build_proto_module ciengine product/ci/engine/proto
 
 rm -f bazel-bin bazel-out bazel-portal bazel-testlogs
