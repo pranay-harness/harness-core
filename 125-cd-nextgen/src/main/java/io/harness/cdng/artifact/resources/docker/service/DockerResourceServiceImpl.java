@@ -3,6 +3,7 @@ package io.harness.cdng.artifact.resources.docker.service;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -49,7 +50,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
   private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
   private final ConnectorService connectorService;
   private final SecretManagerClientService secretManagerClientService;
-  private static final int timeoutInSecs = 30;
+  @VisibleForTesting static final int timeoutInSecs = 30;
 
   @Inject
   public DockerResourceServiceImpl(DelegateServiceGrpcClient delegateServiceGrpcClient,
