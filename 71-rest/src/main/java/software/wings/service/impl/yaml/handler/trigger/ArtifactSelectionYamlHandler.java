@@ -14,7 +14,9 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
+import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactSelection;
@@ -69,7 +71,11 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
     }
     String serviceId = null;
     if (EmptyPredicate.isNotEmpty(serviceName)) {
+      Service service = serviceResourceService.getServiceByName(appId, serviceName);
+      notNullCheck(serviceName + " doesnot exist", service);
       serviceId = serviceResourceService.getServiceByName(appId, serviceName).getUuid();
+    } else {
+      throw new GeneralException("Service name cannot be empty.");
     }
 
     ArtifactSelection artifactSelection = ArtifactSelection.builder()
