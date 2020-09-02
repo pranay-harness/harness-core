@@ -131,7 +131,8 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     return allPods;
   }
 
-  private boolean init(K8sScaleTaskParameters k8sScaleTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
+  @VisibleForTesting
+  boolean init(K8sScaleTaskParameters k8sScaleTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
       String namespace, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
