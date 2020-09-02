@@ -202,9 +202,9 @@ public class TriggerResource {
   @ExceptionMetered
   public RestResponse<WebhookParameters> listWebhookParameters(@QueryParam("appId") String appId,
       @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") WorkflowType workflowType,
-      @QueryParam("webhookSource") WebhookSource webhookSource, @QueryParam("eventType") WebhookEventType eventType) {
-    return new RestResponse<>(
-        triggerService.listWebhookParameters(appId, workflowId, workflowType, webhookSource, eventType));
+      @QueryParam("webhookSource") WebhookSource webhookSource, @QueryParam("eventType") String eventType) {
+    return new RestResponse<>(triggerService.listWebhookParameters(
+        appId, workflowId, workflowType, webhookSource, WebhookEventType.fromString(eventType)));
   }
 
   @GET
