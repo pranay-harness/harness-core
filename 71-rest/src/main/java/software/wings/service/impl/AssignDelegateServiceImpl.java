@@ -414,7 +414,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return delegateIds;
   }
 
-  private List<String> fetchCriteria(DelegateTask task) {
+  protected List<String> fetchCriteria(DelegateTask task) {
     DelegateTaskPackage delegateTaskPackage = DelegateTaskUtils.getDelegateTaskPackage(task);
     if (featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, task.getAccountId())) {
       if (isEmpty(delegateTaskPackage.getExecutionCapabilities())) {
@@ -423,6 +423,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
       return delegateTaskPackage.getExecutionCapabilities()
           .stream()
+          .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
           .map(ExecutionCapability::fetchCapabilityBasis)
           .collect(toList());
     } else {
