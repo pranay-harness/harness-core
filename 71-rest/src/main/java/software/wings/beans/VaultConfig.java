@@ -19,14 +19,13 @@ import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,20 +53,18 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
 
   @Attributes(title = "Base Path") private String basePath;
 
-  @Attributes(title = "Renew token interval", required = true) private int renewIntervalHours;
+  // This field is deprecated and is not used anymore, will be removed in future. Please use renewalInterval
+  @Deprecated @Attributes(title = "Renew token interval", required = true) private int renewIntervalHours;
 
   @Attributes(title = "Token Renewal Interval in minutes", required = true) private long renewalInterval;
 
   @Attributes(title = "Is Vault Read Only") private boolean isReadOnly;
 
-  /**
-   * Vault 0.11 is using secrete engine V2 by default and it mandate a slightly different way of read/write secrets
-   * This field should have value "1" or "2". For backward compatibility, null of value "0" will be converted to value
-   * "1" automatically.
-   */
-  @SchemaIgnore private int secretEngineVersion;
+  @Attributes(title = "Secret Engine Version") private int secretEngineVersion;
 
-  @Default private String secretEngineName = "secret";
+  @Attributes(title = "Secret Engine Name") private String secretEngineName;
+
+  @Attributes(title = "Is Secret Engine Manually Entered") private boolean engineManuallyEntered;
 
   private long renewedAt;
 
@@ -82,12 +79,13 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
   @SchemaIgnore
   @Override
   public String getValidationCriteria() {
-    return vaultUrl;
+    return getEncryptionServiceUrl();
   }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl));
+    return Collections.singletonList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl));
   }
 
   @Override

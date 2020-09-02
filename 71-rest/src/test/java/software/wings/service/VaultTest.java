@@ -254,7 +254,7 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
       fail("Saved invalid vault config");
     } catch (WingsException e) {
-      assertThat(e.getCode()).isEqualTo(ErrorCode.VAULT_OPERATION_ERROR);
+      assertThat(e.getCode()).isEqualTo(ErrorCode.UNKNOWN_ERROR);
     }
   }
 

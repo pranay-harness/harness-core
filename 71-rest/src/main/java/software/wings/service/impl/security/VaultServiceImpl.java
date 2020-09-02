@@ -306,7 +306,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
 
     savedVaultConfig.setName(vaultConfig.getName());
-    savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
     savedVaultConfig.setRenewalInterval(vaultConfig.getRenewalInterval());
     savedVaultConfig.setDefault(vaultConfig.isDefault());
     savedVaultConfig.setReadOnly(vaultConfig.isReadOnly());
@@ -315,6 +314,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     savedVaultConfig.setSecretEngineVersion(vaultConfig.getSecretEngineVersion());
     savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
     savedVaultConfig.setVaultUrl(vaultConfig.getVaultUrl());
+    savedVaultConfig.setEngineManuallyEntered(vaultConfig.isEngineManuallyEntered());
     savedVaultConfig.setTemplatizedFields(vaultConfig.getTemplatizedFields());
     // PL-3237: Audit secret manager config changes.
     if (auditChanges) {
@@ -344,7 +344,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       vaultConfig.setUuid(vaultConfigId);
     } catch (DuplicateKeyException e) {
       throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Another vault configuration with the same name or URL exists", USER_SRE);
+          SECRET_MANAGEMENT_ERROR, "Another vault configuration with the same name or URL exists", e, USER_SRE);
     }
 
     saveVaultCredentials(vaultConfig, authToken, secretId);
@@ -575,50 +575,23 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   private void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
-    try {
-      if (vaultConfig.getSecretEngineVersion() == 0) {
-        SecretEngineSummary secretEngine = getVaultSecretEngine(vaultConfig);
-        if (secretEngine == null) {
-          String message = "Was not able to find the default or matching backend Vault secret engine.";
-          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
-        } else {
-          // Default to secret engine kv version 2
-          int secreteEngineVersion = secretEngine.getVersion() != null ? secretEngine.getVersion() : 2;
-
-          vaultConfig.setSecretEngineVersion(secreteEngineVersion);
-          vaultConfig.setSecretEngineName(secretEngine.getName());
-          logger.info("Backend secret engine name and version for Vault secret manager {} are: [{}, {}]",
-              vaultConfig.getName(), secretEngine.getName(), secreteEngineVersion);
-        }
-      }
-
-      // Need to try using Vault AppRole login to generate a client token if configured so
-      if (vaultConfig.getAccessType() == APP_ROLE) {
-        VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
-        if (loginResult != null && EmptyPredicate.isNotEmpty(loginResult.getClientToken())) {
-          vaultConfig.setAuthToken(loginResult.getClientToken());
-        } else {
-          String message =
-              "Was not able to login Vault using the AppRole auth method. Please check your credentials and try again";
-          throw new SecretManagementException(VAULT_OPERATION_ERROR, message, USER);
-        }
-      }
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      String message =
-          "Was not able to determine the vault server's secret engine version using given credentials. Please check your credentials and try again";
-      throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
+    if (isEmpty(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
+      throw new SecretManagementException(
+          VAULT_OPERATION_ERROR, "Secret engine or secret engine version was not specified", USER);
     }
-
-    if (!vaultConfig.isReadOnly()) {
-      try {
-        encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, VAULT, vaultConfig, null);
-      } catch (WingsException e) {
+    // Need to try using Vault AppRole login to generate a client token if configured so
+    if (vaultConfig.getAccessType() == APP_ROLE) {
+      VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
+      if (loginResult != null && EmptyPredicate.isNotEmpty(loginResult.getClientToken())) {
+        vaultConfig.setAuthToken(loginResult.getClientToken());
+      } else {
         String message =
-            "Was not able to encrypt a secret in vault using given credentials. Please check your credentials and try again";
-        throw new SecretManagementException(VAULT_OPERATION_ERROR, message, e, USER);
+            "Was not able to login Vault using the AppRole auth method. Please check your credentials and try again";
+        throw new SecretManagementException(VAULT_OPERATION_ERROR, message, USER);
       }
+    }
+    if (!vaultConfig.isReadOnly()) {
+      encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, VAULT, vaultConfig, null);
     }
   }
 
@@ -644,26 +617,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         sleep(ofMillis(1000));
       }
     }
-  }
-
-  private SecretEngineSummary getVaultSecretEngine(VaultConfig vaultConfig) {
-    List<SecretEngineSummary> secretEngineSummaries = listSecretEnginesInternal(vaultConfig);
-
-    return getSecretEngineWithFallback(vaultConfig, secretEngineSummaries);
-  }
-
-  private SecretEngineSummary getSecretEngineWithFallback(
-      VaultConfig vaultConfig, List<SecretEngineSummary> secretEngineSummaries) {
-    String mountPointName = isEmpty(vaultConfig.getSecretEngineName()) ? DEFAULT_SECRET_ENGINE_NAME
-                                                                       : vaultConfig.getSecretEngineName().trim();
-    SecretEngineSummary secretEngine =
-        secretEngineSummaries.stream()
-            .filter(secretEngineSummary -> secretEngineSummary.getName().equals(mountPointName))
-            .findAny()
-            .get();
-
-    logger.info("Matched Vault secret engine: {}", secretEngine);
-    return secretEngine;
   }
 
   @Override

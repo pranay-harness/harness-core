@@ -76,7 +76,6 @@ import software.wings.service.impl.security.vault.VaultSecretMetadata;
 import software.wings.service.impl.security.vault.VaultSecretMetadata.VersionMetadata;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
@@ -324,22 +323,23 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           secretEngineSummaries.add(secretEngineSummary);
         }
       } else {
-        // Log down why the sys mount failed.
+        // Throw error when sys mount fails.
+        String message;
         if (response.errorBody() != null) {
-          logger.error("Failed to list secret engines for secret manager {} due to the following error {}",
+          message = String.format("Failed to list secret engines for %s due to the following error from vault: \"%s\".",
               vaultConfig.getVaultUrl(), response.errorBody().string());
+        } else {
+          message = String.format("Failed to list secret engines for %s.", vaultConfig.getVaultUrl());
         }
-        // To be consistent with the old Vault secret management behavior we will take a default secret engine
-        SecretEngineSummary secretEngineSummary = SecretEngineSummary.builder()
-                                                      .name(VaultService.DEFAULT_SECRET_ENGINE_NAME)
-                                                      .type(VaultService.KEY_VALUE_SECRET_ENGINE_TYPE)
-                                                      .version(2)
-                                                      .build();
-        secretEngineSummaries.add(secretEngineSummary);
+        String hint =
+            " Please provide the read permission for sys/mounts in vault or enter the secret engine name and version manually.";
+        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message + hint, USER);
       }
     } catch (IOException e) {
-      String message = "Failed to list secret engines for secret manager " + vaultConfig.getName() + " at "
-          + vaultConfig.getVaultUrl();
+      String message =
+          String.format("Failed to list secret engines for %s due to unexpected network error. Please try again.",
+              vaultConfig.getVaultUrl());
+      logger.error(message, e);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
     }
 
