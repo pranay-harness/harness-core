@@ -2643,6 +2643,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if (stateExecutionData instanceof SkipStateExecutionData) {
       return stateExecutionData;
     }
+    if (!(stateExecutionMap.get(stateExecutionInstance.getDisplayName())
+                instanceof VerificationStateAnalysisExecutionData)) {
+      logger.info("The state execution data is not of type VerificationStateAnalysisExecutionData. It is of type: {}",
+          stateExecutionMap.get(stateExecutionInstance.getDisplayName()).getClass().getName());
+      return VerificationStateAnalysisExecutionData.builder().stateExecutionInstanceId(stateExecutionId).build();
+    }
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
     if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {
