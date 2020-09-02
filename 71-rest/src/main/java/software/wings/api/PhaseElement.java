@@ -12,9 +12,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
@@ -35,6 +37,7 @@ public class PhaseElement implements ContextElement {
   public static final String PHASE_PARAM = "PHASE_PARAM";
 
   @Inject @Transient private transient ArtifactService artifactService;
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   private String uuid;
   private String phaseName;
@@ -73,6 +76,10 @@ public class PhaseElement implements ContextElement {
     if (rollbackArtifactId != null) {
       Artifact artifact = artifactService.getWithSource(rollbackArtifactId);
       map.put(ARTIFACT, artifact);
+    } else if (isRollback()
+        && featureFlagService.isEnabled(FeatureName.ROLLBACK_NONE_ARTIFACT, context.getAccountId())) {
+      // In case of rollback if don't find rollbackArtifactId, set artifact object to null.
+      map.put(ARTIFACT, null);
     }
     return map;
   }
