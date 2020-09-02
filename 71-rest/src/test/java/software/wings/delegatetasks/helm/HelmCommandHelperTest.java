@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.helm;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,6 +91,14 @@ public class HelmCommandHelperTest extends WingsBaseTest {
     assertThat(helmDeployChartSpec.getUrl()).isEqualTo("http://storage.googleapis.com/kubernetes-charts");
     assertThat(helmDeployChartSpec.getName()).isEqualTo("ABC");
     assertThat(helmDeployChartSpec.getVersion()).isEqualTo("0.1.0");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGenerateHelmDeployChartSpecFromYamlEmpty() {
+    Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("");
+    assertThat(optional.isPresent()).isFalse();
   }
 
   @Test
