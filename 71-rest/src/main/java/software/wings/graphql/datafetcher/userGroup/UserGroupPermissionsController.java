@@ -453,6 +453,7 @@ public class UserGroupPermissionsController {
         return ADMINISTER_OTHER_ACCOUNT_FUNCTIONS;
       case AUDIT_VIEWER:
         return VIEW_AUDITS;
+      case TAG_MANAGEMENT:
       case MANAGE_TAGS:
         return QLAccountPermissionType.MANAGE_TAGS;
       case CE_ADMIN:
