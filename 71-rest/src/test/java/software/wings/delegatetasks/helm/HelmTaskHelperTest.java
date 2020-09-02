@@ -550,6 +550,26 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmChartConfigParams.getChartVersion()).isEqualTo(chartVersion);
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlFromChartUnableToPopulateChartVersion() throws Exception {
+    HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder().chartName("chartName").build();
+
+    doReturn("working/directory").when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
+    doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelper)
+        .executeCommand(contains("helm/path fetch"), anyString(), eq("fetch chart chartName"), anyLong());
+    doThrow(new RuntimeException("Unable to fetch version"))
+        .when(helmTaskHelper)
+        .getHelmChartInfoFromChartsYamlFile(anyString());
+
+    assertThatCode(() -> helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL))
+        .doesNotThrowAnyException();
+  }
+
   private String prepareChartDirectoryWithValuesFileForTest(String chartName, String valuesFileContent)
       throws IOException {
     String workingDirectory = Files.createTempDirectory("get-values-yaml-chart").toString();

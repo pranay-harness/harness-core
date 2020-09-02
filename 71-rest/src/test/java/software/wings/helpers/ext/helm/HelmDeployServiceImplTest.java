@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.replace;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -25,6 +26,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -44,12 +46,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
@@ -59,7 +63,6 @@ import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
-import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -71,6 +74,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
@@ -101,7 +105,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -120,6 +126,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private GitClientHelper gitClientHelper;
   @Mock private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Mock private KubernetesContainerService kubernetesContainerService;
+  @Mock private HelmHelper helmHelper;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
@@ -277,6 +284,73 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
     verify(helmClient).upgrade(helmInstallCommandRequest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeployFailedUpgrade() throws Exception {
+    HelmDeployServiceImpl spyHelmDeployService = spy(helmDeployService);
+    helmCliReleaseHistoryResponse.setCommandExecutionStatus(SUCCESS);
+    helmCliListReleasesResponse.setOutput(HelmTestConstants.LIST_RELEASE_V2);
+    helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
+
+    helmInstallCommandResponse.setCommandExecutionStatus(FAILURE);
+
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any())).thenReturn(helmInstallCommandResponse);
+    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+
+    HelmCommandResponse response = spyHelmDeployService.deploy(helmInstallCommandRequest);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    verify(spyHelmDeployService, never())
+        .getExecutionLogCallback(helmInstallCommandRequest, HelmDummyCommandUnit.WaitForSteadyState);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeployTimeout() throws Exception {
+    TimeLimiter mockTimeLimiter = mock(TimeLimiter.class);
+    on(helmDeployService).set("timeLimiter", mockTimeLimiter);
+    helmCliReleaseHistoryResponse.setCommandExecutionStatus(SUCCESS);
+    helmCliListReleasesResponse.setOutput(HelmTestConstants.LIST_RELEASE_V2);
+    helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
+
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any())).thenReturn(helmInstallCommandResponse);
+    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+
+    doThrow(new UncheckedTimeoutException("Timed out"))
+        .when(mockTimeLimiter)
+        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+
+    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
+    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(helmCommandResponse.getOutput()).contains("Timed out");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeployWingsException() throws Exception {
+    GeneralException exception = new GeneralException("Something went wrong");
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any())).thenThrow(exception);
+    assertThatThrownBy(() -> helmDeployService.deploy(helmInstallCommandRequest)).isEqualTo(exception);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeployException() throws Exception {
+    IOException ioException = new IOException("Some I/O issue");
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any())).thenThrow(ioException);
+
+    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
+    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(helmCommandResponse.getOutput()).contains("Some I/O issue");
   }
 
   @Test
@@ -935,6 +1009,51 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     return (HelmInstallCommandResponse) helmDeployService.rollback(request);
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRollbackTimeout() throws Exception {
+    TimeLimiter mockTimeLimiter = mock(TimeLimiter.class);
+    on(helmDeployService).set("timeLimiter", mockTimeLimiter);
+    HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
+
+    doThrow(new UncheckedTimeoutException("Timed out"))
+        .when(mockTimeLimiter)
+        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    doReturn(
+        HelmInstallCommandResponse.builder().output("Rollback was a success.").commandExecutionStatus(SUCCESS).build())
+        .when(helmClient)
+        .rollback(request);
+
+    HelmCommandResponse helmCommandResponse = helmDeployService.rollback(request);
+    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(helmCommandResponse.getOutput()).contains("Timed out");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRollbackWingsException() throws Exception {
+    GeneralException exception = new GeneralException("Something went wrong");
+    HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
+    doThrow(exception).when(helmClient).rollback(request);
+
+    assertThatThrownBy(() -> helmDeployService.rollback(request)).isEqualTo(exception);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRollbackException() throws Exception {
+    IOException ioException = new IOException("Some I/O issue");
+    HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
+    doThrow(ioException).when(helmClient).rollback(request);
+
+    HelmCommandResponse helmCommandResponse = helmDeployService.rollback(request);
+    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(helmCommandResponse.getOutput()).contains("Some I/O issue");
+  }
+
   private void successWhenHelm3PresentInClientTools() throws InterruptedException, IOException, TimeoutException {
     doReturn("/client-tools/helm").when(k8sGlobalConfigService).getHelmPath(V3);
 
@@ -952,7 +1071,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   private void setFakeTimeLimiter() {
-    Reflect.on(helmDeployService).set("timeLimiter", timeLimiter);
+    on(helmDeployService).set("timeLimiter", timeLimiter);
   }
 
   @Test
@@ -1142,5 +1261,52 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
           .isEqualTo("Bad chart name specified, please specify in the following format: repo/chartName");
     }
     verify(executionLogCallback, times(0)).saveExecutionLog("Helm Chart Repo checked-out locally");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testPrintHelmChartKubernetesResourcesOnDeploy() throws Exception {
+    helmInstallCommandRequest.setNamespace("default");
+    helmInstallCommandRequest.setVariableOverridesYamlFiles(Collections.emptyList());
+    String renderedHelmChart = "apiVersion: apps/v1\n"
+        + "kind: Deployment\n"
+        + "metadata:\n"
+        + "  name: example\n"
+        + "  labels: []\n"
+        + "spec:\n"
+        + "  selector:\n"
+        + "    app: test-app\n"
+        + "    release: helm-release\n"
+        + "  template:\n"
+        + "    metadata:\n"
+        + "      name: example\n"
+        + "      labels:\n"
+        + "         app: test-app\n"
+        + "         release: helm-release\n"
+        + "---\n"
+        + "apiVersion: v1\n"
+        + "kind: Secret\n"
+        + "metadata:\n"
+        + "  name: example\n"
+        + "type: Opaque\n"
+        + "data:\n"
+        + "  sample: c29tZXRpbWVzIHNjaWVuY2UgaXMgbW9yZSBhcnQgdGhhbiBzY2llbmNlLCBNb3J0eQ==\n";
+    List<KubernetesResource> expectedLoggedResources = ManifestHelper.processYaml(renderedHelmChart);
+    String expectedLoggedYaml = ManifestHelper.toYamlForLogs(expectedLoggedResources);
+    HelmCliResponse renderedHelmChartResponse =
+        HelmCliResponse.builder().commandExecutionStatus(SUCCESS).output(renderedHelmChart).build();
+
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any())).thenReturn(helmInstallCommandResponse);
+    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    doReturn(renderedHelmChartResponse)
+        .when(helmClient)
+        .renderChart(helmInstallCommandRequest, "./repository/helm/source/${ACTIVITY_ID}/test", "default",
+            Collections.emptyList());
+    helmDeployService.deploy(helmInstallCommandRequest);
+    ArgumentCaptor<String> savedLogsCaptor = ArgumentCaptor.forClass(String.class);
+    verify(logCallback, atLeastOnce()).saveExecutionLog(savedLogsCaptor.capture());
+    assertThat(savedLogsCaptor.getAllValues()).contains(expectedLoggedYaml);
   }
 }
