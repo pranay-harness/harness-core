@@ -104,7 +104,6 @@ public class OrchestrationEngineTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldStartSyncExecution() {
     String testStartNodeId = generateUuid();
-    String testSecondNodeId = generateUuid();
     Plan oneNodePlan =
         Plan.builder()
             .node(PlanNode.builder()
@@ -112,20 +111,6 @@ public class OrchestrationEngineTest extends OrchestrationTest {
                       .uuid(testStartNodeId)
                       .identifier("test1")
                       .stepType(TEST_STEP_TYPE)
-                      .adviserObtainment(
-                          AdviserObtainment.builder()
-                              .type(OnSuccessAdviser.ADVISER_TYPE)
-                              .parameters(OnSuccessAdviserParameters.builder().nextNodeId(testSecondNodeId).build())
-                              .build())
-                      .facilitatorObtainment(FacilitatorObtainment.builder()
-                                                 .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
-                                                 .build())
-                      .build())
-            .node(PlanNode.builder()
-                      .name("Test Node 2")
-                      .uuid(testSecondNodeId)
-                      .identifier("test2")
-                      .stepType(DUMMY_STEP_TYPE)
                       .facilitatorObtainment(FacilitatorObtainment.builder()
                                                  .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                                  .build())

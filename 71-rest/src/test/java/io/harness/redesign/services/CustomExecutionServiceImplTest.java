@@ -21,7 +21,7 @@ import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
-import io.harness.state.core.dummy.DummyStep;
+import io.harness.steps.dummy.DummyStep;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

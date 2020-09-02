@@ -13,12 +13,6 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventNotifyData;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.state.core.dummy.DummySectionOutcome;
-import io.harness.state.core.dummy.DummySectionStepParameters;
-import io.harness.state.core.dummy.DummySectionStepTransput;
-import io.harness.state.core.fork.ForkStepParameters;
-import io.harness.state.core.section.SectionStepParameters;
-import io.harness.state.core.section.chain.SectionChainStepParameters;
 
 @OwnedBy(CDC)
 public class OrchestrationKryoRegister implements KryoRegistrar {
@@ -33,13 +27,6 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
 
     kryo.register(ExecutionStatusResponseData.class, 3102);
     kryo.register(RetryAdviserParameters.class, 3103);
-    kryo.register(DummySectionStepTransput.class, 3104);
-    kryo.register(DummySectionOutcome.class, 3105);
-
-    kryo.register(ForkStepParameters.class, 3113);
-    kryo.register(SectionStepParameters.class, 3114);
-    kryo.register(DummySectionStepParameters.class, 3115);
-    kryo.register(SectionChainStepParameters.class, 3116);
 
     // Put promoted classes here and do not change the id
     kryo.register(DelayEventNotifyData.class, 7273);

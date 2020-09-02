@@ -1,4 +1,4 @@
-package io.harness.state.core.dummy;
+package io.harness.steps.dummy;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

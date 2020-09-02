@@ -12,8 +12,8 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.state.StepType;
-import io.harness.state.core.dummy.DummyStep;
-import io.harness.state.core.section.SectionStepParameters;
+import io.harness.steps.dummy.DummyStep;
+import io.harness.steps.section.SectionStepParameters;
 
 public class PlanRepo {
   public static Plan planWithBigWait() {

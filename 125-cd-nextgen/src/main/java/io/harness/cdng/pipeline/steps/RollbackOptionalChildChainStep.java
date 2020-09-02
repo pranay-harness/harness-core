@@ -12,10 +12,10 @@ import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.state.Step;
 import io.harness.state.StepType;
-import io.harness.state.core.section.chain.SectionChainPassThroughData;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.steps.section.chain.SectionChainPassThroughData;
 
 import java.util.Map;
 

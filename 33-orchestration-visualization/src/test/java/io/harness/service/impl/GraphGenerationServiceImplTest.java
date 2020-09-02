@@ -27,11 +27,10 @@ import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
-import io.harness.state.core.dummy.DummyStep;
-import io.harness.state.core.fork.ForkStep;
-import io.harness.state.core.fork.ForkStepParameters;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.testlib.RealMongo;
+import io.harness.utils.DummyForkStepParameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -92,7 +91,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   public void shouldTestWithoutCache() {
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
     StepParameters forkStepParams =
-        ForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
+        DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
     NodeExecution fork = NodeExecution.builder()
                              .uuid("node1")
                              .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
@@ -100,7 +99,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                              .node(PlanNode.builder()
                                        .uuid("node1_plan")
                                        .name("name1")
-                                       .stepType(ForkStep.STEP_TYPE)
+                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
                                        .identifier("identifier1")
                                        .stepParameters(forkStepParams)
                                        .build())
@@ -113,7 +112,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_1")
                                                 .name("name_children_1")
-                                                .stepType(DummyStep.STEP_TYPE)
+                                                .stepType(StepType.builder().type("DUMMY").build())
                                                 .identifier("name_children_1")
                                                 .build())
                                       .parentId(fork.getUuid())
@@ -125,7 +124,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_2")
                                                 .name("name_children_2")
-                                                .stepType(DummyStep.STEP_TYPE)
+                                                .stepType(StepType.builder().type("DUMMY").build())
                                                 .identifier("name_children_2")
                                                 .build())
                                       .parentId(fork.getUuid())
@@ -166,7 +165,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                    .node(PlanNode.builder()
                                              .uuid("node1_plan")
                                              .name("name")
-                                             .stepType(DummyStep.STEP_TYPE)
+                                             .stepType(StepType.builder().type("DUMMY").build())
                                              .identifier("identifier1")
                                              .build())
                                    .build();
