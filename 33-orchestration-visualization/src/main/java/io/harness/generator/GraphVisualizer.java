@@ -1,4 +1,4 @@
-package io.harness.presentation.visualization;
+package io.harness.generator;
 
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
@@ -6,8 +6,8 @@ import guru.nidi.graphviz.engine.Renderer;
 import guru.nidi.graphviz.rough.FillStyle;
 import guru.nidi.graphviz.rough.RoughFilter;
 import io.harness.annotations.dev.ExcludeRedesign;
-import io.harness.presentation.Graph;
-import io.harness.presentation.GraphVertex;
+import io.harness.beans.Graph;
+import io.harness.beans.GraphVertex;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 

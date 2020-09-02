@@ -1,4 +1,4 @@
-package io.harness.presentation;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

@@ -4,11 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.Graph;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.presentation.Graph;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;

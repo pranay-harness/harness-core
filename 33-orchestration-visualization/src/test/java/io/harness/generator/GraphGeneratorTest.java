@@ -1,4 +1,4 @@
-package io.harness.engine;
+package io.harness.generator;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,15 +9,15 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.GraphVertex;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.plan.PlanNode;
-import io.harness.presentation.GraphVertex;
 import io.harness.rule.Owner;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 /**
  * Test class for {@link GraphGenerator}
  */
-public class GraphGeneratorTest extends OrchestrationTest {
+public class GraphGeneratorTest extends OrchestrationVisualizationTest {
   private static final String PLAN_EXECUTION_ID = "planId";
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 
@@ -50,7 +50,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
   @Before
   public void setUp() {
     when(outcomeService.findAllByRuntimeId(anyString(), anyString()))
-        .thenReturn(Collections.singletonList(DummyOutcome.builder().test("outcome").build()));
+        .thenReturn(Collections.singletonList(new DummyOutcome("outcome")));
   }
 
   @Test

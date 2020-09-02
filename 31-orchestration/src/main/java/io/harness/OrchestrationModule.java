@@ -19,8 +19,6 @@ import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
-import io.harness.engine.graph.GraphGenerationService;
-import io.harness.engine.graph.GraphGenerationServiceImpl;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.outcomes.OutcomeService;
@@ -79,7 +77,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
-    bind(GraphGenerationService.class).to(GraphGenerationServiceImpl.class);
     bind(EngineObtainmentHelper.class).toInstance(new EngineObtainmentHelper());
     bind(ExecutorService.class)
         .annotatedWith(Names.named("EngineExecutorService"))
