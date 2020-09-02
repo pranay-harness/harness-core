@@ -1,7 +1,8 @@
-package software.wings.beans;
+package io.harness.steps.resourcerestraint.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,7 +19,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
@@ -41,6 +41,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "ResourceConstraintKeys")
 @Entity(value = "resourceConstraint", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                            UpdatedByAware, AccountAccess, ResourceRestraint {
   public static final String ACCOUNT_ID_KEY = "accountId";

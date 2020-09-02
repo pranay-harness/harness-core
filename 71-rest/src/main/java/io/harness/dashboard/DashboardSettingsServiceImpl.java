@@ -6,8 +6,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.steps.resourcerestraint.beans.ResourceConstraint.ACCOUNT_ID_KEY;
 import static java.util.Arrays.asList;
-import static software.wings.beans.ResourceConstraint.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

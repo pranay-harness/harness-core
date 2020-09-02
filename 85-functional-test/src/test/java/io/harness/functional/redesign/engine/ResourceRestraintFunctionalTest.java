@@ -30,12 +30,12 @@ import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
+import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
-import software.wings.beans.ResourceConstraint;
 
 import java.util.concurrent.TimeUnit;
 

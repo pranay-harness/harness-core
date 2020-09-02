@@ -222,6 +222,7 @@
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/ResourceRestraintStepParameters.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/AcquireMode.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/HoldingScope.java
+32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/ResourceConstraint.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/ResourceRestraintInstance.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/ResourceRestraintOutcome.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/beans/ResourceRestraintResponseData.java
@@ -345,7 +346,6 @@
 71-rest/src/main/java/software/wings/beans/PipelineStageExecution.java
 71-rest/src/main/java/software/wings/beans/PipelineStageGroupedInfo.java
 71-rest/src/main/java/software/wings/beans/RequiredExecutionArgs.java
-71-rest/src/main/java/software/wings/beans/ResourceConstraint.java
 71-rest/src/main/java/software/wings/beans/ResourceConstraintInstance.java
 71-rest/src/main/java/software/wings/beans/ResourceConstraintNotification.java
 71-rest/src/main/java/software/wings/beans/ResourceConstraintUsage.java

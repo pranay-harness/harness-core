@@ -54,7 +54,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
   @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
-  @Inject private RestraintService<? extends ResourceRestraint> restraintService;
+  @Inject private RestraintService restraintService;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override

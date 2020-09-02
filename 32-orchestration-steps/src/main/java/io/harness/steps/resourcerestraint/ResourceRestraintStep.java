@@ -50,7 +50,7 @@ public class ResourceRestraintStep
   private static final String PLAN = "PLAN";
 
   @Inject private ResourceRestraintService resourceRestraintService;
-  @Inject private RestraintService<? extends ResourceRestraint> restraintService;
+  @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject private EngineExpressionService engineExpressionService;
 
