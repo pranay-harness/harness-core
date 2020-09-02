@@ -263,7 +263,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(148, AddCeFullTrialLicenseToCurrentAccounts.class))
         .add(Pair.of(149, AddAccountIdToServiceInstance.class))
         .add(Pair.of(150, BaseMigration.class))
-        .add(Pair.of(151, AddAccountIdToCommandCollection.class))
+        .add(Pair.of(151, BaseMigration.class))
         .add(Pair.of(152, BaseMigration.class))
         .add(Pair.of(153, WorkflowExecutionAddCDPageCandidateMigration.class))
         .add(Pair.of(154, AddAccountIdToExecutionInterruptCollection.class))
@@ -271,7 +271,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(156, AddAccountIdToServiceTemplates.class))
         .add(Pair.of(157, BaseMigration.class))
         .add(Pair.of(158, AddAccountIdToPermitCollection.class))
-        .add(Pair.of(159, AddAccountIdToStateMachine.class))
+        .add(Pair.of(159, BaseMigration.class))
         .add(Pair.of(160, RemoveDeprecatedFieldsFromHarnessUserGroup.class))
         .add(Pair.of(161, BaseMigration.class))
         .add(Pair.of(162, BaseMigration.class))
@@ -283,6 +283,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(168, AddAccountIdToTriggers.class))
         .add(Pair.of(169, InvalidCVConfigDeletionMigration.class))
         .add(Pair.of(170, AddAccountIdToStateExecutionInstance.class))
+        .add(Pair.of(171, AddAccountIdToCommandCollection.class))
+        .add(Pair.of(172, AddAccountIdToStateMachine.class))
         .build();
   }
 }
