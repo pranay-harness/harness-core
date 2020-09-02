@@ -374,9 +374,11 @@ public class BillingDataQueryBuilder {
       decorateQueryWithFilters(selectQuery, filters);
     }
 
+    List<QLBillingSortCriteria> finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria);
     addAccountFilter(selectQuery, accountId);
 
     selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     queryMetaDataBuilder.fieldNames(fieldNames);
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.filters(filters);
@@ -817,6 +819,21 @@ public class BillingDataQueryBuilder {
     return sortCriteria;
   }
 
+  // For podCountDataFetcher
+  private List<QLBillingSortCriteria> validateAndAddSortCriteria(
+      SelectQuery selectQuery, List<QLBillingSortCriteria> sortCriteria) {
+    if (isEmpty(sortCriteria)) {
+      return new ArrayList<>();
+    }
+
+    sortCriteria.removeIf(qlBillingSortCriteria -> qlBillingSortCriteria.getSortOrder() == null);
+
+    if (EmptyPredicate.isNotEmpty(sortCriteria)) {
+      sortCriteria.forEach(s -> addOrderBy(selectQuery, s));
+    }
+    return sortCriteria;
+  }
+
   private void addOrderBy(SelectQuery selectQuery, QLBillingSortCriteria sortCriteria) {
     QLBillingSortType sortType = sortCriteria.getSortType();
     OrderObject.Dir dir = sortCriteria.getSortOrder() == QLSortOrder.ASCENDING ? Dir.ASCENDING : Dir.DESCENDING;
@@ -1238,8 +1255,6 @@ public class BillingDataQueryBuilder {
       SelectQuery selectQuery, List<CeActivePodCountMetaDataFields> fieldNames) {
     selectQuery.addColumns(podTableSchema.getStartTime());
     fieldNames.add(CeActivePodCountMetaDataFields.STARTTIME);
-    selectQuery.addColumns(podTableSchema.getEndTime());
-    fieldNames.add(CeActivePodCountMetaDataFields.ENDTIME);
     selectQuery.addColumns(podTableSchema.getClusterId());
     fieldNames.add(CeActivePodCountMetaDataFields.CLUSTERID);
     selectQuery.addColumns(podTableSchema.getInstanceId());
