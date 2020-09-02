@@ -24,6 +24,10 @@ import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataQueryMetadataBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.ResultType;
+import software.wings.graphql.datafetcher.ce.activePods.CeActivePodCountQueryMetadata;
+import software.wings.graphql.datafetcher.ce.activePods.CeActivePodCountQueryMetadata.CeActivePodCountMetaDataFields;
+import software.wings.graphql.datafetcher.ce.activePods.CeActivePodCountQueryMetadata.CeActivePodCountQueryMetadataBuilder;
+import software.wings.graphql.datafetcher.ce.activePods.CeActivePodCountTableSchema;
 import software.wings.graphql.datafetcher.k8sLabel.K8sLabelHelper;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.Filter;
@@ -66,6 +70,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
+  private CeActivePodCountTableSchema podTableSchema = new CeActivePodCountTableSchema();
   private static final String STANDARD_TIME_ZONE = "GMT";
   private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
   public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
@@ -343,6 +348,29 @@ public class BillingDataQueryBuilder {
 
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
+      decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    addAccountFilter(selectQuery, accountId);
+
+    selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.fieldNames(fieldNames);
+    queryMetaDataBuilder.query(selectQuery.toString());
+    queryMetaDataBuilder.filters(filters);
+    return queryMetaDataBuilder.build();
+  }
+
+  public CeActivePodCountQueryMetadata formPodCountQuery(
+      String accountId, List<QLBillingDataFilter> filters, List<QLBillingSortCriteria> sortCriteria) {
+    CeActivePodCountQueryMetadataBuilder queryMetaDataBuilder = CeActivePodCountQueryMetadata.builder();
+    SelectQuery selectQuery = new SelectQuery();
+
+    List<CeActivePodCountMetaDataFields> fieldNames = new ArrayList<>();
+    selectQuery.addCustomFromTable(podTableSchema.getActivePodCountTable());
+
+    addFieldsForPodCountDataFetcher(selectQuery, fieldNames);
+
+    if (!Lists.isNullOrEmpty(filters)) {
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -1204,5 +1232,19 @@ public class BillingDataQueryBuilder {
       }
     }
     return false;
+  }
+
+  private void addFieldsForPodCountDataFetcher(
+      SelectQuery selectQuery, List<CeActivePodCountMetaDataFields> fieldNames) {
+    selectQuery.addColumns(podTableSchema.getStartTime());
+    fieldNames.add(CeActivePodCountMetaDataFields.STARTTIME);
+    selectQuery.addColumns(podTableSchema.getEndTime());
+    fieldNames.add(CeActivePodCountMetaDataFields.ENDTIME);
+    selectQuery.addColumns(podTableSchema.getClusterId());
+    fieldNames.add(CeActivePodCountMetaDataFields.CLUSTERID);
+    selectQuery.addColumns(podTableSchema.getInstanceId());
+    fieldNames.add(CeActivePodCountMetaDataFields.INSTANCEID);
+    selectQuery.addColumns(podTableSchema.getPodCount());
+    fieldNames.add(CeActivePodCountMetaDataFields.PODCOUNT);
   }
 }

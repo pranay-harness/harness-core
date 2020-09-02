@@ -16,6 +16,7 @@ enum DataFetcherEnum {
   ceClusterBillingData
   ceConnector
   ceHealthStatus
+  ceActivePodCount
   cloudEntityStats
   cloudFilterValues
   cloudOverview

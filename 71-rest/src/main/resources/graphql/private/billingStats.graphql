@@ -76,6 +76,12 @@ extend type Query {
     groupBy: [CCMGroupBy]
     sortCriteria: [BillingSortCriteria]
   ): NodeAndPodData @dataFetcher(name: nodeAndPodDetails)
+
+  ceActivePodCount(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    sortCriteria: [BillingSortCriteria]
+  ): PodCountTimeSeriesData @dataFetcher(name: ceActivePodCount)
 }
 
 input CCMAggregationFunction {
@@ -427,4 +433,18 @@ type NodeAndPodDataPoint {
   createTime: Number
   deleteTime: Number
   qosClass: String
+}
+
+type PodCountTimeSeriesData {
+  data: [PodCountTimeSeriesDataPoint]
+}
+
+type PodCountTimeSeriesDataPoint {
+  values: [PodCountDataPoint]
+  time: DateTime
+}
+
+type PodCountDataPoint {
+  key: Reference
+  value: Number
 }
