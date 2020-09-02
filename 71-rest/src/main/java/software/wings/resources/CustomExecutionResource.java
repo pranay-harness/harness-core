@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.beans.Graph;
+import io.harness.dto.OrchestrationGraph;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.redesign.services.CustomExecutionService;
@@ -111,6 +112,12 @@ public class CustomExecutionResource {
   @Path("/get-graph")
   public RestResponse<Graph> getGraph(@QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(customExecutionService.getGraph(planExecutionId));
+  }
+
+  @GET
+  @Path("/get-orchestration-graph")
+  public RestResponse<OrchestrationGraph> getOrchestrationGraph(@QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(customExecutionService.getOrchestrationGraph(planExecutionId));
   }
 
   @GET

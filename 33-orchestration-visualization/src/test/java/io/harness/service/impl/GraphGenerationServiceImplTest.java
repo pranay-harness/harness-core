@@ -16,6 +16,7 @@ import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
+import io.harness.dto.OrchestrationGraph;
 import io.harness.engine.executions.node.NodeExecutionRepository;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
@@ -185,6 +186,36 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     assertThat(graphResponse).isNotNull();
     assertThat(graphResponse.getGraphVertex()).isNotNull();
     assertThat(graphResponse.getGraphVertex().getUuid()).isEqualTo(vertex.getUuid());
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTReturnOrchestrationGraph() {
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    NodeExecution dummyStart = NodeExecution.builder()
+                                   .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
+                                   .mode(ExecutionMode.SYNC)
+                                   .node(PlanNode.builder()
+                                             .uuid("node1_plan")
+                                             .name("name")
+                                             .stepType(DummyStep.STEP_TYPE)
+                                             .identifier("identifier1")
+                                             .build())
+                                   .build();
+    nodeExecutionRepository.save(dummyStart);
+
+    OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
+    assertThat(graphResponse).isNotNull();
+    assertThat(graphResponse.getAdjacencyList()).isNotNull();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId())).isNotNull();
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getGroupedEdges())
+        .isEmpty();
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getEdges())
+        .isEmpty();
   }
 
   private static Answer<?> executeRunnable(ArgumentCaptor<Runnable> runnableCaptor) {
