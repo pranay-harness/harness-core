@@ -25,11 +25,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,6 +46,7 @@ import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INF
 import static software.wings.infra.InfraDefinitionTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.infra.InfraDefinitionTestConstants.INFRA_DEFINITION_NAME;
 import static software.wings.infra.InfraDefinitionTestConstants.INFRA_PROVISIONER_ID;
+import static software.wings.infra.InfraDefinitionTestConstants.REGION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -68,6 +71,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -108,6 +112,7 @@ import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -118,7 +123,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
 
@@ -147,11 +154,24 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private EventPublishHelper eventPublishHelper;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
+  @Mock private AwsRoute53HelperServiceManager awsRoute53HelperServiceManager;
+  @Mock private SecretManager secretManager;
 
   @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
+  List<AwsRoute53HostedZoneData> hostedZones1;
+  List<AwsRoute53HostedZoneData> hostedZones2;
+
   private static final String DEFAULT = "default";
   private static final String USER_INPUT_NAMESPACE = "USER_INPUT_NAMESPACE";
+
+  @Before
+  public void setUp() {
+    hostedZones1 = Arrays.asList(AwsRoute53HostedZoneData.builder().hostedZoneName("zone1").build(),
+        AwsRoute53HostedZoneData.builder().hostedZoneName("zone2").build());
+    hostedZones2 = Arrays.asList(AwsRoute53HostedZoneData.builder().hostedZoneName("zone3").build(),
+        AwsRoute53HostedZoneData.builder().hostedZoneName("zone4").build());
+  }
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -1444,5 +1464,58 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     infraVariables = infrastructureDefinitionService.filterNonOverridenVariables(templateVariables, null);
     assertThat(infraVariables).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testListedHostedZones() {
+    // provisionerId is  empty
+    setupHostedZones("us-east-1", null);
+    List<AwsRoute53HostedZoneData> hostedZones =
+        infrastructureDefinitionService.listHostedZones(APP_ID, INFRA_DEFINITION_ID);
+    verify(awsRoute53HelperServiceManager, times(1))
+        .listHostedZones(any(AwsConfig.class), anyList(), eq(REGION), eq(APP_ID));
+    assertThat(hostedZones).containsSequence(hostedZones1);
+
+    // provisionerId isn't empty
+    setupHostedZones("us-east-1", PROVISIONER_ID);
+    hostedZones = infrastructureDefinitionService.listHostedZones(APP_ID, INFRA_DEFINITION_ID);
+    verify(awsRoute53HelperServiceManager, times(1))
+        .listHostedZones(any(AwsConfig.class), anyList(), eq("us-east-1"), eq(APP_ID));
+    assertThat(hostedZones).containsSequence(hostedZones2);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testListedHostedZonesRegionIsAnExpression() {
+    // provisioner is present and region is an expression
+    setupHostedZones("${region}", PROVISIONER_ID);
+    List<AwsRoute53HostedZoneData> hostedZones =
+        infrastructureDefinitionService.listHostedZones(APP_ID, INFRA_DEFINITION_ID);
+    verify(awsRoute53HelperServiceManager, never()).listHostedZones(any(), any(), any(), any());
+    assertThat(hostedZones).isEqualTo(emptyList());
+  }
+
+  private void setupHostedZones(String region, String provisionerId) {
+    Map<String, String> expressions = new HashMap<>();
+    expressions.put("region", region);
+    AwsEcsInfrastructure awsEcsInfrastructure = AwsEcsInfrastructure.builder()
+                                                    .expressions(expressions)
+                                                    .region(REGION)
+                                                    .cloudProviderId("cloudProviderId")
+                                                    .build();
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().infrastructure(awsEcsInfrastructure).provisionerId(provisionerId).build();
+    when(wingsPersistence.getWithAppId(eq(InfrastructureDefinition.class), eq(APP_ID), eq(INFRA_DEFINITION_ID)))
+        .thenReturn(infrastructureDefinition);
+    when(awsRoute53HelperServiceManager.listHostedZones(any(AwsConfig.class), anyList(), eq(REGION), eq(APP_ID)))
+        .thenReturn(hostedZones1);
+    when(awsRoute53HelperServiceManager.listHostedZones(any(AwsConfig.class), anyList(), eq("us-east-1"), eq(APP_ID)))
+        .thenReturn(hostedZones2);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(AwsConfig.builder().build());
+    when(mockSettingsService.get(anyString())).thenReturn(settingAttribute);
   }
 }
