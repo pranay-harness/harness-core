@@ -64,6 +64,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.TaskType;
@@ -832,6 +833,27 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldGetWhitelistedDelegatesWithoutCriteriaCapabilityFramework() {
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, ACCOUNT_ID))
+        .thenReturn(true);
+    TaskData taskData = TaskData.builder().taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build();
+    DelegateTask delegateTask =
+        DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).executionCapabilities(emptyList()).build();
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .build();
+    wingsPersistence.save(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
+    assertThat(delegateIds).containsExactly(delegate.getUuid());
+  }
+
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetNullFirstAttemptDelegate() {
@@ -1141,5 +1163,44 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Set<String> wapprDelegates = new HashSet<>();
     wapprDelegates.add(wapprDelegate.getUuid());
     verify(delegateSelectionLogsService).logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(wapprDelegates));
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldFetchCriteriaWithCapabilityFramework() {
+    Set<String> selectors = Stream.of("a", "b").collect(Collectors.toSet());
+
+    HttpConnectionExecutionCapability connectionExecutionCapability =
+        HttpConnectionExecutionCapability.builder().url("localhost").build();
+    SelectorCapability selectorCapability = SelectorCapability.builder().selectors(selectors).build();
+
+    List<ExecutionCapability> executionCapabilityList =
+        Arrays.asList(selectorCapability, connectionExecutionCapability);
+
+    DelegateTask delegateTask =
+        DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
+
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, ACCOUNT_ID))
+        .thenReturn(true);
+    List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
+
+    assertThat(criteria).containsExactly("localhost");
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldFetchCriteria() {
+    HttpTaskParameters parameters = HttpTaskParameters.builder().url("localhost").build();
+    TaskData taskData = TaskData.builder().taskType(TaskType.HTTP.name()).parameters(new Object[] {parameters}).build();
+    DelegateTask delegateTask =
+        DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).tags(Arrays.asList("a", "b")).build();
+
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, ACCOUNT_ID))
+        .thenReturn(false);
+    List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
+
+    assertThat(criteria).containsExactly("localhost");
   }
 }
