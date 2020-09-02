@@ -22,7 +22,9 @@ import software.wings.beans.Application.ApplicationKeys;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,6 +36,7 @@ public class AddAccountIdToStateExecutionInstance implements Migration {
   @Override
   public void migrate() {
     logger.info(debugLine + "Migration of stateExecutionInstances started");
+    Map<String, Set<String>> accountIdToAppIdMap = new HashMap<>();
     try (HIterator<Account> accounts = new HIterator<>(
              wingsPersistence.createQuery(Account.class, excludeAuthority).project(Account.ID_KEY, true).fetch())) {
       while (accounts.hasNext()) {
@@ -46,10 +49,12 @@ public class AddAccountIdToStateExecutionInstance implements Migration {
         if (isNotEmpty(appIdKeyList)) {
           Set<String> appIdSet =
               appIdKeyList.stream().map(applicationKey -> (String) applicationKey.getId()).collect(Collectors.toSet());
-
-          bulkSetAccountId(accountId, "stateExecutionInstances", appIdSet);
+          accountIdToAppIdMap.put(accountId, appIdSet);
         }
       }
+    }
+    for (Map.Entry<String, Set<String>> entry : accountIdToAppIdMap.entrySet()) {
+      bulkSetAccountId(entry.getKey(), "stateExecutionInstances", entry.getValue());
     }
     logger.info(debugLine + "Migration of stateExecutionInstances finished");
   }
