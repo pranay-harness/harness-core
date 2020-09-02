@@ -19,7 +19,7 @@ echo "Generating coverage of commons using bazel... "
 bazel coverage //commons/...
 
 echo "Generating coverage of product using bazel... "
-bazel coverage //product/...
+bazel coverage //product/... --javacopt=' -XepDisableAllChecks'
 
 echo "Removing any previous existing coverage directory... "
 rm -rf /tmp/symportal

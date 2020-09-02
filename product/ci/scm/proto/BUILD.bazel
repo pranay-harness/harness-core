@@ -1,6 +1,7 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
 
 proto_library(
     name = "ciscmpb_proto",
@@ -21,5 +22,13 @@ go_library(
     name = "go_default_library",
     embed = [":ciscmpb_go_proto"],
     importpath = "github.com/wings-software/portal/product/ci/scm/proto",
+    visibility = ["//visibility:public"],
+)
+
+java_grpc_library(
+    name = "ciscm_java_proto",
+    deps = [
+        ":ciscmpb_proto",
+    ],
     visibility = ["//visibility:public"],
 )

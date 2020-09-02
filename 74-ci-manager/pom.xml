@@ -67,6 +67,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>ciscm-proto</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
