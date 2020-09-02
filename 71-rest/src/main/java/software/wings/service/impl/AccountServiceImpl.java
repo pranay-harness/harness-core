@@ -275,7 +275,6 @@ public class AccountServiceImpl implements AccountService {
         logger.info("Creating the account for import only, no default account entities will be created");
       } else {
         createDefaultAccountEntities(account, shouldCreateSampleApp);
-
         // Schedule default account level jobs.
         scheduleAccountLevelJobs(account.getUuid());
       }
@@ -284,7 +283,7 @@ public class AccountServiceImpl implements AccountService {
 
       logger.info("Successfully created account.");
     }
-
+    authService.evictUserPermissionCacheForAccount(account.getUuid(), true);
     return account;
   }
 
