@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
-import static software.wings.delegatetasks.validation.PCFCommandValidation.CONNECTION_TIMED_OUT;
+import static io.harness.pcf.model.PcfConstants.PCF_CONNECTIVITY_SUCCESS;
 
 import com.google.inject.Inject;
 
@@ -30,7 +30,7 @@ public class PcfConnectivityCapabilityCheck implements CapabilityCheck {
           pcfDeploymentManager.checkConnectivity(pcfConfig, pcfConnectivityCapability.isLimitPcfThreads());
       return CapabilityResponse.builder()
           .delegateCapability(pcfConnectivityCapability)
-          .validated(!validationErrorMsg.toLowerCase().contains(CONNECTION_TIMED_OUT))
+          .validated(PCF_CONNECTIVITY_SUCCESS.equals(validationErrorMsg))
           .build();
     } catch (Exception e) {
       logger.error("Failed to Decrypt pcfConfig, RepoUrl: {}", pcfConfig.getEndpointUrl());
