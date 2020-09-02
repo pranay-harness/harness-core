@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -184,10 +185,10 @@ public class ArtifactCollectionUtils {
     }
     if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
       if (buildDetails.getArtifactPath() != null) {
-        return artifactStream.fetchArtifactDisplayName("");
+        return artifactStream.fetchArtifactDisplayName(buildDetails.getArtifactPath());
       }
     } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
-      return artifactStream.fetchArtifactDisplayName("");
+      return artifactStream.fetchArtifactDisplayName(ofNullable(buildDetails.getArtifactPath()).orElse(""));
     }
 
     return artifactStream.fetchArtifactDisplayName(buildDetails.getNumber());
