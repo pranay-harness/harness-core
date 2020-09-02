@@ -43,14 +43,10 @@ compile_proto_module() {
 
 cleanup 22-ng-delegate-service-beans/src/generated/java \
         24-manager-delegate-service-beans/src/generated/java \
-        24-ng-manager-service-beans/src/generated/java \
-        72-ci-beans/src/generated/java
+        24-ng-manager-service-beans/src/generated/java
 
 compile_proto_module 22-ng-delegate-service-beans 22-ng-delegate-service-beans/src/main 22-ng-delegate-service-beans/src/generated/java
 compile_proto_module 24-manager-delegate-service-beans 24-manager-delegate-service-beans/src/main 24-manager-delegate-service-beans/src/generated/java
 compile_proto_module 24-ng-manager-service-beans 24-ng-manager-service-beans/src/main 24-ng-manager-service-beans/src/generated/java
-
-compile_proto_module cienginepb product/ci/engine 72-ci-beans/src/generated/java
-compile_proto_module ciaddonpb product/ci/addon 72-ci-beans/src/generated/java
 
 rm -f bazel-bin bazel-out bazel-portal bazel-testlogs
