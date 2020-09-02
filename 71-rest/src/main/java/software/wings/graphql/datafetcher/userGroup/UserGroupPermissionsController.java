@@ -20,7 +20,6 @@ import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
-import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
@@ -28,6 +27,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_API_KEYS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
@@ -139,7 +139,7 @@ public class UserGroupPermissionsController {
   private PermissionType mapAccountPermissions(QLAccountPermissionType permissionType) {
     switch (permissionType) {
       case CREATE_AND_DELETE_APPLICATION:
-        return APPLICATION_CREATE_DELETE;
+        return MANAGE_APPLICATIONS;
       case READ_USERS_AND_GROUPS:
         return USER_PERMISSION_READ;
       case MANAGE_USERS_AND_GROUPS:
@@ -441,6 +441,7 @@ public class UserGroupPermissionsController {
   // user portal permissionType to Account Permissions output
   private QLAccountPermissionType mapAccountPermissionsToOutput(PermissionType permissionType) {
     switch (permissionType) {
+      case MANAGE_APPLICATIONS:
       case APPLICATION_CREATE_DELETE:
         return CREATE_AND_DELETE_APPLICATION;
       case USER_PERMISSION_READ:

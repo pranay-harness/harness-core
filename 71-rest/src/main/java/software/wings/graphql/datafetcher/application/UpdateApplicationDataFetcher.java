@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.application;
 
 import static java.lang.String.format;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import com.google.inject.Inject;
 
@@ -17,7 +18,6 @@ import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicat
 import software.wings.graphql.schema.mutation.application.payload.QLUpdateApplicationPayload;
 import software.wings.graphql.schema.type.QLApplication;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 
@@ -59,7 +59,7 @@ public class UpdateApplicationDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE, action = PermissionAttribute.Action.UPDATE)
+  @AuthRule(permissionType = MANAGE_APPLICATIONS, action = PermissionAttribute.Action.UPDATE)
   protected QLUpdateApplicationPayload mutateAndFetch(
       QLUpdateApplicationInput parameter, MutationContext mutationContext) {
     validate(parameter);

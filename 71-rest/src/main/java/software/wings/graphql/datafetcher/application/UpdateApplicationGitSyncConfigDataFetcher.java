@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.application;
 
 import static org.apache.commons.lang3.StringUtils.strip;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import com.google.inject.Inject;
 
@@ -19,7 +20,6 @@ import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicat
 import software.wings.graphql.schema.mutation.application.payload.QLUpdateApplicationGitSyncConfigPayload;
 import software.wings.graphql.schema.type.QLGitSyncConfig;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -46,7 +46,7 @@ public class UpdateApplicationGitSyncConfigDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE, action = PermissionAttribute.Action.CREATE)
+  @AuthRule(permissionType = MANAGE_APPLICATIONS, action = PermissionAttribute.Action.CREATE)
   protected QLUpdateApplicationGitSyncConfigPayload mutateAndFetch(
       QLUpdateApplicationGitSyncConfigInput input, MutationContext mutationContext) {
     validate(input);

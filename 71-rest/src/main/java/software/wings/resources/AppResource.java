@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
@@ -80,7 +80,7 @@ public class AppResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE)
+  @AuthRule(permissionType = MANAGE_APPLICATIONS)
   public RestResponse<Application> save(@NotEmpty @QueryParam("accountId") String accountId, Application app) {
     app.setAccountId(accountId);
     return new RestResponse<>(appService.save(app));
@@ -97,7 +97,7 @@ public class AppResource {
   @Path("{appId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE)
+  @AuthRule(permissionType = MANAGE_APPLICATIONS)
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
     app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
@@ -128,7 +128,7 @@ public class AppResource {
   @Path("{appId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE)
+  @AuthRule(permissionType = MANAGE_APPLICATIONS)
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);
     return new RestResponse();

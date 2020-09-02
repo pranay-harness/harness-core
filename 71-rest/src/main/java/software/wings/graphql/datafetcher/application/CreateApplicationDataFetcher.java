@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.application;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
+
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +12,6 @@ import software.wings.graphql.schema.mutation.application.input.QLCreateApplicat
 import software.wings.graphql.schema.mutation.application.payload.QLCreateApplicationPayload;
 import software.wings.graphql.schema.type.QLApplication;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 
@@ -37,7 +38,7 @@ public class CreateApplicationDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE, action = PermissionAttribute.Action.CREATE)
+  @AuthRule(permissionType = MANAGE_APPLICATIONS, action = PermissionAttribute.Action.CREATE)
   protected QLCreateApplicationPayload mutateAndFetch(
       QLCreateApplicationInput parameter, MutationContext mutationContext) {
     final Application savedApplication = appService.save(prepareApplication(parameter, mutationContext.getAccountId()));

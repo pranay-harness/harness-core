@@ -2,7 +2,7 @@ package io.harness.userGroup;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,7 @@ public class AddAccountPermissionTest extends GraphQLTest {
     UserGroup updatedUserGroup = userGroupService.get(getAccountId(), userGroup.getUuid());
     AccountPermissions accountPermissions = updatedUserGroup.getAccountPermissions();
     assertThat(accountPermissions).isNotNull();
-    assertThat(accountPermissions.getPermissions()).containsExactly(APPLICATION_CREATE_DELETE);
+    assertThat(accountPermissions.getPermissions()).containsExactly(MANAGE_APPLICATIONS);
 
     // The case when a new account permission is added to the user group
     String addQuery = String.format(
@@ -65,6 +65,6 @@ public class AddAccountPermissionTest extends GraphQLTest {
     AccountPermissions updatedAccountPermissions = updatedUserGroupWithTwoPerm.getAccountPermissions();
     assertThat(updatedAccountPermissions).isNotNull();
     assertThat(updatedAccountPermissions.getPermissions())
-        .containsExactlyInAnyOrderElementsOf(ImmutableSet.of(APPLICATION_CREATE_DELETE, TEMPLATE_MANAGEMENT));
+        .containsExactlyInAnyOrderElementsOf(ImmutableSet.of(MANAGE_APPLICATIONS, TEMPLATE_MANAGEMENT));
   }
 }

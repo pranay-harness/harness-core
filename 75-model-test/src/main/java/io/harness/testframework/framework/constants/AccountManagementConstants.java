@@ -32,9 +32,9 @@ public class AccountManagementConstants {
       }
     },
 
-    APPLICATION_CREATE_DELETE {
+    MANAGE_APPLICATIONS {
       public String toString() {
-        return "APPLICATION_CREATE_DELETE";
+        return "MANAGE_APPLICATIONS";
       }
     }
   }

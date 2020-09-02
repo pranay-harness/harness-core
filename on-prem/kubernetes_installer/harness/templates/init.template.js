@@ -58,7 +58,7 @@ if (0 < db.accounts.count()) {
                 'ACCOUNT_MANAGEMENT',
                 'USER_PERMISSION_MANAGEMENT',
                 'USER_PERMISSION_READ',
-                'APPLICATION_CREATE_DELETE',
+                'MANAGE_APPLICATIONS',
                 'TEMPLATE_MANAGEMENT'
             ]
         },

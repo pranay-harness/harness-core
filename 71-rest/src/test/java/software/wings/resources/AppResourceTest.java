@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -19,9 +21,12 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.ResourceTestRule;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import javax.ws.rs.core.GenericType;
 
 /**
@@ -78,5 +83,28 @@ public class AppResourceTest extends CategoryTest {
         resources.client().target("/apps/" + TEST_UUID).request().get(new GenericType<RestResponse<Application>>() {});
     assertThat(actual.getResource()).isEqualTo(testApp);
     verify(appService).get(TEST_UUID, true);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkIfPermissionCorrect() throws NoSuchMethodException {
+    ArrayList<String> methodList = new ArrayList<>();
+    methodList.add("save");
+    methodList.add("update");
+
+    for (String methodName : methodList) {
+      Method method = AppResource.class.getMethod(methodName, String.class, Application.class);
+      testSingleMethodPermission(method);
+    }
+
+    // Testing delete method has correct permission
+    Method deleteMethod = AppResource.class.getMethod("delete", String.class);
+    testSingleMethodPermission(deleteMethod);
+  }
+
+  private void testSingleMethodPermission(Method method) {
+    AuthRule annotation = method.getAnnotation(AuthRule.class);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_APPLICATIONS);
   }
 }

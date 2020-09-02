@@ -27,6 +27,7 @@ type AccountPermissions {
 }
 
 enum AccountPermissionType {
+  #This corresponds to MANAGE_APPLICATIONS permission on UI
   CREATE_AND_DELETE_APPLICATION
   READ_USERS_AND_GROUPS
   MANAGE_USERS_AND_GROUPS

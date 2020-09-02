@@ -60,7 +60,7 @@ db.getCollection('userGroups').insert({
         "permissions" : [
             "ACCOUNT_MANAGEMENT",
             "USER_PERMISSION_MANAGEMENT",
-            "APPLICATION_CREATE_DELETE",
+            "MANAGE_APPLICATIONS",
             "TEMPLATE_MANAGEMENT"
         ]
     },

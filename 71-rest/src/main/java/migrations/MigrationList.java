@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import lombok.experimental.UtilityClass;
 import migrations.accountpermission.AlertNotificationAccountPermissionMigration;
 import migrations.accountpermission.ManageApiKeyPermissionMigration;
+import migrations.accountpermission.ManageApplicationsPermissionMigration;
 import migrations.accountpermission.ManageAuthenticationSettingsPermissionMigration;
 import migrations.accountpermission.ManageCloudProvidersAndConnectorsPermissionMigration;
 import migrations.accountpermission.ManageDelegatePermissionMigration;
@@ -385,6 +386,7 @@ public class MigrationList {
         .add(Pair.of(336, ManageApiKeyPermissionMigration.class))
         .add(Pair.of(337, RemoveRedundantAccountPermissions.class))
         .add(Pair.of(338, ManageTagsMigration.class))
+        .add(Pair.of(339, ManageApplicationsPermissionMigration.class))
         .build();
   }
 }
