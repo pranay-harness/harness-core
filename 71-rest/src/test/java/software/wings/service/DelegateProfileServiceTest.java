@@ -3,7 +3,10 @@ package software.wings.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NIKOLA;
+import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
@@ -21,6 +24,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
+import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -238,6 +242,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     DelegateProfile delegateProfile =
         createDelegateProfileBuilder() /*.uuid(uuid)*/.startupScript("script").approvalRequired(false).build();
+    DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
+    delegateProfile.setScopingRules(asList(rule));
     wingsPersistence.save(delegateProfile);
 
     delegateProfile.setName(updatedName);
@@ -253,6 +259,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(updatedDelegateProfile.getStartupScript()).isEqualTo(updatedScript);
     assertThat(updatedDelegateProfile.isApprovalRequired()).isEqualTo(true);
     assertThat(updatedDelegateProfile.getSelectors()).isEqualTo(profileSelectors);
+    assertThat(updatedDelegateProfile.getScopingRules()).containsExactly(rule);
   }
 
   @Test
@@ -316,6 +323,58 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(retrievedDelegateProfile.getSelectors()).hasSize(3);
     assertThat(retrievedDelegateProfile.getSelectors())
         .containsExactly("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void testUpdateShouldUpdateScopingRules() {
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
+
+    wingsPersistence.save(delegateProfile);
+
+    DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
+    DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(
+        delegateProfile.getAccountId(), delegateProfile.getUuid(), asList(rule));
+
+    assertThat(updatedDelegateProfile.getScopingRules()).containsExactly(rule);
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void testUpdateShouldUpdateScopingRulesWithNull() {
+    DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
+    DelegateProfile delegateProfile = createDelegateProfileBuilder()
+                                          .startupScript("script")
+                                          .scopingRules(asList(rule))
+                                          .approvalRequired(false)
+                                          .build();
+    wingsPersistence.save(delegateProfile);
+
+    DelegateProfile updatedDelegateProfile =
+        delegateProfileService.updateScopingRules(delegateProfile.getAccountId(), delegateProfile.getUuid(), null);
+
+    assertThat(updatedDelegateProfile.getScopingRules()).isNull();
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void testUpdateShouldUpdateScopingRulesWithEmptyList() {
+    DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
+    DelegateProfile delegateProfile = createDelegateProfileBuilder()
+                                          .startupScript("script")
+                                          .scopingRules(asList(rule))
+                                          .approvalRequired(false)
+                                          .build();
+    wingsPersistence.save(delegateProfile);
+
+    DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(
+        delegateProfile.getAccountId(), delegateProfile.getUuid(), emptyList());
+
+    assertThat(updatedDelegateProfile.getScopingRules()).isNull();
   }
 
   @Test

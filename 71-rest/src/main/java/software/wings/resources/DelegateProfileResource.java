@@ -11,6 +11,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -87,6 +88,17 @@ public class DelegateProfileResource {
     delegateProfile.setAccountId(accountId);
     delegateProfile.setUuid(delegateProfileId);
     return new RestResponse<>(delegateProfileService.update(delegateProfile));
+  }
+
+  @PUT
+  @Path("{delegateProfileId}/scoping-rules")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<DelegateProfile> updateScopingRules(
+      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
+      @QueryParam("accountId") @NotEmpty String accountId, List<DelegateProfileScopingRule> scopingRules) {
+    return new RestResponse<>(delegateProfileService.updateScopingRules(accountId, delegateProfileId, scopingRules));
   }
 
   @POST
