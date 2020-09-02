@@ -34,7 +34,7 @@ public class UpdateApplicationGitSyncConfigStatusDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE, action = PermissionAttribute.Action.CREATE)
+  @AuthRule(permissionType = PermissionType.MANAGE_APPLICATIONS, action = PermissionAttribute.Action.CREATE)
   protected QLUpdateApplicationGitSyncConfigPayload mutateAndFetch(
       QLUpdateApplicationGitSyncConfigInput input, MutationContext mutationContext) {
     validate(input);

@@ -365,7 +365,7 @@ public class PermissionAttribute {
     /**
      * Manage Applications
      */
-    APPLICATION_CREATE_DELETE,
+    @Deprecated APPLICATION_CREATE_DELETE,
     /**
      * Account permission type.
      */
@@ -411,6 +411,11 @@ public class PermissionAttribute {
      * Manage Connectors
      */
     MANAGE_CONNECTORS,
+
+    /**
+     * Manage Applications
+     */
+    MANAGE_APPLICATIONS,
 
     /**
      * Manage Application Stacks

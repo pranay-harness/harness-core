@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.application;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
+
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +10,6 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationInput;
 import software.wings.graphql.schema.mutation.application.payload.QLDeleteApplicationPayload;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 
@@ -24,7 +25,7 @@ public class DeleteApplicationDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE, action = PermissionAttribute.Action.DELETE)
+  @AuthRule(permissionType = MANAGE_APPLICATIONS, action = PermissionAttribute.Action.DELETE)
   protected QLDeleteApplicationPayload mutateAndFetch(
       QLUpdateApplicationInput parameter, MutationContext mutationContext) {
     appService.delete(parameter.getApplicationId());

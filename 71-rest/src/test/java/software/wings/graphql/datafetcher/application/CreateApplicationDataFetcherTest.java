@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.application;
 
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -7,6 +8,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -31,7 +33,10 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.application.input.QLCreateApplicationInput;
 import software.wings.graphql.schema.mutation.application.payload.QLCreateApplicationPayload;
 import software.wings.graphql.schema.type.QLApplication;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
+
+import java.lang.reflect.Method;
 
 public class CreateApplicationDataFetcherTest extends CategoryTest {
   @Mock AuthRuleGraphQL authRuleInstrumentation;
@@ -86,5 +91,15 @@ public class CreateApplicationDataFetcherTest extends CategoryTest {
     assertThat(qlApplication.getId()).isEqualTo(savedApplication.getAppId());
     assertThat(qlApplication.getName()).isEqualTo(savedApplication.getName());
     assertThat(qlApplication.getDescription()).isEqualTo(savedApplication.getDescription());
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkIfPermissionCorrect() throws NoSuchMethodException {
+    Method method = CreateApplicationDataFetcher.class.getDeclaredMethod(
+        "mutateAndFetch", QLCreateApplicationInput.class, MutationContext.class);
+    AuthRule annotation = method.getAnnotation(AuthRule.class);
+    assertThat(annotation.permissionType()).isEqualTo(MANAGE_APPLICATIONS);
   }
 }

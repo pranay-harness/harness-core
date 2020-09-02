@@ -27,7 +27,7 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELIN
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
-import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -1138,7 +1138,7 @@ public class AuthServiceImpl implements AuthService {
       AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
 
       if (accountPermissionSummary == null || isEmpty(accountPermissionSummary.getPermissions())
-          || !accountPermissionSummary.getPermissions().contains(APPLICATION_CREATE_DELETE)) {
+          || !accountPermissionSummary.getPermissions().contains(MANAGE_APPLICATIONS)) {
         logger.error("Auth Failure: User does not have access to update {}", appId);
         throw new WingsException(ACCESS_DENIED, USER);
       }

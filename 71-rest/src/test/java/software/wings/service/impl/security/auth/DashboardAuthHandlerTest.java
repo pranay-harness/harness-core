@@ -35,7 +35,7 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject private DashboardAuthHandler authHandler;
 
   //  private List<PermissionType> accountPermissionTypes =
-  //      asList(ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE, USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT);
+  //      asList(ACCOUNT_MANAGEMENT, MANAGE_APPLICATIONS, USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT);
   //  private List<Action> allActions = asList(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE,
   //  Action.EXECUTE);
   private List<Action> allActions = asList(Action.MANAGE, Action.UPDATE, Action.READ, Action.DELETE);
