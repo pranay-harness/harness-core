@@ -1,6 +1,9 @@
 package software.wings.beans.trigger;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnknownEnumTypeException;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -35,5 +38,17 @@ public enum WebhookEventType {
       throw new InvalidRequestException(String.format("Unsupported Webhook Event Type %s.", val));
     }
     return t;
+  }
+
+  public static WebhookEventType fromString(String val) {
+    if (isBlank(val)) {
+      return null;
+    }
+    for (WebhookEventType type : values()) {
+      if (type.name().equals(val)) {
+        return type;
+      }
+    }
+    throw new UnknownEnumTypeException("Webhook event type", val);
   }
 }
