@@ -102,6 +102,7 @@ public enum FeatureName {
   USE_NEXUS3_PRIVATE_APIS,
   WEEKLY_WINDOW,
   YAML_RBAC,
+  ROLLBACK_NONE_ARTIFACT,
   ;
 
   FeatureName() {
