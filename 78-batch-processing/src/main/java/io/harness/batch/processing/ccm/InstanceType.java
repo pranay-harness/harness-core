@@ -10,6 +10,8 @@ public enum InstanceType {
   EC2_INSTANCE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE),
   K8S_POD(PricingGroup.COMPUTE, 1, CostAttribution.PARTIAL),
   K8S_NODE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE),
+  // Find suitable chargeableSeconds and CostAttribution
+  K8S_PV(PricingGroup.STORAGE, 3600, CostAttribution.COMPLETE),
   CLUSTER_UNALLOCATED(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE);
 
   private final PricingGroup pricingGroup;

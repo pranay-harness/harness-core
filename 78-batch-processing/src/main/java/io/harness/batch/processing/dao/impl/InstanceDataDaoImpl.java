@@ -129,6 +129,10 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         updateOperations.set(InstanceDataKeys.allocatableResource, instanceInfo.getAllocatableResource());
       }
 
+      if (!isNull(instanceInfo.getStorageResource())) {
+        updateOperations.set(InstanceDataKeys.storageResource, instanceInfo.getStorageResource());
+      }
+
       if (!isNull(instanceInfo.getLabels())) {
         updateOperations.set(InstanceDataKeys.labels, instanceInfo.getLabels());
       }

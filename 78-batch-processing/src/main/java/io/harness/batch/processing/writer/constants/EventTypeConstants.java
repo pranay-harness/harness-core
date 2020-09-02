@@ -16,6 +16,8 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
+import io.harness.perpetualtask.k8s.watch.PVEvent;
+import io.harness.perpetualtask.k8s.watch.PVInfo;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import lombok.experimental.UtilityClass;
@@ -40,4 +42,6 @@ public class EventTypeConstants {
   public final String K8S_WATCH_EVENT = K8sWatchEvent.class.getName();
   public final String K8S_CONTAINER_STATE = ContainerStateProto.class.getName();
   public final String K8S_WORKLOAD_SPEC = K8sWorkloadSpec.class.getName();
+  public final String K8S_PV_EVENT = PVEvent.class.getName();
+  public final String K8S_PV_INFO = PVInfo.class.getName();
 }

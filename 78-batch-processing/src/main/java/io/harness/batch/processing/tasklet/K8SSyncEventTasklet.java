@@ -77,6 +77,8 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       Set<String> activeInstanceArns = new HashSet<>();
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsList());
+      activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
+
       SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
       logger.info("Inactive K8S instance arns {}", inactiveInstanceArns.toString());
 

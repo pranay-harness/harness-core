@@ -31,6 +31,7 @@ import io.harness.serializer.KryoSerializer;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolume;
 import io.kubernetes.client.openapi.models.V1Pod;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -38,6 +39,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -155,6 +157,20 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                   .map(V1Pod::getMetadata)
                                   .map(V1ObjectMeta::getUid)
                                   .collect(Collectors.toList());
+    List<String> pvUidList = new ArrayList<>();
+
+    // optional as of now, will remove when the permission is mandatory.
+    try {
+      pvUidList.addAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null)
+                           .getItems()
+                           .stream()
+                           .map(V1PersistentVolume::getMetadata)
+                           .map(V1ObjectMeta::getUid)
+                           .collect(Collectors.toList()));
+    } catch (ApiException ex) {
+      logger.warn("ListPersistentVolume failed: code=[{}], headers=[{}]", ex.getCode(), ex.getResponseHeaders(), ex);
+    }
+
     Timestamp timestamp = HTimestamps.fromInstant(pollTime);
     K8SClusterSyncEvent k8SClusterSyncEvent = K8SClusterSyncEvent.newBuilder()
                                                   .setClusterId(watchTaskParams.getClusterId())
@@ -163,6 +179,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .setKubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(client))
                                                   .addAllActiveNodeUids(nodeUidList)
                                                   .addAllActivePodUids(podUidList)
+                                                  .addAllActivePvUids(pvUidList)
                                                   .setLastProcessedTimestamp(timestamp)
                                                   .build();
     eventPublisher.publishMessage(
