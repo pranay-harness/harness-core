@@ -94,7 +94,6 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
-import software.wings.service.impl.artifact.ArtifactComparator;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -264,10 +263,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         continue;
       }
 
-      List<ArtifactSummary> artifactSummaries = artifacts.stream()
-                                                    .sorted(new ArtifactComparator())
-                                                    .map(ArtifactSummary::prepareSummaryFromArtifact)
-                                                    .collect(toList());
+      List<ArtifactSummary> artifactSummaries =
+          artifacts.stream().map(ArtifactSummary::prepareSummaryFromArtifact).collect(toList());
       artifactStream.setArtifactCount(totalArtifactCount);
       artifactStream.setArtifacts(artifactSummaries);
       newArtifactStreams.add(artifactStream);
