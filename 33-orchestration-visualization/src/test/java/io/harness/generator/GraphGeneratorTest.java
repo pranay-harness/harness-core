@@ -45,6 +45,8 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
   private static final String PLAN_EXECUTION_ID = "planId";
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 
+  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
+
   @Mock private OutcomeService outcomeService;
   @InjectMocks @Inject private GraphGenerator graphGenerator;
 
@@ -344,12 +346,12 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                    .node(PlanNode.builder()
                                              .uuid(STARTING_EXECUTION_NODE_ID)
                                              .name("name")
-                                             .stepType(DummyStep.STEP_TYPE)
+                                             .stepType(DUMMY_STEP_TYPE)
                                              .identifier("identifier1")
                                              .build())
                                    .nextId("node2")
                                    .build();
-    StepParameters sectionStepParams = SectionStepParameters.builder().childNodeId("child_section_2").build();
+    StepParameters sectionStepParams = DummySectionStepParameters.builder().childNodeId("child_section_2").build();
     NodeExecution section = NodeExecution.builder()
                                 .uuid("node2")
                                 .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
@@ -357,7 +359,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                 .node(PlanNode.builder()
                                           .uuid("section_2")
                                           .name("name2")
-                                          .stepType(SectionStep.STEP_TYPE)
+                                          .stepType(StepType.builder().type("SECTION").build())
                                           .identifier("identifier2")
                                           .stepParameters(sectionStepParams)
                                           .build())
@@ -371,7 +373,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                      .node(PlanNode.builder()
                                                .uuid("child_section_2")
                                                .name("name_child_2")
-                                               .stepType(DummyStep.STEP_TYPE)
+                                               .stepType(DUMMY_STEP_TYPE)
                                                .identifier("identifier_child_2")
                                                .build())
                                      .parentId(section.getUuid())
@@ -403,19 +405,20 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
     String dummyNode1Uuid = "dummyNode1";
     String dummyNode2Uuid = "dummyNode2";
 
-    NodeExecution sectionChainParentNode = NodeExecution.builder()
-                                               .uuid("section_chain_start")
-                                               .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
-                                               .mode(ExecutionMode.CHILD_CHAIN)
-                                               .node(PlanNode.builder()
-                                                         .uuid("section_chain_plan_node")
-                                                         .name("name_section_chain")
-                                                         .identifier("name_section_chain")
-                                                         .stepType(SectionChainStep.STEP_TYPE)
-                                                         .build())
-                                               .createdAt(System.currentTimeMillis())
-                                               .lastUpdatedAt(System.currentTimeMillis())
-                                               .build();
+    NodeExecution sectionChainParentNode =
+        NodeExecution.builder()
+            .uuid("section_chain_start")
+            .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
+            .mode(ExecutionMode.CHILD_CHAIN)
+            .node(PlanNode.builder()
+                      .uuid("section_chain_plan_node")
+                      .name("name_section_chain")
+                      .identifier("name_section_chain")
+                      .stepType(StepType.builder().type("_DUMMY_SECTION_CHAIN").build())
+                      .build())
+            .createdAt(System.currentTimeMillis())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .build();
 
     NodeExecution sectionChain1 = NodeExecution.builder()
                                       .uuid("section_chain_child1")
@@ -425,7 +428,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                                 .uuid("section_chain_child1_plan_node")
                                                 .name("name_section_chain_child1_plan_node")
                                                 .identifier("name_section_chain_child1_plan_node")
-                                                .stepType(DummyStep.STEP_TYPE)
+                                                .stepType(DUMMY_STEP_TYPE)
                                                 .build())
                                       .createdAt(System.currentTimeMillis())
                                       .lastUpdatedAt(System.currentTimeMillis())
@@ -441,7 +444,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                                 .uuid("section_chain_child2_plan_node")
                                                 .name("name_section_chain_child2_plan_node")
                                                 .identifier("name_section_chain_child2_plan_node")
-                                                .stepType(DummyStep.STEP_TYPE)
+                                                .stepType(DUMMY_STEP_TYPE)
                                                 .build())
                                       .createdAt(System.currentTimeMillis())
                                       .lastUpdatedAt(System.currentTimeMillis())
@@ -456,7 +459,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                    .node(PlanNode.builder()
                                              .uuid("dummy_plan_node_1")
                                              .name("name_dummy_node_1")
-                                             .stepType(DummyStep.STEP_TYPE)
+                                             .stepType(DUMMY_STEP_TYPE)
                                              .identifier("name_dummy_node_1")
                                              .build())
                                    .createdAt(System.currentTimeMillis())
@@ -472,7 +475,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                    .node(PlanNode.builder()
                                              .uuid("dummy_plan_node_2")
                                              .name("name_dummy_node_2")
-                                             .stepType(DummyStep.STEP_TYPE)
+                                             .stepType(DUMMY_STEP_TYPE)
                                              .identifier("name_dummy_node_2")
                                              .build())
                                    .createdAt(System.currentTimeMillis())
@@ -508,7 +511,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
   @Category(UnitTests.class)
   public void shouldGenerateOrchestrationGraphWithFork() {
     StepParameters forkStepParams =
-        ForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
+        DummyForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
     NodeExecution fork = NodeExecution.builder()
                              .uuid("node1")
                              .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
@@ -516,7 +519,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                              .node(PlanNode.builder()
                                        .uuid(STARTING_EXECUTION_NODE_ID)
                                        .name("name1")
-                                       .stepType(ForkStep.STEP_TYPE)
+                                       .stepType(StepType.builder().type("DUMMY_FORK").build())
                                        .identifier("identifier1")
                                        .stepParameters(forkStepParams)
                                        .build())
@@ -531,7 +534,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_1")
                                                 .name("name_children_1")
-                                                .stepType(DummyStep.STEP_TYPE)
+                                                .stepType(DUMMY_STEP_TYPE)
                                                 .identifier("name_children_1")
                                                 .build())
                                       .parentId(fork.getUuid())
@@ -545,7 +548,7 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_2")
                                                 .name("name_children_2")
-                                                .stepType(DummyStep.STEP_TYPE)
+                                                .stepType(DUMMY_STEP_TYPE)
                                                 .identifier("name_children_2")
                                                 .build())
                                       .parentId(fork.getUuid())
