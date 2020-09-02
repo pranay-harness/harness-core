@@ -3,7 +3,9 @@ package io.harness.yaml.core;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
+import io.harness.yaml.core.serializer.ParallelStepElementSerializer;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +21,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @JsonTypeName("parallel")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonSerialize(using = ParallelStepElementSerializer.class)
 public class ParallelStepElement implements ExecutionWrapper {
   @NotNull List<ExecutionWrapper> sections;
 
