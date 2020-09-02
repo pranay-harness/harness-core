@@ -21,7 +21,7 @@ public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConne
     DockerAuthType dockerAuthType =
         configDTO.getAuthScheme() != null ? configDTO.getAuthScheme().getAuthType() : DockerAuthType.NO_AUTH;
     DockerConnectorBuilder dockerConnectorBuilder =
-        DockerConnector.builder().url(configDTO.getUrl()).authType(dockerAuthType);
+        DockerConnector.builder().url(configDTO.getDockerRegistryUrl()).authType(dockerAuthType);
     if (dockerAuthType == DockerAuthType.USER_PASSWORD) {
       DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
           (DockerUserNamePasswordDTO) configDTO.getAuthScheme().getCredentials();

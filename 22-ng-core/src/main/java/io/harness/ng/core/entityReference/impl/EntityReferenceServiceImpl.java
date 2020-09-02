@@ -57,6 +57,13 @@ public class EntityReferenceServiceImpl implements EntityReferenceService {
     return entityReferenceToDTO.createEntityReferenceDTO(savedEntityReference);
   }
 
+  @Override
+  public Boolean delete(String referredEntityFQN, String referredByEntityFQN) {
+    long numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredEntityFQNAndReferredByEntityFQN(
+        referredEntityFQN, referredByEntityFQN);
+    return numberOfRecordsDeleted == 1;
+  }
+
   private Pageable getPageRequest(int page, int size, Sort sort) {
     return PageRequest.of(page, size, sort);
   }

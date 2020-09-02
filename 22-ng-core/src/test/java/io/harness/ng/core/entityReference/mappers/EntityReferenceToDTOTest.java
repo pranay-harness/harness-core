@@ -1,10 +1,11 @@
 package io.harness.ng.core.entityReference.mappers;
 
+import static io.harness.ng.EntityType.SECRETS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.entityReference.ReferenceEntityType;
+import io.harness.ng.EntityType;
 import io.harness.ng.core.entityReference.dto.EntityReferenceDTO;
 import io.harness.ng.core.entityReference.entity.EntityReference;
 import io.harness.rule.Owner;
@@ -29,10 +30,10 @@ public class EntityReferenceToDTOTest extends CategoryTest {
   public void createEntityReferenceDTOTest() {
     String accountIdentifier = "accountIdentifier";
     String referredByEntityFQN = "account/pipelineIdentifier";
-    ReferenceEntityType referredByEntityType = ReferenceEntityType.PIPELINE;
+    EntityType referredEntityType = EntityType.CONNECTORS;
     String referredByEntityName = "Pipeline 1";
     String referredEntityFQN = "account/org1/connectorIdnentifier";
-    ReferenceEntityType referredEntityType = ReferenceEntityType.CONNECTOR;
+    EntityType referredByEntityType = SECRETS;
     String referredEntityName = "Connector 1";
     EntityReference entityReference = EntityReference.builder()
                                           .accountIdentifier(accountIdentifier)

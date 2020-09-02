@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class NGSecretServiceImpl implements NGSecretService {
   private final SecretManagerClient secretManagerClient;
+  private final SecretEntityReferenceHelper secretEntityReferenceHelper;
 
   @Override
   public EncryptedData get(
@@ -75,7 +76,9 @@ public class NGSecretServiceImpl implements NGSecretService {
       }
       dto.setDraft(true);
     }
-    return fromDTO(getResponse(secretManagerClient.createSecret(dto)));
+    EncryptedDataDTO encryptedData = getResponse(secretManagerClient.createSecret(dto));
+    secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+    return fromDTO(encryptedData);
   }
 
   @Override
@@ -109,7 +112,13 @@ public class NGSecretServiceImpl implements NGSecretService {
 
   @Override
   public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    return getResponse(
-        secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+    EncryptedDataDTO encryptedDataDTO =
+        getResponse(secretManagerClient.getSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+    boolean isSecretDeleted =
+        getResponse(secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+    if (isSecretDeleted && encryptedDataDTO != null) {
+      secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
+    }
+    return isSecretDeleted;
   }
 }

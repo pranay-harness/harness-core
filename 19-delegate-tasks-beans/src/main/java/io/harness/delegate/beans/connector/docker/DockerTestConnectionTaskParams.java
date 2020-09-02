@@ -19,6 +19,7 @@ public class DockerTestConnectionTaskParams implements TaskParameters, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(HttpConnectionExecutionCapability.builder().url(dockerConnector.getUrl()).build());
+    return Collections.singletonList(
+        HttpConnectionExecutionCapability.builder().url(dockerConnector.getDockerRegistryUrl()).build());
   }
 }

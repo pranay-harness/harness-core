@@ -20,6 +20,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName("DockerRegistry")
 public class DockerConnectorDTO extends ConnectorConfigDTO {
-  String url;
+  String dockerRegistryUrl;
   DockerAuthenticationDTO authScheme;
 }

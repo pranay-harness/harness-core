@@ -11,6 +11,8 @@ import com.google.inject.Singleton;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.entityreferenceclient.EntityReferenceClientModule;
+import io.harness.entityreferenceclient.NGManagerClientConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
@@ -33,6 +35,7 @@ import java.util.Set;
 public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;
   private SecretManagementClientModule secretManagementClientModule;
+  private EntityReferenceClientModule entityReferenceClientModule;
 
   @Test
   @Owner(developers = VIKAS)
@@ -40,9 +43,12 @@ public class SecretManagementModuleTest extends CategoryTest {
   public void testSecretManagementModule() {
     ServiceHttpClientConfig secretManagerClientConfig =
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7143").build();
+    NGManagerClientConfig ngManagerClientConfig =
+        NGManagerClientConfig.builder().baseUrl("http://localhost:3457").build();
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule = new SecretManagementClientModule(secretManagerClientConfig, serviceSecret);
+    entityReferenceClientModule = new EntityReferenceClientModule(ngManagerClientConfig, serviceSecret, "ng-manager");
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
@@ -54,6 +60,7 @@ public class SecretManagementModuleTest extends CategoryTest {
     });
     modules.add(secretManagementModule);
     modules.add(secretManagementClientModule);
+    modules.add(entityReferenceClientModule);
     Injector injector = Guice.createInjector(modules);
 
     NGSecretManagerService ngSecretManagerService = injector.getInstance(NGSecretManagerService.class);

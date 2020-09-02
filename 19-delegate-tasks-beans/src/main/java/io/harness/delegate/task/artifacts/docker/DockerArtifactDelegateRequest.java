@@ -38,7 +38,8 @@ public class DockerArtifactDelegateRequest implements ArtifactSourceDelegateRequ
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        dockerConnectorDTO.getUrl().endsWith("/") ? dockerConnectorDTO.getUrl()
-                                                  : dockerConnectorDTO.getUrl().concat("/")));
+        dockerConnectorDTO.getDockerRegistryUrl().endsWith("/")
+            ? dockerConnectorDTO.getDockerRegistryUrl()
+            : dockerConnectorDTO.getDockerRegistryUrl().concat("/")));
   }
 }
