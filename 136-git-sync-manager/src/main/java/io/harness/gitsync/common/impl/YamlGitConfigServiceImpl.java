@@ -16,6 +16,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitConfig.YamlGitConfigRepository;
@@ -50,6 +51,16 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     this.connectorService = connectorService;
   }
 
+  public YamlGitConfigDTO getByIdentifier(
+      String projectId, String organizationId, String accountId, String identifier) {
+    Scope scope = getScope(accountId, organizationId, projectId);
+    final List<YamlGitFolderConfig> yamlGitFolderConfigs =
+        yamlGitConfigFolderRepository
+            .findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndYamlGitConfigIdOrderByCreatedAtAsc(
+                accountId, organizationId, projectId, scope, identifier);
+    return toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(yamlGitFolderConfigs);
+  }
+
   @Override
   public List<YamlGitConfigDTO> get(String projectIdentifier, String orgIdentifier, String accountId) {
     Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
@@ -82,13 +93,13 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   @Override
   public YamlGitConfigDTO getByFolderIdentifier(
       String projectIdentifier, String orgIdentifier, String accountId, String identifier) {
-    Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
     // assuming identifier = uuid.
-    List<YamlGitFolderConfig> yamlGitConfigs =
-        yamlGitConfigFolderRepository
-            .findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndYamlGitConfigIdOrderByCreatedAtAsc(
-                accountId, orgIdentifier, projectIdentifier, scope, identifier);
-    return toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(yamlGitConfigs);
+    Optional<YamlGitFolderConfig> yamlGitFolderConfig = yamlGitConfigFolderRepository.findById(identifier);
+    if (yamlGitFolderConfig.isPresent()) {
+      return toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(
+          Collections.singletonList(yamlGitFolderConfig.get()));
+    }
+    throw new InvalidRequestException("No git sync with given folder ID");
   }
 
   @Override

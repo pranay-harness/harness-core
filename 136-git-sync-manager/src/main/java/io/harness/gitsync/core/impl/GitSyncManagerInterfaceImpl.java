@@ -34,7 +34,8 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
   @Override
   public String processHarnessToGit(ChangeType changeType, String yamlContent, String accountId, String orgId,
       String projectId, String entityName, String entityType, String entityIdentifier) {
-    GitFileLocation gitFileLocation = getGitFileLocation(accountId, orgId, projectId, entityType, entityIdentifier);
+    GitFileLocation gitFileLocation =
+        getGitFileLocation(accountId, orgId, projectId, entityType, entityIdentifier, entityName);
     YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.getByFolderIdentifierAndIsEnabled(
         projectId, orgId, accountId, gitFileLocation.getEntityRootFolderId());
     if (yamlGitConfig == null) {
@@ -76,16 +77,16 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
   }
 
   private GitFileLocation getGitFileLocation(
-      String accountId, String orgId, String projectId, String entityType, String entityIdentifier) {
+      String accountId, String orgId, String projectId, String entityType, String entityIdentifier, String entityName) {
     Optional<GitFileLocation> gitFileLocation =
         gitFileLocationRepository.findByProjectIdAndOrganizationIdAndAccountIdAndEntityTypeAndEntityIdentifier(
             projectId, orgId, accountId, entityType, entityIdentifier);
     return gitFileLocation.orElseGet(
-        () -> buildGitFileLocation(accountId, orgId, projectId, entityType, entityIdentifier));
+        () -> buildGitFileLocation(accountId, orgId, projectId, entityType, entityIdentifier, entityName));
   }
 
   private GitFileLocation buildGitFileLocation(
-      String accountId, String orgId, String projectId, String entityType, String entityIdentifier) {
+      String accountId, String orgId, String projectId, String entityType, String entityIdentifier, String entityName) {
     Optional<YamlGitConfigDTO.RootFolder> defaultRootFolder =
         yamlGitConfigService.getDefault(projectId, orgId, accountId);
 
@@ -97,8 +98,7 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
                                                     .accountId(accountId)
                                                     .entityIdentifier(entityIdentifier)
                                                     .entityType(entityType)
-                                                    .entityIdentifier(entityIdentifier)
-                                                    .entityType(entityType)
+                                                    .entityName(entityName)
                                                     .organizationId(orgId)
                                                     .projectId(projectId)
                                                     .yamlGitFolderConfigId(rootFolder.getIdentifier())

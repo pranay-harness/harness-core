@@ -49,10 +49,16 @@ import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.git.UsernamePasswordAuthRequest;
+import io.harness.git.model.AuthInfo;
 import io.harness.git.model.ChangeType;
+import io.harness.git.model.CommitAndPushRequest;
+import io.harness.git.model.CommitAndPushResult;
+import io.harness.git.model.CommitResult;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitRepositoryType;
+import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.k8s.model.HelmVersion;
@@ -163,6 +169,14 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(ChangeType.class, 5212);
     kryo.register(GitFileChange.class, 1418);
+    kryo.register(CommitAndPushRequest.class, 1419);
+    kryo.register(UsernamePasswordAuthRequest.class, 1420);
+    kryo.register(AuthInfo.class, 1421);
+    kryo.register(AuthInfo.AuthType.class, 1422);
+    kryo.register(CommitAndPushResult.class, 1423);
+    kryo.register(CommitResult.class, 1424);
+    kryo.register(PushResultGit.class, 1425);
+    kryo.register(PushResultGit.RefUpdate.class, 1426);
     kryo.register(GitRepositoryType.class, 5270);
   }
 }

@@ -17,7 +17,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.HarnessException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -91,14 +91,18 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     }
   }
 
-  private void testCRUD(String yamlString, String workflowName) throws IOException, HarnessException {
+  private void testCRUD(String yamlString, String workflowName) throws IOException {
     ChangeContext<BasicWorkflowYaml> changeContext =
         getChangeContext(yamlString, BASIC_VALID_YAML_FILE_PATH_PREFIX + workflowName + ".yaml", yamlHandler);
 
     BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
-
-    Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    Workflow workflow;
+    try {
+      workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    } catch (Exception e) {
+      throw new InvalidRequestException(e.getMessage(), e);
+    }
     assertThat(workflow).isNotNull();
     assertThat(workflowName).isEqualTo(workflow.getName());
     assertThat(workflow.getOrchestrationWorkflow()).isNotNull();
@@ -121,9 +125,11 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     //    Workflow savedWorkflow = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     assertThat(savedWorkflow).isNotNull();
     assertThat(workflowName).isEqualTo(savedWorkflow.getName());
-
-    yamlHandler.delete(changeContext);
-
+    try {
+      yamlHandler.delete(changeContext);
+    } catch (Exception e) {
+      throw new InvalidRequestException(e.getMessage(), e);
+    }
     Workflow deletedWorkflow = yamlHandler.get(ACCOUNT_ID, BASIC_VALID_YAML_FILE_PATH_PREFIX);
     assertThat(deletedWorkflow).isNull();
   }

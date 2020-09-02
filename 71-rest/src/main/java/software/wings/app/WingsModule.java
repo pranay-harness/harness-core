@@ -52,6 +52,8 @@ import io.harness.datahandler.services.AdminUserService;
 import io.harness.datahandler.services.AdminUserServiceImpl;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
+import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
@@ -59,6 +61,8 @@ import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.executionplan.ExecutionPlanModule;
+import io.harness.git.GitClientV2;
+import io.harness.git.GitClientV2Impl;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
@@ -1135,7 +1139,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(ScalyrService.class).to(ScalyrServiceImpl.class);
     bind(ApmVerificationService.class).to(ApmVerificationServiceImpl.class);
     bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
-
+    bind(NGGitService.class).to(NGGitServiceImpl.class);
+    bind(GitClientV2.class).to(GitClientV2Impl.class);
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);
