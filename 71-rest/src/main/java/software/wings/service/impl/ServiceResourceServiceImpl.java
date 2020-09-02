@@ -1819,7 +1819,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     validateCommandName(serviceCommand.getName());
     ServiceCommand savedServiceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
     if (!StringUtils.equals(savedServiceCommand.getName(), serviceCommand.getName())) {
-      verifyDuplicateServiceCommandName(appId, serviceId, serviceCommand);
+      throw new InvalidRequestException("Service command renaming is not allowed");
     }
 
     UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
