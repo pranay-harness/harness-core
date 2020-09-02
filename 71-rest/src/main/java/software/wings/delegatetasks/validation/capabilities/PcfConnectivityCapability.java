@@ -25,6 +25,6 @@ public class PcfConnectivityCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return "Pcf:" + pcfConfig.getEndpointUrl() + "/" + pcfConfig.getUsername();
+    return "Pcf:" + pcfConfig.getEndpointUrl();
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.PCF_CONNECTIVITY_SUCCESS;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static io.harness.pcf.model.PcfConstants.THREAD_SLEEP_INTERVAL_FOR_STEADY_STATE_CHECK;
 import static java.util.Comparator.comparingInt;
@@ -341,7 +342,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       return e.getMessage();
     }
 
-    return "SUCCESS";
+    return PCF_CONNECTIVITY_SUCCESS;
   }
 
   @Override
