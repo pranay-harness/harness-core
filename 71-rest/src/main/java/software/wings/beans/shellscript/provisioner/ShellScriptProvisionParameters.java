@@ -6,6 +6,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.Expression;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
@@ -19,7 +20,7 @@ import java.util.Map;
 @Value
 @Builder
 public class ShellScriptProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
-  private String scriptBody;
+  @Expression private String scriptBody;
   private long timeoutInMillis;
   private Map<String, String> textVariables;
   private Map<String, EncryptedDataDetail> encryptedVariables;

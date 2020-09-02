@@ -6,9 +6,11 @@ import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -55,10 +57,12 @@ import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionContext;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -102,15 +106,20 @@ public class InstanceFetchStateTest extends WingsBaseTest {
         .when(activityHelperService)
         .createAndSaveActivity(eq(context), eq(Activity.Type.Command), anyString(),
             eq(CommandUnitType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName()), anyList());
-    doReturn("5").when(context).renderExpression(timeoutExpr);
     doReturn("some-string").when(context).appendStateExecutionId(anyString());
     doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(WORKFLOW);
+    doAnswer(invocation -> invocation.getArgumentAt(0, String.class)).when(context).renderExpression(anyString());
+    doAnswer(invocation -> invocation.getArgumentAt(0, String.class))
+        .when(context)
+        .renderExpression(anyString(), any(StateExecutionContext.class));
+    doReturn("5").when(context).renderExpression(timeoutExpr);
   }
 
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void execute() {
+    state.setTags(Arrays.asList("tag1", null, " tag2 ", "tag1 ", "", null));
     final ExecutionResponse response = state.execute(context);
 
     final ShellScriptProvisionParameters expectedTaskParams =
@@ -131,6 +140,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                        .description("Fetch Instances")
                        .waitId(ACTIVITY_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                       .tags(Arrays.asList("tag1", "tag2"))
                        .data(TaskData.builder()
                                  .async(true)
                                  .parameters(new Object[] {expectedTaskParams})
