@@ -8,7 +8,6 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ShellExecutionException;
-import io.harness.exception.WingsException;
 import io.harness.shell.ShellExecutionResponse.ShellExecutionResponseBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -98,7 +97,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
       shellExecutionResponseBuilder.exitValue(processResult.getExitValue());
       if (processResult.getExitValue() == 0) {
         if (scriptOutputFile != null && scriptOutputFile.length() == 0) {
-          throw new WingsException("Error occurred during script execution, Reason: " + message[0]);
+          throw new ShellExecutionException("No artifact file was downloaded.");
         }
         Map<String, String> scriptData = new HashMap<>();
         scriptData.put(ARTIFACT_RESULT_PATH, scriptOutputFile.getAbsolutePath());
@@ -115,7 +114,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
       try {
         deleteFileIfExists(scriptFile.getAbsolutePath());
       } catch (IOException e) {
-        logger.warn("Failed to delete file: {} ", scriptFile.getAbsolutePath());
+        logger.warn("Failed to delete file: {} ", scriptFile.getAbsolutePath(), e);
       }
     }
 
