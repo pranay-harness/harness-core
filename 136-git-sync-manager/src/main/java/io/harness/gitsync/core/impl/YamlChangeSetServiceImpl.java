@@ -111,10 +111,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     if (yamlGitConfig == null) {
       throw NoResultFoundException.newBuilder()
           .message(format(
-              "Unable to find yamlGitConfig for harness to git changeset for account =[%s], appId=[%s]. Git Sync might not have been configured",
-              yamlChangeSet.getAccountId(), null
-              //                  yamlChangeSet.getAppId()
-              ))
+              "Unable to find yamlGitConfig for harness to git changeset for account =[%s], orgId=[%s]. projectId = [%s]Git Sync might not have been configured",
+              yamlChangeSet.getAccountId(), yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId()))
           .build();
     }
     return yamlGitConfig;

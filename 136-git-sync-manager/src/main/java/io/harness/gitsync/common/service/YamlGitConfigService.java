@@ -40,4 +40,6 @@ public interface YamlGitConfigService {
   @ValidationGroups(Update.class) YamlGitConfigDTO update(@Valid YamlGitConfigDTO yamlGitConfig);
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
+
+  YamlGitConfigDTO getByIdentifier(String projectId, String organizationId, String accountId, String identifier);
 }
