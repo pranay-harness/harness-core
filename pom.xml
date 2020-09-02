@@ -37,6 +37,7 @@
         <module>29-orchestration-beans</module>
         <module>31-orchestration</module>
         <module>32-orchestration-steps</module>
+        <module>33-orchestration-visualization</module>
         <module>35-yaml-beans</module>
         <module>38-execution-plan</module>
         <module>57-command-library-common</module>
@@ -67,7 +68,6 @@
         <module>125-cd-nextgen</module>
         <module>136-git-sync-manager</module>
         <module>160-model-gen-tool</module>
-
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

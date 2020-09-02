@@ -18,6 +18,7 @@ import io.dropwizard.lifecycle.Managed;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
+import io.harness.OrchestrationVisualizationModule;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -1162,6 +1163,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());
+    install(OrchestrationVisualizationModule.getInstance());
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     bind(new TypeLiteral<RestraintService<? extends ResourceRestraint>>() {}).to(ResourceConstraintServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =

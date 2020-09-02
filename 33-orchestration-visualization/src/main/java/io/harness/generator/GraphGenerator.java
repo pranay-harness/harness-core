@@ -1,8 +1,5 @@
-package io.harness.engine;
+package io.harness.generator;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -13,13 +10,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.GraphVertex;
+import io.harness.beans.Subgraph;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;
-import io.harness.presentation.GraphVertex;
-import io.harness.presentation.Subgraph;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -28,13 +27,13 @@ import java.util.Map;
 
 @Slf4j
 @Redesign
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 public class GraphGenerator {
   @Inject private OutcomeService outcomeService;
 
   public GraphVertex generateGraphVertexStartingFrom(String startingNodeExId, List<NodeExecution> nodeExecutions) {
-    if (isEmpty(startingNodeExId)) {
+    if (EmptyPredicate.isEmpty(startingNodeExId)) {
       logger.warn("Starting node cannot be null");
       return null;
     }
@@ -55,7 +54,7 @@ public class GraphGenerator {
 
   private Map<String, List<String>> obtainParentIdMap(List<NodeExecution> nodeExecutions) {
     return nodeExecutions.stream()
-        .filter(node -> isNotEmpty(node.getParentId()) && isEmpty(node.getPreviousId()))
+        .filter(node -> EmptyPredicate.isNotEmpty(node.getParentId()) && EmptyPredicate.isEmpty(node.getPreviousId()))
         .sorted(Comparator.comparingLong(NodeExecution::getCreatedAt))
         .collect(groupingBy(NodeExecution::getParentId, mapping(NodeExecution::getUuid, toList())));
   }

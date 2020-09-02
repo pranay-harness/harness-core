@@ -11,16 +11,16 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.Graph;
+import io.harness.beans.GraphVertex;
 import io.harness.category.element.UnitTests;
 import io.harness.config.MockServerConfig;
 import io.harness.engine.OrchestrationService;
-import io.harness.engine.graph.GraphGenerationService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
-import io.harness.presentation.Graph;
-import io.harness.presentation.GraphVertex;
 import io.harness.rule.Owner;
+import io.harness.service.GraphGenerationService;
 import io.harness.state.core.dummy.DummyStep;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package io.harness.engine.graph;
+package io.harness.service.impl;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,9 +9,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.Graph;
+import io.harness.beans.GraphVertex;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionRepository;
@@ -22,9 +24,8 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.plan.PlanNode;
-import io.harness.presentation.Graph;
-import io.harness.presentation.GraphVertex;
 import io.harness.rule.Owner;
+import io.harness.service.GraphGenerationService;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
 /**
  * Test class for {@link GraphGenerationServiceImpl}
  */
-public class GraphGenerationServiceImplTest extends OrchestrationTest {
+public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTest {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionRepository nodeExecutionRepository;
   @Inject private SpringMongoStore mongoStore;

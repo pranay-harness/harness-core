@@ -111,7 +111,6 @@
 31-orchestration/src/main/java/io/harness/delay/SimpleNotifier.java
 31-orchestration/src/main/java/io/harness/engine/EngineObtainmentHelper.java
 31-orchestration/src/main/java/io/harness/engine/ExecutionEngineDispatcher.java
-31-orchestration/src/main/java/io/harness/engine/GraphGenerator.java
 31-orchestration/src/main/java/io/harness/engine/OrchestrationEngine.java
 31-orchestration/src/main/java/io/harness/engine/OrchestrationServiceImpl.java
 31-orchestration/src/main/java/io/harness/engine/advise/AdviseHandlerFactory.java
@@ -148,7 +147,6 @@
 31-orchestration/src/main/java/io/harness/engine/expressions/functors/NodeExecutionValue.java
 31-orchestration/src/main/java/io/harness/engine/expressions/functors/OutcomeFunctor.java
 31-orchestration/src/main/java/io/harness/engine/expressions/functors/SecretFunctor.java
-31-orchestration/src/main/java/io/harness/engine/graph/GraphGenerationServiceImpl.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/InterruptCheck.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/InterruptHandlerFactory.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/InterruptManager.java
@@ -184,9 +182,6 @@
 31-orchestration/src/main/java/io/harness/facilitator/task/TaskFacilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/taskv2/TaskV2Facilitator.java
 31-orchestration/src/main/java/io/harness/facilitator/taskv3/TaskV3Facilitator.java
-31-orchestration/src/main/java/io/harness/presentation/Graph.java
-31-orchestration/src/main/java/io/harness/presentation/GraphVertex.java
-31-orchestration/src/main/java/io/harness/presentation/Subgraph.java
 31-orchestration/src/main/java/io/harness/registrars/OrchestrationAdviserRegistrar.java
 31-orchestration/src/main/java/io/harness/registrars/OrchestrationFacilitatorRegistrar.java
 31-orchestration/src/main/java/io/harness/registrars/OrchestrationModuleEventHandlerRegistrar.java
@@ -233,6 +228,13 @@
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/service/ResourceRestraintPersistenceMonitor.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/service/ResourceRestraintRegistryImpl.java
 32-orchestration-steps/src/main/java/io/harness/steps/resourcerestraint/service/ResourceRestraintServiceImpl.java
+33-orchestration-visualization/src/main/java/io/harness/OrchestrationVisualizationModule.java
+33-orchestration-visualization/src/main/java/io/harness/beans/Graph.java
+33-orchestration-visualization/src/main/java/io/harness/beans/GraphVertex.java
+33-orchestration-visualization/src/main/java/io/harness/beans/Subgraph.java
+33-orchestration-visualization/src/main/java/io/harness/generator/GraphGenerator.java
+33-orchestration-visualization/src/main/java/io/harness/serializer/OrchestrationVisualizationModuleRegistrars.java
+33-orchestration-visualization/src/main/java/io/harness/service/impl/GraphGenerationServiceImpl.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskClientParams.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskServiceClient.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionResponseHandler.java

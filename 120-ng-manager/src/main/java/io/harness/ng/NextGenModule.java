@@ -13,6 +13,7 @@ import com.google.inject.name.Names;
 import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.OrchestrationVisualizationModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -189,6 +190,7 @@ public class NextGenModule extends DependencyModule {
                                                 .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
                                                 .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
                                                 .build()));
+    install(OrchestrationVisualizationModule.getInstance());
 
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);

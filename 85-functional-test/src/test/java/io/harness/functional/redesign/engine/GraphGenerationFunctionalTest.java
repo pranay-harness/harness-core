@@ -13,9 +13,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.Graph;
+import io.harness.beans.GraphVertex;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
-import io.harness.engine.graph.GraphGenerationService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -23,8 +24,6 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
-import io.harness.presentation.Graph;
-import io.harness.presentation.GraphVertex;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.state.core.dummy.DummyStep;
@@ -51,7 +50,7 @@ import java.util.Map;
 import javax.ws.rs.core.GenericType;
 
 /**
- * Functional Tests for {@link GraphGenerationService}
+ * Functional Tests for {@link io.harness.service.GraphGenerationService}
  */
 public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   private static final String BASIC_HTTP_STEP_TYPE = "BASIC_HTTP";

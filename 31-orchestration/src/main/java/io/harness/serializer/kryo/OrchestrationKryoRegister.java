@@ -12,9 +12,6 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventNotifyData;
-import io.harness.presentation.Graph;
-import io.harness.presentation.GraphVertex;
-import io.harness.presentation.Subgraph;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepParameters;
@@ -38,9 +35,6 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(RetryAdviserParameters.class, 3103);
     kryo.register(DummySectionStepTransput.class, 3104);
     kryo.register(DummySectionOutcome.class, 3105);
-    kryo.register(Graph.class, 3110);
-    kryo.register(GraphVertex.class, 3111);
-    kryo.register(Subgraph.class, 3112);
 
     kryo.register(ForkStepParameters.class, 3113);
     kryo.register(SectionStepParameters.class, 3114);
