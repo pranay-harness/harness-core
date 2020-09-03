@@ -2080,8 +2080,12 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldRetrieveDelegatesImplicitSelectors() {
-    DelegateProfile delegateProfile =
-        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
+    DelegateProfile delegateProfile = DelegateProfile.builder()
+                                          .uuid(generateUuid())
+                                          .accountId(ACCOUNT_ID)
+                                          .name("primary")
+                                          .selectors(ImmutableList.of("jkl", "fgh"))
+                                          .build();
 
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
@@ -2099,8 +2103,35 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
 
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
-    assertThat(tags.size()).isEqualTo(5);
-    assertThat(tags).containsExactlyInAnyOrder("abc", "bbb", "host", "primary", "test");
+    assertThat(tags.size()).isEqualTo(7);
+    assertThat(tags).containsExactlyInAnyOrder("abc", "bbb", "host", "primary", "test", "jkl", "fgh");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegateImplicitSelectorsWithDelegateProfileSelectorsOnly() {
+    DelegateProfile delegateProfile = DelegateProfile.builder()
+                                          .uuid(generateUuid())
+                                          .accountId(ACCOUNT_ID)
+                                          .selectors(ImmutableList.of("jkl", "fgh"))
+                                          .build();
+    wingsPersistence.save(delegateProfile);
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .ip("127.0.0.1")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .build();
+    wingsPersistence.save(delegate);
+
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
+    Set<String> selectors = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(selectors.size()).isEqualTo(2);
+    assertThat(selectors).containsExactly("fgh", "jkl");
   }
 
   @Test

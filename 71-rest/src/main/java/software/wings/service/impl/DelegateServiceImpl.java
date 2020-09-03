@@ -460,6 +460,12 @@ public class DelegateServiceImpl implements DelegateService {
       selectorTypeMap.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
     }
 
+    if (delegateProfile != null && isNotEmpty(delegateProfile.getSelectors())) {
+      for (String selector : delegateProfile.getSelectors()) {
+        selectorTypeMap.put(selector.toLowerCase(), SelectorType.PROFILE_SELECTORS);
+      }
+    }
+
     return selectorTypeMap;
   }
 

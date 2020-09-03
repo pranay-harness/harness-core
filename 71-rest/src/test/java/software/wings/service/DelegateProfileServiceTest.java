@@ -294,7 +294,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void testShouldUpdateDelegateProfileSelector() {
+  public void testShouldUpdateDelegateProfileSelectors() {
     String uuid = generateUuid();
     String accountId = generateUuid();
     List<String> profileSelectors =
@@ -375,6 +375,65 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
         delegateProfile.getAccountId(), delegateProfile.getUuid(), emptyList());
 
     assertThat(updatedDelegateProfile.getScopingRules()).isNull();
+  }
+
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testShouldUpdateDelegateProfileSelectorsWithNull() {
+    String uuid = generateUuid();
+    String accountId = generateUuid();
+    List<String> profileSelectors =
+        Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
+
+    DelegateProfile delegateProfile = DelegateProfile.builder()
+                                          .uuid(uuid)
+                                          .accountId(accountId)
+                                          .startupScript("script")
+                                          .approvalRequired(false)
+                                          .selectors(profileSelectors)
+                                          .build();
+
+    wingsPersistence.save(delegateProfile);
+
+    delegateProfileService.updateDelegateProfileSelectors(uuid, accountId, null);
+
+    DelegateProfile retrievedDelegateProfile = wingsPersistence.createQuery(DelegateProfile.class)
+                                                   .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
+                                                   .get();
+
+    assertThat(retrievedDelegateProfile).isNotNull();
+    assertThat(retrievedDelegateProfile.getSelectors()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testShouldNotUpdateDelegateProfileSelectorsWithEmptyList() {
+    String uuid = generateUuid();
+    String accountId = generateUuid();
+    List<String> profileSelectors =
+        Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
+
+    DelegateProfile delegateProfile = DelegateProfile.builder()
+                                          .uuid(uuid)
+                                          .accountId(accountId)
+                                          .startupScript("script")
+                                          .approvalRequired(false)
+                                          .selectors(profileSelectors)
+                                          .build();
+
+    wingsPersistence.save(delegateProfile);
+
+    List<String> profileSelectorsUpdated = emptyList();
+
+    delegateProfileService.updateDelegateProfileSelectors(uuid, accountId, profileSelectorsUpdated);
+
+    DelegateProfile retrievedDelegateProfile = wingsPersistence.createQuery(DelegateProfile.class)
+                                                   .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
+                                                   .get();
+
+    assertThat(retrievedDelegateProfile).isNotNull();
+    assertThat(retrievedDelegateProfile.getSelectors()).isNullOrEmpty();
   }
 
   @Test
