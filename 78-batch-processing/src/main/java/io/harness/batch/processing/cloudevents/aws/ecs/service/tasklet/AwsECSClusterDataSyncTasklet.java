@@ -108,7 +108,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
       if (null != awsCrossAccountAttributes) {
         logger.info("Sync for cluster {}", ceCluster.getUuid());
         syncECSClusterData(accountId, awsCrossAccountAttributes, ceCluster);
-        lastReceivedPublishedMessageDao.upsert(accountId, ceCluster.getHash());
+        lastReceivedPublishedMessageDao.upsert(accountId, ceCluster.getUuid());
       }
     });
     return null;
@@ -239,7 +239,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   @VisibleForTesting
   void updateTasks(String accountId, CECluster ceCluster, List<Task> tasks, Map<String, String> taskArnServiceNameMap) {
     Instant stopTime = Instant.now();
-    String clusterId = ceCluster.getHash();
+    String clusterId = ceCluster.getUuid();
     String settingId = ceCluster.getParentAccountSettingId();
     String region = ceCluster.getRegion();
     Map<String, InstanceData> activeInstanceDataMap = getInstanceDataMap(accountId, clusterId,
@@ -388,7 +388,7 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   void updateContainerInstance(String accountId, CECluster ceCluster,
       AwsCrossAccountAttributes awsCrossAccountAttributes, List<ContainerInstance> containerInstances) {
     Instant stopTime = Instant.now();
-    String clusterId = ceCluster.getHash();
+    String clusterId = ceCluster.getUuid();
     String clusterArn = ceCluster.getClusterArn();
     String settingId = ceCluster.getParentAccountSettingId();
     Map<String, InstanceData> activeInstanceDataMap = getInstanceDataMap(
