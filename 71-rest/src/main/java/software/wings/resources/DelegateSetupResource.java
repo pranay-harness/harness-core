@@ -22,6 +22,7 @@ import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.task.DelegateLogContext;
+import io.harness.k8s.KubernetesConvention;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
@@ -483,6 +484,15 @@ public class DelegateSetupResource {
             .build();
       }
     }
+  }
+
+  @PublicApi
+  @GET
+  @Path("kubernetes/account-identifier")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getAccountIdentifier(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(KubernetesConvention.getAccountIdentifier(accountId));
   }
 
   @PublicApi
