@@ -153,7 +153,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Secret does not exit");
+        .hasMessage("Secret does not exist");
   }
 
   @Test

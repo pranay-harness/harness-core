@@ -154,7 +154,7 @@ public class CreateConnectorDataFetcherTest {
     doReturn(null).when(secretManager).getSecretById("ACCOUNT_ID", "password");
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, mutationContext))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Secret does not exit");
+        .hasMessage("Secret does not exist");
   }
 
   private QLGitConnectorInputBuilder getQlGitConnectorInputBuilder() {
