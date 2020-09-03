@@ -37,9 +37,9 @@ mkdir -p dist/cv-nextgen ;
 
 cd dist/cv-nextgen
 
-cp ../../80-cv-nextgen/target/cv-nextgen-capsule.jar .
-cp ../../80-cv-nextgen/keystore.jks .
-cp ../../80-cv-nextgen/cv-nextgen-config.yml .
+cp ../../300-cv-nextgen/target/cv-nextgen-capsule.jar .
+cp ../../300-cv-nextgen/keystore.jks .
+cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
