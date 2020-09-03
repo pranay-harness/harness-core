@@ -79,7 +79,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListAccounts() {
     String identityServiceToken = generateIdentityServiceToken();

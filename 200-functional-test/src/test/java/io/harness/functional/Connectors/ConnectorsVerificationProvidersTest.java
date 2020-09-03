@@ -35,7 +35,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = SHASWAT)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC1_createAndDeleteAppdynamicsConnector() {
     String connectorName = CONNECTOR_APPDYNAMICS_PREFIX + System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = SHASWAT)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC2_createAndDeleteNewrelicConnector() {
     String connectorName = CONNECTOR_NEWRELIC_PREFIX + System.currentTimeMillis();
@@ -119,7 +119,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = SHASWAT)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC5_createAndDeleteBugsnagConnector() {
     String connectorName = CONNECTOR_BUGSNAG_PREFIX + System.currentTimeMillis();
@@ -161,7 +161,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = SHASWAT)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC7_createAndDeleteSumoLogicConnector() {
     String connectorName = CONNECTOR_SUMOLOGIC_PREFIX + System.currentTimeMillis();

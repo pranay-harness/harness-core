@@ -124,7 +124,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void runAzureArtifactsConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC16_createAzureArtifactsConnector, booleanMatcher, true);

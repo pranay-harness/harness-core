@@ -116,7 +116,7 @@ public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGetPipelineExecutionWithPipeline() {
     Artifact artifact = getArtifact(service, service.getAppId());
@@ -136,7 +136,7 @@ public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGetMemberWorkflowExecutionWithPipeline() {
     Artifact artifact = getArtifact(service, service.getAppId());

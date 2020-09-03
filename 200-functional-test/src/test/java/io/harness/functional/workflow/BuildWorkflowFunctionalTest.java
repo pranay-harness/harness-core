@@ -43,7 +43,7 @@ public class BuildWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = YOGESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldRunBuildWorkflow() {
     final String appId = service.getAppId();

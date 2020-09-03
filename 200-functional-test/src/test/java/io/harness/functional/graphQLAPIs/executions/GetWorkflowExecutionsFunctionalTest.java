@@ -73,7 +73,7 @@ public class GetWorkflowExecutionsFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGetWorkflowExecutionwithArtifactsAndWorkflow() {
     Workflow workflow = workflowUtils.getRollingK8sWorkflow("GraphQLAPI-test-", service, infrastructureDefinition);

@@ -44,7 +44,7 @@ public class GetArtifactConnectionFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = MILAN)
+  @Owner(developers = MILAN, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGetArtifactConnectionWithArtifactSourceFilter() {
     List<Artifact> artifacts = getArtifacts(service, service.getAppId());

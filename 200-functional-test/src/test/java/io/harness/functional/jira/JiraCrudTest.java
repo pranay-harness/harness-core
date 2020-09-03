@@ -77,7 +77,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCreateJiraWithCustomFields() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);

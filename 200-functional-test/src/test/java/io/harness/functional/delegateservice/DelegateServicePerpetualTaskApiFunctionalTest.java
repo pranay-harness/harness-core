@@ -44,7 +44,7 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
   @Inject private DelegateSyncService delegateSyncService;
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = MARKO, intermittent = true)
   @Category(FunctionalTests.class)
   public void testPerpetualTaskExecution() throws InterruptedException {
     DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
@@ -81,7 +81,7 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = MARKO, intermittent = true)
   @Category(FunctionalTests.class)
   public void testPerpetualTaskExecutionWithCachedParams() throws InterruptedException {
     String countryName = "testCountry2";
