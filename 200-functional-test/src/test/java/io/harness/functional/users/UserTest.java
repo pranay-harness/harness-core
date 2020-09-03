@@ -59,7 +59,7 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(developers = NATARAJA)
+  @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void listUsers() {
     logger.info("Starting the list users test");

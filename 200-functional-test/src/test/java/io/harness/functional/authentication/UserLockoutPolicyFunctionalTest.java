@@ -42,7 +42,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   @Inject @NonFinal UserService userService;
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC0_setUserLockoutPolicy() {
     userLockoutPolicy = UserLockoutPolicy.builder()
@@ -101,7 +101,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC3_disableUserLockoutPolicy() {
     userLockoutPolicy = UserLockoutPolicy.builder().enableLockoutPolicy(DISABLE_LOCKOUT_POLICY).build();
