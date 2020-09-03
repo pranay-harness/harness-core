@@ -119,4 +119,7 @@ public interface YamlConstants {
   String OC_PARAMS_ENTITY = "OC_PARAMS";
   String OC_PARAMS_FOLDER = "OC Params";
   String OC_PARAMS_FILE = "params";
+
+  // ECS PARAMS
+  String ECS_NOT_USED = "ECS_NOT_USED";
 }

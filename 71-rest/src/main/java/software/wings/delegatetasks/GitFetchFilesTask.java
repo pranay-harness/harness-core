@@ -38,6 +38,7 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -132,8 +133,14 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
       executionLogCallback.saveExecutionLog("CommitId: " + gitFileConfig.getCommitId());
     }
 
-    List<String> filePathsToFetch = null;
-    if (EmptyPredicate.isNotEmpty(gitFileConfig.getFilePathList())) {
+    List<String> filePathsToFetch = new ArrayList<>();
+    if (EmptyPredicate.isNotEmpty(gitFileConfig.getTaskSpecFilePath())
+        && EmptyPredicate.isNotEmpty(gitFileConfig.getServiceSpecFilePath())) {
+      filePathsToFetch.add(gitFileConfig.getTaskSpecFilePath());
+      filePathsToFetch.add(gitFileConfig.getServiceSpecFilePath());
+      executionLogCallback.saveExecutionLog("\nFetching following Task and Service Spec files :");
+      gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
+    } else if (EmptyPredicate.isNotEmpty(gitFileConfig.getFilePathList())) {
       filePathsToFetch = gitFileConfig.getFilePathList();
       executionLogCallback.saveExecutionLog("\nFetching following Files :");
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
@@ -163,7 +170,6 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     switch (appManifestKind) {
       case VALUES:
         return "Values";
-
       case PCF_OVERRIDE:
       case K8S_MANIFEST:
         return "manifest";

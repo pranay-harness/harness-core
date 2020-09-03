@@ -16,7 +16,7 @@ import java.util.List;
 
 @Data
 @Builder
-class EcsSetUpDataBag {
+public class EcsSetUpDataBag {
   Service service;
   AwsConfig awsConfig;
   Environment environment;

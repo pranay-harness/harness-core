@@ -67,7 +67,9 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -84,6 +86,8 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
   @Mock private EcsStateHelper mockEcsStateHelper;
   @Mock private SecretManager mockSecretManager;
   @Mock private ActivityService mockActivityService;
+  @Mock private AppService appService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @Mock private SettingsService mockSettingsService;
   @Mock private DelegateService mockDelegateService;
   @Mock private ArtifactCollectionUtils mockArtifactCollectionUtils;
@@ -134,12 +138,14 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
         anEcsSetupParams().withBlueGreen(false).withServiceName("EcsSvc").withClusterName(CLUSTER_NAME).build();
     doReturn(params).when(mockEcsStateHelper).buildContainerSetupParams(any(), any());
     CommandStateExecutionData executionData = aCommandStateExecutionData().build();
-    doReturn(executionData).when(mockEcsStateHelper).getStateExecutionData(any(), anyString(), any(), any());
+    doReturn(executionData)
+        .when(mockEcsStateHelper)
+        .getStateExecutionData(any(), anyString(), any(), any(Activity.class));
     EcsSetupContextVariableHolder holder = EcsSetupContextVariableHolder.builder().build();
     doReturn(holder).when(mockEcsStateHelper).renderEcsSetupContextVariables(any());
     doReturn("DEL_TASK_ID")
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any());
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<EcsSetupStateConfig> captor = ArgumentCaptor.forClass(EcsSetupStateConfig.class);
     verify(mockEcsStateHelper).buildContainerSetupParams(any(), captor.capture());
@@ -159,7 +165,8 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
     assertThat(config.getTargetPort()).isEqualTo("8080");
     assertThat(config.getStageListenerPort()).isEqualTo("8181");
     ArgumentCaptor<EcsBGServiceSetupRequest> captor2 = ArgumentCaptor.forClass(EcsBGServiceSetupRequest.class);
-    verify(mockEcsStateHelper).createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(), any());
+    verify(mockEcsStateHelper)
+        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(String.class), any());
     EcsBGServiceSetupRequest request = captor2.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsSetupParams()).isNotNull();
