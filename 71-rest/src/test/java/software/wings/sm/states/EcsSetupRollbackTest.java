@@ -126,12 +126,14 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
         anEcsSetupParams().withBlueGreen(false).withServiceName("EcsSvc").withClusterName(CLUSTER_NAME).build();
     doReturn(params).when(mockEcsStateHelper).buildContainerSetupParams(any(), any());
     CommandStateExecutionData executionData = aCommandStateExecutionData().build();
-    doReturn(executionData).when(mockEcsStateHelper).getStateExecutionData(any(), anyString(), any(), any());
+    doReturn(executionData)
+        .when(mockEcsStateHelper)
+        .getStateExecutionData(any(), anyString(), any(), any(Activity.class));
     EcsSetupContextVariableHolder holder = EcsSetupContextVariableHolder.builder().build();
     doReturn(holder).when(mockEcsStateHelper).renderEcsSetupContextVariables(any());
     doReturn(DEL_TASK_ID)
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any());
 
     ExecutionResponse response = state.execute(mockContext);
 
@@ -151,7 +153,8 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
     assertThat(config.getRoleArn()).isNull();
 
     ArgumentCaptor<EcsServiceSetupRequest> captor2 = ArgumentCaptor.forClass(EcsServiceSetupRequest.class);
-    verify(mockEcsStateHelper).createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(), any());
+    verify(mockEcsStateHelper)
+        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(Activity.class), any());
     EcsServiceSetupRequest request = captor2.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsSetupParams()).isNotNull();

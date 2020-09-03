@@ -7,6 +7,8 @@ import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FILE;
 import software.wings.beans.yaml.YamlConstants;
 
 public enum AppManifestKind {
+  // K8sManifest is not specific to K8s, this simply represents a service manifest, pcf, ecs and k8s use the same enum
+  // for service spec. We could not rename it to manifest only because its already saved in DB.
   VALUES(VALUES_YAML_KEY, YamlConstants.VALUES_FOLDER),
   K8S_MANIFEST(VALUES_YAML_KEY),
   PCF_OVERRIDE(VARS_YML, YamlConstants.PCF_OVERRIDES_FOLDER),

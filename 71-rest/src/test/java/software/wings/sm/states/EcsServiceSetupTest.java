@@ -58,6 +58,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Service;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.EcsSetupParams;
@@ -66,7 +67,9 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -75,6 +78,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,8 +89,12 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Mock private ActivityService mockActivityService;
   @Mock private SettingsService mockSettingsService;
   @Mock private DelegateService mockDelegateService;
+
+  @Mock private ApplicationManifestUtils mockApplicationManifestUtils;
   @Mock private ArtifactCollectionUtils mockArtifactCollectionUtils;
   @Mock private ServiceResourceService mockServiceResourceService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
+  @Mock private AppService appService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private SweepingOutputService mockSweepingOutputService;
 
@@ -125,16 +133,23 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     doReturn(bag).when(mockEcsStateHelper).prepareBagForEcsSetUp(any(), anyInt(), any(), any(), any(), any(), any());
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity).when(mockEcsStateHelper).createActivity(any(), anyString(), anyString(), any(), any());
+    //    doReturn(false).when(mockFeatureFlagService).isEnabled(FeatureName.ECS_REMOTE_MANIFEST,
+    //    mockContext.getAccountId());
+    doReturn(null)
+        .when(mockApplicationManifestUtils)
+        .getApplicationManifests(mockContext, AppManifestKind.K8S_MANIFEST);
     EcsSetupParams params =
         anEcsSetupParams().withBlueGreen(false).withServiceName("EcsSvc").withClusterName(CLUSTER_NAME).build();
     doReturn(params).when(mockEcsStateHelper).buildContainerSetupParams(any(), any());
     CommandStateExecutionData executionData = aCommandStateExecutionData().build();
-    doReturn(executionData).when(mockEcsStateHelper).getStateExecutionData(any(), anyString(), any(), any());
+    doReturn(executionData)
+        .when(mockEcsStateHelper)
+        .getStateExecutionData(any(), anyString(), any(), any(Activity.class));
     EcsSetupContextVariableHolder holder = EcsSetupContextVariableHolder.builder().build();
     doReturn(holder).when(mockEcsStateHelper).renderEcsSetupContextVariables(any());
     doReturn("DEL_TASK_ID")
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any());
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<EcsSetupStateConfig> captor = ArgumentCaptor.forClass(EcsSetupStateConfig.class);
     verify(mockEcsStateHelper).buildContainerSetupParams(any(), captor.capture());
@@ -150,7 +165,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     assertThat(config.getLoadBalancerName()).isEqualTo("LbName");
     assertThat(config.getRoleArn()).isEqualTo("RoleArn");
     ArgumentCaptor<EcsServiceSetupRequest> captor2 = ArgumentCaptor.forClass(EcsServiceSetupRequest.class);
-    verify(mockEcsStateHelper).createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(), any());
+    verify(mockEcsStateHelper)
+        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(String.class), any());
     EcsServiceSetupRequest request = captor2.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsSetupParams()).isNotNull();

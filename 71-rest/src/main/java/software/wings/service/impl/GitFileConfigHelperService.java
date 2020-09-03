@@ -70,6 +70,8 @@ public class GitFileConfigHelperService {
         .filePath(gitFileConfig.getFilePath())
         .commitId(gitFileConfig.getCommitId())
         .useBranch(gitFileConfig.isUseBranch())
+        .serviceSpecFilePath(gitFileConfig.getServiceSpecFilePath())
+        .taskSpecFilePath(gitFileConfig.getTaskSpecFilePath())
         .connectorName(gitFileConfig.getConnectorName())
         .repoName(gitFileConfig.getRepoName())
         .build();
@@ -94,6 +96,14 @@ public class GitFileConfigHelperService {
 
     if (gitFileConfig.getRepoName() != null) {
       gitFileConfig.setRepoName(context.renderExpression(gitFileConfig.getRepoName()).trim());
+    }
+
+    if (gitFileConfig.getServiceSpecFilePath() != null) {
+      gitFileConfig.setServiceSpecFilePath(context.renderExpression(gitFileConfig.getServiceSpecFilePath().trim()));
+    }
+
+    if (gitFileConfig.getTaskSpecFilePath() != null) {
+      gitFileConfig.setTaskSpecFilePath(context.renderExpression(gitFileConfig.getTaskSpecFilePath().trim()));
     }
 
     if (gitFileConfig.getFilePathList() != null) {

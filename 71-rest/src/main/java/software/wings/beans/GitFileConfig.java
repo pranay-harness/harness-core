@@ -25,6 +25,8 @@ public class GitFileConfig {
   @Trimmed private String filePath;
   @Trimmed @Nullable private String repoName;
   private List<String> filePathList;
+  @Trimmed @Nullable private String serviceSpecFilePath;
+  @Trimmed @Nullable private String taskSpecFilePath;
   private boolean useBranch;
   @Transient @JsonInclude(Include.NON_EMPTY) private String connectorName;
 }
