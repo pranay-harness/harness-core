@@ -12,7 +12,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import software.wings.beans.ServiceVariable;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -26,7 +25,6 @@ public class SecretFunctor extends LateBindingMap {
     CASCADING,
   }
   private Mode mode;
-  private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
   private String accountId;
@@ -35,14 +33,11 @@ public class SecretFunctor extends LateBindingMap {
   private boolean adoptDelegateDecryption;
   private int expressionFunctorToken;
 
-  private boolean twoPhaseEnabled;
-  private boolean threePhaseEnabled;
+  private boolean disablePhasing;
 
   public Object getValue(String secretName) {
-    if (adoptDelegateDecryption && featureFlagService != null) {
-      if (twoPhaseEnabled || threePhaseEnabled) {
-        return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
-      }
+    if (adoptDelegateDecryption && !disablePhasing) {
+      return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
     }
 
     EncryptedData encryptedData = null;

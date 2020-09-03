@@ -61,14 +61,12 @@ public class CustomDeploymentInstanceSyncClient implements PerpetualTaskServiceC
     return ImmutableMap.<String, Object>builder()
         .put("secrets",
             SecretFunctor.builder()
-                .featureFlagService(featureFlagService)
                 .managerDecryptionService(managerDecryptionService)
                 .secretManager(secretManager)
                 .accountId(getAccountId(clientContext))
                 .appId(getAppId(clientContext))
                 .envId(getEnvId(clientContext))
-                .twoPhaseEnabled(false)
-                .threePhaseEnabled(false)
+                .disablePhasing(true)
                 .build())
         .build();
   }
