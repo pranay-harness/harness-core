@@ -59,6 +59,7 @@ import software.wings.service.intfc.yaml.clone.YamlCloneService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlHelper;
+import software.wings.yaml.YamlOperationResponse;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -108,11 +109,11 @@ public class YamlResource {
   /**
    * Instantiates a new service resource.
    *
-   * @param yamlResourceService        the yaml resource servicewe
-   * @param appYamlResourceService     the app yaml resource service
-   * @param yamlDirectoryService       the yaml directory service
-   * @param yamlArtifactStreamService  the yaml artifact stream service
-   * @param yamlService            the yaml service
+   * @param yamlResourceService       the yaml resource servicewe
+   * @param appYamlResourceService    the app yaml resource service
+   * @param yamlDirectoryService      the yaml directory service
+   * @param yamlArtifactStreamService the yaml artifact stream service
+   * @param yamlService               the yaml service
    * @param yamlGitSyncService
    */
   @Inject
@@ -237,7 +238,7 @@ public class YamlResource {
   /**
    * Gets the yaml version of a trigger by trigger id
    *
-   * @param appId            the app id
+   * @param appId     the app id
    * @param triggerId the artifact stream id
    * @return the rest response
    */
@@ -327,8 +328,8 @@ public class YamlResource {
   /**
    * Update a pipeline that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param appId         the app id
-   * @param yamlPayload   the yaml version of the service command
+   * @param appId       the app id
+   * @param yamlPayload the yaml version of the service command
    * @return the rest response
    */
   @PUT
@@ -354,8 +355,8 @@ public class YamlResource {
   /**
    * Gets the yaml version of a notification group by id
    *
-   * @param accountId            the account id
-   * @param notificationGroupId  the notification group id
+   * @param accountId           the account id
+   * @param notificationGroupId the notification group id
    * @return the rest response
    */
   @GET
@@ -386,8 +387,8 @@ public class YamlResource {
   /**
    * Update a service command that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param accountId            the account id
-   * @param yamlPayload      the yaml version of the service command
+   * @param accountId   the account id
+   * @param yamlPayload the yaml version of the service command
    * @return the rest response
    */
   @PUT
@@ -451,8 +452,8 @@ public class YamlResource {
   /**
    * Update defaults that is sent as Yaml
    *
-   * @param accountId            the account id
-   * @param yamlPayload      the yaml version of the defaults
+   * @param accountId   the account id
+   * @param yamlPayload the yaml version of the defaults
    * @return the rest response
    */
   @PUT
@@ -513,9 +514,9 @@ public class YamlResource {
   /**
    * Update a environment that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param accountId         the account id
-   * @param appId         the app id
-   * @param yamlPayload   the yaml version of environment
+   * @param accountId   the account id
+   * @param appId       the app id
+   * @param yamlPayload the yaml version of environment
    * @return the rest response
    */
   @PUT
@@ -548,9 +549,9 @@ public class YamlResource {
   /**
    * Update a service that is sent as Yaml (in a JSON "wrapper")
    *
-   * @param appId         the app id
-   * @param accountId         the account id
-   * @param yamlPayload   the yaml version of service
+   * @param appId       the app id
+   * @param accountId   the account id
+   * @param yamlPayload the yaml version of service
    * @return the rest response
    */
   @PUT
@@ -565,9 +566,10 @@ public class YamlResource {
 
   /**
    * Update a config file that is sent as Yaml (in a JSON "wrapper")
-   * @param appId app id
-   * @param configId the config id
-   * @param yamlPayload the yaml version of configFile
+   *
+   * @param appId         app id
+   * @param configId      the config id
+   * @param yamlPayload   the yaml version of configFile
    * @param deleteEnabled
    * @return
    */
@@ -1169,5 +1171,27 @@ public class YamlResource {
       yamlPayload.setYamlPayload("");
       return new RestResponse<>(yamlPayload);
     }
+  }
+
+  @POST
+  @Path("upsert-entities")
+  @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT, action = Action.UPDATE)
+  public RestResponse<YamlOperationResponse> upsertYAMLEntities(@QueryParam("accountId") @NotEmpty String accountId,
+      @FormDataParam("file") InputStream uploadedInputStream) throws IOException {
+    return new RestResponse<>(yamlService.upsertYAMLFilesAsZip(accountId,
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit())));
+  }
+
+  @DELETE
+  @Path("delete-entities")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT, action = Action.UPDATE)
+  public RestResponse<YamlOperationResponse> deleteYAMLEntities(
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {
+    return new RestResponse<>(yamlService.deleteYAMLByPaths(accountId, filePaths));
   }
 }

@@ -6,6 +6,7 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.YamlProcessingException;
 import software.wings.yaml.BaseYaml;
+import software.wings.yaml.YamlOperationResponse;
 import software.wings.yaml.YamlPayload;
 
 import java.io.IOException;
@@ -42,4 +43,8 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
   BaseYaml getYamlForFilePath(String accountId, String yamlFilePath, String yamlSubType, String applicationId);
 
   String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath);
+
+  YamlOperationResponse upsertYAMLFilesAsZip(String accountId, InputStream fileInputStream) throws IOException;
+
+  YamlOperationResponse deleteYAMLByPaths(String accountId, List<String> filePaths);
 }

@@ -4,7 +4,9 @@ import io.harness.exception.HarnessException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.ChangeContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,6 +16,8 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 public class YamlProcessingException extends HarnessException {
   private Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap;
+  private List<ChangeContext> changeContextList;
+  private List<Change> changeList;
 
   public YamlProcessingException(String message, Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {
     super(message);
@@ -24,6 +28,14 @@ public class YamlProcessingException extends HarnessException {
       String message, Throwable cause, Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {
     super(message, cause);
     this.failedYamlFileChangeMap = failedYamlFileChangeMap;
+  }
+
+  public YamlProcessingException(String message, Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap,
+      List<ChangeContext> changeContextList, List<Change> changeList) {
+    super(message);
+    this.failedYamlFileChangeMap = failedYamlFileChangeMap;
+    this.changeContextList = changeContextList;
+    this.changeList = changeList;
   }
 
   @Data
