@@ -24,7 +24,7 @@ import java.util.Map;
 @Slf4j
 public class IntegrationStageStep implements Step, ChildExecutable<IntegrationStageStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("INTEGRATION_STAGE_STEP").build();
-  public static final String CHILD_PLAN_START_NODE = "execution";
+  public static final String CHILD_PLAN_START_NODE = "io/harness/beans/execution";
 
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Override

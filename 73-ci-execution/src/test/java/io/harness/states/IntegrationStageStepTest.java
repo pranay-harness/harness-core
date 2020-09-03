@@ -53,7 +53,7 @@ public class IntegrationStageStepTest extends CIExecutionTest {
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("namespace");
     Ambiance ambiance = Ambiance.builder().build();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
-    fieldToExecutionNodeIdMap.put("execution", CHILD_ID);
+    fieldToExecutionNodeIdMap.put("io/harness/beans/execution", CHILD_ID);
     IntegrationStageStepParameters stateParameters = IntegrationStageStepParameters.builder()
                                                          .integrationStage(integrationStage)
                                                          .podName("podname")
@@ -71,7 +71,7 @@ public class IntegrationStageStepTest extends CIExecutionTest {
   public void handleChildResponse() {
     Ambiance ambiance = Ambiance.builder().build();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
-    fieldToExecutionNodeIdMap.put("execution", CHILD_ID);
+    fieldToExecutionNodeIdMap.put("io/harness/beans/execution", CHILD_ID);
     IntegrationStageStepParameters stateParameters = IntegrationStageStepParameters.builder()
                                                          .integrationStage(integrationStage)
                                                          .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)

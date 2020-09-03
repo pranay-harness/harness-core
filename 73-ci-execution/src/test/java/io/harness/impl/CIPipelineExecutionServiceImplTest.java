@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.beans.CIPipeline;
+import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
@@ -44,7 +45,8 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
 
     when(orchestrationService.startExecution(any(), any())).thenReturn(PlanExecution.builder().status(RUNNING).build());
 
-    PlanExecution planExecution = ciPipelineExecutionService.executePipeline(ciPipeline);
+    PlanExecution planExecution =
+        ciPipelineExecutionService.executePipeline(ciPipeline, CIExecutionArgs.builder().build(), null);
     assertThat(planExecution).isNotNull();
     verify(orchestrationService, times(1)).startExecution(any(), any());
   }

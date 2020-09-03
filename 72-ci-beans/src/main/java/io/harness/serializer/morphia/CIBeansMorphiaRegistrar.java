@@ -3,6 +3,8 @@ package io.harness.serializer.morphia;
 import io.harness.beans.CIPipeline;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.ci.beans.entities.BuildNumber;
+import io.harness.ci.beans.entities.CIBuild;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -12,6 +14,8 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(CIPipeline.class);
+    set.add(BuildNumber.class);
+    set.add(CIBuild.class);
     set.add(K8PodDetails.class);
     set.add(ContextElement.class);
   }

@@ -30,7 +30,9 @@ import java.util.Scanner;
 public class CIPipelineServiceImplTest extends CIManagerTest {
   @Mock private CIPipelineRepository ciPipelineRepository;
   @InjectMocks @Inject CIPipelineServiceImpl ciPipelineService;
-
+  private final String ACCOUNT_ID = "ACCOUNT_ID";
+  private final String ORG_ID = "ORG_ID";
+  private final String PROJECT_ID = "PROJECT_ID";
   private YAML yaml;
   private CIPipeline pipeline;
 
@@ -54,7 +56,7 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     when(ciPipelineRepository.save(any(CIPipeline.class))).thenReturn(pipeline);
     when(ciPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
 
-    ciPipelineService.createPipelineFromYAML(yaml);
+    ciPipelineService.createPipelineFromYAML(yaml, ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
     verify(ciPipelineRepository).save(pipelineCaptor.capture());
     CIPipeline ciPipeline = pipelineCaptor.getValue();
@@ -99,10 +101,11 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
   @Category(UnitTests.class)
   public void readPipeline() {
     ArgumentCaptor<CIPipeline> pipelineCaptor = ArgumentCaptor.forClass(CIPipeline.class);
-    when(ciPipelineRepository.save(any(CIPipeline.class))).thenReturn(pipeline);
-    when(ciPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
+    when(ciPipelineRepository.findByAccountIdAndOrganizationIdAndProjectIdAndIdentifier(
+             ACCOUNT_ID, ORG_ID, PROJECT_ID, "testId"))
+        .thenReturn(Optional.ofNullable(pipeline));
 
-    CIPipeline ciPipeline = ciPipelineService.readPipeline("testId");
+    CIPipeline ciPipeline = ciPipelineService.readPipeline("testId", ACCOUNT_ID, ORG_ID, PROJECT_ID);
 
     assertThat(ciPipeline.getIdentifier()).isEqualTo("testIdentifier");
     assertThat(ciPipeline.getDescription()).isEqualTo("testDescription");

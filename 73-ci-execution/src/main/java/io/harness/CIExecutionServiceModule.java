@@ -1,20 +1,19 @@
 package io.harness;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
+import io.harness.core.ci.services.CIBuildService;
+import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
-import io.harness.executionplan.ExecutionPlanModule;
-import io.harness.govern.DependencyModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 
-import java.util.Set;
-
-public class CIExecutionServiceModule extends DependencyModule {
+public class CIExecutionServiceModule extends AbstractModule {
   private static CIExecutionServiceModule instance;
+
   public static CIExecutionServiceModule getInstance() {
     if (instance == null) {
       instance = new CIExecutionServiceModule();
@@ -27,15 +26,10 @@ public class CIExecutionServiceModule extends DependencyModule {
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                 .build()));
-
+    bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(ExecutionRegistrar.class.getName()).to(ExecutionRegistrar.class);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(ExecutionPlanModule.getInstance(), CIBeansModule.getInstance());
   }
 }
