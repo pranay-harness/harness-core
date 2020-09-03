@@ -20,6 +20,9 @@ import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -59,6 +62,18 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
               DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
         wingsPersistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
         logger.info("Batch saved successfully");
+      } else {
+        batch.getDelegateSelectionLogs()
+            .stream()
+            .map(selectionLog
+                -> String.format(
+                    "Delegate selection log: delegates %s for account: %s and taskId: %s %s with note: %s at: %s",
+                    selectionLog.getDelegateIds(), selectionLog.getAccountId(), selectionLog.getTaskId(),
+                    selectionLog.getConclusion(), selectionLog.getMessage(),
+                    LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(selectionLog.getEventTimestamp()), ZoneId.systemDefault())))
+            .distinct()
+            .forEach(logger::info);
       }
     } catch (Exception exception) {
       logger.error("Error while saving into Database ", exception);

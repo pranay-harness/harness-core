@@ -106,6 +106,22 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldNotSave_OnlyLogWhenFFEnabled() {
+    DelegateSelectionLog selectionLog =
+        createDelegateSelectionLogBuilder().uuid(generateUuid()).message("testMessage").groupId(generateUuid()).build();
+    BatchDelegateSelectionLog batch =
+        BatchDelegateSelectionLog.builder().delegateSelectionLogs(Arrays.asList(selectionLog)).build();
+    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+        .thenReturn(true);
+
+    delegateSelectionLogsService.save(batch);
+
+    assertThat(wingsPersistence.get(DelegateSelectionLog.class, selectionLog.getUuid())).isNull();
+  }
+
+  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldSaveWithoutDuplicates() {
