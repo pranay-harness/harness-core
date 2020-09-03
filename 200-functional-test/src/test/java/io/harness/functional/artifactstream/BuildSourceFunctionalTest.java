@@ -214,7 +214,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void getGroupIdsForNexus() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {

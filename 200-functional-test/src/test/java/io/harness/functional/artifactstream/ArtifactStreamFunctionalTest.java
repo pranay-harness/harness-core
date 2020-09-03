@@ -231,7 +231,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = DINESH)
+  @Owner(developers = DINESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldFailWithBadSubstitutionForInvalidSecretInArtifactScript() {
     String secretName = "non existing secret";

@@ -139,7 +139,7 @@ public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category({FunctionalTests.class})
   public void testGraphWithAggregation() {
     resetCache(application.getAccountId());

@@ -53,7 +53,7 @@ public class ShellScriptApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCreateShellScriptApprovalStepAndRun() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
