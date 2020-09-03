@@ -79,7 +79,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGenerateGraph() {
     PlanExecution planExecutionResponse =

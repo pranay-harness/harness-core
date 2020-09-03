@@ -59,7 +59,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = MARKO, intermittent = true)
   @Category(FunctionalTests.class)
   public void testSyncTaskExecution() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -112,7 +112,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = MARKO, intermittent = true)
   @Category(FunctionalTests.class)
   public void testSyncTaskExecutionWithErrorResponse() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -216,7 +216,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = MARKO, intermittent = true)
   @Category(FunctionalTests.class)
   public void testAsyncTaskExecution() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -273,7 +273,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = MARKO, intermittent = true)
   @Category(FunctionalTests.class)
   public void testAsyncTaskExecutionWithErrorResponse() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();

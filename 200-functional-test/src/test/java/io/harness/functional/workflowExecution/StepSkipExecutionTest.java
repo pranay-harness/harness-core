@@ -248,7 +248,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecutePipelineWithTrueValues() {
     Map<String, String> stateToStatusMap = executePipeline(true, true);
@@ -257,7 +257,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecutePipelineWithFalseValues() {
     Map<String, String> stateToStatusMap = executePipeline(false, false);

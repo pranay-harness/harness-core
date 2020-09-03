@@ -32,7 +32,7 @@ public class ConnectorsSourceRepoTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = SHASWAT)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC1_createAndDeleteGitConnector() {
     String connectorName = CONNECTOR_GIT_PREFIX + System.currentTimeMillis();

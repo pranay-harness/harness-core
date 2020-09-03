@@ -45,7 +45,7 @@ public class GetArtifactSourceConnectionFromArtifactFunctionalTest extends Abstr
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldGetArtifactByIdWithArtifactSources() {
     Artifact artifact = getArtifact(service, service.getAppId());

@@ -47,7 +47,7 @@ public class GcpSecretsManagerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void testGcpSecretsManagerCRUD() {
     String configId = saveGcpSecretsManager();

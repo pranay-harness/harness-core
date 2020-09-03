@@ -94,7 +94,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ANKIT)
+  @Owner(developers = ANKIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void testCRUDSecretsReferenceWithoutVersion() {
     String secretPath = "DoNotChange-FunctionalTestSecret";
@@ -116,7 +116,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ANKIT)
+  @Owner(developers = ANKIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void testCRUDSecretsReferenceWithVersion() {
     String secretPath = "DoNotChange-FunctionalTestSecret/128cf6016e0449c3ad02007c4881dd9a";

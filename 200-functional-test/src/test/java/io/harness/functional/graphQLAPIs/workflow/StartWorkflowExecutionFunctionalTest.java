@@ -91,7 +91,7 @@ public class StartWorkflowExecutionFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(developers = POOJA)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldTriggerTemplatisedWorkflow() {
     ImmutableMap<String, String> workflowVariables =

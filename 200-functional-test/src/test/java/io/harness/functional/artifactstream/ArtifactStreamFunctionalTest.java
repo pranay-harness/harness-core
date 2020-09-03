@@ -182,7 +182,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
     String name = "Custom Artifact Stream - " + System.currentTimeMillis();
@@ -242,7 +242,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = DINESH)
+  @Owner(developers = DINESH, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldHaveAccessToAccountScopedSecretTextExpressionInArtifactStream() {
     String name = "Custom Artifact Stream - " + System.currentTimeMillis();
