@@ -44,6 +44,16 @@ public interface AzureAutoScaleSettingsHelperServiceDelegate {
 
   /**
    * Attach Auto Scale Setting to target resource
+   *
+   * @param azureConfig
+   * @param resourceGroupName
+   * @param targetResourceId
+   * @param autoScaleSettingResourceInnerJson
+   */
+  void attachAutoScaleSettingToTargetResourceId(AzureConfig azureConfig, String resourceGroupName,
+      String targetResourceId, String autoScaleSettingResourceInnerJson);
+  /**
+   * Attach Auto Scale Setting to target resource
    * @param azureConfig
    * @param resourceGroupName
    * @param targetResourceId

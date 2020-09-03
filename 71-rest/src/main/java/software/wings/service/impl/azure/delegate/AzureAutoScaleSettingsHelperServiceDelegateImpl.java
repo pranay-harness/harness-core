@@ -2,6 +2,7 @@ package software.wings.service.impl.azure.delegate;
 
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
@@ -96,6 +97,13 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImpl
 
   @Override
   public void attachAutoScaleSettingToTargetResourceId(AzureConfig azureConfig, final String resourceGroupName,
+      final String targetResourceId, final String autoScaleSettingResourceInnerJson) {
+    attachAutoScaleSettingToTargetResourceId(
+        azureConfig, resourceGroupName, targetResourceId, autoScaleSettingResourceInnerJson, null);
+  }
+
+  @Override
+  public void attachAutoScaleSettingToTargetResourceId(AzureConfig azureConfig, final String resourceGroupName,
       final String targetResourceId, final String autoScaleSettingResourceInnerJson,
       ScaleCapacity defaultProfileScaleCapacity) {
     if (isBlank(resourceGroupName)) {
@@ -151,6 +159,10 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImpl
 
   private void setDefaultAutoScaleProfileCapacity(
       ScaleCapacity defaultProfileScaleCapacity, AutoscaleSettingResourceInner autoScaleSettingResourceInner) {
+    if (isNull(defaultProfileScaleCapacity) || isNull(autoScaleSettingResourceInner)) {
+      return;
+    }
+
     autoScaleSettingResourceInner.profiles().stream().findFirst().ifPresent(
         ap -> ap.withCapacity(defaultProfileScaleCapacity));
   }

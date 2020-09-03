@@ -24,6 +24,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
+import software.wings.service.intfc.azure.delegate.AzureNetworkHelperServiceDelegate;
 import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class AzureVMSSTaskHandler {
   @Inject protected AzureVMSSHelperServiceDelegate azureVMSSHelperServiceDelegate;
   @Inject protected AzureAutoScaleSettingsHelperServiceDelegate azureAutoScaleSettingsHelperServiceDelegate;
+  @Inject protected AzureNetworkHelperServiceDelegate azureNetworkHelperServiceDelegate;
   @Inject protected DelegateLogService delegateLogService;
   @Inject protected TimeLimiter timeLimiter;
 
@@ -90,7 +92,7 @@ public abstract class AzureVMSSTaskHandler {
     logCallBack.saveExecutionLog("All instances are healthy", INFO, SUCCESS);
   }
 
-  public void waitForVMSSToBeDownSized(AzureConfig azureConfig, String subscriptionId,
+  protected void waitForVMSSToBeDownSized(AzureConfig azureConfig, String subscriptionId,
       VirtualMachineScaleSet virtualMachineScaleSet, int capacity, int autoScalingSteadyStateTimeout,
       ExecutionLogCallback logCallBack) {
     try {
