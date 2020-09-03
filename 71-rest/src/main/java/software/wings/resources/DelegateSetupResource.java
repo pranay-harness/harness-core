@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.util.stream.Collectors.toList;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 import static software.wings.service.impl.DelegateServiceImpl.DELEGATE_DIR;
 import static software.wings.service.impl.DelegateServiceImpl.DOCKER_DELEGATE;
@@ -102,6 +104,7 @@ public class DelegateSetupResource {
       { @ApiImplicitParam(name = "accountId", required = true, dataType = "string", paramType = "query") })
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<PageResponse<Delegate>>
   list(@BeanParam PageRequest<Delegate> pageRequest) {
     return new RestResponse<>(delegateService.list(pageRequest));
@@ -116,6 +119,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @Deprecated
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<DelegateStatus> listDelegateStatus(@QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateStatus(accountId));
@@ -126,6 +130,7 @@ public class DelegateSetupResource {
   @Path("status2")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<DelegateStatus> listDelegateStatusWithScalingGroups(
       @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -158,6 +163,7 @@ public class DelegateSetupResource {
   @Path("validateDelegateName")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Boolean> validateThatDelegateNameIsUnique(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -169,6 +175,7 @@ public class DelegateSetupResource {
   @Path("{delegateId}/profile-result")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<String> getProfileResult(
       @PathParam("delegateId") String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -182,6 +189,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Delegate> updateScopes(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -241,6 +249,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Delegate> updateTags(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -266,6 +275,7 @@ public class DelegateSetupResource {
   @Path("kubernetes-delegates")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<List<String>> kubernetesDelegateNames(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -281,6 +291,7 @@ public class DelegateSetupResource {
   @Path("delegate-selectors")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Set<String>> delegateSelectors(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -292,6 +303,7 @@ public class DelegateSetupResource {
   @Path("delegate-tags")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Set<String>> delegateTags(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -303,6 +315,7 @@ public class DelegateSetupResource {
   @Path("{delegateId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Delegate> get(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -316,6 +329,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Delegate> update(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -338,6 +352,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Delegate> updateDescription(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, @Trimmed String newDescription) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -351,6 +366,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Delegate> updateApprovalStatus(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("action") @NotNull DelegateApproval action) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -364,6 +380,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Void> delete(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -377,6 +394,7 @@ public class DelegateSetupResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Void> deleteAllExcept(
       @QueryParam("accountId") @NotEmpty String accountId, List<String> delegatesToRetain) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {

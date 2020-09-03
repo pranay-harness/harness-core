@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
 import com.google.inject.Inject;
@@ -66,6 +67,7 @@ public class DelegateScopeResource {
   }
 
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   @DELETE
   @Path("{delegateScopeId}")
   @Timed
@@ -77,6 +79,7 @@ public class DelegateScopeResource {
   }
 
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   @PUT
   @Path("{delegateScopeId}")
   @Timed
@@ -89,6 +92,7 @@ public class DelegateScopeResource {
   }
 
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   @POST
   public RestResponse<DelegateScope> add(
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScope delegateScope) {
