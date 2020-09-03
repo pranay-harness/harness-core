@@ -66,6 +66,13 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/simple-timeout")
+  public RestResponse<PlanExecution> executeSimpleTimeoutPlan(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
+    return new RestResponse<>(customExecutionService.executeSimpleTimeoutPlan(accountId, appId));
+  }
+
+  @GET
   @Path("/task-chain-v1")
   public RestResponse<PlanExecution> executeTaskChainPlanV1() {
     return new RestResponse<>(customExecutionService.executeTaskChainPlanV1());

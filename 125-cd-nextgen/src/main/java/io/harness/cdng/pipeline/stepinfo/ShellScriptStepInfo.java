@@ -29,10 +29,10 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepInfo(boolean executeOnDelegate, String host, List<String> tags,
       ShellScriptState.ConnectionType connectionType, String sshKeyRef, String connectionAttributes, String commandPath,
-      ScriptType scriptType, String scriptString, String outputVars, String sweepingOutputName,
+      ScriptType scriptType, String scriptString, String timeoutSecs, String outputVars, String sweepingOutputName,
       String sweepingOutputScope, String name, String identifier) {
     super(executeOnDelegate, host, tags, connectionType, sshKeyRef, connectionAttributes, commandPath, scriptType,
-        scriptString, outputVars, sweepingOutputName, sweepingOutputScope);
+        scriptString, timeoutSecs, outputVars, sweepingOutputName, sweepingOutputScope);
     this.name = name;
     this.identifier = identifier;
   }

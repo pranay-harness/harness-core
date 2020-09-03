@@ -69,7 +69,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Mutable
   @Wither @LastModifiedDate Long lastUpdatedAt;
   Status status;
-  private Long expiryTs;
   @Version Long version;
 
   @Singular List<ExecutableResponse> executableResponses;

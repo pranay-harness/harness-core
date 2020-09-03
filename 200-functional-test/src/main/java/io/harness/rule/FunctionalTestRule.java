@@ -23,6 +23,7 @@ import io.dropwizard.Configuration;
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationStepsPersistenceConfig;
+import io.harness.TimeoutEnginePersistenceConfig;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
@@ -187,9 +188,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new ProviderModule() {
       @Override
       public void configure() {
-        install(new SpringModule(
-            BeanFactoryProvider.from(OrchestrationPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class,
-                ConnectorPersistenceConfig.class, WingsPersistenceConfig.class)));
+        install(new SpringModule(BeanFactoryProvider.from(TimeoutEnginePersistenceConfig.class,
+            OrchestrationPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class,
+            ConnectorPersistenceConfig.class, WingsPersistenceConfig.class)));
       }
 
       @Provides

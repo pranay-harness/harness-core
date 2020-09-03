@@ -5,8 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.state.io.StepParameters;
+import io.harness.timeout.TimeoutObtainment;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +23,7 @@ import software.wings.sm.states.ShellScriptState;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -47,8 +52,22 @@ public class ShellScriptStepParameters implements StepParameters {
   @Attributes(title = "Working Directory") String commandPath;
   @NotEmpty @DefaultValue("BASH") @Attributes(title = "Script Type") ScriptType scriptType;
   @NotEmpty @Attributes(title = "Script") String scriptString;
+  @NotEmpty @DefaultValue("3600") @Attributes(title = "Timeout in secs") String timeoutSecs;
 
   @Attributes(title = "Script Output Variables") String outputVars;
   @Attributes(title = "Publish Variable Name") String sweepingOutputName;
   @Attributes(title = "Publish Variable Scope") String sweepingOutputScope;
+
+  @Override
+  public List<TimeoutObtainment> getTimeouts() {
+    long timeoutMillis = 3600000;
+    if (EmptyPredicate.isNotEmpty(timeoutSecs)) {
+      timeoutMillis = Long.parseLong(timeoutSecs) * 1000;
+    }
+    return Collections.singletonList(
+        TimeoutObtainment.builder()
+            .type(AbsoluteTimeoutTrackerFactory.DIMENSION)
+            .parameters(AbsoluteTimeoutParameters.builder().timeoutMillis(timeoutMillis).build())
+            .build());
+  }
 }

@@ -87,6 +87,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeSimpleTimeoutPlan(String accountId, String appId) {
+    return orchestrationService.startExecution(
+        customExecutionProvider.provideSimpleTimeoutPlan(), getAbstractions(accountId, appId), getEmbeddedUser());
+  }
+
+  @Override
   public PlanExecution executeTaskChainPlanV1() {
     return orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(FacilitatorType.TASK_CHAIN), getAbstractions(), getEmbeddedUser());

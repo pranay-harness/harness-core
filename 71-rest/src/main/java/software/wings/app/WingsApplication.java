@@ -128,6 +128,7 @@ import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
+import io.harness.timeout.TimeoutEngine;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -851,6 +852,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
+    injector.getInstance(TimeoutEngine.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

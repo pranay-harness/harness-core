@@ -14,11 +14,12 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutDetails;
 import io.harness.timeout.TimeoutInstance;
+import org.springframework.data.annotation.Transient;
 
 @OwnedBy(CDC)
 public class NodeExecutionTimeoutCallback implements TimeoutCallback {
-  @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private InterruptManager interruptManager;
+  @Inject @Transient private transient NodeExecutionService nodeExecutionService;
+  @Inject @Transient private transient InterruptManager interruptManager;
 
   private final String planExecutionId;
   private final String nodeExecutionId;

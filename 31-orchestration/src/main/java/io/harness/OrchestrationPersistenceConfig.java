@@ -7,7 +7,6 @@ import com.google.inject.Injector;
 import io.harness.annotation.HarnessRepo;
 import io.harness.beans.converters.SweepingOutputReadMongoConverter;
 import io.harness.beans.converters.SweepingOutputWriteMongoConverter;
-import io.harness.engine.executions.node.NodeExecutionAfterSaveListener;
 import io.harness.exception.GeneralException;
 import io.harness.mongo.OrchestrationMongoTemplate;
 import io.harness.mongo.OrchestrationTypeInformationMapper;
@@ -66,12 +65,6 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
     converter.setCodecRegistryProvider(mongoDbFactory());
     converter.afterPropertiesSet();
     return new OrchestrationMongoTemplate(mongoDbFactory(), converter);
-  }
-
-  // Node Execution Listener Beans
-  @Bean
-  public NodeExecutionAfterSaveListener nodeExecutionAfterSaveListener() {
-    return new NodeExecutionAfterSaveListener();
   }
 
   private Map<String, Class<?>> collectAliasMap() {
