@@ -21,6 +21,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>200-functional-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>31-orchestration</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
@@ -35,12 +41,6 @@
             <groupId>software.wings</groupId>
             <artifactId>75-model-test</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>85-functional-test</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
