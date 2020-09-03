@@ -90,18 +90,14 @@ public class GitDataFetcherHelper {
 
   private void handleSecrets(
       RequestField<String> passwordSecretId, RequestField<String> sshSettingId, GitConfig gitConfig) {
-    if (passwordSecretId.isPresent()) {
-      passwordSecretId.getValue().ifPresent(s -> {
-        gitConfig.setEncryptedPassword(s);
-        gitConfig.setKeyAuth(false);
-        gitConfig.setSshSettingId(null);
-      });
-    } else if (sshSettingId.isPresent()) {
-      sshSettingId.getValue().ifPresent(s -> {
-        gitConfig.setSshSettingId(s);
-        gitConfig.setKeyAuth(true);
-        gitConfig.setEncryptedPassword(null);
-      });
+    if (passwordSecretId.isPresent() && passwordSecretId.getValue().isPresent()) {
+      gitConfig.setEncryptedPassword(passwordSecretId.getValue().get());
+      gitConfig.setKeyAuth(false);
+      gitConfig.setSshSettingId(null);
+    } else if (sshSettingId.isPresent() && sshSettingId.getValue().isPresent()) {
+      gitConfig.setSshSettingId(sshSettingId.getValue().get());
+      gitConfig.setKeyAuth(true);
+      gitConfig.setEncryptedPassword(null);
     }
   }
 }

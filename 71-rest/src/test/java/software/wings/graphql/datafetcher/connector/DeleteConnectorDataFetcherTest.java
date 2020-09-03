@@ -65,7 +65,7 @@ public class DeleteConnectorDataFetcherTest extends AbstractDataFetcherTest {
         QLDeleteConnectorInput.builder().build(), MutationContext.builder().accountId(ACCOUNT_ID).build());
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void deleteOfWrongCategory() {
@@ -82,7 +82,7 @@ public class DeleteConnectorDataFetcherTest extends AbstractDataFetcherTest {
     verify(settingsService, times(0)).delete(null, CONNECTOR_ID);
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void deleteOfNonExistingSetting() {

@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
@@ -23,6 +24,10 @@ import software.wings.graphql.schema.type.connector.QLConnectorBuilder;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.ConstraintViolationHandlerUtils;
+
+import javax.validation.ConstraintViolationException;
 
 @Slf4j
 public class UpdateConnectorDataFetcher
@@ -31,6 +36,7 @@ public class UpdateConnectorDataFetcher
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private GitDataFetcherHelper gitDataFetcherHelper;
   @Inject private ConnectorsController connectorsController;
+  @Inject private SecretManager secretManager;
 
   public UpdateConnectorDataFetcher() {
     super(QLUpdateConnectorInput.class, QLUpdateConnectorPayload.class);
@@ -66,7 +72,12 @@ public class UpdateConnectorDataFetcher
     } else {
       throw new InvalidRequestException("Invalid connector Type");
     }
-
+    try {
+      settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, mutationContext.getAccountId());
+    } catch (ConstraintViolationException exception) {
+      String errorMessages = String.join(", ", ConstraintViolationHandlerUtils.getErrorMessages(exception));
+      throw new InvalidRequestException(errorMessages, exception);
+    }
     settingAttribute =
         settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
@@ -87,9 +98,10 @@ public class UpdateConnectorDataFetcher
   private void checkSecrets(QLUpdateGitConnectorInput gitConnectorInput, SettingAttribute settingAttribute) {
     boolean passwordSecretIsPresent = false;
     boolean sshSettingIdIsPresent = false;
-    if (gitConnectorInput.getPasswordSecretId().isPresent()) {
-      throwExceptionIfUsernameShoulBeSpecified(gitConnectorInput, settingAttribute);
-      passwordSecretIsPresent = gitConnectorInput.getPasswordSecretId().getValue().isPresent();
+    if (gitConnectorInput.getPasswordSecretId().isPresent()
+        && gitConnectorInput.getPasswordSecretId().getValue().isPresent()) {
+      throwExceptionIfUsernameShouldBeSpecified(gitConnectorInput, settingAttribute);
+      passwordSecretIsPresent = true;
     }
     if (gitConnectorInput.getSshSettingId().isPresent()) {
       sshSettingIdIsPresent = gitConnectorInput.getSshSettingId().getValue().isPresent();
@@ -97,14 +109,32 @@ public class UpdateConnectorDataFetcher
     if (passwordSecretIsPresent && sshSettingIdIsPresent) {
       throw new InvalidRequestException("Just one secretId should be specified");
     }
+    if (passwordSecretIsPresent) {
+      checkIfSecretExists(settingAttribute.getAccountId(), gitConnectorInput.getPasswordSecretId().getValue().get());
+    }
+    if (sshSettingIdIsPresent) {
+      checkIfSshSettingExists(settingAttribute.getAccountId(), gitConnectorInput.getSshSettingId().getValue().get());
+    }
   }
 
-  private void throwExceptionIfUsernameShoulBeSpecified(
+  private void throwExceptionIfUsernameShouldBeSpecified(
       QLUpdateGitConnectorInput gitConnectorInput, SettingAttribute settingAttribute) {
     if (null == ((GitConfig) settingAttribute.getValue()).getUsername()) {
       if (!gitConnectorInput.getUserName().isPresent() || !gitConnectorInput.getUserName().getValue().isPresent()) {
         throw new InvalidRequestException("userName should be specified");
       }
+    }
+  }
+
+  private void checkIfSecretExists(String accountId, String secretId) {
+    if (secretManager.getSecretById(accountId, secretId) == null) {
+      throw new InvalidRequestException("Secret does not exit");
+    }
+  }
+
+  private void checkIfSshSettingExists(String accountId, String secretId) {
+    if (settingsService.getByAccount(accountId, secretId) == null) {
+      throw new InvalidRequestException("Secret does not exit");
     }
   }
 }
