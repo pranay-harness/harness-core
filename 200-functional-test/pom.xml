@@ -73,12 +73,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>13-grpc-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -95,6 +89,12 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>75-model-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>

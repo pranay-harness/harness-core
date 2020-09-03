@@ -31,12 +31,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
@@ -45,6 +39,12 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>75-model-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>

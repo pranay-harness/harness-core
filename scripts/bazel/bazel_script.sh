@@ -66,7 +66,7 @@ build_proto_module() {
    -f scripts/bazel/proto_pom.xml
 }
 
-build_bazel_module 11-commons-test
+build_bazel_module 990-commons-test
 build_java_proto_module 13-grpc-api
 build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans

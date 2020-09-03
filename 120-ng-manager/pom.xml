@@ -152,15 +152,15 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
+            <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
+            <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>

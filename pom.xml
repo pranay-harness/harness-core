@@ -6,7 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!--<module>11-commons-test</module>-->
         <module>12-commons</module>
         <module>13-grpc-api</module>
         <module>14-api-services-beans</module>

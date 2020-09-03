@@ -1,5 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//11-commons-test:GenTestRules.bzl", "run_tests")
+load("//990-commons-test:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 
@@ -36,7 +36,7 @@ java_library(
         "//:lombok",
     ],
     resources = [
-        "//11-commons-test/src/main/resources:resource",
+        "//990-commons-test/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
 )
@@ -51,7 +51,7 @@ run_tests(
         "@maven//:org_jacoco_org_jacoco_agent",
     ],
     runtime_deps = [
-        "//11-commons-test/src/main/resources:resources",
+        "//990-commons-test/src/main/resources:resources",
     ],
 )
 
