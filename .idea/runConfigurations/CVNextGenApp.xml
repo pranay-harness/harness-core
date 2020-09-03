@@ -4,7 +4,7 @@
       <env name="VERIFICATION_SERVICE_SECRET" value="67d9b94d9856665afc21acd3aa745401" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="io.harness.cvng.VerificationApplication" />
-    <module name="80-cv-nextgen" />
+    <module name="300-cv-nextgen" />
     <option name="PROGRAM_PARAMETERS" value="server cv-nextgen-config.yml" />
     <option name="VM_PARAMETERS" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar" />
     <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
