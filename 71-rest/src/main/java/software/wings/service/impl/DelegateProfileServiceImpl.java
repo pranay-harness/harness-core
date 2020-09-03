@@ -103,8 +103,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     Query<DelegateProfile> delegateProfileQuery = wingsPersistence.createQuery(DelegateProfile.class)
                                                       .filter(DelegateProfileKeys.accountId, accountId)
                                                       .filter(DelegateProfileKeys.uuid, delegateProfileId);
-    UpdateOperations<DelegateProfile> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateProfile.class).set(DelegateProfileKeys.selectors, selectors);
+    UpdateOperations<DelegateProfile> updateOperations = wingsPersistence.createUpdateOperations(DelegateProfile.class);
+
+    setUnset(updateOperations, DelegateProfileKeys.selectors, selectors);
 
     DelegateProfile delegateProfileSelectorsUpdated =
         wingsPersistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
