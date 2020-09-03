@@ -12,6 +12,7 @@ import "product/ci/addon/proto/addon.proto";
 message PublishArtifactsStep {
   repeated io.harness.product.ci.addon.proto.UploadFile files = 1;
   repeated io.harness.product.ci.addon.proto.BuildPublishImage images = 2;
+  string callback_id = 3;
 }
 
 message StepContext {
@@ -23,16 +24,19 @@ message RunStep {
   repeated string commands = 1;
   StepContext context = 2;
   repeated string envVarOutputs = 3;  // produced output variables
+  string callback_id = 4;
 }
 
 message SaveCacheStep {
   string key = 1;
   repeated string paths = 2;
+  string callback_id = 3;
 }
 
 message RestoreCacheStep {
   string key = 1;
   bool fail_if_not_exist = 2;
+  string callback_id = 3;
 }
 
 message UnitStep {
