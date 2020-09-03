@@ -4345,7 +4345,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                            .project(WorkflowExecutionKeys.endTs, true)
                                                            .project(WorkflowExecutionKeys.name, true)
                                                            .project(WorkflowExecutionKeys.envId, true)
-                                                           .field(WorkflowExecutionKeys.uuid)
+                                                           .field("_id")
                                                            .in(entityIds)
                                                            .asList();
     workflowExecutions.sort(Comparator.comparing(item -> entityIds.indexOf(item.getUuid())));
