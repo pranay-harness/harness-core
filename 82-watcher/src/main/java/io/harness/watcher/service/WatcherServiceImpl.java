@@ -83,6 +83,7 @@ import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
+import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
 import io.harness.managerclient.ManagerClientV2;
 import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
@@ -1257,53 +1258,105 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void migrate(String newUrl) {
     try {
-      String managerUrlKey = "managerUrl: ";
-      String verificationServiceUrlKey = "verificationServiceUrl: ";
-
-      List<String> configFileNames = ImmutableList.of("config-delegate.yml", "config-watcher.yml");
-      for (String configName : configFileNames) {
-        File config = new File(configName);
-        boolean changed = false;
-        if (config.exists()) {
-          List<String> outLines = new ArrayList<>();
-          for (String line : FileUtils.readLines(config, Charsets.UTF_8)) {
-            if (startsWith(line, managerUrlKey)) {
-              String currentVal = substringAfter(line, managerUrlKey);
-              if (!StringUtils.equals(currentVal, newUrl)) {
-                outLines.add(managerUrlKey + newUrl);
-                changed = true;
-              } else {
-                outLines.add(line);
-              }
-            } else if (startsWith(line, verificationServiceUrlKey)) {
-              String currentVal = substringAfter(line, verificationServiceUrlKey);
-              String newUrlVerification = replace(newUrl, "api", "verification");
-              if (!StringUtils.equals(currentVal, newUrlVerification)) {
-                outLines.add(verificationServiceUrlKey + newUrlVerification);
-                changed = true;
-              } else {
-                outLines.add(line);
-              }
-            } else {
-              outLines.add(line);
-            }
-          }
-          if (changed) {
-            FileUtils.forceDelete(config);
-            FileUtils.touch(config);
-            FileUtils.writeLines(config, outLines);
-            Files.setPosixFilePermissions(config.toPath(),
-                Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
-                    PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-          }
-        }
-      }
-
+      updateConfigFilesWithNewUrl(newUrl);
       logger.info("Delegate processes {} will be restarted to complete migration.", runningDelegates);
       restartDelegate();
       restartWatcher();
     } catch (Exception e) {
       logger.error("Error updating config.", e);
+    }
+  }
+
+  public boolean updateConfigFileContentsWithNewUrls(
+      List<String> originalLines, List<String> outLines, String newUrl, String fileName) {
+    boolean changed = false;
+
+    String managerUrlKey = "managerUrl: ";
+    String verificationServiceUrlKey = "verificationServiceUrl: ";
+    String managerAuthorityKey = "managerAuthority: ";
+    String managerTargetKey = "managerTarget: ";
+    String publishAuthorityKey = "publishAuthority: ";
+    String publishTargetKey = "publishTarget: ";
+
+    String formattedManagerUrl = newUrl.replace("/api/", "");
+    formattedManagerUrl = formattedManagerUrl.replace("/api", "");
+
+    String newTargetUrl = DelegateGrpcConfigExtractor.extractTarget(formattedManagerUrl);
+    String managerAuthority = DelegateGrpcConfigExtractor.extractAuthority(formattedManagerUrl, "manager");
+    String publishAuthority = DelegateGrpcConfigExtractor.extractAuthority(formattedManagerUrl, "events");
+
+    boolean foundPublishAuthority = false;
+    boolean foundPublishTarget = false;
+    boolean foundManagerAuthority = false;
+    boolean foundManagerTarget = false;
+
+    for (String line : originalLines) {
+      if (startsWith(line, managerUrlKey)) {
+        changed = processConfigLine(outLines, line, managerUrlKey, newUrl) || changed;
+      } else if (startsWith(line, verificationServiceUrlKey)) {
+        String newUrlVerification = replace(newUrl, "api", "verification");
+        changed = processConfigLine(outLines, line, verificationServiceUrlKey, newUrlVerification) || changed;
+      } else if (startsWith(line, managerTargetKey)) {
+        foundManagerTarget = true;
+        changed = processConfigLine(outLines, line, managerTargetKey, newTargetUrl) || changed;
+      } else if (startsWith(line, publishTargetKey)) {
+        foundPublishTarget = true;
+        changed = processConfigLine(outLines, line, publishTargetKey, newTargetUrl) || changed;
+      } else if (startsWith(line, managerAuthorityKey)) {
+        foundManagerAuthority = true;
+        changed = processConfigLine(outLines, line, managerAuthorityKey, managerAuthority) || changed;
+      } else if (startsWith(line, publishAuthorityKey)) {
+        foundPublishAuthority = true;
+        changed = processConfigLine(outLines, line, publishAuthorityKey, publishAuthority) || changed;
+      } else {
+        outLines.add(line);
+      }
+    }
+    if (!foundManagerAuthority && fileName.contains("config-delegate")) {
+      outLines.add(managerAuthorityKey + managerAuthority);
+    }
+    if (!foundManagerTarget && fileName.contains("config-delegate")) {
+      outLines.add(managerTargetKey + newTargetUrl);
+    }
+    if (!foundPublishAuthority && fileName.contains("config-watcher")) {
+      outLines.add(publishAuthorityKey + publishAuthority);
+    }
+    if (!foundPublishTarget && fileName.contains("config-watcher")) {
+      outLines.add(publishTargetKey + newTargetUrl);
+    }
+    return changed;
+  }
+
+  private void updateConfigFilesWithNewUrl(String newUrl) throws IOException {
+    List<String> configFileNames = ImmutableList.of("config-delegate.yml", "config-watcher.yml");
+    for (String configName : configFileNames) {
+      File config = new File(configName);
+
+      if (config.exists()) {
+        List<String> originalLines = FileUtils.readLines(config, Charsets.UTF_8);
+        List<String> outputLines = new ArrayList<>();
+        boolean changed = updateConfigFileContentsWithNewUrls(originalLines, outputLines, newUrl, configName);
+
+        if (changed) {
+          FileUtils.forceDelete(config);
+          FileUtils.touch(config);
+          FileUtils.writeLines(config, outputLines);
+          Files.setPosixFilePermissions(config.toPath(),
+              Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                  PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+        }
+      }
+    }
+  }
+
+  private boolean processConfigLine(List<String> outLines, String line, String configUrlKey, String newUrl) {
+    String currentVal = substringAfter(line, configUrlKey);
+    if (!StringUtils.equals(currentVal, newUrl)) {
+      outLines.add(configUrlKey + newUrl);
+      return true;
+    } else {
+      outLines.add(line);
+      return false;
     }
   }
 
