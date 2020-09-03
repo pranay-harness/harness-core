@@ -93,7 +93,7 @@ public class SafeHttpCallTest extends CategoryTest {
   }
 
   private Response<String> prepareErrorResponse(int code) {
-    return Response.error(code, ResponseBody.create(MediaType.parse("text/plain"), "MSG"));
+    return error(code, ResponseBody.create(MediaType.parse("text/plain"), "MSG"));
   }
 
   private okhttp3.Response prepareRawResponse(int code) {
@@ -104,5 +104,19 @@ public class SafeHttpCallTest extends CategoryTest {
         .protocol(Protocol.HTTP_1_1)
         .message("MSG")
         .build();
+  }
+
+  private <String> Response<String> error(int code, ResponseBody body) {
+    if (code < 400) {
+      throw new IllegalArgumentException("code < 400: " + code);
+    }
+    return Response.error(body,
+        new okhttp3.Response
+            .Builder() //
+            .code(code)
+            .protocol(Protocol.HTTP_1_1)
+            .request(new Request.Builder().url("http://localhost/").build())
+            .message("err")
+            .build());
   }
 }
