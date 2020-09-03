@@ -1,20 +1,25 @@
 package software.wings.security;
 
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
@@ -30,7 +35,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
-
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
@@ -40,12 +44,14 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -63,6 +69,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
+import software.wings.utils.DummyTestResource;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -70,8 +77,10 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
@@ -146,6 +155,57 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     authRuleFilter.filter(requestContext);
     assertThat(requestContext.getMethod()).isEqualTo("GET");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testFilterInAuthRuleFilterWithMultipleAuthRules() {
+    Set<Action> actions = new HashSet<>();
+    actions.add(Action.DEFAULT);
+    when(resourceInfo.getResourceClass()).thenReturn(getResourceClassWithMultipleAnnotations());
+    when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithMultipleAnnotations());
+    when(requestContext.getMethod()).thenReturn("GET");
+    mockUriInfo(PATH, uriInfo);
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+    when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
+
+    // test method with multiple annotations
+    try {
+      authRuleFilter.filter(requestContext);
+    } catch (InvalidRequestException e) {
+      fail("Exception was not expected in this test execution.");
+    }
+
+    ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(authHandler).authorizeAccountPermission(any(UserRequestContext.class), argumentCaptor.capture());
+
+    List<PermissionAttribute> permissionAttributeList = argumentCaptor.getValue();
+    assertThat(permissionAttributeList).hasSize(2);
+    assertThat(permissionAttributeList.stream()
+                   .map(permissionAttribute -> permissionAttribute.getPermissionType())
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrderElementsOf(Arrays.asList(ACCOUNT_MANAGEMENT, MANAGE_DELEGATES));
+
+    // test method with no annotations. Class level annotations are expected
+    when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithoutAnnotations());
+    try {
+      authRuleFilter.filter(requestContext);
+    } catch (InvalidRequestException e) {
+      fail("Exception was not expected in this test execution.");
+    }
+
+    argumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(authHandler, times(2)).authorizeAccountPermission(any(UserRequestContext.class), argumentCaptor.capture());
+
+    permissionAttributeList = argumentCaptor.getValue();
+    assertThat(permissionAttributeList).hasSize(2);
+    assertThat(permissionAttributeList.stream()
+                   .map(permissionAttribute -> permissionAttribute.getPermissionType())
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrderElementsOf(Arrays.asList(LOGGED_IN, ACCOUNT_MANAGEMENT));
   }
 
   @Test
@@ -228,6 +288,28 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     Class mockClass = AccountResource.class;
     try {
       return mockClass.getMethod("getAccount", String.class);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Class getResourceClassWithMultipleAnnotations() {
+    return DummyTestResource.class;
+  }
+
+  private Method getResourceMethodWithMultipleAnnotations() {
+    Class mockClass = DummyTestResource.class;
+    try {
+      return mockClass.getMethod("testMultipleMethodAnnotations");
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Method getResourceMethodWithoutAnnotations() {
+    Class mockClass = DummyTestResource.class;
+    try {
+      return mockClass.getMethod("testMultipleClassAnnotations");
     } catch (NoSuchMethodException e) {
       return null;
     }

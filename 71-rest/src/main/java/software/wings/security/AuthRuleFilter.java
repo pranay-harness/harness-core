@@ -584,18 +584,22 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
 
     Method resourceMethod = resourceInfo.getResourceMethod();
-    AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
-    if (null != methodAnnotations) {
-      methodPermissionAttributes.add(buildPermissionAttribute(methodAnnotations, requestContext.getMethod(), null));
+    AuthRule[] methodAnnotations = resourceMethod.getAnnotationsByType(AuthRule.class);
+    if (isNotEmpty(methodAnnotations)) {
+      for (AuthRule methodAnnotation : methodAnnotations) {
+        methodPermissionAttributes.add(buildPermissionAttribute(methodAnnotation, requestContext.getMethod(), null));
+      }
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
-    AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
-    if (null != classAnnotations) {
-      classPermissionAttributes.add(new PermissionAttribute(null, classAnnotations.permissionType(),
-          getAction(classAnnotations, requestContext.getMethod()), requestContext.getMethod(),
-          classAnnotations.parameterName(), classAnnotations.dbFieldName(), classAnnotations.dbCollectionName(),
-          classAnnotations.skipAuth()));
+    AuthRule[] classAnnotations = resourceClass.getAnnotationsByType(AuthRule.class);
+    if (isNotEmpty(classAnnotations)) {
+      for (AuthRule classAnnotation : classAnnotations) {
+        classPermissionAttributes.add(new PermissionAttribute(null, classAnnotation.permissionType(),
+            getAction(classAnnotation, requestContext.getMethod()), requestContext.getMethod(),
+            classAnnotation.parameterName(), classAnnotation.dbFieldName(), classAnnotation.dbCollectionName(),
+            classAnnotation.skipAuth()));
+      }
     }
 
     if (methodPermissionAttributes.isEmpty()) {
