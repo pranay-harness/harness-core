@@ -29,8 +29,10 @@ import software.wings.graphql.schema.mutation.connector.input.QLGitConnectorInpu
 import software.wings.graphql.schema.mutation.connector.payload.QLCreateConnectorPayload;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.sql.SQLException;
 
@@ -39,6 +41,7 @@ public class CreateConnectorDataFetcherTest {
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private GitDataFetcherHelper gitDataFetcherHelper;
   @Mock private ConnectorsController connectorsController;
+  @Mock private SecretManager secretManager;
 
   @InjectMocks private CreateConnectorDataFetcher dataFetcher = new CreateConnectorDataFetcher();
 
@@ -68,6 +71,7 @@ public class CreateConnectorDataFetcherTest {
 
     doReturn(QLGitConnector.builder()).when(connectorsController).getConnectorBuilder(any());
     doReturn(QLGitConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById("ACCOUNT_ID", "PASSWORD");
 
     QLCreateConnectorPayload payload = dataFetcher.mutateAndFetch(
         QLCreateConnectorInput.builder()
@@ -97,6 +101,7 @@ public class CreateConnectorDataFetcherTest {
                                                          .build())
                                        .build();
     MutationContext mutationContext = MutationContext.builder().accountId("ACCOUNT_ID").build();
+    doReturn(new SettingAttribute()).when(settingsService).getByAccount("ACCOUNT_ID", "PASSWORD");
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, mutationContext))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Just one secretId should be specified");
@@ -121,15 +126,35 @@ public class CreateConnectorDataFetcherTest {
   @Category(UnitTests.class)
   public void createGitConnectorWithPasswordNotSpecifyingUsername() {
     QLGitConnectorInputBuilder gitConnectorInputBuilder = getQlGitConnectorInputBuilder();
-    gitConnectorInputBuilder.userName(RequestField.absent()).passwordSecretId(RequestField.ofNullable("password"));
+    gitConnectorInputBuilder.userName(RequestField.absent()).passwordSecretId(RequestField.ofNullable("PASSWORD"));
     QLCreateConnectorInput input = QLCreateConnectorInput.builder()
                                        .connectorType(QLConnectorType.GIT)
                                        .gitConnector(gitConnectorInputBuilder.build())
                                        .build();
     MutationContext mutationContext = MutationContext.builder().accountId("ACCOUNT_ID").build();
+    doReturn(new SettingAttribute()).when(settingsService).getByAccount("ACCOUNT_ID", "PASSWORD");
+
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, mutationContext))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("userName should be specified");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void createGitConnectorWitNonExistentSecretId() {
+    QLGitConnectorInputBuilder gitConnectorInputBuilder = getQlGitConnectorInputBuilder();
+    gitConnectorInputBuilder.userName(RequestField.ofNullable("username"))
+        .passwordSecretId(RequestField.ofNullable("password"));
+    QLCreateConnectorInput input = QLCreateConnectorInput.builder()
+                                       .connectorType(QLConnectorType.GIT)
+                                       .gitConnector(gitConnectorInputBuilder.build())
+                                       .build();
+    MutationContext mutationContext = MutationContext.builder().accountId("ACCOUNT_ID").build();
+    doReturn(null).when(secretManager).getSecretById("ACCOUNT_ID", "password");
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, mutationContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Secret does not exit");
   }
 
   private QLGitConnectorInputBuilder getQlGitConnectorInputBuilder() {

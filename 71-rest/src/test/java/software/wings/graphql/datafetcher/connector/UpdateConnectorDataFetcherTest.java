@@ -33,8 +33,10 @@ import software.wings.graphql.schema.mutation.connector.input.QLUpdateGitConnect
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.sql.SQLException;
 
@@ -46,6 +48,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
   @Mock private SettingsService settingsService;
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private ConnectorsController connectorsController;
+  @Mock private SecretManager secretManager;
 
   @InjectMocks @Inject private UpdateConnectorDataFetcher dataFetcher;
 
@@ -59,6 +62,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void updateGit() {
     SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
                                    .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
                                    .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
                                    .build();
@@ -82,14 +86,16 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
 
     doReturn(QLGitConnector.builder()).when(connectorsController).getConnectorBuilder(any());
     doReturn(QLGitConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, "PASSWORD");
 
-    QLUpdateConnectorPayload payload =
-        dataFetcher.mutateAndFetch(QLUpdateConnectorInput.builder()
-                                       .connectorId(CONNECTOR_ID)
-                                       .connectorType(QLConnectorType.GIT)
-                                       .gitConnector(getQlUpdateGitConnectorInputBuilder().build())
-                                       .build(),
-            MutationContext.builder().accountId(ACCOUNT_ID).build());
+    QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLUpdateConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GIT)
+            .gitConnector(
+                getQlUpdateGitConnectorInputBuilder().passwordSecretId(RequestField.ofNullable("PASSWORD")).build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
 
     verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
     verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
@@ -124,6 +130,30 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTest {
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Just one secretId should be specified");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void updateGitWithNonExistentSecretId() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    QLUpdateConnectorInput input =
+        QLUpdateConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GIT)
+            .gitConnector(getQlUpdateGitConnectorInputBuilder().sshSettingId(RequestField.ofNullable("SSH")).build())
+            .build();
+    MutationContext context = MutationContext.builder().accountId(ACCOUNT_ID).build();
+
+    assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Secret does not exit");
   }
 
   @Test

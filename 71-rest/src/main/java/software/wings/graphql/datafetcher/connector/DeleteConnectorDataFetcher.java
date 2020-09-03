@@ -37,15 +37,16 @@ public class DeleteConnectorDataFetcher
 
     SettingAttribute settingAttribute = settingsService.getByAccount(accountId, connectorId);
 
-    if (validForDeletion(settingAttribute)) {
-      settingsService.delete(null, connectorId);
-    }
+    validateForDeletion(settingAttribute, connectorId);
+    settingsService.delete(null, connectorId);
 
     return QLDeleteConnectorPayload.builder().clientMutationId(input.getClientMutationId()).build();
   }
 
-  private boolean validForDeletion(SettingAttribute settingAttribute) {
-    return settingAttribute != null && settingAttribute.getValue() != null
-        && CONNECTOR == settingAttribute.getCategory();
+  private void validateForDeletion(SettingAttribute settingAttribute, String connectorId) {
+    if (settingAttribute == null || settingAttribute.getValue() == null
+        || CONNECTOR != settingAttribute.getCategory()) {
+      throw new InvalidRequestException(String.format("Invalid connectorId: %s", connectorId));
+    }
   }
 }
