@@ -68,6 +68,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 public class DelegateSetupResourceTest {
+  private static String accountId = "ACCOUNT_ID";
   private static DelegateService delegateService = mock(DelegateService.class);
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
   private static DelegateScopeService delegateScopeService = mock(DelegateScopeService.class);
@@ -82,19 +83,17 @@ public class DelegateSetupResourceTest {
   }
 
   @ClassRule
-  public static final ResourceTestRule RESOURCES =
-
-      ResourceTestRule.builder()
-          .instance(new DelegateSetupResource(
-              delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper))
-          .instance(new AbstractBinder() {
-            @Override
-            protected void configure() {
-              bind(httpServletRequest).to(HttpServletRequest.class);
-            }
-          })
-          .type(WingsExceptionMapper.class)
-          .build();
+  public final ResourceTestRule RESOURCES = ResourceTestRule.builder()
+                                                .instance(new DelegateSetupResource(delegateService,
+                                                    delegateScopeService, downloadTokenService, subdomainUrlHelper))
+                                                .instance(new AbstractBinder() {
+                                                  @Override
+                                                  protected void configure() {
+                                                    bind(httpServletRequest).to(HttpServletRequest.class);
+                                                  }
+                                                })
+                                                .type(WingsExceptionMapper.class)
+                                                .build();
 
   @Test
   @Owner(developers = ROHITKARELIA)
