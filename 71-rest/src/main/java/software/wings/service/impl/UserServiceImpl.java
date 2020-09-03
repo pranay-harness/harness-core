@@ -1380,7 +1380,7 @@ public class UserServiceImpl implements UserService {
 
     LicenseInfo licenseInfo = LicenseInfo.builder()
                                   .accountType(AccountType.PAID)
-                                  .licenseUnits(0)
+                                  .licenseUnits(marketPlace.getOrderQuantity())
                                   .expiryTime(marketPlace.getExpirationDate().getTime())
                                   .accountStatus(AccountStatus.ACTIVE)
                                   .build();
