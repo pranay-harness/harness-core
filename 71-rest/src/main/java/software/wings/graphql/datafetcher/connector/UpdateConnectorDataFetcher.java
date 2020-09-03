@@ -128,13 +128,13 @@ public class UpdateConnectorDataFetcher
 
   private void checkIfSecretExists(String accountId, String secretId) {
     if (secretManager.getSecretById(accountId, secretId) == null) {
-      throw new InvalidRequestException("Secret does not exit");
+      throw new InvalidRequestException("Secret does not exist");
     }
   }
 
   private void checkIfSshSettingExists(String accountId, String secretId) {
     if (settingsService.getByAccount(accountId, secretId) == null) {
-      throw new InvalidRequestException("Secret does not exit");
+      throw new InvalidRequestException("Secret does not exist");
     }
   }
 }
