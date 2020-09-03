@@ -19,8 +19,13 @@ import io.harness.mongo.MongoConfig;
 import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.glassfish.jersey.server.model.Resource;
+import org.reflections.Reflections;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import javax.ws.rs.Path;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -57,8 +62,18 @@ public class VerificationConfiguration extends Configuration {
    * @return the swagger bundle configuration
    */
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
+    Reflections reflections = new Reflections(this.getClass().getPackage().getName());
+    Set<String> resourcePackages = new HashSet<>();
+    reflections.getTypesAnnotatedWith(Path.class).forEach(resource -> {
+      if (!resource.getPackage().getName().endsWith("resources")) {
+        throw new IllegalStateException("Resource classes should be in resources package." + resource);
+      }
+      if (Resource.isAcceptable(resource)) {
+        resourcePackages.add(resource.getPackage().getName());
+      }
+    });
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    defaultSwaggerBundleConfiguration.setResourcePackage("io.harness.cvng.core.resources");
+    defaultSwaggerBundleConfiguration.setResourcePackage(String.join(",", resourcePackages));
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
