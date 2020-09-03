@@ -16,6 +16,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -27,6 +28,7 @@ import static software.wings.beans.FeatureName.REVALIDATE_WHITELISTED_DELEGATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.sun.tools.javac.util.List;
@@ -56,15 +58,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
+import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.TaskType;
+import software.wings.features.api.UsageLimitedFeature;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.processingcontrollers.DelegateProcessingController;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
@@ -73,10 +81,14 @@ import java.util.concurrent.TimeUnit;
 
 public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
+  @Mock private UsageLimitedFeature delegatesFeature;
   @Mock private Broadcaster broadcaster;
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private DelegateTaskBroadcastHelper broadcastHelper;
   @Mock private DelegateCallbackRegistry delegateCallbackRegistry;
+  @Mock private EmailNotificationService emailNotificationService;
+  @Mock private AccountService accountService;
+  @Mock private Account account;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
   @Mock private AssignDelegateService assignDelegateService;
@@ -160,6 +172,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldObtainDelegateName() {
+    String accountId = generateUuid();
+    when(delegatesFeature.getMaxUsageAllowedForAccount(anyString())).thenReturn(Integer.MAX_VALUE);
+
     String delegateId = generateUuid();
     assertThat(delegateService.obtainDelegateName(null, delegateId, true)).isEqualTo("");
     assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);
@@ -169,7 +184,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateService.add(delegateBuilder.uuid(delegateId).build());
     assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);
 
-    String accountId = generateUuid();
     delegateService.add(delegateBuilder.accountId(accountId).build());
     assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo(delegateId);
 
@@ -421,5 +435,93 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(retrievedDelegateConnection.isDisconnected()).isTrue();
 
     verify(delegateObserver).onDisconnected(accountId, delegateId);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSelectDelegateToRetain() {
+    Delegate delegate1 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .version(VERSION)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .version(VERSION)
+                             .lastHeartBeat(0)
+                             .build();
+
+    wingsPersistence.save(delegate1);
+    wingsPersistence.save(delegate2);
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(1);
+
+    delegateService.deleteAllDelegatesExceptOne(ACCOUNT_ID, 1);
+
+    Delegate delegateToRetain1 =
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate1.getUuid()).get();
+    Delegate delegateToRetain2 =
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate2.getUuid()).get();
+
+    assertThat(delegateToRetain1).isNotNull();
+    assertThat(delegateToRetain2).isNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSelectDelegateToRetainSendEmailAboutDelegatesOverUsage() {
+    Delegate delegate1 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .version(VERSION)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .version(VERSION)
+                             .lastHeartBeat(0)
+                             .build();
+
+    wingsPersistence.save(delegate1);
+    wingsPersistence.save(delegate2);
+
+    EmailData emailData =
+        EmailData.builder()
+            .hasHtml(false)
+            .body(
+                "Account is using more than [0] delegates. Account Id : [ACCOUNT_ID], Company Name : [NCR], Account Name : [testAccountName], Delegate Count : [1]")
+            .subject("Found account with more than 0 delegates")
+            .to(Lists.newArrayList("support@harness.io"))
+            .build();
+
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    when(account.getCompanyName()).thenReturn("NCR");
+    when(account.getAccountName()).thenReturn("testAccountName");
+    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(0);
+
+    when(emailNotificationService.send(emailData)).thenReturn(true);
+
+    delegateService.deleteAllDelegatesExceptOne(ACCOUNT_ID, 1);
+
+    Delegate delegateToRetain1 =
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate1.getUuid()).get();
+    Delegate delegateToRetain2 =
+        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate2.getUuid()).get();
+
+    assertThat(delegateToRetain1).isNotNull();
+    assertThat(delegateToRetain2).isNull();
+
+    verify(emailNotificationService, atLeastOnce()).send(emailData);
   }
 }
