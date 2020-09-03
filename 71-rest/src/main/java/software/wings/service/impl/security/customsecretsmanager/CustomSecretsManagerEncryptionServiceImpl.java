@@ -7,7 +7,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecordData;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.FeatureName;
 import software.wings.expression.SecretFunctor;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
@@ -86,8 +85,6 @@ public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsM
             .managerDecryptionService(managerDecryptionService)
             .secretManager(secretManager)
             .accountId(accountId)
-            .twoPhaseEnabled(featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, accountId))
-            .threePhaseEnabled(featureFlagService.isEnabled(FeatureName.THREE_PHASE_SECRET_DECRYPTION, accountId))
             .build());
     return expressionEvaluator.substitute(script, context);
   }

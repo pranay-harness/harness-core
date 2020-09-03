@@ -5,7 +5,6 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
 import lombok.Builder;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -25,10 +24,7 @@ class LateBindingServiceEncryptedVariable implements LateBindingValue {
 
   @Override
   public Object bind() {
-    if (adoptDelegateDecryption
-        && (featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, executionContext.getAccountId())
-               || featureFlagService.isEnabled(
-                      FeatureName.THREE_PHASE_SECRET_DECRYPTION, executionContext.getAccountId()))) {
+    if (adoptDelegateDecryption) {
       return "${secretManager.obtain(\"" + serviceVariable.getSecretTextName() + "\", " + expressionFunctorToken + ")}";
     }
     managerDecryptionService.decrypt(serviceVariable,
