@@ -104,6 +104,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -136,6 +137,9 @@ import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.BaseYaml;
+import software.wings.yaml.FileOperationStatus;
+import software.wings.yaml.YamlOperationResponse;
+import software.wings.yaml.YamlOperationResponse.YamlOperationResponseBuilder;
 import software.wings.yaml.YamlPayload;
 
 import java.io.File;
@@ -144,10 +148,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -186,6 +193,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private static final String PHASES = "phases";
   private static final String AMI_TAGS = "amiTags";
   private static final String NAME = "name";
+  private static final String DEFAULT_YAML = "harnessApiVersion: '1.0'";
 
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
@@ -256,16 +264,17 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             .putAll(emptyIfNull(processingErrorMap))
             .putAll(emptyIfNull(validationResponseMap.errorMsgMap))
             .build();
-    ensureNoError(failedYamlFileChangeMap);
+    ensureNoError(failedYamlFileChangeMap, validationResponseMap.changeContextList, changeList);
 
     logger.info(GIT_YAML_LOG_PREFIX + "Processed all the changes from GIT without any error.");
     return validationResponseMap.changeContextList;
   }
 
-  private void ensureNoError(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) throws YamlProcessingException {
+  private void ensureNoError(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap,
+      List<ChangeContext> changeContextList, List<Change> changeList) throws YamlProcessingException {
     if (!failedYamlFileChangeMap.isEmpty()) {
-      throw new YamlProcessingException(
-          "Error while processing some yaml files in the changeset.", failedYamlFileChangeMap);
+      throw new YamlProcessingException("Error while processing some yaml files in the changeset.",
+          failedYamlFileChangeMap, changeContextList, changeList);
     }
   }
 
@@ -924,6 +933,163 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       logger.error(String.format("Error while fetching yaml content for file path %s", yamlFilePath));
     }
     return yamlForFilePath;
+  }
+
+  @Override
+  public YamlOperationResponse upsertYAMLFilesAsZip(final String accountId, final InputStream fileInputStream)
+      throws IOException {
+    try {
+      Future<YamlOperationResponse> future =
+          Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("upsert-yamls-as-zip").build())
+              .submit(() -> {
+                try {
+                  List changeList = getChangesForZipFile(accountId, fileInputStream, null);
+                  List<ChangeContext> processedChangeList = processChangeSet(changeList);
+                  return prepareSuccessfulYAMLOperationResponse(processedChangeList, changeList);
+                } catch (YamlProcessingException ex) {
+                  logger.warn(
+                      String.format("Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
+                  return prepareFailedYAMLOperationResponse(
+                      ex.getMessage(), ex.getFailedYamlFileChangeMap(), ex.getChangeContextList(), ex.getChangeList());
+                }
+              });
+      return future.get(30, TimeUnit.SECONDS);
+    } catch (Exception ex) {
+      logger.warn(String.format("Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
+      return YamlOperationResponse.builder()
+          .responseStatus(YamlOperationResponse.Status.FAILED)
+          .errorMessage(ex.toString())
+          .build();
+    }
+  }
+
+  /**
+   * Delete YAML files by paths
+   * @param accountId
+   * @param filePaths
+   * @return
+   */
+  @Override
+  public YamlOperationResponse deleteYAMLByPaths(final String accountId, final List<String> filePaths) {
+    try {
+      List changeList = filePaths.stream()
+                            .map(filePath
+                                -> GitFileChange.Builder.aGitFileChange()
+                                       .withFileContent(DEFAULT_YAML)
+                                       .withFilePath(filePath)
+                                       .withAccountId(accountId)
+                                       .withChangeType(ChangeType.DELETE)
+                                       .build())
+                            .collect(toList());
+      List<ChangeContext> processedChangesWithContext = processChangeSet(changeList);
+      return prepareSuccessfulYAMLOperationResponse(processedChangesWithContext, changeList);
+    } catch (YamlProcessingException ex) {
+      logger.warn(String.format("Error while deleting yaml file paths(s) for account %s, error: %s", accountId, ex));
+      return prepareFailedYAMLOperationResponse(
+          ex.getMessage(), ex.getFailedYamlFileChangeMap(), ex.getChangeContextList(), ex.getChangeList());
+    }
+  }
+
+  private YamlOperationResponse prepareFailedYAMLOperationResponse(final String errorMessage,
+      final Map<String, ChangeWithErrorMsg> processingFailures, final List<ChangeContext> processedChangesWithContext,
+      final List<Change> originalChangeList) {
+    final YamlOperationResponseBuilder yamlOperationResponseBuilder =
+        YamlOperationResponse.builder().errorMessage(errorMessage).responseStatus(YamlOperationResponse.Status.FAILED);
+    if (processingFailures.isEmpty() || CollectionUtils.isEmpty(processedChangesWithContext)
+        || CollectionUtils.isEmpty(originalChangeList)) {
+      return yamlOperationResponseBuilder.build();
+    }
+    final List<FileOperationStatus> fileOperationStatusList = prepareFileOperationStatusList(processingFailures);
+    final List<Change> failedChangeList =
+        new LinkedList<>(processingFailures.values()).stream().map(value -> value.getChange()).collect(toList());
+    final List<Change> processedChangeList =
+        processedChangesWithContext.stream().map(changeContext -> changeContext.getChange()).collect(toList());
+    fileOperationStatusList.addAll(
+        prepareFileOperationStatusListFromChangeList(failedChangeList, processedChangeList, originalChangeList));
+    return yamlOperationResponseBuilder.filesStatus(fileOperationStatusList).build();
+  }
+
+  private YamlOperationResponse prepareSuccessfulYAMLOperationResponse(
+      final List<ChangeContext> processedChangesWithContext, final List<Change> originalChangeList) {
+    final YamlOperationResponseBuilder yamlOperationResponseBuilder = YamlOperationResponse.builder();
+    if (CollectionUtils.isEmpty(processedChangesWithContext) || CollectionUtils.isEmpty(originalChangeList)) {
+      return yamlOperationResponseBuilder.responseStatus(YamlOperationResponse.Status.FAILED)
+          .filesStatus(Collections.EMPTY_LIST)
+          .errorMessage("No yaml files found in the uploaded zip file.")
+          .build();
+    }
+
+    final List<Change> processedChangeList =
+        processedChangesWithContext.stream().map(result -> result.getChange()).collect(toList());
+    List<FileOperationStatus> fileOperationStatusList =
+        prepareFileOperationStatusListFromChangeList(Collections.EMPTY_LIST, processedChangeList, originalChangeList);
+
+    return yamlOperationResponseBuilder.responseStatus(YamlOperationResponse.Status.SUCCESS)
+        .filesStatus(fileOperationStatusList)
+        .errorMessage("")
+        .build();
+  }
+
+  private List<Change> getSkippedChangeList(final List<Change> originalChangeList,
+      final List<Change> processedChangeList, final List<Change> failedChangeList) {
+    List<Change> skippedFiles = new LinkedList<>(originalChangeList);
+    Set<Change> skippedFileSet = new HashSet<>(skippedFiles);
+    Set<Change> processedChangeSet = new HashSet<>(processedChangeList);
+    Set<Change> failedChangeSet = new HashSet<>(failedChangeList);
+    skippedFileSet.removeAll(processedChangeSet);
+    skippedFileSet.removeAll(failedChangeSet);
+    skippedFiles = new LinkedList<>(skippedFileSet);
+    return skippedFiles;
+  }
+
+  private List<FileOperationStatus> prepareFileOperationStatusListFromChangeList(final List<Change> failedChangeList,
+      final List<Change> processedChangeList, final List<Change> originalChangeList) {
+    if (CollectionUtils.isEmpty(processedChangeList) || CollectionUtils.isEmpty(originalChangeList)) {
+      return Collections.EMPTY_LIST;
+    }
+    List<FileOperationStatus> fileOperationStatusList = new LinkedList<>();
+    if (originalChangeList.size() >= processedChangeList.size()) {
+      List<Change> skippedFiles = getSkippedChangeList(originalChangeList, processedChangeList, failedChangeList);
+      if (skippedFiles.size() > 0) {
+        fileOperationStatusList.addAll(
+            prepareFileOperationStatusList(skippedFiles, FileOperationStatus.Status.SKIPPED));
+      }
+      List<Change> successfullyProcessedFiles = new LinkedList<>(processedChangeList);
+      successfullyProcessedFiles.retainAll(originalChangeList);
+      if (successfullyProcessedFiles.size() > 0) {
+        fileOperationStatusList.addAll(
+            prepareFileOperationStatusList(successfullyProcessedFiles, FileOperationStatus.Status.SUCCESS));
+      }
+    }
+    return fileOperationStatusList;
+  }
+
+  private List<FileOperationStatus> prepareFileOperationStatusList(
+      final List<Change> processedChangeList, final FileOperationStatus.Status status) {
+    if (CollectionUtils.isEmpty(processedChangeList)) {
+      return Collections.EMPTY_LIST;
+    }
+    return processedChangeList.stream()
+        .map(result
+            -> FileOperationStatus.builder().status(status).errorMssg("").yamlFilePath(result.getFilePath()).build())
+        .collect(toList());
+  }
+
+  private List<FileOperationStatus> prepareFileOperationStatusList(
+      final Map<String, ChangeWithErrorMsg> processingFailures) {
+    if (processingFailures.isEmpty()) {
+      return Collections.EMPTY_LIST;
+    }
+    List<FileOperationStatus> fileOperationStatusList = new LinkedList<>();
+    for (Map.Entry<String, ChangeWithErrorMsg> entry : processingFailures.entrySet()) {
+      final ChangeWithErrorMsg changeWithErrorMsg = entry.getValue();
+      fileOperationStatusList.add(FileOperationStatus.builder()
+                                      .status(FileOperationStatus.Status.FAILED)
+                                      .errorMssg(changeWithErrorMsg.getErrorMsg())
+                                      .yamlFilePath(changeWithErrorMsg.getChange().getFilePath())
+                                      .build());
+    }
+    return fileOperationStatusList;
   }
 
   private void checkOnPhasesNamesWithDots(LinkedHashMap<String, Object> load) {
