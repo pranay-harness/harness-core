@@ -19,6 +19,6 @@ public class CEClusterDao {
   }
 
   public CECluster getCECluster(String clusterId) {
-    return hPersistence.createQuery(CECluster.class, excludeAuthority).field(CEClusterKeys.hash).equal(clusterId).get();
+    return hPersistence.createQuery(CECluster.class, excludeAuthority).field(CEClusterKeys.uuid).equal(clusterId).get();
   }
 }

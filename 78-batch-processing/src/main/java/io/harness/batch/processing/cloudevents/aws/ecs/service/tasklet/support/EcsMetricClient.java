@@ -116,12 +116,12 @@ public class EcsMetricClient {
     // Add service level metrics
     for (Service service : services) {
       utilizationMetrics.add(extractMetricResult(
-          metricDataResultMap, cluster, service, ceCluster.getHash(), ceCluster.getParentAccountSettingId()));
+          metricDataResultMap, cluster, service, ceCluster.getUuid(), ceCluster.getParentAccountSettingId()));
     }
 
     // Add cluster level metrics
     utilizationMetrics.add(extractMetricResult(
-        metricDataResultMap, cluster, null, ceCluster.getHash(), ceCluster.getParentAccountSettingId()));
+        metricDataResultMap, cluster, null, ceCluster.getUuid(), ceCluster.getParentAccountSettingId()));
     return utilizationMetrics;
   }
 
