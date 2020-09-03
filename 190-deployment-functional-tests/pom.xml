@@ -10,7 +10,7 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
+            <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>

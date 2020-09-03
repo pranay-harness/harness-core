@@ -42,11 +42,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>29-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -63,6 +58,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>72-ci-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

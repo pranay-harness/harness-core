@@ -110,12 +110,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
@@ -133,6 +127,12 @@
                     <artifactId>spring-web</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>990-commons-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
