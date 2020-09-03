@@ -9,8 +9,8 @@ import io.harness.timeout.TimeoutTrackerState;
 
 @OwnedBy(CDC)
 public class AbsoluteTimeoutTracker implements TimeoutTracker {
-  private final long timeoutMillis;
-  private final long startTimeMillis;
+  private long timeoutMillis;
+  private long startTimeMillis;
 
   public AbsoluteTimeoutTracker(long timeoutMillis) {
     this.timeoutMillis = timeoutMillis;

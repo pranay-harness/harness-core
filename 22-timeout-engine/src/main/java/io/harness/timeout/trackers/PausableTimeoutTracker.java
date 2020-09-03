@@ -8,8 +8,8 @@ import io.harness.timeout.TimeoutTrackerState;
 
 @OwnedBy(CDC)
 public abstract class PausableTimeoutTracker implements TimeoutTracker {
-  private final long timeoutMillis;
-  private final StopWatch stopWatch;
+  private long timeoutMillis;
+  private StopWatch stopWatch;
 
   public PausableTimeoutTracker(long timeoutMillis, boolean running) {
     this.timeoutMillis = timeoutMillis;

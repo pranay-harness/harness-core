@@ -1,12 +1,13 @@
 package io.harness.rule;
 
 import io.harness.OrchestrationPersistenceConfig;
+import io.harness.TimeoutEnginePersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
 
 public class OrchestrationPersistenceTestModule extends PersistenceTestModule {
   @Override
   protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
-    return new Class[] {OrchestrationPersistenceConfig.class};
+    return new Class[] {TimeoutEnginePersistenceConfig.class, OrchestrationPersistenceConfig.class};
   }
 }

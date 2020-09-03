@@ -8,6 +8,7 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -19,6 +20,7 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceRequiredProvider;
 import io.harness.timeout.TimeoutInstance.TimeoutInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Duration;
 import java.util.List;
@@ -32,7 +34,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
 
   @Inject private TimeoutInstanceRepository timeoutInstanceRepository;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private SpringPersistenceRequiredProvider<TimeoutInstance> persistenceProvider;
+  @Inject @Named("timeoutEngineMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject private Injector injector;
 
   private PersistenceIterator<TimeoutInstance> iterator;
@@ -82,7 +84,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
             .acceptableExecutionTime(Duration.ofSeconds(30))
             .handler(this)
             .schedulingType(REGULAR)
-            .persistenceProvider(persistenceProvider)
+            .persistenceProvider(new SpringPersistenceRequiredProvider<>(mongoTemplate))
             .redistribute(true));
   }
 
@@ -103,7 +105,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
       }
 
       try {
-        timeoutInstanceRepository.delete(timeoutInstance);
+        timeoutInstanceRepository.deleteById(timeoutInstance.getUuid());
       } catch (Exception ex) {
         logger.error("TimeoutInstance delete failed", ex);
       }

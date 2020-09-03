@@ -39,6 +39,7 @@ import io.harness.engine.executables.ExecutableProcessorFactory;
 import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.interrupts.InterruptCheck;
@@ -59,6 +60,7 @@ import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
+import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
@@ -67,6 +69,12 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.timeout.TimeoutCallback;
+import io.harness.timeout.TimeoutEngine;
+import io.harness.timeout.TimeoutInstance;
+import io.harness.timeout.TimeoutObtainment;
+import io.harness.timeout.TimeoutTracker;
+import io.harness.timeout.TimeoutTrackerFactory;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -94,6 +102,7 @@ public class OrchestrationEngine {
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
+  @Inject private TimeoutRegistry timeoutRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
@@ -104,6 +113,7 @@ public class OrchestrationEngine {
   @Inject private InterruptService interruptService;
   @Inject private AmbianceUtils ambianceUtils;
   @Inject private InvocationHelper invocationHelper;
+  @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   public void startNodeExecution(String nodeExecutionId) {
@@ -217,19 +227,37 @@ public class OrchestrationEngine {
                             .build());
   }
 
+  private List<String> registerTimeouts(NodeExecution nodeExecution) {
+    StepParameters resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+    List<TimeoutObtainment> timeoutObtainmentList;
+    if (resolvedStepParameters != null) {
+      timeoutObtainmentList = resolvedStepParameters.getTimeouts();
+    } else {
+      timeoutObtainmentList = new StepParameters() {}.getTimeouts();
+    }
+
+    List<String> timeoutInstanceIds = new ArrayList<>();
+    if (isEmpty(timeoutObtainmentList)) {
+      return timeoutInstanceIds;
+    }
+
+    TimeoutCallback timeoutCallback =
+        new NodeExecutionTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
+    for (TimeoutObtainment timeoutObtainment : timeoutObtainmentList) {
+      TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(timeoutObtainment.getType());
+      TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(timeoutObtainment.getParameters());
+      TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
+      timeoutInstanceIds.add(instance.getUuid());
+    }
+    return timeoutInstanceIds;
+  }
+
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
     return Preconditions.checkNotNull(
         nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.RUNNING, ops -> {
           ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
-          StepParameters resolvedStepParameters = nodeExecution.getResolvedStepParameters();
-          if (resolvedStepParameters != null) {
-            setUnset(ops, NodeExecutionKeys.expiryTs,
-                resolvedStepParameters.timeout().toMillis() + System.currentTimeMillis());
-          } else {
-            setUnset(ops, NodeExecutionKeys.expiryTs,
-                new StepParameters() {}.timeout().toMillis() + System.currentTimeMillis());
-          }
+          setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
         }));
   }
 

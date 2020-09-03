@@ -11,6 +11,7 @@ public class OrchestrationStepsPersistenceTestModule extends PersistenceTestModu
   @Override
   protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
     bind(new TypeLiteral<RestraintService>() {}).to(RestraintTestService.class);
-    return new Class[] {OrchestrationPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class};
+    return new Class[] {TimeoutEnginePersistenceConfig.class, OrchestrationPersistenceConfig.class,
+        OrchestrationStepsPersistenceConfig.class};
   }
 }

@@ -3,10 +3,10 @@ package io.harness.timeout;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Value;
+import lombok.Data;
 
 @OwnedBy(CDC)
-@Value
+@Data
 public class TimeoutDetails {
   TimeoutInstance timeoutInstance;
   long expiredAt;

@@ -31,6 +31,8 @@ public interface CustomExecutionService {
 
   PlanExecution executeSimpleShellScriptPlan(String accountId, String appId);
 
+  PlanExecution executeSimpleTimeoutPlan(String accountId, String appId);
+
   PlanExecution executeTaskChainPlanV1();
 
   PlanExecution executeSectionChainPlan();

@@ -117,6 +117,7 @@
 31-orchestration/src/main/java/io/harness/engine/advise/handlers/EndPlanAdviseHandler.java
 31-orchestration/src/main/java/io/harness/engine/advise/handlers/NextStepHandler.java
 31-orchestration/src/main/java/io/harness/engine/advise/handlers/RetryAdviseHandler.java
+31-orchestration/src/main/java/io/harness/engine/events/NodeExecutionStatusUpdateEventHandler.java
 31-orchestration/src/main/java/io/harness/engine/events/OrchestrationEventEmitter.java
 31-orchestration/src/main/java/io/harness/engine/executables/ExecutableProcessor.java
 31-orchestration/src/main/java/io/harness/engine/executables/ExecutableProcessorFactory.java
@@ -129,7 +130,6 @@
 31-orchestration/src/main/java/io/harness/engine/executables/invokers/SyncStrategy.java
 31-orchestration/src/main/java/io/harness/engine/executables/invokers/TaskChainStrategy.java
 31-orchestration/src/main/java/io/harness/engine/executables/invokers/TaskStrategy.java
-31-orchestration/src/main/java/io/harness/engine/executions/node/NodeExecutionAfterSaveListener.java
 31-orchestration/src/main/java/io/harness/engine/executions/node/NodeExecutionServiceImpl.java
 31-orchestration/src/main/java/io/harness/engine/executions/node/NodeExecutionTimeoutCallback.java
 31-orchestration/src/main/java/io/harness/engine/executions/node/NodeExecutionUpdateFailedException.java

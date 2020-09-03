@@ -773,6 +773,91 @@ public class CustomExecutionProvider {
         .build();
   }
 
+  public Plan provideSimpleTimeoutPlan() {
+    String section1NodeId = generateUuid();
+    String section2NodeId = generateUuid();
+    String shellScript1NodeId = generateUuid();
+    String shellScript2NodeId = generateUuid();
+    ShellScriptStepParameters shellScript1StepParameters = ShellScriptStepParameters.builder()
+                                                               .executeOnDelegate(true)
+                                                               .connectionType(ShellScriptState.ConnectionType.SSH)
+                                                               .scriptType(ScriptType.BASH)
+                                                               .scriptString("echo 'Hello, world, from script 1!'")
+                                                               .outputVars("HELLO,HI")
+                                                               .sweepingOutputName("shell1")
+                                                               .sweepingOutputScope("SECTION")
+                                                               .timeoutSecs("1")
+                                                               .build();
+    ShellScriptStepParameters shellScript2StepParameters =
+        ShellScriptStepParameters.builder()
+            .executeOnDelegate(true)
+            .connectionType(ShellScriptState.ConnectionType.SSH)
+            .scriptType(ScriptType.BASH)
+            .scriptString("echo 'Hello, world, from script 2!'\nsleep 500")
+            .outputVars("HELLO,HI")
+            .sweepingOutputName("shell1")
+            .sweepingOutputScope("SECTION")
+            .timeoutSecs("1")
+            .build();
+
+    return Plan.builder()
+        .startingNodeId(section1NodeId)
+        .node(PlanNode.builder()
+                  .uuid(section1NodeId)
+                  .name("Section 1")
+                  .identifier("section1")
+                  .stepType(DummySectionStep.STEP_TYPE)
+                  .group("SECTION")
+                  .stepParameters(DummySectionStepParameters.builder()
+                                      .childNodeId(shellScript1NodeId)
+                                      .data(ImmutableMap.of("f1", "v11", "f2", "v12"))
+                                      .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(section2NodeId)
+                  .name("Section 2")
+                  .identifier("section2")
+                  .stepType(DummySectionStep.STEP_TYPE)
+                  .group("SECTION")
+                  .stepParameters(DummySectionStepParameters.builder()
+                                      .childNodeId(shellScript2NodeId)
+                                      .data(ImmutableMap.of("f1", "v21", "f2", "v22"))
+                                      .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(shellScript1NodeId)
+                  .name("shell1")
+                  .identifier("shell1")
+                  .stepType(ShellScriptStep.STEP_TYPE)
+                  .stepParameters(shellScript1StepParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(shellScript2NodeId)
+                  .name("shell2")
+                  .identifier("shell2")
+                  .stepType(ShellScriptStep.STEP_TYPE)
+                  .stepParameters(shellScript2StepParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
   public Plan provideTaskChainPlan(String facilitatorType) {
     String sectionNodeId = generateUuid();
     String httpChainId = generateUuid();

@@ -8,6 +8,7 @@ import static io.harness.distribution.barrier.Forcer.State.ABANDONED;
 import static io.harness.distribution.barrier.Forcer.State.APPROACHING;
 import static io.harness.distribution.barrier.Forcer.State.ARRIVED;
 import static io.harness.execution.status.Status.ABORTED;
+import static io.harness.execution.status.Status.EXPIRED;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
@@ -208,7 +209,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             "Barrier {} is down because all barriers are in the ASYNC_WAITING {}", forcerId.getValue(), nodeExecutions);
         return ARRIVED;
       }
-      if (nodeExecutions.stream().anyMatch(node -> System.currentTimeMillis() > node.getExpiryTs())) {
+      if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == EXPIRED)) {
         logger.info("Barrier {} was timed out", forcerId.getValue());
         return Forcer.State.TIMED_OUT;
       }
