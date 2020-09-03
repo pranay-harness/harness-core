@@ -23,9 +23,12 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.harness.CIBeansModule;
+import io.harness.CIExecutionServiceModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
+import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoConfig;
@@ -141,6 +144,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new CIPersistenceModule());
     addGuiceValidationModule(modules);
     modules.addAll(new CIManagerServiceModule(configuration, configuration.getManagerUrl()).cumulativeDependencies());
+    modules.add(CIExecutionServiceModule.getInstance());
+    modules.add(CIBeansModule.getInstance());
+    modules.add(ExecutionPlanModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override

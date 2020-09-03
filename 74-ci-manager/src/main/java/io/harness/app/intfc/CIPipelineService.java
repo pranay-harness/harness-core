@@ -10,7 +10,9 @@ import javax.validation.Valid;
 public interface CIPipelineService {
   @ValidationGroups(Create.class) CIPipeline createPipeline(@Valid CIPipeline ciPipeline);
 
+  CIPipeline readPipeline(String pipelineId, String accountId, String orgId, String projectId);
+
   CIPipeline readPipeline(String pipelineId);
 
-  CIPipeline createPipelineFromYAML(YAML yaml);
+  CIPipeline createPipelineFromYAML(YAML yaml, String accountId, String orgId, String projectId);
 }

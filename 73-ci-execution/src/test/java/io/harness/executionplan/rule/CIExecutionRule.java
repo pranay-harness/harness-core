@@ -5,8 +5,10 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.multibindings.MapBinder;
 
+import io.harness.CIBeansModule;
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
+import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
@@ -70,7 +72,9 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       }
     });
     modules.add(new CIExecutionPersistenceTestModule());
-    modules.addAll(new CIExecutionServiceModule().cumulativeDependencies());
+    modules.add(new CIExecutionServiceModule());
+    modules.add(new CIBeansModule());
+    modules.add(new ExecutionPlanModule());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

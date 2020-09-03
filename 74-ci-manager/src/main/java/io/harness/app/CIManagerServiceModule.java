@@ -1,18 +1,18 @@
 package io.harness.app;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 
-import io.harness.CIExecutionServiceModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.app.impl.CIPipelineServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.intfc.YAMLToObject;
+import io.harness.core.ci.services.BuildNumberService;
+import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.govern.DependencyModule;
 import io.harness.managerclient.ManagerCIResource;
@@ -29,6 +29,7 @@ import software.wings.service.impl.ci.CIServiceAuthSecretKeyImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.Collections;
 import java.util.Set;
 
 public class CIManagerServiceModule extends DependencyModule {
@@ -70,10 +71,11 @@ public class CIManagerServiceModule extends DependencyModule {
     bind(CIPipelineService.class).to(CIPipelineServiceImpl.class);
     bind(ManagerCIResource.class).toProvider(ManagerClientFactory.class);
     bind(CIServiceAuthSecretKey.class).to(CIServiceAuthSecretKeyImpl.class);
+    bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
   }
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(CIExecutionServiceModule.getInstance());
+    return Collections.emptySet();
   }
 }
