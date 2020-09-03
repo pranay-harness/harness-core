@@ -79,6 +79,7 @@ public class DelegateProfileResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   public RestResponse<Void> delete(@PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
       @QueryParam("accountId") @NotEmpty String accountId) {
     delegateProfileService.delete(accountId, delegateProfileId);
@@ -90,6 +91,7 @@ public class DelegateProfileResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   public RestResponse<DelegateProfile> update(@PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateProfile delegateProfile) {
     delegateProfile.setAccountId(accountId);
@@ -102,6 +104,7 @@ public class DelegateProfileResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   public RestResponse<DelegateProfile> updateScopingRules(
       @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
       @QueryParam("accountId") @NotEmpty String accountId, List<DelegateProfileScopingRule> scopingRules) {
@@ -110,6 +113,7 @@ public class DelegateProfileResource {
 
   @POST
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   public RestResponse<DelegateProfile> add(
       @QueryParam("accountId") @NotEmpty String accountId, DelegateProfile delegateProfile) {
     delegateProfile.setAccountId(accountId);
@@ -121,6 +125,7 @@ public class DelegateProfileResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   public RestResponse<DelegateProfile> updateDelegateProfileSelector(
       @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selectors") List<String> selectors) {
