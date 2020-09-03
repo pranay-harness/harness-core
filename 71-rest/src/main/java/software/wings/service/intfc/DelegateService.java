@@ -151,4 +151,6 @@ public interface DelegateService extends OwnedByAccount {
   boolean validateThatDelegateNameIsUnique(String accountId, String delegateName);
 
   void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId);
+
+  void deleteAllDelegatesExceptOne(String accountId, long shutdownInterval);
 }

@@ -68,6 +68,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -84,7 +85,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FileMetadata;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ConnectionMode;
@@ -139,6 +142,7 @@ import io.harness.network.Http;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.UuidAware;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -201,6 +205,7 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
 import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters.PcfCommandTaskParametersBuilder;
@@ -219,6 +224,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -241,6 +247,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -275,6 +282,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
   private static final String DELIMITER = "_";
+  private static final int MAX_RETRIES = 2;
 
   public static final String HARNESS_DELEGATE_VALUES_YAML = HARNESS_DELEGATE + "-values";
   private static final String YAML = ".yaml";
@@ -334,6 +342,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateTaskService delegateTaskService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
+  @Inject private EmailNotificationService emailNotificationService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -3398,4 +3407,87 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
   //------ END: ECS Delegate Specific Methods
+
+  //------ START: DelegateFeature Specific methods
+  @Override
+  public void deleteAllDelegatesExceptOne(String accountId, long shutdownInterval) {
+    int retryCount = 0;
+    while (true) {
+      try {
+        Optional<String> delegateToRetain = selectDelegateToRetain(accountId);
+
+        if (delegateToRetain.isPresent()) {
+          logger.info("Deleting all delegates for account : {} except {}", accountId, delegateToRetain.get());
+
+          retainOnlySelectedDelegatesAndDeleteRestByUuid(
+              accountId, Collections.singletonList(delegateToRetain.get()), shutdownInterval);
+
+          logger.info("Deleted all delegates for account : {} except {}", accountId, delegateToRetain.get());
+        } else {
+          logger.info("No delegate found to retain for account : {}", accountId);
+        }
+
+        break;
+      } catch (Exception ex) {
+        if (retryCount >= MAX_RETRIES) {
+          logger.error("Couldn't delete delegates for account: {}. Current Delegate Count : {}", accountId,
+              getDelegates(accountId).size(), ex);
+          break;
+        }
+        retryCount++;
+      }
+    }
+
+    int numDelegates = getDelegates(accountId).size();
+    if (numDelegates > delegatesFeature.getMaxUsageAllowedForAccount(accountId)) {
+      sendEmailAboutDelegatesOverUsage(accountId, numDelegates);
+    }
+  }
+
+  private Optional<String> selectDelegateToRetain(String accountId) {
+    return getDelegates(accountId)
+        .stream()
+        .max(Comparator.comparingLong(Delegate::getLastHeartBeat))
+        .map(UuidAware::getUuid);
+  }
+
+  private List<Delegate> getDelegates(String accountId) {
+    return list(PageRequestBuilder.aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, accountId).build())
+        .getResponse();
+  }
+
+  private void retainOnlySelectedDelegatesAndDeleteRestByUuid(
+      String accountId, List<String> delegatesToRetain, long shutdownInterval) throws InterruptedException {
+    Query<Delegate> query = wingsPersistence.createQuery(Delegate.class)
+                                .filter(DelegateKeys.accountId, accountId)
+                                .field(DelegateKeys.uuid)
+                                .notIn(delegatesToRetain);
+
+    UpdateOperations<Delegate> updateOps =
+        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, Status.DELETED);
+    wingsPersistence.update(query, updateOps);
+
+    // Waiting for shutdownInterval to ensure shutdown msg reach delegates before removing their entries from DB
+    Thread.sleep(shutdownInterval);
+
+    retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
+  }
+
+  private void sendEmailAboutDelegatesOverUsage(String accountId, int numDelegates) {
+    Account account = accountService.get(accountId);
+    String body = String.format(
+        "Account is using more than [%d] delegates. Account Id : [%s], Company Name : [%s], Account Name : [%s], Delegate Count : [%d]",
+        delegatesFeature.getMaxUsageAllowedForAccount(accountId), accountId, account.getCompanyName(),
+        account.getAccountName(), numDelegates);
+    String subjectMail = String.format(
+        "Found account with more than %d delegates", delegatesFeature.getMaxUsageAllowedForAccount(accountId));
+
+    emailNotificationService.send(EmailData.builder()
+                                      .hasHtml(false)
+                                      .body(body)
+                                      .subject(subjectMail)
+                                      .to(Lists.newArrayList("support@harness.io"))
+                                      .build());
+  }
+  //------ END: DelegateFeature Specific methods
 }
