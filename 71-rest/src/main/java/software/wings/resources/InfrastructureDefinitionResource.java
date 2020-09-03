@@ -343,6 +343,28 @@ public class InfrastructureDefinitionResource {
   }
 
   @GET
+  @Path("{infraDefinitionId}/azure-load-balancers")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getAzureLoadBalancers(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listAzureLoadBalancers(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/azure-load-balancers/{loadbalancerName}/backend-pools")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getAzureLoadBalancerBackendPools(@QueryParam("appId") String appId,
+      @PathParam("infraDefinitionId") String infraDefinitionId,
+      @PathParam("loadbalancerName") String loadBalancerName) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.listAzureLoadBalancerBackendPools(appId, infraDefinitionId, loadBalancerName));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/vpcs")
   @Timed
   @ExceptionMetered

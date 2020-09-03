@@ -148,6 +148,7 @@ import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureK
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
+import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
@@ -1951,6 +1952,56 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
+  }
+
+  @Override
+  public List<String> listAzureLoadBalancers(String appId, String infraDefinitionId) {
+    AzureVMSSInfra azureVMSSInfra = validateAndGetAzureVMSSInfra(appId, infraDefinitionId);
+
+    String resourceGroupName = azureVMSSInfra.getResourceGroupName();
+    String cloudProviderId = azureVMSSInfra.getCloudProviderId();
+
+    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureVMSSHelperServiceManager.listLoadBalancersNames(
+          azureConfig, resourceGroupName, encryptionDetails, appId);
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listAzureLoadBalancerBackendPools(
+      String appId, String infraDefinitionId, String loadBalancerName) {
+    AzureVMSSInfra azureVMSSInfra = validateAndGetAzureVMSSInfra(appId, infraDefinitionId);
+
+    String resourceGroupName = azureVMSSInfra.getResourceGroupName();
+    String cloudProviderId = azureVMSSInfra.getCloudProviderId();
+
+    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureVMSSHelperServiceManager.listLoadBalancerBackendPoolsNames(
+          azureConfig, resourceGroupName, loadBalancerName, encryptionDetails, appId);
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  private AzureVMSSInfra validateAndGetAzureVMSSInfra(String appId, String infraDefinitionId) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infrastructure Definition is null", infrastructureDefinition);
+
+    InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
+    notNullCheck("InfraMappingInfrastructureProvider is null", infrastructure);
+
+    if (!(infrastructure instanceof AzureVMSSInfra)) {
+      throw new InvalidRequestException("Not AzureVMSSInfra, invalid type");
+    }
+    return (AzureVMSSInfra) infrastructure;
   }
 
   private AzureConfig validateAndGetAzureConfig(String computeProviderSettingId) {

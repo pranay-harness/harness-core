@@ -8,16 +8,28 @@ import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
+import com.microsoft.azure.management.network.LoadBalancer;
+import com.microsoft.azure.management.network.LoadBalancerBackend;
+import com.microsoft.azure.management.network.PublicIPAddressDnsSettings;
+import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
 import com.microsoft.azure.management.resources.Subscription;
+import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
+import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListLoadBalancerBackendPoolsNamesParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListLoadBalancersNamesParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListResourceGroupsNamesParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListVMDataParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListVirtualMachineScaleSetsParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSGetVirtualMachineScaleSetResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListLoadBalancerBackendPoolsNamesResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListLoadBalancersNamesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListResourceGroupsNamesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListSubscriptionsResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListVMDataResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListVirtualMachineScaleSetsResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
@@ -121,8 +133,47 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
                                     .build();
         break;
       }
+      case AZURE_VMSS_LIST_LOAD_BALANCERS_NAMES: {
+        String resourceGroupName =
+            ((AzureVMSSListLoadBalancersNamesParameters) azureVMSSTaskParameters).getResourceGroupName();
+
+        List<LoadBalancer> loadBalancers =
+            azureNetworkHelperServiceDelegate.listLoadBalancersByResourceGroup(azureConfig, resourceGroupName);
+
+        List<String> loadBalancersNames = loadBalancers.stream().map(HasName::name).collect(Collectors.toList());
+
+        azureVMSSTaskResponse =
+            AzureVMSSListLoadBalancersNamesResponse.builder().loadBalancersNames(loadBalancersNames).build();
+        break;
+      }
+      case AZURE_VMSS_LIST_LOAD_BALANCER_BACKEND_POOLS_NAMES: {
+        String resourceGroupName =
+            ((AzureVMSSListLoadBalancerBackendPoolsNamesParameters) azureVMSSTaskParameters).getResourceGroupName();
+        String loadBalancerName =
+            ((AzureVMSSListLoadBalancerBackendPoolsNamesParameters) azureVMSSTaskParameters).getLoadBalancerName();
+
+        List<LoadBalancerBackend> loadBalancerBackendPools =
+            azureNetworkHelperServiceDelegate.listLoadBalancerBackendPools(
+                azureConfig, resourceGroupName, loadBalancerName);
+
+        List<String> loadBalancerBackendPoolsNames =
+            loadBalancerBackendPools.stream().map(HasName::name).collect(Collectors.toList());
+
+        azureVMSSTaskResponse = AzureVMSSListLoadBalancerBackendPoolsNamesResponse.builder()
+                                    .loadBalancerBackendPoolsNames(loadBalancerBackendPoolsNames)
+                                    .build();
+        break;
+      }
       case AZURE_VMSS_LIST_VM_DATA: {
-        return null;
+        String subscriptionId = ((AzureVMSSListVMDataParameters) azureVMSSTaskParameters).getSubscriptionId();
+        String vmssId = ((AzureVMSSListVMDataParameters) azureVMSSTaskParameters).getVmssId();
+
+        List<VirtualMachineScaleSetVM> virtualMachines =
+            azureVMSSHelperServiceDelegate.listVirtualMachineScaleSetVMs(azureConfig, subscriptionId, vmssId);
+        List<AzureVMData> vmDataList = virtualMachines.stream().map(toVMData()).collect(Collectors.toList());
+
+        azureVMSSTaskResponse = AzureVMSSListVMDataResponse.builder().vmssId(vmssId).vmData(vmDataList).build();
+        break;
       }
       default: {
         throw new InvalidRequestException(format("Unrecognized object of class: [%s] while executing sync task",
@@ -144,5 +195,17 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
   @NotNull
   private Function<VirtualMachineScaleSet, VirtualMachineScaleSetData> toVirtualMachineScaleSetData() {
     return vmss -> VirtualMachineScaleSetData.builder().id(vmss.id()).name(vmss.name()).build();
+  }
+
+  @NotNull
+  private Function<VirtualMachineScaleSetVM, AzureVMData> toVMData() {
+    return vm -> {
+      String id = vm.id();
+      Optional<PublicIPAddressInner> publicIPAddressOp = azureVMSSHelperServiceDelegate.getVMPublicIPAddress(vm);
+      String publicIp = publicIPAddressOp.map(PublicIPAddressInner::ipAddress).orElse(EMPTY);
+      String publicDnsName =
+          publicIPAddressOp.map(PublicIPAddressInner::dnsSettings).map(PublicIPAddressDnsSettings::fqdn).orElse(EMPTY);
+      return AzureVMData.builder().id(id).ip(publicIp).publicDns(publicDnsName).build();
+    };
   }
 }

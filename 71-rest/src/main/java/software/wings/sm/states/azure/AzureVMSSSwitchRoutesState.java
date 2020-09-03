@@ -251,14 +251,14 @@ public class AzureVMSSSwitchRoutesState extends State {
       Activity activity, ManagerExecutionLogCallback executionLogCallback, Exception exception) {
     logger.error(SWAP_ROUTE_FAILURE, exception);
     Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
-    AzureVMSSSwitchRouteStateExecutionData awsAmiExecutionData =
+    AzureVMSSSwitchRouteStateExecutionData switchRouteStateExecutionData =
         AzureVMSSSwitchRouteStateExecutionData.builder().build();
     String errorMessage = getMessage(exception);
     ExecutionResponseBuilder responseBuilder = ExecutionResponse.builder();
     return responseBuilder.correlationIds(singletonList(activity.getUuid()))
         .executionStatus(FAILED)
         .errorMessage(errorMessage)
-        .stateExecutionData(awsAmiExecutionData)
+        .stateExecutionData(switchRouteStateExecutionData)
         .async(true)
         .build();
   }

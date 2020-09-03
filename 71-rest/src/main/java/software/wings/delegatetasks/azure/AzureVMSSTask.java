@@ -11,6 +11,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSDeployTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSRollbackTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSetupTaskHandler;
+import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSwitchRouteTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSTaskHandler;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
@@ -34,6 +36,7 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
   @Inject private AzureVMSSSetupTaskHandler setupTaskHandler;
   @Inject private AzureVMSSDeployTaskHandler deployTaskHandler;
   @Inject private AzureVMSSRollbackTaskHandler rollbackTaskHandler;
+  @Inject private AzureVMSSSwitchRouteTaskHandler switchRouteTaskHandler;
   @Inject private EncryptionService encryptionService;
 
   public AzureVMSSTask(
@@ -83,6 +86,21 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
           }
           AzureVMSSDeployTaskParameters deployTaskParameters = (AzureVMSSDeployTaskParameters) azureVMSSTaskParameters;
           handler = deployTaskParameters.isRollback() ? rollbackTaskHandler : deployTaskHandler;
+          break;
+        }
+
+        case AZURE_VMSS_SWITCH_ROUTE: {
+          if (!(azureVMSSTaskParameters instanceof AzureVMSSSwitchRouteTaskParameters)) {
+            String message = format("Parameters of unrecognized class: [%s] found while executing deploy step",
+                azureVMSSTaskParameters.getClass().getSimpleName());
+            logger.error(message);
+            return AzureVMSSTaskExecutionResponse.builder()
+                .commandExecutionStatus(FAILURE)
+                .errorMessage(message)
+                .build();
+          }
+
+          handler = switchRouteTaskHandler;
           break;
         }
 

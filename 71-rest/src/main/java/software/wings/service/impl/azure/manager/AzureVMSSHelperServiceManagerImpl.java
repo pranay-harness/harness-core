@@ -20,12 +20,16 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListLoadBalancerBackendPoolsNamesParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListLoadBalancersNamesParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListResourceGroupsNamesParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListSubscriptionsParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListVMDataParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListVirtualMachineScaleSetsParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSGetVirtualMachineScaleSetResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListLoadBalancerBackendPoolsNamesResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListLoadBalancersNamesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListResourceGroupsNamesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListSubscriptionsResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSListVMDataResponse;
@@ -93,6 +97,29 @@ public class AzureVMSSHelperServiceManagerImpl implements AzureVMSSHelperService
         azureConfig, encryptionDetails, appId);
 
     return ((AzureVMSSGetVirtualMachineScaleSetResponse) response).getVirtualMachineScaleSet();
+  }
+
+  @Override
+  public List<String> listLoadBalancersNames(
+      AzureConfig azureConfig, String resourceGroupName, List<EncryptedDataDetail> encryptionDetails, String appId) {
+    AzureVMSSTaskResponse response = executeTask(azureConfig.getAccountId(),
+        AzureVMSSListLoadBalancersNamesParameters.builder().resourceGroupName(resourceGroupName).build(), azureConfig,
+        encryptionDetails, appId);
+
+    return ((AzureVMSSListLoadBalancersNamesResponse) response).getLoadBalancersNames();
+  }
+
+  @Override
+  public List<String> listLoadBalancerBackendPoolsNames(AzureConfig azureConfig, String resourceGroupName,
+      String loadBalancerName, List<EncryptedDataDetail> encryptionDetails, String appId) {
+    AzureVMSSTaskResponse response = executeTask(azureConfig.getAccountId(),
+        AzureVMSSListLoadBalancerBackendPoolsNamesParameters.builder()
+            .resourceGroupName(resourceGroupName)
+            .loadBalancerName(loadBalancerName)
+            .build(),
+        azureConfig, encryptionDetails, appId);
+
+    return ((AzureVMSSListLoadBalancerBackendPoolsNamesResponse) response).getLoadBalancerBackendPoolsNames();
   }
 
   @Override

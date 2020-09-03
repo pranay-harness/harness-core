@@ -16,7 +16,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.google.inject.Singleton;
 
-import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.monitor.ScaleCapacity;
@@ -176,7 +175,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     String privateIP = EMPTY;
     String publicDnsName = EMPTY;
 
-    PagedList<VirtualMachineScaleSetNetworkInterface> vmScaleSetNetworkInterfaces = scaleSetVM.listNetworkInterfaces();
+    List<VirtualMachineScaleSetNetworkInterface> vmScaleSetNetworkInterfaces =
+        azureVMSSHelperServiceDelegate.listVMVirtualMachineScaleSetNetworkInterfaces(scaleSetVM);
     if (!vmScaleSetNetworkInterfaces.isEmpty()) {
       VirtualMachineScaleSetNetworkInterface virtualMachineScaleSetNetworkInterface =
           vmScaleSetNetworkInterfaces.get(0);
@@ -189,6 +189,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
         publicDnsName = publicIPAddressDnsSettings != null ? publicIPAddressDnsSettings.fqdn() : EMPTY;
       }
     }
+
     return AzureVMInstanceData.builder()
         .instanceId(vmId)
         .privateDnsName(vmName)

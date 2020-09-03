@@ -355,7 +355,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
         desiredInstances = mostRecentActiveVMSS.capacity();
         mostRecentActiveVMSSName = mostRecentActiveVMSS.name();
       }
-      logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from Asg: [%s]",
+      logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from VMSS: [%s]",
                                        minInstances, maxInstances, desiredInstances, mostRecentActiveVMSSName),
           INFO);
     } else {

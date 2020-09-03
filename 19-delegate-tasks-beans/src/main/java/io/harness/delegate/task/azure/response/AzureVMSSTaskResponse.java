@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
           name = "azureVMSSListVirtualMachineScaleSetsResponse"),
       @JsonSubTypes.Type(value = AzureVMSSSetupTaskResponse.class, name = "azureVMSSSetupTaskResponse"),
       @JsonSubTypes.Type(value = AzureVMSSDeployTaskResponse.class, name = "azureVMSSDeployTaskResponse"),
-      @JsonSubTypes.Type(value = AzureVMSSListVMDataResponse.class, name = "azureVMSSListVMDataResponse")
+      @JsonSubTypes.Type(value = AzureVMSSListVMDataResponse.class, name = "azureVMSSListVMDataResponse"),
+      @JsonSubTypes.Type(value = AzureVMSSSwitchRoutesResponse.class, name = "azureVMSSSwitchRoutesResponse")
 })
 public interface AzureVMSSTaskResponse {}

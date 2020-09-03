@@ -25,6 +25,7 @@ public interface AzureConstants {
   String NAME_TAG = "Name";
   String BG_VERSION_TAG_NAME = "BG_VERSION";
   String BG_GREEN_TAG_VALUE = "GREEN";
+  String BG_BLUE_TAG_VALUE = "BLUE";
   String VMSS_CREATED_TIME_STAMP_TAG_NAME = "Created";
 
   // User VM Auth types
@@ -46,6 +47,8 @@ public interface AzureConstants {
   String DEPLOYMENT_STATUS = "Final Deployment status";
   String DEPLOYMENT_ERROR = "Failed Deployment status";
   String DELETE_NEW_VMSS = "Delete New Virtual Machine Scale Set";
+  String BG_SWAP_ROUTES_COMMAND_UNIT = "Swap Routes";
+  String BG_ROLLBACK_COMMAND_UNIT = "Rollback Swap Routes";
 
   // Messaging
   String SKIP_VMSS_DEPLOY = "No Azure VMSS setup context element found. Skipping deploy";
@@ -58,10 +61,17 @@ public interface AzureConstants {
 
   // Validation messages
   String RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG = "Parameter resourceGroupName is required and cannot be null";
+  String RESOURCE_ID_NAME_NULL_VALIDATION_MSG = "Parameter resourceId is required and cannot be null";
+  String LOAD_BALANCER_NAME_NULL_VALIDATION_MSG = "Parameter loadBalancerName is required and cannot be null";
+  String BACKEND_POOL_NAME_NULL_VALIDATION_MSG = "Parameter backendPoolName is required and cannot be null";
   String TARGET_RESOURCE_ID_NULL_VALIDATION_MSG = "Parameter targetResourceId is required and cannot be null";
   String AUTOSCALE_SETTINGS_RESOURCE_JSON_NULL_VALIDATION_MSG =
       "Parameter autoScaleSettingResourceInnerJson is required and cannot be null";
   String AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG = "Azure management client can't be null";
+  String VIRTUAL_MACHINE_SCALE_SET_NULL_VALIDATION_MSG =
+      "Parameter virtualMachineScaleSet is required and cannot be null";
+  String PRIMARY_INTERNET_FACING_LOAD_BALANCER_NULL_VALIDATION_MSG =
+      "Parameter primaryInternetFacingLoadBalancer is required and cannot be null";
   String SUBSCRIPTION_ID_NULL_VALIDATION_MSG = "Parameter subscriptionId is required and cannot be null";
   String VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG =
       "Parameter virtualMachineScaleSetId is required and cannot be null";
@@ -74,4 +84,11 @@ public interface AzureConstants {
   String HARNESS_REVISION_IS_NULL_VALIDATION_MSG = "Parameter harnessRevision is required and cannot be null";
   String VMSS_IDS_IS_NULL_VALIDATION_MSG = "Parameter vmssIds is required and cannot be null";
   String NUMBER_OF_VM_INSTANCES_VALIDATION_MSG = "Required number of VM instances can't have negative value";
+  String BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG = "Backend pools list cannot be empty";
+  String VM_INSTANCE_IDS_LIST_EMPTY_VALIDATION_MSG = "Virtual Machine instances ids list cannot be empty";
+  String VM_INSTANCE_IDS_NOT_NUMBERS_VALIDATION_MSG = "Virtual Machine instances ids must be '*' or numbers";
+  String NEW_VMSS_NAME_NULL_VALIDATION_MSG = "Parameter newVMSSName is required and cannot be null";
+  String OLD_VMSS_NAME_NULL_VALIDATION_MSG = "Parameter oldVMSSName is required and cannot be null";
+  String AZURE_LOAD_BALANCER_DETAIL_NULL_VALIDATION_MSG =
+      "Parameter azureLoadBalancerDetail is required and cannot be null";
 }

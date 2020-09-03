@@ -204,6 +204,8 @@ import software.wings.service.impl.aws.delegate.AwsRoute53HelperServiceDelegateI
 import software.wings.service.impl.aws.delegate.AwsS3HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsServiceDiscoveryHelperServiceDelegateImpl;
 import software.wings.service.impl.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegateImpl;
+import software.wings.service.impl.azure.delegate.AzureMonitorHelperServiceDelegateImpl;
+import software.wings.service.impl.azure.delegate.AzureNetworkHelperServiceDelegateImpl;
 import software.wings.service.impl.azure.delegate.AzureVMSSHelperServiceDelegateImpl;
 import software.wings.service.impl.bugsnag.BugsnagDelegateService;
 import software.wings.service.impl.bugsnag.BugsnagDelegateServiceImpl;
@@ -265,6 +267,8 @@ import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate
 import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
 import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
+import software.wings.service.intfc.azure.delegate.AzureMonitorHelperServiceDelegate;
+import software.wings.service.intfc.azure.delegate.AzureNetworkHelperServiceDelegate;
 import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
@@ -679,6 +683,8 @@ public class DelegateModule extends AbstractModule {
     bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
     bind(AzureVMSSHelperServiceDelegate.class).to(AzureVMSSHelperServiceDelegateImpl.class);
     bind(AzureAutoScaleSettingsHelperServiceDelegate.class).to(AzureAutoScaleSettingsHelperServiceDelegateImpl.class);
+    bind(AzureNetworkHelperServiceDelegate.class).to(AzureNetworkHelperServiceDelegateImpl.class);
+    bind(AzureMonitorHelperServiceDelegate.class).to(AzureMonitorHelperServiceDelegateImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
 
     // NG Delegate

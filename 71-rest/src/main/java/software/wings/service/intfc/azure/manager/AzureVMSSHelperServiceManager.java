@@ -59,6 +59,42 @@ public interface AzureVMSSHelperServiceManager {
   VirtualMachineScaleSetData getVirtualMachineScaleSet(AzureConfig azureConfig, String subscriptionId,
       String resourceGroupName, String vmssId, List<EncryptedDataDetail> encryptionDetails, String appId);
 
+  /**
+   * List load balancers for resource group based on resource group name.
+   *
+   * @param azureConfig
+   * @param resourceGroupName
+   * @param encryptionDetails
+   * @param appId
+   * @return
+   */
+  List<String> listLoadBalancersNames(
+      AzureConfig azureConfig, String resourceGroupName, List<EncryptedDataDetail> encryptionDetails, String appId);
+
+  /**
+   * List backend pools names for Load Balancer based on load balancer name.
+   *
+   * @param azureConfig
+   * @param resourceGroupName
+   * @param loadBalancerName
+   * @param encryptionDetails
+   * @param appId
+   * @return
+   */
+  List<String> listLoadBalancerBackendPoolsNames(AzureConfig azureConfig, String resourceGroupName,
+      String loadBalancerName, List<EncryptedDataDetail> encryptionDetails, String appId);
+
+  /**
+   * List Virtual Machines for VMSS based on id.
+   *
+   * @param azureConfig
+   * @param subscriptionId
+   * @param resourceGroupName
+   * @param vmssId
+   * @param encryptionDetails
+   * @param appId
+   * @return
+   */
   List<AzureVMData> listVMSSVirtualMachines(AzureConfig azureConfig, String subscriptionId, String resourceGroupName,
       String vmssId, List<EncryptedDataDetail> encryptionDetails, String appId);
 }
