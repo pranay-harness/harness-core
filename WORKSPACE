@@ -938,6 +938,22 @@ go_repository(
     sum = "h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=",
     version = "v1.0.0-20141024135613-dd632973f1e7",
 )
+
+go_repository(
+    name = "com_github_drone_go_scm",
+    importpath = "github.com/drone/go-scm",
+    sum = "h1:KUf9gEaCDzhsE/V7hpFz7nmTisuR0gXJz3+D946ggLk=",
+    version = "v1.7.0",
+)
+
+go_repository(
+    name = "com_github_h2non_gock",
+    importpath = "github.com/h2non/gock",
+    sum = "h1:17gCehSo8ZOgEsFKpQgqHiR7VLyjxdAG3lkhVvO9QZU=",
+    version = "v1.0.9",
+)
+
+
 ##############################################################################################################################################################################################
 # ######################################   Java code ######################################
 
@@ -994,16 +1010,16 @@ maven_install(
     ],
 )
 
-go_repository(
-    name = "com_github_drone_go_scm",
-    importpath = "github.com/drone/go-scm",
-    sum = "h1:KUf9gEaCDzhsE/V7hpFz7nmTisuR0gXJz3+D946ggLk=",
-    version = "v1.7.0",
-)
+load("//tools/sonarqube:repositories.bzl", "bazel_sonarqube_repositories")
 
-go_repository(
-    name = "com_github_h2non_gock",
-    importpath = "github.com/h2non/gock",
-    sum = "h1:17gCehSo8ZOgEsFKpQgqHiR7VLyjxdAG3lkhVvO9QZU=",
-    version = "v1.0.9",
+bazel_sonarqube_repositories()
+http_archive(
+    name = "openjdk8u242_darwin_archive",
+    build_file_content = """
+java_runtime(name = 'runtime', srcs =  glob(['**']), java='//:bin/java', visibility = ['//visibility:public'])
+exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
+""",
+    sha256 = "f39b523c724d0e0047d238eb2bb17a9565a60574cf651206c867ee5fc000ab43",
+    strip_prefix = "jdk8u242-b08",
+    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
 )

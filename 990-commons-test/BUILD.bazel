@@ -2,6 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//990-commons-test:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
 
 sources()
 
@@ -40,6 +41,15 @@ java_library(
     ],
     visibility = ["//visibility:public"],
 )
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/java/**/*.java"]),
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok"
+    ],
+)
 
 run_tests(
     test_files = glob(["src/test/**/*Test.java"]),
@@ -56,3 +66,12 @@ run_tests(
 )
 
 checkstyle()
+
+sonarqube_test(
+    name="sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)

@@ -22,6 +22,12 @@ nogo(
     visibility = ["//visibility:public"],
 )
 
+    ########################################################################################################
+####################################################  JAVA Starts Here    ####################################################
+    ########################################################################################################
+
+load("//tools/sonarqube:defs.bzl", "sonarqube")
+
 java_plugin(
     name = "lombok_plugin",
     processor_class = "lombok.launch.AnnotationProcessorHider$AnnotationProcessor",
@@ -34,4 +40,41 @@ java_library(
     exports = ["@maven//:org_projectlombok_lombok"],
     exported_plugins = [":lombok_plugin"],
     visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "git",
+    srcs = glob(
+        [".git/**/*"],
+    ),
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "coverage_report",
+    srcs = ["bazel-out/_coverage/_coverage_report.dat"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "test_reports",
+    srcs = glob(["bazel-testlogs/**/test.xml"]),
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+
+sonarqube(
+    name = "sq",
+    project_key = "portal_bazel",
+    project_name = "Bazel Portal",
+    srcs = [],
+    targets = [],
+    modules = {
+        "//990-commons-test:sq_mycomponent": "990-commons-test",
+    },
+    coverage_report = ":coverage_report",
+    scm_info = [":git"],
+    tags = ["manual"],
 )
