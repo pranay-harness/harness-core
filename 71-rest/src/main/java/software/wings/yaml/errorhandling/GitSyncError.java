@@ -16,6 +16,7 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.GitRepositoryInfo;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import software.wings.yaml.errorhandling.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
@@ -70,6 +71,7 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
   private String gitConnectorId;
   private String repositoryName;
   @Transient private String gitConnectorName;
+  @Transient private GitRepositoryInfo repositoryInfo;
 
   private String branchName;
   private String yamlGitConfigId;

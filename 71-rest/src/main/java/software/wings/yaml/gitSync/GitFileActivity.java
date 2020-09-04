@@ -16,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.GitRepositoryInfo;
 
 import javax.ws.rs.DefaultValue;
 
@@ -62,6 +63,7 @@ public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAw
   private String repositoryName;
   private String branchName;
   @Transient private String connectorName;
+  @Transient private GitRepositoryInfo repositoryInfo;
   @Transient @DefaultValue("false") private boolean userDoesNotHavePermForFile;
 
   public enum Status { SUCCESS, FAILED, DISCARDED, EXPIRED, SKIPPED, QUEUED }

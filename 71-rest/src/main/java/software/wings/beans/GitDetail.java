@@ -16,4 +16,5 @@ public class GitDetail {
   private String appId;
   private String gitCommitId;
   @Transient String connectorName;
+  @Transient GitRepositoryInfo repositoryInfo;
 }

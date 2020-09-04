@@ -9,6 +9,10 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
@@ -27,6 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Application;
@@ -37,6 +42,7 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
 import software.wings.yaml.errorhandling.GitProcessingError;
@@ -53,6 +59,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class GitSyncErrorServiceImplTest extends WingsBaseTest {
+  @Mock private GitConfigHelperService gitConfigHelperService;
   @InjectMocks @Inject private GitSyncErrorServiceImpl gitSyncErrorService;
   private final String accountId = generateUuid();
   private static final String WEBHOOK_TOKEN = "Webhook_Token";
@@ -147,6 +154,8 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
     assertThat(errorsList.size()).isEqualTo(1);
     error = errorsList.get(0);
     assertThat(error.getFailedCount()).isEqualTo(2);
+
+    verify(gitConfigHelperService, times(2)).createRepositoryInfo(any(), anyString());
   }
 
   @Test
@@ -700,6 +709,8 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
     assertThat(error2.getConnectorName()).isNull();
     assertThat(error2.getBranchName()).isNull();
     assertThat(error2.getRepositoryName()).isNull();
+
+    verify(gitConfigHelperService).createRepositoryInfo(any(GitConfig.class), anyString());
   }
 
   @Test
