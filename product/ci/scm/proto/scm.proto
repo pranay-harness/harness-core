@@ -89,6 +89,11 @@ message Commit {
   string link = 5;
 }
 
+message Label {
+  string name = 1;
+  string color = 2;
+}
+
 message PullRequest {
   int64 number = 1;
   string title = 2;
@@ -106,6 +111,7 @@ message PullRequest {
   User author = 14;
   google.protobuf.Timestamp created = 15;
   google.protobuf.Timestamp updated = 16;
+  repeated Label labels = 17;
 }
 
 message PullRequestHook {
@@ -123,6 +129,7 @@ message PushHook {
   string after = 5;
   Commit commit = 6;
   User sender = 7;
+  repeated Commit commits = 8;  // List of commits associated with the push request
 }
 
 message Header {

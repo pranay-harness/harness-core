@@ -242,8 +242,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_crypto",
     importpath = "golang.org/x/crypto",
-    sum = "h1:R423Cnkcp5JABoeemiGEPlt9tHXFfw5kvc0yqlxRPWo=",
-    version = "v0.0.0-20190513172903-22d7a77e9e5f",
+    sum = "h1:ObdrDkeb4kJdCP557AjRjq69pTHfNouLtWZG7j9rPN8=",
+    version = "v0.0.0-20191011191535-87dc89f01550",
 )
 
 go_repository(
@@ -256,29 +256,29 @@ go_repository(
 go_repository(
     name = "org_golang_x_mod",
     importpath = "golang.org/x/mod",
-    sum = "h1:JgcxKXxCjrA2tyDP/aNU9K0Ck5Czfk6C7e2tMw7+bSI=",
-    version = "v0.0.0-20190513183733-4bf6d317e70e",
+    sum = "h1:GgiSbuUyC0BlbUmHQBgFqu32eiRR/CEYdjOjOd4zE6Y=",
+    version = "v0.1.1-0.20191107180719-034126e5016b",
 )
 
 go_repository(
     name = "org_golang_x_sys",
     importpath = "golang.org/x/sys",
-    sum = "h1:xhmwyvizuTgC2qz7ZlMluP20uW+C3Rm0FD/WLDX8884=",
-    version = "v0.0.0-20200323222414-85ca7c5b95cd",
+    sum = "h1:gWF768j/LaZugp8dyS4UwsslYCYz9XgFxvlgsn0n9H8=",
+    version = "v0.0.0-20200420163511-1957bb5e6d1f",
 )
 
 go_repository(
     name = "org_golang_x_text",
     importpath = "golang.org/x/text",
-    sum = "h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=",
-    version = "v0.3.0",
+    sum = "h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=",
+    version = "v0.3.2",
 )
 
 go_repository(
     name = "org_golang_x_tools",
     importpath = "golang.org/x/tools",
-    sum = "h1:hKsoRgsbwY1NafxrwTs+k64bikrLBkAgPir1TNCj3Zs=",
-    version = "v0.0.0-20191029190741-b9c20aec41a5",
+    sum = "h1:5E4dL8+NgFOgjwbTKz+OOEGGhP+ectTmF842l6KjupQ=",
+    version = "v0.0.0-20200207183749-b753a1ba74fa",
 )
 
 go_repository(
@@ -634,8 +634,8 @@ go_repository(
 go_repository(
     name = "org_golang_google_genproto",
     importpath = "google.golang.org/genproto",
-    sum = "h1:gSJIx1SDwno+2ElGhA4+qG2zF97qiUzTM+rQ0klBOcE=",
-    version = "v0.0.0-20190819201941-24fa4b261c55",
+    sum = "h1:0Uz5jLJQioKgVozXa1gzGbzYxbb/rhQEVvSWxzw5oUs=",
+    version = "v0.0.0-20200423170343-7949de9c1215",
 )
 
 go_repository(
@@ -655,8 +655,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_exp",
     importpath = "golang.org/x/exp",
-    sum = "h1:c2HOrn5iMezYjSlGPncknSEr/8x5LELb/ilJbXi9DEA=",
-    version = "v0.0.0-20190121172915-509febef88a4",
+    sum = "h1:FR+oGxGfbQu1d+jglI3rCkjAjUnhRSZcUxr+DqlDLNo=",
+    version = "v0.0.0-20200331195152-e8c3332aa8e5",
 )
 
 go_repository(
@@ -816,8 +816,8 @@ go_repository(
 go_repository(
     name = "com_github_sirupsen_logrus",
     importpath = "github.com/sirupsen/logrus",
-    sum = "h1:1N5EYkVAPEywqZRJd7cwnRtCb6xJx7NH3T3WUTF980Q=",
-    version = "v1.5.0",
+    sum = "h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4=",
+    version = "v1.4.2",
 )
 
 go_repository(
@@ -900,8 +900,8 @@ go_repository(
 go_repository(
     name = "com_github_grpc_ecosystem_go_grpc_middleware",
     importpath = "github.com/grpc-ecosystem/go-grpc-middleware",
-    sum = "h1:0IKlLyQ3Hs9nDaiK5cSHAGmcQEIC8l2Ts1u6x5Dfrqg=",
-    version = "v1.2.0",
+    sum = "h1:V59tBiPuMkySHwJkuq/OYkK0WnOLwCwD3UkTbEMr12U=",
+    version = "v1.2.1",
 )
 
 go_repository(
@@ -942,8 +942,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:KUf9gEaCDzhsE/V7hpFz7nmTisuR0gXJz3+D946ggLk=",
-    version = "v1.7.0",
+    sum = "h1:wME/n7Qdo70VJ+WXZanJHjLtNWONEfjNsO2iwHDdlkE=",
+    version = "v1.7.1",
 )
 
 go_repository(
@@ -974,33 +974,33 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 maven_install(
     name = "maven",
-    artifacts= [
-            "junit:junit:4.12",
-            "org.slf4j:slf4j-api:1.7.29",
-            "org.powermock:powermock-module-junit4:1.7.4",
-            "ch.qos.logback:logback-classic:1.2.3",
-            "com.bettercloud:vault-java-driver:4.0.0",
-            "com.google.code.findbugs:annotations:3.0.0",
-            "com.google.guava:guava:21.0",
-            "com.google.inject:guice:4.2.3",
-            "commons-codec:commons-codec:1.10",
-            "net.rcarz:jira-client:0.8-SNAPSHOT",
-            "org.apache.commons:commons-lang3:3.7",
-            "org.assertj:assertj-core:3.16.1",
-            "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
-            "org.jacoco:org.jacoco.agent:0.8.5",
-            "org.mockito:mockito-core:1.10.19",
-            "org.projectlombok:lombok:1.18.6",
-            "antlr:antlr:2.7.7",
-            "org.antlr:antlr4-runtime:4.7",
-            "com.puppycrawl.tools:checkstyle:8.5",
-            "commons-beanutils:commons-beanutils:1.9.3",
-            "info.picocli:picocli:3.8.2",
-            "commons-collections:commons-collections:3.2.2",
-            "com.google.guava:guava:21.0",
-            "org.slf4j:slf4j-simple:1.7.29",
-            "org.slf4j:jcl-over-slf4j:1.7.29",
-            "com.github.sevntu-checkstyle:sevntu-checks:1.35.0"
+    artifacts = [
+        "junit:junit:4.12",
+        "org.slf4j:slf4j-api:1.7.29",
+        "org.powermock:powermock-module-junit4:1.7.4",
+        "ch.qos.logback:logback-classic:1.2.3",
+        "com.bettercloud:vault-java-driver:4.0.0",
+        "com.google.code.findbugs:annotations:3.0.0",
+        "com.google.guava:guava:21.0",
+        "com.google.inject:guice:4.2.3",
+        "commons-codec:commons-codec:1.10",
+        "net.rcarz:jira-client:0.8-SNAPSHOT",
+        "org.apache.commons:commons-lang3:3.7",
+        "org.assertj:assertj-core:3.16.1",
+        "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
+        "org.jacoco:org.jacoco.agent:0.8.5",
+        "org.mockito:mockito-core:1.10.19",
+        "org.projectlombok:lombok:1.18.6",
+        "antlr:antlr:2.7.7",
+        "org.antlr:antlr4-runtime:4.7",
+        "com.puppycrawl.tools:checkstyle:8.5",
+        "commons-beanutils:commons-beanutils:1.9.3",
+        "info.picocli:picocli:3.8.2",
+        "commons-collections:commons-collections:3.2.2",
+        "com.google.guava:guava:21.0",
+        "org.slf4j:slf4j-simple:1.7.29",
+        "org.slf4j:jcl-over-slf4j:1.7.29",
+        "com.github.sevntu-checkstyle:sevntu-checks:1.35.0",
     ],
     version_conflict_policy = "pinned",
     repositories = [

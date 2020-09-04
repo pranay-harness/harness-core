@@ -1,0 +1,62 @@
+{
+    "pr": {
+        "action": "OPEN",
+        "repo": {
+            "id": "288719292",
+            "namespace": "wings-software",
+            "name": "test-webhook",
+            "branch": "master",
+            "private": true,
+            "clone": "https://github.com/wings-software/test-webhook.git",
+            "cloneSsh": "git@github.com:wings-software/test-webhook.git",
+            "link": "https://github.com/wings-software/test-webhook",
+            "created": "0001-01-01T00:00:00Z",
+            "updated": "0001-01-01T00:00:00Z"
+        },
+        "pr": {
+            "number": "2",
+            "title": "Update README.md",
+            "body": "pr request",
+            "sha": "616993848535117531eea23f39aa046999f5237f",
+            "ref": "refs/pull/2/head",
+            "source": "shubham149-patch-2",
+            "target": "master",
+            "fork": "wings-software/test-webhook",
+            "link": "https://github.com/wings-software/test-webhook/pull/2",
+            "base": {
+                "name": "master",
+                "path": "refs/heads/master",
+                "sha": "bafbacb95e8941fdc1cfced3d229bd15ddc2bc8b"
+            },
+            "head": {
+                "name": "shubham149-patch-2",
+                "path": "refs/heads/shubham149-patch-2",
+                "sha": "616993848535117531eea23f39aa046999f5237f"
+            },
+            "author": {
+                "login": "shubham149",
+                "avatar": "https://avatars1.githubusercontent.com/u/61136843?v=4",
+                "created": "0001-01-01T00:00:00Z",
+                "updated": "0001-01-01T00:00:00Z"
+            },
+            "created": "2020-09-03T09:25:26Z",
+            "updated": "2020-09-03T09:25:26Z",
+            "labels": [
+                {
+                    "name": "go",
+                    "color": "f4a869"
+                },
+                {
+                    "name": "good first issue",
+                    "color": "7057ff"
+                }
+            ]
+        },
+        "sender": {
+            "login": "shubham149",
+            "avatar": "https://avatars1.githubusercontent.com/u/61136843?v=4",
+            "created": "0001-01-01T00:00:00Z",
+            "updated": "0001-01-01T00:00:00Z"
+        }
+    }
+}

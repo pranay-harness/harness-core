@@ -48,6 +48,10 @@ func convertPR(pr scm.PullRequest) (*pb.PullRequest, error) {
 		return nil, err
 	}
 
+	var labels []*pb.Label
+	for _, l := range pr.Labels {
+		labels = append(labels, convertLabel(l))
+	}
 	return &pb.PullRequest{
 		Number:  int64(pr.Number),
 		Title:   pr.Title,
@@ -65,5 +69,6 @@ func convertPR(pr scm.PullRequest) (*pb.PullRequest, error) {
 		Author:  author,
 		Created: createTs,
 		Updated: updateTs,
+		Labels:  labels,
 	}, nil
 }

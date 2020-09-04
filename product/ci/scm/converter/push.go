@@ -20,6 +20,14 @@ func ConvertPushHook(p *scm.PushHook) (*pb.PushHook, error) {
 		return nil, err
 	}
 
+	var commits []*pb.Commit
+	for _, c := range p.Commits {
+		commit, err := convertCommit(c)
+		if err != nil {
+			return nil, err
+		}
+		commits = append(commits, commit)
+	}
 	return &pb.PushHook{
 		Ref:     p.Ref,
 		BaseRef: p.BaseRef,
@@ -27,6 +35,7 @@ func ConvertPushHook(p *scm.PushHook) (*pb.PushHook, error) {
 		Before:  p.Before,
 		After:   p.After,
 		Commit:  commit,
+		Commits: commits,
 		Sender:  sender,
 	}, nil
 }

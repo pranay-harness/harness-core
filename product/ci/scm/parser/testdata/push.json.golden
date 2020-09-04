@@ -1,0 +1,61 @@
+{
+    "push": {
+        "ref": "refs/heads/master",
+        "repo": {
+            "id": "288719292",
+            "namespace": "wings-software",
+            "name": "test-webhook",
+            "branch": "master",
+            "private": true,
+            "clone": "https://github.com/wings-software/test-webhook.git",
+            "cloneSsh": "git@github.com:wings-software/test-webhook.git",
+            "link": "https://github.com/wings-software/test-webhook",
+            "created": "0001-01-01T00:00:00Z",
+            "updated": "0001-01-01T00:00:00Z"
+        },
+        "before": "e286f86f4db84e682b50007772a28a9d5e9b51d0",
+        "after": "3c377597b64e441cae5378b660578fa00983aaba",
+        "commit": {
+            "sha": "3c377597b64e441cae5378b660578fa00983aaba",
+            "message": "Update README.md",
+            "author": {
+                "name": "Shubham Agrawal",
+                "email": "shubham.agrawal@harness.io",
+                "date": "2020-08-25T07:30:01Z",
+                "login": "shubham149"
+            },
+            "committer": {
+                "name": "GitHub",
+                "email": "noreply@github.com",
+                "date": "2020-08-25T07:30:01Z",
+                "login": "web-flow"
+            },
+            "link": "https://github.com/wings-software/test-webhook/compare/e286f86f4db8...3c377597b64e"
+        },
+        "sender": {
+            "login": "shubham149",
+            "avatar": "https://avatars1.githubusercontent.com/u/61136843?v=4",
+            "created": "0001-01-01T00:00:00Z",
+            "updated": "0001-01-01T00:00:00Z"
+        },
+        "commits": [
+            {
+                "sha": "3c377597b64e441cae5378b660578fa00983aaba",
+                "message": "Update README.md",
+                "author": {
+                    "name": "Shubham Agrawal",
+                    "email": "shubham.agrawal@harness.io",
+                    "date": "2020-08-25T07:30:01Z",
+                    "login": "shubham149"
+                },
+                "committer": {
+                    "name": "GitHub",
+                    "email": "noreply@github.com",
+                    "date": "2020-08-25T07:30:01Z",
+                    "login": "web-flow"
+                },
+                "link": "https://github.com/wings-software/test-webhook/commit/3c377597b64e441cae5378b660578fa00983aaba"
+            }
+        ]
+    }
+}

@@ -75,6 +75,14 @@ func convertPerm(p *scm.Perm) *pb.Perm {
 	}
 }
 
+// convertLabel converts *scm.Label to protobuf object
+func convertLabel(l scm.Label) *pb.Label {
+	return &pb.Label{
+		Name:  l.Name,
+		Color: l.Color,
+	}
+}
+
 // convertRepo converts scm.Repository to protobuf object
 func convertRepo(r scm.Repository) (*pb.Repository, error) {
 	createTs, err := ptypes.TimestampProto(r.Created)
