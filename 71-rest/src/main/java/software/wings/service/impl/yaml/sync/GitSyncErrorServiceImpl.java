@@ -49,6 +49,8 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.GitConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -98,7 +100,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private static final EnumSet<GitFileActivity.Status> TERMINATING_STATUSES =
       EnumSet.of(GitFileActivity.Status.EXPIRED, GitFileActivity.Status.DISCARDED);
-  private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
   private WingsPersistence wingsPersistence;
   private YamlGitService yamlGitService;
@@ -326,15 +327,15 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     }
     List<String> connectorIdList =
         commitWiseErrorDetails.stream().map(GitToHarnessErrorCommitStats::getGitConnectorId).collect(toList());
-    Map<String, String> connetorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
+    Map<String, SettingAttribute> connectorMap = gitSyncService.getGitConnectorMap(connectorIdList, accountId);
     List<GitToHarnessErrorCommitStats> filteredCommitDetails = new ArrayList<>();
     for (GitToHarnessErrorCommitStats commitStats : commitWiseErrorDetails) {
       String gitConnectorId = commitStats.getGitConnectorId();
-      if (connetorIdNameMap.containsKey(gitConnectorId)) {
-        commitStats.setGitConnectorName(connetorIdNameMap.get(gitConnectorId));
-      } else {
-        commitStats.setGitConnectorName(UNKNOWN_GIT_CONNECTOR);
-      }
+      String connectorName = gitSyncService.getConnectorNameFromConnectorMap(gitConnectorId, connectorMap);
+      GitConfig gitConfig = gitSyncService.getGitConfigFromConnectorMap(gitConnectorId, connectorMap);
+      commitStats.setGitConnectorName(connectorName);
+      commitStats.setRepositoryInfo(
+          gitConfigHelperService.createRepositoryInfo(gitConfig, commitStats.getRepositoryName()));
       filteredCommitDetails.add(commitStats);
     }
     return filteredCommitDetails;
@@ -711,16 +712,15 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       return Collections.emptyList();
     }
     List<String> connectorIdList = gitSyncErrors.stream().map(error -> error.getGitConnectorId()).collect(toList());
-    Map<String, String> connetorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
+    Map<String, SettingAttribute> connectorMap = gitSyncService.getGitConnectorMap(connectorIdList, accountId);
     List<GitSyncError> filteredErrors = new ArrayList<>();
 
     for (GitSyncError error : gitSyncErrors) {
       String gitConnectorId = error.getGitConnectorId();
-      if (connetorIdNameMap.containsKey(gitConnectorId)) {
-        error.setGitConnectorName(connetorIdNameMap.get(gitConnectorId));
-      } else {
-        error.setGitConnectorName(UNKNOWN_GIT_CONNECTOR);
-      }
+      String connectorName = gitSyncService.getConnectorNameFromConnectorMap(gitConnectorId, connectorMap);
+      GitConfig gitConfig = gitSyncService.getGitConfigFromConnectorMap(gitConnectorId, connectorMap);
+      error.setGitConnectorName(connectorName);
+      error.setRepositoryInfo(gitConfigHelperService.createRepositoryInfo(gitConfig, error.getRepositoryName()));
       filteredErrors.add(error);
     }
     return filteredErrors;
@@ -840,30 +840,33 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .build();
   }
 
-  private GitProcessingError getGitProcessingErrorWithConnectorName(
-      GitProcessingError gitProcessingError, Map<String, String> connectorNameIdMap) {
+  private void populateGitProcessingErrorWithConnectorName(
+      GitProcessingError gitProcessingError, Map<String, SettingAttribute> connectorMap) {
     if (gitProcessingError == null) {
-      return null;
+      return;
     }
     String gitConnectorId = gitProcessingError.getGitConnectorId();
-    if (isBlank(gitProcessingError.getGitConnectorId()) || !connectorNameIdMap.containsKey(gitConnectorId)) {
+    if (isBlank(gitProcessingError.getGitConnectorId()) || !connectorMap.containsKey(gitConnectorId)) {
       gitProcessingError.setConnectorName(null);
       gitProcessingError.setBranchName(null);
       gitProcessingError.setRepositoryName(null);
     } else {
-      gitProcessingError.setConnectorName(connectorNameIdMap.get(gitConnectorId));
+      String connectorName = gitSyncService.getConnectorNameFromConnectorMap(gitConnectorId, connectorMap);
+      GitConfig gitConfig = gitSyncService.getGitConfigFromConnectorMap(gitConnectorId, connectorMap);
+      gitProcessingError.setConnectorName(connectorName);
+      gitProcessingError.setRepositoryInfo(
+          gitConfigHelperService.createRepositoryInfo(gitConfig, gitProcessingError.getRepositoryName()));
     }
-    return gitProcessingError;
   }
 
   private void populateTheConnectorName(
-      List<GitProcessingError> gitProcessingErrors, Map<String, String> connectorNameIdMap) {
+      List<GitProcessingError> gitProcessingErrors, Map<String, SettingAttribute> connectorMap) {
     if (isEmpty(gitProcessingErrors)) {
       return;
     }
     // We need to filter because maybe someone deleted the connector and
-    // alert still uses that gitconnectorId
-    gitProcessingErrors.forEach(e -> getGitProcessingErrorWithConnectorName(e, connectorNameIdMap));
+    // alert still uses that gitConnectorId
+    gitProcessingErrors.forEach(e -> populateGitProcessingErrorWithConnectorName(e, connectorMap));
   }
 
   private List<Alert> getGitConnectionAlert(String accountId) {
@@ -887,8 +890,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         gitProcessingAlerts.stream().map(this ::getGitProcessingError).collect(toList());
     List<String> connectorIds =
         gitProcessingErrors.stream().map(GitProcessingError::getGitConnectorId).distinct().collect(toList());
-    Map<String, String> connectorNameIdMap = gitConfigHelperService.getConnectorIdNameMap(connectorIds, accountId);
-    populateTheConnectorName(gitProcessingErrors, connectorNameIdMap);
+    Map<String, SettingAttribute> connectorMap = gitSyncService.getGitConnectorMap(connectorIds, accountId);
+    populateTheConnectorName(gitProcessingErrors, connectorMap);
     return aPageResponse().withTotal(gitProcessingErrors.size()).withResponse(gitProcessingErrors).build();
   }
 }

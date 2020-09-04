@@ -3,8 +3,10 @@ package software.wings.service.intfc.yaml.sync;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.GitCommit;
+import software.wings.beans.GitConfig;
 import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
@@ -102,4 +104,10 @@ public interface GitSyncService {
   List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(String accountId, String appId, int count, Boolean gitToHarness);
 
   void changeAppIdOfNewlyAddedFiles(Set<String> nameOfTheNewAppsAdded, String accountId, String processingCommitId);
+
+  Map<String, SettingAttribute> getGitConnectorMap(List<String> gitConnectorIds, String accountId);
+
+  String getConnectorNameFromConnectorMap(String gitConnectorId, Map<String, SettingAttribute> gitConnectorMap);
+
+  GitConfig getGitConfigFromConnectorMap(String gitConnectorId, Map<String, SettingAttribute> gitConnectorMap);
 }

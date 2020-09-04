@@ -30,8 +30,10 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.transport.URIish;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitRepositoryInfo;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -46,9 +48,12 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 
+import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -195,13 +200,63 @@ public class GitConfigHelperService {
   public void convertToRepoGitConfig(GitConfig gitConfig, String repoName) {
     notNullCheck("GitConfig provided cannot be null", gitConfig);
     if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
-      notEmptyCheck("Repo name cannot be null for Account level git connector", repoName);
-      String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
-      String purgedRepoName = repoName.replaceAll("^/*", "");
-      gitConfig.setRepoUrl(purgedRepoUrl + "/" + purgedRepoName);
+      String repositoryUrl = getRepositoryUrl(gitConfig, repoName);
+      gitConfig.setRepoUrl(repositoryUrl);
     }
 
     gitConfig.setRepoName(repoName);
     gitConfig.setUrlType(GitConfig.UrlType.REPO);
+  }
+
+  private String getRepositoryUrl(GitConfig gitConfig, String repoName) {
+    notNullCheck("GitConfig provided cannot be null", gitConfig);
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+      notEmptyCheck("Repo name cannot be null for Account level git connector", repoName);
+      String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
+      String purgedRepoName = repoName.replaceAll("^/*", "");
+      return purgedRepoUrl + "/" + purgedRepoName;
+    }
+    return gitConfig.getRepoUrl();
+  }
+
+  private String getDisplayRepositoryUrl(String repositoryUrl) {
+    try {
+      URIish uri = new URIish(repositoryUrl);
+      String path = uri.getPath();
+      path = StringUtils.removeEnd(path, "/");
+      path = StringUtils.removeEnd(path, ".git");
+      return StringUtils.removeStart(path, "/");
+    } catch (URISyntaxException e) {
+      logger.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
+    }
+    return repositoryUrl;
+  }
+
+  private GitRepositoryInfo.GitProvider getGitProvider(String repositoryUrl) {
+    try {
+      URIish uri = new URIish(repositoryUrl);
+      String host = uri.getHost();
+      if (null != host) {
+        Optional<GitRepositoryInfo.GitProvider> provider =
+            Arrays.stream(GitRepositoryInfo.GitProvider.values())
+                .filter(
+                    p -> p != GitRepositoryInfo.GitProvider.UNKNOWN && StringUtils.containsIgnoreCase(host, p.name()))
+                .findFirst();
+        if (provider.isPresent()) {
+          return provider.get();
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Failed to generate Git Provider Repository Url {}", repositoryUrl, e);
+    }
+    return GitRepositoryInfo.GitProvider.UNKNOWN;
+  }
+
+  public GitRepositoryInfo createRepositoryInfo(GitConfig gitConfig, String repositoryName) {
+    String repositoryUrl = getRepositoryUrl(gitConfig, repositoryName);
+    String displayUrl = getDisplayRepositoryUrl(repositoryUrl);
+    GitRepositoryInfo.GitProvider provider = getGitProvider(repositoryUrl);
+
+    return GitRepositoryInfo.builder().url(repositoryUrl).displayUrl(displayUrl).provider(provider).build();
   }
 }

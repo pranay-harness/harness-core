@@ -2,14 +2,20 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.GitCommit.Status.COMPLETED;
 import static software.wings.beans.GitCommit.Status.FAILED;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import com.google.inject.Inject;
 
@@ -28,11 +34,13 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -55,21 +63,29 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @InjectMocks @Inject private GitSyncErrorService gitSyncErrorService;
   @Mock YamlGitConfigService yamlGitConfigService;
+  @Mock GitConfigHelperService gitConfigHelperService;
   private String accountId = generateUuid();
   private String uuid = generateUuid();
   private String gitConnectorName = "gitConnectorName";
   private String repoURL = "https://abc.com";
   String branchName1 = "branchName1";
   private String gitConnectorId;
+  private SettingAttribute settingAttribute;
 
   @Before
   public void setup() {
-    final SettingAttribute gitConfig = SettingAttribute.Builder.aSettingAttribute()
-                                           .withAccountId(accountId)
-                                           .withName(gitConnectorName)
-                                           .withValue(GitConfig.builder().repoUrl(repoURL).branch("branchName").build())
-                                           .build();
-    gitConnectorId = wingsPersistence.save(gitConfig);
+    settingAttribute =
+        aSettingAttribute()
+            .withAccountId(accountId)
+            .withName(gitConnectorName)
+            .withValue(GitConfig.builder()
+                           .repoUrl(repoURL)
+                           .urlType(GitConfig.UrlType.REPO)
+                           .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+                           .branch("branchName")
+                           .build())
+            .build();
+    gitConnectorId = wingsPersistence.save(settingAttribute);
   }
 
   @Test
@@ -142,6 +158,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
 
     assertThat(accountLevelGitDetail.getEntityName()).isEqualTo(accountName);
     assertThat(appLevelGitDetail.getEntityName()).isEqualTo(applicationName);
+    verify(gitConfigHelperService, times(2)).createRepositoryInfo((GitConfig) settingAttribute.getValue(), null);
   }
 
   @Test
@@ -203,6 +220,8 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     final List<GitFileActivity> responseList = pageResponse.getResponse();
     assertThat(responseList.size()).isEqualTo(1);
     assertThat(responseList.get(0).getAccountId()).isEqualTo(accountId);
+    verify(gitConfigHelperService)
+        .createRepositoryInfo((GitConfig) settingAttribute.getValue(), fileActivity.getRepositoryName());
   }
 
   @Test
@@ -517,5 +536,72 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     assertThat(fileActivity2.getBranchName()).isEqualTo(branchName1);
     assertThat(fileActivity2.getCommitMessage()).isEqualTo(commitMessage);
     assertThat(fileActivity2.getErrorMessage()).isEqualTo(errorMsg2);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_getGitConnectorMap() {
+    String uuid1 = wingsPersistence.save(aSettingAttribute()
+                                             .withAccountId(ACCOUNT_ID)
+                                             .withValue(GitConfig.builder().build())
+                                             .withName(SETTING_NAME)
+                                             .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                             .build());
+    String uuid2 = wingsPersistence.save(aSettingAttribute()
+                                             .withAccountId(ACCOUNT_ID)
+                                             .withValue(GitConfig.builder().build())
+                                             .withName(SETTING_NAME)
+                                             .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                             .build());
+    assertThat(gitSyncService.getGitConnectorMap(Arrays.asList(generateUuid()), ACCOUNT_ID)).isEmpty();
+    Map<String, SettingAttribute> gitConnectorMap =
+        gitSyncService.getGitConnectorMap(Arrays.asList(uuid1, uuid2), ACCOUNT_ID);
+    assertThat(gitConnectorMap).isNotEmpty();
+    assertThat(gitConnectorMap).containsOnlyKeys(uuid1, uuid2);
+    gitConnectorMap.values().forEach(v -> {
+      assertThat(v.getUuid()).isNotNull();
+      assertThat(v.getName()).isNotNull();
+      assertThat(v.getValue()).isNotNull();
+    });
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_getConnectorNameFromConnectorMap() {
+    Map<String, SettingAttribute> attributeMap = new HashMap<>();
+    assertThat(gitSyncService.getConnectorNameFromConnectorMap(generateUuid(), attributeMap))
+        .isEqualTo("Unknown Git Connector");
+    attributeMap.put(uuid,
+        aSettingAttribute()
+            .withAccountId(ACCOUNT_ID)
+            .withValue(GitConfig.builder().build())
+            .withName(SETTING_NAME)
+            .withUuid(uuid)
+            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+            .build());
+    assertThat(gitSyncService.getConnectorNameFromConnectorMap(generateUuid(), attributeMap))
+        .isEqualTo("Unknown Git Connector");
+    assertThat(gitSyncService.getConnectorNameFromConnectorMap(uuid, attributeMap)).isEqualTo(SETTING_NAME);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void test_getGitConfigFromConnectorMap() {
+    Map<String, SettingAttribute> attributeMap = new HashMap<>();
+    assertThat(gitSyncService.getGitConfigFromConnectorMap(generateUuid(), attributeMap)).isNull();
+    GitConfig gitConfig = GitConfig.builder().build();
+    attributeMap.put(uuid,
+        aSettingAttribute()
+            .withAccountId(ACCOUNT_ID)
+            .withValue(gitConfig)
+            .withName(SETTING_NAME)
+            .withUuid(uuid)
+            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+            .build());
+    assertThat(gitSyncService.getGitConfigFromConnectorMap(generateUuid(), attributeMap)).isNull();
+    assertThat(gitSyncService.getGitConfigFromConnectorMap(uuid, attributeMap)).isEqualTo(gitConfig);
   }
 }

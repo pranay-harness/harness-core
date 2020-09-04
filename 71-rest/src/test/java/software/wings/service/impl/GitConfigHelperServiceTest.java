@@ -10,6 +10,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.GitRepositoryInfo.GitProvider.BITBUCKET;
+import static software.wings.beans.GitRepositoryInfo.GitProvider.GITHUB;
+import static software.wings.beans.GitRepositoryInfo.GitProvider.GITLAB;
+import static software.wings.beans.GitRepositoryInfo.GitProvider.UNKNOWN;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.VALIDATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -29,6 +33,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitRepositoryInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -36,7 +41,9 @@ import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GitConfigHelperServiceTest extends WingsBaseTest {
   @Mock ExecutionContext context;
@@ -159,6 +166,34 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
         validateGitConfigConvert(repoUrl2, repoName, config, url, GitConfig.UrlType.ACCOUNT, null);
       }
     }
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testCreateRepositoryInfo() throws Exception {
+    Map<String, GitRepositoryInfo.GitProvider> expectedMap = new HashMap<>();
+    String displayUrl = "user/repo";
+    expectedMap.put("https://github.com/user/repo.git", GITHUB);
+    expectedMap.put("git@github.com:user/repo.git", GITHUB);
+    expectedMap.put("https://abc@github.com/user/repo", GITHUB);
+    expectedMap.put("https://bitbucket.org/user/repo.git", BITBUCKET);
+    expectedMap.put("git@bitbucket.org:user/repo.git", BITBUCKET);
+    expectedMap.put("https://abc@bitbucket.org/user/repo", BITBUCKET);
+    expectedMap.put("https://gitlab.com/user/repo.git", GITLAB);
+    expectedMap.put("git@gitlab.com:user/repo.git", GITLAB);
+    expectedMap.put("https://abc@gitlab.com/user/repo", GITLAB);
+    expectedMap.put("https://xyz.com/user/repo.git", UNKNOWN);
+    expectedMap.put("git@xyz.com:user/repo.git", UNKNOWN);
+    expectedMap.put("https://abc@xyz.com/user/repo", UNKNOWN);
+    expectedMap.forEach((k, v) -> {
+      GitRepositoryInfo repositoryInfo =
+          gitConfigHelperService.createRepositoryInfo(GitConfig.builder().repoUrl(k).build(), null);
+      assertThat(repositoryInfo).isNotNull();
+      assertThat(repositoryInfo.getUrl()).isEqualTo(k);
+      assertThat(repositoryInfo.getDisplayUrl()).isEqualTo(displayUrl);
+      assertThat(repositoryInfo.getProvider()).isEqualTo(v);
+    });
   }
 
   @Test

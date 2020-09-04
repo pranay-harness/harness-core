@@ -51,4 +51,5 @@ public class GitFileActivitySummary
   private GitCommit.Status status;
   private GitFileProcessingSummary fileProcessingSummary;
   @Transient private String connectorName;
+  @Transient private GitRepositoryInfo repositoryInfo;
 }

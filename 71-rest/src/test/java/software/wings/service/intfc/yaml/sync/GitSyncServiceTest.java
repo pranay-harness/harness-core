@@ -13,6 +13,8 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitRepositoryInfo;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
 import software.wings.yaml.gitSync.GitSyncMetadata;
@@ -23,6 +25,11 @@ import java.util.List;
 
 public class GitSyncServiceTest extends WingsBaseTest {
   @Inject GitSyncService gitSyncService;
+  private GitRepositoryInfo repositoryInfo = GitRepositoryInfo.builder()
+                                                 .url("https://abc.com/xyz.git")
+                                                 .displayUrl("xyz")
+                                                 .provider(GitRepositoryInfo.GitProvider.UNKNOWN)
+                                                 .build();
 
   @Test
   @Owner(developers = ABHINAV)
@@ -44,6 +51,7 @@ public class GitSyncServiceTest extends WingsBaseTest {
         gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, null);
     assertThat(changeSetDTOList).isNotNull();
     assertThat(changeSetDTOList.size()).isEqualTo(4);
+    changeSetDTOList.forEach(cd -> assertThat(cd.getGitDetail().getRepositoryInfo()).isEqualTo(repositoryInfo));
 
     // Case 2: With git to harness filter
     // With git to harness filter
@@ -51,12 +59,14 @@ public class GitSyncServiceTest extends WingsBaseTest {
         gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, true);
     assertThat(changeSetDTOList_1).isNotNull();
     assertThat(changeSetDTOList_1.size()).isEqualTo(4);
+    changeSetDTOList_1.forEach(cd -> cd.getGitDetail().getRepositoryInfo().equals(repositoryInfo));
 
     // Case 3: With harness to git filter
     List<ChangeSetDTO> changeSetDTOList_2 =
         gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, false);
     assertThat(changeSetDTOList_2).isNotNull();
     assertThat(changeSetDTOList_2.size()).isEqualTo(0);
+    changeSetDTOList_2.forEach(cd -> cd.getGitDetail().getRepositoryInfo().equals(repositoryInfo));
   }
 
   private void saveYamlChangeSetCombinations(
@@ -73,6 +83,7 @@ public class GitSyncServiceTest extends WingsBaseTest {
                               .withName(gitConnectorName)
                               .withUuid(gitConnectorid)
                               .withAccountId(GLOBAL_ACCOUNT_ID)
+                              .withValue(GitConfig.builder().repoUrl("https://abc.com/xyz.git").build())
                               .build());
     wingsPersistence.save(
         Application.Builder.anApplication().uuid(appId).appId(appId).accountId(GLOBAL_ACCOUNT_ID).build());

@@ -42,6 +42,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.GitCommit;
+import software.wings.beans.GitConfig;
 import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.GitFileActivitySummary.GitFileActivitySummaryKeys;
@@ -82,7 +83,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -123,12 +123,12 @@ public class GitSyncServiceImpl implements GitSyncService {
       gitFileActivitiesFilteredByAccountRBAC =
           gitSyncRBACHelper.populateUserHasPermissionForFileField(gitFileActivities, accountId);
     }
-    List<GitFileActivity> fileHistoryWithValidConnectorName =
-        populateConnectorNameInFileHistory(gitFileActivitiesFilteredByAccountRBAC, accountId);
+    populateConnectorNameInFileHistory(gitFileActivitiesFilteredByAccountRBAC, accountId);
+
     if (!activityForFileHistory) {
-      sortGitFileActivityInProcessingOrder(fileHistoryWithValidConnectorName);
+      sortGitFileActivityInProcessingOrder(gitFileActivitiesFilteredByAccountRBAC);
     }
-    response.setResponse(fileHistoryWithValidConnectorName);
+    response.setResponse(gitFileActivitiesFilteredByAccountRBAC);
     return response;
   }
 
@@ -150,22 +150,19 @@ public class GitSyncServiceImpl implements GitSyncService {
     }
   }
 
-  private List<GitFileActivity> populateConnectorNameInFileHistory(
-      List<GitFileActivity> gitFileActivities, String accountId) {
+  private void populateConnectorNameInFileHistory(List<GitFileActivity> gitFileActivities, String accountId) {
     if (isEmpty(gitFileActivities)) {
-      return gitFileActivities;
+      return;
     }
-    List<String> connectorIdList =
-        gitFileActivities.stream().map(commit -> commit.getGitConnectorId()).collect(toList());
-    Map<String, String> connectorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
-    return gitFileActivities.stream()
-        .map(fileActivity -> {
-          String connectorName =
-              connectorIdNameMap.getOrDefault(fileActivity.getGitConnectorId(), UNKNOWN_GIT_CONNECTOR);
-          fileActivity.setConnectorName(connectorName);
-          return fileActivity;
-        })
-        .collect(toList());
+    List<String> connectorIdList = gitFileActivities.stream().map(GitFileActivity::getGitConnectorId).collect(toList());
+    Map<String, SettingAttribute> gitConnectorMap = getGitConnectorMap(connectorIdList, accountId);
+    gitFileActivities.forEach(fileActivity -> {
+      String connectorName = getConnectorNameFromConnectorMap(fileActivity.getGitConnectorId(), gitConnectorMap);
+      GitConfig gitConfig = getGitConfigFromConnectorMap(fileActivity.getGitConnectorId(), gitConnectorMap);
+      fileActivity.setConnectorName(connectorName);
+      fileActivity.setRepositoryInfo(
+          gitConfigHelperService.createRepositoryInfo(gitConfig, fileActivity.getRepositoryName()));
+    });
   }
 
   public List<GitFileActivity> getActivitiesForGitSyncErrors(final List<GitSyncError> errors, Status status) {
@@ -334,44 +331,74 @@ public class GitSyncServiceImpl implements GitSyncService {
     }
 
     // SettingAttribute collection
-    final Set<String> gitConnectorIds =
-        yamlGitConfigs.stream().map(yamlGitConfig -> yamlGitConfig.getGitConnectorId()).collect(Collectors.toSet());
-    Map<String, String> gitConnectorIdURLMap = getGitConnectorIdNameMap(gitConnectorIds, accountId);
-    return createGitDetails(yamlGitConfigs, gitConnectorIdURLMap);
+    List<String> gitConnectorIds =
+        yamlGitConfigs.stream().map(YamlGitConfig::getGitConnectorId).collect(Collectors.toList());
+    Map<String, SettingAttribute> gitConnectorMap = getGitConnectorMap(gitConnectorIds, accountId);
+    return createGitDetails(yamlGitConfigs, gitConnectorMap);
   }
 
-  private Map<String, String> getGitConnectorIdNameMap(Set<String> gitConnectorIds, String accountId) {
+  /**
+   * @param gitConnectorIds List of git connector ids
+   * @param accountId AccountId
+   * @return Returns Map of uuid, SettingAttributes of GitConnector containing uuid, name and value keys.
+   */
+  @Override
+  public Map<String, SettingAttribute> getGitConnectorMap(List<String> gitConnectorIds, String accountId) {
     List<SettingAttribute> gitConnectors = wingsPersistence.createQuery(SettingAttribute.class)
                                                .filter(ACCOUNT_ID_KEY, accountId)
                                                .field(ID_KEY)
                                                .in(gitConnectorIds)
                                                .project(SettingAttributeKeys.uuid, true)
                                                .project(SettingAttributeKeys.name, true)
+                                               .project(SettingAttributeKeys.value, true)
                                                .asList();
     if (isEmpty(gitConnectors)) {
       return Collections.emptyMap();
     }
-    return gitConnectors.stream().collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getName));
+    return gitConnectors.stream().collect(Collectors.toMap(SettingAttribute::getUuid, Function.identity()));
   }
 
   private List<GitDetail> createGitDetails(
-      List<YamlGitConfig> yamlGitConfigs, Map<String, String> gitConnectorIdNameMap) {
+      List<YamlGitConfig> yamlGitConfigs, Map<String, SettingAttribute> gitConnectorMap) {
     if (isEmpty(yamlGitConfigs)) {
       return Collections.emptyList();
     }
     return yamlGitConfigs.stream()
-        .map(yamlGitConfig -> createGitDetail(yamlGitConfig, gitConnectorIdNameMap))
+        .map(yamlGitConfig -> createGitDetail(yamlGitConfig, gitConnectorMap, EMPTY_STR))
         .collect(Collectors.toList());
   }
 
-  private GitDetail createGitDetail(YamlGitConfig yamlGitConfig, Map<String, String> gitConnectorIdNameMap) {
-    String gitConnectorName =
-        getConnectorNameFromConnectorIdMap(yamlGitConfig.getGitConnectorId(), gitConnectorIdNameMap);
-    return buildGitDetail(yamlGitConfig, gitConnectorName, EMPTY_STR);
+  private GitDetail createGitDetail(
+      YamlGitConfig yamlGitConfig, Map<String, SettingAttribute> gitConnectorMap, String gitCommitId) {
+    String gitConnectorName = getConnectorNameFromConnectorMap(yamlGitConfig.getGitConnectorId(), gitConnectorMap);
+    GitConfig gitConfig = getGitConfigFromConnectorMap(yamlGitConfig.getGitConnectorId(), gitConnectorMap);
+    return buildGitDetail(yamlGitConfig, gitConnectorName, gitConfig, gitCommitId);
   }
 
-  private String getConnectorNameFromConnectorIdMap(String gitConnectorId, Map<String, String> gitConnectorIdNameMap) {
-    return gitConnectorIdNameMap.getOrDefault(gitConnectorId, UNKNOWN_GIT_CONNECTOR);
+  private GitDetail buildGitDetail(
+      YamlGitConfig yamlGitConfig, String gitConnectorName, GitConfig gitConfig, String gitCommitId) {
+    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName, gitCommitId);
+    gitDetail.setRepositoryInfo(
+        gitConfigHelperService.createRepositoryInfo(gitConfig, yamlGitConfig.getRepositoryName()));
+    return gitDetail;
+  }
+
+  @Override
+  public String getConnectorNameFromConnectorMap(String gitConnectorId, Map<String, SettingAttribute> gitConnectorMap) {
+    SettingAttribute attribute = gitConnectorMap.get(gitConnectorId);
+    if (null != attribute) {
+      return attribute.getName();
+    }
+    return UNKNOWN_GIT_CONNECTOR;
+  }
+
+  @Override
+  public GitConfig getGitConfigFromConnectorMap(String gitConnectorId, Map<String, SettingAttribute> gitConnectorMap) {
+    SettingAttribute attribute = gitConnectorMap.get(gitConnectorId);
+    if (null != attribute && attribute.getValue() instanceof GitConfig) {
+      return (GitConfig) attribute.getValue();
+    }
+    return null;
   }
 
   private GitDetail buildGitDetail(YamlGitConfig yamlGitConfig, String gitConnectorName, String gitCommitId) {
@@ -396,9 +423,8 @@ public class GitSyncServiceImpl implements GitSyncService {
     PageResponse<GitFileActivitySummary> pageResponse =
         wingsPersistence.query(GitFileActivitySummary.class, pageRequest);
     List<GitFileActivitySummary> gitFileActivitySummaries = pageResponse.getResponse();
-    List<GitFileActivitySummary> gitCommitsWithValidConnectorName =
-        populateConnectorNameInGitFileActivitySummaries(gitFileActivitySummaries, accountId);
-    pageResponse.setResponse(gitCommitsWithValidConnectorName);
+    populateConnectorNameInGitFileActivitySummaries(gitFileActivitySummaries, accountId);
+    pageResponse.setResponse(gitFileActivitySummaries);
     return pageResponse;
   }
 
@@ -418,21 +444,20 @@ public class GitSyncServiceImpl implements GitSyncService {
                                        .in(gitFileActivityIds));
   }
 
-  private List<GitFileActivitySummary> populateConnectorNameInGitFileActivitySummaries(
+  private void populateConnectorNameInGitFileActivitySummaries(
       List<GitFileActivitySummary> gitFileActivitySummaries, String accountId) {
     if (isEmpty(gitFileActivitySummaries)) {
-      return gitFileActivitySummaries;
+      return;
     }
     List<String> connectorIdList =
-        gitFileActivitySummaries.stream().map(commit -> commit.getGitConnectorId()).collect(toList());
-    Map<String, String> connetorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
-    return gitFileActivitySummaries.stream()
-        .map(gitCommit -> {
-          String connectorName = connetorIdNameMap.getOrDefault(gitCommit.getGitConnectorId(), UNKNOWN_GIT_CONNECTOR);
-          gitCommit.setConnectorName(connectorName);
-          return gitCommit;
-        })
-        .collect(toList());
+        gitFileActivitySummaries.stream().map(GitFileActivitySummary::getGitConnectorId).collect(toList());
+    Map<String, SettingAttribute> gitConnectorMap = getGitConnectorMap(connectorIdList, accountId);
+    gitFileActivitySummaries.forEach(summary -> {
+      String connectorName = getConnectorNameFromConnectorMap(summary.getGitConnectorId(), gitConnectorMap);
+      GitConfig gitConfig = getGitConfigFromConnectorMap(summary.getGitConnectorId(), gitConnectorMap);
+      summary.setConnectorName(connectorName);
+      summary.setRepositoryInfo(gitConfigHelperService.createRepositoryInfo(gitConfig, summary.getRepositoryName()));
+    });
   }
 
   private TriggeredBy getTriggeredBy(boolean isGitToHarness, boolean isFullSync) {
@@ -667,23 +692,29 @@ public class GitSyncServiceImpl implements GitSyncService {
           accountId, appId, yamlGitConfig, displayCount, processingStatuses, true);
     }
 
+    List<String> connectorIds =
+        changeSetsWithProcessingStatus.stream()
+            .filter(ycs -> null != ycs.getGitSyncMetadata() && null != ycs.getGitSyncMetadata().getGitConnectorId())
+            .map(ycs -> ycs.getGitSyncMetadata().getGitConnectorId())
+            .collect(toList());
+
+    Map<String, SettingAttribute> gitConnectorMap = getGitConnectorMap(connectorIds, accountId);
+
     return changeSetsWithProcessingStatus.stream()
         .map(changeSet -> {
           if (YamlChangeSet.Status.QUEUED.equals(changeSet.getStatus())) {
-            return makeDTOForQueuedChangeSet(changeSet, yamlGitConfig, accountId);
+            return makeDTOForQueuedChangeSet(changeSet, yamlGitConfig, gitConnectorMap);
           } else {
-            return makeDTOForRunningChangeSet(changeSet, yamlGitConfig, accountId);
+            return makeDTOForRunningChangeSet(changeSet, yamlGitConfig, gitConnectorMap);
           }
         })
         .collect(Collectors.toList());
   }
 
   private ChangeSetDTO makeDTOForRunningChangeSet(
-      YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
-    String gitConnectorName =
-        safelyGetGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
+      YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, Map<String, SettingAttribute> gitConnectorMap) {
     String gitCommitId = getGitCommitId(yamlChangeSet);
-    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName, gitCommitId);
+    GitDetail gitDetail = createGitDetail(yamlGitConfig, gitConnectorMap, gitCommitId);
     RunningChangesetInformation runningChangesetInformation = RunningChangesetInformation.builder()
                                                                   .startedRunningAt(yamlChangeSet.getLastUpdatedAt())
                                                                   .queuedAt(yamlChangeSet.getCreatedAt())
@@ -693,11 +724,9 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private ChangeSetDTO makeDTOForQueuedChangeSet(
-      YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
-    String gitConnectorName =
-        safelyGetGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
+      YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, Map<String, SettingAttribute> gitConnectorMap) {
     String gitCommitId = getGitCommitId(yamlChangeSet);
-    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName, gitCommitId);
+    GitDetail gitDetail = createGitDetail(yamlGitConfig, gitConnectorMap, gitCommitId);
     QueuedChangesetInformation queuedChangesetInformation =
         QueuedChangesetInformation.builder().queuedAt(yamlChangeSet.getCreatedAt()).build();
     return buildChangesetDTO(queuedChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(),
@@ -726,14 +755,6 @@ public class GitSyncServiceImpl implements GitSyncService {
         .status(status)
         .changeSetId(id)
         .build();
-  }
-
-  private String safelyGetGitConnectorNameFromId(String gitConnectorId, String accountId) {
-    SettingAttribute gitConnector = getGitConnectorFromId(gitConnectorId, accountId);
-    if (gitConnector == null) {
-      return UNKNOWN_GIT_CONNECTOR;
-    }
-    return Optional.ofNullable(gitConnector.getName()).orElse(UNKNOWN_GIT_CONNECTOR);
   }
 
   private SettingAttribute getGitConnectorFromId(String gitConnectorId, String accountId) {
