@@ -1541,7 +1541,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logsCVConfiguration.getAppId(), logsCVConfiguration.getUuid(), LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
     Optional<Long> analysisEndMinute;
 
-    if (lastCVAnalysisMinute <= 0) {
+    if (lastCVAnalysisMinute <= 0 || lastCVAnalysisMinute < logsCVConfiguration.getBaselineStartMinute()) {
       logger.info(
           "This is the first ever time we're doing analysis for this configuration {}", logsCVConfiguration.getUuid());
       long analysisEnd = l2RecordMin + CRON_POLL_INTERVAL_IN_MINUTES - 1; // since both are inclusive, we subtract one.
