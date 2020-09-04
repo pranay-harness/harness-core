@@ -41,6 +41,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.features.CeCloudAccountFeature;
@@ -108,6 +109,48 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                        .s3Prefix(S3_BUCKET_PREFIX)
                        .region(S3_REGION)
                        .build());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ROHIT)
+  @Category(UnitTests.class)
+  public void testAllowOnlyOneAWSConnectorCase() {
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setCategory(SettingCategory.CE_CONNECTOR);
+    CEAwsConfig ceAwsConfig =
+        CEAwsConfig.builder()
+            .s3BucketDetails(AwsS3BucketDetails.builder().s3BucketName(S3_BUCKET_NAME).build())
+            .awsCrossAccountAttributes(AwsCrossAccountAttributes.builder().crossAccountRoleArn(ROLE_ARN).build())
+            .build();
+    attribute.setValue(ceAwsConfig);
+    doReturn(AwsS3BucketDetails.builder().s3Prefix(S3_BUCKET_PREFIX).region(S3_REGION).build())
+        .when(awsCeConfigService)
+        .validateCURReportAccessAndReturnS3Config(ceAwsConfig);
+    attribute.setAccountId(ACCOUNT_ID);
+    when(ceCloudAccountFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(2);
+    when(ccmSettingService.listCeCloudAccounts(ACCOUNT_ID)).thenReturn(Collections.singletonList(attribute));
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> settingsService.validateAndUpdateCEDetails(attribute, true))
+        .withMessage("Cannot enable continuous efficiency for more than 1 AWS cloud account");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ROHIT)
+  @Category(UnitTests.class)
+  public void testAllowOnlyOneGCPConnectorCase() {
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setCategory(SettingCategory.CE_CONNECTOR);
+    CEGcpConfig ceGcpConfig = CEGcpConfig.builder().organizationSettingId("orgSettingId").build();
+
+    attribute.setValue(ceGcpConfig);
+    attribute.setAccountId(ACCOUNT_ID);
+    when(ceCloudAccountFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(2);
+    when(ccmSettingService.listCeCloudAccounts(ACCOUNT_ID)).thenReturn(Collections.singletonList(attribute));
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> settingsService.validateAndUpdateCEDetails(attribute, true))
+        .withMessage("Cannot enable continuous efficiency for more than 1 GCP cloud account");
   }
 
   @Test

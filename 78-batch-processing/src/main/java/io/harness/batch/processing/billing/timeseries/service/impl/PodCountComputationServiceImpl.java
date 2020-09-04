@@ -85,8 +85,8 @@ public class PodCountComputationServiceImpl {
         }
         index++;
       }
-      count -= offset;
       podCount.put(startTime, count);
+      count -= offset;
       startTime += FIVE_MINUTES_IN_MILLIS;
     }
     return insertDataInTable(clusterId, accountId, nodeId, jobStartTime, podCount);
