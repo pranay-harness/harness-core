@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
@@ -187,5 +188,16 @@ public class CVConfigServiceImpl implements CVConfigService {
                                                       .set(CVConfigKeys.dataCollectionTaskId, dataCollectionTaskId);
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class).filter(CVConfigKeys.uuid, uuid);
     hPersistence.update(query, updateOperations);
+  }
+
+  @Override
+  public List<CVConfig> list(String accountId, String environmentIdentifier, String serviceIdentifier,
+      CVMonitoringCategory monitoringCategory) {
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
+                                .filter(CVConfigKeys.accountId, accountId)
+                                .filter(CVConfigKeys.envIdentifier, environmentIdentifier)
+                                .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
+                                .filter(CVConfigKeys.category, monitoringCategory);
+    return query.asList();
   }
 }

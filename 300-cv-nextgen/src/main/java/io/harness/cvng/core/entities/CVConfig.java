@@ -12,7 +12,9 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.models.VerificationType;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,6 +29,9 @@ import org.mongodb.morphia.annotations.Id;
 
 import javax.validation.constraints.NotNull;
 
+@CdIndex(name = "env_service_category_index",
+    fields = { @Field("accountId")
+               , @Field("envIdentifier"), @Field(value = "serviceIdentifier") })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigKeys")
 @NoArgsConstructor
