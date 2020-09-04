@@ -296,6 +296,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
 
     StateExecutionInstance dbStateExecutionInstance = executionStateMap.get(stateExecutionInstance.getUuid());
     assertThat(dbStateExecutionInstance).isNotNull();
+    assertThat(dbStateExecutionInstance.getAccountId()).isEqualTo(stateExecutionInstance.getAccountId());
     assertThat(dbStateExecutionInstance.getContextElement()).isEqualTo(stateExecutionInstance.getContextElement());
     assertThat(dbStateExecutionInstance.isContextTransition()).isEqualTo(stateExecutionInstance.isContextTransition());
     assertThat(dbStateExecutionInstance.getDedicatedInterruptCount())
@@ -332,6 +333,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance()
+            .accountId(ACCOUNT_ID)
             .executionUuid(generateUuid())
             .contextElement(InstanceElement.Builder.anInstanceElement().build())
             .contextTransition(false)
