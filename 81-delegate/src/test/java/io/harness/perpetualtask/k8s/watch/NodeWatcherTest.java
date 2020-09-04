@@ -7,7 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.grpc.utils.HTimestamps.toInstant;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_START;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.UTSAV;
@@ -27,6 +26,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
 import io.kubernetes.client.informer.EventType;
@@ -134,7 +134,7 @@ public class NodeWatcherTest extends CategoryTest {
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
       assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
       assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
-      assertThat(toInstant(nodeInfo.getCreationTime())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
     });
@@ -143,7 +143,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
-      assertThat(toInstant(nodeEvent.getTimestamp())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
     });
 
@@ -195,7 +195,7 @@ public class NodeWatcherTest extends CategoryTest {
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
       assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
       assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
-      assertThat(toInstant(nodeInfo.getCreationTime())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
     });
@@ -205,7 +205,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
-      assertThat(toInstant(nodeEvent.getTimestamp())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
     });
 
@@ -213,7 +213,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
-      assertThat(toInstant(nodeEvent.getTimestamp())).hasToString(TIMESTAMP.plusMillis(100).toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.plusMillis(100).getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
     });
 
@@ -265,7 +265,7 @@ public class NodeWatcherTest extends CategoryTest {
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
       assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
       assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
-      assertThat(toInstant(nodeInfo.getCreationTime())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
     });
@@ -275,7 +275,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
-      assertThat(toInstant(nodeEvent.getTimestamp())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
     });
 
@@ -295,7 +295,7 @@ public class NodeWatcherTest extends CategoryTest {
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
       assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
       assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
-      assertThat(toInstant(nodeInfo.getCreationTime())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
     });
@@ -316,7 +316,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
-      assertThat(toInstant(nodeEvent.getTimestamp())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
     });
   }
@@ -335,7 +335,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
       assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
-      assertThat(toInstant(nodeEvent.getTimestamp())).hasToString(TIMESTAMP.toInstant().toString());
+      assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
     });
   }
