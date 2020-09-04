@@ -65,7 +65,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC1_updateUserLockoutPolicy() {
     userLockoutPolicy = UserLockoutPolicy.builder()
