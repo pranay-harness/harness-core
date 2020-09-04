@@ -1,0 +1,16 @@
+directories:
+  990-commons-test
+
+# Automatically includes all relevant targets under the 'directories' above
+derive_targets_from_directories: true
+
+workspace_type: java
+java_language_level: 8
+
+build_flags:
+  --define=ABSOLUTE_JAVABASE=${JAVA_HOME}
+  --javabase=@bazel_tools//tools/jdk:absolute_javabase
+  --host_javabase=@bazel_tools//tools/jdk:absolute_javabase
+  --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
+  --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
+  --java_header_compilation=false
