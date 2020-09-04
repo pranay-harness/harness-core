@@ -55,6 +55,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
   private static final String curReportKey = "CUR Report";
   private static final String curReportConfigKey = "CUR Report Config";
   private static final String validationFailureKey = "Validation Failed";
+  public static final String resources = "RESOURCES";
   private static final String aws = "AWS";
 
   @Override
@@ -126,6 +127,10 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
     if (!report.isRefreshClosedReports()) {
       throw new InvalidArgumentsException(
           ImmutablePair.of(curReportConfigKey, "Data Refresh setting should be Automatic"));
+    }
+    if (!report.getAdditionalSchemaElements().contains(resources)) {
+      throw new InvalidArgumentsException(
+          ImmutablePair.of(curReportConfigKey, "Missing Include ResourceIds in CUR configuration"));
     }
     return AwsS3BucketDetails.builder().region(report.getS3Region()).s3Prefix(report.getS3Prefix()).build();
   }

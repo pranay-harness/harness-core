@@ -115,6 +115,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -710,8 +711,22 @@ public class SettingsServiceImpl implements SettingsService {
   @VisibleForTesting
   void validateAndUpdateCEDetails(SettingAttribute settingAttribute, boolean isSave) {
     if (CE_CONNECTOR == settingAttribute.getCategory()) {
+      List<SettingAttribute> settingAttributesList =
+          ccmSettingService.listCeCloudAccounts(settingAttribute.getAccountId());
+      boolean isAwsConnectorPresent = false;
+      boolean isGCPConnectorPresent = false;
+
+      for (SettingAttribute attribute : settingAttributesList) {
+        if (attribute.getValue() instanceof CEAwsConfig) {
+          isAwsConnectorPresent = true;
+        }
+        if (attribute.getValue() instanceof CEGcpConfig) {
+          isGCPConnectorPresent = true;
+        }
+      }
+
       int maxCloudAccountsAllowed = ceCloudAccountFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
-      int currentCloudAccountsCount = ccmSettingService.listCeCloudAccounts(settingAttribute.getAccountId()).size();
+      int currentCloudAccountsCount = settingAttributesList.size();
 
       if (currentCloudAccountsCount >= maxCloudAccountsAllowed && isSave) {
         logger.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
@@ -721,6 +736,14 @@ public class SettingsServiceImpl implements SettingsService {
       }
 
       if (settingAttribute.getValue() instanceof CEAwsConfig) {
+        // Throw Exception if AWS connector Exists already
+        if (isAwsConnectorPresent && isSave) {
+          logger.info(
+              "Did not save Setting Attribute of type {} for account ID {} because AWS connector exists already",
+              settingAttribute.getValue().getType(), settingAttribute.getAccountId());
+          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 AWS cloud account");
+        }
+
         // Extract AWS Master AccountId
         CEAwsConfig awsConfig = (CEAwsConfig) settingAttribute.getValue();
         Arn roleArn = Arn.fromString(awsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn());
@@ -737,6 +760,16 @@ public class SettingsServiceImpl implements SettingsService {
 
         // Update Bucket Policy
         awsCeConfigService.updateBucketPolicy(awsConfig);
+      }
+
+      if (settingAttribute.getValue() instanceof CEGcpConfig) {
+        // Throw Exception if GCP connector Exists already
+        if (isGCPConnectorPresent && isSave) {
+          logger.info(
+              "Did not save Setting Attribute of type {} for account ID {} because GCP connector exists already",
+              settingAttribute.getValue().getType(), settingAttribute.getAccountId());
+          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 GCP cloud account");
+        }
       }
     }
   }

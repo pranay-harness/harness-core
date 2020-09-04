@@ -92,6 +92,7 @@ public class AWSCEConfigValidationServiceImplTest {
     reportDefinition.setS3Prefix(s3Prefix);
     reportDefinition.setReportName(CUR_REPORT_NAME);
     reportDefinition.setRefreshClosedReports(true);
+    reportDefinition.setAdditionalSchemaElements(Collections.singleton("RESOURCES"));
   }
 
   @Test
@@ -270,6 +271,23 @@ public class AWSCEConfigValidationServiceImplTest {
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
 
     exceptionParamsMap.put("args", "CUR Report Config: Data Refresh setting should be Automatic");
+    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void resourceIdNotPresentTestCase() {
+    AWSCredentialsProvider mockCredential = mock(AWSCredentialsProvider.class);
+    doReturn(mockCredential)
+        .when(awsceConfigValidationService)
+        .getCredentialProvider(ceAwsConfig.getAwsCrossAccountAttributes());
+    reportDefinition.setAdditionalSchemaElements(Collections.emptyList());
+    doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
+
+    exceptionParamsMap.put("args", "CUR Report Config: Missing Include ResourceIds in CUR configuration");
     assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
