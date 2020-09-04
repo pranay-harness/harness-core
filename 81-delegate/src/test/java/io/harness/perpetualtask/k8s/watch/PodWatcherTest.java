@@ -7,8 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.grpc.utils.HTimestamps.toInstant;
-import static io.harness.grpc.utils.HTimestamps.toMillis;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.rule.OwnerRule.AVMOHAN;
@@ -34,6 +32,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
 import io.kubernetes.client.informer.EventType;
@@ -278,19 +277,19 @@ public class PodWatcherTest extends CategoryTest {
   private void deletedMessageAssertions(PodEvent podEvent) {
     assertThat(podEvent.getPodUid()).isEqualTo("948e988d-d300-11e9-b63d-4201ac100a04");
     assertThat(podEvent.getType()).isEqualTo(EVENT_TYPE_TERMINATED);
-    assertThat(toInstant(podEvent.getTimestamp()).toEpochMilli()).isEqualTo(DELETION_TIMESTAMP.toInstant().getMillis());
+    assertThat(HTimestamps.toMillis(podEvent.getTimestamp())).isEqualTo(DELETION_TIMESTAMP.getMillis());
   }
 
   private void scheduledMessageAssertions(PodEvent podEvent) {
     assertThat(podEvent.getPodUid()).isEqualTo("948e988d-d300-11e9-b63d-4201ac100a04");
     assertThat(podEvent.getType()).isEqualTo(EVENT_TYPE_SCHEDULED);
-    assertThat(toMillis(podEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
+    assertThat(HTimestamps.toMillis(podEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
   }
 
   private void infoMessageAssertions(PodInfo podInfo) {
     assertThat(podInfo.getPodUid()).isEqualTo("948e988d-d300-11e9-b63d-4201ac100a04");
     assertThat(podInfo.getPodName()).isEqualTo("manager-79cc97bdfb-r6kzs");
-    assertThat(toMillis(podInfo.getCreationTimestamp())).isEqualTo(TIMESTAMP.getMillis());
+    assertThat(HTimestamps.toMillis(podInfo.getCreationTimestamp())).isEqualTo(TIMESTAMP.getMillis());
     assertThat(podInfo.getNamespace()).isEqualTo("harness");
     assertThat(podInfo.getNodeName()).isEqualTo("gke-pr-private-pool-1-49d0f375-12xx");
     assertThat(podInfo.getContainersList())
