@@ -30,6 +30,8 @@ go_test(
     deps = [
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/scm/proto:go_default_library",
+        "@com_github_golang_protobuf//jsonpb:go_default_library_gen",
+        "@com_github_golang_protobuf//proto:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],

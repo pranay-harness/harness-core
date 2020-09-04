@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
@@ -12,9 +14,9 @@ import (
 )
 
 func TestParsePRWebhookPRSuccess(t *testing.T) {
-	raw, _ := ioutil.ReadFile("testdata/pr.json")
+	data, _ := ioutil.ReadFile("testdata/pr.json")
 	in := &pb.ParseWebhookRequest{
-		Body: string(raw),
+		Body: string(data),
 		Header: &pb.Header{
 			Fields: []*pb.Header_Pair{
 				{
@@ -28,10 +30,18 @@ func TestParsePRWebhookPRSuccess(t *testing.T) {
 	}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	ret, err := ParseWebhook(context.Background(), in, log.Sugar())
+	got, err := ParseWebhook(context.Background(), in, log.Sugar())
 	assert.Nil(t, err)
-	assert.NotNil(t, ret.GetPr())
-	assert.Equal(t, ret.GetPr().GetAction(), pb.Action_OPEN)
+
+	want := &pb.ParseWebhookResponse{}
+	raw, _ := ioutil.ReadFile("testdata/pr.json.golden")
+	jsonpb.UnmarshalString(string(raw), want)
+
+	if !proto.Equal(got, want) {
+		t.Errorf("Unexpected Results")
+		t.Log(got)
+		t.Log(want)
+	}
 }
 
 func TestParsePRWebhook_UnknownActionErr(t *testing.T) {
@@ -78,9 +88,9 @@ func TestParsePRWebhook_UnknownErr(t *testing.T) {
 }
 
 func TestParsePushWebhookPRSuccess(t *testing.T) {
-	raw, _ := ioutil.ReadFile("testdata/push.json")
+	data, _ := ioutil.ReadFile("testdata/push.json")
 	in := &pb.ParseWebhookRequest{
-		Body: string(raw),
+		Body: string(data),
 		Header: &pb.Header{
 			Fields: []*pb.Header_Pair{
 				{
@@ -94,7 +104,16 @@ func TestParsePushWebhookPRSuccess(t *testing.T) {
 	}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	ret, err := ParseWebhook(context.Background(), in, log.Sugar())
+	got, err := ParseWebhook(context.Background(), in, log.Sugar())
 	assert.Nil(t, err)
-	assert.NotNil(t, ret.GetPush())
+	assert.NotNil(t, got.GetPush())
+
+	want := &pb.ParseWebhookResponse{}
+	raw, _ := ioutil.ReadFile("testdata/push.json.golden")
+	jsonpb.UnmarshalString(string(raw), want)
+	if !proto.Equal(got, want) {
+		t.Errorf("Unexpected Results")
+		t.Log(got)
+		t.Log(want)
+	}
 }
