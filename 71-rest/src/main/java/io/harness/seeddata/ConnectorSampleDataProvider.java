@@ -27,6 +27,7 @@ public class ConnectorSampleDataProvider {
             .withValue(
                 DockerConfig.builder().accountId(accountId).dockerRegistryUrl(HARNESS_DOCKER_HUB_CONNECTOR_URL).build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .withSample(true)
             .build();
 
     SettingAttribute existing = settingsService.fetchSettingAttributeByName(
