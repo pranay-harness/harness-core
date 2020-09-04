@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -257,6 +258,24 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfigs.get(0).setProductName("product2");
     save(cvConfigs);
     assertThat(cvConfigService.list(accountId, connectorIdentifier1, "product1", "group1")).hasSize(3);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testList_withServiceEnvironmentCategory() {
+    List<CVConfig> cvConfigs = createCVConfigs(2);
+    String serviceIdentifier = generateUuid();
+    String envIdentifier = generateUuid();
+    CVMonitoringCategory category = CVMonitoringCategory.PERFORMANCE;
+    cvConfigs.forEach(cvConfig -> {
+      cvConfig.setServiceIdentifier(serviceIdentifier);
+      cvConfig.setEnvIdentifier(envIdentifier);
+      cvConfig.setCategory(category);
+    });
+    save(cvConfigs);
+    assertThat(cvConfigService.list(accountId, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+        .hasSize(2);
   }
 
   @Test

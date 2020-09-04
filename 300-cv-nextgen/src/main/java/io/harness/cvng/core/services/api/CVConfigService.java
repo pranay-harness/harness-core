@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
@@ -18,6 +19,8 @@ public interface CVConfigService {
   List<CVConfig> list(String accountId, String connectorIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName, String groupId);
+  List<CVConfig> list(String accountId, String environmentIdentifier, String serviceIdentifier,
+      CVMonitoringCategory monitoringCategory);
   List<String> getProductNames(String accountId, String connectorIdentifier);
 
   void setCollectionTaskId(String uuid, String dataCollectionTaskId);
