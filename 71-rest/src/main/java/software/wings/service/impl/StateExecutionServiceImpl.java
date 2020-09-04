@@ -67,6 +67,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
              new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
                                  .filter(StateExecutionInstanceKeys.appId, appId)
                                  .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                                 .project(StateExecutionInstanceKeys.accountId, true)
                                  .project(StateExecutionInstanceKeys.contextElement, true)
                                  .project(StateExecutionInstanceKeys.contextTransition, true)
                                  .project(StateExecutionInstanceKeys.dedicatedInterruptCount, true)
