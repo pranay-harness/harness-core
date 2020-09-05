@@ -62,7 +62,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.network.Http;
-import io.harness.ng.core.dto.CreateOrganizationDTO;
+import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.observer.Subject;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.persistence.HIterator;
@@ -401,7 +401,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void createDefaultOrganization(String accountId) {
-    CreateOrganizationDTO createOrganizationDTO = new CreateOrganizationDTO();
+    OrganizationDTO createOrganizationDTO = OrganizationDTO.builder().build();
     createOrganizationDTO.setIdentifier("default");
     createOrganizationDTO.setColor("#05a660");
     createOrganizationDTO.setName("Default");

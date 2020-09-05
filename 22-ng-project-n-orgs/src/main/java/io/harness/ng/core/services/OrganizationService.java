@@ -1,5 +1,7 @@
 package io.harness.ng.core.services;
 
+import io.harness.ng.core.dto.OrganizationDTO;
+import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,13 +10,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.util.Optional;
 
 public interface OrganizationService {
-  Organization create(Organization organization);
+  Organization create(String accountIdentifier, OrganizationDTO organization);
 
-  Optional<Organization> get(String accountIdentifier, String organizationIdentifier);
+  Optional<Organization> get(String accountIdentifier, String identifier);
 
-  Organization update(Organization organization);
+  Organization update(String accountIdentifier, String identifier, OrganizationDTO organization);
+
+  Page<Organization> list(String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO);
 
   Page<Organization> list(Criteria criteria, Pageable pageable);
 
-  boolean delete(String accountIdentifier, String organizationIdentifier);
+  boolean delete(String accountIdentifier, String identifier);
 }

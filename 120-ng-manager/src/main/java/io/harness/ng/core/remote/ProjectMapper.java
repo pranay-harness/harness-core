@@ -1,31 +1,32 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.ng.NGConstants.HARNESS_BLUE;
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.ng.core.dto.CreateProjectDTO;
 import io.harness.ng.core.dto.ProjectDTO;
-import io.harness.ng.core.dto.UpdateProjectDTO;
 import io.harness.ng.core.entities.Project;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
+import java.util.Optional;
+
 @UtilityClass
 public class ProjectMapper {
-  static Project toProject(CreateProjectDTO createProjectDTO) {
+  public static Project toProject(ProjectDTO createProjectDTO) {
     return Project.builder()
         .identifier(createProjectDTO.getIdentifier())
-        .accountIdentifier(createProjectDTO.getAccountIdentifier())
         .name(createProjectDTO.getName())
-        .description(createProjectDTO.getDescription())
-        .owners(createProjectDTO.getOwners())
-        .color(createProjectDTO.getColor())
-        .tags(createProjectDTO.getTags())
-        .modules(createProjectDTO.getModules())
+        .description(Optional.ofNullable(createProjectDTO.getDescription()).orElse(""))
+        .owners(Optional.ofNullable(createProjectDTO.getOwners()).orElse(emptyList()))
+        .color(Optional.ofNullable(createProjectDTO.getColor()).orElse(HARNESS_BLUE))
+        .tags(Optional.ofNullable(createProjectDTO.getTags()).orElse(emptyList()))
+        .modules(Optional.ofNullable(createProjectDTO.getModules()).orElse(emptyList()))
         .build();
   }
 
-  static ProjectDTO writeDTO(Project project) {
+  public static ProjectDTO writeDTO(Project project) {
     return ProjectDTO.builder()
-        .id(project.getId())
         .accountIdentifier(project.getAccountIdentifier())
         .orgIdentifier(project.getOrgIdentifier())
         .identifier(project.getIdentifier())
@@ -40,7 +41,7 @@ public class ProjectMapper {
   }
 
   @SneakyThrows
-  static Project applyUpdateToProject(Project project, UpdateProjectDTO updateProjectDTO) {
+  public static Project applyUpdateToProject(Project project, ProjectDTO updateProjectDTO) {
     String jsonString = new ObjectMapper().writer().writeValueAsString(updateProjectDTO);
     return new ObjectMapper().readerForUpdating(project).readValue(jsonString);
   }

@@ -1,7 +1,7 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.ng.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
 import static io.harness.ng.core.RestCallToNGManagerClientUtils.execute;
-import static io.harness.secretmanagerclient.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

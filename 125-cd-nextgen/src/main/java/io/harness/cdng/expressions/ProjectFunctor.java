@@ -19,8 +19,10 @@ public class ProjectFunctor implements LateBindingValue {
   public Object bind() {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
-    return EmptyPredicate.isEmpty(accountId) || EmptyPredicate.isEmpty(projectIdentifier)
+    String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
+    return EmptyPredicate.isEmpty(accountId) || EmptyPredicate.isEmpty(orgIdentifier)
+            || EmptyPredicate.isEmpty(projectIdentifier)
         ? null
-        : projectService.get(accountId, projectIdentifier);
+        : projectService.get(accountId, orgIdentifier, projectIdentifier);
   }
 }

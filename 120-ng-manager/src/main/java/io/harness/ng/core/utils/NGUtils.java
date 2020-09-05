@@ -1,8 +1,10 @@
 package io.harness.ng.core.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 
+import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -17,12 +19,34 @@ import org.apache.commons.lang3.tuple.Pair;
 import software.wings.service.impl.security.SecretManagementException;
 
 import java.util.List;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
 
 @UtilityClass
 public class NGUtils {
+  private static final Validator validator = Validation.buildDefaultValidatorFactory().usingContext().getValidator();
+
   public static void verifyValuesNotChanged(List<Pair<?, ?>> valuesList) {
     for (Pair<?, ?> pair : valuesList) {
       if (!pair.getKey().equals(pair.getValue())) {
+        throw new InvalidRequestException(
+            "Value mismatch, previous: " + pair.getKey() + " current: " + pair.getValue());
+      }
+    }
+  }
+
+  public static void validate(Object entity) {
+    Set<ConstraintViolation<Object>> constraints = validator.validate(entity);
+    if (isNotEmpty(constraints)) {
+      throw new JerseyViolationException(constraints, null);
+    }
+  }
+
+  public static void verifyValuesNotChangedIfPresent(List<Pair<?, ?>> valuesList) {
+    for (Pair<?, ?> pair : valuesList) {
+      if (pair.getValue() != null && !pair.getKey().equals(pair.getValue())) {
         throw new InvalidRequestException(
             "Value mismatch, previous: " + pair.getKey() + " current: " + pair.getValue());
       }

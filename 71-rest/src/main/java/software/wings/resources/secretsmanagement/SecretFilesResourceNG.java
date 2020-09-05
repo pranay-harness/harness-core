@@ -1,11 +1,11 @@
 package software.wings.resources.secretsmanagement;
 
-import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
-import static io.harness.secretmanagerclient.NGConstants.FILE_KEY;
-import static io.harness.secretmanagerclient.NGConstants.FILE_METADATA_KEY;
-import static io.harness.secretmanagerclient.NGConstants.IDENTIFIER_KEY;
-import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
+import static io.harness.ng.NGConstants.ACCOUNT_KEY;
+import static io.harness.ng.NGConstants.FILE_KEY;
+import static io.harness.ng.NGConstants.FILE_METADATA_KEY;
+import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
+import static io.harness.ng.NGConstants.ORG_KEY;
+import static io.harness.ng.NGConstants.PROJECT_KEY;
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import com.google.inject.Inject;

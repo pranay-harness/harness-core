@@ -11,5 +11,5 @@ import java.util.Optional;
 public interface OrganizationRepository
     extends PagingAndSortingRepository<Organization, String>, OrganizationRepositoryCustom {
   Optional<Organization> findByAccountIdentifierAndIdentifierAndDeletedNot(
-      String accountIdentifier, String organizationIdentifier, boolean notDeleted);
+      String accountIdentifier, String identifier, boolean notDeleted);
 }

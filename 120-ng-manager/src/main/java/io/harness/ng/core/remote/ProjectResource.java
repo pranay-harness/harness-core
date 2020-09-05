@@ -1,7 +1,13 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.core.remote.ProjectMapper.applyUpdateToProject;
-import static io.harness.ng.core.remote.ProjectMapper.toProject;
+import static io.harness.ng.NGConstants.ACCOUNT_KEY;
+import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
+import static io.harness.ng.NGConstants.MODULE_TYPE_KEY;
+import static io.harness.ng.NGConstants.ORG_KEY;
+import static io.harness.ng.NGConstants.PAGE_KEY;
+import static io.harness.ng.NGConstants.SEARCH_TERM_KEY;
+import static io.harness.ng.NGConstants.SIZE_KEY;
+import static io.harness.ng.NGConstants.SORT_KEY;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -9,16 +15,13 @@ import static io.harness.utils.PageUtils.getPageRequest;
 import com.google.inject.Inject;
 
 import io.harness.beans.NGPageResponse;
-import io.harness.ng.core.dto.CreateProjectDTO;
+import io.harness.ng.ModuleType;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.dto.UpdateProjectDTO;
-import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -26,9 +29,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,86 +47,65 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 @Api("projects")
-@Path("organizations/{orgIdentifier}/projects")
-@Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Path("projects")
+@Produces({"application/json", "text/yaml"})
+@Consumes({"application/json", "text/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@Slf4j
 public class ProjectResource {
   private final ProjectService projectService;
-  private final OrganizationService organizationService;
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
-  public ResponseDTO<ProjectDTO> create(
-      @PathParam("orgIdentifier") String orgIdentifier, @NotNull @Valid CreateProjectDTO createProjectDTO) {
-    Project project = toProject(createProjectDTO);
-    project.setOrgIdentifier(orgIdentifier);
-    ProjectDTO createdProject = writeDTO(projectService.create(project));
-    Optional<Organization> organization = organizationService.get(createdProject.getAccountIdentifier(), orgIdentifier);
-    organization.ifPresent(value -> createdProject.setOrganizationName(value.getName()));
-    return ResponseDTO.newResponse(createdProject);
+  public ResponseDTO<ProjectDTO> create(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(ORG_KEY) String orgIdentifier, @NotNull @Valid ProjectDTO projectDTO) {
+    Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);
+    return ResponseDTO.newResponse(writeDTO(createdProject));
   }
 
   @GET
-  @Path("{projectIdentifier}")
+  @Path("{identifier}")
   @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
-  public ResponseDTO<Optional<ProjectDTO>> get(
-      @PathParam("orgIdentifier") String orgIdentifier, @PathParam("projectIdentifier") String projectIdentifier) {
-    Optional<ProjectDTO> projectDTO = projectService.get(orgIdentifier, projectIdentifier).map(ProjectMapper::writeDTO);
-    if (projectDTO.isPresent()) {
-      Optional<Organization> organization =
-          organizationService.get(projectDTO.get().getAccountIdentifier(), orgIdentifier);
-      organization.ifPresent(value -> projectDTO.get().setOrganizationName(value.getName()));
-    }
+  public ResponseDTO<Optional<ProjectDTO>> get(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @NotNull @QueryParam(ORG_KEY) String orgIdentifier) {
+    Optional<ProjectDTO> projectDTO =
+        projectService.get(accountIdentifier, orgIdentifier, identifier).map(ProjectMapper::writeDTO);
     return ResponseDTO.newResponse(projectDTO);
   }
 
   @GET
-  @ApiOperation(value = "Gets Project list for an organization", nickname = "getProjectListForOrganization")
-  public ResponseDTO<NGPageResponse<ProjectDTO>> listProjectsForOrganization(
-      @PathParam("orgIdentifier") String orgIdentifier, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("100") int size, @QueryParam("sort") List<String> sort) {
-    Criteria criteria =
-        Criteria.where(ProjectKeys.orgIdentifier).is(orgIdentifier).and(ProjectKeys.deleted).ne(Boolean.TRUE);
+  @ApiOperation(value = "Get Project list", nickname = "getProjectList")
+  public ResponseDTO<NGPageResponse<ProjectDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType,
+      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @QueryParam(PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(SIZE_KEY) @DefaultValue("100") int size, @QueryParam(SORT_KEY) List<String> sort) {
+    ProjectFilterDTO projectFilterDTO =
+        ProjectFilterDTO.builder().searchTerm(searchTerm).orgIdentifier(orgIdentifier).moduleType(moduleType).build();
     Page<ProjectDTO> projects =
-        projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
-    if (!projects.getContent().isEmpty()) {
-      Optional<Organization> organization =
-          organizationService.get(projects.getContent().get(0).getAccountIdentifier(), orgIdentifier);
-      projects.getContent().forEach(
-          project -> organization.ifPresent(value -> project.setOrganizationName(value.getName())));
-    }
+        projectService.list(accountIdentifier, getPageRequest(page, size, sort), projectFilterDTO)
+            .map(ProjectMapper::writeDTO);
     return ResponseDTO.newResponse(getNGPageResponse(projects));
   }
 
   @PUT
-  @Path("{projectIdentifier}")
+  @Path("{identifier}")
   @ApiOperation(value = "Update a project by identifier", nickname = "putProject")
-  public ResponseDTO<Optional<ProjectDTO>> update(@PathParam("orgIdentifier") String orgIdentifier,
-      @PathParam("projectIdentifier") String projectIdentifier, @NotNull @Valid UpdateProjectDTO updateProjectDTO) {
-    Optional<Project> projectOptional = projectService.get(orgIdentifier, projectIdentifier);
-    if (projectOptional.isPresent()) {
-      Project project = applyUpdateToProject(projectOptional.get(), updateProjectDTO);
-      ProjectDTO updatedProject = writeDTO(projectService.update(project));
-      Optional<Organization> organization =
-          organizationService.get(updatedProject.getAccountIdentifier(), orgIdentifier);
-      organization.ifPresent(value -> updatedProject.setOrganizationName(value.getName()));
-      return ResponseDTO.newResponse(Optional.of(updatedProject));
-    }
-    return ResponseDTO.newResponse(Optional.empty());
+  public ResponseDTO<ProjectDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @NotNull @QueryParam(ORG_KEY) String orgIdentifier,
+      @NotNull @Valid ProjectDTO projectDTO) {
+    Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
+    return ResponseDTO.newResponse(writeDTO(updatedProject));
   }
 
   @DELETE
-  @Path("{projectIdentifier}")
+  @Path("{identifier}")
   @ApiOperation(value = "Delete a project by identifier", nickname = "deleteProject")
-  public ResponseDTO<Boolean> delete(
-      @PathParam("orgIdentifier") String orgIdentifier, @PathParam("projectIdentifier") String projectIdentifier) {
-    return ResponseDTO.newResponse(projectService.delete(orgIdentifier, projectIdentifier));
+  public ResponseDTO<Boolean> delete(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @NotNull @QueryParam(ORG_KEY) String orgIdentifier) {
+    return ResponseDTO.newResponse(projectService.delete(accountIdentifier, orgIdentifier, identifier));
   }
 }

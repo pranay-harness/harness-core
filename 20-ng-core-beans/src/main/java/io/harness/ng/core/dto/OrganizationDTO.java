@@ -1,6 +1,10 @@
 package io.harness.ng.core.dto;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +17,9 @@ import javax.validation.constraints.Size;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(NON_NULL)
+@ApiModel(value = "Organization")
 public class OrganizationDTO {
-  String id;
   String accountIdentifier;
   String identifier;
   String name;

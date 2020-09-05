@@ -2,11 +2,11 @@ package software.wings.resources.secretsmanagement;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
-import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PAGE_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
-import static io.harness.secretmanagerclient.NGConstants.SIZE_KEY;
+import static io.harness.ng.NGConstants.ACCOUNT_KEY;
+import static io.harness.ng.NGConstants.ORG_KEY;
+import static io.harness.ng.NGConstants.PAGE_KEY;
+import static io.harness.ng.NGConstants.PROJECT_KEY;
+import static io.harness.ng.NGConstants.SIZE_KEY;
 
 import com.google.inject.Inject;
 

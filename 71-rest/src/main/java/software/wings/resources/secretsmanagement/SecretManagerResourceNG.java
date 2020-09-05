@@ -1,10 +1,10 @@
 package software.wings.resources.secretsmanagement;
 
 import static io.harness.exception.WingsException.USER;
-import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
-import static io.harness.secretmanagerclient.NGConstants.IDENTIFIER_KEY;
-import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
+import static io.harness.ng.NGConstants.ACCOUNT_KEY;
+import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
+import static io.harness.ng.NGConstants.ORG_KEY;
+import static io.harness.ng.NGConstants.PROJECT_KEY;
 
 import com.google.inject.Inject;
 

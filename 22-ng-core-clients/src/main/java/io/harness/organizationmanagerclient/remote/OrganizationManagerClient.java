@@ -1,10 +1,15 @@
 package io.harness.organizationmanagerclient.remote;
 
+import static io.harness.ng.NGConstants.ACCOUNT_KEY;
+import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
+import static io.harness.ng.NGConstants.PAGE_KEY;
+import static io.harness.ng.NGConstants.SEARCH_TERM_KEY;
+import static io.harness.ng.NGConstants.SIZE_KEY;
+import static io.harness.ng.NGConstants.SORT_KEY;
+
 import io.harness.beans.NGPageResponse;
-import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -18,31 +23,26 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrganizationManagerClient {
-  String ACCOUNT_IDENTIFIER = "accountIdentifier";
-  String ORG_IDENTIFIER = "orgIdentifier";
-
-  String ORGANIZATIONS_API = "/accounts/{accountIdentifier}/organizations";
+  String ORGANIZATIONS_API = "/organizations";
 
   @POST(ORGANIZATIONS_API)
   Call<ResponseDTO<OrganizationDTO>> createOrganization(
-      @Path(value = ACCOUNT_IDENTIFIER) String accountIdentifier, @Body CreateOrganizationDTO request);
+      @Query(value = ACCOUNT_KEY) String accountIdentifier, @Body OrganizationDTO organizationDTO);
 
-  @GET(ORGANIZATIONS_API + "/{organizationIdentifier}")
+  @GET(ORGANIZATIONS_API + "/{identifier}")
   Call<ResponseDTO<Optional<OrganizationDTO>>> getOrganization(
-      @Path(value = ACCOUNT_IDENTIFIER) String accountIdentifier,
-      @Path(value = ORG_IDENTIFIER) String organizationIdentifier);
+      @Path(value = IDENTIFIER_KEY) String identifier, @Query(value = ACCOUNT_KEY) String accountIdentifier);
 
   @GET(ORGANIZATIONS_API)
   Call<ResponseDTO<NGPageResponse<OrganizationDTO>>> listOrganization(
-      @Path(value = ACCOUNT_IDENTIFIER) String accountIdentifier, @Query(value = "page") int page,
-      @Query(value = "size") int size, @Query(value = "sort") List<String> sort);
+      @Path(value = ACCOUNT_KEY) String accountIdentifier, @Query(SEARCH_TERM_KEY) String searchTerm,
+      @Query(value = PAGE_KEY) int page, @Query(value = SIZE_KEY) int size, @Query(value = SORT_KEY) List<String> sort);
 
-  @PUT(ORGANIZATIONS_API + "/{organizationIdentifier}")
-  Call<ResponseDTO<Optional<OrganizationDTO>>> updateOrganization(
-      @Path(value = ACCOUNT_IDENTIFIER) String accountIdentifier, @Path(value = ORG_IDENTIFIER) String orgIdentifier,
-      @Body UpdateOrganizationDTO updateOrganizationDTO);
+  @PUT(ORGANIZATIONS_API + "/{identifier}")
+  Call<ResponseDTO<Optional<OrganizationDTO>>> updateOrganization(@Path(value = IDENTIFIER_KEY) String identifier,
+      @Query(value = ACCOUNT_KEY) String accountIdentifier, @Body OrganizationDTO organizationDTO);
 
-  @DELETE(ORGANIZATIONS_API + "/{organizationIdentifier}")
-  Call<ResponseDTO<Boolean>> deleteOrganization(@Path(value = ACCOUNT_IDENTIFIER) String accountIdentifier,
-      @Path(value = ORG_IDENTIFIER) String organizationIdentifier);
+  @DELETE(ORGANIZATIONS_API + "/{identifier}")
+  Call<ResponseDTO<Boolean>> deleteOrganization(
+      @Path(value = IDENTIFIER_KEY) String identifier, @Query(value = ACCOUNT_KEY) String accountIdentifier);
 }
