@@ -1,7 +1,6 @@
-package io.harness.steps.resourcerestraint;
+package io.harness.steps.resourcerestraint.service;
 
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 
 import java.util.List;
 import java.util.Set;
