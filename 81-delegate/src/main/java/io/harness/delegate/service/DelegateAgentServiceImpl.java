@@ -209,7 +209,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -1681,39 +1680,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             executorService.submit(() -> delegateValidateTask.validationResults());
         currentlyValidatingFutures.put(delegateTaskPackage.getDelegateTaskId(), future);
 
-        DelegateValidateTask delegateAlternativeValidateTask = getAlternativeDelegateValidateTask(delegateTaskPackage);
-        if (delegateAlternativeValidateTask != null) {
-          injector.injectMembers(delegateAlternativeValidateTask);
-
-          alternativeExecutor.submit(() -> {
-            try (TaskLogContext ignore = new TaskLogContext(delegateTaskPackage.getDelegateTaskId(),
-
-                     taskData.getTaskType(), getCapabilityDetails(delegateTaskPackage), OVERRIDE_ERROR)) {
-              logger.info("Executing comparison for task type {}", taskData.getTaskType());
-              try {
-                List<DelegateConnectionResult> alternativeResults = delegateAlternativeValidateTask.validationResults();
-                if (alternativeResults == null) {
-                  return;
-                }
-                List<DelegateConnectionResult> originalResults = future.get();
-                if (originalResults == null) {
-                  return;
-                }
-                boolean original = originalResults.stream().allMatch(DelegateConnectionResult::isValidated);
-                boolean alternative = alternativeResults.stream().allMatch(DelegateConnectionResult::isValidated);
-                if (original != alternative) {
-                  logErrorDetails(taskData, alternativeResults, original);
-                }
-              } catch (InterruptedException exception) {
-                logger.error("Comparison failed.", exception);
-                Thread.currentThread().interrupt();
-              } catch (RuntimeException | ExecutionException exception) {
-                logger.error("Comparison failed.", exception);
-              }
-            }
-          });
-        }
-
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
 
       } else if (delegateId.equals(delegateTaskPackage.getDelegateId())) {
@@ -1777,15 +1743,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
           .getDelegateValidateTask(delegateId, delegateTaskPackage, postValidationFunction);
     }
-  }
-
-  private DelegateValidateTask getAlternativeDelegateValidateTask(DelegateTaskPackage delegateTaskPackage) {
-    if (isNotEmpty(delegateTaskPackage.getExecutionCapabilities())
-        && !delegateTaskPackage.isCapabilityFrameworkEnabled()) {
-      return TaskType.valueOf(delegateTaskPackage.getData().getTaskType())
-          .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTaskPackage, null);
-    }
-    return null;
   }
 
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
