@@ -58,7 +58,6 @@
         <module>79-verification</module>
         <module>81-delegate</module>
         <module>82-watcher</module>
-        <module>84-command-library-server</module>
 
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
@@ -67,6 +66,7 @@
         <module>160-model-gen-tool</module>
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
+        <module>210-command-library-server</module>
         <module>300-cv-nextgen</module>
 
     </modules>
