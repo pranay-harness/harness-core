@@ -35,9 +35,9 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.deployment.InstanceDetails;
@@ -699,7 +699,7 @@ public class K8sStateHelper {
   }
 
   public ExecutionResponse handleAsyncResponseWrapper(
-      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
 
@@ -780,7 +780,7 @@ public class K8sStateHelper {
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfrastructureMapping.getUuid())
             .build();
 
-    ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+    DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       throw new K8sPodSyncException(format("Failed to fetch PodList for release %s. Error: %s", releaseName,
           ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage()));
@@ -836,7 +836,7 @@ public class K8sStateHelper {
   }
 
   private ExecutionResponse handleAsyncResponseForGitTaskWrapper(
-      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, DelegateResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);
@@ -916,7 +916,7 @@ public class K8sStateHelper {
   }
 
   private ExecutionResponse handleAsyncResponseForHelmFetchTask(
-      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, DelegateResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);

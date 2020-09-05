@@ -22,7 +22,7 @@ import io.harness.beans.DelegateTask.Status;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -217,7 +217,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     VerificationDataAnalysisResponse metricDataAnalysisResponse =
         VerificationDataAnalysisResponse.builder().stateExecutionData(metricAnalysisExecutionData).build();
     metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.FAILED);
-    Map<String, ResponseData> responseMap = new HashMap<>();
+    Map<String, DelegateResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", metricDataAnalysisResponse);
     dynatraceState.handleAsyncResponse(executionContext, responseMap);
 

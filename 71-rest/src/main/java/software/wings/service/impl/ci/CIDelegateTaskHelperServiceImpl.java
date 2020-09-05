@@ -10,7 +10,7 @@ import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -104,7 +104,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
 
     try {
       logger.info("Sending delegate task for pod creation from manager podname: {}", podParams.getName());
-      ResponseData responseData = delegateService.executeTask(
+      DelegateResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(ACCOUNT_ID)
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -176,7 +176,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     }
 
     try {
-      ResponseData responseData = delegateService.executeTask(
+      DelegateResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(ACCOUNT_ID)
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -212,7 +212,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     }
 
     try {
-      ResponseData responseData = delegateService.executeTask(
+      DelegateResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(ACCOUNT_ID)
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)

@@ -12,7 +12,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.experimental.FieldNameConstants;
@@ -123,7 +123,7 @@ public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     DataCollectionTaskResult executionResponse = (DataCollectionTaskResult) response.values().iterator().next();
     NewRelicMarkerExecutionData analysisExecutionData =

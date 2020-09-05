@@ -21,8 +21,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
@@ -236,10 +236,10 @@ public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepPara
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, ShellScriptStepParameters stepParameters, Map<String, ResponseData> response) {
+      Ambiance ambiance, ShellScriptStepParameters stepParameters, Map<String, DelegateResponseData> response) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     String activityId = response.keySet().iterator().next();
-    ResponseData data = response.values().iterator().next();
+    DelegateResponseData data = response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
     ExecutionStatus executionStatus = null;
     if (data instanceof CommandExecutionResult) {
@@ -294,7 +294,7 @@ public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepPara
           FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
       return stepResponseBuilder.build();
     } else {
-      logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
+      logger.error("Unhandled DelegateResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
     StepResponse stepResponse = stepResponseBuilder.build();

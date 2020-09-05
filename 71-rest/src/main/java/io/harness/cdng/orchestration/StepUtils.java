@@ -1,6 +1,6 @@
 package io.harness.cdng.orchestration;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.state.io.StepResponse;
@@ -13,7 +13,7 @@ import java.util.Map;
 
 @UtilityClass
 public class StepUtils {
-  public StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
+  public StepResponse createStepResponseFromChildResponse(Map<String, DelegateResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
     StepResponseNotifyData statusNotifyResponseData =
         (StepResponseNotifyData) responseDataMap.values().iterator().next();

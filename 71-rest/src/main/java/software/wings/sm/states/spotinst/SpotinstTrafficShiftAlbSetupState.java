@@ -22,7 +22,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbSetupParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -81,7 +81,7 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
     super(name, StateType.SPOTINST_ALB_SHIFT_SETUP.name());
   }
 
-  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
     SpotInstTaskExecutionResponse executionResponse =
         (SpotInstTaskExecutionResponse) response.values().iterator().next();
@@ -244,7 +244,7 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {

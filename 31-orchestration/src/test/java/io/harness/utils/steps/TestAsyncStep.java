@@ -5,7 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
@@ -33,7 +33,7 @@ public class TestAsyncStep implements Step, AsyncExecutable<TestStepParameters> 
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, TestStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, TestStepParameters stepParameters, Map<String, DelegateResponseData> responseDataMap) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 

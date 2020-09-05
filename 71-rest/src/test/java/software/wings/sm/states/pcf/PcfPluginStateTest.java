@@ -59,7 +59,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -445,7 +445,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
                                                                   .gitCommandResult(gitFetchFilesFromMultipleRepoResult)
                                                                   .build();
 
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     response.put("response", gitCommandExecutionResponse);
     final ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).build();
     ((PcfPluginStateExecutionData) context.getStateExecutionData()).setTaskType(TaskType.GIT_FETCH_FILES_TASK);
@@ -474,7 +474,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     final PcfCommandExecutionResponse commandExecutionResponse =
         PcfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     response.put("response", commandExecutionResponse);
 
     ((PcfPluginStateExecutionData) context.getStateExecutionData()).setTaskType(TaskType.PCF_COMMAND_TASK);

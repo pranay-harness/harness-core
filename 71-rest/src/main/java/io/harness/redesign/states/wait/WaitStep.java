@@ -11,7 +11,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delay.SimpleNotifier;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
@@ -49,7 +49,7 @@ public class WaitStep implements Step, AsyncExecutable<WaitStepParameters> {
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, WaitStepParameters waitStepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, WaitStepParameters waitStepParameters, Map<String, DelegateResponseData> responseDataMap) {
     WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
     waitStateExecutionData.setDuration(waitStepParameters.getWaitDurationSeconds());
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());

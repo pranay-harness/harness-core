@@ -11,8 +11,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
@@ -88,7 +88,7 @@ public class JiraHelperService {
                                     .build();
 
     try {
-      ResponseData responseData = delegateService.executeTask(delegateTask);
+      DelegateResponseData responseData = delegateService.executeTask(delegateTask);
       if (responseData instanceof RemoteMethodReturnValueData) {
         RemoteMethodReturnValueData remoteMethodReturnValueData = (RemoteMethodReturnValueData) responseData;
         if (remoteMethodReturnValueData.getException() instanceof InvalidRequestException) {
@@ -229,7 +229,7 @@ public class JiraHelperService {
                                               .build())
                                     .build();
 
-    ResponseData responseData = delegateService.executeTask(delegateTask);
+    DelegateResponseData responseData = delegateService.executeTask(delegateTask);
     if (jiraTaskParameters.getJiraAction() == CHECK_APPROVAL && delegateTask != null) {
       logger.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
           jiraTaskParameters.getIssueId());

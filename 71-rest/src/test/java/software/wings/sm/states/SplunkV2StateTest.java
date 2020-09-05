@@ -20,7 +20,7 @@ import com.google.common.collect.Sets;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -262,7 +262,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
         VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
     response.setExecutionStatus(ExecutionStatus.ERROR);
 
-    Map<String, ResponseData> responseMap = new HashMap<>();
+    Map<String, DelegateResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", response);
 
     ExecutionResponse executionResponse = splunkState.handleAsyncResponse(executionContext, responseMap);
@@ -294,7 +294,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
         VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
     response.setExecutionStatus(ExecutionStatus.SUCCESS);
 
-    Map<String, ResponseData> responseMap = new HashMap<>();
+    Map<String, DelegateResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", response);
 
     SplunkV2State spyState = spy(splunkState);

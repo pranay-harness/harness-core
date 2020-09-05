@@ -5,8 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskRank;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -170,7 +170,7 @@ public class DelegateTask
 
   public static class ResponseDataConverter extends KryoConverter implements SimpleValueConverter {
     public ResponseDataConverter() {
-      super(ResponseData.class);
+      super(DelegateResponseData.class);
     }
   }
 

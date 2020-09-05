@@ -27,8 +27,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
@@ -1276,7 +1276,7 @@ public class CommandState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     if (response.size() != 1) {
       return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
@@ -1284,7 +1284,7 @@ public class CommandState extends State {
           .build();
     }
 
-    ResponseData notifyResponseData = response.values().iterator().next();
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return ExecutionResponse.builder()

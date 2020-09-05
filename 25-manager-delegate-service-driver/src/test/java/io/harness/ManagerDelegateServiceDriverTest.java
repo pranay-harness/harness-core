@@ -30,7 +30,7 @@ import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -128,7 +128,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
                 ByteString.copyFrom(kryoSerializer.asDeflatedBytes(CommandExecutionResult.builder().build())))
             .build();
     when(managerDelegateGrpcClient.sendTask(any(SendTaskRequest.class), anyLong())).thenReturn(sendTaskResponse);
-    ResponseData responseData = managerDelegateServiceDriver.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
+    DelegateResponseData responseData = managerDelegateServiceDriver.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
     assertThat(responseData).isNotNull().isInstanceOf(CommandExecutionResult.class);
   }
 

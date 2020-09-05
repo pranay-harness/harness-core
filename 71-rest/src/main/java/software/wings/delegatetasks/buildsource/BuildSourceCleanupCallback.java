@@ -16,8 +16,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
@@ -67,7 +67,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   @VisibleForTesting
-  void handleResponseForSuccessInternal(ResponseData notifyResponseData, ArtifactStream artifactStream) {
+  void handleResponseForSuccessInternal(DelegateResponseData notifyResponseData, ArtifactStream artifactStream) {
     logger.info("Processing response for BuildSourceCleanupCallback for accountId:[{}] artifactStreamId:[{}]",
         accountId, artifactStreamId);
 
@@ -99,7 +99,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
     }
   }
 
-  private void handleResponseForSuccess(ResponseData notifyResponseData, ArtifactStream artifactStream) {
+  private void handleResponseForSuccess(DelegateResponseData notifyResponseData, ArtifactStream artifactStream) {
     try {
       executorService.submit(() -> {
         try {
@@ -117,8 +117,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, ResponseData> response) {
-    ResponseData notifyResponseData = response.values().iterator().next();
+  public void notify(Map<String, DelegateResponseData> response) {
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (notifyResponseData instanceof BuildSourceExecutionResponse) {
       if (SUCCESS == ((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus()) {
@@ -132,8 +132,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
-    ResponseData notifyResponseData = response.values().iterator().next();
+  public void notifyError(Map<String, DelegateResponseData> response) {
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       logger.info("Request failed :[{}]", ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {

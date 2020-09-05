@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.facilitator.PassThroughData;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
@@ -41,8 +41,8 @@ public interface TaskChainExecutable<T extends StepParameters> {
   TaskChainResponse startChainLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   TaskChainResponse executeNextLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
+      PassThroughData passThroughData, Map<String, DelegateResponseData> responseDataMap);
 
-  StepResponse finalizeExecution(
-      Ambiance ambiance, T stepParameters, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
+  StepResponse finalizeExecution(Ambiance ambiance, T stepParameters, PassThroughData passThroughData,
+      Map<String, DelegateResponseData> responseDataMap);
 }

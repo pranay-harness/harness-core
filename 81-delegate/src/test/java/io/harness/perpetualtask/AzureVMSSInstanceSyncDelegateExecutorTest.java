@@ -19,7 +19,7 @@ import com.google.protobuf.ByteString;
 import io.harness.DelegateTest;
 import io.harness.azure.model.AzureVMData;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.response.AzureVMSSListVMDataResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
@@ -58,7 +58,8 @@ public class AzureVMSSInstanceSyncDelegateExecutorTest extends DelegateTest {
   @Before
   public void setUp() {
     on(executor).set("kryoSerializer", kryoSerializer);
-    when(mockDelegateAgentManagerClient.publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class)))
+    when(mockDelegateAgentManagerClient.publishInstanceSyncResult(
+             anyString(), anyString(), any(DelegateResponseData.class)))
         .thenReturn(mockCall);
   }
 

@@ -4,10 +4,10 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -31,7 +31,7 @@ public class HostValidationTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     HostValidationTaskParameters hostValidationTaskParameters = null;
     if (!(parameters[0] instanceof HostValidationTaskParameters)) {
       hostValidationTaskParameters = HostValidationTaskParameters.builder()

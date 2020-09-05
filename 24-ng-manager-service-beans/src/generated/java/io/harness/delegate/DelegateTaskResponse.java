@@ -39,7 +39,7 @@ public final class DelegateTaskResponse {
             internal_static_io_harness_delegate_SendTaskResultRequest_descriptor,
             new java.lang.String[] {
                 "TaskId",
-                "ResponseData",
+                "DelegateResponseData",
             });
     internal_static_io_harness_delegate_SendTaskResultResponse_descriptor = getDescriptor().getMessageTypes().get(1);
     internal_static_io_harness_delegate_SendTaskResultResponse_fieldAccessorTable =

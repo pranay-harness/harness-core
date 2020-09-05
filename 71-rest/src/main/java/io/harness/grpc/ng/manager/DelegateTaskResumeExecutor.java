@@ -1,17 +1,17 @@
 package io.harness.grpc.ng.manager;
 
 import io.harness.NgManagerServiceDriver;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import lombok.Builder;
 
 public class DelegateTaskResumeExecutor implements Runnable {
   String taskId;
-  ResponseData responseData;
+  DelegateResponseData responseData;
   NgManagerServiceDriver ngManagerServiceDriver;
 
   @Builder
   public DelegateTaskResumeExecutor(
-      String taskId, ResponseData responseData, NgManagerServiceDriver ngManagerServiceDriver) {
+      String taskId, DelegateResponseData responseData, NgManagerServiceDriver ngManagerServiceDriver) {
     this.taskId = taskId;
     this.responseData = responseData;
     this.ngManagerServiceDriver = ngManagerServiceDriver;

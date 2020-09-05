@@ -19,7 +19,7 @@ import com.google.protobuf.ByteString;
 import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
@@ -82,7 +82,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
@@ -118,7 +118,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
@@ -150,7 +150,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;

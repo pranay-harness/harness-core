@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbSwapRoutesParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.ExceptionUtils;
@@ -155,7 +155,7 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (Exception e) {
@@ -170,7 +170,7 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
         new SpotinstDummyCommandUnit(DEPLOYMENT_ERROR));
   }
 
-  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
     SpotInstTaskExecutionResponse executionResponse =
         (SpotInstTaskExecutionResponse) response.values().iterator().next();

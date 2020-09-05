@@ -16,11 +16,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.Capability;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.exception.InvalidRequestException;
@@ -121,7 +121,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
       DelegateTask validationTask = getValidationTask(taskRecord);
 
       try {
-        ResponseData response = delegateService.executeTask(validationTask);
+        DelegateResponseData response = delegateService.executeTask(validationTask);
 
         if (response instanceof DelegateTaskNotifyResponseData) {
           if (response instanceof PerpetualTaskCapabilityCheckResponse) {

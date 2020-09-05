@@ -17,7 +17,7 @@ import com.google.protobuf.ByteString;
 
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
@@ -94,7 +94,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
         .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
@@ -141,7 +141,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
         .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
@@ -182,7 +182,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
     doReturn(Arrays.asList(containerInfo)).when(containerService).getContainerInfos(any(ContainerServiceParams.class));
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
@@ -225,7 +225,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
         .getContainerInfos(any(ContainerServiceParams.class));
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;

@@ -31,7 +31,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.delay.DelayEventHelper;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.executables.ExecutableProcessor;
@@ -367,7 +367,7 @@ public class OrchestrationEngine {
     adviseHandler.handleAdvise(ambiance, advise);
   }
 
-  public void resume(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
+  public void resume(String nodeExecutionId, Map<String, DelegateResponseData> response, boolean asyncError) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = ambiance.autoLogContext()) {

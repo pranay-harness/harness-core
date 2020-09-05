@@ -16,9 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -60,19 +60,19 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("Not implemented");
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     return run((ServiceNowTaskParameters) parameters);
   }
 
-  private ResponseData run(ServiceNowTaskParameters parameters) {
+  private DelegateResponseData run(ServiceNowTaskParameters parameters) {
     ServiceNowAction action = parameters.getAction();
 
-    ResponseData responseData = null;
+    DelegateResponseData responseData = null;
 
     logger.info("Executing ServiceNowTask. Action: {}, IssueNumber: {}", action, parameters.getIssueNumber());
 
@@ -91,7 +91,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData createServiceNowTicket(ServiceNowTaskParameters parameters) {
+  private DelegateResponseData createServiceNowTicket(ServiceNowTaskParameters parameters) {
     ServiceNowConfig config = parameters.getServiceNowConfig();
 
     Map<String, String> body = new HashMap<>();
@@ -138,7 +138,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData createImportSets(ServiceNowTaskParameters parameters) {
+  private DelegateResponseData createImportSets(ServiceNowTaskParameters parameters) {
     Gson gson = new Gson();
     Map body = gson.fromJson(parameters.getJsonBody(), HashMap.class);
     ServiceNowConfig config = parameters.getServiceNowConfig();
@@ -180,7 +180,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData updateServiceNowTicket(ServiceNowTaskParameters parameters) {
+  private DelegateResponseData updateServiceNowTicket(ServiceNowTaskParameters parameters) {
     if (parameters.getTicketType() == CHANGE_TASK && parameters.isUpdateMultiple()) {
       return updateAllChangeTaskTickets(parameters);
     }
@@ -236,7 +236,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData updateAllChangeTaskTickets(ServiceNowTaskParameters parameters) {
+  private DelegateResponseData updateAllChangeTaskTickets(ServiceNowTaskParameters parameters) {
     if (!parameters.getFields().containsKey(ServiceNowFields.CHANGE_REQUEST_NUMBER)
         || EmptyPredicate.isEmpty(parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER))) {
       throw new InvalidRequestException(

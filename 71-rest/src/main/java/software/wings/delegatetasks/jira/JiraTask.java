@@ -7,9 +7,9 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -73,19 +73,19 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     throw new NotImplementedException("not implemented");
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     return run((JiraTaskParameters) parameters[0]);
   }
 
-  public ResponseData run(JiraTaskParameters parameters) {
+  public DelegateResponseData run(JiraTaskParameters parameters) {
     JiraAction jiraAction = parameters.getJiraAction();
 
-    ResponseData responseData = null;
+    DelegateResponseData responseData = null;
 
     logger.info("Executing JiraTask. Action: {}", jiraAction);
 
@@ -140,7 +140,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return responseData;
   }
 
-  private ResponseData validateCredentials(JiraTaskParameters parameters) {
+  private DelegateResponseData validateCredentials(JiraTaskParameters parameters) {
     try {
       JiraClient jiraClient = getJiraClient(parameters);
       jiraClient.getProjects();
@@ -153,7 +153,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
   }
 
-  private ResponseData getCreateMetadata(JiraTaskParameters parameters) {
+  private DelegateResponseData getCreateMetadata(JiraTaskParameters parameters) {
     URI uri = null;
     try {
       logger.info("Getting decrypted jira client configs for GET_CREATE_METADATA");
@@ -191,7 +191,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData getStatuses(JiraTaskParameters parameters) {
+  private DelegateResponseData getStatuses(JiraTaskParameters parameters) {
     try {
       JiraClient jiraClient = getJiraClient(parameters);
       URI uri = jiraClient.getRestClient().buildURI(
@@ -209,7 +209,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData getFieldsAndOptions(JiraTaskParameters parameters) {
+  private DelegateResponseData getFieldsAndOptions(JiraTaskParameters parameters) {
     URI uri;
     SearchResult issues;
     JiraClient jiraClient;
@@ -241,7 +241,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData getProjects(JiraTaskParameters parameters) {
+  private DelegateResponseData getProjects(JiraTaskParameters parameters) {
     try {
       JiraClient jira = getJiraClient(parameters);
       URI uri = jira.getRestClient().buildURI(Resource.getBaseUri() + "project");
@@ -255,7 +255,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData updateTicket(JiraTaskParameters parameters) {
+  private DelegateResponseData updateTicket(JiraTaskParameters parameters) {
     JiraClient jiraClient;
     try {
       jiraClient = getJiraClient(parameters);
@@ -405,7 +405,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return e.getMessage();
   }
 
-  private ResponseData createTicket(JiraTaskParameters parameters) {
+  private DelegateResponseData createTicket(JiraTaskParameters parameters) {
     CommandExecutionStatus commandExecutionStatus;
     try {
       JiraClient jira = getJiraClient(parameters);
@@ -491,7 +491,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData checkJiraApproval(JiraTaskParameters parameters) {
+  private DelegateResponseData checkJiraApproval(JiraTaskParameters parameters) {
     Issue issue;
     logger.info("Checking approval for IssueId = {}", parameters.getIssueId());
     try {
@@ -565,7 +565,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return new JiraClient(jiraConfig.getBaseUrl(), creds);
   }
 
-  private ResponseData fetchIssue(JiraTaskParameters parameters) {
+  private DelegateResponseData fetchIssue(JiraTaskParameters parameters) {
     JiraConfig jiraConfig = parameters.getJiraConfig();
     encryptionService.decrypt(jiraConfig, parameters.getEncryptionDetails());
     JiraClient jira;

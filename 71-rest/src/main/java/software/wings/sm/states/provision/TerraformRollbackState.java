@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -225,8 +225,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    Entry<String, ResponseData> entry = response.entrySet().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+    Entry<String, DelegateResponseData> entry = response.entrySet().iterator().next();
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) entry.getValue();
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 

@@ -7,9 +7,9 @@ import static software.wings.delegatetasks.cv.CVConstants.RETRY_SLEEP_DURATION;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
@@ -54,12 +54,12 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new RuntimeException("Not implemented. This should not get called for data collection tasks.");
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     dataCollectionInfo = (DataCollectionInfoV2) parameters;
     DataCollectionTaskResult dataCollectionTaskResult;
     try (VerificationLogContext ignored =

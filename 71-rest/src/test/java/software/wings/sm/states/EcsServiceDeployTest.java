@@ -33,7 +33,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -175,7 +175,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowWingsException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
     doThrow(new WingsException("test"))
         .when(mockEcsStateHelper)
         .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());
@@ -188,7 +188,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowInvalidRequestException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
     doThrow(new NullPointerException("test"))
         .when(mockEcsStateHelper)
         .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());

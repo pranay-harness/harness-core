@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -207,7 +207,7 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowWingsException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
     EcsCommandExecutionResponse ecsCommandExecutionResponse = mock(EcsCommandExecutionResponse.class);
     delegateResponse.put("test", ecsCommandExecutionResponse);
     doThrow(new WingsException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();
@@ -220,7 +220,7 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowInvalidRequestException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
     EcsCommandExecutionResponse ecsCommandExecutionResponse = mock(EcsCommandExecutionResponse.class);
     delegateResponse.put("test", ecsCommandExecutionResponse);
     doThrow(new NullPointerException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();

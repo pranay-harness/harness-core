@@ -1,11 +1,11 @@
 package software.wings.beans;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 
 /**
  * Created by anubhaw on 2/22/17.
  */
-public class HostValidationResponse implements ResponseData {
+public class HostValidationResponse implements DelegateResponseData {
   private String hostName;
   private String status;
   private String errorCode;

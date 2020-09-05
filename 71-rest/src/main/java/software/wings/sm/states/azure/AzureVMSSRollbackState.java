@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -50,7 +50,7 @@ public class AzureVMSSRollbackState extends AzureVMSSDeployState {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       if (isSuccess(response)) {
         markAllPhaseRollbackDone(context);
@@ -63,7 +63,7 @@ public class AzureVMSSRollbackState extends AzureVMSSDeployState {
     }
   }
 
-  private boolean isSuccess(Map<String, ResponseData> response) {
+  private boolean isSuccess(Map<String, DelegateResponseData> response) {
     AzureVMSSTaskExecutionResponse executionResponse =
         (AzureVMSSTaskExecutionResponse) response.values().iterator().next();
     return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS;

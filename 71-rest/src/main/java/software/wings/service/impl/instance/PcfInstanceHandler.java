@@ -17,8 +17,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.NoDelegatesException;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentInfo;
@@ -77,7 +77,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     Multimap<String, Instance> pcfAppNameInstanceMap = ArrayListMultimap.create();
 
     syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), pcfAppNameInstanceMap,
@@ -368,12 +368,12 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
     return pcfInstanceSyncPerpetualTaskCreator;
   }
 
-  public int getInstanceCount(ResponseData response) {
+  public int getInstanceCount(DelegateResponseData response) {
     return pcfHelperService.getInstanceCount((PcfCommandExecutionResponse) response);
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     PcfCommandExecutionResponse pcfCommandExecutionResponse = (PcfCommandExecutionResponse) response;
     boolean isSuccess = pcfCommandExecutionResponse.getCommandExecutionStatus() == SUCCESS;
     String errorMsg = isSuccess ? null : pcfCommandExecutionResponse.getErrorMessage();

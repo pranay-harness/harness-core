@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import lombok.Builder;
 import lombok.Value;
@@ -13,6 +13,6 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
-public class StatusNotifyResponseData implements ResponseData {
+public class StatusNotifyResponseData implements DelegateResponseData {
   Status status;
 }

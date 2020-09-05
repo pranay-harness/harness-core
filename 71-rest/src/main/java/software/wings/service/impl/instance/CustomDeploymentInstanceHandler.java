@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
@@ -230,13 +230,13 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), null, false,
         (ShellScriptProvisionExecutionData) response, InstanceSyncFlow.PERPETUAL_TASK);
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     ShellScriptProvisionExecutionData executionData = (ShellScriptProvisionExecutionData) response;
     return Status.builder()
         .success(executionData.getExecutionStatus() == ExecutionStatus.SUCCESS)

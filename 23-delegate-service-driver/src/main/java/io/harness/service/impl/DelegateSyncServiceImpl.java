@@ -9,9 +9,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
@@ -61,7 +61,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   }
 
   @Override
-  public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
+  public <T extends DelegateResponseData> T waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse;
     try {
       logger.info("Executing sync task");

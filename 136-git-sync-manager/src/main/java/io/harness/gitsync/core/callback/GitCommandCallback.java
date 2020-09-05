@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -75,12 +75,12 @@ public class GitCommandCallback implements NotifyCallback {
   @Inject private transient GitCommitService gitCommitService;
 
   @Override
-  public void notify(Map<String, ResponseData> response) {
+  public void notify(Map<String, DelegateResponseData> response) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new GitCommandCallbackLogContext(getContext(), OVERRIDE_ERROR)) {
       logger.info("Git command response [{}]", response);
 
-      ResponseData notifyResponseData = response.values().iterator().next();
+      DelegateResponseData notifyResponseData = response.values().iterator().next();
       if (notifyResponseData instanceof GitCommandExecutionResponse) {
         GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
         GitBaseResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
@@ -174,7 +174,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
+  public void notifyError(Map<String, DelegateResponseData> response) {
     logger.warn("Git request failed for command:[{}], changeSetId:[{}], account:[{}], response:[{}]", gitCommandType,
         changeSetId, accountId, response);
     updateChangeSetFailureStatusSafely();

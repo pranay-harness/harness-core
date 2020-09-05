@@ -13,7 +13,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -112,7 +112,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AwsCodeDeployListDeploymentInstancesResponse listInstancesResponse =
         (AwsCodeDeployListDeploymentInstancesResponse) response;
     syncInstancesInternal(infrastructureMapping, null, false, Optional.of(listInstancesResponse.getInstances()),
@@ -245,7 +245,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AwsCodeDeployListDeploymentInstancesResponse listInstancesResponse =
         (AwsCodeDeployListDeploymentInstancesResponse) response;
     boolean success = listInstancesResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;

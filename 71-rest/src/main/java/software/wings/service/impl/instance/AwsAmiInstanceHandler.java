@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -253,14 +253,14 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler implements Instanc
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
     syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), asgInstanceMap, null,
         false, (AwsAsgListInstancesResponse) response, InstanceSyncFlow.PERPETUAL_TASK);
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AwsAsgListInstancesResponse asgListInstancesResponse = (AwsAsgListInstancesResponse) response;
     boolean success = asgListInstancesResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
     boolean deleteTask = success && isEmpty(asgListInstancesResponse.getInstances());

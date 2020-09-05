@@ -16,7 +16,7 @@ import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.Outcome;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
@@ -63,14 +63,14 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
   }
 
   @Override
-  public StepResponse handleChildrenResponse(
-      Ambiance ambiance, ServiceStepParameters serviceStepParameters, Map<String, ResponseData> responseDataMap) {
+  public StepResponse handleChildrenResponse(Ambiance ambiance, ServiceStepParameters serviceStepParameters,
+      Map<String, DelegateResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     boolean allChildrenSuccess = true;
     EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
     List<String> errorMessages = new ArrayList<>();
     List<StepResponseNotifyData> responseNotifyDataList = new ArrayList<>();
-    for (ResponseData responseData : responseDataMap.values()) {
+    for (DelegateResponseData responseData : responseDataMap.values()) {
       StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
       responseNotifyDataList.add(responseNotifyData);
       Status executionStatus = responseNotifyData.getStatus();

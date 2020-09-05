@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.ManagerDelegateServiceDriver;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskManager;
@@ -43,7 +43,7 @@ public class NGDelegateClientResource {
 
   @GET
   @ApiOperation(value = "Create a delegate tasks", nickname = "postDelegate")
-  public ResponseData create(@QueryParam("accountId") @NotBlank String accountId) {
+  public DelegateResponseData create(@QueryParam("accountId") @NotBlank String accountId) {
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
     TaskData taskData =
         TaskData.builder()

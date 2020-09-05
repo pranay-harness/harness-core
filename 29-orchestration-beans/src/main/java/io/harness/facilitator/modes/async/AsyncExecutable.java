@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.facilitator.modes.Abortable;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
@@ -32,5 +32,6 @@ import java.util.Map;
 public interface AsyncExecutable<T extends StepParameters> extends Abortable<T, AsyncExecutableResponse> {
   AsyncExecutableResponse executeAsync(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  StepResponse handleAsyncResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
+  StepResponse handleAsyncResponse(
+      Ambiance ambiance, T stepParameters, Map<String, DelegateResponseData> responseDataMap);
 }

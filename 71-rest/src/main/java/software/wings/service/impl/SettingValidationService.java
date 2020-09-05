@@ -18,9 +18,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -164,7 +164,7 @@ public class SettingValidationService {
                                                 .build())
                                       .build();
       try {
-        ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+        DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
         if (notifyResponseData instanceof ErrorNotifyResponseData) {
           return ValidationResult.builder()
               .errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
@@ -180,7 +180,7 @@ public class SettingValidationService {
         if (!(notifyResponseData instanceof ConnectivityValidationDelegateResponse)) {
           throw new WingsException(ErrorCode.GENERAL_ERROR)
               .addParam("message", "Unknown Response from delegate")
-              .addContext(ResponseData.class, notifyResponseData);
+              .addContext(DelegateResponseData.class, notifyResponseData);
         } else {
           ConnectivityValidationDelegateResponse connectivityValidationDelegateResponse =
               (ConnectivityValidationDelegateResponse) notifyResponseData;
@@ -526,7 +526,7 @@ public class SettingValidationService {
                                                 .build())
                                       .build();
 
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
 
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
@@ -536,7 +536,7 @@ public class SettingValidationService {
       } else if (!(notifyResponseData instanceof HelmRepoConfigValidationResponse)) {
         throw new WingsException(ErrorCode.GENERAL_ERROR)
             .addParam("message", "Unknown response from delegate")
-            .addContext(ResponseData.class, notifyResponseData);
+            .addContext(DelegateResponseData.class, notifyResponseData);
       }
 
       repoConfigValidationResponse = (HelmRepoConfigValidationResponse) notifyResponseData;

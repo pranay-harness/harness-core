@@ -15,7 +15,7 @@ import io.harness.delegate.NgTaskSetupAbstractions;
 import io.harness.delegate.NgTaskType;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -44,9 +44,9 @@ public class NgDelegateTaskResponseGrpcServer
 
   @Override
   public void sendTaskResult(SendTaskResultRequest request, StreamObserver<SendTaskResultResponse> responseObserver) {
-    ResponseData responseData = null;
+    DelegateResponseData responseData = null;
     if (!request.getResponseData().isEmpty()) {
-      responseData = (ResponseData) kryoSerializer.asInflatedObject(request.getResponseData().toByteArray());
+      responseData = (DelegateResponseData) kryoSerializer.asInflatedObject(request.getResponseData().toByteArray());
     }
     waitNotifyEngine.doneWith(request.getTaskId(), responseData);
     SendTaskResultResponse sendTaskResultResponse =

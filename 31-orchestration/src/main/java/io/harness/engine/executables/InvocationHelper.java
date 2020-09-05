@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
@@ -23,8 +23,8 @@ public class InvocationHelper {
     this.nodeExecutionService = nodeExecutionService;
   }
 
-  public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
-    Map<String, ResponseData> response = new HashMap<>();
+  public Map<String, DelegateResponseData> accumulateResponses(String planExecutionId, String notifyId) {
+    Map<String, DelegateResponseData> response = new HashMap<>();
     List<NodeExecution> childExecutions = nodeExecutionService.fetchNodeExecutionsByNotifyId(planExecutionId, notifyId);
     for (NodeExecution childExecution : childExecutions) {
       PlanNode node = childExecution.getNode();

@@ -24,9 +24,9 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -429,8 +429,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ResponseData notifyResponseData = response.values().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);

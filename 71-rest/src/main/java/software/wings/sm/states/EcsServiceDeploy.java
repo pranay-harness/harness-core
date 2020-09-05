@@ -13,7 +13,7 @@ import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aSt
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
@@ -155,7 +155,7 @@ public class EcsServiceDeploy extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return ecsStateHelper.handleDelegateResponseForEcsDeploy(
           context, response, false, activityService, serviceTemplateService, containerDeploymentHelper);

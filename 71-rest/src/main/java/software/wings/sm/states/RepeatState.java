@@ -14,7 +14,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
@@ -163,9 +163,9 @@ public class RepeatState extends State {
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    for (ResponseData status : response.values()) {
+    for (DelegateResponseData status : response.values()) {
       ExecutionStatus responseStatus = ((ElementNotifyResponseData) status).getExecutionStatus();
       if (responseStatus != ExecutionStatus.SUCCESS) {
         executionStatus = responseStatus;

@@ -3,7 +3,7 @@ package io.harness.delay;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SimpleNotifier implements Runnable {
   private WaitNotifyEngine waitNotifyEngine;
   private String correlationId;
-  private ResponseData response;
+  private DelegateResponseData response;
 
   /**
    * Instantiates a new Simple notifier.
@@ -21,7 +21,7 @@ public class SimpleNotifier implements Runnable {
    * @param correlationId    the correlation id
    * @param response         the response
    */
-  public SimpleNotifier(WaitNotifyEngine waitNotifyEngine, String correlationId, ResponseData response) {
+  public SimpleNotifier(WaitNotifyEngine waitNotifyEngine, String correlationId, DelegateResponseData response) {
     this.waitNotifyEngine = waitNotifyEngine;
     this.correlationId = correlationId;
     this.response = response;

@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,12 +40,12 @@ public class ExecutionResumeAllCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, ResponseData> response) {
+  public void notify(Map<String, DelegateResponseData> response) {
     stateMachineExecutor.startExecution(appId, executionUuid, stateExecutionInstanceId);
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
+  public void notifyError(Map<String, DelegateResponseData> response) {
     // Do nothing.
   }
 }

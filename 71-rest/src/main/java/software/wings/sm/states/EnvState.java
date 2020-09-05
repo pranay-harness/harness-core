@@ -24,7 +24,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.interrupts.ExecutionInterruptType;
@@ -381,7 +381,7 @@ public class EnvState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
     ExecutionResponseBuilder executionResponseBuilder =
         ExecutionResponse.builder().executionStatus(responseData.getStatus());
@@ -498,7 +498,7 @@ public class EnvState extends State {
   /**
    * The type Env execution response data.
    */
-  public static class EnvExecutionResponseData implements ResponseData {
+  public static class EnvExecutionResponseData implements DelegateResponseData {
     private String workflowExecutionId;
     private ExecutionStatus status;
 

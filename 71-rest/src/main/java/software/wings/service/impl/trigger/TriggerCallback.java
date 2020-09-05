@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +34,10 @@ public class TriggerCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, ResponseData> response) {
+  public void notify(Map<String, DelegateResponseData> response) {
     logger.info("Trigger command response {} for account {}", response, accountId);
 
-    ResponseData notifyResponseData = response.values().iterator().next();
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     TriggerResponse triggerResponse = new TriggerResponse();
     triggerResponse.setExecutionStatus(ExecutionStatus.FAILED);
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -54,10 +54,10 @@ public class TriggerCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
+  public void notifyError(Map<String, DelegateResponseData> response) {
     logger.info("Trigger command request failed for account {} and for trigger executionId {} with response {}",
         accountId, triggerExecutionId, response);
-    ResponseData notifyResponseData = response.values().iterator().next();
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     TriggerResponse triggerResponse = new TriggerResponse();
     triggerResponse.setExecutionStatus(ExecutionStatus.FAILED);
     if (notifyResponseData instanceof ErrorNotifyResponseData) {

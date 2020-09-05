@@ -12,8 +12,8 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -69,14 +69,15 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionFailure() {
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
-                                          .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.FAILURE)
-                                          .errorMessage("cant connect ot git")
-                                          .build();
+    DelegateResponseData notifyResponseData =
+        GitCommandExecutionResponse.builder()
+            .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
+            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.FAILURE)
+            .errorMessage("cant connect ot git")
+            .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -87,13 +88,14 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionSuccess() throws Exception {
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
-                                          .build();
+    DelegateResponseData notifyResponseData =
+        GitCommandExecutionResponse.builder()
+            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
+            .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
 
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     try {
@@ -111,9 +113,9 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testNotifyOnErrorCase() {
-    ResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
+    DelegateResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
 
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -124,12 +126,13 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testNotifyWithUnhandledGitCommandType() {
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
-                                          .gitCommandResult(CommitResult.builder().build())
-                                          .build();
+    DelegateResponseData notifyResponseData =
+        GitCommandExecutionResponse.builder()
+            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
+            .gitCommandResult(CommitResult.builder().build())
+            .build();
 
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     on(commandCallback).set("gitCommandType", GitCommandType.CHECKOUT);
@@ -166,14 +169,15 @@ public class GitCommandCallbackTest extends CategoryTest {
                                                      .filesCommittedToGit(Arrays.asList(gitFileChange))
                                                      .gitCommitResult(gitCommitResult)
                                                      .build();
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
-                                          .gitCommandResult(gitCommitAndPushResult)
-                                          .gitCommandRequest(CommitAndPushRequest.builder().build())
+    DelegateResponseData notifyResponseData =
+        GitCommandExecutionResponse.builder()
+            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
+            .gitCommandResult(gitCommitAndPushResult)
+            .gitCommandRequest(CommitAndPushRequest.builder().build())
 
-                                          .build();
+            .build();
 
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     doReturn(Optional.of(YamlChangeSet.builder().gitFileChanges(Collections.singletonList(gitFileChange)).build()))

@@ -1,8 +1,8 @@
 package io.harness.delegate.task;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 
 public interface DelegateRunnableTask extends Runnable {
-  @Deprecated ResponseData run(Object[] parameters);
-  ResponseData run(TaskParameters parameters);
+  @Deprecated DelegateResponseData run(Object[] parameters);
+  DelegateResponseData run(TaskParameters parameters);
 }

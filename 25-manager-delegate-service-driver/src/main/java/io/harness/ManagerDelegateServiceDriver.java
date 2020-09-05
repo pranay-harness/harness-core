@@ -19,7 +19,7 @@ import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -49,7 +49,7 @@ public class ManagerDelegateServiceDriver {
     this.kryoSerializer = kryoSerializer;
   }
 
-  public <T extends ResponseData> T sendTask(
+  public <T extends DelegateResponseData> T sendTask(
       String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
     NgTaskDetails taskDetails = buildTaskDetails(taskData);
     SendTaskRequest request =

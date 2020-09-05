@@ -39,7 +39,7 @@ import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskSelector;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -87,7 +87,7 @@ public class DelegateServiceGrpcClient {
     return submitTaskResponse.getTaskId().getId();
   }
 
-  public <T extends ResponseData> T executeSyncTask(
+  public <T extends DelegateResponseData> T executeSyncTask(
       DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
     final SubmitTaskResponse submitTaskResponse = submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken);
     final String taskId = submitTaskResponse.getTaskId().getId();

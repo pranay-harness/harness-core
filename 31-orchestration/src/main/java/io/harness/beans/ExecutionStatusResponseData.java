@@ -1,8 +1,8 @@
 package io.harness.beans;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 
 /**
  * The type Execution status data.
  */
-public interface ExecutionStatusResponseData extends ResponseData { ExecutionStatus getExecutionStatus(); }
+public interface ExecutionStatusResponseData extends DelegateResponseData { ExecutionStatus getExecutionStatus(); }

@@ -9,7 +9,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DelegateTaskResponse {
   private String accountId;
-  private ResponseData response;
+  private DelegateResponseData response;
   private ResponseCode responseCode;
 
   public enum ResponseCode {

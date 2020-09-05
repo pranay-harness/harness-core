@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskManager;
 import io.harness.ng.core.remote.NGDelegateClientResource;
 import io.harness.rule.Owner;
@@ -38,9 +38,9 @@ public class NGDelegateClientResourceTest extends CategoryTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testCreate() {
-    final ResponseData responseData = new ResponseData() {};
+    final DelegateResponseData responseData = new DelegateResponseData() {};
     when(managerDelegateServiceDriver.sendTask(any(String.class), any(), any())).thenReturn(responseData);
-    final ResponseData response = ngDelegateClientResource.create(generateUuid());
+    final DelegateResponseData response = ngDelegateClientResource.create(generateUuid());
     assertThat(response).isNotNull().isEqualTo(responseData);
   }
 

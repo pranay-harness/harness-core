@@ -9,12 +9,12 @@ import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.validation.Create;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -105,7 +105,7 @@ public interface DelegateService extends OwnedByAccount {
 
   void scheduleSyncTask(DelegateTask task);
 
-  <T extends ResponseData> T executeTask(DelegateTask task) throws InterruptedException;
+  <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
   String obtainDelegateName(Delegate delegate);
 

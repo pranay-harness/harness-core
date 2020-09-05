@@ -40,7 +40,7 @@ import java.time.Duration;
 
 /**
  * We are trying to remain as independent from Kryo as possible.
- * All the classes which get saved inside ResponseData need to be registered as our
+ * All the classes which get saved inside DelegateResponseData need to be registered as our
  * WaitNotify engine used that.
  */
 @OwnedBy(CDC)

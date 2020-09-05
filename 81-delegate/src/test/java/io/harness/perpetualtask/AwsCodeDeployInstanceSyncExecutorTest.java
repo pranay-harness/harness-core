@@ -22,7 +22,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
@@ -80,7 +80,7 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
 
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     PerpetualTaskResponse perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), perpetualTaskParams, Instant.now());
 
@@ -117,7 +117,7 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
 
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doThrow(new InvalidRequestException("Invalid deployment id"))
         .when(ec2ServiceDelegate)
         .listEc2Instances(

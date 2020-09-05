@@ -70,7 +70,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
@@ -446,7 +446,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     GitCommandExecutionResponse gitCommandExecutionResponse =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
 
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     response.put("activityId", gitCommandExecutionResponse);
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
@@ -482,7 +482,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     GitCommandExecutionResponse gitCommandExecutionResponse =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.FAILURE).build();
 
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     response.put("activityId", gitCommandExecutionResponse);
 
     PcfSetupStateExecutionData pcfSetupStateExecutionData =

@@ -31,9 +31,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -808,7 +808,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                               .build())
                                     .build();
 
-    ResponseData notifyResponseData;
+    DelegateResponseData notifyResponseData;
     try {
       notifyResponseData = delegateService.executeTask(delegateTask);
     } catch (InterruptedException ex) {
@@ -823,7 +823,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     } else if (!(notifyResponseData instanceof GitCommandExecutionResponse)) {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", "Unknown Response from delegate")
-          .addContext(ResponseData.class, notifyResponseData);
+          .addContext(DelegateResponseData.class, notifyResponseData);
     }
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) notifyResponseData;

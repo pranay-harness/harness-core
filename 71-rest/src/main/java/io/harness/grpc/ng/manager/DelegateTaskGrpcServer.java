@@ -21,7 +21,7 @@ import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.grpc.DelegateTaskGrpcUtils;
@@ -59,7 +59,7 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
   public void sendTask(SendTaskRequest request, StreamObserver<SendTaskResponse> responseObserver) {
     try {
       DelegateTask task = extractDelegateTask(request);
-      ResponseData responseData = delegateService.executeTask(task);
+      DelegateResponseData responseData = delegateService.executeTask(task);
       responseObserver.onNext(SendTaskResponse.newBuilder()
                                   .setTaskId(NgTaskId.newBuilder().setId(task.getUuid()).build())
                                   .setResponseData(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(responseData)))

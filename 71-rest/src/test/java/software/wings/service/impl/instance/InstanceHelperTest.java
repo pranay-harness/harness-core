@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.GeneralException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -1114,7 +1114,7 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     when(infraMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(null);
 
-    instanceHelper.processInstanceSyncResponseFromPerpetualTask(perpetualTaskId, mock(ResponseData.class));
+    instanceHelper.processInstanceSyncResponseFromPerpetualTask(perpetualTaskId, mock(DelegateResponseData.class));
 
     verify(instanceSyncPerpetualTaskService, times(1)).deletePerpetualTasks(ACCOUNT_ID, INFRA_MAPPING_ID);
   }

@@ -13,8 +13,8 @@ import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.orchestration.StepUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
@@ -75,9 +75,9 @@ public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, ArtifactStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, ArtifactStepParameters stepParameters, Map<String, DelegateResponseData> responseDataMap) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
-    ResponseData notifyResponseData = responseDataMap.values().iterator().next();
+    DelegateResponseData notifyResponseData = responseDataMap.values().iterator().next();
 
     if (notifyResponseData instanceof ArtifactTaskResponse) {
       ArtifactTaskResponse taskResponse = (ArtifactTaskResponse) notifyResponseData;
@@ -100,7 +100,7 @@ public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters
           FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage()).build());
       return stepResponseBuilder.build();
     } else {
-      logger.error("Unhandled ResponseData class " + notifyResponseData.getClass().getCanonicalName());
+      logger.error("Unhandled DelegateResponseData class " + notifyResponseData.getClass().getCanonicalName());
     }
 
     return stepResponseBuilder.build();

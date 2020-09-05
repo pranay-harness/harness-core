@@ -21,9 +21,9 @@ import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.InvalidRequestException;
@@ -102,7 +102,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                 httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
             .getTaskId();
 
-    ResponseData responseData =
+    DelegateResponseData responseData =
         delegateSyncService.waitForTask(taskId.getId(), "Http Execution", Duration.ofSeconds(60));
 
     assertThat(responseData).isNotNull();
@@ -155,7 +155,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                 httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
             .getTaskId();
 
-    ResponseData responseData =
+    DelegateResponseData responseData =
         delegateSyncService.waitForTask(taskId.getId(), "Http Execution", Duration.ofSeconds(60));
 
     assertThat(responseData).isNotNull();

@@ -43,7 +43,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -165,7 +165,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     doReturn(APP_ID).when(mockParams).getAppId();
     ScriptStateExecutionData mockData = mock(ScriptStateExecutionData.class);
     doReturn(mockData).when(mockContext).getStateExecutionData();
-    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, DelegateResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         EcsSteadyStateCheckResponse.builder()
             .executionStatus(ExecutionStatus.SUCCESS)
             .containerInfoList(singletonList(ContainerInfo.builder().hostName("host").containerId("cid").build()))
@@ -185,7 +185,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowWingsException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
     doThrow(new WingsException("test")).when(mockContext).getContextElement(ContextElementType.STANDARD);
     check.handleAsyncResponse(mockContext, delegateResponse);
     assertThatExceptionOfType(WingsException.class).isThrownBy(() -> check.execute(mockContext));
@@ -196,7 +196,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, ResponseData> delegateResponse = new HashMap<>();
+    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
     doThrow(new NullPointerException("test")).when(mockContext).getContextElement(ContextElementType.STANDARD);
     check.handleAsyncResponse(mockContext, delegateResponse);
     assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> check.execute(mockContext));

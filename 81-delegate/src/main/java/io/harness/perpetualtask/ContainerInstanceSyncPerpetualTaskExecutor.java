@@ -10,7 +10,7 @@ import static software.wings.service.impl.ContainerMetadataType.K8S;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.k8s.model.K8sPod;
@@ -162,7 +162,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
   }
 
   private void publishInstanceSyncResult(
-      PerpetualTaskId taskId, String accountId, String namespace, ResponseData responseData) {
+      PerpetualTaskId taskId, String accountId, String namespace, DelegateResponseData responseData) {
     try {
       execute(delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), accountId, responseData));
     } catch (Exception e) {

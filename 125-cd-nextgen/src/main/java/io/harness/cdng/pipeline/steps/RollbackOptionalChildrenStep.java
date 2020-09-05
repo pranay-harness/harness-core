@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters;
 import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
@@ -38,10 +38,10 @@ public class RollbackOptionalChildrenStep implements Step, ChildrenExecutable<Ro
   }
 
   @Override
-  public StepResponse handleChildrenResponse(
-      Ambiance ambiance, RollbackOptionalChildrenParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+  public StepResponse handleChildrenResponse(Ambiance ambiance, RollbackOptionalChildrenParameters stepParameters,
+      Map<String, DelegateResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
-    for (ResponseData responseData : responseDataMap.values()) {
+    for (DelegateResponseData responseData : responseDataMap.values()) {
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
       if (executionStatus != Status.SUCCEEDED) {
         responseBuilder.status(executionStatus);

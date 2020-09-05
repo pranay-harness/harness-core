@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
@@ -105,12 +105,12 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient @Inject private GitSyncErrorService gitSyncErrorService;
 
   @Override
-  public void notify(Map<String, ResponseData> response) {
+  public void notify(Map<String, DelegateResponseData> response) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new GitCommandCallbackLogContext(getContext(), OVERRIDE_ERROR)) {
       logger.info("Git command response [{}]", response);
 
-      ResponseData notifyResponseData = response.values().iterator().next();
+      DelegateResponseData notifyResponseData = response.values().iterator().next();
       if (notifyResponseData instanceof GitCommandExecutionResponse) {
         GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
         GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
@@ -325,7 +325,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
+  public void notifyError(Map<String, DelegateResponseData> response) {
     logger.warn("Git request failed for command:[{}], changeSetId:[{}], account:[{}], response:[{}]", gitCommandType,
         changeSetId, accountId, response);
     updateChangeSetFailureStatusSafely();

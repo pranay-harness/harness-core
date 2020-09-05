@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationStepsTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.rule.Owner;
@@ -58,8 +58,8 @@ public class ForkStepTest extends OrchestrationStepsTest {
     ForkStepParameters stateParameters =
         ForkStepParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
 
-    Map<String, ResponseData> responseDataMap =
-        ImmutableMap.<String, ResponseData>builder()
+    Map<String, DelegateResponseData> responseDataMap =
+        ImmutableMap.<String, DelegateResponseData>builder()
             .put(FIRST_CHILD_ID, StepResponseNotifyData.builder().status(Status.SUCCEEDED).build())
             .put(SECOND_CHILD_ID, StepResponseNotifyData.builder().status(Status.FAILED).build())
             .build();
