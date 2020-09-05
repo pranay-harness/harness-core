@@ -85,7 +85,9 @@ public class DelegateTask
   @Singular private Map<String, String> setupAbstractions;
 
   private String version;
-  private List<String> tags;
+
+  // Please use SelectorCapability instead.
+  @Deprecated private List<String> tags;
 
   // This extra field is pointless, we should use the task uuid.
   @Deprecated private String waitId;
