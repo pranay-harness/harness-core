@@ -16,6 +16,7 @@ import io.harness.beans.PageResponse;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.rest.RestResponse;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.swagger.annotations.Api;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.MediaType;
 @Scope(ResourceType.SETTING)
 public class ResourceConstraintResource {
   @Inject private ResourceConstraintService resourceConstraintService;
+  @Inject private RestraintService restraintService;
 
   @GET
   @Timed
@@ -65,7 +67,7 @@ public class ResourceConstraintResource {
     if (resourceConstraint.getStrategy() == null) {
       resourceConstraint.setStrategy(Strategy.ASAP);
     }
-    return new RestResponse<>(resourceConstraintService.save(resourceConstraint));
+    return new RestResponse<>(restraintService.save(resourceConstraint));
   }
 
   @PUT

@@ -14,6 +14,7 @@ import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint.ResourceConstraintBuilder;
+import io.harness.steps.resourcerestraint.service.RestraintService;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ResourceConstraintService;
@@ -24,6 +25,7 @@ public class ResourceConstraintGenerator {
   @Inject AccountGenerator accountGenerator;
 
   @Inject ResourceConstraintService resourceConstraintService;
+  @Inject RestraintService restraintService;
   @Inject WingsPersistence wingsPersistence;
 
   public enum ResourceConstraints { GENERIC_ASAP_TEST, GENERIC_FIFO_TEST }
@@ -108,6 +110,6 @@ public class ResourceConstraintGenerator {
     final ResourceConstraint finalResourceConstraint = builder.build();
 
     return GeneratorUtils.suppressDuplicateException(
-        () -> resourceConstraintService.save(finalResourceConstraint), () -> exists(finalResourceConstraint));
+        () -> restraintService.save(finalResourceConstraint), () -> exists(finalResourceConstraint));
   }
 }

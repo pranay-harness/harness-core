@@ -15,6 +15,8 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistryImpl;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintServiceImpl;
+import io.harness.steps.resourcerestraint.service.RestraintService;
+import io.harness.steps.resourcerestraint.service.RestraintServiceImpl;
 
 public class OrchestrationStepsModule extends AbstractModule {
   private static OrchestrationStepsModule instance;
@@ -29,6 +31,7 @@ public class OrchestrationStepsModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(BarrierService.class).to(BarrierServiceImpl.class);
+    bind(RestraintService.class).to(RestraintServiceImpl.class);
     bind(ResourceRestraintService.class).to(ResourceRestraintServiceImpl.class);
     bind(ResourceRestraintRegistry.class).to(ResourceRestraintRegistryImpl.class);
 
