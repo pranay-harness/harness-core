@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -41,11 +40,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint.ResourceConstraintKeys;
-import io.harness.validation.Create;
+import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.validation.Update;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.IteratorUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -84,6 +82,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class ResourceConstraintServiceImpl implements ResourceConstraintService, ConstraintRegistry {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private StateExecutionService stateExecutionService;
+  @Inject private RestraintService restraintService;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WingsPersistence wingsPersistence;
@@ -92,17 +91,6 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public PageResponse<ResourceConstraint> list(PageRequest<ResourceConstraint> pageRequest) {
     return wingsPersistence.query(ResourceConstraint.class, pageRequest);
-  }
-
-  @Override
-  @ValidationGroups(Create.class)
-  public ResourceConstraint save(ResourceConstraint resourceConstraint) {
-    try {
-      wingsPersistence.save(resourceConstraint);
-      return resourceConstraint;
-    } catch (DuplicateKeyException exception) {
-      throw new InvalidRequestException("The resource constraint name cannot be reused.", exception, USER);
-    }
   }
 
   @Override
@@ -117,15 +105,6 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @ValidationGroups(Update.class)
   public void update(ResourceConstraint resourceConstraint) {
     wingsPersistence.merge(resourceConstraint);
-  }
-
-  @Override
-  public ResourceConstraint get(String accountId, String resourceConstraintId) {
-    final ResourceConstraint resourceConstraint = wingsPersistence.get(ResourceConstraint.class, resourceConstraintId);
-    if (resourceConstraint != null && accountId != null && !resourceConstraint.getAccountId().equals(accountId)) {
-      return null;
-    }
-    return resourceConstraint;
   }
 
   @Override
@@ -288,17 +267,6 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
-  public List<ResourceConstraint> getConstraintsIn(Set<String> constraintIds) {
-    try (HIterator<ResourceConstraint> iterator =
-             new HIterator<>(wingsPersistence.createQuery(ResourceConstraint.class, excludeAuthority)
-                                 .field(ResourceConstraintKeys.uuid)
-                                 .in(constraintIds)
-                                 .fetch())) {
-      return IteratorUtils.toList(iterator.iterator());
-    }
-  }
-
-  @Override
   public void updateBlockedConstraints(Set<String> constraintIds) {
     if (isEmpty(constraintIds)) {
       return;
@@ -411,7 +379,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public Constraint load(ConstraintId id) throws UnableToLoadConstraintException {
-    final ResourceConstraint resourceConstraint = get(null, id.getValue());
+    final ResourceConstraint resourceConstraint = restraintService.get(null, id.getValue());
     return createAbstraction(resourceConstraint);
   }
 
@@ -464,7 +432,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public boolean registerConsumer(ConstraintId id, ConstraintUnit unit, Consumer consumer, int currentlyRunning)
       throws UnableToRegisterConsumerException {
-    ResourceConstraint resourceConstraint = get(null, id.getValue());
+    ResourceConstraint resourceConstraint = restraintService.get(null, id.getValue());
     if (resourceConstraint == null) {
       throw new InvalidRequestException(format("There is no resource constraint with id: %s", id.getValue()));
     }

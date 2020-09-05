@@ -31,6 +31,7 @@ import io.harness.distribution.constraint.ConsumerId;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+import io.harness.steps.resourcerestraint.service.RestraintService;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -70,6 +71,7 @@ import javax.validation.constraints.Min;
 public class ResourceConstraintState extends State {
   @Inject @Transient private AppService applicationService;
   @Inject @Transient private ResourceConstraintService resourceConstraintService;
+  @Inject @Transient private RestraintService restraintService;
   @Inject @Transient private NotificationSetupService notificationSetupService;
   @Inject @Transient private NotificationService notificationService;
   @Inject @Transient private WingsPersistence wingsPersistence;
@@ -126,7 +128,7 @@ public class ResourceConstraintState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
-    final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
+    final ResourceConstraint resourceConstraint = restraintService.get(accountId, resourceConstraintId);
 
     if (isNotEmpty(notificationEvents) && notificationEvents.contains(NotificationEvent.UNBLOCKED)) {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION);
@@ -139,7 +141,7 @@ public class ResourceConstraintState extends State {
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
-    final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
+    final ResourceConstraint resourceConstraint = restraintService.get(accountId, resourceConstraintId);
     final Constraint constraint = resourceConstraintService.createAbstraction(resourceConstraint);
 
     if (acquireMode == ENSURE) {

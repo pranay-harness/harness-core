@@ -18,6 +18,7 @@ import io.harness.distribution.constraint.Constraint;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+import io.harness.steps.resourcerestraint.service.RestraintService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,6 +38,7 @@ import software.wings.sm.states.ResourceConstraintState.AcquireMode;
 public class ResourceConstraintStateTest extends WingsBaseTest {
   @Mock ExecutionContextImpl executionContext;
   @Mock ResourceConstraintService resourceConstraintService;
+  @Mock RestraintService restraintService;
   @Mock AppService applicationService;
 
   @InjectMocks @Spy ResourceConstraintState state = new ResourceConstraintState("rcs");
@@ -90,7 +92,7 @@ public class ResourceConstraintStateTest extends WingsBaseTest {
         .when(resourceConstraintService)
         .createAbstraction(any(ResourceConstraint.class));
 
-    doReturn(mock(ResourceConstraint.class)).when(resourceConstraintService).get(anyString(), anyString());
+    doReturn(mock(ResourceConstraint.class)).when(restraintService).get(anyString(), anyString());
     doReturn(2).when(state).alreadyAcquiredPermits(any(), any());
 
     state.setAcquireMode(AcquireMode.ENSURE);

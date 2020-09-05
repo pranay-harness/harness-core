@@ -109,7 +109,6 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
@@ -1172,7 +1171,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
-    bind(new TypeLiteral<RestraintService>() {}).to(ResourceConstraintServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(DelegateTaskExecutor.class);
