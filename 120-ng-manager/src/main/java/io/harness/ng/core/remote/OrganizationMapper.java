@@ -1,28 +1,31 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.ng.NGConstants.HARNESS_BLUE;
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
-import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.ng.core.entities.Organization;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
+import java.util.Optional;
+
 @UtilityClass
 public class OrganizationMapper {
-  static Organization toOrganization(CreateOrganizationDTO createOrgRequest) {
+  public static Organization toOrganization(OrganizationDTO dto) {
     return Organization.builder()
-        .tags(createOrgRequest.getTags())
-        .color(createOrgRequest.getColor())
-        .description(createOrgRequest.getDescription())
-        .identifier(createOrgRequest.getIdentifier())
-        .name(createOrgRequest.getName())
+        .accountIdentifier(dto.getAccountIdentifier())
+        .tags(Optional.ofNullable(dto.getTags()).orElse(emptyList()))
+        .color(Optional.ofNullable(dto.getColor()).orElse(HARNESS_BLUE))
+        .description(Optional.ofNullable(dto.getDescription()).orElse(""))
+        .identifier(dto.getIdentifier())
+        .name(dto.getName())
         .build();
   }
 
-  static OrganizationDTO writeDto(Organization organization) {
+  public static OrganizationDTO writeDto(Organization organization) {
     return OrganizationDTO.builder()
-        .id(organization.getId())
         .color(organization.getColor())
         .description(organization.getDescription())
         .identifier(organization.getIdentifier())
@@ -34,8 +37,8 @@ public class OrganizationMapper {
   }
 
   @SneakyThrows
-  static Organization applyUpdateToOrganization(
-      Organization organization, UpdateOrganizationDTO updateOrganizationDTO) {
+  public static Organization applyUpdateToOrganization(
+      Organization organization, OrganizationDTO updateOrganizationDTO) {
     String jsonString = new ObjectMapper().writer().writeValueAsString(updateOrganizationDTO);
     return new ObjectMapper().readerForUpdating(organization).readValue(jsonString);
   }

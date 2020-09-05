@@ -4,7 +4,7 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.secretmanagerclient.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.secretmanagerclient.utils.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
@@ -63,13 +63,16 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         String orgIdentifier = connector.getOrgIdentifier();
         String projectIdentifier = connector.getProjectIdentifier();
         String description = connector.getDescription();
+        String name = connector.getName();
         connector.setOrgIdentifier(null);
         connector.setProjectIdentifier(null);
         connector.setDescription("Account Level Secret Manager");
+        connector.setName("Harness Secrets Manager");
         createSecretManagerConnector(connector, accountIdentifier);
         connector.setProjectIdentifier(projectIdentifier);
         connector.setOrgIdentifier(orgIdentifier);
         connector.setDescription(description);
+        connector.setName(name);
       }
     }
     return createSecretManagerConnector(connector, accountIdentifier);

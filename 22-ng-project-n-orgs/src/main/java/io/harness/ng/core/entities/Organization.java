@@ -41,7 +41,7 @@ public class Organization implements PersistentEntity, NGAccountAccess {
   @NotEmpty @EntityIdentifier String identifier;
 
   @NotEmpty @EntityName String name;
-  @NotEmpty String color;
+  @Trimmed @NotEmpty String color;
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<String> tags;
 

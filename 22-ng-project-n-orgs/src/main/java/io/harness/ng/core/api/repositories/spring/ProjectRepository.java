@@ -9,6 +9,6 @@ import java.util.Optional;
 
 @HarnessRepo
 public interface ProjectRepository extends PagingAndSortingRepository<Project, String>, ProjectRepositoryCustom {
-  Optional<Project> findByOrgIdentifierAndIdentifierAndDeletedNot(
-      String orgIdentifier, String projectIdentifier, boolean notDeleted);
+  Optional<Project> findByAccountIdentifierAndOrgIdentifierAndIdentifierAndDeletedNot(
+      String accountIdentifier, String orgIdentifier, String identifier, boolean notDeleted);
 }

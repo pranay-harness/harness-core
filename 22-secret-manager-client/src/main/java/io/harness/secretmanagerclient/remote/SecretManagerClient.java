@@ -1,13 +1,13 @@
 package io.harness.secretmanagerclient.remote;
 
-import static io.harness.secretmanagerclient.NGConstants.ACCOUNT_KEY;
-import static io.harness.secretmanagerclient.NGConstants.FILE_KEY;
-import static io.harness.secretmanagerclient.NGConstants.FILE_METADATA_KEY;
-import static io.harness.secretmanagerclient.NGConstants.IDENTIFIER_KEY;
-import static io.harness.secretmanagerclient.NGConstants.ORG_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PAGE_KEY;
-import static io.harness.secretmanagerclient.NGConstants.PROJECT_KEY;
-import static io.harness.secretmanagerclient.NGConstants.SIZE_KEY;
+import static io.harness.ng.NGConstants.ACCOUNT_KEY;
+import static io.harness.ng.NGConstants.FILE_KEY;
+import static io.harness.ng.NGConstants.FILE_METADATA_KEY;
+import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
+import static io.harness.ng.NGConstants.ORG_KEY;
+import static io.harness.ng.NGConstants.PAGE_KEY;
+import static io.harness.ng.NGConstants.PROJECT_KEY;
+import static io.harness.ng.NGConstants.SIZE_KEY;
 
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;

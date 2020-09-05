@@ -214,3 +214,5 @@ organizationManagerClient:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+
+ngManagerAvailable: false

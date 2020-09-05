@@ -3,10 +3,15 @@ package io.harness.ng.core.impl;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
+import static io.harness.ng.core.remote.OrganizationMapper.applyUpdateToOrganization;
+import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
-import static io.harness.secretmanagerclient.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.ng.core.utils.NGUtils.validate;
+import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChangedIfPresent;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -15,21 +20,24 @@ import com.google.inject.name.Named;
 
 import io.harness.connector.services.ConnectorService;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.repositories.spring.OrganizationRepository;
+import io.harness.ng.core.dto.OrganizationDTO;
+import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import software.wings.service.impl.security.SecretManagementException;
 
-import java.util.Objects;
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
 
 @Singleton
 @Slf4j
@@ -37,10 +45,6 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorService secretManagerConnectorService;
-
-  void validatePresenceOfRequiredFields(Object... fields) {
-    Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
-  }
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository,
@@ -52,14 +56,18 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Organization create(Organization organization) {
+  public Organization create(String accountIdentifier, OrganizationDTO organizationDTO) {
+    validateCreateOrganizationRequest(accountIdentifier, organizationDTO);
+    Organization organization = toOrganization(organizationDTO);
+    organization.setAccountIdentifier(accountIdentifier);
     try {
+      validate(organization);
       Organization savedOrganization = organizationRepository.save(organization);
       performActionsPostOrganizationCreation(organization);
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(String.format("Organization [%s] under account [%s] already exists",
-                                            organization.getIdentifier(), organization.getAccountIdentifier()),
+      throw new DuplicateFieldException(
+          String.format("Try using different org identifier, [%s] cannot be used", organization.getIdentifier()),
           USER_SRE, ex);
     }
   }
@@ -74,7 +82,8 @@ public class OrganizationServiceImpl implements OrganizationService {
           ngSecretManagerService.getGlobalSecretManager(organization.getAccountIdentifier());
       globalSecretManager.setIdentifier(HARNESS_SECRET_MANAGER_IDENTIFIER);
       globalSecretManager.setDescription("Organisation: " + organization.getName());
-      globalSecretManager.setName(getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()));
+      globalSecretManager.setName(
+          getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()) + ": " + organization.getName());
       globalSecretManager.setProjectIdentifier(null);
       globalSecretManager.setOrgIdentifier(organization.getIdentifier());
       globalSecretManager.setDefault(false);
@@ -94,15 +103,43 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Organization update(Organization organization) {
-    validatePresenceOfRequiredFields(
-        organization.getAccountIdentifier(), organization.getIdentifier(), organization.getId());
-    return organizationRepository.save(organization);
+  public Organization update(String accountIdentifier, String identifier, OrganizationDTO organizationDTO) {
+    validateUpdateOrganizationRequest(accountIdentifier, identifier, organizationDTO);
+    Optional<Organization> organizationOptional = get(accountIdentifier, identifier);
+    if (organizationOptional.isPresent()) {
+      Organization organization = organizationOptional.get();
+      Organization updatedOrganization = applyUpdateToOrganization(organization, organizationDTO);
+      validate(updatedOrganization);
+      return organizationRepository.save(updatedOrganization);
+    }
+    throw new InvalidRequestException("Organisation to be updated does not exist");
   }
 
   @Override
-  public Page<Organization> list(@NotNull Criteria criteria, Pageable pageable) {
+  public Page<Organization> list(
+      String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO) {
+    Criteria criteria = createOrganizationFilterCriteria(Criteria.where(OrganizationKeys.accountIdentifier)
+                                                             .is(accountIdentifier)
+                                                             .and(OrganizationKeys.deleted)
+                                                             .ne(Boolean.TRUE),
+        organizationFilterDTO);
     return organizationRepository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public Page<Organization> list(Criteria criteria, Pageable pageable) {
+    return organizationRepository.findAll(criteria, pageable);
+  }
+
+  private Criteria createOrganizationFilterCriteria(Criteria criteria, OrganizationFilterDTO organizationFilterDTO) {
+    if (organizationFilterDTO == null) {
+      return criteria;
+    }
+    if (isNotBlank(organizationFilterDTO.getSearchTerm())) {
+      criteria.orOperator(Criteria.where(OrganizationKeys.name).regex(organizationFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(OrganizationKeys.tags).regex(organizationFilterDTO.getSearchTerm(), "i"));
+    }
+    return criteria;
   }
 
   @Override
@@ -115,5 +152,16 @@ public class OrganizationServiceImpl implements OrganizationService {
       return true;
     }
     return false;
+  }
+
+  private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {
+    verifyValuesNotChangedIfPresent(
+        Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())));
+  }
+
+  private void validateUpdateOrganizationRequest(
+      String accountIdentifier, String identifier, OrganizationDTO organization) {
+    verifyValuesNotChangedIfPresent(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier()),
+        Pair.of(identifier, organization.getIdentifier())));
   }
 }
