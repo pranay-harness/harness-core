@@ -136,7 +136,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>84-command-library-server</artifactId>
+            <artifactId>210-command-library-server</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>

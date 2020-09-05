@@ -36,7 +36,7 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class CommandLibraryServiceExecutor {
-  public static final String COMMAND_LIBRARY_SERVER_MODULE = "84-command-library-server";
+  public static final String COMMAND_LIBRARY_SERVER_MODULE = "210-command-library-server";
   private boolean hasFailed;
 
   public void ensureCommandLibraryService(Class clazz, String alpnPath, String alpnJarPath) throws IOException {

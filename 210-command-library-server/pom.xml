@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>84-command-library-server</artifactId>
+    <artifactId>210-command-library-server</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
