@@ -3,8 +3,8 @@ package io.harness;
 import com.google.inject.TypeLiteral;
 
 import io.harness.springdata.SpringPersistenceConfig;
-import io.harness.steps.resourcerestraint.RestraintTestService;
 import io.harness.steps.resourcerestraint.service.RestraintService;
+import io.harness.steps.resourcerestraint.service.RestraintTestService;
 import io.harness.testlib.PersistenceTestModule;
 
 public class OrchestrationStepsPersistenceTestModule extends PersistenceTestModule {

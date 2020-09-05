@@ -1,6 +1,7 @@
 package io.harness.ng;
 
 import io.harness.OrchestrationPersistenceConfig;
+import io.harness.OrchestrationStepsPersistenceConfig;
 import io.harness.TimeoutEnginePersistenceConfig;
 import io.harness.cdng.CDNGPersistenceConfig;
 import io.harness.connector.ConnectorPersistenceConfig;
@@ -12,7 +13,7 @@ public class NextGenPersistenceModule extends PersistenceModule {
   @Override
   protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
     return new Class[] {TimeoutEnginePersistenceConfig.class, OrchestrationPersistenceConfig.class,
-        ConnectorPersistenceConfig.class, NextGenPersistenceConfig.class, GitSyncPersistenceConfig.class,
-        CDNGPersistenceConfig.class};
+        OrchestrationStepsPersistenceConfig.class, ConnectorPersistenceConfig.class, NextGenPersistenceConfig.class,
+        GitSyncPersistenceConfig.class, CDNGPersistenceConfig.class};
   }
 }

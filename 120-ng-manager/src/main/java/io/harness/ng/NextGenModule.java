@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -13,6 +14,7 @@ import com.google.inject.name.Names;
 import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -55,6 +57,8 @@ import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.steps.resourcerestraint.service.RestraintService;
+import io.harness.steps.resourcerestraint.service.RestraintTestService;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.version.VersionModule;
@@ -193,8 +197,10 @@ public class NextGenModule extends DependencyModule {
                                                 .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
                                                 .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
                                                 .build()));
+    install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
 
+    bind(new TypeLiteral<RestraintService>() {}).to(RestraintTestService.class);
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
