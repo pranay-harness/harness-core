@@ -4,7 +4,7 @@ import static io.harness.cdng.orchestration.StepUtils.createStepResponseFromChil
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipelineSetupParameters;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.child.ChildExecutable;
@@ -35,7 +35,7 @@ public class CIPipelineSetupStep implements Step, ChildExecutable<CIPipelineSetu
 
   @Override
   public StepResponse handleChildResponse(Ambiance ambiance, CIPipelineSetupParameters ciPipelineSetupParameters,
-      Map<String, ResponseData> responseDataMap) {
+      Map<String, DelegateResponseData> responseDataMap) {
     logger.info("executed pipeline =[{}]", ciPipelineSetupParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);

@@ -18,7 +18,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delay.DelayEventHelper;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
@@ -179,7 +179,7 @@ public class ArtifactCollectionState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     notNullCheck("ArtifactStream was deleted", artifactStream);
 

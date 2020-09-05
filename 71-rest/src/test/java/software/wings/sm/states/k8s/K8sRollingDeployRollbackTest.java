@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -123,7 +123,7 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   public void testHandleAsyncResponse() {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
         K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
 
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
@@ -145,7 +145,7 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   public void testHandleAsyncResponseInvalidRequestException() {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
         K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
     stateExecutionInstance.setContextElements(new LinkedList<>(Arrays.asList(workflowStandardParams)));
@@ -157,7 +157,7 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGettingHelmChartInfoFromK8sHelmElement() {
     ExecutionContextImpl spyContext = spy(context);
-    Map<String, ResponseData> response =
+    Map<String, DelegateResponseData> response =
         ImmutableMap.of("response", K8sTaskExecutionResponse.builder().commandExecutionStatus(SUCCESS).build());
     doReturn(WorkflowStandardParams.Builder.aWorkflowStandardParams().withAppId(APP_ID).build())
         .when(spyContext)
@@ -167,7 +167,7 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
     testK8sHelmElementDoesntExists(spyContext, response);
   }
 
-  private void testK8sHelmElementExists(ExecutionContextImpl context, Map<String, ResponseData> response) {
+  private void testK8sHelmElementExists(ExecutionContextImpl context, Map<String, DelegateResponseData> response) {
     K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().build();
     HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("name").version("1.2.3").build();
     doReturn(K8sHelmDeploymentElement.builder().previousDeployedHelmChart(helmChartInfo).build())
@@ -179,7 +179,8 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
     assertThat(stateExecutionData.getHelmChartInfo()).isEqualTo(helmChartInfo);
   }
 
-  private void testK8sHelmElementDoesntExists(ExecutionContextImpl context, Map<String, ResponseData> response) {
+  private void testK8sHelmElementDoesntExists(
+      ExecutionContextImpl context, Map<String, DelegateResponseData> response) {
     K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().build();
     doReturn(null).when(k8sStateHelper).getK8sHelmDeploymentElement(context);
     k8sRollingState.handleAsyncResponse(context, response);

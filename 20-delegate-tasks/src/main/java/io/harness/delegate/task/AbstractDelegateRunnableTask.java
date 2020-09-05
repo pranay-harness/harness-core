@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -15,7 +16,6 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
@@ -87,7 +87,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     try {
       logger.info("Started executing task {}", taskId);
 
-      ResponseData result = parameters.length == 1 && parameters[0] instanceof TaskParameters
+      DelegateResponseData result = parameters.length == 1 && parameters[0] instanceof TaskParameters
           ? run((TaskParameters) parameters[0])
           : run(parameters);
 

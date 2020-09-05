@@ -8,9 +8,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -52,7 +52,7 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 

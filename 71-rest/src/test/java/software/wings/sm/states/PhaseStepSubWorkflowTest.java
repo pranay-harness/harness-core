@@ -25,7 +25,7 @@ import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -219,7 +219,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
         .thenReturn(phaseElement);
     when(executionContext.getStateExecutionData()).thenReturn(new PhaseStepExecutionData());
 
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
 
     response.put("", getElementNotifyResponseData(null));
     Reflect.on(phaseStepSubWorkflow).set("phaseStepType", K8S_PHASE_STEP);

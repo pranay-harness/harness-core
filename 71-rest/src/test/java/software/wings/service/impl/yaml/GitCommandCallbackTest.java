@@ -29,8 +29,8 @@ import com.google.common.collect.Lists;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
@@ -98,15 +98,15 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionFailure() throws Exception {
     String errorMessage = "cant connect to git";
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
-                                          .gitCommandStatus(GitCommandStatus.FAILURE)
-                                          .errorMessage(errorMessage)
-                                          .build();
+    DelegateResponseData notifyResponseData = GitCommandExecutionResponse.builder()
+                                                  .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
+                                                  .gitCommandStatus(GitCommandStatus.FAILURE)
+                                                  .errorMessage(errorMessage)
+                                                  .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
     doNothing().when(yamlGitService).raiseAlertForGitFailure(anyString(), anyString(), any());
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -125,14 +125,14 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionSuccess() throws Exception {
-    ResponseData notifyResponseData =
+    DelegateResponseData notifyResponseData =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
     doThrow(new RuntimeException())
         .when(yamlGitService)
         .closeAlertForGitFailureIfOpen(anyString(), anyString(), any(), any());
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     try {
@@ -150,9 +150,9 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotifyOnErrorCase() {
-    ResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
+    DelegateResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
 
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -166,12 +166,12 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotifyWithUnhandledGitCommandType() {
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .gitCommandStatus(GitCommandStatus.SUCCESS)
-                                          .gitCommandResult(GitCheckoutResult.builder().build())
-                                          .build();
+    DelegateResponseData notifyResponseData = GitCommandExecutionResponse.builder()
+                                                  .gitCommandStatus(GitCommandStatus.SUCCESS)
+                                                  .gitCommandResult(GitCheckoutResult.builder().build())
+                                                  .build();
 
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     on(commandCallback).set("gitCommandType", GitCommandType.CHECKOUT);
@@ -254,11 +254,11 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testCallbackForGitDiffFailure() throws Exception {
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .errorCode(ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER)
-                                          .gitCommandStatus(GitCommandStatus.FAILURE)
-                                          .errorMessage("cant connect to git")
-                                          .build();
+    DelegateResponseData notifyResponseData = GitCommandExecutionResponse.builder()
+                                                  .errorCode(ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER)
+                                                  .gitCommandStatus(GitCommandStatus.FAILURE)
+                                                  .errorMessage("cant connect to git")
+                                                  .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
     final GitWebhookRequestAttributes webhookRequestAttributes = GitWebhookRequestAttributes.builder()
@@ -274,7 +274,7 @@ public class GitCommandCallbackTest extends CategoryTest {
         .when(diffCommandCallback)
         .obtainYamlGitConfigIds(anyString(), anyString(), anyString(), anyString());
     doReturn(GitCommit.builder().build()).when(yamlGitService).saveCommit(any(GitCommit.class));
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     diffCommandCallback.notify(map);
@@ -318,12 +318,12 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testGitUnseenHead() {
-    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                          .gitCommandStatus(GitCommandStatus.FAILURE)
-                                          .errorCode(ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT)
-                                          .build();
+    DelegateResponseData notifyResponseData = GitCommandExecutionResponse.builder()
+                                                  .gitCommandStatus(GitCommandStatus.FAILURE)
+                                                  .errorCode(ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT)
+                                                  .build();
 
-    Map<String, ResponseData> map = new HashMap<>();
+    Map<String, DelegateResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
     commandCallback.notify(map);
     verify(yamlChangeSetService, times(1)).updateStatusAndIncrementPushCount(any(), any(), any());

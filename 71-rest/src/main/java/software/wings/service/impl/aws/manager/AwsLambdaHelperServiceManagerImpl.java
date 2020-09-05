@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -70,7 +70,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
                       .build())
             .build();
     try {
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new GeneralException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
       } else if (notifyResponseData instanceof AwsResponse

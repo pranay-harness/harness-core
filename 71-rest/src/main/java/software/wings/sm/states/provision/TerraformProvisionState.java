@@ -48,7 +48,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
@@ -204,7 +204,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     if (runPlanOnly) {
       return handleAsyncResponseInternalRunPlanOnly(context, response);
     } else {
@@ -213,8 +213,8 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseInternalRunPlanOnly(
-      ExecutionContext context, Map<String, ResponseData> response) {
-    Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
+    Entry<String, DelegateResponseData> responseEntry = response.entrySet().iterator().next();
     String activityId = responseEntry.getKey();
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
     terraformExecutionData.setActivityId(activityId);
@@ -347,8 +347,8 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseInternalRegular(
-      ExecutionContext context, Map<String, ResponseData> response) {
-    Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
+    Entry<String, DelegateResponseData> responseEntry = response.entrySet().iterator().next();
     String activityId = responseEntry.getKey();
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
     terraformExecutionData.setActivityId(activityId);

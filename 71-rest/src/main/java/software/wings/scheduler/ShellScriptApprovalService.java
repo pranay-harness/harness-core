@@ -5,8 +5,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -78,7 +78,7 @@ public class ShellScriptApprovalService {
                                               .build())
                                     .build();
 
-    ResponseData responseData = null;
+    DelegateResponseData responseData = null;
     try {
       responseData = delegateService.executeTask(delegateTask);
     } catch (Exception e) {

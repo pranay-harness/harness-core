@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
@@ -92,8 +92,8 @@ public class ResourceRestraintStep
   }
 
   @Override
-  public StepResponse handleAsyncResponse(
-      Ambiance ambiance, ResourceRestraintStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+  public StepResponse handleAsyncResponse(Ambiance ambiance, ResourceRestraintStepParameters stepParameters,
+      Map<String, DelegateResponseData> responseDataMap) {
     final ResourceRestraint resourceRestraint =
         restraintService.get(stepParameters.getClaimantId(), stepParameters.getResourceRestraintId());
 

@@ -97,6 +97,7 @@ import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
@@ -111,7 +112,6 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
@@ -1956,7 +1956,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public <T extends ResponseData> T executeTask(DelegateTask task) {
+  public <T extends DelegateResponseData> T executeTask(DelegateTask task) {
     if (!delegateProcessingController.canProcessAccount(task.getAccountId())) {
       throw new AccountDisabledException(
           "Account is disabled. Delegates cannot execute tasks", null, ACCOUNT_DISABLED, Level.ERROR, USER, null);
@@ -2291,7 +2291,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("No connected whitelisted delegates found for task");
       String errorMessage = generateValidationError(delegateTask);
       logger.info(errorMessage);
-      ResponseData response;
+      DelegateResponseData response;
       if (delegateTask.getData().isAsync()) {
         response = ErrorNotifyResponseData.builder()
                        .failureTypes(EnumSet.of(FailureType.DELEGATE_PROVISIONING))

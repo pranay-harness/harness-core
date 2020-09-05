@@ -19,7 +19,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -250,7 +250,7 @@ public abstract class ContainerServiceDeploy extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       logger.info("Received async response");
       CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
@@ -353,8 +353,8 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private List<InstanceStatusSummary> buildInstanceStatusSummaries(
-      String appId, String serviceId, String envId, ServiceElement serviceElement, Map<String, ResponseData> response) {
+  private List<InstanceStatusSummary> buildInstanceStatusSummaries(String appId, String serviceId, String envId,
+      ServiceElement serviceElement, Map<String, DelegateResponseData> response) {
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0);
     CommandExecutionData commandExecutionData =
@@ -372,7 +372,7 @@ public abstract class ContainerServiceDeploy extends State {
     return instanceStatusSummaries;
   }
 
-  private List<InstanceDetails> buildInstanceDetails(Map<String, ResponseData> response) {
+  private List<InstanceDetails> buildInstanceDetails(Map<String, DelegateResponseData> response) {
     CommandExecutionData commandExecutionData =
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     ResizeCommandUnitExecutionData resizeExecutionData = (ResizeCommandUnitExecutionData) commandExecutionData;
@@ -383,7 +383,7 @@ public abstract class ContainerServiceDeploy extends State {
     return instanceDetails;
   }
 
-  private List<InstanceElement> buildInstanceElements(Map<String, ResponseData> response) {
+  private List<InstanceElement> buildInstanceElements(Map<String, DelegateResponseData> response) {
     CommandExecutionData commandExecutionData =
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     ResizeCommandUnitExecutionData resizeExecutionData = (ResizeCommandUnitExecutionData) commandExecutionData;

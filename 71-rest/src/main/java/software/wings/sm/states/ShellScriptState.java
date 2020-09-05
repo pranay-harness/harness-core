@@ -24,8 +24,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.TaskParameters;
@@ -185,10 +185,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     String activityId = response.keySet().iterator().next();
-    ResponseData data = response.values().iterator().next();
+    DelegateResponseData data = response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
     if (data instanceof CommandExecutionResult) {
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) data;
@@ -227,7 +227,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       executionResponseBuilder.errorMessage(((ErrorNotifyResponseData) data).getErrorMessage());
       return executionResponseBuilder.build();
     } else {
-      logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
+      logger.error("Unhandled DelegateResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
     ExecutionResponse executionResponse = executionResponseBuilder.build();

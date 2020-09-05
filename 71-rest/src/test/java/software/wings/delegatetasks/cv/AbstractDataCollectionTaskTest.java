@@ -20,7 +20,7 @@ import com.google.inject.Injector;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -121,7 +121,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo();
     DataCollector<DataCollectionInfoV2> dataCollector = mock(DataCollector.class);
     doReturn(dataCollector).when(dataCollectorFactory).newInstance(any());
-    ResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
+    DelegateResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
 
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
     assertThat(DataCollectionTaskStatus.SUCCESS).isEqualTo(taskResult.getStatus());
@@ -141,7 +141,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     DataCollector<DataCollectionInfoV2> dataCollector = mock(DataCollector.class);
     doReturn(dataCollector).when(dataCollectorFactory).newInstance(any());
     doThrow(new RuntimeException("error message from test")).doNothing().when(dataCollector).init(any(), any());
-    ResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
+    DelegateResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
 
     DataCollectionTaskResult taskResult = (DataCollectionTaskResult) responseData;
     verify(dataCollector, times(2)).init(any(), eq(dataCollectionInfo));
@@ -161,7 +161,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     DataCollector<DataCollectionInfoV2> dataCollector = mock(DataCollector.class);
     doReturn(dataCollector).when(dataCollectorFactory).newInstance(any());
     doThrow(new RuntimeException("error message from test")).when(dataCollector).init(any(), any());
-    ResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
+    DelegateResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
 
     verify(dataCollector, times(3)).init(any(), eq(dataCollectionInfo));
     verify(abstractDataCollectionTask, times(0)).collectAndSaveData(dataCollectionInfo);
@@ -181,7 +181,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     DataCollector<DataCollectionInfoV2> dataCollector = mock(DataCollector.class);
     doReturn(dataCollector).when(dataCollectorFactory).newInstance(any());
     doThrow(new RuntimeException("error message from test")).when(abstractDataCollectionTask).collectAndSaveData(any());
-    ResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
+    DelegateResponseData responseData = abstractDataCollectionTask.run(dataCollectionInfo);
 
     verify(dataCollector, times(3)).init(any(), eq(dataCollectionInfo));
     verify(abstractDataCollectionTask, times(3)).collectAndSaveData(dataCollectionInfo);

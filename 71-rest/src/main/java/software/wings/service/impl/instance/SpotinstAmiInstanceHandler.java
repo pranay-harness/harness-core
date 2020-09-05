@@ -22,7 +22,7 @@ import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -97,7 +97,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     SpotInstTaskExecutionResponse spotInstTaskExecutionResponse = (SpotInstTaskExecutionResponse) response;
     SpotInstListElastigroupInstancesResponse listElastigroupInstancesResponse =
         (SpotInstListElastigroupInstancesResponse) spotInstTaskExecutionResponse.getSpotInstTaskResponse();
@@ -177,7 +177,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     SpotInstTaskExecutionResponse spotInstTaskExecutionResponse = (SpotInstTaskExecutionResponse) response;
     SpotInstListElastigroupInstancesResponse listElastigroupInstancesResponse =
         (SpotInstListElastigroupInstancesResponse) spotInstTaskExecutionResponse.getSpotInstTaskResponse();

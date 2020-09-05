@@ -24,7 +24,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -144,7 +144,7 @@ public class AzureVMSSRollbackStateTest extends WingsBaseTest {
     reset(sweepingOutputService);
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     SweepingOutputInstanceBuilder outputInstanceBuilder = SweepingOutputInstance.builder();
-    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, DelegateResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
         AzureVMSSTaskExecutionResponse.builder()
             .azureVMSSTaskResponse(AzureVMSSDeployTaskResponse.builder()
                                        .vmInstancesAdded(Collections.emptyList())

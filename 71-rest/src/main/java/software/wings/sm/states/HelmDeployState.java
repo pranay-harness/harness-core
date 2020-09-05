@@ -34,8 +34,8 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
@@ -411,7 +411,7 @@ public class HelmDeployState extends State {
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;
     appendDelegateTaskDetails(context, delegateTask);
-    ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+    DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
     if (notifyResponseData instanceof HelmCommandExecutionResponse) {
       helmCommandExecutionResponse = (HelmCommandExecutionResponse) notifyResponseData;
     } else {
@@ -451,7 +451,7 @@ public class HelmDeployState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -461,7 +461,7 @@ public class HelmDeployState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response)
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, DelegateResponseData> response)
       throws InterruptedException {
     HelmDeployStateExecutionData helmStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
@@ -481,7 +481,7 @@ public class HelmDeployState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForHelmFetchTask(
-      ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
+      ExecutionContext context, Map<String, DelegateResponseData> response) throws InterruptedException {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = obtainActivityId(context);
@@ -693,7 +693,7 @@ public class HelmDeployState extends State {
     return secretManager.getEncryptionDetails(gitConfig, context.getAppId(), context.getWorkflowExecutionId());
   }
 
-  private HelmCommandExecutionResponse fetchHelmCommandExecutionResponse(ResponseData notifyResponseData) {
+  private HelmCommandExecutionResponse fetchHelmCommandExecutionResponse(DelegateResponseData notifyResponseData) {
     if (!(notifyResponseData instanceof HelmCommandExecutionResponse)) {
       String msg = "Delegate returned error response. Could not convert delegate response to helm response. ";
 
@@ -1032,7 +1032,7 @@ public class HelmDeployState extends State {
   }
 
   protected ExecutionResponse handleAsyncResponseForHelmTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
     HelmCommandExecutionResponse executionResponse =
         fetchHelmCommandExecutionResponse(response.values().iterator().next());
@@ -1099,7 +1099,7 @@ public class HelmDeployState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForGitFetchFilesTask(
-      ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
+      ExecutionContext context, Map<String, DelegateResponseData> response) throws InterruptedException {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = obtainActivityId(context);

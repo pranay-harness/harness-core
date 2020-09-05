@@ -57,7 +57,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -351,7 +351,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(any());
     doReturn(null).when(sweepingOutputService).save(any());
     doNothing().when(activityService).updateStatus(anyString(), anyString(), any());
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
 
     doReturn(PhaseElement.builder().phaseName("name").build()).when(context).getContextElement(any(), any());
 
@@ -424,7 +424,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(any());
     doReturn(null).when(sweepingOutputService).save(any());
     doNothing().when(activityService).updateStatus(anyString(), anyString(), any());
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
 
     doReturn(PhaseElement.builder().phaseName("name").build()).when(context).getContextElement(any(), any());
 

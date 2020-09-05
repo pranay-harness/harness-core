@@ -9,8 +9,8 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.execution.status.Status;
@@ -68,9 +68,9 @@ public class BasicHttpStep implements Step, TaskExecutable<BasicHttpStepParamete
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, BasicHttpStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, BasicHttpStepParameters stepParameters, Map<String, DelegateResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
-    ResponseData notifyResponseData = responseDataMap.values().iterator().next();
+    DelegateResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
       responseBuilder.status(Status.FAILED);

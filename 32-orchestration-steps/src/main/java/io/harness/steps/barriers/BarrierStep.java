@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
@@ -78,8 +78,8 @@ public class BarrierStep
   }
 
   @Override
-  public StepResponse handleAsyncResponse(
-      Ambiance ambiance, BarrierStepParameters barrierStepParameters, Map<String, ResponseData> responseDataMap) {
+  public StepResponse handleAsyncResponse(Ambiance ambiance, BarrierStepParameters barrierStepParameters,
+      Map<String, DelegateResponseData> responseDataMap) {
     // if barrier is still in STANDING => update barrier state
     BarrierExecutionInstance barrierExecutionInstance =
         updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());

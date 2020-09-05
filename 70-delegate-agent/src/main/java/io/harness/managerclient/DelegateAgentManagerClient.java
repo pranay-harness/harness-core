@@ -5,10 +5,10 @@ import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
@@ -92,5 +92,5 @@ public interface DelegateAgentManagerClient {
 
   @POST("agent/delegates/instance-sync/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
-      @Query("accountId") String accountId, @Body ResponseData responseData);
+      @Query("accountId") String accountId, @Body DelegateResponseData responseData);
 }

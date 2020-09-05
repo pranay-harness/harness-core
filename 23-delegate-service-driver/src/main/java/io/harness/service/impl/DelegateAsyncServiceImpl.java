@@ -9,8 +9,8 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResponseKeys;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
@@ -57,7 +57,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
       logger.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
 
       waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
-          (ResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData()));
+          (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData()));
 
       responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
       if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {

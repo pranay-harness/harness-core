@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.interrupts.ExecutionInterruptType;
@@ -31,7 +31,7 @@ public class EngineWaitRetryCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, ResponseData> response) {
+  public void notify(Map<String, DelegateResponseData> response) {
     interruptManager.register(InterruptPackage.builder()
                                   .planExecutionId(planExecutionId)
                                   .nodeExecutionId(nodeExecutionId)
@@ -40,7 +40,7 @@ public class EngineWaitRetryCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
+  public void notifyError(Map<String, DelegateResponseData> response) {
     logger.info("Retry Error Callback Received");
   }
 }

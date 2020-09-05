@@ -11,9 +11,9 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -52,12 +52,12 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     return run((ShellScriptApprovalTaskParameters) parameters[0]);
   }
 
   @Override
-  public ResponseData run(TaskParameters taskParameters) {
+  public DelegateResponseData run(TaskParameters taskParameters) {
     ShellScriptApprovalTaskParameters parameters = (ShellScriptApprovalTaskParameters) taskParameters;
 
     ShellExecutorConfig shellExecutorConfig = ShellExecutorConfig.builder()

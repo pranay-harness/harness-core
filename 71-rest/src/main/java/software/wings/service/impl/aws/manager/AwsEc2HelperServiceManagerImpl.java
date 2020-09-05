@@ -13,7 +13,7 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.ResourceType;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -177,7 +177,7 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
                       .build())
             .build();
     try {
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       helper.validateDelegateSuccessForSyncTask(notifyResponseData);
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {

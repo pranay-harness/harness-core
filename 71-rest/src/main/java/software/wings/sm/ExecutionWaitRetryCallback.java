@@ -7,7 +7,7 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.waiter.NotifyCallback;
 
 import java.util.Map;
@@ -43,7 +43,7 @@ public class ExecutionWaitRetryCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, ResponseData> response) {
+  public void notify(Map<String, DelegateResponseData> response) {
     executionInterruptManager.registerExecutionInterrupt(anExecutionInterrupt()
                                                              .appId(appId)
                                                              .executionUuid(executionUuid)
@@ -53,7 +53,7 @@ public class ExecutionWaitRetryCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
+  public void notifyError(Map<String, DelegateResponseData> response) {
     // Do nothing.
   }
 }

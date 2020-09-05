@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
 import io.harness.perpetualtask.instancesync.AwsSshPerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -75,13 +75,13 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(),
         Optional.of((AwsEc2ListInstancesResponse) response), InstanceSyncFlow.PERPETUAL_TASK);
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AwsEc2ListInstancesResponse awsResponse = (AwsEc2ListInstancesResponse) response;
     boolean success = awsResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
     String errorMessage = success ? null : awsResponse.getErrorMessage();

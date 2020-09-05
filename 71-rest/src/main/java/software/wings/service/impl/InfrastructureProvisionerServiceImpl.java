@@ -25,9 +25,9 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ErrorCode;
@@ -802,7 +802,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                       .build())
             .build();
 
-    ResponseData notifyResponseData;
+    DelegateResponseData notifyResponseData;
     try {
       notifyResponseData = delegateService.executeTask(delegateTask);
     } catch (InterruptedException e) {
@@ -817,7 +817,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     } else if (!(notifyResponseData instanceof TerraformInputVariablesTaskResponse)) {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", "Unknown Response from delegate")
-          .addContext(ResponseData.class, notifyResponseData);
+          .addContext(DelegateResponseData.class, notifyResponseData);
     }
 
     TerraformInputVariablesTaskResponse taskResponse = (TerraformInputVariablesTaskResponse) notifyResponseData;
@@ -870,7 +870,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                       .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                       .build())
             .build();
-    ResponseData responseData;
+    DelegateResponseData responseData;
     try {
       responseData = delegateService.executeTask(delegateTask);
     } catch (InterruptedException e) {
@@ -883,7 +883,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         && ((RemoteMethodReturnValueData) responseData).getException() instanceof InvalidRequestException) {
       throw(InvalidRequestException)((RemoteMethodReturnValueData) responseData).getException();
     } else if (!(responseData instanceof TerraformExecutionData)) {
-      throw new WingsException("Unknown response from delegate.").addContext(ResponseData.class, responseData);
+      throw new WingsException("Unknown response from delegate.").addContext(DelegateResponseData.class, responseData);
     }
     return ((TerraformExecutionData) responseData).getTargets();
   }

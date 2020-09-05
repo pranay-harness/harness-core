@@ -33,7 +33,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.SweepingOutput;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
@@ -470,7 +470,7 @@ public class AwsAmiServiceDeployState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
         (AwsAmiDeployStateExecutionData) context.getStateExecutionData();
 

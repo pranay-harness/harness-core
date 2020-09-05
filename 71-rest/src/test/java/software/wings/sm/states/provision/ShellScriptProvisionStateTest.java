@@ -33,7 +33,7 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -129,7 +129,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
                                                           .executionStatus(ExecutionStatus.ERROR)
                                                           .errorMsg("Error during execution")
                                                           .build();
-    Map<String, ResponseData> responseData = ImmutableMap.of(ACTIVITY_ID, executionData);
+    Map<String, DelegateResponseData> responseData = ImmutableMap.of(ACTIVITY_ID, executionData);
 
     doReturn(APP_ID).when(executionContext).getAppId();
     doReturn(null).when(executionContext).getContextElement(ContextElementType.SHELL_SCRIPT_PROVISION);
@@ -158,7 +158,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
                                                           .executionStatus(ExecutionStatus.SUCCESS)
                                                           .output("{\"key\": \"value\"}")
                                                           .build();
-    Map<String, ResponseData> responseData = ImmutableMap.of(ACTIVITY_ID, executionData);
+    Map<String, DelegateResponseData> responseData = ImmutableMap.of(ACTIVITY_ID, executionData);
     ManagerExecutionLogCallback logCallback = mock(ManagerExecutionLogCallback.class);
     Map<String, Object> expectedOutputMap = ImmutableMap.of("key", "value");
     ShellScriptProvisionerOutputElement outputElement = ShellScriptProvisionerOutputElement.builder().build();

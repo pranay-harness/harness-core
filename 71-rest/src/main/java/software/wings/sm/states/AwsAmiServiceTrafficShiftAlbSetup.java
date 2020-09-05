@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.InvalidRequestException;
@@ -204,7 +204,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
     AwsAmiServiceTrafficShiftAlbSetupResponse amiServiceSetupResponse =
         (AwsAmiServiceTrafficShiftAlbSetupResponse) response.values().iterator().next();

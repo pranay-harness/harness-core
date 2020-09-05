@@ -25,7 +25,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -663,7 +663,7 @@ public class InstanceHelper {
     return false;
   }
 
-  public void processInstanceSyncResponseFromPerpetualTask(String perpetualTaskId, ResponseData response) {
+  public void processInstanceSyncResponseFromPerpetualTask(String perpetualTaskId, DelegateResponseData response) {
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(perpetualTaskId);
     Map<String, String> clientParams = perpetualTaskRecord.getClientContext().getClientParams();
 
@@ -698,8 +698,8 @@ public class InstanceHelper {
         infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
   }
 
-  private void handleInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, PerpetualTaskRecord perpetualTaskRecord, ResponseData response) {
+  private void handleInstanceSyncResponseFromPerpetualTask(InfrastructureMapping infrastructureMapping,
+      PerpetualTaskRecord perpetualTaskRecord, DelegateResponseData response) {
     Optional<InstanceHandler> instanceHandler = getInstanceHandler(infrastructureMapping);
     if (!instanceHandler.isPresent() || !isInstanceSyncByPerpetualTaskEnabled(infrastructureMapping)) {
       return;

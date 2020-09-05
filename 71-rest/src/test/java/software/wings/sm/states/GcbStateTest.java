@@ -36,9 +36,9 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -160,7 +160,7 @@ public class GcbStateTest extends CategoryTest {
     when(gcbExecutionData.withDelegateResponse(gcbDelegateResponse)).thenReturn(gcbExecutionData);
     doNothing().when(state).handleSweepingOutput(eq(sweepingOutputService), eq(context), eq(gcbExecutionData));
 
-    Map<String, ResponseData> response = ImmutableMap.of("", gcbDelegateResponse);
+    Map<String, DelegateResponseData> response = ImmutableMap.of("", gcbDelegateResponse);
 
     state.handleAsyncResponse(context, response);
     verify(activityService)

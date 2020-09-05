@@ -22,7 +22,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintException;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -126,7 +126,7 @@ public class ResourceConstraintState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
     final ResourceConstraint resourceConstraint = restraintService.get(accountId, resourceConstraintId);
 

@@ -31,8 +31,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.NoDelegatesException;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
@@ -680,13 +680,13 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), emptyList(),
         (AwsLambdaDetailsMetricsResponse) response, PERPETUAL_TASK);
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse = (AwsLambdaDetailsMetricsResponse) response;
     boolean success = awsLambdaDetailsResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
     boolean deleteTask = success && isNull(awsLambdaDetailsResponse.getLambdaDetails());

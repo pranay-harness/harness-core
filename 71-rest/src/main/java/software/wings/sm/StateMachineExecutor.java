@@ -61,10 +61,10 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.config.PipelineConfig;
 import io.harness.delay.DelayEventHelper;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
@@ -1425,7 +1425,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param response                 map of responses from state machine instances this state was waiting on.
    */
   public void resume(String appId, String executionUuid, String stateExecutionInstanceId,
-      Map<String, ResponseData> response, boolean asyncError) {
+      Map<String, DelegateResponseData> response, boolean asyncError) {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
@@ -1878,7 +1878,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     private ExecutionContextImpl context;
     private StateMachineExecutor stateMachineExecutor;
     private State state;
-    private Map<String, ResponseData> response;
+    private Map<String, DelegateResponseData> response;
     private boolean asyncError;
 
     /**
@@ -1889,7 +1889,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @param response             the response
      * @param stateMachineExecutor the state machine executor
      */
-    SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, ResponseData> response,
+    SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, DelegateResponseData> response,
         StateMachineExecutor stateMachineExecutor, boolean asyncError) {
       this.context = context;
       this.state = state;
@@ -1936,7 +1936,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     private void populateDelegateMetaData() {
       try {
         if (response != null) {
-          ResponseData responseData = response.values().iterator().next();
+          DelegateResponseData responseData = response.values().iterator().next();
           if (responseData instanceof DelegateTaskNotifyResponseData) {
             context.getStateExecutionData().setDelegateMetaInfo(
                 ((DelegateTaskNotifyResponseData) responseData).getDelegateMetaInfo());

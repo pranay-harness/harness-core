@@ -17,7 +17,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
@@ -174,7 +174,7 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
     doReturn(SUCCESS).when(azureVMSSStateHelper).getExecutionStatus(any());
     doReturn(sweepingOutputInstance).when(sweepingOutputService).save(any());
 
-    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, DelegateResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
         AzureVMSSTaskExecutionResponse.builder()
             .azureVMSSTaskResponse(AzureVMSSDeployTaskResponse.builder()
                                        .vmInstancesAdded(instancesAdded)

@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.expression.ExpressionEvaluator;
@@ -143,7 +143,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
   private void syncInstancesInternal(ContainerInfrastructureMapping containerInfraMapping,
       Multimap<ContainerMetadata, Instance> containerMetadataInstanceMap,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollback, ResponseData responseData,
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollback, DelegateResponseData responseData,
       InstanceSyncFlow instanceSyncFlow) {
     String appId = containerInfraMapping.getAppId();
     Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap =
@@ -191,7 +191,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
   }
 
-  private void handleContainerServiceInstances(boolean rollback, ResponseData responseData,
+  private void handleContainerServiceInstances(boolean rollback, DelegateResponseData responseData,
       InstanceSyncFlow instanceSyncFlow, ContainerInfrastructureMapping containerInfraMapping,
       Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
       Collection<Instance> instancesInDB) {
@@ -308,7 +308,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
   }
 
-  private List<ContainerInfo> getContainerInfos(ResponseData responseData, InstanceSyncFlow instanceSyncFlow,
+  private List<ContainerInfo> getContainerInfos(DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow,
       ContainerInfrastructureMapping containerInfraMapping, ContainerMetadata containerMetadata) {
     ContainerSyncResponse instanceSyncResponse = null;
     if (PERPETUAL_TASK != instanceSyncFlow) {
@@ -325,7 +325,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     return Optional.ofNullable(instanceSyncResponse.getContainerInfoList()).orElse(emptyList());
   }
 
-  private void handleK8sInstances(ResponseData responseData, InstanceSyncFlow instanceSyncFlow,
+  private void handleK8sInstances(DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow,
       ContainerInfrastructureMapping containerInfraMapping,
       Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
       Collection<Instance> instancesInDB) {
@@ -333,7 +333,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     processK8sPodsInstances(containerInfraMapping, containerMetadata, instancesInDB, deploymentSummaryMap, k8sPods);
   }
 
-  private List<K8sPod> getK8sPods(ResponseData responseData, InstanceSyncFlow instanceSyncFlow,
+  private List<K8sPod> getK8sPods(DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow,
       ContainerInfrastructureMapping containerInfraMapping, ContainerMetadata containerMetadata) {
     if (PERPETUAL_TASK != instanceSyncFlow) {
       return getK8sPodsFromDelegate(containerInfraMapping, containerMetadata);
@@ -1195,7 +1195,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
       String msg = "Incompatible infrastructure mapping type found:" + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
@@ -1209,7 +1209,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     if (!(response instanceof ContainerSyncResponse) && !(response instanceof K8sTaskExecutionResponse)) {
       throw new GeneralException("Incompatible response data received from perpetual task execution");
     }

@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import software.wings.beans.command.CommandUnit;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -19,5 +19,5 @@ public interface K8sStateExecutor {
 
   ExecutionResponse executeK8sTask(ExecutionContext context, String activityId);
 
-  ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response);
+  ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, DelegateResponseData> response);
 }

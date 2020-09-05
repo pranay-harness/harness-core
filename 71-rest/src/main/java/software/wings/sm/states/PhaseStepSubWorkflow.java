@@ -27,7 +27,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.PageResponse;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
@@ -501,7 +501,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
       ExecutionStatus executionStatus =
@@ -509,7 +509,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponseBuilder.executionStatus(executionStatus);
       }
-      ResponseData notifiedResponseData = response.values().iterator().next();
+      DelegateResponseData notifiedResponseData = response.values().iterator().next();
       if (notifiedResponseData instanceof ElementNotifyResponseData) {
         ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
         List<ContextElement> elements = elementNotifyResponseData.getContextElements();
@@ -532,12 +532,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     return executionResponseBuilder.build();
   }
 
-  private void handleElementNotifyResponseData(PhaseElement phaseElement, Map<String, ResponseData> response,
+  private void handleElementNotifyResponseData(PhaseElement phaseElement, Map<String, DelegateResponseData> response,
       ExecutionResponseBuilder executionResponseBuilder) {
     if (isEmpty(response)) {
       throw new InvalidRequestException("Missing response");
     }
-    ResponseData notifiedResponseData = response.values().iterator().next();
+    DelegateResponseData notifiedResponseData = response.values().iterator().next();
     if (!(notifiedResponseData instanceof ElementNotifyResponseData)) {
       throw new InvalidRequestException("Response data has wrong type");
     }

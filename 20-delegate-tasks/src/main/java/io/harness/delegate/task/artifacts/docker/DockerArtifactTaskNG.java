@@ -2,9 +2,9 @@ package io.harness.delegate.task.artifacts.docker;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
@@ -28,7 +28,7 @@ public class DockerArtifactTaskNG extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 

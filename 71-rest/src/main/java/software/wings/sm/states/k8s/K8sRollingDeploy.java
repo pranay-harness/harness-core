@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
@@ -129,12 +129,13 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     return k8sStateHelper.handleAsyncResponseWrapper(this, context, response);
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponseForK8sTask(
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     Application app = appService.get(context.getAppId());
     K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 

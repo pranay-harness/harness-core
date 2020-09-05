@@ -19,7 +19,7 @@ import com.google.protobuf.ByteString;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -64,7 +64,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
   @Before
   public void setUp() {
     on(executor).set("kryoSerializer", kryoSerializer);
-    when(delegateAgentManagerClient.publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class)))
+    when(
+        delegateAgentManagerClient.publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class)))
         .thenReturn(call);
   }
 

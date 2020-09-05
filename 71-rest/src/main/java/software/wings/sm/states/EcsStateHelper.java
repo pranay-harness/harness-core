@@ -37,7 +37,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
@@ -714,7 +714,7 @@ public class EcsStateHelper {
   }
 
   public ExecutionResponse handleDelegateResponseForEcsDeploy(ExecutionContext context,
-      Map<String, ResponseData> response, boolean rollback, ActivityService activityService,
+      Map<String, DelegateResponseData> response, boolean rollback, ActivityService activityService,
       ServiceTemplateService serviceTemplateService, ContainerDeploymentManagerHelper containerDeploymentHelper) {
     String activityId = response.keySet().iterator().next();
     EcsCommandExecutionResponse executionResponse = (EcsCommandExecutionResponse) response.values().iterator().next();

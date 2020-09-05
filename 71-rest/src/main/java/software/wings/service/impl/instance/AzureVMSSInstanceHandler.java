@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.azure.model.AzureVMData;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.response.AzureVMSSListVMDataResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -125,7 +125,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, ResponseData response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse = (AzureVMSSTaskExecutionResponse) response;
     AzureVMSSListVMDataResponse azureVMSSTaskResponse =
         (AzureVMSSListVMDataResponse) azureVMSSTaskExecutionResponse.getAzureVMSSTaskResponse();
@@ -154,7 +154,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
   }
 
   @Override
-  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+  public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse = (AzureVMSSTaskExecutionResponse) response;
     AzureVMSSListVMDataResponse azureVMSSTaskResponse =
         (AzureVMSSListVMDataResponse) azureVMSSTaskExecutionResponse.getAzureVMSSTaskResponse();

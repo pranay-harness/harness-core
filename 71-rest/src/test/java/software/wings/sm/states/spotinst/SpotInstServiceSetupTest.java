@@ -16,7 +16,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -83,7 +83,7 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
     String oldId = "oldId";
     state.setElastiGroupNamePrefix(groupPrefix);
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, DelegateResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
         SpotInstTaskExecutionResponse.builder()
             .spotInstTaskResponse(
                 SpotInstSetupTaskResponse.builder()

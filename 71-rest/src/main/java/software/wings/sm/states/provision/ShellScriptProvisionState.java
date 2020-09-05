@@ -17,7 +17,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -125,8 +125,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+    Entry<String, DelegateResponseData> responseEntry = response.entrySet().iterator().next();
     String activityId = responseEntry.getKey();
     ShellScriptProvisionExecutionData executionData = (ShellScriptProvisionExecutionData) responseEntry.getValue();
     executionData.setActivityId(activityId);

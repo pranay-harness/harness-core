@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -343,7 +343,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext executionContext, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(
+      ExecutionContext executionContext, Map<String, DelegateResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     VerificationDataAnalysisResponse executionResponse =
         (VerificationDataAnalysisResponse) response.values().iterator().next();

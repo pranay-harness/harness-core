@@ -9,8 +9,8 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.mappers.SecretRefHelper;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -85,7 +85,7 @@ public class NGGitCommandTaskTest extends CategoryTest {
                                 .build();
     doReturn(null).when(gitService).validate(any(), any());
     doReturn(null).when(encryptionService).decrypt(any(), any());
-    ResponseData response = ngGitCommandValidationTask.run(task);
+    DelegateResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);
     assertThat(((GitCommandExecutionResponse) response).getGitCommandStatus()).isEqualTo(GitCommandStatus.SUCCESS);
   }
@@ -102,7 +102,7 @@ public class NGGitCommandTaskTest extends CategoryTest {
                                 .build();
     doReturn(CommitAndPushResult.builder().build()).when(gitService).commitAndPush(any(), any(), any());
     doReturn(null).when(encryptionService).decrypt(any(), any());
-    ResponseData response = ngGitCommandValidationTask.run(task);
+    DelegateResponseData response = ngGitCommandValidationTask.run(task);
     assertThat(response).isInstanceOf(GitCommandExecutionResponse.class);
     assertThat(((GitCommandExecutionResponse) response).getGitCommandStatus()).isEqualTo(GitCommandStatus.SUCCESS);
   }

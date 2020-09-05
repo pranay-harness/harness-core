@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
@@ -29,5 +29,6 @@ import java.util.Map;
 public interface ChildrenExecutable<T extends StepParameters> {
   ChildrenExecutableResponse obtainChildren(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  StepResponse handleChildrenResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
+  StepResponse handleChildrenResponse(
+      Ambiance ambiance, T stepParameters, Map<String, DelegateResponseData> responseDataMap);
 }

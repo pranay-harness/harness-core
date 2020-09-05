@@ -11,7 +11,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -67,8 +67,8 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
                                                     .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                     .build();
 
-    Map<String, ResponseData> responseDataMap =
-        ImmutableMap.<String, ResponseData>builder()
+    Map<String, DelegateResponseData> responseDataMap =
+        ImmutableMap.<String, DelegateResponseData>builder()
             .put(CHILD_ID, StepResponseNotifyData.builder().status(Status.FAILED).build())
             .build();
     StepResponse stepResponse = ciPipelineSetupStep.handleChildResponse(ambiance, stateParameters, responseDataMap);

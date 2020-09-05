@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.serializer.KryoSerializer;
@@ -44,7 +44,7 @@ public class NGDelegate2TaskResource {
   @POST
   @Path("sync")
   @ApiOperation(value = "Sync task using Delegate 2.0 framework", nickname = "syncTaskD2")
-  public ResponseData createSyncTaskD2(@QueryParam("accountId") @NotBlank String accountId,
+  public DelegateResponseData createSyncTaskD2(@QueryParam("accountId") @NotBlank String accountId,
       @QueryParam("orgIdentifier") @NotBlank String orgIdentifier,
       @QueryParam("projectIdentifier") @NotBlank String projectIdentifier) {
     final int timeoutInSecs = 30;

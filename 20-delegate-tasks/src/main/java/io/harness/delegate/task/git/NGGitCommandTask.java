@@ -8,9 +8,9 @@ import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
@@ -44,12 +44,12 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     GitCommandParams gitCommandParams = (GitCommandParams) parameters;
     GitConfigDTO gitConfig = gitCommandParams.getGitConfig();
     List<EncryptedDataDetail> encryptionDetails = gitCommandParams.getEncryptionDetails();
@@ -80,7 +80,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ResponseData handleCommitAndPush(GitCommandParams gitCommandParams, GitConfigDTO gitConfig) {
+  private DelegateResponseData handleCommitAndPush(GitCommandParams gitCommandParams, GitConfigDTO gitConfig) {
     CommitAndPushRequest gitCommitRequest = (CommitAndPushRequest) gitCommandParams.getGitCommandRequest();
     logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
     CommitAndPushResult gitCommitAndPushResult = gitService.commitAndPush(gitConfig, gitCommitRequest, getAccountId());
@@ -92,7 +92,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
         .build();
   }
 
-  private ResponseData handleValidateTask(GitConfigDTO gitConfig) {
+  private DelegateResponseData handleValidateTask(GitConfigDTO gitConfig) {
     logger.info("Processing Git command: VALIDATE");
     String errorMessage = gitService.validate(gitConfig, getAccountId());
     if (isEmpty(errorMessage)) {

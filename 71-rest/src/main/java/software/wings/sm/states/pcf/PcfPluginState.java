@@ -29,7 +29,7 @@ import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.ListUtils;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -555,7 +555,7 @@ public class PcfPluginState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -565,7 +565,8 @@ public class PcfPluginState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     PcfPluginStateExecutionData stateExecutionData = getPcfPluginStateExecutionData(context);
     TaskType taskType = stateExecutionData.getTaskType();
 
@@ -580,7 +581,7 @@ public class PcfPluginState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForPluginTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     final String activityId = getActivityId(context);
 
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
@@ -600,7 +601,7 @@ public class PcfPluginState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForGitTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     final String activityId = getActivityId(context);
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();

@@ -30,7 +30,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -285,7 +285,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
                                                                                 .sourceRepoBranch("sourceRepoBranch")
                                                                                 .build();
     when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     TerraformExecutionData terraformExecutionData =
         TerraformExecutionData.builder()
             .executionStatus(ExecutionStatus.SUCCESS)
@@ -327,7 +327,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
         TerraformInfrastructureProvisioner.builder().build();
     when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     TerraformExecutionData terraformExecutionData =
         TerraformExecutionData.builder()
             .executionStatus(ExecutionStatus.SUCCESS)

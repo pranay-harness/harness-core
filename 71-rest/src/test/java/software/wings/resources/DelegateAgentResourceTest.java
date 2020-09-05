@@ -32,11 +32,11 @@ import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -228,7 +228,7 @@ public class DelegateAgentResourceTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void shouldProcessInstanceSyncResponse() {
-    ResponseData responseData = PcfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
+    DelegateResponseData responseData = PcfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
     String perpetualTaskId = "12345679";
 
     RestResponse<Boolean> restResponse =

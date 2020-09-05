@@ -4,9 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -31,12 +31,12 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     NewRelicDataCollectionInfo dataCollectionInfo = (NewRelicDataCollectionInfo) parameters;
     if (isEmpty(dataCollectionInfo.getDeploymentMarker())) {
       throw new WingsException("Empty deployment marker body");

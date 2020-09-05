@@ -75,9 +75,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -940,7 +940,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   public void testHandleAsyncResponseForHelmFetchTask() {
     HelmValuesFetchTaskResponse valuesFetchTaskResponse =
         HelmValuesFetchTaskResponse.builder().commandExecutionStatus(FAILURE).build();
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     response.put(ACTIVITY_ID, valuesFetchTaskResponse);
 
     K8sStateExecutor k8sStateExecutor = mock(K8sStateExecutor.class);
@@ -982,7 +982,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
         GitCommandExecutionResponse.builder()
             .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.FAILURE)
             .build();
-    Map<String, ResponseData> response = new HashMap<>();
+    Map<String, DelegateResponseData> response = new HashMap<>();
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
     response.put(ACTIVITY_ID, gitCommandExecutionResponse);
 

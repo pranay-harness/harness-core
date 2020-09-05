@@ -15,8 +15,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
@@ -98,11 +98,11 @@ public class WaitNotifyEngine {
     return waitInstanceId;
   }
 
-  public String doneWith(String correlationId, ResponseData response) {
+  public String doneWith(String correlationId, DelegateResponseData response) {
     return doneWith(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
 
-  private String doneWith(String correlationId, ResponseData response, boolean error) {
+  private String doneWith(String correlationId, DelegateResponseData response, boolean error) {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
     if (logger.isDebugEnabled()) {

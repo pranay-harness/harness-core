@@ -27,9 +27,9 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.tasks.Cd1SetupFields;
@@ -233,8 +233,8 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ResponseData notifyResponseData = response.values().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)

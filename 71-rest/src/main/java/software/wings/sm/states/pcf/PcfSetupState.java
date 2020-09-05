@@ -30,7 +30,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -552,7 +552,7 @@ public class PcfSetupState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -562,7 +562,8 @@ public class PcfSetupState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     PcfSetupStateExecutionData stateExecutionData = (PcfSetupStateExecutionData) context.getStateExecutionData();
 
     TaskType taskType = stateExecutionData.getTaskType();
@@ -581,7 +582,7 @@ public class PcfSetupState extends State {
   }
 
   protected ExecutionResponse handleAsyncResponseForPCFTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = getActivityId(context);
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
@@ -768,7 +769,7 @@ public class PcfSetupState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForGitTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);

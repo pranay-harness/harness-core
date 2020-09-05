@@ -24,7 +24,7 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
@@ -229,8 +229,8 @@ public class InstanceFetchState extends State {
    * @return Response from handling this state.
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    final Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+    final Entry<String, DelegateResponseData> responseEntry = response.entrySet().iterator().next();
     ShellScriptProvisionExecutionData executionData = (ShellScriptProvisionExecutionData) responseEntry.getValue();
 
     final InstanceFetchStateExecutionData stateExecutionData = context.getStateExecutionData();

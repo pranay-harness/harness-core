@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
@@ -184,7 +184,7 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
                       .build())
             .build();
     try {
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       helper.validateDelegateSuccessForSyncTask(notifyResponseData);
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {

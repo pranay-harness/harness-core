@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -77,7 +77,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (Exception e) {
@@ -85,7 +85,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
     }
   }
 
-  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
     AwsAmiSwitchRoutesResponse executionResponse = (AwsAmiSwitchRoutesResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getExecutionStatus();

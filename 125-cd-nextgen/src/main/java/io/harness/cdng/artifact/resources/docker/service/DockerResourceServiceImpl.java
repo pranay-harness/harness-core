@@ -17,8 +17,8 @@ import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
 import io.harness.cdng.artifact.resources.docker.mappers.DockerResourceMapper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
@@ -186,11 +186,11 @@ public class DockerResourceServiceImpl implements DockerResourceService {
 
   private ArtifactTaskExecutionResponse executeSyncTask(DockerArtifactDelegateRequest dockerRequest,
       ArtifactTaskType taskType, BaseNGAccess ngAccess, String ifFailedMessage) {
-    ResponseData responseData = getResponseData(ngAccess, dockerRequest, taskType);
+    DelegateResponseData responseData = getResponseData(ngAccess, dockerRequest, taskType);
     return getTaskExecutionResponse(responseData, ifFailedMessage);
   }
 
-  private ResponseData getResponseData(
+  private DelegateResponseData getResponseData(
       BaseNGAccess ngAccess, DockerArtifactDelegateRequest delegateRequest, ArtifactTaskType artifactTaskType) {
     ArtifactTaskParameters artifactTaskParameters = ArtifactTaskParameters.builder()
                                                         .accountId(ngAccess.getAccountIdentifier())
@@ -209,7 +209,8 @@ public class DockerResourceServiceImpl implements DockerResourceService {
     return delegateServiceGrpcClient.executeSyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
   }
 
-  private ArtifactTaskExecutionResponse getTaskExecutionResponse(ResponseData responseData, String ifFailedMessage) {
+  private ArtifactTaskExecutionResponse getTaskExecutionResponse(
+      DelegateResponseData responseData, String ifFailedMessage) {
     if (responseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
       throw new ArtifactServerException(ifFailedMessage + " - " + errorNotifyResponseData.getErrorMessage());

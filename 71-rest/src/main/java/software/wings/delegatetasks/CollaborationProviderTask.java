@@ -2,9 +2,9 @@ package software.wings.delegatetasks;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -28,12 +28,12 @@ public class CollaborationProviderTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     throw new NotImplementedException("not implemented");
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     CollaborationProviderRequest request = (CollaborationProviderRequest) parameters[0];
     try {
       switch (request.getCommunicationType()) {

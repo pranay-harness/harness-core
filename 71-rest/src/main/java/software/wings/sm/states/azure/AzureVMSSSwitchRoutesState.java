@@ -22,7 +22,7 @@ import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
@@ -197,7 +197,7 @@ public class AzureVMSSSwitchRoutesState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -207,7 +207,7 @@ public class AzureVMSSSwitchRoutesState extends State {
     }
   }
 
-  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
     AzureVMSSTaskExecutionResponse executionResponse =
         (AzureVMSSTaskExecutionResponse) response.values().iterator().next();

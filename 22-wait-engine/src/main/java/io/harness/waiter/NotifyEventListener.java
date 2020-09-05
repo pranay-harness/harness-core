@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.WriteConcern;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -68,7 +68,7 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
       }
 
       boolean isError = false;
-      Map<String, ResponseData> responseMap = new HashMap<>();
+      Map<String, DelegateResponseData> responseMap = new HashMap<>();
 
       try (HIterator<NotifyResponse> notifyResponses =
                new HIterator(persistence.createQuery(NotifyResponse.class, excludeAuthority)
@@ -81,7 +81,7 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
             isError = true;
           }
           responseMap.put(notifyResponse.getUuid(),
-              (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData()));
+              (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData()));
         }
       }
 

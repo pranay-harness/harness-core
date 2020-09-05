@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
@@ -39,7 +39,8 @@ public class SectionChainStep implements Step, ChildChainExecutable<SectionChain
 
   @Override
   public ChildChainResponse executeNextChild(Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData,
+      Map<String, DelegateResponseData> responseDataMap) {
     SectionChainPassThroughData chainPassThroughData = (SectionChainPassThroughData) passThroughData;
     int nextChildIndex = chainPassThroughData.getChildIndex() + 1;
     String previousChildId = responseDataMap.keySet().iterator().next();
@@ -55,9 +56,9 @@ public class SectionChainStep implements Step, ChildChainExecutable<SectionChain
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      PassThroughData passThroughData, Map<String, DelegateResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
-    for (ResponseData responseData : responseDataMap.values()) {
+    for (DelegateResponseData responseData : responseDataMap.values()) {
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
       if (executionStatus != Status.SUCCEEDED) {
         responseBuilder.status(executionStatus);

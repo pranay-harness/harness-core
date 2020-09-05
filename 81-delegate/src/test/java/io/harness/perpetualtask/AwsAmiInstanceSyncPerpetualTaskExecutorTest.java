@@ -19,7 +19,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
@@ -73,7 +73,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
         .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"));
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
@@ -114,7 +114,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
         .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"));
     doReturn(call)
         .when(delegateAgentManagerClient)
-        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;

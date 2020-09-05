@@ -6,9 +6,9 @@ package software.wings.delegatetasks.citasks;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +27,12 @@ public class ExecuteCommandTask extends AbstractDelegateRunnableTask {
     super(delegateTaskPackage, consumer, preExecute);
   }
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("Not implemented");
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     ExecuteCommandTaskParams executeCommandTaskParams = (ExecuteCommandTaskParams) parameters;
     return executeCommandTaskHandler.executeTaskInternal(executeCommandTaskParams);
   }

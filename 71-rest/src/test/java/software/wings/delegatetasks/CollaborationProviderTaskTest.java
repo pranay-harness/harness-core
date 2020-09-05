@@ -8,8 +8,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -68,7 +68,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
         .when(mailer)
         .send(any(SmtpConfig.class), any(List.class), any(EmailData.class));
     EmailRequest emailRequest = new EmailRequest();
-    ResponseData response = collaborationProviderTask.run(new Object[] {emailRequest});
+    DelegateResponseData response = collaborationProviderTask.run(new Object[] {emailRequest});
     assertThat(response).isInstanceOf(CollaborationProviderResponse.class);
     assertThat(((CollaborationProviderResponse) response).getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }

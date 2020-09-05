@@ -6,9 +6,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnexpectedException;
@@ -51,7 +51,7 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     return run((TerraformProvisionParameters) parameters);
   }
 

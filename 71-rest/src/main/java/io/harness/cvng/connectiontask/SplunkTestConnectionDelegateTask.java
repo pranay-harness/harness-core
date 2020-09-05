@@ -2,9 +2,9 @@ package io.harness.cvng.connectiontask;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskParams;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
@@ -25,12 +25,12 @@ public class SplunkTestConnectionDelegateTask extends AbstractDelegateRunnableTa
   }
 
   @Override
-  public ResponseData run(Object[] parameters) {
+  public DelegateResponseData run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 
   @Override
-  public ResponseData run(TaskParameters parameters) {
+  public DelegateResponseData run(TaskParameters parameters) {
     SplunkConnectionTaskParams taskParameters = (SplunkConnectionTaskParams) parameters;
     boolean validCredentails = false;
     Exception execptionInProcessing = null;

@@ -28,9 +28,9 @@ import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.AllArgsConstructor;
@@ -349,7 +349,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         .build();
   }
 
-  public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, DelegateResponseData> response) {
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
     String resolvedJenkinsConfigTemplate = null;
     if (isEmpty(jenkinsExecutionResponse.queuedBuildUrl)) {
@@ -428,8 +428,8 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    ResponseData notifyResponseData = response.values().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     JenkinsExecutionResponse jenkinsExecutionResponse;
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return ExecutionResponse.builder()

@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -55,7 +55,7 @@ public class AwsS3HelperServiceManagerImpl implements AwsS3HelperServiceManager 
                       .build())
             .build();
     try {
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       helper.validateDelegateSuccessForSyncTask(notifyResponseData);
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {

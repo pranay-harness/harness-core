@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.distribution.barrier.Barrier;
 import lombok.Getter;
 import lombok.Setter;
@@ -90,11 +90,11 @@ public class BarrierState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     updateBarrier(context);
     final ExecutionResponseBuilder executionResponseBuilder = executionResponseBuilder(context);
 
-    ResponseData notifyResponseData = response.values().iterator().next();
+    DelegateResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof BarrierStatusData && ((BarrierStatusData) notifyResponseData).isFailed()) {
       executionResponseBuilder.executionStatus(ExecutionStatus.FAILED).errorMessage(errorMsg);
     }

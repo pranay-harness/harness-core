@@ -21,7 +21,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -166,7 +166,7 @@ public class EcsDaemonServiceSetup extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -336,7 +336,7 @@ public class EcsDaemonServiceSetup extends State {
     return containerServiceElementBuilder.build();
   }
 
-  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, DelegateResponseData> response) {
     StateExecutionData stateExecutionData = context.getStateExecutionData();
 
     if (stateExecutionData instanceof EcsSetupStateExecutionData) {
@@ -349,7 +349,8 @@ public class EcsDaemonServiceSetup extends State {
     }
   }
 
-  private ExecutionResponse handleAsyncInternalGitTask(ExecutionContext context, Map<String, ResponseData> response) {
+  private ExecutionResponse handleAsyncInternalGitTask(
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     EcsSetupStateExecutionData ecsSetupStateExecutionData =
@@ -383,7 +384,7 @@ public class EcsDaemonServiceSetup extends State {
   }
 
   private ExecutionResponse handleAsyncInternalEcsDaemonTask(
-      ExecutionContext context, Map<String, ResponseData> response) {
+      ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
     EcsCommandExecutionResponse executionResponse = (EcsCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus =

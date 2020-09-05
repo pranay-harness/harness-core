@@ -1,6 +1,6 @@
 package software.wings.beans.container;
 
-import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.DelegateResponseData;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.yaml.GitCommandRequest;
@@ -11,7 +11,7 @@ import software.wings.beans.yaml.GitCommandResult;
  */
 @Data
 @Builder
-public class ContainerCommandExecutionResponse implements ResponseData {
+public class ContainerCommandExecutionResponse implements DelegateResponseData {
   private GitCommandResult gitCommandResult;
   private GitCommandRequest gitCommandRequest;
   private GitCommandStatus gitCommandStatus;
