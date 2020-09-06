@@ -9,7 +9,6 @@ import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
@@ -17,6 +16,7 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -50,8 +50,8 @@ public class IntegrationStageStep implements Step, ChildExecutable<IntegrationSt
   }
 
   @Override
-  public StepResponse handleChildResponse(Ambiance ambiance, IntegrationStageStepParameters stepParameters,
-      Map<String, DelegateResponseData> responseDataMap) {
+  public StepResponse handleChildResponse(
+      Ambiance ambiance, IntegrationStageStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     logger.info("executed integration stage =[{}]", stepParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);

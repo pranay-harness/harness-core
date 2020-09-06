@@ -4,11 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.facilitator.PassThroughData;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.ResponseData;
 
 import java.util.Map;
 
@@ -42,8 +42,8 @@ public interface ChildChainExecutable<T extends StepParameters> {
   ChildChainResponse executeFirstChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   ChildChainResponse executeNextChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData, Map<String, DelegateResponseData> responseDataMap);
+      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 
-  StepResponse finalizeExecution(Ambiance ambiance, T stepParameters, PassThroughData passThroughData,
-      Map<String, DelegateResponseData> responseDataMap);
+  StepResponse finalizeExecution(
+      Ambiance ambiance, T stepParameters, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 }

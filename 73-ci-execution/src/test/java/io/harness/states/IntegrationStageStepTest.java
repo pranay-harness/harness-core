@@ -14,7 +14,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -24,6 +23,7 @@ import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -77,8 +77,8 @@ public class IntegrationStageStepTest extends CIExecutionTest {
                                                          .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                          .build();
 
-    Map<String, DelegateResponseData> responseDataMap =
-        ImmutableMap.<String, DelegateResponseData>builder()
+    Map<String, ResponseData> responseDataMap =
+        ImmutableMap.<String, ResponseData>builder()
             .put(CHILD_ID, StepResponseNotifyData.builder().status(Status.FAILED).build())
             .build();
     StepResponse stepResponse = integrationStageStep.handleChildResponse(ambiance, stateParameters, responseDataMap);

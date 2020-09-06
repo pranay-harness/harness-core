@@ -21,7 +21,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -42,6 +41,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -236,10 +236,10 @@ public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepPara
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, ShellScriptStepParameters stepParameters, Map<String, DelegateResponseData> response) {
+      Ambiance ambiance, ShellScriptStepParameters stepParameters, Map<String, ResponseData> response) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     String activityId = response.keySet().iterator().next();
-    DelegateResponseData data = response.values().iterator().next();
+    ResponseData data = response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
     ExecutionStatus executionStatus = null;
     if (data instanceof CommandExecutionResult) {

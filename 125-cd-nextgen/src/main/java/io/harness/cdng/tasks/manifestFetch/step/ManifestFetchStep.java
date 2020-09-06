@@ -17,7 +17,6 @@ import io.harness.cdng.tasks.manifestFetch.ManifestFetchHelper;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome.ManifestFetchOutcomeBuilder;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.execution.status.Status;
@@ -29,6 +28,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
@@ -71,7 +71,7 @@ public class ManifestFetchStep implements Step, TaskExecutable<ManifestFetchPara
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, ManifestFetchParameters stepParameters, Map<String, DelegateResponseData> responseDataMap) {
+      Ambiance ambiance, ManifestFetchParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     GitCommandExecutionResponse executionResponse =
         (GitCommandExecutionResponse) responseDataMap.values().iterator().next();
     ExecutionStatus executionStatus =

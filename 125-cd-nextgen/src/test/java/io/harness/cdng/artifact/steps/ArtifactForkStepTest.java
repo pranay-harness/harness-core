@@ -10,7 +10,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
@@ -21,6 +20,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.steps.fork.ForkStepParameters;
+import io.harness.tasks.ResponseData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -66,7 +66,7 @@ public class ArtifactForkStepTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testHandleChildrenResponse() {
-    Map<String, DelegateResponseData> responseDataMap = new HashMap<>();
+    Map<String, ResponseData> responseDataMap = new HashMap<>();
 
     DockerArtifactOutcome artifactOutcome =
         DockerArtifactOutcome.builder().primaryArtifact(true).identifier("ARTIFACT1").build();

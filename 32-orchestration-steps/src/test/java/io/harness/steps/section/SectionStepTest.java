@@ -10,13 +10,13 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationStepsTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.tasks.ResponseData;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,8 +46,8 @@ public class SectionStepTest extends OrchestrationStepsTest {
     Ambiance ambiance = Ambiance.builder().build();
     SectionStepParameters stateParameters = SectionStepParameters.builder().childNodeId(CHILD_ID).build();
 
-    Map<String, DelegateResponseData> responseDataMap =
-        ImmutableMap.<String, DelegateResponseData>builder()
+    Map<String, ResponseData> responseDataMap =
+        ImmutableMap.<String, ResponseData>builder()
             .put(CHILD_ID, StepResponseNotifyData.builder().status(Status.FAILED).build())
             .build();
     StepResponse stepResponse = sectionState.handleChildResponse(ambiance, stateParameters, responseDataMap);

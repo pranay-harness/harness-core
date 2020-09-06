@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.fabric8.utils.Lists;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -30,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +63,7 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
     List<Consumer> consumers = new ArrayList<>();
 
     List<ResourceRestraintInstance> instances = resourceRestraintService.getAllByRestraintIdAndResourceUnitAndStates(
-        id.getValue(), unit.getValue(), Lists.newArrayList(ACTIVE, BLOCKED));
+        id.getValue(), unit.getValue(), new ArrayList<>(Arrays.asList(ACTIVE, BLOCKED)));
 
     instances.forEach(instance
         -> consumers.add(Consumer.builder()

@@ -9,7 +9,6 @@ import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.orchestration.StepUtils;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.execution.status.Status;
@@ -21,6 +20,7 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
@@ -71,8 +71,8 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRo
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters,
-      Map<String, DelegateResponseData> responseDataMap) {
+  public StepResponse handleTaskResult(
+      Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
 
     if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {

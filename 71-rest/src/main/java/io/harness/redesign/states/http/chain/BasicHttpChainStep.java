@@ -10,7 +10,6 @@ import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -24,6 +23,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.TaskType;
 
@@ -47,8 +47,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable<BasicHttpCh
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, BasicHttpChainStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData,
-      Map<String, DelegateResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     BasicHttpChainStepParameters parameters = obtainBasicHttpChainStepParameters(stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(1);
     DelegateTask task = buildTask(ambiance, linkParam);
@@ -57,7 +56,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable<BasicHttpCh
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, BasicHttpChainStepParameters stepParameters,
-      PassThroughData passThroughData, Map<String, DelegateResponseData> responseDataMap) {
+      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 

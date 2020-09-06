@@ -7,7 +7,6 @@ import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.delay.SimpleNotifier;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
@@ -17,6 +16,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,7 @@ public class SimpleAsyncStep implements Step, AsyncExecutable<SimpleStepAsyncPar
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, SimpleStepAsyncParams stepParameters, Map<String, DelegateResponseData> responseDataMap) {
+      Ambiance ambiance, SimpleStepAsyncParams stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (Object response : responseDataMap.values()) {
       if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {

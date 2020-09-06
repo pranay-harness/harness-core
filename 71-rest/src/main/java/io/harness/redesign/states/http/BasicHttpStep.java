@@ -9,7 +9,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -23,6 +22,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.TaskType;
@@ -68,9 +68,9 @@ public class BasicHttpStep implements Step, TaskExecutable<BasicHttpStepParamete
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, BasicHttpStepParameters stepParameters, Map<String, DelegateResponseData> responseDataMap) {
+      Ambiance ambiance, BasicHttpStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
-    DelegateResponseData notifyResponseData = responseDataMap.values().iterator().next();
+    ResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
       responseBuilder.status(Status.FAILED);

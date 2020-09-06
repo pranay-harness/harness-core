@@ -12,15 +12,17 @@ import lombok.experimental.UtilityClass;
 public class OrchestrationRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
+          .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(WaitEngineRegistrars.kryoRegistrars)
+          .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .add(OrchestrationKryoRegister.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
+          .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
           .add(OrchestrationMorphiaRegistrar.class)
           .build();
 }
