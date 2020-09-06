@@ -315,7 +315,7 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
     Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
     Map<String, String> baseVMSSTags = getTagsForNewVMSS(
-        baseVirtualMachineScaleSet, infraMappingId, harnessRevision, newVirtualMachineScaleSetName, false);
+        baseVirtualMachineScaleSet, infraMappingId, harnessRevision, newVirtualMachineScaleSetName, isBlueGreen);
 
     VirtualMachineScaleSetInner inner = baseVirtualMachineScaleSet.inner();
 

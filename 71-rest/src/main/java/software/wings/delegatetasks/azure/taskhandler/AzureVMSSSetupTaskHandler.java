@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -84,8 +85,10 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     logCallback.saveExecutionLog("Getting the most recent active Virtual Machine Scale Set", INFO);
     VirtualMachineScaleSet mostRecentActiveVMSS = getMostRecentActiveVMSS(harnessVMSSSortedByCreationTimeReverse);
 
-    downsizeOrDeleteOlderVirtualMachineScaleSets(
+    downsizeLatestVersionsKeptVMSSs(
         azureConfig, setupTaskParameters, harnessVMSSSortedByCreationTimeReverse, mostRecentActiveVMSS, logCallback);
+    deleteVMSSsOlderThenLatestVersionsToKeep(
+        azureConfig, harnessVMSSSortedByCreationTimeReverse, mostRecentActiveVMSS, logCallback);
 
     logCallback.saveExecutionLog("Getting the new revision and Virtual Machine Scale Set name", INFO);
     Integer newHarnessRevision = getNewHarnessRevision(harnessVMSSSortedByCreationTimeReverse);
@@ -147,17 +150,14 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   }
 
   private VirtualMachineScaleSet getMostRecentActiveVMSS(List<VirtualMachineScaleSet> harnessManagedScaleSets) {
-    Optional<VirtualMachineScaleSet> harnessManagedScaleSetsWithNonZeroCount =
-        harnessManagedScaleSets.stream()
-            .filter(Objects::nonNull)
-            .filter(scaleSet -> scaleSet.capacity() > 0)
-            .findFirst();
-
-    return harnessManagedScaleSetsWithNonZeroCount.orElseGet(
-        () -> harnessManagedScaleSets.stream().findFirst().orElse(null));
+    return harnessManagedScaleSets.stream()
+        .filter(Objects::nonNull)
+        .filter(scaleSet -> scaleSet.capacity() > 0)
+        .findFirst()
+        .orElse(null);
   }
 
-  private void downsizeOrDeleteOlderVirtualMachineScaleSets(AzureConfig azureConfig,
+  private void downsizeLatestVersionsKeptVMSSs(AzureConfig azureConfig,
       AzureVMSSSetupTaskParameters setupTaskParameters, List<VirtualMachineScaleSet> sortedHarnessManagedVMSSs,
       VirtualMachineScaleSet mostRecentActiveVMSS, ExecutionLogCallback executionLogCallback) {
     if (isEmpty(sortedHarnessManagedVMSSs) || mostRecentActiveVMSS == null) {
@@ -176,16 +176,9 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
             .filter(vmss -> !vmss.name().equals(mostRecentActiveVMSSName))
             .limit(versionsToKeep)
             .collect(toList());
-    List<VirtualMachineScaleSet> listOfVMSSsForDelete =
-        sortedHarnessManagedVMSSs.stream()
-            .filter(Objects::nonNull)
-            .filter(vmss -> !vmss.name().equals(mostRecentActiveVMSSName))
-            .skip(versionsToKeep)
-            .collect(toList());
 
     downsizeVMSSs(azureConfig, setupTaskParameters, listOfVMSSsForDownsize, subscriptionId, resourceGroupName,
         autoScalingSteadyStateVMSSTimeout, executionLogCallback);
-    deleteVMSSs(azureConfig, listOfVMSSsForDelete, executionLogCallback);
   }
 
   public void downsizeVMSSs(AzureConfig azureConfig, AzureVMSSSetupTaskParameters setupTaskParameters,
@@ -201,15 +194,35 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     });
   }
 
+  private void deleteVMSSsOlderThenLatestVersionsToKeep(AzureConfig azureConfig,
+      List<VirtualMachineScaleSet> sortedHarnessManagedVMSSs, VirtualMachineScaleSet mostRecentActiveVMSS,
+      ExecutionLogCallback executionLogCallback) {
+    if (isEmpty(sortedHarnessManagedVMSSs) || mostRecentActiveVMSS == null) {
+      return;
+    }
+
+    String mostRecentActiveVMSSName = mostRecentActiveVMSS.name();
+    int versionsToKeep = NUMBER_OF_LATEST_VERSIONS_TO_KEEP - 1;
+
+    List<VirtualMachineScaleSet> listOfVMSSsForDelete =
+        sortedHarnessManagedVMSSs.stream()
+            .filter(Objects::nonNull)
+            .filter(vmss -> !vmss.name().equals(mostRecentActiveVMSSName))
+            .skip(versionsToKeep)
+            .collect(toList());
+    deleteVMSSs(azureConfig, listOfVMSSsForDelete, executionLogCallback);
+  }
+
   public void deleteVMSSs(
       AzureConfig azureConfig, List<VirtualMachineScaleSet> vmssForDelete, ExecutionLogCallback executionLogCallback) {
     List<String> vmssIds = vmssForDelete.stream().map(VirtualMachineScaleSet::id).collect(toList());
 
-    StringBuilder virtualMachineScaleSetNames = new StringBuilder();
-    vmssForDelete.forEach(vmss -> virtualMachineScaleSetNames.append(vmss.name()).append(","));
+    StringJoiner virtualMachineScaleSetNamesJoiner = new StringJoiner(",", "[", "]");
+    vmssForDelete.forEach(vmss -> virtualMachineScaleSetNamesJoiner.add(vmss.name()));
 
     executionLogCallback.saveExecutionLog(
-        color("# Deleting Existing Virtual Machine Scale Sets: " + virtualMachineScaleSetNames, Yellow, Bold));
+        color("# Deleting existing Virtual Machine Scale Sets: " + virtualMachineScaleSetNamesJoiner.toString(), Yellow,
+            Bold));
     azureVMSSHelperServiceDelegate.bulkDeleteVirtualMachineScaleSets(azureConfig, vmssIds);
     executionLogCallback.saveExecutionLog("Successfully deleted Virtual Scale Sets", INFO);
   }
@@ -319,7 +332,6 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
     return AzureVMSSSetupTaskResponse.builder()
         .lastDeployedVMSSName(mostRecentActiveVMSSName)
-        .newVirtualMachineScaleSetName(newVirtualMachineScaleSetName)
         .harnessRevision(harnessRevision)
         .minInstances(azureVMSSAutoScalingData.getMinInstances())
         .maxInstances(azureVMSSAutoScalingData.getMaxInstances())
@@ -334,38 +346,64 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   private AzureVMSSAutoScalingData getAzureVMSSAutoScalingData(AzureConfig azureConfig,
       VirtualMachineScaleSet mostRecentActiveVMSS, AzureVMSSSetupTaskParameters setupTaskParameters,
       ExecutionLogCallback logCallback, boolean isUseCurrentRunningCount) {
-    int minInstances = DEFAULT_AZURE_VMSS_MIN_INSTANCES;
-    int maxInstances = DEFAULT_AZURE_VMSS_MAX_INSTANCES;
-    int desiredInstances = DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
-
     if (isUseCurrentRunningCount) {
-      String mostRecentActiveVMSSName = StringUtils.EMPTY;
       if (mostRecentActiveVMSS != null) {
-        // Get scaling policy for mostRecentActiveVMSS
         Optional<AutoscaleProfile> defaultAutoScaleProfileOp =
             azureAutoScaleSettingsHelperServiceDelegate.getDefaultAutoScaleProfile(
                 azureConfig, mostRecentActiveVMSS.resourceGroupName(), mostRecentActiveVMSS.id());
         if (defaultAutoScaleProfileOp.isPresent()) {
-          AutoscaleProfile defaultAutoScaleProfile = defaultAutoScaleProfileOp.get();
-          int defaultAPMinInstance = defaultAutoScaleProfile.minInstanceCount();
-          int defaultAPMaxInstance = defaultAutoScaleProfile.maxInstanceCount();
-          minInstances = defaultAPMinInstance;
-          maxInstances = defaultAPMaxInstance;
+          return getMostRecentActiveVMSSAutoScalingData(
+              defaultAutoScaleProfileOp.get(), mostRecentActiveVMSS, logCallback);
         }
-        desiredInstances = mostRecentActiveVMSS.capacity();
-        mostRecentActiveVMSSName = mostRecentActiveVMSS.name();
       }
-      logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from VMSS: [%s]",
-                                       minInstances, maxInstances, desiredInstances, mostRecentActiveVMSSName),
-          INFO);
-    } else {
-      minInstances = setupTaskParameters.getMinInstances();
-      maxInstances = setupTaskParameters.getMaxInstances();
-      desiredInstances = setupTaskParameters.getDesiredInstances();
-      logCallback.saveExecutionLog(format("Using workflow input min: [%d], max: [%d] and desired: [%d]", minInstances,
-                                       maxInstances, desiredInstances),
-          INFO);
+      return getDefaultAutoScalingData(logCallback);
     }
+
+    return getWorkflowInputAutoScalingData(setupTaskParameters, logCallback);
+  }
+
+  private AzureVMSSAutoScalingData getMostRecentActiveVMSSAutoScalingData(AutoscaleProfile defaultAutoScaleProfile,
+      VirtualMachineScaleSet mostRecentActiveVMSS, ExecutionLogCallback logCallback) {
+    int minInstances = defaultAutoScaleProfile.minInstanceCount();
+    int maxInstances = defaultAutoScaleProfile.maxInstanceCount();
+    int desiredInstances = mostRecentActiveVMSS.capacity();
+    String mostRecentActiveVMSSName = mostRecentActiveVMSS.name();
+
+    logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from VMSS: [%s]",
+                                     minInstances, maxInstances, desiredInstances, mostRecentActiveVMSSName),
+        INFO);
+
+    return AzureVMSSAutoScalingData.builder()
+        .minInstances(minInstances)
+        .maxInstances(maxInstances)
+        .desiredInstances(desiredInstances)
+        .build();
+  }
+
+  private AzureVMSSAutoScalingData getDefaultAutoScalingData(ExecutionLogCallback logCallback) {
+    int minInstances = DEFAULT_AZURE_VMSS_MIN_INSTANCES;
+    int maxInstances = DEFAULT_AZURE_VMSS_MAX_INSTANCES;
+    int desiredInstances = DEFAULT_AZURE_VMSS_DESIRED_INSTANCES;
+
+    logCallback.saveExecutionLog(
+        format("Using default min: [%d], max: [%d], desired: [%d]", minInstances, maxInstances, desiredInstances),
+        INFO);
+    return AzureVMSSAutoScalingData.builder()
+        .minInstances(minInstances)
+        .maxInstances(maxInstances)
+        .desiredInstances(desiredInstances)
+        .build();
+  }
+
+  private AzureVMSSAutoScalingData getWorkflowInputAutoScalingData(
+      AzureVMSSSetupTaskParameters setupTaskParameters, ExecutionLogCallback logCallback) {
+    int minInstances = setupTaskParameters.getMinInstances();
+    int maxInstances = setupTaskParameters.getMaxInstances();
+    int desiredInstances = setupTaskParameters.getDesiredInstances();
+
+    logCallback.saveExecutionLog(format("Using workflow input min: [%d], max: [%d] and desired: [%d]", minInstances,
+                                     maxInstances, desiredInstances),
+        INFO);
 
     return AzureVMSSAutoScalingData.builder()
         .minInstances(minInstances)

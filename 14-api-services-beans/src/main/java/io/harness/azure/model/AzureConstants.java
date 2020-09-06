@@ -18,6 +18,7 @@ public interface AzureConstants {
   String AZURE_VMSS_SWAP_BACKEND_POOL = "Swap VMSS Backend Pool";
   String ACTIVITY_ID = "activityId";
   int NUMBER_OF_LATEST_VERSIONS_TO_KEEP = 3;
+  String STEADY_STATE_TIMEOUT_REGEX = "w|d|h|m|s|ms";
 
   // VMSS Tags names and values
   String HARNESS_AUTOSCALING_GROUP_TAG_NAME = "HARNESS_REVISION";

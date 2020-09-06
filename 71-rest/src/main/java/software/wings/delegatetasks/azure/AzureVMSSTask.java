@@ -137,7 +137,7 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
       if (azureVMSSCommandRequest.getServiceVariable() != null) {
         ServiceVariable serviceVariable = azureVMSSCommandRequest.getServiceVariable();
         encryptionService.decrypt(serviceVariable, azureVMSSCommandRequest.getServiceVariableEncryptionDetails());
-        setupTaskParameters.setSshPublicKey(new String(serviceVariable.getValue()));
+        setupTaskParameters.setPassword(new String(serviceVariable.getValue()));
       }
     }
   }
