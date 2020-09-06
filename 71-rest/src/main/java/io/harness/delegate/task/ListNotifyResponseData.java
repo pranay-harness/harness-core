@@ -1,4 +1,4 @@
-package io.harness.waiter;
+package io.harness.delegate.task;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;

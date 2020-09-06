@@ -1,7 +1,7 @@
 package software.wings.collect;
 
+import static io.harness.delegate.task.ListNotifyResponseData.Builder.aListNotifyResponseData;
 import static io.harness.rule.OwnerRule.GARVIT;
-import static io.harness.waiter.ListNotifyResponseData.Builder.aListNotifyResponseData;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

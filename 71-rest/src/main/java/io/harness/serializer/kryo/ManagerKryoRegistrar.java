@@ -26,6 +26,7 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
@@ -1755,5 +1756,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SetupTestNodeData.Instance.class, 7470);
     kryo.register(InstanceFetchStateExecutionData.class, 7471);
     kryo.register(InstanceFetchStateExecutionSummary.class, 7472);
+
+    kryo.register(ListNotifyResponseData.class, 5133);
   }
 }

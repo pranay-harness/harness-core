@@ -3,8 +3,8 @@ package software.wings.helpers.ext.bamboo;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
