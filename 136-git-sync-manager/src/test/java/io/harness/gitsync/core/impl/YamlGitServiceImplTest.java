@@ -50,6 +50,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 
@@ -186,7 +187,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
   }
 
   private String obtainPayload(String filePath) throws IOException {
-    ClassLoader classLoader = getClass().getClassLoader();
+    ClassLoader classLoader = WingsBaseTest.class.getClassLoader();
 
     File file = new File(classLoader.getResource(filePath).getFile());
     return FileUtils.readFileToString(file, Charset.defaultCharset());

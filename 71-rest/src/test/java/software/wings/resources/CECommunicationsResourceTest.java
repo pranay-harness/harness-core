@@ -14,6 +14,7 @@ import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -27,6 +28,10 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 public class CECommunicationsResourceTest extends CategoryTest {
+  @ClassRule
+  public static ResourceTestRule RESOURCES =
+      ResourceTestRule.builder().instance(new CECommunicationsResource(null)).build();
+
   private String accountId = "ACCOUNT_ID";
   private String accountId2 = "ACCOUNT_ID2";
   private String uuid = "UUID";
@@ -35,13 +40,12 @@ public class CECommunicationsResourceTest extends CategoryTest {
   private CECommunications communications;
   private CommunicationType type = CommunicationType.WEEKLY_REPORT;
 
-  private static CECommunicationsService communicationsService = mock(CECommunicationsService.class);
-  @ClassRule
-  public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().instance(new CECommunicationsResource(communicationsService)).build();
+  private CECommunicationsService communicationsService = mock(CECommunicationsService.class);
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
+    CECommunicationsResource instance = (CECommunicationsResource) RESOURCES.getInstances().iterator().next();
+    FieldUtils.writeField(instance, "communicationsService", communicationsService, true);
     communications = CECommunications.builder().uuid(uuid).accountId(accountId).emailId(email).build();
   }
 
