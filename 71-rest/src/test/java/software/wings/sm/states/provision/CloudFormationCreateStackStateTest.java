@@ -35,9 +35,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -270,7 +270,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     state.setTemplateExpressions(null);
     state.setAwsConfigId("awsConfigId");
 
-    Map<String, DelegateResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
             .commandExecutionStatus(SUCCESS)
             .commandResponse(createStackResponse)
@@ -308,7 +308,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseFailure() {
-    Map<String, DelegateResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
             .commandExecutionStatus(FAILURE)
             .commandResponse(CloudFormationCreateStackResponse.builder().commandExecutionStatus(FAILURE).build())

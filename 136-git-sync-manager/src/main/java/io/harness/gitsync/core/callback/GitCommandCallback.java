@@ -33,6 +33,7 @@ import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,12 +76,12 @@ public class GitCommandCallback implements NotifyCallback {
   @Inject private transient GitCommitService gitCommitService;
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new GitCommandCallbackLogContext(getContext(), OVERRIDE_ERROR)) {
       logger.info("Git command response [{}]", response);
 
-      DelegateResponseData notifyResponseData = response.values().iterator().next();
+      DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
       if (notifyResponseData instanceof GitCommandExecutionResponse) {
         GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
         GitBaseResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
@@ -174,7 +175,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     logger.warn("Git request failed for command:[{}], changeSetId:[{}], account:[{}], response:[{}]", gitCommandType,
         changeSetId, accountId, response);
     updateChangeSetFailureStatusSafely();

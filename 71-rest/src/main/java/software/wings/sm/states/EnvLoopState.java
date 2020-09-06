@@ -9,7 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
-import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -120,9 +120,9 @@ public class EnvLoopState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
-    for (DelegateResponseData status : response.values()) {
+    for (ResponseData status : response.values()) {
       ExecutionStatus executionStatus = ((ExecutionStatusResponseData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponseBuilder.executionStatus(executionStatus);

@@ -29,7 +29,6 @@ import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.ListUtils;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -37,6 +36,7 @@ import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -555,7 +555,7 @@ public class PcfPluginState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -565,8 +565,7 @@ public class PcfPluginState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(
-      ExecutionContext context, Map<String, DelegateResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     PcfPluginStateExecutionData stateExecutionData = getPcfPluginStateExecutionData(context);
     TaskType taskType = stateExecutionData.getTaskType();
 
@@ -581,7 +580,7 @@ public class PcfPluginState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForPluginTask(
-      ExecutionContext context, Map<String, DelegateResponseData> response) {
+      ExecutionContext context, Map<String, ResponseData> response) {
     final String activityId = getActivityId(context);
 
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
@@ -601,7 +600,7 @@ public class PcfPluginState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForGitTask(
-      ExecutionContext context, Map<String, DelegateResponseData> response) {
+      ExecutionContext context, Map<String, ResponseData> response) {
     final String activityId = getActivityId(context);
 
     GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();

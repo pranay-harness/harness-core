@@ -8,8 +8,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
@@ -98,14 +98,14 @@ public class SubWorkflowState extends State {
    * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     handleStatusSummary(workflowExecutionService, context, response, executionResponseBuilder);
     return executionResponseBuilder.build();
   }
 
   protected void handleStatusSummary(WorkflowExecutionService workflowExecutionService, ExecutionContext context,
-      Map<String, DelegateResponseData> response, ExecutionResponseBuilder executionResponseBuilder) {
+      Map<String, ResponseData> response, ExecutionResponseBuilder executionResponseBuilder) {
     ExecutionStatus executionStatus =
         ((ExecutionStatusResponseData) response.values().iterator().next()).getExecutionStatus();
     if (executionStatus != ExecutionStatus.SUCCESS) {

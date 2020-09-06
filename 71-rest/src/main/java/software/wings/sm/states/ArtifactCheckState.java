@@ -17,7 +17,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delay.DelayEventNotifyData;
-import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
@@ -108,7 +108,7 @@ public class ArtifactCheckState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     List<String> artifactNamesForDownload = new ArrayList<>();
     List<String> correlationIds = new ArrayList<>();
     List<Artifact> failedArtifacts = new ArrayList<>();

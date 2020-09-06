@@ -13,10 +13,10 @@ import com.google.inject.Injector;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -848,8 +848,7 @@ public class StateMachineTest extends WingsBaseTest {
      * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
      */
     @Override
-    public ExecutionResponse handleAsyncResponse(
-        ExecutionContext context, Map<String, DelegateResponseData> responseMap) {
+    public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> responseMap) {
       ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
       for (Object response : responseMap.values()) {
         if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {

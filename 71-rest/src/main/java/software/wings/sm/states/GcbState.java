@@ -33,6 +33,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -233,8 +234,8 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)

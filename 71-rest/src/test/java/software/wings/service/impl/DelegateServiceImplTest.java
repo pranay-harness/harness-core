@@ -36,6 +36,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
@@ -48,7 +49,6 @@ import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.tasks.Cd1SetupFields;
-import io.harness.waiter.StringNotifyResponseData;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
@@ -328,7 +328,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                     .build();
 
     DelegateTaskResponse delegateTaskResponse =
-        DelegateTaskResponse.builder().response(StringNotifyResponseData.builder().data("OK").build()).build();
+        DelegateTaskResponse.builder().response(DelegateStringResponseData.builder().data("OK").build()).build();
 
     delegateService.handleDriverResponse(null, delegateTaskResponse);
     verify(delegateCallbackRegistry, never()).obtainDelegateCallbackService(any());
@@ -366,7 +366,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                     .build();
 
     DelegateTaskResponse delegateTaskResponse =
-        DelegateTaskResponse.builder().response(StringNotifyResponseData.builder().data("OK").build()).build();
+        DelegateTaskResponse.builder().response(DelegateStringResponseData.builder().data("OK").build()).build();
 
     DelegateCallbackService delegateCallbackService = mock(DelegateCallbackService.class);
     when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId()))
@@ -390,7 +390,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                     .build();
 
     DelegateTaskResponse delegateTaskResponse =
-        DelegateTaskResponse.builder().response(StringNotifyResponseData.builder().data("OK").build()).build();
+        DelegateTaskResponse.builder().response(DelegateStringResponseData.builder().data("OK").build()).build();
 
     DelegateCallbackService delegateCallbackService = mock(DelegateCallbackService.class);
     when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId()))

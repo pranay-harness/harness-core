@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 
 import io.harness.WaitEngineTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
@@ -21,6 +20,7 @@ import io.harness.queue.QueueConsumer.Filter;
 import io.harness.queue.QueueListenerController;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Poller;
 import org.junit.Before;
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WaitNotifyEngineTest extends WaitEngineTest {
   private static AtomicInteger callCount;
-  private static Map<String, DelegateResponseData> responseMap;
+  private static Map<String, ResponseData> responseMap;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private HPersistence persistence;
@@ -68,12 +68,12 @@ public class WaitNotifyEngineTest extends WaitEngineTest {
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-      DelegateResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
       NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
       assertThat(notifyResponse).isNotNull();
-      DelegateResponseData responseDataResult =
-          (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
       assertThat(responseDataResult).isEqualTo(data);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
@@ -93,13 +93,13 @@ public class WaitNotifyEngineTest extends WaitEngineTest {
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-      DelegateResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
 
       NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
       assertThat(notifyResponse).isNotNull();
-      DelegateResponseData responseDataResult =
-          (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
       assertThat(responseDataResult).isEqualTo(data);
 
       Concurrent.test(10, i -> { notifyEventListener.execute(); });
@@ -117,7 +117,7 @@ public class WaitNotifyEngineTest extends WaitEngineTest {
   public void testNotifyBeforeWait() throws IOException {
     String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(true)) {
-      DelegateResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
 
       String waitInstanceId = waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid);
@@ -126,8 +126,8 @@ public class WaitNotifyEngineTest extends WaitEngineTest {
 
       NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
       assertThat(notifyResponse).isNotNull();
-      DelegateResponseData responseDataResult =
-          (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
       assertThat(responseDataResult).isEqualTo(data);
 
       notifyEventListener.execute();
@@ -156,40 +156,40 @@ public class WaitNotifyEngineTest extends WaitEngineTest {
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-      DelegateResponseData data1 = StringNotifyResponseData.builder().data("response-" + uuid1).build();
+      ResponseData data1 = StringNotifyResponseData.builder().data("response-" + uuid1).build();
 
       String id = waitNotifyEngine.doneWith(uuid1, data1);
 
       NotifyResponse notifyResponse1 = persistence.get(NotifyResponse.class, id);
       assertThat(notifyResponse1).isNotNull();
-      DelegateResponseData responseDataResult1 =
-          (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse1.getResponseData());
+      ResponseData responseDataResult1 =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse1.getResponseData());
       assertThat(responseDataResult1).isEqualTo(data1);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
-      DelegateResponseData data2 = StringNotifyResponseData.builder().data("response-" + uuid2).build();
+      ResponseData data2 = StringNotifyResponseData.builder().data("response-" + uuid2).build();
 
       id = waitNotifyEngine.doneWith(uuid2, data2);
 
       NotifyResponse notifyResponse2 = persistence.get(NotifyResponse.class, id);
       assertThat(notifyResponse2).isNotNull();
-      DelegateResponseData responseDataResult2 =
-          (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse2.getResponseData());
+      ResponseData responseDataResult2 =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse2.getResponseData());
       assertThat(responseDataResult2).isEqualTo(data2);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
-      DelegateResponseData data3 = StringNotifyResponseData.builder().data("response-" + uuid3).build();
+      ResponseData data3 = StringNotifyResponseData.builder().data("response-" + uuid3).build();
 
       id = waitNotifyEngine.doneWith(uuid3, data3);
 
       NotifyResponse notifyResponse3 = persistence.get(NotifyResponse.class, id);
       assertThat(notifyResponse3).isNotNull();
-      DelegateResponseData responseDataResult =
-          (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse3.getResponseData());
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse3.getResponseData());
       assertThat(responseDataResult).isEqualTo(data3);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
@@ -218,13 +218,13 @@ public class WaitNotifyEngineTest extends WaitEngineTest {
           .extracting(WaitInstance::getUuid)
           .containsExactly(waitInstanceId1, waitInstanceId2, waitInstanceId3);
 
-      DelegateResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
 
       NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
       assertThat(notifyResponse).isNotNull();
-      DelegateResponseData responseDataResult =
-          (DelegateResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
       assertThat(responseDataResult).isEqualTo(data);
 
       while (notifyConsumer.count(Filter.ALL) != 0) {
@@ -254,13 +254,13 @@ public class WaitNotifyEngineTest extends WaitEngineTest {
 
   public static class TestNotifyCallback implements NotifyCallback {
     @Override
-    public void notify(Map<String, DelegateResponseData> response) {
+    public void notify(Map<String, ResponseData> response) {
       callCount.incrementAndGet();
       responseMap.putAll(response);
     }
 
     @Override
-    public void notifyError(Map<String, DelegateResponseData> response) {
+    public void notifyError(Map<String, ResponseData> response) {
       // Do Nothing.
     }
   }

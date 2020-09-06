@@ -29,8 +29,8 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -176,7 +176,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
     doReturn(query).when(wingsPersistence).createQuery(any());
     when(query.filter(anyString(), any(Object.class))).thenReturn(query);
 
-    Map<String, DelegateResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
             .commandExecutionStatus(SUCCESS)
             .commandResponse(CloudFormationCreateStackResponse.builder().commandExecutionStatus(SUCCESS).build())

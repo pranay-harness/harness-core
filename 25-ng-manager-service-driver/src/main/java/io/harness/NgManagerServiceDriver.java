@@ -14,12 +14,12 @@ import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc.NgDelegateTaskResponseServiceBlockingStub;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsResponse;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
@@ -54,7 +54,7 @@ public class NgManagerServiceDriver {
                .obtainPerpetualTaskExecutionParams(request));
   }
 
-  public boolean sendTaskResult(String taskId, DelegateResponseData responseData) {
+  public boolean sendTaskResult(String taskId, ResponseData responseData) {
     SendTaskResultRequest resultRequest =
         SendTaskResultRequest.newBuilder()
             .setTaskId(taskId)

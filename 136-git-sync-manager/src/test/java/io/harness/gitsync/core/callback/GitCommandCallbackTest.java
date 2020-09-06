@@ -31,6 +31,7 @@ import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -77,7 +78,7 @@ public class GitCommandCallbackTest extends CategoryTest {
             .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -95,7 +96,7 @@ public class GitCommandCallbackTest extends CategoryTest {
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
 
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     try {
@@ -115,7 +116,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   public void testNotifyOnErrorCase() {
     DelegateResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
 
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -132,7 +133,7 @@ public class GitCommandCallbackTest extends CategoryTest {
             .gitCommandResult(CommitResult.builder().build())
             .build();
 
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     on(commandCallback).set("gitCommandType", GitCommandType.CHECKOUT);
@@ -177,7 +178,7 @@ public class GitCommandCallbackTest extends CategoryTest {
 
             .build();
 
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     doReturn(Optional.of(YamlChangeSet.builder().gitFileChanges(Collections.singletonList(gitFileChange)).build()))

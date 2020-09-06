@@ -12,13 +12,13 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -83,8 +83,8 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
-    Entry<String, DelegateResponseData> responseEntry = response.entrySet().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
     String activityId = responseEntry.getKey();
 
     ServiceNowExecutionData snowExecutionData = (ServiceNowExecutionData) responseEntry.getValue();

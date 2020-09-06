@@ -35,8 +35,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -234,7 +234,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseNoRollbackElements() {
-    Map<String, DelegateResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
             .commandExecutionStatus(SUCCESS)
             .commandResponse(CloudFormationCreateStackResponse.builder().commandExecutionStatus(SUCCESS).build())
@@ -301,7 +301,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
         CloudFormationRollbackInfoElement.builder().stackExisted(true).provisionerId(PROVISIONER_ID).build();
     doReturn(singletonList(stackElement)).when(mockContext).getContextElementList(any());
     doReturn(ScriptStateExecutionData.builder().build()).when(mockContext).getStateExecutionData();
-    Map<String, DelegateResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
             .commandExecutionStatus(SUCCESS)
             .commandResponse(CloudFormationCreateStackResponse.builder()

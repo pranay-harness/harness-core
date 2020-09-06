@@ -12,7 +12,6 @@ import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
@@ -32,6 +31,7 @@ import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -67,7 +67,7 @@ public class ChildStrategy implements ExecuteStrategy {
     NodeExecution nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
-    Map<String, DelegateResponseData> accumulateResponses = invocationHelper.accumulateResponses(
+    Map<String, ResponseData> accumulateResponses = invocationHelper.accumulateResponses(
         ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
     StepResponse stepResponse =
         childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), accumulateResponses);

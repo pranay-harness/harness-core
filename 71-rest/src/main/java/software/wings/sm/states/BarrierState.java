@@ -10,8 +10,8 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.distribution.barrier.Barrier;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
@@ -90,11 +90,11 @@ public class BarrierState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     updateBarrier(context);
     final ExecutionResponseBuilder executionResponseBuilder = executionResponseBuilder(context);
 
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+    ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof BarrierStatusData && ((BarrierStatusData) notifyResponseData).isFailed()) {
       executionResponseBuilder.executionStatus(ExecutionStatus.FAILED).errorMessage(errorMsg);
     }

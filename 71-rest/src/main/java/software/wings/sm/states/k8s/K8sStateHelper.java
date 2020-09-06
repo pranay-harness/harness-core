@@ -57,6 +57,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.tuple.Pair;
@@ -699,7 +700,7 @@ public class K8sStateHelper {
   }
 
   public ExecutionResponse handleAsyncResponseWrapper(
-      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, DelegateResponseData> response) {
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
     try {
       K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
 
@@ -836,7 +837,7 @@ public class K8sStateHelper {
   }
 
   private ExecutionResponse handleAsyncResponseForGitTaskWrapper(
-      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, DelegateResponseData> response) {
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);
@@ -916,7 +917,7 @@ public class K8sStateHelper {
   }
 
   private ExecutionResponse handleAsyncResponseForHelmFetchTask(
-      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, DelegateResponseData> response) {
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);

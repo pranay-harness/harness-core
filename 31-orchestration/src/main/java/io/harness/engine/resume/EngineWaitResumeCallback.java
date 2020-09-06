@@ -6,11 +6,11 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.state.io.StepInputPackage;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Builder;
 import org.mongodb.morphia.annotations.Converters;
@@ -34,12 +34,12 @@ public class EngineWaitResumeCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     orchestrationEngine.invokeExecutable(ambiance, facilitatorResponse, inputPackage);
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     // TODO => Handle Error
   }
 }

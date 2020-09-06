@@ -39,6 +39,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -1276,7 +1277,7 @@ public class CommandState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     if (response.size() != 1) {
       return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
@@ -1284,7 +1285,7 @@ public class CommandState extends State {
           .build();
     }
 
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+    DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return ExecutionResponse.builder()

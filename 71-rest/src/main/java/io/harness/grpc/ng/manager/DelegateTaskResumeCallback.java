@@ -3,7 +3,7 @@ package io.harness.grpc.ng.manager;
 import com.google.inject.Inject;
 
 import io.harness.NgManagerServiceDriver;
-import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Builder;
 
@@ -22,16 +22,16 @@ public class DelegateTaskResumeCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     notifyDriver(response);
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     notifyDriver(response);
   }
 
-  private void notifyDriver(Map<String, DelegateResponseData> response) {
+  private void notifyDriver(Map<String, ResponseData> response) {
     DelegateTaskResumeExecutor resumeExecutor = DelegateTaskResumeExecutor.builder()
                                                     .taskId(taskId)
                                                     .responseData(response.values().iterator().next())

@@ -38,6 +38,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -185,10 +186,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     String activityId = response.keySet().iterator().next();
-    DelegateResponseData data = response.values().iterator().next();
+    DelegateResponseData data = (DelegateResponseData) response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
     if (data instanceof CommandExecutionResult) {
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) data;

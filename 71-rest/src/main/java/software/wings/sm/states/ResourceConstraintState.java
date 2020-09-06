@@ -22,7 +22,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintException;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -32,6 +31,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.service.RestraintService;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -126,7 +126,7 @@ public class ResourceConstraintState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
     final ResourceConstraint resourceConstraint = restraintService.get(accountId, resourceConstraintId);
 

@@ -23,9 +23,9 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -98,7 +98,7 @@ public class KubernetesSwapServiceSelectorsTest extends WingsBaseTest {
     KubernetesSwapServiceSelectorsResponse kubernetesSwapServiceSelectorsResponse =
         KubernetesSwapServiceSelectorsResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
 
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("activityId", kubernetesSwapServiceSelectorsResponse);
     ExecutionResponse executionResponse = kubernetesSwapServiceSelectors.handleAsyncResponse(context, response);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);

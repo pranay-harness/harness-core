@@ -12,8 +12,8 @@ import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.ListNotifyResponseData;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
@@ -51,7 +51,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     Artifact artifact = artifactService.get(artifactId);
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
 
@@ -99,7 +99,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     logger.info("Error occurred while collecting content of artifact id {}", artifactId);
     Artifact artifact = artifactService.get(artifactId);
     if (artifact == null) {

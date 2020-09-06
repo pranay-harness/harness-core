@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecutableProcessor;
@@ -13,6 +12,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.ResponseData;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.Map;
 @Redesign
 public class EngineResumeExecutor implements Runnable {
   boolean asyncError;
-  Map<String, DelegateResponseData> response;
+  Map<String, ResponseData> response;
   NodeExecution nodeExecution;
   OrchestrationEngine orchestrationEngine;
   ExecutableProcessor processor;

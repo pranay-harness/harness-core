@@ -11,12 +11,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.tasks.ResponseData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.service.impl.azure.manager.AzureVMSSAllPhaseRollbackData;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -50,7 +50,7 @@ public class AzureVMSSRollbackState extends AzureVMSSDeployState {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       if (isSuccess(response)) {
         markAllPhaseRollbackDone(context);
@@ -63,7 +63,7 @@ public class AzureVMSSRollbackState extends AzureVMSSDeployState {
     }
   }
 
-  private boolean isSuccess(Map<String, DelegateResponseData> response) {
+  private boolean isSuccess(Map<String, ResponseData> response) {
     AzureVMSSTaskExecutionResponse executionResponse =
         (AzureVMSSTaskExecutionResponse) response.values().iterator().next();
     return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS;

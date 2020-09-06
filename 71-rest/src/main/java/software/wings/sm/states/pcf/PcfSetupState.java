@@ -30,7 +30,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -38,6 +37,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.annotation.EncryptableSetting;
@@ -552,7 +552,7 @@ public class PcfSetupState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -562,8 +562,7 @@ public class PcfSetupState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(
-      ExecutionContext context, Map<String, DelegateResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     PcfSetupStateExecutionData stateExecutionData = (PcfSetupStateExecutionData) context.getStateExecutionData();
 
     TaskType taskType = stateExecutionData.getTaskType();
@@ -582,7 +581,7 @@ public class PcfSetupState extends State {
   }
 
   protected ExecutionResponse handleAsyncResponseForPCFTask(
-      ExecutionContext context, Map<String, DelegateResponseData> response) {
+      ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = getActivityId(context);
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
@@ -769,7 +768,7 @@ public class PcfSetupState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForGitTask(
-      ExecutionContext context, Map<String, DelegateResponseData> response) {
+      ExecutionContext context, Map<String, ResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = getActivityId(context);
