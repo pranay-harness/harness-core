@@ -162,6 +162,7 @@ public class InstanceFetchState extends State {
     final long timeout =
         ObjectUtils.defaultIfNull(Long.valueOf(getTimeoutMillis(context)), TaskData.DEFAULT_ASYNC_CALL_TIMEOUT);
 
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
                                     .description("Fetch Instances")
@@ -173,10 +174,10 @@ public class InstanceFetchState extends State {
                                               .parameters(new Object[] {taskParameters})
                                               .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
                                               .timeout(timeout)
+                                              .expressionFunctorToken(expressionFunctorToken)
                                               .build())
                                     .build();
 
-    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     renderDelegateTask(context, delegateTask,
         StateExecutionContext.builder()
             .stateExecutionData(context.getStateExecutionData())
