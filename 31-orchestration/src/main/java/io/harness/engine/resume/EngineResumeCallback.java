@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Builder;
 import lombok.Value;
@@ -24,12 +24,12 @@ public class EngineResumeCallback implements NotifyCallback {
   String nodeExecutionId;
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     orchestrationEngine.resume(nodeExecutionId, response, false);
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     orchestrationEngine.resume(nodeExecutionId, response, true);
   }
 }

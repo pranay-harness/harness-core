@@ -47,7 +47,6 @@ import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -56,6 +55,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.Misc;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -784,7 +784,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ApprovalStateExecutionData approvalNotifyResponse =
         (ApprovalStateExecutionData) response.values().iterator().next();
 

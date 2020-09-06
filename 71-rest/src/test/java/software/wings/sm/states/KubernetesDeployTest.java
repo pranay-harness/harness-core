@@ -56,11 +56,11 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -334,7 +334,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   public void shouldExecuteAsync() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
 
     stateExecutionInstance.getStateExecutionMap().put(
@@ -353,7 +353,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   public void shouldExecuteAsyncWithOldRControllerWithNoInstance() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());

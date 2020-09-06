@@ -35,6 +35,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -429,8 +430,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);

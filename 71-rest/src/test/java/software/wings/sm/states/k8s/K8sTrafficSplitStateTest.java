@@ -13,10 +13,10 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -93,7 +93,7 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
   public void testHandleAsyncResponse() {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
         K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
 
     ExecutionResponse executionResponse = k8sTrafficSplitState.handleAsyncResponse(context, response);

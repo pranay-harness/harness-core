@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.alert.AlertType;
@@ -20,9 +21,9 @@ public class EmailNotificationCallBack implements NotifyCallback {
   @Inject private AlertService alertService;
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     try {
-      DelegateResponseData data = response.entrySet().iterator().next().getValue();
+      DelegateResponseData data = (DelegateResponseData) response.entrySet().iterator().next().getValue();
       CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
       if (collaborationProviderResponse.getStatus() == CommandExecutionStatus.SUCCESS) {
         logger.info("Email sending succeeded. Response : [{}]", data);
@@ -39,9 +40,9 @@ public class EmailNotificationCallBack implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     try {
-      DelegateResponseData data = response.entrySet().iterator().next().getValue();
+      DelegateResponseData data = (DelegateResponseData) response.entrySet().iterator().next().getValue();
       if (data instanceof CollaborationProviderResponse) {
         CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
         openEmailNotSentAlert(data, collaborationProviderResponse);

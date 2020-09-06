@@ -13,9 +13,9 @@ import com.google.inject.Inject;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,7 +78,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
 
     dataCollectionCallback.setExecutionData(new VerificationStateAnalysisExecutionData());
 
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("error", ErrorNotifyResponseData.builder().errorMessage("some error message").build());
 
     dataCollectionCallback.notifyError(response);

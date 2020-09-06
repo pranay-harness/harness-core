@@ -11,11 +11,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.serializer.MapperUtils;
+import io.harness.tasks.ResponseData;
 import lombok.experimental.FieldNameConstants;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.EntityType;
@@ -304,7 +304,7 @@ public abstract class State {
    * @param response map of responses this state was waiting on.
    * @return Response from handling this state.
    */
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     return ExecutionResponse.builder().build();
   }
 

@@ -24,10 +24,10 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -162,7 +162,7 @@ public class K8sScaleTest extends WingsBaseTest {
                                                             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                                             .k8sTaskResponse(K8sScaleResponse.builder().build())
                                                             .build();
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put(ACTIVITY_ID, k8sTaskExecutionResponse);
     when(k8sStateHelper.getInstanceElementListParam(anyList())).thenReturn(InstanceElementListParam.builder().build());
     k8sScale.handleAsyncResponse(context, response);

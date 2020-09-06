@@ -89,6 +89,7 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -761,7 +762,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .build();
 
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("activityId", helmCommandResponse);
 
     String instanceElementName = "instanceElement";
@@ -798,7 +799,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
                                                            .errorMessage("Failed")
                                                            .build();
 
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("activityId", helmCommandResponse);
 
     ExecutionResponse executionResponse = helmDeployState.handleAsyncResponseForHelmTask(context, response);
@@ -827,7 +828,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .build();
 
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("activityId", helmCommandResponse);
 
     ExecutionResponse executionResponse = helmDeployState.handleAsyncResponseForHelmTask(context, response);
@@ -855,7 +856,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     helmStateExecutionData.setActivityId(activityId);
     helmStateExecutionData.setCurrentTaskType(TaskType.GIT_COMMAND);
 
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put(activityId, gitCommandExecutionResponse);
 
     ExecutionResponse executionResponse = helmDeployState.handleAsyncInternal(context, response);
@@ -882,7 +883,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     helmStateExecutionData.setActivityId(activityId);
     helmStateExecutionData.setCurrentTaskType(TaskType.HELM_VALUES_FETCH);
 
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put(activityId, helmValuesFetchTaskResponse);
     ExecutionResponse executionResponse = helmDeployState.handleAsyncInternal(context, response);
 
@@ -899,7 +900,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   public void testHandleAsyncResponseOverallFailure() throws Exception {
     HelmDeployState spyDeployState = spy(helmDeployState);
     HelmValuesFetchTaskResponse response = HelmValuesFetchTaskResponse.builder().build();
-    Map<String, DelegateResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     // Rethrow instance of WingsException
     doThrow(new HelmClientException("Client exception"))
@@ -937,7 +938,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
                                                .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                                .valuesFileContent("fileContent")
                                                .build();
-    Map<String, DelegateResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     doReturn(appManifestMap)
         .when(applicationManifestUtils)
@@ -957,7 +958,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
     HelmValuesFetchTaskResponse response =
         HelmValuesFetchTaskResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
-    Map<String, DelegateResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     doReturn("taskId").when(delegateService).queueTask(delegateTaskCaptor.capture());
 
@@ -1309,7 +1310,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     helmStateExecutionData.setCurrentTaskType(TaskType.GIT_COMMAND);
     helmStateExecutionData.setAppManifestMap(applicationManifestMap);
     ExecutionResponse helmTaskExecutionResponse = ExecutionResponse.builder().build();
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put(activityId, gitCommandExecutionResponse);
 
     doReturn(helmOverrideManifestMap)

@@ -19,9 +19,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -98,7 +98,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   public void testHandleAsyncErrorStatus() {
     for (ExecutionStatus executionStatus : ExecutionStatus.brokeStatuses()) {
       String errorMsg = generateUuid();
-      Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(executionStatus, errorMsg);
+      Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(executionStatus, errorMsg);
       createMetaDataExecutionData(ExecutionStatus.RUNNING);
       ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData =
           wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
@@ -126,7 +126,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncNoAnalysisQA() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
@@ -142,7 +142,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncQANotFailWithAnomaly() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
@@ -156,7 +156,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncFailWithAnomaly() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
@@ -169,7 +169,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_LowRiskWithLowTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 1);
     saveMetricAnalysisRecord(RiskLevel.LOW);
@@ -182,7 +182,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_LowAndNARiskWithLowTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 1);
     saveMetricAnalysisRecord(RiskLevel.LOW, RiskLevel.NA);
@@ -195,7 +195,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_LowRiskWithMediumTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 2);
     saveMetricAnalysisRecord(RiskLevel.LOW);
@@ -208,7 +208,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_LowRiskWithHighTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 3);
     saveMetricAnalysisRecord(RiskLevel.LOW);
@@ -221,7 +221,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_MediumRiskWithLowTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 1);
     saveMetricAnalysisRecord(RiskLevel.MEDIUM);
@@ -234,7 +234,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_MediumRiskWithMediumTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 2);
     saveMetricAnalysisRecord(RiskLevel.MEDIUM);
@@ -247,7 +247,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_MediumRiskWithHighTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 3);
     saveMetricAnalysisRecord(RiskLevel.MEDIUM);
@@ -260,7 +260,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_HighRiskWithLowTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 1);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
@@ -273,7 +273,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_HighRiskWithMediumTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 2);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
@@ -286,7 +286,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse_HighRiskWithHighTolerance() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 3);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
@@ -299,7 +299,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncNoMetricsQA() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
@@ -319,7 +319,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testHandleAsyncManualAction() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     ContinuousVerificationExecutionMetaData metadata = createMetaDataExecutionData(ExecutionStatus.RUNNING);
     metadata.setExecutionStatus(ExecutionStatus.SUCCESS);
     metadata.setManualOverride(true);
@@ -343,7 +343,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncV2QANotFailWithAnomaly() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
@@ -357,7 +357,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncV2FailWithAnomaly() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
@@ -370,7 +370,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHandleAsyncV2NoFailWithoutAnomaly() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse);
     wingsPersistence.save(
@@ -391,7 +391,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNotifyStateHandleAsyncNoVerificationData() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.RUNNING, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.RUNNING, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse);
 
@@ -402,14 +402,14 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNotifyStateHandleAsyncV2NoVerificationData() {
-    Map<String, DelegateResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.RUNNING, null);
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.RUNNING, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse);
 
     validateStateNotification(dataAnalysisResponse);
   }
 
-  private void validateExecutionResponse(Map<String, DelegateResponseData> dataAnalysisResponse,
+  private void validateExecutionResponse(Map<String, ResponseData> dataAnalysisResponse,
       ExecutionResponse executionResponse, ExecutionStatus executionStatus) {
     ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
@@ -428,7 +428,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     assertThat(continuousVerificationExecutionMetaData.getExecutionStatus()).isEqualTo(executionStatus);
   }
 
-  private void validateStateNotification(Map<String, DelegateResponseData> dataAnalysisResponse) {
+  private void validateStateNotification(Map<String, ResponseData> dataAnalysisResponse) {
     final String correlationId = ((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
                                      .getStateExecutionData()
                                      .getCorrelationId();
@@ -456,8 +456,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     return wingsPersistence.get(ContinuousVerificationExecutionMetaData.class, uuId);
   }
 
-  private Map<String, DelegateResponseData> createDataAnalysisResponse(
-      ExecutionStatus executionStatus, String message) {
+  private Map<String, ResponseData> createDataAnalysisResponse(ExecutionStatus executionStatus, String message) {
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         VerificationStateAnalysisExecutionData.builder()
             .correlationId(generateUuid())
@@ -481,7 +480,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
             .build());
   }
 
-  private void saveAnalysisContext(Map<String, DelegateResponseData> dataAnalysisResponse, int... optionalTolerance) {
+  private void saveAnalysisContext(Map<String, ResponseData> dataAnalysisResponse, int... optionalTolerance) {
     int tolerence = optionalTolerance.length > 0 ? optionalTolerance[0] : 3;
     VerificationDataAnalysisResponse verificationDataAnalysisResponse =
         (VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next();

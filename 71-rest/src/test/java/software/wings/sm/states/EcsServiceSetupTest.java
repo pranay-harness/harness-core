@@ -38,11 +38,11 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -245,7 +245,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowWingsException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
     EcsCommandExecutionResponse ecsCommandExecutionResponse = mock(EcsCommandExecutionResponse.class);
     delegateResponse.put("test", ecsCommandExecutionResponse);
     doThrow(new WingsException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();
@@ -258,7 +258,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseThrowInvalidRequestException() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
-    Map<String, DelegateResponseData> delegateResponse = new HashMap<>();
+    Map<String, ResponseData> delegateResponse = new HashMap<>();
     EcsCommandExecutionResponse ecsCommandExecutionResponse = mock(EcsCommandExecutionResponse.class);
     delegateResponse.put("test", ecsCommandExecutionResponse);
     doThrow(new NullPointerException("test")).when(ecsCommandExecutionResponse).getCommandExecutionStatus();

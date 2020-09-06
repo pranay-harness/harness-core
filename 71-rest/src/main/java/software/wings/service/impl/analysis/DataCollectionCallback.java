@@ -10,8 +10,8 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
@@ -62,7 +62,7 @@ public class DataCollectionCallback implements NotifyCallback {
   private long dataCollectionEndTime;
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
     logger.info("data collection result for state {} is: {}", stateExecutionId, result);
     activityLog(result);
@@ -89,7 +89,7 @@ public class DataCollectionCallback implements NotifyCallback {
 
   // TODO what is this used for
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     logger.info("notify error for {} ", response.values().iterator().next());
     if (response.values().iterator().next() instanceof ErrorNotifyResponseData) {
       final ErrorNotifyResponseData result = (ErrorNotifyResponseData) response.values().iterator().next();

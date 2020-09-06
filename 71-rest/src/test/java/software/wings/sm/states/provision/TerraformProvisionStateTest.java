@@ -54,12 +54,12 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.BoundedInputStream;
+import io.harness.tasks.ResponseData;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -549,7 +549,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     state.setRunPlanOnly(true);
     state.setProvisionerId(PROVISIONER_ID);
     when(executionContext.getAppId()).thenReturn(APP_ID);
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     TerraformExecutionData terraformExecutionData =
         TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     response.put("activityId", terraformExecutionData);
@@ -577,7 +577,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   public void testHandleAsyncResponseSavePlan() {
     state.setRunPlanOnly(true);
     state.setExportPlanToApplyStep(true);
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("activityId", TerraformExecutionData.builder().tfPlanFile("TFPlanFileContent".getBytes()).build());
     doReturn("workflowExecutionId").when(executionContext).getWorkflowExecutionId();
     state.setProvisionerId(PROVISIONER_ID);
@@ -607,7 +607,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   public void testHandleAsyncResponseInternalRegularFail() {
     state.setProvisionerId(PROVISIONER_ID);
     when(executionContext.getAppId()).thenReturn(APP_ID);
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     TerraformExecutionData terraformExecutionData =
         TerraformExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
     response.put("activityId", terraformExecutionData);
@@ -660,7 +660,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         + "\"value\": \"value1\"\n"
         + "}\n"
         + "}";
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
                                                         .workspace("workspace")
                                                         .executionStatus(ExecutionStatus.SUCCESS)
@@ -764,7 +764,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .path("current/working/directory")
                                                          .variables(getTerraformVariables())
                                                          .build();
-    Map<String, DelegateResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, responseData);
+    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, responseData);
     state.setRunPlanOnly(false);
     state.setProvisionerId(PROVISIONER_ID);
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
@@ -808,7 +808,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .path("current/working/directory")
                                                          .variables(getTerraformVariables())
                                                          .build();
-    Map<String, DelegateResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, responseData);
+    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, responseData);
     destroyProvisionState.setRunPlanOnly(false);
     destroyProvisionState.setProvisionerId(PROVISIONER_ID);
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);

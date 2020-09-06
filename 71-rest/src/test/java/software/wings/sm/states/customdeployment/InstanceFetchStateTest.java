@@ -28,11 +28,11 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -170,7 +170,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                  .build())
         .when(context)
         .getStateExecutionData();
-    Map<String, DelegateResponseData> response = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> response = ImmutableMap.of(ACTIVITY_ID,
         ShellScriptProvisionExecutionData.builder()
             .activityId(ACTIVITY_ID)
             .output("{\"Instances\": [{\"ip\":\"1.1\"},{\"ip\":\"2.2\"}]}")
@@ -206,7 +206,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                  .build())
         .when(context)
         .getStateExecutionData();
-    Map<String, DelegateResponseData> response = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> response = ImmutableMap.of(ACTIVITY_ID,
         ShellScriptProvisionExecutionData.builder()
             .activityId(ACTIVITY_ID)
             .output("{\"Instances\": [\"ip\":\"1.1\"},{\"ip\":\"2.2\"}]}")
@@ -235,7 +235,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
                  .build())
         .when(context)
         .getStateExecutionData();
-    Map<String, DelegateResponseData> response = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> response = ImmutableMap.of(ACTIVITY_ID,
         ShellScriptProvisionExecutionData.builder()
             .activityId(ACTIVITY_ID)
             .errorMsg("invalid script")

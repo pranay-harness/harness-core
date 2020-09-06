@@ -28,11 +28,11 @@ import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -284,7 +284,7 @@ public class K8sDeleteTest extends WingsBaseTest {
     when(context.getContextElement(any(ContextElementType.class))).thenReturn(workflowStandardParams);
 
     K8sTaskExecutionResponse k8sTaskExecutionResponse = K8sTaskExecutionResponse.builder().build();
-    Map<String, DelegateResponseData> response = new HashMap<>();
+    Map<String, ResponseData> response = new HashMap<>();
     response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
 
     when(context.getStateExecutionData()).thenReturn(new K8sStateExecutionData());

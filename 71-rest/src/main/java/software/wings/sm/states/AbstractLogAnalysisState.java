@@ -24,9 +24,9 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.serializer.JsonUtils;
+import io.harness.tasks.ResponseData;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
@@ -302,8 +302,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts);
 
   @Override
-  public ExecutionResponse handleAsyncResponse(
-      ExecutionContext executionContext, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext executionContext, Map<String, ResponseData> response) {
     VerificationDataAnalysisResponse executionResponse =
         (VerificationDataAnalysisResponse) response.values().iterator().next();
 

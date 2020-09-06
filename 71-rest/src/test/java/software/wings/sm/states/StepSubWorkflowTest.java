@@ -24,10 +24,10 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -158,7 +158,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(aStateExecutionInstance().uuid(generateUuid()).build());
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("", ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build());
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull();
@@ -193,7 +193,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.INFRASTRUCTURE_NODE);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put(
         "key", ElementNotifyResponseData.builder().contextElements(asList(serviceInstanceIdsParam)).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
@@ -229,7 +229,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put(
         "key", ElementNotifyResponseData.builder().contextElements(asList(containerServiceElement)).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
@@ -264,7 +264,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {
@@ -298,7 +298,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put(
         "key", ElementNotifyResponseData.builder().contextElements(asList(containerServiceElement)).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
@@ -333,7 +333,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
-    Map<String, DelegateResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {

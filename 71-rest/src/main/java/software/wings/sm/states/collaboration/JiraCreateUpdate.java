@@ -18,11 +18,11 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -369,8 +369,8 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
-    Entry<String, DelegateResponseData> responseEntry = response.entrySet().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
     String activityId = responseEntry.getKey();
 
     JiraExecutionData jiraExecutionData = (JiraExecutionData) responseEntry.getValue();

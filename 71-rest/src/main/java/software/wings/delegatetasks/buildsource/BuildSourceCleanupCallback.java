@@ -21,6 +21,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -117,8 +118,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+  public void notify(Map<String, ResponseData> response) {
+    DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (notifyResponseData instanceof BuildSourceExecutionResponse) {
       if (SUCCESS == ((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus()) {
@@ -132,8 +133,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+  public void notifyError(Map<String, ResponseData> response) {
+    DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       logger.info("Request failed :[{}]", ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {

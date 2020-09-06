@@ -34,6 +34,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -106,7 +107,7 @@ public class GitCommandCallbackTest extends CategoryTest {
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
     doNothing().when(yamlGitService).raiseAlertForGitFailure(anyString(), anyString(), any());
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -132,7 +133,7 @@ public class GitCommandCallbackTest extends CategoryTest {
     doThrow(new RuntimeException())
         .when(yamlGitService)
         .closeAlertForGitFailureIfOpen(anyString(), anyString(), any(), any());
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     try {
@@ -152,7 +153,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   public void testNotifyOnErrorCase() {
     DelegateResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
 
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -171,7 +172,7 @@ public class GitCommandCallbackTest extends CategoryTest {
                                                   .gitCommandResult(GitCheckoutResult.builder().build())
                                                   .build();
 
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     on(commandCallback).set("gitCommandType", GitCommandType.CHECKOUT);
@@ -274,7 +275,7 @@ public class GitCommandCallbackTest extends CategoryTest {
         .when(diffCommandCallback)
         .obtainYamlGitConfigIds(anyString(), anyString(), anyString(), anyString());
     doReturn(GitCommit.builder().build()).when(yamlGitService).saveCommit(any(GitCommit.class));
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     diffCommandCallback.notify(map);
@@ -323,7 +324,7 @@ public class GitCommandCallbackTest extends CategoryTest {
                                                   .errorCode(ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT)
                                                   .build();
 
-    Map<String, DelegateResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
     commandCallback.notify(map);
     verify(yamlChangeSetService, times(1)).updateStatusAndIncrementPushCount(any(), any(), any());

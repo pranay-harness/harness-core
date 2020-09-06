@@ -50,6 +50,7 @@ import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -451,7 +452,7 @@ public class HelmDeployState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, DelegateResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -461,7 +462,7 @@ public class HelmDeployState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, DelegateResponseData> response)
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response)
       throws InterruptedException {
     HelmDeployStateExecutionData helmStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
@@ -481,7 +482,7 @@ public class HelmDeployState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForHelmFetchTask(
-      ExecutionContext context, Map<String, DelegateResponseData> response) throws InterruptedException {
+      ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = obtainActivityId(context);
@@ -693,7 +694,7 @@ public class HelmDeployState extends State {
     return secretManager.getEncryptionDetails(gitConfig, context.getAppId(), context.getWorkflowExecutionId());
   }
 
-  private HelmCommandExecutionResponse fetchHelmCommandExecutionResponse(DelegateResponseData notifyResponseData) {
+  private HelmCommandExecutionResponse fetchHelmCommandExecutionResponse(ResponseData notifyResponseData) {
     if (!(notifyResponseData instanceof HelmCommandExecutionResponse)) {
       String msg = "Delegate returned error response. Could not convert delegate response to helm response. ";
 
@@ -1032,7 +1033,7 @@ public class HelmDeployState extends State {
   }
 
   protected ExecutionResponse handleAsyncResponseForHelmTask(
-      ExecutionContext context, Map<String, DelegateResponseData> response) {
+      ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     HelmCommandExecutionResponse executionResponse =
         fetchHelmCommandExecutionResponse(response.values().iterator().next());
@@ -1099,7 +1100,7 @@ public class HelmDeployState extends State {
   }
 
   private ExecutionResponse handleAsyncResponseForGitFetchFilesTask(
-      ExecutionContext context, Map<String, DelegateResponseData> response) throws InterruptedException {
+      ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String activityId = obtainActivityId(context);

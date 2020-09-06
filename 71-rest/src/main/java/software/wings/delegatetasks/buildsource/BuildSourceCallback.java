@@ -19,6 +19,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -166,8 +167,8 @@ public class BuildSourceCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+  public void notify(Map<String, ResponseData> response) {
+    DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     ArtifactStream artifactStream = getArtifactStreamOrThrow();
     logger.info("In notify for artifact stream id: [{}]", artifactStreamId);
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
@@ -224,8 +225,8 @@ public class BuildSourceCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
-    DelegateResponseData notifyResponseData = response.values().iterator().next();
+  public void notifyError(Map<String, ResponseData> response) {
+    DelegateResponseData notifyResponseData = (DelegateResponseData) response.values().iterator().next();
     ArtifactStream artifactStream = getArtifactStreamOrThrow();
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {

@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 
 import java.util.Map;
@@ -80,12 +80,12 @@ public class StateMachineResumeCallback implements NotifyCallback {
    * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
    */
   @Override
-  public void notify(Map<String, DelegateResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     stateMachineExecutor.resume(appId, executionUuid, stateExecutionInstanceId, response, false);
   }
 
   @Override
-  public void notifyError(Map<String, DelegateResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     stateMachineExecutor.resume(appId, executionUuid, stateExecutionInstanceId, response, true);
   }
 }
