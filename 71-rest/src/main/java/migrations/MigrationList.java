@@ -11,6 +11,7 @@ import migrations.accountpermission.ManageAuthenticationSettingsPermissionMigrat
 import migrations.accountpermission.ManageCloudProvidersAndConnectorsPermissionMigration;
 import migrations.accountpermission.ManageDelegatePermissionMigration;
 import migrations.accountpermission.ManageDelegateProfilesPermissionMigration;
+import migrations.accountpermission.ManageDeploymentFreezePermissionMigration;
 import migrations.accountpermission.ManageIPWhitelistPermissionMigration;
 import migrations.accountpermission.ManageTagsMigration;
 import migrations.all.AddAccountIdToAppEntities;
@@ -387,6 +388,7 @@ public class MigrationList {
         .add(Pair.of(337, RemoveRedundantAccountPermissions.class))
         .add(Pair.of(338, ManageTagsMigration.class))
         .add(Pair.of(339, ManageApplicationsPermissionMigration.class))
+        .add(Pair.of(340, ManageDeploymentFreezePermissionMigration.class))
         .build();
   }
 }
