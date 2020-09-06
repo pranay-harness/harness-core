@@ -45,11 +45,9 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-
 @CdIndex(name = "next_iteration_license_info2",
     fields = { @Field("licenseExpiryCheckIteration")
                , @Field("encryptedLicenseInfo") })
-
 public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 

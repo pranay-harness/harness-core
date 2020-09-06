@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static io.harness.network.LocalhostUtils.findFreePort;
+
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -37,7 +39,6 @@ public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRul
 
   public static final String QUEUE_FILE_PATH =
       Paths.get(FileUtils.getTempDirectoryPath(), UUID.randomUUID().toString()).toString();
-  private static final int PORT = 9890;
 
   @Getter private ClosingFactory closingFactory;
 
@@ -54,16 +55,18 @@ public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRul
     modules.add(new AppenderModule(
         AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build(), () -> DEFAULT_DELEGATE_ID));
 
+    int port = findFreePort();
+
     modules.add(new TailerModule(TailerModule.Config.builder()
                                      .accountId(DEFAULT_ACCOUNT_ID)
                                      .accountSecret(DEFAULT_ACCOUNT_SECRET)
                                      .queueFilePath(QUEUE_FILE_PATH)
-                                     .publishTarget("localhost:" + PORT)
+                                     .publishTarget("localhost:" + port)
                                      .publishAuthority("localhost")
                                      .build()));
 
     modules.add(new EventServiceModule(
-        EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()));
+        EventServiceConfig.builder().connector(new Connector(port, true, "cert.pem", "key.pem")).build()));
 
     modules.add(TestMongoModule.getInstance());
     return modules;
