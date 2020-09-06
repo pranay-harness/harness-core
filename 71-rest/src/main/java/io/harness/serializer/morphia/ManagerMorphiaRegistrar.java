@@ -24,6 +24,7 @@ import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
 import io.harness.ccm.health.CeExceptionRecord;
 import io.harness.dashboard.DashboardSettings;
+import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.execution.export.request.ExportExecutionsRequest;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
@@ -1107,6 +1108,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("redesign.states.wait.WaitStepParameters", WaitStepParameters.class);
     h.put("redesign.states.shell.ShellScriptStepParameters", ShellScriptStepParameters.class);
     h.put("redesign.states.email.EmailStepParameters", EmailStepParameters.class);
+    h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);
     w.put("api.AmiServiceSetupElement", AmiServiceSetupElement.class);

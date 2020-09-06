@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.waiter.ListNotifyResponseData;
+import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;

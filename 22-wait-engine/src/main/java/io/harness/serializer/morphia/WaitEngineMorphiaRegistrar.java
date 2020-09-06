@@ -2,7 +2,6 @@ package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyResponse;
 import io.harness.waiter.WaitInstance;
@@ -19,6 +18,6 @@ public class WaitEngineMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
+    // No Registrations required
   }
 }
