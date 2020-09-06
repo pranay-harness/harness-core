@@ -4,6 +4,7 @@ import static com.google.common.base.Ascii.toUpperCase;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 import io.harness.beans.ExecutionStatus;
@@ -27,6 +28,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -118,29 +120,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
 
     CloseableHttpClient httpclient = httpClientBuilder.build();
 
-    HttpUriRequest httpUriRequest;
-
-    switch (toUpperCase(method)) {
-      case "GET":
-        httpUriRequest = new HttpGet(url);
-        break;
-      case "POST":
-        HttpPost post = new HttpPost(url);
-        setEntity(body, post);
-        httpUriRequest = post;
-        break;
-      case "PUT":
-        HttpPut put = new HttpPut(url);
-        setEntity(body, put);
-        httpUriRequest = put;
-        break;
-      case "DELETE":
-        httpUriRequest = new HttpDelete(url);
-        break;
-      case "HEAD":
-      default:
-        httpUriRequest = new HttpHead(url);
-    }
+    HttpUriRequest httpUriRequest = getMethodSpecificHttpRequest(toUpperCase(method), url, body);
 
     if (headers != null) {
       for (String header : HEADERS_SPLITTER.split(headers)) {
@@ -169,6 +149,31 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     }
 
     return httpStateExecutionResponse;
+  }
+
+  @VisibleForTesting
+  protected HttpUriRequest getMethodSpecificHttpRequest(String method, String url, String body) {
+    switch (method) {
+      case "GET":
+        return new HttpGet(url);
+      case "POST":
+        HttpPost post = new HttpPost(url);
+        setEntity(body, post);
+        return post;
+      case "PATCH":
+        HttpPatch patch = new HttpPatch(url);
+        setEntity(body, patch);
+        return patch;
+      case "PUT":
+        HttpPut put = new HttpPut(url);
+        setEntity(body, put);
+        return put;
+      case "DELETE":
+        return new HttpDelete(url);
+      case "HEAD":
+      default:
+        return new HttpHead(url);
+    }
   }
 
   private void setEntity(String body, HttpEntityEnclosingRequestBase entityEnclosingRequestBase) {
