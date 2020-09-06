@@ -42,7 +42,7 @@ import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.waiter.WaitNotifyEngine;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,13 +50,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Optional;
 import javax.ws.rs.core.HttpHeaders;
@@ -187,10 +185,8 @@ public class YamlGitServiceImplTest extends CategoryTest {
   }
 
   private String obtainPayload(String filePath) throws IOException {
-    ClassLoader classLoader = WingsBaseTest.class.getClassLoader();
-
-    File file = new File(classLoader.getResource(filePath).getFile());
-    return FileUtils.readFileToString(file, Charset.defaultCharset());
+    return IOUtils.toString(
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath), StandardCharsets.UTF_8);
   }
 
   @Test
