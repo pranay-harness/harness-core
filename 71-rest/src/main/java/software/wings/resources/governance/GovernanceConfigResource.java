@@ -1,5 +1,7 @@
 package software.wings.resources.governance;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -71,7 +73,7 @@ public class GovernanceConfigResource {
   @Path("{accountId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DEPLOYMENT_FREEZES)
   public RestResponse<GovernanceConfig> update(
       @PathParam("accountId") String accountId, GovernanceConfig governanceConfig) {
     governanceConfig.setAccountId(accountId);

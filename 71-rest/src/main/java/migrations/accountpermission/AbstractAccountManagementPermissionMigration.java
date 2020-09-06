@@ -21,20 +21,25 @@ import java.util.Set;
 @Slf4j
 public abstract class AbstractAccountManagementPermissionMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
+  private static final String debugMessage = "ACCOUNT_PERMISSION_MIGRATION: ";
 
   private void runMigration() {
     try (HIterator<UserGroup> userGroupHIterator = new HIterator<>(
              wingsPersistence.createQuery(UserGroup.class).field(UserGroupKeys.accountPermissions).exists().fetch())) {
       while (userGroupHIterator.hasNext()) {
         UserGroup userGroup = userGroupHIterator.next();
-        if (checkIfUserGroupContainsAccountManagementPermission(userGroup)) {
-          Set<PermissionType> accountPermissions = userGroup.getAccountPermissions().getPermissions();
-          accountPermissions.addAll(getToBeAddedPermissions());
+        try {
+          if (checkIfUserGroupContainsAccountManagementPermission(userGroup)) {
+            Set<PermissionType> accountPermissions = userGroup.getAccountPermissions().getPermissions();
+            accountPermissions.addAll(getToBeAddedPermissions());
 
-          UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
-          setUnset(operations, UserGroupKeys.accountPermissions,
-              AccountPermissions.builder().permissions(accountPermissions).build());
-          wingsPersistence.update(userGroup, operations);
+            UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
+            setUnset(operations, UserGroupKeys.accountPermissions,
+                AccountPermissions.builder().permissions(accountPermissions).build());
+            wingsPersistence.update(userGroup, operations);
+          }
+        } catch (Exception e) {
+          logger.error(debugMessage + "Error occurred for userGroup:[{}]", userGroup.getUuid(), e);
         }
       }
     }
@@ -49,10 +54,12 @@ public abstract class AbstractAccountManagementPermissionMigration implements Mi
 
   @Override
   public void migrate() {
+    logger.info(debugMessage + "Starting Migration");
     try {
       runMigration();
     } catch (Exception e) {
-      logger.error("Migration: Error on running migration", e);
+      logger.error(debugMessage + "Error on running migration", e);
     }
+    logger.info(debugMessage + "Completed Migration");
   }
 }
