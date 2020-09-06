@@ -25,16 +25,19 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -134,20 +137,26 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .build();
 
-    verify(delegateService)
-        .queueTask(DelegateTask.builder()
-                       .accountId(ACCOUNT_ID)
-                       .description("Fetch Instances")
-                       .waitId(ACTIVITY_ID)
-                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                       .tags(Arrays.asList("tag1", "tag2"))
-                       .data(TaskData.builder()
-                                 .async(true)
-                                 .parameters(new Object[] {expectedTaskParams})
-                                 .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
-                                 .timeout(5 * 60 * 1000)
-                                 .build())
-                       .build());
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    final DelegateTask expected = DelegateTask.builder()
+                                      .accountId(ACCOUNT_ID)
+                                      .description("Fetch Instances")
+                                      .waitId(ACTIVITY_ID)
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                      .tags(Arrays.asList("tag1", "tag2"))
+                                      .data(TaskData.builder()
+                                                .async(true)
+                                                .parameters(new Object[] {expectedTaskParams})
+                                                .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
+                                                .timeout(5 * 60 * 1000)
+                                                .build())
+                                      .build();
+    verify(delegateService).queueTask(captor.capture());
+
+    final DelegateTask task = captor.getValue();
+    assertThat(task).isEqualToIgnoringGivenFields(expected, DelegateTaskKeys.data, DelegateTaskKeys.validUntil);
+    assertThat(task.getData()).isEqualToIgnoringGivenFields(expected.getData(), TaskDataKeys.expressionFunctorToken);
+    assertThat(task.getData().getExpressionFunctorToken()).isNotEqualTo(0);
   }
 
   @Test
