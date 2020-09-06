@@ -32,6 +32,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -75,9 +76,9 @@ public class ArtifactStep implements Step, TaskExecutable<ArtifactStepParameters
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, ArtifactStepParameters stepParameters, Map<String, DelegateResponseData> responseDataMap) {
+      Ambiance ambiance, ArtifactStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
-    DelegateResponseData notifyResponseData = responseDataMap.values().iterator().next();
+    DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
 
     if (notifyResponseData instanceof ArtifactTaskResponse) {
       ArtifactTaskResponse taskResponse = (ArtifactTaskResponse) notifyResponseData;

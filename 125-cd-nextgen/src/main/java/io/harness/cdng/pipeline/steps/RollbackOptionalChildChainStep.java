@@ -6,7 +6,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
@@ -16,6 +15,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.steps.section.chain.SectionChainPassThroughData;
+import io.harness.tasks.ResponseData;
 
 import java.util.Map;
 
@@ -45,8 +45,7 @@ public class RollbackOptionalChildChainStep
 
   @Override
   public ChildChainResponse executeNextChild(Ambiance ambiance, RollbackOptionalChildChainStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData,
-      Map<String, DelegateResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     int index = ((SectionChainPassThroughData) passThroughData).getChildIndex() + 1;
 
     for (int i = index; i < stepParameters.getChildNodes().size(); i++) {
@@ -66,7 +65,7 @@ public class RollbackOptionalChildChainStep
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, RollbackOptionalChildChainStepParameters stepParameters,
-      PassThroughData passThroughData, Map<String, DelegateResponseData> responseDataMap) {
+      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     StepResponseNotifyData notifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
     return StepResponse.builder().status(notifyData.getStatus()).failureInfo(notifyData.getFailureInfo()).build();
   }

@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
@@ -24,6 +23,7 @@ import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
 import io.harness.steps.barriers.service.BarrierService;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -78,8 +78,8 @@ public class BarrierStep
   }
 
   @Override
-  public StepResponse handleAsyncResponse(Ambiance ambiance, BarrierStepParameters barrierStepParameters,
-      Map<String, DelegateResponseData> responseDataMap) {
+  public StepResponse handleAsyncResponse(
+      Ambiance ambiance, BarrierStepParameters barrierStepParameters, Map<String, ResponseData> responseDataMap) {
     // if barrier is still in STANDING => update barrier state
     BarrierExecutionInstance barrierExecutionInstance =
         updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());

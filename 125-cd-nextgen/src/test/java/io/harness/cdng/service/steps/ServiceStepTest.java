@@ -20,7 +20,6 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.status.Status;
@@ -33,6 +32,7 @@ import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.tasks.ResponseData;
 import org.joor.Reflect;
 import org.junit.Rule;
 import org.junit.Test;
@@ -132,7 +132,7 @@ public class ServiceStepTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testHandleChildrenResponse() {
-    Map<String, DelegateResponseData> responseDataMap = new HashMap<>();
+    Map<String, ResponseData> responseDataMap = new HashMap<>();
 
     StepResponseNotifyData stepResponseNotifyData =
         StepResponseNotifyData.builder()

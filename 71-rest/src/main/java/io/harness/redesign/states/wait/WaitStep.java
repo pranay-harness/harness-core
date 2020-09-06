@@ -11,7 +11,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delay.SimpleNotifier;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
@@ -21,6 +20,7 @@ import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
@@ -49,7 +49,7 @@ public class WaitStep implements Step, AsyncExecutable<WaitStepParameters> {
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, WaitStepParameters waitStepParameters, Map<String, DelegateResponseData> responseDataMap) {
+      Ambiance ambiance, WaitStepParameters waitStepParameters, Map<String, ResponseData> responseDataMap) {
     WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
     waitStateExecutionData.setDuration(waitStepParameters.getWaitDurationSeconds());
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());

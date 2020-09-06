@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
@@ -16,6 +15,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.tasks.ResponseData;
 
 import java.util.Map;
 
@@ -39,8 +39,7 @@ public class SectionChainStep implements Step, ChildChainExecutable<SectionChain
 
   @Override
   public ChildChainResponse executeNextChild(Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData,
-      Map<String, DelegateResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     SectionChainPassThroughData chainPassThroughData = (SectionChainPassThroughData) passThroughData;
     int nextChildIndex = chainPassThroughData.getChildIndex() + 1;
     String previousChildId = responseDataMap.keySet().iterator().next();
@@ -56,9 +55,9 @@ public class SectionChainStep implements Step, ChildChainExecutable<SectionChain
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters,
-      PassThroughData passThroughData, Map<String, DelegateResponseData> responseDataMap) {
+      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
-    for (DelegateResponseData responseData : responseDataMap.values()) {
+    for (ResponseData responseData : responseDataMap.values()) {
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
       if (executionStatus != Status.SUCCEEDED) {
         responseBuilder.status(executionStatus);

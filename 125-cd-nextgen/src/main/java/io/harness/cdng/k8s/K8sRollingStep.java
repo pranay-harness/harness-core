@@ -24,7 +24,6 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -45,6 +44,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import io.harness.validation.Validator;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -265,8 +265,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData,
-      Map<String, DelegateResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     GitCommandExecutionResponse gitTaskResponse =
         (GitCommandExecutionResponse) responseDataMap.values().iterator().next();
 
@@ -305,7 +304,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
-      PassThroughData passThroughData, Map<String, DelegateResponseData> responseDataMap) {
+      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
         (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
 

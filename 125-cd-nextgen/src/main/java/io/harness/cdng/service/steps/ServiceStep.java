@@ -16,7 +16,6 @@ import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.Outcome;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
@@ -34,6 +33,7 @@ import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.tasks.ResponseData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -63,14 +63,14 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
   }
 
   @Override
-  public StepResponse handleChildrenResponse(Ambiance ambiance, ServiceStepParameters serviceStepParameters,
-      Map<String, DelegateResponseData> responseDataMap) {
+  public StepResponse handleChildrenResponse(
+      Ambiance ambiance, ServiceStepParameters serviceStepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     boolean allChildrenSuccess = true;
     EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
     List<String> errorMessages = new ArrayList<>();
     List<StepResponseNotifyData> responseNotifyDataList = new ArrayList<>();
-    for (DelegateResponseData responseData : responseDataMap.values()) {
+    for (ResponseData responseData : responseDataMap.values()) {
       StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
       responseNotifyDataList.add(responseNotifyData);
       Status executionStatus = responseNotifyData.getStatus();
