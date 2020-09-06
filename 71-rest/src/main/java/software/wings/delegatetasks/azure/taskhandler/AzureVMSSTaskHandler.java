@@ -14,6 +14,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
+import com.microsoft.azure.CloudException;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
@@ -47,10 +48,10 @@ public abstract class AzureVMSSTaskHandler {
       }
       return response;
     } catch (Exception ex) {
+      String message = getErrorMessage(ex);
       if (azureVMSSTaskParameters.isSyncTask()) {
-        throw new InvalidRequestException(ex.getMessage(), ex);
+        throw new InvalidRequestException(message, ex);
       } else {
-        String message = ex.getMessage();
         ExecutionLogCallback logCallback = getLogCallBack(azureVMSSTaskParameters, DEPLOYMENT_ERROR);
         logCallback.saveExecutionLog(message, ERROR, FAILURE);
         logger.error(format("Exception: [%s] while processing azure vmss task: [%s].", message,
@@ -59,6 +60,16 @@ public abstract class AzureVMSSTaskHandler {
         return AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(FAILURE).errorMessage(message).build();
       }
     }
+  }
+
+  public String getErrorMessage(Exception ex) {
+    String message = ex.getMessage();
+    if (ex.getCause() instanceof CloudException) {
+      CloudException cloudException = (CloudException) ex.getCause();
+      String cloudExMsg = cloudException.getMessage();
+      message = format("%s, %nAzure Cloud Exception Message: %s", message, cloudExMsg);
+    }
+    return message;
   }
 
   protected void createAndFinishEmptyExecutionLog(

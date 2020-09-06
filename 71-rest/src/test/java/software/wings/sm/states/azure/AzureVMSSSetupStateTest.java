@@ -75,7 +75,6 @@ public class AzureVMSSSetupStateTest extends WingsBaseTest {
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
     Activity activity = Activity.builder().uuid(activityId).build();
-    state.setBlueGreen(false);
     InfrastructureMapping azureVMSSInfrastructureMapping = AzureVMSSInfrastructureMapping.builder()
                                                                .baseVMSSName("baseVMSSName")
                                                                .resourceGroupName("resourceGroupName")

@@ -21,7 +21,9 @@ public class AzureVMSSTaskParameters implements TaskParameters, ExecutionCapabil
           AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_RESOURCE_GROUPS_NAMES,
           AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_VIRTUAL_MACHINE_SCALE_SETS,
           AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_GET_VIRTUAL_MACHINE_SCALE_SET,
-          AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_VM_DATA);
+          AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_VM_DATA,
+          AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_LOAD_BALANCERS_NAMES,
+          AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_LOAD_BALANCER_BACKEND_POOLS_NAMES);
 
   private String appId;
   private String accountId;

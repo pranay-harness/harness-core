@@ -68,10 +68,8 @@ public class AzureVMSSSetupState extends State {
   @Getter @Setter private String desiredInstances;
   @Getter @Setter private String autoScalingSteadyStateVMSSTimeout;
   @Getter @Setter private boolean useCurrentRunningCount;
-  @Getter @Setter private boolean blueGreen;
   @Getter @Setter private ResizeStrategy resizeStrategy;
 
-  @Getter @Setter private String vmssNamePrefix;
   @Getter @Setter private AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail;
 
   @Inject private transient DelegateService delegateService;
@@ -285,13 +283,17 @@ public class AzureVMSSSetupState extends State {
   }
 
   private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
-    String activityId = response.keySet().iterator().next();
-    String appId = context.getAppId();
     AzureVMSSTaskExecutionResponse executionResponse =
         (AzureVMSSTaskExecutionResponse) response.values().iterator().next();
-
     ExecutionStatus executionStatus = azureVMSSStateHelper.getExecutionStatus(executionResponse);
-    azureVMSSStateHelper.updateActivityStatus(appId, activityId, executionStatus);
+    if (executionStatus == ExecutionStatus.FAILED) {
+      return ExecutionResponse.builder()
+          .executionStatus(executionStatus)
+          .errorMessage(executionResponse.getErrorMessage())
+          .build();
+    }
+
+    updateActivityStatus(response, context.getAppId(), executionStatus);
 
     AzureVMSSSetupStateExecutionData stateExecutionData =
         populateAzureVMSSSetupStateExecutionData(context, executionResponse, executionStatus);
@@ -307,6 +309,13 @@ public class AzureVMSSSetupState extends State {
         .build();
   }
 
+  private void updateActivityStatus(Map<String, ResponseData> response, String appId, ExecutionStatus executionStatus) {
+    if (response.keySet().iterator().hasNext()) {
+      String activityId = response.keySet().iterator().next();
+      azureVMSSStateHelper.updateActivityStatus(appId, activityId, executionStatus);
+    }
+  }
+
   private AzureVMSSSetupContextElement buildAzureVMSSSetupContextElement(
       ExecutionContext context, AzureVMSSTaskExecutionResponse executionResponse) {
     AzureVMSSSetupTaskResponse azureVMSSSetupTaskResponse =
@@ -318,17 +327,17 @@ public class AzureVMSSSetupState extends State {
         autoScalingSteadyStateVMSSTimeout, context, DEFAULT_AZURE_VMSS_TIMEOUT_MIN);
 
     return AzureVMSSSetupContextElement.builder()
+        .isBlueGreen(isBlueGreen)
+        .azureLoadBalancerDetail(azureLoadBalancerDetail)
+        .resizeStrategy(resizeStrategyFixed)
+        .autoScalingSteadyStateVMSSTimeout(autoScalingSteadyStateVMSSTimeoutFixed)
+        .commandName(AZURE_VMSS_SETUP_COMMAND_NAME)
         .newVirtualMachineScaleSetName(azureVMSSSetupTaskResponse.getNewVirtualMachineScaleSetName())
         .oldVirtualMachineScaleSetName(azureVMSSSetupTaskResponse.getLastDeployedVMSSName())
         .baseVMSSScalingPolicyJSONs(azureVMSSSetupTaskResponse.getBaseVMSSScalingPolicyJSONs())
         .minInstances(azureVMSSSetupTaskResponse.getMinInstances())
         .maxInstances(azureVMSSSetupTaskResponse.getMaxInstances())
         .desiredInstances(azureVMSSSetupTaskResponse.getDesiredInstances())
-        .isBlueGreen(isBlueGreen)
-        .azureLoadBalancerDetail(azureLoadBalancerDetail)
-        .resizeStrategy(resizeStrategyFixed)
-        .autoScalingSteadyStateVMSSTimeout(autoScalingSteadyStateVMSSTimeoutFixed)
-        .commandName(AZURE_VMSS_SETUP_COMMAND_NAME)
         .preDeploymentData(azureVMSSSetupTaskResponse.getPreDeploymentData())
         .build();
   }

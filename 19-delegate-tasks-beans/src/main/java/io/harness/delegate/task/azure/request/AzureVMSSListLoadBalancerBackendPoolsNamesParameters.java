@@ -1,6 +1,6 @@
 package io.harness.delegate.task.azure.request;
 
-import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_LOAD_BALANCERS_NAMES;
+import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_LIST_LOAD_BALANCER_BACKEND_POOLS_NAMES;
 
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +15,8 @@ public class AzureVMSSListLoadBalancerBackendPoolsNamesParameters extends AzureV
   @Builder
   public AzureVMSSListLoadBalancerBackendPoolsNamesParameters(String appId, String accountId, String activityId,
       String commandName, String resourceGroupName, String loadBalancerName, Integer timeoutIntervalInMin) {
-    super(appId, accountId, activityId, commandName, timeoutIntervalInMin, AZURE_VMSS_LIST_LOAD_BALANCERS_NAMES);
+    super(appId, accountId, activityId, commandName, timeoutIntervalInMin,
+        AZURE_VMSS_LIST_LOAD_BALANCER_BACKEND_POOLS_NAMES);
     this.resourceGroupName = resourceGroupName;
     this.loadBalancerName = loadBalancerName;
   }

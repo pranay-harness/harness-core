@@ -353,13 +353,13 @@ public class InfrastructureDefinitionResource {
   }
 
   @GET
-  @Path("{infraDefinitionId}/azure-load-balancers/{loadbalancerName}/backend-pools")
+  @Path("{infraDefinitionId}/azure-load-balancers/{loadBalancerName}/backend-pools")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getAzureLoadBalancerBackendPools(@QueryParam("appId") String appId,
       @PathParam("infraDefinitionId") String infraDefinitionId,
-      @PathParam("loadbalancerName") String loadBalancerName) {
+      @PathParam("loadBalancerName") String loadBalancerName) {
     return new RestResponse<>(
         infrastructureDefinitionService.listAzureLoadBalancerBackendPools(appId, infraDefinitionId, loadBalancerName));
   }

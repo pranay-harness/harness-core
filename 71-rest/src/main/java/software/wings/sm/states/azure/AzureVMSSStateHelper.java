@@ -6,6 +6,7 @@ import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
@@ -14,6 +15,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -201,6 +203,7 @@ public class AzureVMSSStateHelper {
   }
 
   public int renderTimeoutExpressionOrGetDefault(String timeout, ExecutionContext context, int defaultValue) {
+    timeout = timeout.replaceAll(STEADY_STATE_TIMEOUT_REGEX, EMPTY);
     int value = renderExpressionOrGetDefault(timeout, context, defaultValue);
     return value <= 0 ? defaultValue : value;
   }
