@@ -111,7 +111,7 @@ jar ufm dist/delegate/delegate-capsule.jar app.mf
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 
 mkdir -p dist/watcher
-cp 82-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
+cp 250-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
 jar ufm dist/watcher/watcher-capsule.jar app.mf
 cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
 

@@ -51,8 +51,8 @@ public class WatcherExecutor {
           return;
         }
         logger.info("Execute the watcher from {}", directory);
-        final Path jar = Paths.get(directory.getPath(), "82-watcher", "target", "watcher-capsule.jar");
-        final Path config = Paths.get(directory.getPath(), "82-watcher", "config-watcher.yml");
+        final Path jar = Paths.get(directory.getPath(), "250-watcher", "target", "watcher-capsule.jar");
+        final Path config = Paths.get(directory.getPath(), "250-watcher", "config-watcher.yml");
 
         List<String> command = new ArrayList<>();
         command.add("java");

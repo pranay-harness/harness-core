@@ -232,7 +232,7 @@ public class SshDelegateExecutor {
     try {
       final File directory = new File(directoryPath);
       final Path delegateJarSource = Paths.get(directory.getPath(), "81-delegate", "target", "delegate-capsule.jar");
-      final Path watcherJarSource = Paths.get(directory.getPath(), "82-watcher", "target", "watcher-capsule.jar");
+      final Path watcherJarSource = Paths.get(directory.getPath(), "250-watcher", "target", "watcher-capsule.jar");
       final Path watcherJarDestination =
           Paths.get(directory.getPath(), LOCAL_STORAGE, WINGS_WATCHERS, "watcher", "watcher.jar");
       final Path delegateJarDestination =
