@@ -1,14 +1,13 @@
 package io.harness.service;
 
-import io.harness.govern.DependencyModule;
+import com.google.inject.AbstractModule;
+
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
 
-import java.util.Set;
-
-public class DelegateServiceDriverModule extends DependencyModule {
+public class DelegateServiceDriverModule extends AbstractModule {
   private static volatile DelegateServiceDriverModule instance;
 
   public static DelegateServiceDriverModule getInstance() {
@@ -22,10 +21,5 @@ public class DelegateServiceDriverModule extends DependencyModule {
   protected void configure() {
     bind(DelegateSyncService.class).to(DelegateSyncServiceImpl.class);
     bind(DelegateAsyncService.class).to(DelegateAsyncServiceImpl.class);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return null;
   }
 }

@@ -115,6 +115,7 @@ public class NextGenModule extends DependencyModule {
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance());
 
     bind(NextGenConfiguration.class).toInstance(appConfig);
 
@@ -227,6 +228,6 @@ public class NextGenModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(ExecutionPlanModule.getInstance(), DelegateServiceDriverModule.getInstance());
+    return ImmutableSet.of(ExecutionPlanModule.getInstance());
   }
 }

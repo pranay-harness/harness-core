@@ -754,6 +754,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                 .build()));
+    install(DelegateServiceDriverModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(SchedulerConfig.class)
@@ -1336,8 +1337,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(),
-        DelegateServiceDriverModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance());
   }
 
   @Provides
