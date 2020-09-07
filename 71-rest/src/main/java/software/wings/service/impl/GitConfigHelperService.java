@@ -66,6 +66,8 @@ public class GitConfigHelperService {
   @Inject private SettingValidationService settingValidationService;
   @Inject private FeatureFlagService featureFlagService;
 
+  public static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
+
   public void validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (gitConfig.isKeyAuth()) {
       if (gitConfig.getSshSettingId() == null) {
@@ -253,10 +255,17 @@ public class GitConfigHelperService {
   }
 
   public GitRepositoryInfo createRepositoryInfo(GitConfig gitConfig, String repositoryName) {
-    String repositoryUrl = getRepositoryUrl(gitConfig, repositoryName);
-    String displayUrl = getDisplayRepositoryUrl(repositoryUrl);
-    GitRepositoryInfo.GitProvider provider = getGitProvider(repositoryUrl);
-
-    return GitRepositoryInfo.builder().url(repositoryUrl).displayUrl(displayUrl).provider(provider).build();
+    if (null != gitConfig) {
+      String repositoryUrl = getRepositoryUrl(gitConfig, repositoryName);
+      String displayUrl = getDisplayRepositoryUrl(repositoryUrl);
+      GitRepositoryInfo.GitProvider provider = getGitProvider(repositoryUrl);
+      return GitRepositoryInfo.builder().url(repositoryUrl).displayUrl(displayUrl).provider(provider).build();
+    } else {
+      return GitRepositoryInfo.builder()
+          .url(UNKNOWN_GIT_CONNECTOR)
+          .displayUrl(UNKNOWN_GIT_CONNECTOR)
+          .provider(GitRepositoryInfo.GitProvider.UNKNOWN)
+          .build();
+    }
   }
 }

@@ -18,6 +18,7 @@ import static software.wings.beans.security.UserGroup.ACCOUNT_ID_KEY;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.service.impl.GitConfigHelperService.UNKNOWN_GIT_CONNECTOR;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.EMPTY_STR;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
@@ -104,8 +105,6 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private YamlHelper yamlHelper;
   @Inject private YamlSuccessfulChangeServiceImpl yamlSuccessfulChangeService;
   @Inject private GitSyncRBACHelper gitSyncRBACHelper;
-
-  private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
   @Override
   public PageResponse<GitFileActivity> fetchGitSyncActivity(
