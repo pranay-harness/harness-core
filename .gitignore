@@ -8,6 +8,7 @@
 # removed, you can use `git clean -df` to cleanup your repo.
 
 portal.iml
+/.ijwb
 /target
 /repository
 jacoco-it.exec
