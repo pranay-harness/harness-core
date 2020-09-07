@@ -103,7 +103,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
   @Override
   public void deleteDataCollectionTask(String accountId, String dataCollectionTaskId) {
-    verificationManagerService.deleteDataCollectionTask(accountId, dataCollectionTaskId);
+    verificationManagerService.deletePerpetualTask(accountId, dataCollectionTaskId);
   }
 
   @Override
@@ -214,8 +214,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
     dataCollectionTask.setDataCollectionWorkerId(cvConfig.getUuid());
-    String dataCollectionTaskId = verificationManagerService.createServiceGuardDataCollectionTask(
-        cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(),
+    String dataCollectionTaskId = verificationManagerService.createServiceGuardPerpetualTask(cvConfig.getAccountId(),
+        cvConfig.getUuid(), cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(),
         cvConfig.getProjectIdentifier(), dataCollectionTask.getDataCollectionWorkerId());
     save(dataCollectionTask);
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);

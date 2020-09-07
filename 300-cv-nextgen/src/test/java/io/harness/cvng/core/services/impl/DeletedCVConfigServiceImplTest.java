@@ -57,7 +57,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     CVConfig cvConfig = createCVConfig();
     DeletedCVConfig saved = save(createDeletedCVConfig(cvConfig));
     assertThat(saved.getAccountId()).isEqualTo(cvConfig.getAccountId());
-    assertThat(saved.getDataCollectionTaskId()).isEqualTo(cvConfig.getDataCollectionTaskId());
+    assertThat(saved.getPerpetualTaskId()).isEqualTo(cvConfig.getPerpetualTaskId());
     assertThat(saved.getCvConfig()).isNotNull();
   }
 
@@ -70,7 +70,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     deletedCVConfigServiceWithMocks.triggerCleanup(saved);
     assertThat(hPersistence.get(DeletedCVConfig.class, saved.getUuid())).isNull();
     verify(dataCollectionTaskService, times(1))
-        .deleteDataCollectionTask(saved.getAccountId(), saved.getDataCollectionTaskId());
+        .deleteDataCollectionTask(saved.getAccountId(), saved.getPerpetualTaskId());
   }
 
   @Test
@@ -81,7 +81,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     DeletedCVConfig updated = save(createDeletedCVConfig(cvConfig));
     DeletedCVConfig saved = deletedCVConfigService.get(updated.getUuid());
     assertThat(saved.getAccountId()).isEqualTo(updated.getCvConfig().getAccountId());
-    assertThat(saved.getDataCollectionTaskId()).isEqualTo(updated.getCvConfig().getDataCollectionTaskId());
+    assertThat(saved.getPerpetualTaskId()).isEqualTo(updated.getCvConfig().getPerpetualTaskId());
     assertThat(saved.getCvConfig()).isNotNull();
   }
 

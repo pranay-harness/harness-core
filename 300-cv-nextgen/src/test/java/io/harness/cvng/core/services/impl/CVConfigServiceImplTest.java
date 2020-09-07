@@ -315,11 +315,11 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   public void setCollectionTaskId() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
-    assertThat(cvConfig.getDataCollectionTaskId()).isNull();
+    assertThat(cvConfig.getPerpetualTaskId()).isNull();
     String taskId = generateUuid();
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), taskId);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    assertThat(updated.getDataCollectionTaskId()).isEqualTo(taskId);
+    assertThat(updated.getPerpetualTaskId()).isEqualTo(taskId);
   }
 
   @Test

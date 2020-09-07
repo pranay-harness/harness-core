@@ -92,15 +92,15 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
     Set<String> connectorIds = cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
     // TODO: Keeping it one perpetual task per connector. We need to figure this one out based on the next gen
     // connectors.
-    List<String> dataCollectionTaskIds = new ArrayList<>();
+    List<String> perpetualTaskIds = new ArrayList<>();
 
     connectorIds.forEach(connectorId -> {
       String dataCollectionWorkerId = getDataCollectionWorkerId(deploymentVerificationTask, connectorId);
-      dataCollectionTaskIds.add(verificationManagerService.createDeploymentVerificationDataCollectionTask(
+      perpetualTaskIds.add(verificationManagerService.createDeploymentVerificationPerpetualTask(
           deploymentVerificationTask.getAccountId(), connectorId, verificationJob.getOrgIdentifier(),
           verificationJob.getProjectIdentifier(), dataCollectionWorkerId));
     });
-    setDataCollectionTaskIds(deploymentVerificationTask, dataCollectionTaskIds);
+    setPerpetualTaskIds(deploymentVerificationTask, perpetualTaskIds);
     createDataCollectionTasks(deploymentVerificationTask, verificationJob, cvConfigs);
     markRunning(deploymentVerificationTask.getUuid());
   }
@@ -128,6 +128,15 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
         .update(hPersistence.createQuery(DeploymentVerificationTask.class)
                     .filter(DeploymentVerificationTaskKeys.uuid, deploymentVerificationId),
             deploymentVerificationTaskUpdateOperations, options);
+  }
+
+  @Override
+  public void deletePerpetualTasks(DeploymentVerificationTask entity) {
+    verificationManagerService.deletePerpetualTasks(entity.getAccountId(), entity.getPerpetualTaskIds());
+    UpdateOperations<DeploymentVerificationTask> updateOperations =
+        hPersistence.createUpdateOperations(DeploymentVerificationTask.class);
+    updateOperations.unset(DeploymentVerificationTaskKeys.perpetualTaskIds);
+    hPersistence.update(entity, updateOperations);
   }
 
   private ExecutionStatus mapToExecutionStatus(AnalysisStatus analysisStatus) {
@@ -195,14 +204,14 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
     }
   }
 
-  private void setDataCollectionTaskIds(
-      DeploymentVerificationTask deploymentVerificationTask, List<String> dataCollectionTaskIds) {
+  private void setPerpetualTaskIds(
+      DeploymentVerificationTask deploymentVerificationTask, List<String> perpetualTaskIds) {
     UpdateOperations<DeploymentVerificationTask> verificationTaskUpdateOperations =
         hPersistence.createUpdateOperations(DeploymentVerificationTask.class);
-    verificationTaskUpdateOperations.set(DeploymentVerificationTaskKeys.dataCollectionTaskIds, dataCollectionTaskIds);
+    verificationTaskUpdateOperations.set(DeploymentVerificationTaskKeys.perpetualTaskIds, perpetualTaskIds);
     hPersistence.update(deploymentVerificationTask,
         hPersistence.createUpdateOperations(DeploymentVerificationTask.class)
-            .set(DeploymentVerificationTaskKeys.dataCollectionTaskIds, dataCollectionTaskIds));
+            .set(DeploymentVerificationTaskKeys.perpetualTaskIds, perpetualTaskIds));
   }
 
   private void markRunning(String verificationTaskId) {

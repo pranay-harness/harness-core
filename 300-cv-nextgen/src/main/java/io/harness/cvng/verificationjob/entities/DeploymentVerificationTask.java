@@ -48,10 +48,11 @@ public class DeploymentVerificationTask
   private String verificationJobIdentifier;
   private Instant deploymentStartTime;
   private Instant startTime;
-  @FdIndex private long dataCollectionTaskIteration;
+  @FdIndex private Long dataCollectionTaskIteration;
   @FdIndex private Long analysisOrchestrationIteration;
+  @FdIndex private Long deletePerpetualTaskIteration;
   private Duration dataCollectionDelay;
-  private List<String> dataCollectionTaskIds;
+  private List<String> perpetualTaskIds;
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;
@@ -68,6 +69,10 @@ public class DeploymentVerificationTask
       this.analysisOrchestrationIteration = nextIteration;
       return;
     }
+    if (DeploymentVerificationTaskKeys.deletePerpetualTaskIteration.equals(fieldName)) {
+      this.deletePerpetualTaskIteration = nextIteration;
+      return;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -78,6 +83,9 @@ public class DeploymentVerificationTask
     }
     if (DeploymentVerificationTaskKeys.analysisOrchestrationIteration.equals(fieldName)) {
       return this.analysisOrchestrationIteration;
+    }
+    if (DeploymentVerificationTaskKeys.deletePerpetualTaskIteration.equals(fieldName)) {
+      return this.deletePerpetualTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
