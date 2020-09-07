@@ -275,10 +275,12 @@ import software.wings.beans.ci.ShellScriptType;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.CIK8ServicePodParams;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
+import software.wings.beans.ci.pod.HostAliasParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.PodParams;
@@ -1755,5 +1757,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanceFetchStateExecutionSummary.class, 7472);
 
     kryo.register(ListNotifyResponseData.class, 5133);
+    kryo.register(CIK8ServicePodParams.class, 8056);
+    kryo.register(HostAliasParams.class, 8057);
   }
 }

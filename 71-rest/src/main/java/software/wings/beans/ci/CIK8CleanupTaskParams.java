@@ -15,7 +15,8 @@ import javax.validation.constraints.NotNull;
 public class CIK8CleanupTaskParams implements CICleanupTaskParams {
   private KubernetesClusterConfig kubernetesClusterConfig;
   private List<EncryptedDataDetail> encryptionDetails;
-  @NotNull private String podName;
+  @NotNull private List<String> podNameList;
+  @NotNull private List<String> serviceNameList;
   @NotNull private String namespace;
   @Builder.Default private static final CICleanupTaskParams.Type type = Type.GCP_K8;
 

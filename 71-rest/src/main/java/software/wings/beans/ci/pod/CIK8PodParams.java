@@ -18,8 +18,8 @@ public class CIK8PodParams<T extends ContainerParams> extends PodParams<T> {
   @Builder
   public CIK8PodParams(GitFetchFilesConfig gitFetchFilesConfig, String stepExecVolumeName, String stepExecWorkingDir,
       String name, String namespace, Map<String, String> labels, List<T> containerParamsList,
-      List<T> initContainerParamsList, List<PVCParams> pvcParamList) {
-    super(name, namespace, labels, containerParamsList, initContainerParamsList, pvcParamList);
+      List<T> initContainerParamsList, List<PVCParams> pvcParamList, List<HostAliasParams> hostAliasParamsList) {
+    super(name, namespace, labels, containerParamsList, initContainerParamsList, pvcParamList, hostAliasParamsList);
     this.gitFetchFilesConfig = gitFetchFilesConfig;
     this.stepExecVolumeName = stepExecVolumeName;
     this.stepExecWorkingDir = stepExecWorkingDir;

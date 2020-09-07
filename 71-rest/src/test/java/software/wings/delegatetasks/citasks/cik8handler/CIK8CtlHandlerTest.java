@@ -26,6 +26,7 @@ import com.google.inject.Provider;
 import io.fabric8.kubernetes.api.model.DoneablePersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableSecret;
+import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimList;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -35,6 +36,8 @@ import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretList;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ContainerResource;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
@@ -69,6 +72,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -91,6 +95,10 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   private NonNamespaceOperation<PersistentVolumeClaim, PersistentVolumeClaimList, DoneablePersistentVolumeClaim,
       Resource<PersistentVolumeClaim, DoneablePersistentVolumeClaim>> mockPVCNonNamespacedOp;
 
+  @Mock private MixedOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>> mockSvcOp;
+  @Mock
+  private NonNamespaceOperation<Service, ServiceList, DoneableService, Resource<Service, DoneableService>>
+      mockSvcNonNamespacedOp;
   @Mock Provider<ExecCommandListener> execListenerProvider;
   @Mock
   private ContainerResource<String, LogWatch, InputStream, PipedOutputStream, OutputStream, PipedInputStream, String,
@@ -480,5 +488,22 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockPVCNonNamespacedOp.create(any())).thenReturn(pvc);
     cik8CtlHandler.createPVC(mockKubernetesClient, namespace, volumeName, storageClass, storageMib);
     verify(mockKubernetesClient).persistentVolumeClaims();
+  }
+
+  @Test()
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void createService() {
+    Service svc = mock(Service.class);
+    String serviceName = "svc";
+    List<Integer> ports = new ArrayList<>();
+    ports.add(8000);
+    Map<String, String> selector = new HashMap<>();
+    selector.put("foo", "bar");
+    when(mockKubernetesClient.services()).thenReturn(mockSvcOp);
+    when(mockSvcOp.inNamespace(namespace)).thenReturn(mockSvcNonNamespacedOp);
+    when(mockSvcNonNamespacedOp.create(any())).thenReturn(svc);
+    cik8CtlHandler.createService(mockKubernetesClient, namespace, serviceName, selector, ports);
+    verify(mockKubernetesClient).services();
   }
 }

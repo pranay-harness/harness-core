@@ -25,6 +25,8 @@ import software.wings.delegatetasks.citasks.CICleanupTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
@@ -35,14 +37,31 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
 
   private static final String namespace = "default";
   private static final String podName = "pod";
+  private static final String serviceName = "svc";
 
   private CIK8CleanupTaskParams getTaskParams() {
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
+    List<String> podList = new ArrayList<>();
+    podList.add(podName);
     return CIK8CleanupTaskParams.builder()
         .encryptionDetails(encryptionDetails)
         .kubernetesClusterConfig(kubernetesClusterConfig)
-        .podName(podName)
+        .podNameList(podList)
+        .namespace(namespace)
+        .build();
+  }
+
+  private CIK8CleanupTaskParams getTaskParamsWithService() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = mock(List.class);
+    List<String> podList = new ArrayList<>();
+    podList.add(podName);
+    return CIK8CleanupTaskParams.builder()
+        .encryptionDetails(encryptionDetails)
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .podNameList(podList)
+        .serviceNameList(Arrays.asList(serviceName))
         .namespace(namespace)
         .build();
   }
@@ -84,6 +103,36 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
 
     when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenThrow(KubernetesClientException.class);
+
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void executeTaskWithServiceSuccess() {
+    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+    CIK8CleanupTaskParams taskParams = getTaskParamsWithService();
+
+    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
+    when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
+    when(kubeCtlHandler.deleteService(kubernetesClient, namespace, serviceName)).thenReturn(Boolean.TRUE);
+
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void executeTaskWithServiceFailure() {
+    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+    CIK8CleanupTaskParams taskParams = getTaskParamsWithService();
+
+    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
+    when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
+    when(kubeCtlHandler.deleteService(kubernetesClient, namespace, serviceName)).thenReturn(Boolean.FALSE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());

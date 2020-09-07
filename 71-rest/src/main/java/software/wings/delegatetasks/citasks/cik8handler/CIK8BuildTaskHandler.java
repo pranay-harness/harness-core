@@ -34,6 +34,7 @@ import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.CIK8ServicePodParams;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
@@ -90,6 +91,11 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
         createPVCs(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
 
+        if (cik8BuildTaskParams.getServicePodParams() != null) {
+          for (CIK8ServicePodParams servicePodParams : cik8BuildTaskParams.getServicePodParams()) {
+            createServicePod(kubernetesClient, namespace, servicePodParams);
+          }
+        }
         Pod pod = podSpecBuilder.createSpec(podParams).build();
         logger.info("Creating pod with spec: {}", pod);
         kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
@@ -115,6 +121,16 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         cik8BuildTaskParams.getKubernetesClusterConfig(), cik8BuildTaskParams.getEncryptionDetails());
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
+  }
+
+  private void createServicePod(
+      KubernetesClient kubernetesClient, String namespace, CIK8ServicePodParams servicePodParams) {
+    Pod pod = podSpecBuilder.createSpec((PodParams) servicePodParams.getCik8PodParams()).build();
+    logger.info("Creating service pod with spec: {}", pod);
+    kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
+
+    kubeCtlHandler.createService(kubernetesClient, namespace, servicePodParams.getServiceName(),
+        servicePodParams.getSelectorMap(), servicePodParams.getPorts());
   }
 
   private void createGitSecret(

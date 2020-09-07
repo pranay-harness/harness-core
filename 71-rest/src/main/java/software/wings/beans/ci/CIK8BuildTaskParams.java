@@ -8,6 +8,7 @@ import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.CIK8ServicePodParams;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class CIK8BuildTaskParams implements CIBuildSetupTaskParams {
   private GitFetchFilesConfig gitFetchFilesConfig;
   private CIK8PodParams<CIK8ContainerParams> cik8PodParams;
   private List<EncryptedDataDetail> encryptionDetails;
+  private List<CIK8ServicePodParams> servicePodParams;
   @Builder.Default private static final CIBuildSetupTaskParams.Type type = Type.GCP_K8;
 
   @Override
