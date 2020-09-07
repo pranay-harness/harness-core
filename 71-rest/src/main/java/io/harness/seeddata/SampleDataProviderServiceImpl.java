@@ -127,7 +127,7 @@ public class SampleDataProviderServiceImpl implements SampleDataProviderService 
       SettingAttribute dockerConnector = connectorGenerator.createDockerConnector(account.getUuid());
 
       createK8sV2SampleApp(account, kubernetesClusterConfig, dockerConnector, HARNESS_SAMPLE_APP);
-      authService.evictUserPermissionCacheForAccount(account.getUuid(), true);
+      authService.evictUserPermissionAndRestrictionCacheForAccount(account.getUuid(), true, true);
     } catch (Exception ex) {
       String errorMessage = "Failed to create Sample Application for the account [" + account.getUuid() + "]";
       throw new WingsException(ErrorCode.GENERAL_ERROR, errorMessage, WingsException.USER, ex)

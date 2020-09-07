@@ -283,7 +283,6 @@ public class AccountServiceImpl implements AccountService {
 
       logger.info("Successfully created account.");
     }
-    authService.evictUserPermissionCacheForAccount(account.getUuid(), true);
     return account;
   }
 
