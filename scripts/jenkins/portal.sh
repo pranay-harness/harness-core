@@ -105,8 +105,8 @@ echo "System-Properties: version=1.0.${VERSION}" >> app.mf
 echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 
 mkdir -p dist/delegate
-cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
-cp 81-delegate/config-delegate.yml dist/delegate/config-delegate.yml
+cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jar ufm dist/delegate/delegate-capsule.jar app.mf
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 

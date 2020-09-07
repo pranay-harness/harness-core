@@ -100,7 +100,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>81-delegate</artifactId>
+            <artifactId>260-delegate</artifactId>
             <version>${project.parent.version}</version>
             <scope>runtime</scope>
         </dependency>

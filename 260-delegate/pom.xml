@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>81-delegate</artifactId>
+    <artifactId>260-delegate</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
