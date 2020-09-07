@@ -9,9 +9,6 @@ import io.harness.cdng.connector.tasks.KubernetesConnectionDelegateValidation;
 import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.git.tasks.NGGitConnectionValidation;
 import io.harness.cdng.k8s.K8sCommandValidationNG;
-import io.harness.cdng.k8s.rolling.K8sTaskNG;
-import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
-import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
 import io.harness.cvng.connectiontask.AppDynamicsTestConnectionDelegateTask;
 import io.harness.cvng.connectiontask.SplunkTestConnectionDelegateTask;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -20,7 +17,9 @@ import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
+import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
+import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
@@ -425,7 +424,7 @@ public enum TaskType {
       TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class),
   GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
   GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class),
-  GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT, GitFetchTaskNG.class, GitFetchValidationNG.class),
+  GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT, GitFetchTaskNG.class, AlwaysTrueValidation.class),
   BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class),
   DOCKER_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, DockerArtifactTaskNG.class, AlwaysTrueValidation.class),
   AWS_ROUTE53_TASK(TaskGroup.AWS, AwsRoute53Task.class, AwsConnectionValidation.class),

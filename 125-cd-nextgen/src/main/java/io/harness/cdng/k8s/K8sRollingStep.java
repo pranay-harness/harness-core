@@ -22,10 +22,17 @@ import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
-import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
-import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
+import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.task.git.GitFetchFilesConfig;
+import io.harness.delegate.task.git.GitFetchRequest;
+import io.harness.delegate.task.git.GitFetchResponse;
+import io.harness.delegate.task.git.TaskStatus;
+import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
+import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
@@ -36,6 +43,7 @@ import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
+import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -49,13 +57,7 @@ import io.harness.tasks.Task;
 import io.harness.validation.Validator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.yaml.GitCommandExecutionResponse;
-import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
-import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
 
 import java.util.ArrayList;
@@ -113,16 +115,16 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
       if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
         GitStore gitStore = (GitStore) valuesManifest.getStoreConfigWrapper().getStoreConfig();
         String connectorId = gitStore.getConnectorIdentifier();
-        GitConfig gitConfig = (GitConfig) k8sStepHelper.getSettingAttribute(connectorId, ambiance).getValue();
+        ConnectorDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
+        List<EncryptedDataDetail> encryptedDataDetails =
+            k8sStepHelper.getEncryptedDataDetails((GitConfigDTO) connectorDTO.getConnectorConfig(), ambiance);
+        GitStoreDelegateConfig gitStoreDelegateConfig =
+            k8sStepHelper.getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails);
 
-        List<EncryptedDataDetail> encryptionDetails = k8sStepHelper.getEncryptedDataDetails(gitConfig);
         gitFetchFilesConfigs.add(GitFetchFilesConfig.builder()
-                                     .encryptedDataDetails(encryptionDetails)
-                                     .gitConfig(gitConfig)
-                                     .gitStore(gitStore)
                                      .identifier(valuesManifest.getIdentifier())
-                                     .paths(gitStore.getPaths())
                                      .succeedIfFileNotFound(false)
+                                     .gitStoreDelegateConfig(gitStoreDelegateConfig)
                                      .build());
       }
     }
@@ -177,6 +179,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
             .valuesYamlList(renderedValuesList)
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
+            .accountId(accountId)
             .build();
 
     TaskData taskData = TaskData.builder()
@@ -266,14 +269,12 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    GitCommandExecutionResponse gitTaskResponse =
-        (GitCommandExecutionResponse) responseDataMap.values().iterator().next();
+    GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataMap.values().iterator().next();
 
-    if (gitTaskResponse.getGitCommandStatus() != GitCommandExecutionResponse.GitCommandStatus.SUCCESS) {
-      throw new InvalidRequestException(gitTaskResponse.getErrorMessage());
+    if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
+      throw new InvalidRequestException(gitFetchResponse.getErrorMessage());
     }
-    Map<String, GitFetchFilesResult> gitFetchFilesResultMap =
-        ((GitFetchFilesFromMultipleRepoResult) gitTaskResponse.getGitCommandResult()).getFilesFromMultipleRepo();
+    Map<String, FetchFilesResult> gitFetchFilesResultMap = gitFetchResponse.getFilesFromMultipleRepo();
 
     K8sRollingStepPassThroughData k8sRollingPassThroughData = (K8sRollingStepPassThroughData) passThroughData;
 
@@ -288,12 +289,12 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
 
   @NotNull
   List<String> getFileContents(
-      Map<String, GitFetchFilesResult> gitFetchFilesResultMap, List<ValuesManifest> valuesManifests) {
+      Map<String, FetchFilesResult> gitFetchFilesResultMap, List<ValuesManifest> valuesManifests) {
     List<String> valuesFileContents = new ArrayList<>();
 
     for (ValuesManifest valuesManifest : valuesManifests) {
       if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
-        GitFetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
+        FetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
         valuesFileContents.addAll(
             gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));
       }
@@ -305,13 +306,12 @@ public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepP
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    K8sTaskExecutionResponse k8sTaskExecutionResponse =
-        (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
+    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       Infrastructure infrastructure = (Infrastructure) passThroughData;
       K8sRollingDeployResponse k8sTaskResponse =
-          (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+          (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
       K8sRollingOutcome k8sRollingOutcome = K8sRollingOutcome.builder()
                                                 .releaseName(k8sStepHelper.getReleaseName(infrastructure))

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @SuperBuilder
@@ -17,7 +18,7 @@ public class GitBaseRequest {
   private AuthRequest authRequest;
 
   private String connectorId;
-  private String accountId;
+  @NotEmpty private String accountId;
   private GitRepositoryType repoType;
 
   public boolean useBranch() {

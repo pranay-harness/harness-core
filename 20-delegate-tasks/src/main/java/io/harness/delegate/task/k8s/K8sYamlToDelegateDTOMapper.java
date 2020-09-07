@@ -40,7 +40,8 @@ public class K8sYamlToDelegateDTOMapper {
         }
 
       case MANUAL_CREDENTIALS:
-        return getKubernetesConfigFromManualCredentials((KubernetesClusterDetailsDTO) (clusterConfigDTO.getConfig()));
+        return getKubernetesConfigFromManualCredentials(
+            (KubernetesClusterDetailsDTO) (clusterConfigDTO.getConfig()), namespace);
 
       default:
         throw new UnsupportedOperationException(
@@ -48,9 +49,10 @@ public class K8sYamlToDelegateDTOMapper {
     }
   }
 
-  private KubernetesConfig getKubernetesConfigFromManualCredentials(KubernetesClusterDetailsDTO clusterDetailsDTO) {
+  private KubernetesConfig getKubernetesConfigFromManualCredentials(
+      KubernetesClusterDetailsDTO clusterDetailsDTO, String namespace) {
     KubernetesConfigBuilder kubernetesConfigBuilder =
-        KubernetesConfig.builder().masterUrl(clusterDetailsDTO.getMasterUrl());
+        KubernetesConfig.builder().masterUrl(clusterDetailsDTO.getMasterUrl()).namespace(namespace);
 
     // ToDo This does not handle the older KubernetesClusterConfigs which do not have authType set.
     KubernetesAuthDTO authDTO = clusterDetailsDTO.getAuth();

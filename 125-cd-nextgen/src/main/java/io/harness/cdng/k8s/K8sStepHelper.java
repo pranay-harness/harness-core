@@ -65,7 +65,7 @@ public class K8sStepHelper {
     }
   }
 
-  private ConnectorDTO getConnector(String connectorId, Ambiance ambiance) {
+  public ConnectorDTO getConnector(String connectorId, Ambiance ambiance) {
     Optional<ConnectorDTO> connectorDTO = connectorService.get(AmbianceHelper.getAccountId(ambiance),
         AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance), connectorId);
     if (!connectorDTO.isPresent()) {
@@ -156,20 +156,25 @@ public class K8sStepHelper {
           secretManagerClientService.getEncryptionDetails(basicNGAccessObject, gitConfigDTO.getGitAuth());
 
       return K8sManifestDelegateConfig.builder()
-          .storeDelegateConfig(GitStoreDelegateConfig.builder()
-                                   .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
-                                   .encryptedDataDetails(encryptedDataDetailList)
-                                   .fetchType(gitStore.getGitFetchType())
-                                   .branch(gitStore.getBranch())
-                                   .commitId(gitStore.getCommitId())
-                                   .paths(gitStore.getPaths())
-                                   .connectorName(connectorDTO.getName())
-                                   .build())
+          .storeDelegateConfig(getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetailList))
           .build();
     } else {
       throw new UnsupportedOperationException(
           String.format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
     }
+  }
+
+  public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStore gitStore,
+      @Nonnull ConnectorDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList) {
+    return GitStoreDelegateConfig.builder()
+        .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
+        .encryptedDataDetails(encryptedDataDetailList)
+        .fetchType(gitStore.getGitFetchType())
+        .branch(gitStore.getBranch())
+        .commitId(gitStore.getCommitId())
+        .paths(gitStore.getPaths())
+        .connectorName(connectorDTO.getName())
+        .build();
   }
 
   private List<EncryptedDataDetail> getEncryptionDataDetails(
@@ -210,5 +215,11 @@ public class K8sStepHelper {
         throw new UnsupportedOperationException(
             String.format("Unsupported Infrastructure type: [%s]", infrastructure.getKind()));
     }
+  }
+
+  public List<EncryptedDataDetail> getEncryptedDataDetails(
+      @Nonnull GitConfigDTO gitConfigDTO, @Nonnull Ambiance ambiance) {
+    return secretManagerClientService.getEncryptionDetails(
+        AmbianceHelper.getNgAccess(ambiance), gitConfigDTO.getGitAuth());
   }
 }

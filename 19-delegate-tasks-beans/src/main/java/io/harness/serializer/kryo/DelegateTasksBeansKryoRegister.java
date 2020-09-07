@@ -109,12 +109,17 @@ import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSSwitchRoutesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
+import io.harness.delegate.task.git.GitFetchFilesConfig;
+import io.harness.delegate.task.git.GitFetchRequest;
+import io.harness.delegate.task.git.GitFetchResponse;
+import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
+import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ScriptType;
@@ -286,5 +291,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureVMSSSetupTaskResponse.class, 19321);
     kryo.register(AzureVMSSSwitchRoutesResponse.class, 19322);
     kryo.register(AzureVMSSSwitchRouteTaskParameters.class, 19323);
+    kryo.register(GitFetchRequest.class, 19324);
+    kryo.register(GitFetchFilesConfig.class, 19325);
+    kryo.register(GitFetchResponse.class, 19326);
+    kryo.register(TaskStatus.class, 19327);
+    kryo.register(K8sRollingDeployResponse.class, 19328);
   }
 }

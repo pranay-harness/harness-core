@@ -17,6 +17,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.git.GitFetchFilesTaskHelper;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -152,7 +153,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
     GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
         gitFileConfig.getCommitId(), gitFileConfig.getBranch(), filePathsToFetch, gitFileConfig.isUseBranch());
-    gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
+    gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(
+        executionLogCallback, gitFetchFilesResult == null ? Collections.emptyList() : gitFetchFilesResult.getFiles());
 
     return gitFetchFilesResult;
   }
