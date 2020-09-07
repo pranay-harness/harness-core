@@ -9,6 +9,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,7 @@ import java.util.regex.Pattern;
 @Entity("containerTasks")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ContainerTaskKeys")
-public abstract class ContainerTask extends DeploymentSpecification {
+public abstract class ContainerTask extends DeploymentSpecification implements AccountAccess {
   static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
   static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
   static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";

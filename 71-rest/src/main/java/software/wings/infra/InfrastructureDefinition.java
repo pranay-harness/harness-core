@@ -9,6 +9,7 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.NameAccess;
@@ -47,7 +48,7 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 public class InfrastructureDefinition
     implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
-               ApplicationAccess, CustomDeploymentTypeAware {
+               ApplicationAccess, CustomDeploymentTypeAware, AccountAccess {
   @Id private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore private long createdAt;

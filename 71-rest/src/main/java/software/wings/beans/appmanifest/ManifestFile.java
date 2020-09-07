@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,7 +23,7 @@ import software.wings.yaml.BaseEntityYaml;
 @EqualsAndHashCode(callSuper = false)
 @Entity("manifestFile")
 @HarnessEntity(exportable = true)
-public class ManifestFile extends Base {
+public class ManifestFile extends Base implements AccountAccess {
   public static final String VALUES_YAML_KEY = "values.yaml";
 
   @NotEmpty String fileName;
