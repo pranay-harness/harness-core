@@ -9,11 +9,15 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.beans.AppDynamicsDSConfig;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
@@ -27,6 +31,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +51,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
   private String envIdentifier;
   private String accountId;
   @Inject private HPersistence hPersistence;
+  @Inject private DSConfigService dsConfigService;
 
   @Before
   public void setUp() {
@@ -52,6 +59,20 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
     accountId = generateUuid();
+    AppDynamicsDSConfig dsConfig = new AppDynamicsDSConfig();
+    dsConfig.setProjectIdentifier(projectIdentifier);
+    dsConfig.setAccountId(accountId);
+    dsConfig.setMetricPacks(Sets.newHashSet(MetricPack.builder().category(CVMonitoringCategory.PERFORMANCE).build()));
+    dsConfig.setConnectorIdentifier(generateUuid());
+    dsConfig.setEnvIdentifier(envIdentifier);
+    dsConfig.setProductName(generateUuid());
+    dsConfig.setApplicationName(generateUuid());
+    dsConfig.setIdentifier(generateUuid());
+    dsConfig.setServiceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
+                                                    .serviceIdentifier(serviceIdentifier)
+                                                    .tierName(generateUuid())
+                                                    .build()));
+    dsConfigService.upsert(dsConfig);
   }
 
   @Test
@@ -206,7 +227,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         serviceIdentifier, envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
-    assertThat(heatMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(heatMap.size()).isEqualTo(1);
     assertThat(heatMap.get(CVMonitoringCategory.PERFORMANCE).size())
         .isEqualTo((endMin - startMin) / FIVE_MIN.getResolution().toMinutes() + 1);
     Iterator<HeatMapDTO> heatMapIterator = heatMap.get(CVMonitoringCategory.PERFORMANCE).iterator();
@@ -265,7 +286,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         serviceIdentifier, envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
-    assertThat(heatMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(heatMap.size()).isEqualTo(1);
     assertThat(heatMap.get(CVMonitoringCategory.PERFORMANCE).size())
         .isEqualTo((endMin - startMin) / FIFTEEN_MINUTES.getResolution().toMinutes() + 1);
     Iterator<HeatMapDTO> heatMapIterator = heatMap.get(CVMonitoringCategory.PERFORMANCE).iterator();
@@ -340,5 +361,33 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
       heatMap.getHeatMapRisks().forEach(
           heatMapRisk -> assertThat(heatMapRisk.getRiskScore()).isEqualTo(numOfEnv * numOfService, offset(0.00001)));
     });
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetHeatMap_ForSavedCategories() {
+    Set<CVMonitoringCategory> categories = new HashSet<>();
+    for (CVMonitoringCategory cvMonitoringCategory : CVMonitoringCategory.values()) {
+      AppDynamicsDSConfig dsConfig = new AppDynamicsDSConfig();
+      dsConfig.setProjectIdentifier(projectIdentifier);
+      dsConfig.setAccountId(accountId);
+      dsConfig.setMetricPacks(Sets.newHashSet(MetricPack.builder().category(cvMonitoringCategory).build()));
+      dsConfig.setConnectorIdentifier(generateUuid());
+      dsConfig.setEnvIdentifier(envIdentifier);
+      dsConfig.setProductName(generateUuid());
+      dsConfig.setApplicationName(generateUuid());
+      dsConfig.setIdentifier(generateUuid());
+      dsConfig.setServiceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
+                                                      .serviceIdentifier(serviceIdentifier)
+                                                      .tierName(generateUuid())
+                                                      .build()));
+      dsConfigService.upsert(dsConfig);
+      categories.add(cvMonitoringCategory);
+      Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, projectIdentifier,
+          serviceIdentifier, envIdentifier, Instant.now().minus(1, ChronoUnit.HOURS), Instant.now());
+      assertThat(heatMap.size()).isEqualTo(categories.size());
+      categories.forEach(category -> assertThat(heatMap).containsKey(category));
+    }
   }
 }
