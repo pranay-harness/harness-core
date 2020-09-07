@@ -60,6 +60,7 @@ import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
+import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -97,6 +98,7 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.DummyLogCallbackImpl;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.serializer.YamlUtils;
@@ -148,6 +150,7 @@ public class K8sTaskHelperBase {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject private NGGitService ngGitService;
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
   public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
@@ -1698,7 +1701,7 @@ public class K8sTaskHelperBase {
 
   public LogCallback getExecutionLogCallback(K8sRollingDeployRequest k8sRollingDeployRequest, String commandUnitName) {
     // TODO Vaibhav/Anshul: integrate with NG Execution LogCallback when available
-    return null;
+    return new DummyLogCallbackImpl();
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -1720,11 +1723,12 @@ public class K8sTaskHelperBase {
   }
 
   public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
-      String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis) {
+      String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId) {
     ManifestType manifestType = manifestDelegateConfig.getManifestType();
     switch (manifestType) {
       case K8S_MANIFEST:
-        return downloadManifestFilesFromGit(manifestDelegateConfig, manifestFilesDirectory, executionLogCallback);
+        return downloadManifestFilesFromGit(
+            manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
 
       default:
         throw new UnsupportedOperationException(
@@ -1732,8 +1736,8 @@ public class K8sTaskHelperBase {
     }
   }
 
-  private boolean downloadManifestFilesFromGit(
-      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, LogCallback executionLogCallback) {
+  private boolean downloadManifestFilesFromGit(ManifestDelegateConfig manifestDelegateConfig,
+      String manifestFilesDirectory, LogCallback executionLogCallback, String accountId) {
     if (!(manifestDelegateConfig instanceof K8sManifestDelegateConfig)) {
       throw new InvalidArgumentsException(
           Pair.of("manifestDelegateConfig", "Must be instance of K8sManifestDelegateConfig"));
@@ -1749,8 +1753,7 @@ public class K8sTaskHelperBase {
 
     try {
       printGitConfigInExecutionLogs(gitStoreDelegateConfig, executionLogCallback);
-      // ToDo Uncomment below to download files from Git
-      // gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
+      ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, accountId);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));

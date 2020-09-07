@@ -23,7 +23,6 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -1737,8 +1736,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(StoreConfig.class, 8022);
     kryo.register(GitStore.class, 8023);
-    kryo.register(GitFetchRequest.class, 8025);
-    kryo.register(io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig.class, 8026);
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);

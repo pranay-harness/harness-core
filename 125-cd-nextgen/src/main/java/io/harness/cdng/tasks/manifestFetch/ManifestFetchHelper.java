@@ -10,8 +10,9 @@ import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.ValuesPathProvider;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -47,10 +48,8 @@ public class ManifestFetchHelper {
               List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(gitConfig, "1234", null);
               gitFetchFilesConfigs.add(
                   GitFetchFilesConfig.builder()
-                      .paths(paths)
-                      .gitConfig(gitConfig)
-                      .gitStore(gitStore)
-                      .encryptedDataDetails(encryptionDetails)
+                      .gitStoreDelegateConfig(
+                          GitStoreDelegateConfig.builder().encryptedDataDetails(encryptionDetails).build())
                       .identifier(manifestAttribute.getIdentifier())
                       .succeedIfFileNotFound(ManifestType.K8Manifest.equals(manifestAttribute.getKind()))
                       .build());

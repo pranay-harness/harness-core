@@ -55,6 +55,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.CommitResult;
+import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitRepositoryType;
@@ -177,6 +178,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(CommitResult.class, 1424);
     kryo.register(PushResultGit.class, 1425);
     kryo.register(PushResultGit.RefUpdate.class, 1426);
+    kryo.register(FetchFilesResult.class, 1427);
     kryo.register(GitRepositoryType.class, 5270);
   }
 }

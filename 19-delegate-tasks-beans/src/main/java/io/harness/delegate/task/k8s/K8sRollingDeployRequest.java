@@ -18,4 +18,5 @@ public class K8sRollingDeployRequest implements K8sDeployRequest {
   ManifestDelegateConfig manifestDelegateConfig;
   boolean inCanaryWorkflow;
   boolean localOverrideFeatureFlag;
+  String accountId;
 }

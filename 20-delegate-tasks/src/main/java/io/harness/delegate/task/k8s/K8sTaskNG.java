@@ -1,4 +1,4 @@
-package io.harness.cdng.k8s.rolling;
+package io.harness.delegate.task.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -20,14 +20,6 @@ import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
-import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
-import io.harness.delegate.task.k8s.K8sDeployRequest;
-import io.harness.delegate.task.k8s.K8sDeployResponse;
-import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
-import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
-import io.harness.delegate.task.k8s.K8sTaskType;
-import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -149,8 +141,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     if (k8sInfraDelegateConfig instanceof DirectK8sInfraDelegateConfig) {
       DirectK8sInfraDelegateConfig directK8sInfraDelegateConfig = (DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig;
 
-      KubernetesClusterConfigDTO clusterConfigDTO =
-          (KubernetesClusterConfigDTO) directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO().getConfig();
+      KubernetesClusterConfigDTO clusterConfigDTO = directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO();
       if (clusterConfigDTO.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
         KubernetesClusterDetailsDTO clusterDetailsDTO = (KubernetesClusterDetailsDTO) clusterConfigDTO.getConfig();
         KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();

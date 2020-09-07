@@ -87,9 +87,10 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeployRequest.getTimeoutIntervalInMin());
 
-    boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
-        k8sRollingDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getExecutionLogCallback(k8sRollingDeployRequest, FetchFiles), steadyStateTimeoutInMillis);
+    boolean success =
+        k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sRollingDeployRequest.getManifestDelegateConfig(),
+            manifestFilesDirectory, k8sTaskHelperBase.getExecutionLogCallback(k8sRollingDeployRequest, FetchFiles),
+            steadyStateTimeoutInMillis, k8sRollingDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }

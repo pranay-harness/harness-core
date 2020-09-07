@@ -10,6 +10,6 @@ public class PlanCreatorFacilitatorUtils {
   }
 
   public String decideTaskChainFacilitatorType() {
-    return FacilitatorType.TASK_CHAIN_V2;
+    return FacilitatorType.TASK_CHAIN_V3;
   }
 }
