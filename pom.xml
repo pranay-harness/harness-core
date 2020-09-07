@@ -55,7 +55,6 @@
         <module>75-model-test</module>
         <module>76-graphql-test</module>
         <module>78-batch-processing</module>
-        <module>79-verification</module>
 
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
@@ -67,6 +66,7 @@
         <module>210-command-library-server</module>
         <module>250-watcher</module>
         <module>260-delegate</module>
+        <module>270-verification</module>
         <module>300-cv-nextgen</module>
 
     </modules>
