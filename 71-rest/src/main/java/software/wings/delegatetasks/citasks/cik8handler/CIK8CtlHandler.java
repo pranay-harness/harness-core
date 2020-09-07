@@ -16,6 +16,10 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.harness.exception.PodNotFoundException;
@@ -77,6 +81,28 @@ public class CIK8CtlHandler {
     kubernetesClient.persistentVolumeClaims().inNamespace(namespace).create(pvc);
   }
 
+  // Creates a kubernetes clusterIP service
+  public void createService(KubernetesClient kubernetesClient, String namespace, String serviceName,
+      Map<String, String> selectorMap, List<Integer> ports) {
+    List<ServicePort> svcPorts = new ArrayList<>();
+    for (int idx = 0; idx < ports.size(); idx++) {
+      String name = String.format("%d-%d", ports.get(idx), idx);
+      ServicePort servicePort = new ServicePortBuilder().withName(name).withPort(ports.get(idx)).build();
+      svcPorts.add(servicePort);
+    }
+
+    Service svc = new ServiceBuilder()
+                      .withNewMetadata()
+                      .withName(serviceName)
+                      .endMetadata()
+                      .withNewSpec()
+                      .withSelector(selectorMap)
+                      .withPorts(svcPorts)
+                      .endSpec()
+                      .build();
+    kubernetesClient.services().inNamespace(namespace).create(svc);
+  }
+
   public Map<String, SecretParams> fetchCustomVariableSecretKeyMap(
       Map<String, EncryptedVariableWithType> encryptedSecrets) {
     return secretSpecBuilder.decryptCustomSecretVariables(encryptedSecrets);
@@ -135,6 +161,10 @@ public class CIK8CtlHandler {
 
   public Boolean deletePod(KubernetesClient kubernetesClient, String podName, String namespace) {
     return kubernetesClient.pods().inNamespace(namespace).withName(podName).delete();
+  }
+
+  public Boolean deleteService(KubernetesClient kubernetesClient, String namespace, String serviceName) {
+    return kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete();
   }
 
   public void createGitSecret(KubernetesClient kubernetesClient, String namespace, GitConfig gitConfig,

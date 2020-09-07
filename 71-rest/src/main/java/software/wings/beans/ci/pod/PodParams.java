@@ -16,6 +16,7 @@ public abstract class PodParams<T extends ContainerParams> {
   private List<T> containerParamsList;
   private List<T> initContainerParamsList;
   private List<PVCParams> pvcParamList;
+  private List<HostAliasParams> hostAliasParamsList;
 
   public abstract PodParams.Type getType();
 

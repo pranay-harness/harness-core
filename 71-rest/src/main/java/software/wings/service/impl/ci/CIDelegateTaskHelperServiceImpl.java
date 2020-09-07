@@ -211,6 +211,8 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
 
+    List<String> podNameList = new ArrayList<>();
+    podNameList.add(podName);
     try {
       DelegateResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
@@ -222,7 +224,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
                         .parameters(new Object[] {CIK8CleanupTaskParams.builder()
                                                       .encryptionDetails(encryptedDataDetails)
                                                       .kubernetesClusterConfig(kubernetesClusterConfig)
-                                                      .podName(podName)
+                                                      .podNameList(podNameList)
                                                       .namespace(namespace)
                                                       .build()})
                         .timeout(TimeUnit.SECONDS.toMillis(60))
