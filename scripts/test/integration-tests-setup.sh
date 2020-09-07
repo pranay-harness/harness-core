@@ -109,13 +109,13 @@ if [[ jenkins_overwrite_status -ne 0 ]] ; then
 fi
 
 #run verification engine
-sed -i -e 's/^doUpgrade.*/doUpgrade: false/' 79-verification/verification-config.yml
+sed -i -e 's/^doUpgrade.*/doUpgrade: false/' 270-verification/verification-config.yml
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:verification-gc-logs.gc -XX:+UseParallelGC \
-         -XX:MaxGCPauseMillis=500 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log 2>&1 &
+         -XX:MaxGCPauseMillis=500 -jar 270-verification/target/verification-capsule.jar 270-verification/verification-config.yml > verification.log 2>&1 &
 else
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:verification-gc-logs.gc -XX:+UseParallelGC \
-         -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log 2>&1 &
+         -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/verification/target/verification-capsule.jar 270-verification/verification-config.yml > verification.log 2>&1 &
 fi
 
 # wait for verification to start
