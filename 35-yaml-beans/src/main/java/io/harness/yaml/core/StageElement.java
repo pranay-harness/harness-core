@@ -3,10 +3,11 @@ package io.harness.yaml.core;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.visitor.helpers.stage.StageElementHelper;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
 import io.harness.yaml.core.intfc.WithIdentifier;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonTypeName("stage")
-@JsonIgnoreProperties(ignoreUnknown = true)
+@SimpleVisitorHelper(helperClass = StageElementHelper.class)
 public class StageElement implements StageElementWrapper, WithIdentifier {
   String identifier;
   String name;
