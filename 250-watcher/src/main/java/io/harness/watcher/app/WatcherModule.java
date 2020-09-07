@@ -1,7 +1,7 @@
 package io.harness.watcher.app;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -9,17 +9,24 @@ import com.google.inject.name.Named;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
-import io.harness.govern.DependencyModule;
 import io.harness.time.TimeModule;
 import io.harness.watcher.service.WatcherService;
 import io.harness.watcher.service.WatcherServiceImpl;
 
 import java.time.Clock;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class WatcherModule extends DependencyModule {
+public class WatcherModule extends AbstractModule {
+  private static volatile WatcherModule instance;
+
+  public static WatcherModule getInstance() {
+    if (instance == null) {
+      instance = new WatcherModule();
+    }
+    return instance;
+  }
+
   @Provides
   @Singleton
   @Named("inputExecutor")
@@ -79,10 +86,5 @@ public class WatcherModule extends DependencyModule {
         .toInstance(
             new MessageServiceImpl("", Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
     bind(Clock.class).toInstance(Clock.systemUTC());
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of();
   }
 }
