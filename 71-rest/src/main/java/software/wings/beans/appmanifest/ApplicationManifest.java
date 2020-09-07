@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,7 @@ import software.wings.yaml.BaseEntityYaml;
 @FieldNameConstants(innerTypeName = "ApplicationManifestKeys")
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
-public class ApplicationManifest extends Base {
+public class ApplicationManifest extends Base implements AccountAccess {
   @FdIndex private String accountId;
   private String serviceId;
   private String envId;

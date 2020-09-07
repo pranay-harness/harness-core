@@ -2,6 +2,7 @@ package software.wings.beans.container;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +20,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "HelmChartSpecificationKeys")
 @Entity("helmChartSpecifications")
 @HarnessEntity(exportable = true)
-public class HelmChartSpecification extends DeploymentSpecification {
+public class HelmChartSpecification extends DeploymentSpecification implements AccountAccess {
   @NotEmpty @FdUniqueIndex private String serviceId;
   @NotNull private String chartUrl;
   @NotNull private String chartName;

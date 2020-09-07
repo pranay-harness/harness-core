@@ -3,6 +3,7 @@ package software.wings.beans.container;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +20,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "PcfServiceSpecificationKeys")
 @Entity("pcfServiceSpecification")
 @HarnessEntity(exportable = true)
-public class PcfServiceSpecification extends DeploymentSpecification {
+public class PcfServiceSpecification extends DeploymentSpecification implements AccountAccess {
   @NotNull private String serviceId;
   @NotNull private String manifestYaml;
 

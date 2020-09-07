@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,7 +25,7 @@ import javax.validation.Valid;
 @FieldNameConstants(innerTypeName = "LambdaSpecificationKeys")
 @Entity("lambdaSpecifications")
 @HarnessEntity(exportable = true)
-public class LambdaSpecification extends DeploymentSpecification {
+public class LambdaSpecification extends DeploymentSpecification implements AccountAccess {
   @NotEmpty @FdUniqueIndex private String serviceId;
   private DefaultSpecification defaults;
   @Valid private List<FunctionSpecification> functions;
