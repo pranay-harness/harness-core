@@ -2,6 +2,7 @@ package io.harness;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -181,6 +182,33 @@ public class UserTest extends GraphQLTest {
         accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
     final User user = accountGenerator.ensureUser(
         "userId", "harnessUser", random(String.class), random(String.class).toCharArray(), account);
+
+    final QLTestObject qlUserObject = qlExecute(query, account.getUuid());
+    assertThat(qlUserObject.get(QLUserKeys.id)).isEqualTo(user.getUuid());
+    assertThat(qlUserObject.get(QLUserKeys.name)).isEqualTo(user.getName());
+    assertThat(qlUserObject.get(QLUserKeys.email)).isEqualTo(user.getEmail());
+    assertThat(qlUserObject.get(QLUserKeys.isEmailVerified)).isEqualTo(user.isEmailVerified());
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category({GraphQLTests.class, UnitTests.class})
+  public void test_userByEmail() {
+    String userQueryPattern = MultilineStringMixin.$.GQL(/*
+  {
+  userByEmail(email:"%s"){
+    name
+    id
+    isEmailVerified
+    email
+  }
+}
+*/ UserTest.class);
+    String query = String.format(userQueryPattern, "harnessUser@harness.io");
+    final Account account =
+        accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
+    final User user = accountGenerator.ensureUser(
+        "userId", "harnessUser", "harnessUser@harness.io", random(String.class).toCharArray(), account);
 
     final QLTestObject qlUserObject = qlExecute(query, account.getUuid());
     assertThat(qlUserObject.get(QLUserKeys.id)).isEqualTo(user.getUuid());

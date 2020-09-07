@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -7,6 +9,8 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -38,11 +42,28 @@ public class UserDataFetcher extends AbstractObjectDataFetcher<QLUser, QLUserQue
         }
       }
     }
+    if (qlQuery.getEmail() != null) {
+      try (HIterator<User> iterator = new HIterator<>(getSearchByEmailQuery(accountId, qlQuery.getEmail()).fetch())) {
+        if (iterator.hasNext()) {
+          user = iterator.next();
+        }
+      }
+    }
     if (user == null) {
       throw new InvalidRequestException(USER_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
     final QLUserBuilder builder = QLUser.builder();
     UserController.populateUser(user, builder);
     return builder.build();
+  }
+
+  private Query<User> getSearchByEmailQuery(String accountId, String email) {
+    Query<User> query = persistence.createQuery(User.class, excludeAuthority);
+    CriteriaContainer inviteAccepted =
+        query.and(query.criteria(UserKeys.email).equal(email), query.criteria(UserKeys.accounts).hasThisOne(accountId));
+    CriteriaContainer invitePending = query.and(
+        query.criteria(UserKeys.email).equal(email), query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    query.or(inviteAccepted, invitePending);
+    return query;
   }
 }

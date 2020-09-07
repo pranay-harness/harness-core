@@ -11,6 +11,8 @@ extend type Query {
   users(limit: Int!, offset: Int): UserConnection @dataFetcher(name: userConnection)
   #fetch a user by name
   userByName(name: String!): User @dataFetcher(name: user)
+  #fetch a user by email
+  userByEmail(email: String!): User @dataFetcher(name: user)
 }
 
 input CreateUserInput {
