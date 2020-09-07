@@ -389,7 +389,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
-    when(verificationManagerService.createServiceGuardDataCollectionTask(
+    when(verificationManagerService.createServiceGuardPerpetualTask(
              eq(accountId), eq(cvConfigId), anyString(), anyString(), anyString(), eq(cvConfigId)))
         .thenReturn(taskId);
     AppDynamicsCVConfig cvConfig = getCVConfig();
@@ -414,7 +414,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
     dataCollectionTaskService.deleteDataCollectionTask(accountId, taskId);
-    verify(verificationManagerService, times(1)).deleteDataCollectionTask(accountId, taskId);
+    verify(verificationManagerService, times(1)).deletePerpetualTask(accountId, taskId);
   }
 
   @Test
@@ -425,7 +425,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
-    when(verificationManagerService.createServiceGuardDataCollectionTask(
+    when(verificationManagerService.createServiceGuardPerpetualTask(
              eq(accountId), eq(cvConfigId), anyString(), anyString(), anyString(), eq(cvConfigId)))
         .thenReturn(taskId);
     SplunkCVConfig cvConfig = getSplunkCVConfig();

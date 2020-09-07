@@ -94,7 +94,7 @@ public class CVConfigServiceImpl implements CVConfigService {
     deletedCVConfigService.save(DeletedCVConfig.builder()
                                     .cvConfig(cvConfig)
                                     .accountId(cvConfig.getAccountId())
-                                    .dataCollectionTaskId(cvConfig.getDataCollectionTaskId())
+                                    .perpetualTaskId(cvConfig.getPerpetualTaskId())
                                     .build());
     anomalyService.closeAnomaly(cvConfig.getAccountId(), cvConfigId, Instant.now());
     hPersistence.delete(CVConfig.class, cvConfigId);
@@ -183,9 +183,9 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void setCollectionTaskId(String uuid, String dataCollectionTaskId) {
-    UpdateOperations<CVConfig> updateOperations = hPersistence.createUpdateOperations(CVConfig.class)
-                                                      .set(CVConfigKeys.dataCollectionTaskId, dataCollectionTaskId);
+  public void setCollectionTaskId(String uuid, String perpetualTaskId) {
+    UpdateOperations<CVConfig> updateOperations =
+        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.perpetualTaskId, perpetualTaskId);
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class).filter(CVConfigKeys.uuid, uuid);
     hPersistence.update(query, updateOperations);
   }

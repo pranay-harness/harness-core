@@ -38,7 +38,7 @@ public class DeletedCVConfig
   private CVConfig cvConfig;
   private long createdAt;
   private long lastUpdatedAt;
-  private String dataCollectionTaskId;
+  private String perpetualTaskId;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {

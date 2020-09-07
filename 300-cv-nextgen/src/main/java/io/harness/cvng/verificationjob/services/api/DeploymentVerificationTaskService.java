@@ -12,4 +12,6 @@ public interface DeploymentVerificationTaskService {
   DeploymentVerificationTask getVerificationTask(String verificationTaskId);
   void createDataCollectionTasks(DeploymentVerificationTask deploymentVerificationTask);
   void logProgress(String deploymentVerificationId, Instant startTime, Instant endTime, AnalysisStatus analysisStatus);
+
+  void deletePerpetualTasks(DeploymentVerificationTask entity);
 }

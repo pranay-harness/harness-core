@@ -48,6 +48,7 @@ import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.cvng.statemachine.jobs.DeploymentVerificationTaskOrchestrationJob;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.DeploymentVerificationTaskKeys;
+import io.harness.cvng.verificationjob.jobs.DeletePerpetualTasksHandler;
 import io.harness.cvng.verificationjob.jobs.DeploymentVerificationTaskHandler;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
@@ -197,6 +198,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationTaskOrchestrationIterator(injector);
     registerCVConfigDataCollectionTaskIterator(injector);
     registerVerificationTaskIterator(injector);
+    registerDeleteDataCollectionWorkersIterator(injector);
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
@@ -279,12 +281,41 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .semaphore(new Semaphore(5))
             .handler(cvConfigDataCollectionHandler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(CVConfigKeys.dataCollectionTaskId).doesNotExist())
+            .filterExpander(query -> query.criteria(CVConfigKeys.perpetualTaskId).doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
     dataCollectionExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+  }
+
+  private void registerDeleteDataCollectionWorkersIterator(Injector injector) {
+    ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
+        5, new ThreadFactoryBuilder().setNameFormat("delete-data-collection-workers-iterator").build());
+    DeletePerpetualTasksHandler handler = injector.getInstance(DeletePerpetualTasksHandler.class);
+    // TODO: setup alert if this goes above acceptable threshold.
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator
+            .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(DeploymentVerificationTask.class)
+            .fieldName(DeploymentVerificationTaskKeys.deletePerpetualTaskIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(10))
+            .executorService(verificationTaskExecutor)
+            .semaphore(new Semaphore(4))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.field(DeploymentVerificationTaskKeys.executionStatus)
+                       .in(ExecutionStatus.finalStatuses())
+                       .criteria(DeploymentVerificationTaskKeys.perpetualTaskIds)
+                       .exists())
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    verificationTaskExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerVerificationTaskIterator(Injector injector) {
@@ -304,8 +335,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .semaphore(new Semaphore(5))
             .handler(handler)
             .schedulingType(REGULAR)
-            .filterExpander(
-                query -> query.criteria(DeploymentVerificationTaskKeys.dataCollectionTaskIds).doesNotExist())
+            .filterExpander(query -> query.criteria(DeploymentVerificationTaskKeys.perpetualTaskIds).doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

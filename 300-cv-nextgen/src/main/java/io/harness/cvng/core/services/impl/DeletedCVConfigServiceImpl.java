@@ -31,7 +31,7 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
   @Override
   public void triggerCleanup(DeletedCVConfig deletedCVConfig) {
     dataCollectionTaskService.deleteDataCollectionTask(
-        deletedCVConfig.getAccountId(), deletedCVConfig.getDataCollectionTaskId());
+        deletedCVConfig.getAccountId(), deletedCVConfig.getPerpetualTaskId());
     logger.info("Deleting DeletedCVConfig {}", deletedCVConfig.getUuid());
     delete(deletedCVConfig.getUuid());
     logger.info("Deletion of DeletedCVConfig {} was successful", deletedCVConfig.getUuid());

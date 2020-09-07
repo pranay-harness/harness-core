@@ -8,6 +8,7 @@ import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.InternalServerErrorException;
@@ -17,7 +18,7 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
   @Override
-  public String createServiceGuardDataCollectionTask(String accountId, String cvConfigId, String connectorIdentifier,
+  public String createServiceGuardPerpetualTask(String accountId, String cvConfigId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
     // Need to write this to handle retries, exception etc in a proper way.
 
@@ -38,12 +39,13 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
                                                .build();
 
     return requestExecutor
-        .execute(verificationManagerClient.create(accountId, orgIdentifier, projectIdentifier, bundle))
+        .execute(verificationManagerClient.createDataCollectionPerpetualTask(
+            accountId, orgIdentifier, projectIdentifier, bundle))
         .getResource();
   }
 
   @Override
-  public String createDeploymentVerificationDataCollectionTask(String accountId, String connectorIdentifier,
+  public String createDeploymentVerificationPerpetualTask(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String dataCollectionWorkerId) {
     // TODO(telemetry): counter
     Optional<ConnectorDTO> connectorDTO =
@@ -62,12 +64,18 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
                                                .build();
 
     return requestExecutor
-        .execute(verificationManagerClient.create(accountId, orgIdentifier, projectIdentifier, bundle))
+        .execute(verificationManagerClient.createDataCollectionPerpetualTask(
+            accountId, orgIdentifier, projectIdentifier, bundle))
         .getResource();
   }
 
   @Override
-  public void deleteDataCollectionTask(String accountId, String taskId) {
-    requestExecutor.execute(verificationManagerClient.deleteDataCollectionTask(accountId, taskId));
+  public void deletePerpetualTask(String accountId, String perpetualTaskId) {
+    requestExecutor.execute(verificationManagerClient.deleteDataCollectionPerpetualTask(accountId, perpetualTaskId));
+  }
+
+  @Override
+  public void deletePerpetualTasks(String accountId, List<String> perpetualTaskIds) {
+    perpetualTaskIds.forEach(dataCollectionWorkerId -> this.deletePerpetualTask(accountId, dataCollectionWorkerId));
   }
 }

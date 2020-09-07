@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +36,7 @@ import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -45,6 +47,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
@@ -53,12 +56,13 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   @Inject private CVConfigService cvConfigService;
   @Mock private VerificationManagerService verificationManagerService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
+  @Inject private HPersistence hPersistence;
   private String accountId;
   private String verificationJobIdentifier;
   private long deploymentStartTimeMs;
   private String connectorId;
-  private String dataCollectionTaskId;
-  private String projectIdetifier;
+  private String perpetualTaskId;
+  private String projectIdentifier;
   private String orgIdentifier;
   @Before
   public void setup() throws IllegalAccessException {
@@ -66,15 +70,15 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     verificationJobIdentifier = generateUuid();
     accountId = generateUuid();
     accountId = generateUuid();
-    projectIdetifier = generateUuid();
+    projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     deploymentStartTimeMs = Instant.parse("2020-07-27T10:44:06.390Z").toEpochMilli();
     connectorId = generateUuid();
-    dataCollectionTaskId = generateUuid();
+    perpetualTaskId = generateUuid();
     FieldUtils.writeField(
         deploymentVerificationTaskService, "verificationManagerService", verificationManagerService, true);
-    when(verificationManagerService.createDeploymentVerificationDataCollectionTask(any(), any(), any(), any(), any()))
-        .thenReturn(dataCollectionTaskId);
+    when(verificationManagerService.createDeploymentVerificationPerpetualTask(any(), any(), any(), any(), any()))
+        .thenReturn(perpetualTaskId);
   }
 
   @Test
@@ -158,10 +162,10 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
         deploymentVerificationTaskService.getVerificationTask(verificationTaskId);
     deploymentVerificationTaskService.createDataCollectionTasks(deploymentVerificationTask);
     verify(verificationManagerService)
-        .createDeploymentVerificationDataCollectionTask(eq(accountId), eq(connectorId), eq(orgIdentifier),
-            eq(projectIdetifier), eq(getDataCollectionWorkerId(verificationTaskId, connectorId)));
+        .createDeploymentVerificationPerpetualTask(eq(accountId), eq(connectorId), eq(orgIdentifier),
+            eq(projectIdentifier), eq(getDataCollectionWorkerId(verificationTaskId, connectorId)));
     DeploymentVerificationTask saved = deploymentVerificationTaskService.getVerificationTask(verificationTaskId);
-    assertThat(saved.getDataCollectionTaskIds()).isEqualTo(Lists.newArrayList(dataCollectionTaskId));
+    assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
   }
 
   @Test
@@ -258,6 +262,44 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
         .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.FAILED);
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testDeleteDataCollectionWorkers_whenSuccessful() {
+    verificationJobService.upsert(accountId, newVerificationJob());
+    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
+    DeploymentVerificationTask deploymentVerificationTask =
+        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    List<String> perpetualTaskIds = Lists.newArrayList(generateUuid(), generateUuid());
+    deploymentVerificationTask.setPerpetualTaskIds(perpetualTaskIds);
+    hPersistence.save(deploymentVerificationTask);
+    deploymentVerificationTaskService.deletePerpetualTasks(deploymentVerificationTask);
+    DeploymentVerificationTask updated =
+        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(updated.getPerpetualTaskIds()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testDeleteDataCollectionWorkers_whenManagerCallFails() {
+    verificationJobService.upsert(accountId, newVerificationJob());
+    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
+    DeploymentVerificationTask deploymentVerificationTask =
+        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    List<String> perpetualTaskIds = Lists.newArrayList(generateUuid(), generateUuid());
+    doThrow(new RuntimeException("exception from manager"))
+        .when(verificationManagerService)
+        .deletePerpetualTasks(eq(accountId), any());
+    deploymentVerificationTask.setPerpetualTaskIds(perpetualTaskIds);
+    hPersistence.save(deploymentVerificationTask);
+    assertThatThrownBy(() -> deploymentVerificationTaskService.deletePerpetualTasks(deploymentVerificationTask))
+        .hasMessage("exception from manager");
+    DeploymentVerificationTask updated =
+        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(updated.getPerpetualTaskIds()).isEqualTo(perpetualTaskIds);
+  }
+
   private String getDataCollectionWorkerId(String verificationTaskId, String connectorId) {
     return UUID.nameUUIDFromBytes((verificationTaskId + ":" + connectorId).getBytes(Charsets.UTF_8)).toString();
   }
@@ -270,7 +312,7 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
     testVerificationJobDTO.setServiceIdentifier(generateUuid());
     testVerificationJobDTO.setOrgIdentifier(orgIdentifier);
-    testVerificationJobDTO.setProjectIdentifier(projectIdetifier);
+    testVerificationJobDTO.setProjectIdentifier(projectIdentifier);
     testVerificationJobDTO.setEnvIdentifier(generateUuid());
     testVerificationJobDTO.setBaselineVerificationTaskIdentifier(generateUuid());
     testVerificationJobDTO.setDuration("15m");
