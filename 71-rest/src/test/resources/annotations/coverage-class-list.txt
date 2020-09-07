@@ -46,6 +46,8 @@
 29-orchestration-beans/src/main/java/io/harness/execution/events/OrchestrationSubject.java
 29-orchestration-beans/src/main/java/io/harness/execution/events/SyncOrchestrationEventHandlerProxy.java
 29-orchestration-beans/src/main/java/io/harness/execution/status/Status.java
+29-orchestration-beans/src/main/java/io/harness/expression/field/OrchestrationFieldType.java
+29-orchestration-beans/src/main/java/io/harness/expression/field/ProcessorResult.java
 29-orchestration-beans/src/main/java/io/harness/facilitator/DefaultFacilitatorParams.java
 29-orchestration-beans/src/main/java/io/harness/facilitator/FacilitatorObtainment.java
 29-orchestration-beans/src/main/java/io/harness/facilitator/FacilitatorResponse.java

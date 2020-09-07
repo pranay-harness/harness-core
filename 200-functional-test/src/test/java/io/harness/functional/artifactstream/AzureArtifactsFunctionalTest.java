@@ -26,6 +26,7 @@ import io.restassured.mapper.ObjectMapperType;
 import io.restassured.response.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -79,8 +80,9 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT, intermittent = true)
+  @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: Fix azure artifacts tests - repo config seems to have changed")
   public void shouldCollectMavenArtifactsWithoutProject() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     SettingAttribute azureArtifactsSetting =
@@ -116,8 +118,9 @@ public class AzureArtifactsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT, intermittent = true)
+  @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: Fix azure artifacts tests - repo config seems to have changed")
   public void shouldCollectNuGetArtifactsWithProject() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     SettingAttribute azureArtifactsSetting =
