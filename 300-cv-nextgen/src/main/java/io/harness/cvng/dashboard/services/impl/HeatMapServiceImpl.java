@@ -9,6 +9,8 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.DBCollectionUpdateOptions;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
@@ -23,8 +25,12 @@ import org.mongodb.morphia.query.Query;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -100,7 +106,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     Instant startTimeBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getResolution());
     Instant endTimeBoundary = getBoundaryOfResolution(endTime, heatMapResolution.getResolution());
 
-    for (CVMonitoringCategory category : CVMonitoringCategory.values()) {
+    Set<CVMonitoringCategory> cvMonitoringCategories = getAvailableCategories(accountId, projectIdentifier);
+    for (CVMonitoringCategory category : cvMonitoringCategories) {
       Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(
           projectIdentifier, serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
 
@@ -120,6 +127,20 @@ public class HeatMapServiceImpl implements HeatMapService {
       heatMaps.put(category, heatMapDTOS);
     }
     return heatMaps;
+  }
+
+  private Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier) {
+    BasicDBObject cvConfigQuery = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
+    conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
+    cvConfigQuery.put("$and", conditions);
+
+    Set<CVMonitoringCategory> cvMonitoringCategories = new HashSet<>();
+    hPersistence.getCollection(CVConfig.class)
+        .distinct(CVConfigKeys.category, cvConfigQuery)
+        .forEach(categoryName -> cvMonitoringCategories.add(CVMonitoringCategory.valueOf((String) categoryName)));
+    return cvMonitoringCategories;
   }
 
   private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String projectIdentifier, String serviceIdentifier,
