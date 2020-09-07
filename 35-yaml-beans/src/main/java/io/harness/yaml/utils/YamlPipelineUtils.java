@@ -34,6 +34,7 @@ public class YamlPipelineUtils {
     mapper = new ObjectMapper(new YAMLFactory());
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
@@ -73,5 +74,9 @@ public class YamlPipelineUtils {
 
   public String writeString(Object value) throws JsonProcessingException {
     return mapper.writeValueAsString(value);
+  }
+
+  public ObjectMapper getMapper() {
+    return mapper;
   }
 }
