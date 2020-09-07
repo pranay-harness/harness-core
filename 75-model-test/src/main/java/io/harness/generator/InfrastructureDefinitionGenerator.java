@@ -49,6 +49,7 @@ import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -61,6 +62,7 @@ import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureKubernetesService;
+import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
@@ -74,6 +76,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -355,6 +358,37 @@ public class InfrastructureDefinitionGenerator {
             .build();
 
     return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  public InfrastructureDefinition ensurePredefinedCustomDeployment(
+      Randomizer.Seed seed, Owners owners, String templateUuid, String infrastructureDefinitionName) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+    Service service = owners.obtainService();
+    if (service == null) {
+      service =
+          serviceGenerator.ensurePredefinedCustomDeployment(seed, owners, templateUuid, "CustomDeployment Service");
+      owners.add(service);
+    }
+    List<NameValuePair> infraVariables = new ArrayList<>();
+    infraVariables.add(NameValuePair.builder().name("url").value("qa.harness.io").build());
+    infraVariables.add(NameValuePair.builder().name("namespace").value(null).build());
+    infraVariables.add(NameValuePair.builder().name("cluster").value("myCluster").build());
+    infraVariables.add(NameValuePair.builder().name("username").value("user").build());
+
+    return ensureInfrastructureDefinition(
+        InfrastructureDefinition.builder()
+            .name(infrastructureDefinitionName)
+            .deploymentType(DeploymentType.CUSTOM)
+            .cloudProviderType(CloudProviderType.CUSTOM)
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .deploymentTypeTemplateId(templateUuid)
+            .infrastructure(CustomInfrastructure.builder().infraVariables(infraVariables).build())
+            .build());
   }
 
   private InfrastructureDefinition ensurePhysicalWinRMTest(Randomizer.Seed seed, Owners owners) {

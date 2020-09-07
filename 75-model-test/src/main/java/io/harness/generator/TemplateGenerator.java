@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.HARNESS_COMMAND_LIBRARY;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_PCF_COMMANDS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SERVICE_COMMANDS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
@@ -23,6 +24,7 @@ import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.delegate.task.shell.ScriptType;
 import software.wings.beans.Account;
+import software.wings.beans.Variable;
 import software.wings.beans.command.Command;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateBuilder;
@@ -33,10 +35,13 @@ import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Singleton
 public class TemplateGenerator {
@@ -249,6 +254,63 @@ public class TemplateGenerator {
             .build());
   }
 
+  public Template ensureCustomDeploymentTemplate(Randomizer.Seed seed, OwnerManager.Owners owners,
+      CustomDeploymentTypeTemplate customDeploymentTypeTemplate, String templateName,
+      List<Variable> secretInfraVariables) {
+    Account account = owners.obtainAccount();
+    if (account == null) {
+      account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
+    }
+    TemplateFolder parentFolder =
+        templateFolderGenerator.ensurePredefined(seed, owners, HARNESS_COMMAND_LIBRARY, GLOBAL_APP_ID);
+
+    List<Variable> infraVariables = new ArrayList<>();
+    infraVariables.add(aVariable()
+                           .type(TEXT)
+                           .name("url")
+                           .mandatory(true)
+                           .value("app.harness.io")
+                           .description("harness app url")
+                           .build());
+    infraVariables.add(aVariable().type(TEXT).name("username").mandatory(true).value("").build());
+    infraVariables.add(aVariable()
+                           .type(TEXT)
+                           .name("deploymentName")
+                           .mandatory(true)
+                           .value("nginx")
+                           .description("name of the deployment")
+                           .build());
+    infraVariables.add(aVariable()
+                           .type(TEXT)
+                           .name("namespace")
+                           .mandatory(true)
+                           .value("default")
+                           .description("namespace to deploy pods")
+                           .build());
+    infraVariables.add(aVariable()
+                           .type(TEXT)
+                           .name("cluster")
+                           .mandatory(true)
+                           .value(null)
+                           .description("cluster used for deployment")
+                           .build());
+    infraVariables.add(aVariable().type(TEXT).name("repoName").mandatory(true).value("").description("").build());
+    if (!secretInfraVariables.isEmpty()) {
+      infraVariables.addAll(secretInfraVariables);
+    }
+
+    return ensureTemplate(seed, owners,
+        Template.builder()
+            .type(TemplateType.CUSTOM_DEPLOYMENT_TYPE.name())
+            .accountId(account.getUuid())
+            .name(templateName)
+            .templateObject(customDeploymentTypeTemplate)
+            .folderId(parentFolder.getUuid())
+            .appId(GLOBAL_APP_ID)
+            .variables(infraVariables)
+            .build());
+  }
+
   public Template ensureTemplate(Randomizer.Seed seed, OwnerManager.Owners owners, Template template) {
     EnhancedRandom random = Randomizer.instance(seed);
     TemplateGallery templateGallery = templateGalleryGenerator.ensurePredefined(seed, owners, HARNESS_GALLERY);
@@ -299,6 +361,9 @@ public class TemplateGenerator {
       builder.gallery(template.getGallery());
     } else {
       builder.galleryId(templateGallery.getUuid());
+    }
+    if (template != null && template.getType() != null) {
+      builder.type(template.getType());
     }
 
     Template existingTemplate = exists(builder.build());

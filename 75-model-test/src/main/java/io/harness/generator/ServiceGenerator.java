@@ -105,6 +105,23 @@ public class ServiceGenerator {
     return null;
   }
 
+  public Service ensurePredefinedCustomDeployment(
+      Randomizer.Seed seed, Owners owners, String templateUuid, String serviceName) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder()
+            .name(serviceName)
+            .deploymentType(DeploymentType.CUSTOM)
+            .deploymentTypeTemplateId(templateUuid)
+            .artifactType(ArtifactType.DOCKER)
+            .build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
   public Service ensurePredefined(
       Randomizer.Seed seed, Owners owners, Services predefined, ArtifactStreams artifactStreams) {
     if (predefined == Services.WINDOWS_TEST_DOWNLOAD) {
@@ -460,6 +477,10 @@ public class ServiceGenerator {
     if (service != null) {
       builder.deploymentType(service.getDeploymentType());
       builder.isK8sV2(service.isK8sV2());
+    }
+
+    if (service != null && service.getDeploymentTypeTemplateId() != null) {
+      builder.deploymentTypeTemplateId(service.getDeploymentTypeTemplateId());
     }
 
     if (service != null && service.getCreatedBy() != null) {

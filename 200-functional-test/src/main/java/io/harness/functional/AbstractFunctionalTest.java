@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -59,6 +60,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
@@ -84,6 +86,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject CommandLibraryServiceExecutor commandLibraryServiceExecutor;
+  @Inject FeatureFlagService featureFlagService;
 
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
@@ -280,5 +283,13 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   protected boolean needCommandLibraryService() {
     return false;
+  }
+
+  protected void logFeatureFlagsEnabled(String accountId) {
+    for (FeatureName featureName : FeatureName.values()) {
+      if (featureFlagService.isEnabled(featureName, accountId)) {
+        logger.info("[ENABLED_FEATURE_FLAG]: {}", featureName);
+      }
+    }
   }
 }
