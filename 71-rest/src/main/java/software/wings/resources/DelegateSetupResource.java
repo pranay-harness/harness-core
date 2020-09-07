@@ -407,6 +407,8 @@ public class DelegateSetupResource {
   @Path(DOWNLOAD_URL)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<Map<String, String>> downloadUrl(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -431,11 +433,12 @@ public class DelegateSetupResource {
     }
   }
 
-  @PublicApi
   @GET
   @Path("download")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public Response downloadScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
@@ -452,11 +455,12 @@ public class DelegateSetupResource {
     }
   }
 
-  @PublicApi
   @GET
   @Path("docker")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public Response downloadDocker(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
@@ -473,11 +477,12 @@ public class DelegateSetupResource {
     }
   }
 
-  @PublicApi
   @GET
   @Path("kubernetes")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public Response downloadKubernetes(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token,
@@ -513,11 +518,12 @@ public class DelegateSetupResource {
     return new RestResponse<>(KubernetesConvention.getAccountIdentifier(accountId));
   }
 
-  @PublicApi
   @GET
   @Path("ecs")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public Response downloadEcs(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateGroupName") @NotEmpty String delegateGroupName, @QueryParam("awsVpcMode") Boolean awsVpcMode,
       @QueryParam("hostname") String hostname, @QueryParam("delegateProfileId") String delegateProfileId,
@@ -534,11 +540,12 @@ public class DelegateSetupResource {
     }
   }
 
-  @PublicApi
   @GET
   @Path("delegate-helm-values-yaml")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATES)
   public Response downloadDelegateValuesYaml(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
