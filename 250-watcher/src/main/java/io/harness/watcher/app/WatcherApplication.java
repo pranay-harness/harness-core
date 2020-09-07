@@ -123,7 +123,7 @@ public class WatcherApplication {
     modules.add(new ManagerClientModule(
         configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
 
-    modules.addAll(new WatcherModule().cumulativeDependencies());
+    modules.add(WatcherModule.getInstance());
 
     if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
       String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
