@@ -312,7 +312,7 @@ public class YamlFunctionalTestHelper {
     try {
       String directoryPath = Project.rootDirectory(AbstractFunctionalTest.class);
       String harnessYamPath =
-          Paths.get(directoryPath, "81-delegate", "repository", "yaml", ACCOUNT_ID, repoName).toString();
+          Paths.get(directoryPath, "260-delegate", "repository", "yaml", ACCOUNT_ID, repoName).toString();
 
       FileIo.deleteDirectoryAndItsContentIfExists(harnessYamPath);
     } catch (IOException ex) {

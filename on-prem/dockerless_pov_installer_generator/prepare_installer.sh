@@ -12,7 +12,7 @@ cd $CURRENT_DIR
 echo "Started Copying Files........." 
 cp -r $ROOT_FOLDER/71-rest/config.yml $ROOT_FOLDER/71-rest/target/rest-capsule.jar $CURRENT_DIR/
 cp -r $ROOT_FOLDER/79-verification/verification-config.yml $ROOT_FOLDER/79-verification/target/verification-capsule.jar $CURRENT_DIR/
-cp -r $ROOT_FOLDER/81-delegate/config-delegate.yml $ROOT_FOLDER/81-delegate/target/delegate-capsule.jar $CURRENT_DIR/
+cp -r $ROOT_FOLDER/260-delegate/config-delegate.yml $ROOT_FOLDER/260-delegate/target/delegate-capsule.jar $CURRENT_DIR/
 cp -r $ROOT_FOLDER/250-watcher/config-watcher.yml $ROOT_FOLDER/250-watcher/target/watcher-capsule.jar $CURRENT_DIR/
 cp -r $UI_FOLDER/static $CURRENT_DIR/
 echo "Copying Files completed........."

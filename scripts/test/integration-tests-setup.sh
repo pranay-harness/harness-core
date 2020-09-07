@@ -122,14 +122,14 @@ fi
 echo 'wait for verification engine to start'
 
 #run delegate
-sed -i -e 's/^doUpgrade.*/doUpgrade: false/' 81-delegate/config-delegate.yml
+sed -i -e 's/^doUpgrade.*/doUpgrade: false/' 260-delegate/config-delegate.yml
 rm -rf $HOME/appagent/ver4.3.1.0/logs/
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
-         -XX:MaxGCPauseMillis=500 -jar 81-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml > delgate.out 2>&1 &
+         -XX:MaxGCPauseMillis=500 -jar 260-delegate/target/delegate-capsule.jar 260-delegate/config-delegate.yml > delgate.out 2>&1 &
 else
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
-         -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/81-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml > delgate.out 2>&1 &
+         -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/260-delegate/target/delegate-capsule.jar 260-delegate/config-delegate.yml > delgate.out 2>&1 &
 fi
 
 # wait for delegate to start

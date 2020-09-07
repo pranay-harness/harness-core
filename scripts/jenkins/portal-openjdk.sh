@@ -129,8 +129,8 @@ fi
 cd ../..
 
 mkdir -p dist/delegate
-cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
-cp 81-delegate/config-delegate.yml dist/delegate/config-delegate.yml
+cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/delegate/delegate-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 

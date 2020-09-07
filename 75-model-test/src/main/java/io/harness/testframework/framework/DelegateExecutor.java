@@ -60,8 +60,8 @@ public class DelegateExecutor {
           return;
         }
         logger.info("Execute the delegate from {}", directory);
-        final Path jar = Paths.get(directory.getPath(), "81-delegate", "target", "delegate-capsule.jar");
-        final Path config = Paths.get(directory.getPath(), "81-delegate", "config-delegate.yml");
+        final Path jar = Paths.get(directory.getPath(), "260-delegate", "target", "delegate-capsule.jar");
+        final Path config = Paths.get(directory.getPath(), "260-delegate", "config-delegate.yml");
 
         List<String> command = new ArrayList<>();
         command.add("java");
