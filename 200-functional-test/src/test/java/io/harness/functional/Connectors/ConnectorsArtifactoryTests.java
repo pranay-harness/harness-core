@@ -124,8 +124,9 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT, intermittent = true)
+  @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: Fix azure artifacts tests - repo config seems to have changed")
   public void runAzureArtifactsConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC16_createAzureArtifactsConnector, booleanMatcher, true);
     logger.info(String.format("Created Azure Artifacts Connector with id %s", AzureArtifactsConnectorId));
