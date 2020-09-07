@@ -6,4 +6,5 @@ import lombok.Value;
 public class QLUserQueryParameters {
   private String id;
   private String name;
+  private String email;
 }
