@@ -207,7 +207,9 @@ public class WingsException extends RuntimeException {
   public void excludeReportTarget(ErrorCode errorCode, Set<ReportTarget> targets) {
     if (code == errorCode) {
       if (targets != null) {
-        reportTargets.removeAll(targets);
+        EnumSet<ReportTarget> copyReportTargets = reportTargets.clone();
+        copyReportTargets.removeAll(targets);
+        reportTargets = copyReportTargets;
       }
     }
     Throwable cause = getCause();
