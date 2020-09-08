@@ -2,8 +2,11 @@ package io.harness.perpetualtask.k8s.metrics.collector;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -13,6 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
@@ -23,8 +27,10 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.payloads.AggregatedStorage;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.NodeMetric;
+import io.harness.event.payloads.PVMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -46,6 +52,9 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -61,6 +70,7 @@ public class K8sMetricCollectorTest extends CategoryTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(65219);
 
   private K8sMetricCollector k8sMetricCollector;
+  private final String URL_REGEX_SUFFIX = "(\\?(.*))?";
 
   @Mock private EventPublisher eventPublisher;
   @Captor private ArgumentCaptor<Message> messageArgumentCaptor;
@@ -126,6 +136,12 @@ public class K8sMetricCollectorTest extends CategoryTest {
                                   .build())
 
                         .build()))));
+
+    stubFor(get(urlMatching("^/api/v1/nodes/node1-name/proxy/stats/summary" + URL_REGEX_SUFFIX))
+                .willReturn(aResponse().withStatus(200).withBody("{}")));
+    stubFor(get(urlMatching("^/api/v1/nodes/node2-name/proxy/stats/summary" + URL_REGEX_SUFFIX))
+                .willReturn(aResponse().withStatus(200).withBody("some random response")));
+
     k8sMetricCollector =
         new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now.minus(10, ChronoUnit.MINUTES));
     doNothing()
@@ -139,7 +155,7 @@ public class K8sMetricCollectorTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void shouldPublishMetrics() {
+  public void shouldPublishMetrics() throws IOException {
     Instant now = Instant.now();
 
     stubFor(
@@ -243,6 +259,10 @@ public class K8sMetricCollectorTest extends CategoryTest {
                                   .build())
                         .build())))); // always
 
+    String resourceToString = getK8sApiResponseAsString("get_nodestatssummary.json");
+    stubFor(get(urlMatching("^/api/v1/nodes/node[12]-name/proxy/stats/summary" + URL_REGEX_SUFFIX))
+                .willReturn(aResponse().withStatus(200).withBody(resourceToString)));
+
     k8sMetricCollector = new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now);
     doNothing()
         .when(eventPublisher)
@@ -250,6 +270,9 @@ public class K8sMetricCollectorTest extends CategoryTest {
             eq(Collections.singletonMap(HealthStatusService.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
     k8sMetricCollector.collectAndPublishMetrics(now.plus(30, ChronoUnit.SECONDS));
     k8sMetricCollector.collectAndPublishMetrics(now.plus(30, ChronoUnit.MINUTES));
+
+    verify(2, getRequestedFor(urlMatching("^/api/v1/nodes/node[12]-name/proxy/stats/summary" + URL_REGEX_SUFFIX)));
+
     assertThat(messageArgumentCaptor.getAllValues())
         .contains(NodeMetric.newBuilder()
                       .setCloudProviderId(CLUSTER_DETAILS.getCloudProviderId())
@@ -308,6 +331,21 @@ public class K8sMetricCollectorTest extends CategoryTest {
                                         .setMaxCpuNano(735708495)
                                         .setMaxMemoryByte(256005120L)
                                         .build())
+                .build(),
+            PVMetric.newBuilder()
+                .setCloudProviderId(CLUSTER_DETAILS.getCloudProviderId())
+                .setClusterId(CLUSTER_DETAILS.getClusterId())
+                .setKubeSystemUid(CLUSTER_DETAILS.getKubeSystemUid())
+                .setName("delegate-scope/datadir-mongo-replicaset-2")
+                .setTimestamp(HTimestamps.parse("2020-09-01T20:07:13Z"))
+                .setWindow(Durations.fromSeconds(0))
+                .setAggregatedStorage(
+                    AggregatedStorage.newBuilder().setAvgCapacityByte(78729973760L).setAvgUsedByte(1101856768L).build())
                 .build());
+  }
+
+  private String getK8sApiResponseAsString(String filename) throws IOException {
+    URL url = getClass().getClassLoader().getResource("k8sapidump/" + filename);
+    return Resources.toString(url, StandardCharsets.UTF_8);
   }
 }

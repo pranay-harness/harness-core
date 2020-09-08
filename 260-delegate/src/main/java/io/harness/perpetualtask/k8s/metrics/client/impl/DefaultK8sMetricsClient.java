@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.metrics.client.impl;
 
+import io.harness.k8s.apiclient.NodeStatsClient;
+import io.harness.k8s.model.statssummary.PodStatsList;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetricsList;
@@ -24,5 +26,10 @@ public class DefaultK8sMetricsClient extends CoreV1Api implements K8sMetricsClie
   public GenericKubernetesApi<PodMetrics, PodMetricsList> podMetrics() {
     return new GenericKubernetesApi<>(
         PodMetrics.class, PodMetricsList.class, METRICS_API_GROUP, METRICS_API_VERSION, "pods", this.getApiClient());
+  }
+
+  @Override
+  public NodeStatsClient<PodStatsList> podStats() {
+    return new NodeStatsClient<>(PodStatsList.class, "", "v1", this.getApiClient());
   }
 }
