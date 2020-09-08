@@ -1,8 +1,11 @@
 startup --output_base=/tmp
-build --javabase=@openjdk8u242_darwin_archive//:runtime
-build --host_javabase=@openjdk8u242_darwin_archive//:runtime
-build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+build --define=ABSOLUTE_JAVABASE=/etc/alternatives/java_sdk_1.8.0_openjdk
+build --javabase=@bazel_tools//tools/jdk:absolute_javabase
+build --host_javabase=@bazel_tools//tools/jdk:absolute_javabase
+build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
+build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 build --java_header_compilation=false
 build --javacopt=-XepDisableAllChecks
 build --remote_cache=https://storage.googleapis.com/bazel-cache-java
+build --test_env=LC_ALL="en_US.UTF-8"
+build --test_output=all

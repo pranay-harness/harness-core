@@ -93,7 +93,8 @@ public class CommandLibraryServerModule extends AbstractModule {
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
-          requireNonNull(getClass().getClassLoader().getResourceAsStream("versionInfo.yaml")), StandardCharsets.UTF_8));
+          requireNonNull(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml")),
+          StandardCharsets.UTF_8));
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
     } catch (IOException e) {
       throw new UnexpectedException("Could not load versionInfo.yaml", e);

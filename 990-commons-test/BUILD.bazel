@@ -1,5 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//990-commons-test:GenTestRules.bzl", "run_tests")
+load("//:GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
@@ -43,22 +43,25 @@ java_library(
 )
 java_library(
     name = "tests",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = glob(["src/test/**/*.java"]),
     deps = [
         "maven_deps",
+        "//:lombok",
         "module",
-        "//:lombok"
+        "@maven//:org_jacoco_org_jacoco_agent",
+    ],
+    runtime_deps = [
+        "//990-commons-test/src/main/resources:resources",
     ],
 )
 
 run_tests(
     test_files = glob(["src/test/**/*Test.java"]),
-    srcs = glob(["src/test/**/*.java"]),
     deps = [
         "libmodule.jar",
         "maven_deps",
         "//:lombok",
-        "@maven//:org_jacoco_org_jacoco_agent",
+        "tests"
     ],
     runtime_deps = [
         "//990-commons-test/src/main/resources:resources",

@@ -160,8 +160,9 @@ public class VerificationServiceModule extends AbstractModule {
     }
 
     try {
-      VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
-          getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
+      VersionInfoManager versionInfoManager = new VersionInfoManager(
+          IOUtils.toString(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml"),
+              StandardCharsets.UTF_8));
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
     } catch (IOException e) {
       throw new RuntimeException("Could not load versionInfo.yaml", e);
