@@ -1,5 +1,6 @@
 package io.harness.datahandler.models;
 
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.limits.ConfiguredLimit;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ public class AccountSummary {
   private String companyName;
   private List<String> whiteListedDomains;
   private LicenseInfo licenseInfo;
+  private CeLicenseInfo ceLicenseInfo;
   private Boolean twoFactorAdminEnforced;
   private Boolean oauthEnabled;
   private Boolean cloudCostEnabled;
