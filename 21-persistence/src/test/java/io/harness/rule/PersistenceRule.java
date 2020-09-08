@@ -139,7 +139,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
         return RedisConfig.builder().build();
       }
     });
-    modules.addAll(new PersistentLockModule().cumulativeDependencies());
+    modules.add(PersistentLockModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override

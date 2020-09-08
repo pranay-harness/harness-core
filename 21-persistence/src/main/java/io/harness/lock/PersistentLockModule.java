@@ -14,8 +14,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.MongoClient;
-import io.harness.govern.DependencyModule;
-import io.harness.govern.DependencyProviderModule;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
@@ -24,12 +23,10 @@ import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
-public class PersistentLockModule extends DependencyProviderModule implements ServersModule {
+public class PersistentLockModule extends ProviderModule implements ServersModule {
   private static volatile PersistentLockModule instance;
   private DistributedLockSvc distributedLockSvc;
 
@@ -80,11 +77,6 @@ public class PersistentLockModule extends DependencyProviderModule implements Se
       default:
         throw new UnsupportedOperationException();
     }
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return Collections.emptySet();
   }
 
   @Override
