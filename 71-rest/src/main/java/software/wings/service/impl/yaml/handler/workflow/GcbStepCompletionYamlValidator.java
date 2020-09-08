@@ -1,13 +1,23 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import com.google.inject.Inject;
 
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.JsonUtils;
+
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+
+import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.IncompleteStateException;
+import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 import software.wings.yaml.workflow.StepYaml;
@@ -17,18 +27,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Data
 @Slf4j
 public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidator {
+  @Inject private SettingsService settingsService;
+
   private static final String SWEEPING_OUTPUT_SCOPE = "sweepingOutputScope";
   private static final String SWEEPING_OUTPUT_NAME = "sweepingOutputName";
   private static final String TEMPLATE_EXPRESSIONS = "templateExpressions";
 
   @Override
-  public void validate(StepYaml stepYaml) {
+  public void validate(ChangeContext<StepYaml> changeContext) {
+    StepYaml stepYaml = changeContext.getYaml();
     if (stepYaml.getProperties().get("gcbOptions") == null) {
       throw new IncompleteStateException("Google Cloud Build step is incomplete. Please, provide gcbOptions");
     } else {
-      validateGcbOptions(stepYaml,
+      validateGcbOptions(changeContext,
           JsonUtils.asObject(JsonUtils.asJson(stepYaml.getProperties().get("gcbOptions"))
                                  .replace("gcpConfigName", "gcpConfigId")
                                  .replace("gitConfigName", "gitConfigId"),
@@ -66,7 +80,9 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
     }
   }
 
-  private void validateGcbOptions(StepYaml stepYaml, GcbOptions gcbOptions) {
+  private void validateGcbOptions(ChangeContext<StepYaml> changeContext, GcbOptions gcbOptions) {
+    StepYaml stepYaml = changeContext.getYaml();
+
     List<String> templatizedFields = stepYaml.getProperties().get(TEMPLATE_EXPRESSIONS) == null
         ? Collections.emptyList()
         : ((List<Map<String, Object>>) stepYaml.getProperties().get(TEMPLATE_EXPRESSIONS))
@@ -94,7 +110,7 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
           validateInlineSpec(gcbOptions);
           break;
         case REMOTE:
-          validateRemoteSpec(templatizedFields, gcbOptions);
+          validateRemoteSpec(changeContext, templatizedFields, gcbOptions);
           break;
         case TRIGGER:
           validateTriggerSpec(gcbOptions);
@@ -115,7 +131,8 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
     }
   }
 
-  private void validateRemoteSpec(List<String> templatizedFields, GcbOptions gcbOptions) {
+  private void validateRemoteSpec(
+      ChangeContext<StepYaml> changeContext, List<String> templatizedFields, GcbOptions gcbOptions) {
     if (gcbOptions.getRepositorySpec() == null) {
       throw new IncompleteStateException(
           "\"repositorySpec\" could not be empty or null within REMOTE specSource, please provide value");
@@ -140,6 +157,35 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
           && !ExpressionEvaluator.containsVariablePattern(gcbOptions.getRepositorySpec().getSourceId())) {
         throw new IncompleteStateException(
             "Invalid expression for \"sourceId\". Please, provide value or valid expression");
+      }
+
+      // Check repoName for non-templatized Git connector
+      if (!templatizedFields.contains("gitConfigId")) {
+        SettingAttribute settingAttribute = settingsService.getSettingAttributeByName(
+            changeContext.getChange().getAccountId(), gcbOptions.getRepositorySpec().getGitConfigId());
+        notNullCheck("Git connector was not found", settingAttribute);
+
+        GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+        notNullCheck("Git configuration was not found", gitConfig);
+
+        if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+          if (isBlank(gcbOptions.getRepositorySpec().getRepoName())) {
+            throw new IncompleteStateException("\"repoName\" could not be empty or null. Please, provide value");
+          } else if (gcbOptions.getRepositorySpec().getRepoName().contains("${")
+              && !ExpressionEvaluator.containsVariablePattern(gcbOptions.getRepositorySpec().getRepoName())) {
+            throw new IncompleteStateException(
+                "Invalid expression for \"repoName\". Please, provide value or valid expression");
+          }
+        }
+      }
+      // Check repoName for templatized Git connector
+      else {
+        if (!isBlank(gcbOptions.getRepositorySpec().getRepoName())
+            && gcbOptions.getRepositorySpec().getRepoName().contains("${")
+            && !ExpressionEvaluator.containsVariablePattern(gcbOptions.getRepositorySpec().getRepoName())) {
+          throw new IncompleteStateException(
+              "Invalid expression for \"repoName\". Please, provide value or valid expression");
+        }
       }
     }
   }

@@ -27,4 +27,5 @@ public class QLOnWebhook implements QLTriggerCondition {
   List<String> filePaths;
   Boolean deployOnlyIfFilesChanged;
   String branchName;
+  String repoName;
 }

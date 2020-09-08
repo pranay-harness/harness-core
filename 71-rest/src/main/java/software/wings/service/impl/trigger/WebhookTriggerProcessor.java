@@ -7,6 +7,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_BRANCH_NAME_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_GIT_CONNECTOR_ID_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_WEBHOOK_SOURCE_KEY;
+import static software.wings.utils.GitUtilsManager.fetchCompleteGitRepoUrl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -115,9 +116,8 @@ public class WebhookTriggerProcessor {
     logger.info("Initiating file content change delegate task request");
     String accountId = appService.getAccountIdByAppId(appId);
 
-    TriggerDeploymentNeededRequest triggerDeploymentNeededRequest = createTriggerDeploymentNeededRequest(accountId,
-        appId, webhookEventDetails.getGitConnectorId(), webhookEventDetails.getCommitId(),
-        webhookEventDetails.getPrevCommitId(), webhookEventDetails.getBranchName(), webhookEventDetails.getFilePaths());
+    TriggerDeploymentNeededRequest triggerDeploymentNeededRequest =
+        createTriggerDeploymentNeededRequest(accountId, appId, webhookEventDetails);
 
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
@@ -139,23 +139,33 @@ public class WebhookTriggerProcessor {
         savedTriggerExecution.getUuid());
   }
 
-  private TriggerDeploymentNeededRequest createTriggerDeploymentNeededRequest(@NotEmpty String accountId,
-      @NotEmpty String appId, @NotEmpty String gitConnectorId, @NotEmpty String currentCommitId,
-      @NotEmpty String oldCommitId, @NotEmpty String branch, List<String> filePaths) {
-    GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitConnectorId);
+  private TriggerDeploymentNeededRequest createTriggerDeploymentNeededRequest(
+      @NotEmpty String accountId, @NotEmpty String appId, WebhookEventDetails webhookEventDetails) {
+    GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(webhookEventDetails.getGitConnectorId());
     notNullCheck("Git connector was deleted", gitConfig);
+    setGitConfigRepoNameAndUrl(gitConfig, webhookEventDetails);
+
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(gitConfig, null, null);
 
     return TriggerDeploymentNeededRequest.builder()
         .accountId(accountId)
         .appId(appId)
-        .gitConnectorId(gitConnectorId)
-        .currentCommitId(currentCommitId)
-        .oldCommitId(oldCommitId)
-        .branch(branch)
-        .filePaths(filePaths)
+        .gitConnectorId(webhookEventDetails.getGitConnectorId())
+        .currentCommitId(webhookEventDetails.getCommitId())
+        .oldCommitId(webhookEventDetails.getPrevCommitId())
+        .branch(webhookEventDetails.getBranchName())
+        .repoName(gitConfig.getRepoName())
+        .filePaths(webhookEventDetails.getFilePaths())
         .gitConfig(gitConfig)
         .encryptionDetails(encryptionDetails)
         .build();
+  }
+
+  private void setGitConfigRepoNameAndUrl(GitConfig gitConfig, WebhookEventDetails webhookEventDetails) {
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+      String repoName = webhookEventDetails.getRepoName();
+      gitConfig.setRepoName(repoName);
+      gitConfig.setRepoUrl(fetchCompleteGitRepoUrl(gitConfig, repoName));
+    }
   }
 }

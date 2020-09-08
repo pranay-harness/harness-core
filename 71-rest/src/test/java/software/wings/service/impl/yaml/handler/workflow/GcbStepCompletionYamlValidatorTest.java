@@ -4,20 +4,29 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.singletonMap;
 import static org.junit.runners.Parameterized.Parameters;
-import static software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidatorFactory.getValidatorForStepType;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import software.wings.beans.GitConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.IncompleteStateException;
-import software.wings.sm.StepType;
+import software.wings.service.intfc.SettingsService;
+import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.Arrays;
@@ -28,18 +37,31 @@ import java.util.Map;
 
 @RunWith(Parameterized.class)
 public class GcbStepCompletionYamlValidatorTest {
-  private final StepYaml stepYaml;
-  private final StepCompletionYamlValidator validator;
+  private final ChangeContext<StepYaml> changeContext;
+
   @Rule public final ExpectedException exception = ExpectedException.none();
 
+  private final GcbStepCompletionYamlValidator validator;
+  @Mock private SettingsService settingsService;
+
   public GcbStepCompletionYamlValidatorTest(
-      StepYaml stepYaml, String message, Class<? extends Exception> expectedException) {
-    this.stepYaml = stepYaml;
-    this.validator = getValidatorForStepType(StepType.valueOf("GCB"));
+      ChangeContext<StepYaml> changeContext, String message, Class<? extends Exception> expectedException) {
+    this.changeContext = changeContext;
+    this.validator = new GcbStepCompletionYamlValidator();
+    this.settingsService = Mockito.mock(SettingsService.class);
     if (expectedException != null) {
       exception.expect(expectedException);
       exception.expectMessage(message);
     }
+  }
+
+  @Before
+  public void setUp() {
+    validator.setSettingsService(settingsService);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).build();
+    settingAttribute.setValue(gitConfig);
+    when(settingsService.getSettingAttributeByName(any(), any())).thenReturn(settingAttribute);
   }
 
   @Parameters
@@ -194,6 +216,7 @@ public class GcbStepCompletionYamlValidatorTest {
     validRepoSpec.put("fileSource", "BRANCH");
     validRepoSpec.put("filePath", "path");
     validRepoSpec.put("sourceId", "id");
+    validRepoSpec.put("repoName", "repoName");
     validRepoOptions.put("gcpConfigId", "id");
     validRepoOptions.put("specSource", "REMOTE");
     validRepoOptions.put("repositorySpec", validRepoSpec);
@@ -273,60 +296,125 @@ public class GcbStepCompletionYamlValidatorTest {
     propertiesWithInvalidRemoteSpecSourceIdExpression.put("gcbOptions", invalidRepoSourceIdExpressionOptions);
     propertiesWithInvalidRemoteSpecSourceIdExpression.put("timeoutMillis", 1000);
 
+    // parameter
+    Map<String, Object> propertiesWithoutRemoteSpecRepoName = new HashMap<>();
+    Map<String, Object> repoOptionsWithoutRepoName = new HashMap<>();
+    Map<String, Object> repositorySpecWithoutRepoName = new HashMap<>();
+    repositorySpecWithoutRepoName.put("gitConfigName", "config");
+    repositorySpecWithoutRepoName.put("fileSource", "BRANCH");
+    repositorySpecWithoutRepoName.put("filePath", "path");
+    repositorySpecWithoutRepoName.put("sourceId", "id");
+    repositorySpecWithoutRepoName.put("repoName", "");
+    repoOptionsWithoutRepoName.put("gcpConfigId", "id");
+    repoOptionsWithoutRepoName.put("specSource", "REMOTE");
+    repoOptionsWithoutRepoName.put("repositorySpec", repositorySpecWithoutRepoName);
+    propertiesWithoutRemoteSpecRepoName.put("templateExpressions", Collections.EMPTY_LIST);
+    propertiesWithoutRemoteSpecRepoName.put("gcbOptions", repoOptionsWithoutRepoName);
+
+    // parameter
+    Map<String, Object> propertiesWithRemoteSpecInvalidRepoName = new HashMap<>();
+    Map<String, Object> repoOptionsWithInvalidRepoName = new HashMap<>();
+    Map<String, Object> repositorySpecWithInvalidRepoName = new HashMap<>();
+    repositorySpecWithInvalidRepoName.put("gitConfigName", "config");
+    repositorySpecWithInvalidRepoName.put("fileSource", "BRANCH");
+    repositorySpecWithInvalidRepoName.put("filePath", "path");
+    repositorySpecWithInvalidRepoName.put("sourceId", "id");
+    repositorySpecWithInvalidRepoName.put("repoName", "${repoName");
+    repoOptionsWithInvalidRepoName.put("gcpConfigId", "id");
+    repoOptionsWithInvalidRepoName.put("specSource", "REMOTE");
+    repoOptionsWithInvalidRepoName.put("repositorySpec", repositorySpecWithInvalidRepoName);
+    propertiesWithRemoteSpecInvalidRepoName.put("templateExpressions", Collections.EMPTY_LIST);
+    propertiesWithRemoteSpecInvalidRepoName.put("gcbOptions", repoOptionsWithInvalidRepoName);
+
+    // parameter
+    Map<String, Object> propertiesWithTemplatizedRemoteSpecInvalidRepoName = new HashMap<>();
+    Map<String, Object> repoOptionsInvalidRepoName = new HashMap<>();
+    Map<String, Object> repositorySpecInvalidRepoName = new HashMap<>();
+    Map<String, Object> templateExpressionGITConfigId = new HashMap<>();
+    Map<String, Object> templateExpression = new HashMap<>();
+    templateExpressionGITConfigId.put("fieldName", "gitConfigId");
+    templateExpressionGITConfigId.put("expression", "${SourceRepository}");
+    repositorySpecInvalidRepoName.put("gitConfigName", null);
+    repositorySpecInvalidRepoName.put("fileSource", "BRANCH");
+    repositorySpecInvalidRepoName.put("filePath", "path");
+    repositorySpecInvalidRepoName.put("sourceId", "id");
+    repositorySpecInvalidRepoName.put("repoName", "${repoName");
+    repoOptionsInvalidRepoName.put("specSource", "REMOTE");
+    repoOptionsInvalidRepoName.put("repositorySpec", repositorySpecInvalidRepoName);
+    repoOptionsInvalidRepoName.put("gcpConfigName", "gcpConfigId");
+    propertiesWithTemplatizedRemoteSpecInvalidRepoName.put(
+        "templateExpressions", Arrays.asList(templateExpressionGITConfigId));
+    propertiesWithTemplatizedRemoteSpecInvalidRepoName.put("gcbOptions", repoOptionsInvalidRepoName);
+
     return Arrays.asList(new Object[][] {
-        {StepYaml.builder().properties(propertiesWithoutGcbOptions).build(),
+        {buildChangeContext(propertiesWithoutGcbOptions),
             "Google Cloud Build step is incomplete. Please, provide gcbOptions", IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithNullNonTemplatizedGcpConfig).build(),
+        {buildChangeContext(propertiesWithNullNonTemplatizedGcpConfig),
             "\"gcpConfigName\" could not be empty or null. Please, provide gcpConfigName or add templateExpression",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithoutSpecSource).build(),
+        {buildChangeContext(propertiesWithoutSpecSource),
             "gcbOptions are incomplete. Please, provide specSource (INLINE, REMOTE, TRIGGER)",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithNullInlineSpec).build(),
+        {buildChangeContext(propertiesWithNullInlineSpec),
             "\"inlineSpec\" could not be empty or null within INLINE specSource, please provide value",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithNullTriggerSpec).build(),
+        {buildChangeContext(propertiesWithNullTriggerSpec),
             "\"triggerSpec\" could not be empty or null within TRIGGER specSource, please provide value",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesTriggerSpecWithoutSource).build(),
+        {buildChangeContext(propertiesTriggerSpecWithoutSource),
             "\"source\" could not be empty or null. Please, provide value", IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesTriggerSpecWithoutName).build(),
+        {buildChangeContext(propertiesTriggerSpecWithoutName),
             "\"name\" could not be empty or null. Please, provide value", IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesTriggerSpecWithoutSourceId).build(),
+        {buildChangeContext(propertiesTriggerSpecWithoutSourceId),
             "\"sourceId\" could not be empty or null. Please, provide value", IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithNullRepoSpec).build(),
+        {buildChangeContext(propertiesWithNullRepoSpec),
             "\"repositorySpec\" could not be empty or null within REMOTE specSource, please provide value",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithNullGitConfig).build(),
+        {buildChangeContext(propertiesWithNullGitConfig),
             "\"gitConfigName\" could not be empty or null. Please, provide gitConfigName or add templateExpression",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithoutFileSource).build(),
+        {buildChangeContext(propertiesWithoutFileSource),
             "\"fileSource\" could not be empty or null. Please, provide value", IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithoutFilePath).build(),
+        {buildChangeContext(propertiesWithoutFilePath),
             "\"filePath\" could not be empty or null. Please, provide value", IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithoutSourceId).build(),
+        {buildChangeContext(propertiesWithoutSourceId),
             "\"sourceId\" could not be empty or null. Please, provide value", IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithValidInlineSpec).build(), null, null},
-        {StepYaml.builder().properties(propertiesWithValidRemoteSpec).build(), null, null},
-        {StepYaml.builder().properties(propertiesWithValidTriggerSpec).build(), null, null},
-        {StepYaml.builder().properties(propertiesWithInvalidExpression).build(),
+        {buildChangeContext(propertiesWithValidInlineSpec), null, null},
+        {buildChangeContext(propertiesWithValidRemoteSpec), null, null},
+        {buildChangeContext(propertiesWithValidTriggerSpec), null, null},
+        {buildChangeContext(propertiesWithInvalidExpression),
             "Invalid expression for \"name\". Please, provide value or valid expression",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithInvalidTriggerSourceIdExpression).build(),
+        {buildChangeContext(propertiesWithInvalidTriggerSourceIdExpression),
             "Invalid expression for \"sourceId\". Please, provide value or valid expression",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithInvalidRemoteSpecNameExpression).build(),
+        {buildChangeContext(propertiesWithInvalidRemoteSpecNameExpression),
             "Invalid expression for \"filePath\". Please, provide value or valid expression",
             IncompleteStateException.class},
-        {StepYaml.builder().properties(propertiesWithInvalidRemoteSpecSourceIdExpression).build(),
+        {buildChangeContext(propertiesWithInvalidRemoteSpecSourceIdExpression),
             "Invalid expression for \"sourceId\". Please, provide value or valid expression",
+            IncompleteStateException.class},
+        {buildChangeContext(propertiesWithoutRemoteSpecRepoName),
+            "\"repoName\" could not be empty or null. Please, provide value", IncompleteStateException.class},
+        {buildChangeContext(propertiesWithRemoteSpecInvalidRepoName),
+            "Invalid expression for \"repoName\". Please, provide value or valid expression",
+            IncompleteStateException.class},
+        {buildChangeContext(propertiesWithTemplatizedRemoteSpecInvalidRepoName),
+            "Invalid expression for \"repoName\". Please, provide value or valid expression",
             IncompleteStateException.class}});
+  }
+
+  private static ChangeContext buildChangeContext(Map<String, Object> parameters) {
+    return ChangeContext.Builder.aChangeContext()
+        .withYaml(StepYaml.builder().properties(parameters).build())
+        .withChange(Change.Builder.aFileChange().withAccountId(WingsTestConstants.ACCOUNT_ID).build())
+        .build();
   }
 
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldValidateStepYaml() {
-    validator.validate(stepYaml);
+    validator.validate(changeContext);
   }
 }

@@ -64,6 +64,7 @@ type OnWebhook implements TriggerCondition {
   webhookEvent: WebhookEvent
   branchRegex: String
   branchName: String
+  repoName: String
   deployOnlyIfFilesChanged: Boolean
   filePaths: [String]
   gitConnectorId: String

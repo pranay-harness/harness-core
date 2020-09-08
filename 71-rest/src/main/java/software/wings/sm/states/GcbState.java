@@ -14,6 +14,7 @@ import static software.wings.beans.command.GcbTaskParams.GcbTaskType.START;
 import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.CANCELLED;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.REMOTE;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.TRIGGER;
+import static software.wings.utils.GitUtilsManager.fetchCompleteGitRepoUrl;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -180,6 +181,12 @@ public class GcbState extends State implements SweepingOutputStateMixin {
         ? context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getRepositorySpec().getGitConfigId())
         : null;
 
+    if (gitConfig != null && gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT) {
+      String repoName = gcbOptions.getRepositorySpec().getRepoName();
+      gitConfig.setRepoName(repoName);
+      gitConfig.setRepoUrl(fetchCompleteGitRepoUrl(gitConfig, repoName));
+    }
+
     GcbTaskParams gcbTaskParams = GcbTaskParams.builder()
                                       .gcpConfig(gcpConfig)
                                       .type(START)
@@ -331,6 +338,8 @@ public class GcbState extends State implements SweepingOutputStateMixin {
             context.renderExpression(gcbOptions.getRepositorySpec().getSourceId()));
         gcbOptions.getRepositorySpec().setFilePath(
             context.renderExpression(gcbOptions.getRepositorySpec().getFilePath()));
+        gcbOptions.getRepositorySpec().setRepoName(
+            context.renderExpression(gcbOptions.getRepositorySpec().getRepoName()));
         break;
       default:
         throw new UnsupportedOperationException("Gcb option " + gcbOptions.getSpecSource() + " not supported");

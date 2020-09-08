@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.GitConfigHelperService;
@@ -25,5 +26,18 @@ public class GitUtilsManager {
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
     gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     return gitConfig;
+  }
+
+  public static String fetchCompleteGitRepoUrl(GitConfig gitConfig, String repoName) {
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+      if (StringUtils.isEmpty(repoName)) {
+        throw new InvalidRequestException("Repo name cannot be null for Account level git connector");
+      }
+      String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
+      String purgedRepoName = repoName.replaceAll("^/*", "");
+      return purgedRepoUrl + "/" + purgedRepoName;
+    } else {
+      return gitConfig.getRepoUrl();
+    }
   }
 }

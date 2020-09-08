@@ -71,6 +71,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -124,6 +125,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -183,6 +185,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private TriggerAuthHandler triggerAuthHandler;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
+  @Inject private SettingsService settingsService;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest, boolean withTags, String tagFilter) {
@@ -1250,6 +1253,18 @@ public class TriggerServiceImpl implements TriggerService {
           } else {
             webHookTriggerCondition.setBranchName(branchName);
           }
+
+          GitConfig gitConfig =
+              settingsService.fetchGitConfigFromConnectorId(webHookTriggerCondition.getGitConnectorId());
+          if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+            String repoName = StringUtils.trim(webHookTriggerCondition.getRepoName());
+            if (isEmpty(repoName)) {
+              throw new InvalidRequestException("Repo name is required to check content changed");
+            } else {
+              webHookTriggerCondition.setRepoName(repoName);
+            }
+          }
+
           if (isEmpty(webHookTriggerCondition.getEventTypes())
               || !webHookTriggerCondition.getEventTypes().contains(WebhookEventType.PUSH)) {
             throw new InvalidRequestException("File content check supported only for PUSH events");
