@@ -1,0 +1,24 @@
+{
+  "items" : [
+    {
+      "identity" : [ "servers", "myserver" ],
+      "stagingMode" : "nostage",
+      "listenAddress" : ""
+    },
+    {
+      "identity" : [ "servers", "server-1" ],
+      "stagingMode" : "external_stage",
+      "listenAddress" : "172.17.0.3"
+    },
+    {
+      "identity" : [ "servers", "cluster-2-server1" ],
+      "stagingMode" : "stage",
+      "listenAddress" : null
+    },
+    {
+      "identity" : [ "servers", "cluster-2-server2" ],
+      "stagingMode" : "stage",
+      "listenAddress" : null
+    }
+  ]
+}

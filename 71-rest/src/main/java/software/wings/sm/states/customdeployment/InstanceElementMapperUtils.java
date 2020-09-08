@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.harness.serializer.JsonUtils;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +32,7 @@ public class InstanceElementMapperUtils {
       return instanceList.stream()
           .map(JsonUtils::asJson)
           .map(v -> (String) JsonUtils.jsonPath(v, hostNameKey))
+          .filter(StringUtils::isNotBlank)
           .map(jsonMapper::apply)
           .collect(Collectors.toList());
     }
