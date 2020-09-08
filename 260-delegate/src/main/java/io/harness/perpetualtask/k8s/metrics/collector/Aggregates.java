@@ -13,6 +13,10 @@ import lombok.Getter;
 class Aggregates {
   @Getter private Aggregate cpu;
   @Getter private Aggregate memory;
+
+  @Getter private Aggregate storageCapacity;
+  @Getter private Aggregate storageUsed;
+
   private String startTimestamp;
   private String lastTimestamp;
   private final Duration minWindow;
@@ -21,6 +25,9 @@ class Aggregates {
     this.minWindow = minWindow;
     this.cpu = new Aggregate();
     this.memory = new Aggregate();
+
+    this.storageCapacity = new Aggregate();
+    this.storageUsed = new Aggregate();
   }
 
   static class Aggregate {
@@ -44,6 +51,17 @@ class Aggregates {
     if (timestamp != null && !timestamp.equals(this.lastTimestamp)) {
       cpu.update(cpuNano);
       memory.update(memoryBytes);
+      this.lastTimestamp = timestamp;
+      if (this.startTimestamp == null) {
+        this.startTimestamp = timestamp;
+      }
+    }
+  }
+
+  void updateStorage(long storageCapacityBytes, long storageUsedBytes, String timestamp) {
+    if (timestamp != null && !timestamp.equals(this.lastTimestamp)) {
+      storageCapacity.update(storageCapacityBytes);
+      storageUsed.update(storageUsedBytes);
       this.lastTimestamp = timestamp;
       if (this.startTimestamp == null) {
         this.startTimestamp = timestamp;

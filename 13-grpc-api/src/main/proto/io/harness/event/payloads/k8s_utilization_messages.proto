@@ -14,6 +14,11 @@ message AggregatedUsage {
   int64 max_memory_byte = 4;
 }
 
+message AggregatedStorage {
+  int64 avg_capacity_byte = 1;
+  int64 avg_used_byte = 2;
+}
+
 message NodeMetric {
   string cloud_provider_id = 1;
   string name = 2;
@@ -35,4 +40,15 @@ message PodMetric {
   string cluster_id = 7;
   string kube_system_uid = 8;
   AggregatedUsage aggregated_usage = 9;
+}
+
+message PVMetric {
+  string cloud_provider_id = 1;
+  string name = 2;
+  string namespace = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  google.protobuf.Duration window = 5;
+  string cluster_id = 7;
+  string kube_system_uid = 8;
+  AggregatedStorage aggregated_storage = 9;
 }

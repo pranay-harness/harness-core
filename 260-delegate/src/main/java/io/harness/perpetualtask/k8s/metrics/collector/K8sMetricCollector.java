@@ -4,6 +4,7 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDE
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.checkpointToProto;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -11,13 +12,18 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.payloads.AggregatedStorage;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.ContainerStateProto;
 import io.harness.event.payloads.NodeMetric;
+import io.harness.event.payloads.PVMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.grpc.utils.HDurations;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.histogram.HistogramCheckpoint;
+import io.harness.k8s.model.statssummary.PVCRef;
+import io.harness.k8s.model.statssummary.PodStats;
+import io.harness.k8s.model.statssummary.Volume;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
@@ -31,7 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 @Slf4j
@@ -49,9 +57,12 @@ public class K8sMetricCollector {
   private final EventPublisher eventPublisher;
   private final K8sMetricsClient k8sMetricsClient;
   private final ClusterDetails clusterDetails;
+  // to make sure that PVMetric is collected only once for a single node in a single window.
+  private final Map<String, Boolean> isNodeProcessed = new HashMap<>();
 
   private final Cache<CacheKey, Aggregates> podMetricsCache = Caffeine.newBuilder().build();
   private final Cache<CacheKey, Aggregates> nodeMetricsCache = Caffeine.newBuilder().build();
+  private final Cache<CacheKey, Aggregates> pvMetricsCache = Caffeine.newBuilder().build();
 
   private final Cache<CacheKey, ContainerState> containerStatesCache = Caffeine.newBuilder().build();
 
@@ -68,8 +79,10 @@ public class K8sMetricCollector {
   public void collectAndPublishMetrics(Instant now) {
     collectNodeMetrics();
     collectPodMetricsAndContainerStates();
+    collectPVMetrics();
     if (now.isAfter(this.lastMetricPublished.plus(AGGREGATION_WINDOW))) {
       publishPending(now);
+      isNodeProcessed.clear();
     }
   }
 
@@ -77,7 +90,32 @@ public class K8sMetricCollector {
     publishNodeMetrics();
     publishPodMetrics();
     publishContainerStates();
+    publishPVMetrics();
     this.lastMetricPublished = now;
+  }
+
+  private void collectPVMetrics() {
+    // this function performs one api call (nodeStatsSummary) for each node, so we use map to only fetch a nodeStats if
+    // it failed the last time.
+    isNodeProcessed.entrySet().stream().filter(e -> !e.getValue()).map(Map.Entry::getKey).forEach(nodeName -> {
+      try {
+        for (PodStats podStats : k8sMetricsClient.podStats().list(nodeName).getObject().getItems()) {
+          for (Volume volume : podStats.getVolumeList()) {
+            long capacity = K8sResourceStandardizer.getMemoryByte(volume.getCapacityBytes());
+            long used = K8sResourceStandardizer.getMemoryByte(volume.getUsedBytes());
+            String namespace = ofNullable(volume.getPvcRef()).map(PVCRef::getNamespace).orElse("");
+            String name = ofNullable(volume.getPvcRef()).map(PVCRef::getName).orElse("");
+
+            requireNonNull(pvMetricsCache.get(CacheKey.builder().name(name).namespace(namespace).build(),
+                               key -> new Aggregates(com.google.protobuf.Duration.newBuilder().setNanos(0).build())))
+                .updateStorage(capacity, used, volume.getTime());
+          }
+        }
+        isNodeProcessed.put(nodeName, Boolean.TRUE);
+      } catch (Exception ex) {
+        logger.warn("Failed to collect pvMetrics for node:{}", nodeName, ex);
+      }
+    });
   }
 
   private void collectNodeMetrics() {
@@ -88,6 +126,7 @@ public class K8sMetricCollector {
       requireNonNull(nodeMetricsCache.get(CacheKey.builder().name(nodeMetrics.getMetadata().getName()).build(),
                          key -> new Aggregates(HDurations.parse(nodeMetrics.getWindow()))))
           .update(nodeCpuNano, nodeMemoryBytes, nodeMetrics.getTimestamp());
+      isNodeProcessed.putIfAbsent(nodeMetrics.getMetadata().getName(), Boolean.FALSE);
     }
   }
 
@@ -149,6 +188,31 @@ public class K8sMetricCollector {
             -> eventPublisher.publishMessage(nodeMetric, nodeMetric.getTimestamp(),
                 ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
     nodeMetricsCache.invalidateAll();
+  }
+
+  private void publishPVMetrics() {
+    pvMetricsCache.asMap()
+        .entrySet()
+        .stream()
+        .map(e -> {
+          Aggregates aggregates = e.getValue();
+          return PVMetric.newBuilder()
+              .setCloudProviderId(clusterDetails.getCloudProviderId())
+              .setClusterId(clusterDetails.getClusterId())
+              .setKubeSystemUid(clusterDetails.getKubeSystemUid())
+              .setName(e.getKey().getNamespace() + "/" + e.getKey().getName())
+              .setTimestamp(aggregates.getAggregateTimestamp())
+              .setWindow(aggregates.getAggregateWindow())
+              .setAggregatedStorage(AggregatedStorage.newBuilder()
+                                        .setAvgCapacityByte(aggregates.getStorageCapacity().getAverage())
+                                        .setAvgUsedByte(aggregates.getStorageUsed().getAverage())
+                                        .build())
+              .build();
+        })
+        .forEach(pvMetric
+            -> eventPublisher.publishMessage(pvMetric, pvMetric.getTimestamp(),
+                ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
+    pvMetricsCache.invalidateAll();
   }
 
   private void publishPodMetrics() {
