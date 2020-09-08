@@ -1,0 +1,72 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sources")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    exports = [
+            "//12-commons:maven_deps",
+            "@maven//:com_amazonaws_aws_java_sdk_ec2",
+            "@maven//:com_esotericsoftware_yamlbeans_yamlbeans",
+            "@maven//:com_google_apis_google_api_services_monitoring",
+            "@maven//:com_google_code_gson_gson",
+            "@maven//:com_sumologic_api_client_sumo_java_client",
+            "@maven//:io_fabric8_kubernetes_api",
+            "@maven//:io_fabric8_kubernetes_client",
+            "@maven//:io_fabric8_kubernetes_model",
+            "@maven//:io_kubernetes_client_java",
+            "@maven//:io_kubernetes_client_java_api",
+            "@maven//:org_json_json",
+            "@maven//:org_mongodb_mongo_java_driver",
+        ],
+    visibility = ["//visibility:public"],
+)
+
+
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    deps = [
+        "maven_deps",
+        "//:lombok",
+        "//12-commons:module",
+    ],
+   resources = [
+           "//14-api-services-beans/src/test/resources:resource",
+      ],
+   visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok",
+        "//990-commons-test:module"
+    ],
+   visibility = ["//visibility:public"],
+)
+
+run_tests(
+    test_files = glob(["src/test/**/*Test.java"]),
+    deps = [
+        "module",
+        "maven_deps",
+        "//:lombok",
+        "tests"
+    ],
+    runtime_deps = [
+            "//14-api-services-beans/src/test/resources:resources",
+            "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    testonly = 1,
+)
+
+checkstyle()
+

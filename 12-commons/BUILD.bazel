@@ -63,6 +63,7 @@ java_library(
             "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
             "@maven//:io_github_resilience4j_resilience4j_retrofit",
             "@maven//:io_github_resilience4j_resilience4j_retry",
+            "@maven//:com_google_http_client_google_http_client"
         ],
     visibility = ["//visibility:public"],
 )

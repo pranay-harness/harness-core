@@ -1,0 +1,65 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sources")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    exports = [
+               "//12-commons:maven_deps",
+               "@maven//:com_google_code_findbugs_annotations",
+               "@maven//:com_google_protobuf_protobuf_java",
+               "@maven//:com_google_protobuf_protobuf_java_util",
+               "@maven//:io_grpc_grpc_core",
+               "@maven//:io_grpc_grpc_netty_shaded",
+               "@maven//:io_grpc_grpc_protobuf",
+               "@maven//:io_grpc_grpc_services",
+               "@maven//:io_grpc_grpc_stub",
+               "@maven//:net_openhft_chronicle_queue",
+               "@maven//:org_slf4j_slf4j_api",
+               "@maven//:io_grpc_grpc_testing",
+               "@maven//:junit_junit",
+               "@maven//:org_awaitility_awaitility",
+               "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    deps = [
+        "maven_deps",
+        "//:lombok",
+        "//12-commons:module",
+        "//13-grpc-api/src/main/proto:13_grpc_api_proto",
+        "//13-grpc-api/src/main/proto:13_grpc_api_java_proto",
+    ],
+   visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    deps = [
+        "module",
+        "maven_deps",
+        "//:lombok",
+        "//990-commons-test:module"
+    ]
+)
+run_tests(
+    test_files = glob(["src/test/**/*Test.java"]),
+    deps = [
+        "module",
+        "tests",
+        "maven_deps",
+        "//:lombok",
+    ],
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+)
+
+checkstyle()
