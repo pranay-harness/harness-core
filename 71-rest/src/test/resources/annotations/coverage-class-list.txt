@@ -156,6 +156,7 @@
 31-orchestration/src/main/java/io/harness/engine/interrupts/InterruptProcessingFailedException.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/InterruptServiceImpl.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/handlers/AbortAllInterruptHandler.java
+31-orchestration/src/main/java/io/harness/engine/interrupts/handlers/MarkExpiredInterruptHandler.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/handlers/PauseAllInterruptHandler.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/handlers/ResumeAllInterruptHandler.java
 31-orchestration/src/main/java/io/harness/engine/interrupts/handlers/RetryInterruptHandler.java
