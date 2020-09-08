@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.gson.Gson;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.kubernetes.client.custom.Quantity;
@@ -26,7 +27,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PVCFetcherTest {
+public class PVCFetcherTest extends CategoryTest {
   private SharedInformerFactory sharedInformerFactory;
   private PVCFetcher pvcFetcher;
   private V1PersistentVolumeClaim testPVC;

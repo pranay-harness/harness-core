@@ -57,6 +57,7 @@ message PodInfo {
   string kube_system_uid = 15;
   string qos_class = 16;
   repeated Volume volume = 17;
+  map<string, string> namespace_labels = 18;
 }
 
 message PodEvent {

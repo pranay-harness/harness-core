@@ -25,6 +25,7 @@ public class InstanceInfo {
   StorageResource storageResource;
   List<Container> containerList;
   Map<String, String> labels;
+  Map<String, String> namespaceLabels;
   Map<String, String> metaData;
   HarnessServiceInfo harnessServiceInfo;
 }

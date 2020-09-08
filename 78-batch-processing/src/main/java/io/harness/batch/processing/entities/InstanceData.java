@@ -73,6 +73,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   StorageResource storageResource;
   List<Container> containerList;
   Map<String, String> labels;
+  Map<String, String> namespaceLabels;
   Map<String, String> metaData;
   Instant usageStartTime;
   Instant usageStopTime;

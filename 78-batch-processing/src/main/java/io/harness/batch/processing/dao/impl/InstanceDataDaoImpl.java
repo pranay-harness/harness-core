@@ -137,6 +137,10 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         updateOperations.set(InstanceDataKeys.labels, instanceInfo.getLabels());
       }
 
+      if (!isNull(instanceInfo.getNamespaceLabels()) && !instanceInfo.getNamespaceLabels().isEmpty()) {
+        updateOperations.set(InstanceDataKeys.namespaceLabels, instanceInfo.getNamespaceLabels());
+      }
+
       if (instanceInfo.getMetaData() != null) {
         updateOperations.set(InstanceDataKeys.metaData, instanceInfo.getMetaData());
       }

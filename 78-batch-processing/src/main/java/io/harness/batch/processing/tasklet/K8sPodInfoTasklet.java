@@ -1,5 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.ImmutableSet;
@@ -162,6 +163,8 @@ public class K8sPodInfoTasklet implements Tasklet {
       resourceLimit = K8sResourceUtils.getResource(podInfo.getTotalResource().getLimitsMap());
     }
 
+    Map<String, String> namespaceLabels = encodeDotsInKey(podInfo.getNamespaceLabelsMap());
+
     return InstanceInfo.builder()
         .accountId(accountId)
         .settingId(podInfo.getCloudProviderId())
@@ -176,6 +179,7 @@ public class K8sPodInfoTasklet implements Tasklet {
         .allocatableResource(resource)
         .metaData(metaData)
         .labels(labelsMap)
+        .namespaceLabels(namespaceLabels)
         .harnessServiceInfo(harnessServiceInfo)
         .build();
   }
