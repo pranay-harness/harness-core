@@ -1772,8 +1772,7 @@ public class K8sTaskHelperBase {
   private void printGitConfigInExecutionLogs(
       GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
-    executionLogCallback.saveExecutionLog(
-        "Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getGitAuth().getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getUrl());
 
     if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitStoreDelegateConfig.getBranch());

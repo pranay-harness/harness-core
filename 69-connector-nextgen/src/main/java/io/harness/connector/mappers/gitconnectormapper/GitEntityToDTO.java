@@ -22,6 +22,9 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
     GitSyncConfig gitSyncConfig = createGitSyncConfigDTO(gitConnector);
     return GitConfigDTO.builder()
         .gitAuthType(gitConnector.getAuthType())
+        .gitConnectionType(gitConnector.getConnectionType())
+        .url(gitConnector.getUrl())
+        .branchName(gitConnector.getBranchName())
         .gitAuth(gitAuth)
         .gitSyncConfig(gitSyncConfig)
         .build();
@@ -42,23 +45,18 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
   private GitHTTPAuthenticationDTO createHTTPAuthenticationDTO(GitConfig gitConfig) {
     GitUserNamePasswordAuthentication userNamePasswordAuth =
         (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
-    return GitHTTPAuthenticationDTO.builder()
-        .gitConnectionType(gitConfig.getConnectionType())
-        .url(gitConfig.getUrl())
+    return GitHTTPAuthenticationDTO
+        .builder()
+
         .username(userNamePasswordAuth.getUserName())
         .passwordRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getPasswordReference()))
-        .branchName(gitConfig.getBranchName())
+
         .build();
   }
 
   private GitSSHAuthenticationDTO createSSHAuthenticationDTO(GitConfig gitConfig) {
     GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
-    return GitSSHAuthenticationDTO.builder()
-        .gitConnectionType(gitConfig.getConnectionType())
-        .url(gitConfig.getUrl())
-        .encryptedSshKey(gitSSHAuthentication.getSshKeyReference())
-        .branchName(gitConfig.getBranchName())
-        .build();
+    return GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSSHAuthentication.getSshKeyReference()).build();
   }
 
   private GitSyncConfig createGitSyncConfigDTO(GitConfig gitConnector) {

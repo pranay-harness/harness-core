@@ -45,9 +45,9 @@ public class NGGitServiceImpl implements NGGitService {
   void setGitBaseRequest(
       GitConfigDTO gitConfig, String accountId, GitBaseRequest gitBaseRequest, GitRepositoryType repositoryType) {
     gitBaseRequest.setAuthRequest(getAuthRequest(gitConfig));
-    gitBaseRequest.setBranch(gitConfig.getGitAuth().getBranchName());
+    gitBaseRequest.setBranch(gitConfig.getBranchName());
     gitBaseRequest.setRepoType(repositoryType);
-    gitBaseRequest.setRepoUrl(gitConfig.getGitAuth().getUrl());
+    gitBaseRequest.setRepoUrl(gitConfig.getUrl());
     gitBaseRequest.setAccountId(accountId);
   }
 
@@ -104,7 +104,7 @@ public class NGGitServiceImpl implements NGGitService {
                                                           .commitId(gitStoreDelegateConfig.getCommitId())
                                                           .connectorId(gitStoreDelegateConfig.getConnectorName())
                                                           .repoType(YAML)
-                                                          .repoUrl(gitConfigDTO.getGitAuth().getUrl())
+                                                          .repoUrl(gitConfigDTO.getUrl())
                                                           .build();
     return gitClientV2.fetchFilesByPath(fetchFilesByPathRequest);
   }
@@ -122,7 +122,7 @@ public class NGGitServiceImpl implements NGGitService {
                                                     .commitId(gitStoreDelegateConfig.getCommitId())
                                                     .connectorId(gitStoreDelegateConfig.getConnectorName())
                                                     .repoType(YAML)
-                                                    .repoUrl(gitConfigDTO.getGitAuth().getUrl())
+                                                    .repoUrl(gitConfigDTO.getUrl())
                                                     .destinationDirectory(destinationDirectory)
                                                     .build();
     gitClientV2.downloadFiles(downloadFilesRequest);

@@ -49,9 +49,8 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
     switch (gitConfig.getGitAuthType()) {
       case HTTP:
         GitHTTPAuthenticationDTO gitAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
-        validateRequiredFieldsPresent(gitAuthenticationDTO.getPasswordRef(), gitAuthenticationDTO.getUrl(),
-            gitAuthenticationDTO.getUsername(), gitAuthenticationDTO.getGitConnectionType(),
-            gitAuthenticationDTO.getBranchName());
+        validateRequiredFieldsPresent(gitAuthenticationDTO.getPasswordRef(), gitConfig.getUrl(),
+            gitAuthenticationDTO.getUsername(), gitConfig.getGitConnectionType(), gitConfig.getBranchName());
         break;
       case SSH:
         throw new InvalidRequestException("Not implemented");

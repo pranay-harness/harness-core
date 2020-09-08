@@ -21,6 +21,6 @@ public class GitConnectionNGCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return "GIT: " + gitConfig.getGitAuth().getUrl();
+    return "GIT: " + gitConfig.getUrl();
   }
 }

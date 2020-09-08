@@ -50,14 +50,15 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                         .build();
     GitSyncConfig gitSyncConfig =
         GitSyncConfig.builder().isSyncEnabled(true).customCommitAttributes(customCommitAttributes).build();
-    GitHTTPAuthenticationDTO httpAuthentication = GitHTTPAuthenticationDTO.builder()
-                                                      .gitConnectionType(ACCOUNT)
-                                                      .url(url)
-                                                      .username(userName)
-                                                      .passwordRef(passwordRef)
-                                                      .build();
-    GitConfigDTO gitConfigDTO =
-        GitConfigDTO.builder().gitSyncConfig(gitSyncConfig).gitAuthType(HTTP).gitAuth(httpAuthentication).build();
+    GitHTTPAuthenticationDTO httpAuthentication =
+        GitHTTPAuthenticationDTO.builder().username(userName).passwordRef(passwordRef).build();
+    GitConfigDTO gitConfigDTO = GitConfigDTO.builder()
+                                    .gitSyncConfig(gitSyncConfig)
+                                    .gitAuthType(HTTP)
+                                    .gitConnectionType(ACCOUNT)
+                                    .url(url)
+                                    .gitAuth(httpAuthentication)
+                                    .build();
     GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isTrue();
@@ -83,8 +84,9 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                         .commitMessage("commitMessage")
                                                         .build();
     GitSSHAuthenticationDTO httpAuthentication =
-        GitSSHAuthenticationDTO.builder().gitConnectionType(ACCOUNT).url(url).encryptedSshKey(sshKeyReference).build();
-    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().gitAuthType(SSH).gitAuth(httpAuthentication).build();
+        GitSSHAuthenticationDTO.builder().encryptedSshKey(sshKeyReference).build();
+    GitConfigDTO gitConfigDTO =
+        GitConfigDTO.builder().gitAuthType(SSH).gitConnectionType(ACCOUNT).url(url).gitAuth(httpAuthentication).build();
     GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isFalse();

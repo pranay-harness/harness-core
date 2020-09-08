@@ -34,7 +34,7 @@ public class NGGitConnectionValidation extends AbstractDelegateValidateTask {
     GitConfigDTO gitConfig = gitCommandParams.getGitConfig();
     List<EncryptedDataDetail> encryptionDetails = gitCommandParams.getEncryptionDetails();
 
-    logger.info("Running validation for task {} for repo {}", delegateTaskId, gitConfig.getGitAuth().getUrl());
+    logger.info("Running validation for task {} for repo {}", delegateTaskId, gitConfig.getUrl());
     try {
       decryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
     } catch (Exception e) {
@@ -56,6 +56,6 @@ public class NGGitConnectionValidation extends AbstractDelegateValidateTask {
   public List<String> getCriteria() {
     GitCommandParams gitCommandParams = (GitCommandParams) getParameters()[0];
     GitConfigDTO gitConfig = gitCommandParams.getGitConfig();
-    return singletonList("GIT:" + gitConfig.getGitAuth().getUrl());
+    return singletonList("GIT:" + gitConfig.getUrl());
   }
 }

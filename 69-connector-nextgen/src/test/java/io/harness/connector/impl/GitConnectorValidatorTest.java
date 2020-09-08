@@ -45,12 +45,12 @@ public class GitConnectorValidatorTest extends CategoryTest {
   public void testConnectorValidationForFailedResponse() {
     GitConfigDTO gitConfig = GitConfigDTO.builder()
                                  .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                              .gitConnectionType(GitConnectionType.REPO)
-                                              .branchName("branchName")
                                               .passwordRef(SecretRefHelper.createSecretRef("acc.abcd"))
-                                              .url("url")
                                               .username("username")
                                               .build())
+                                 .gitConnectionType(GitConnectionType.REPO)
+                                 .branchName("branchName")
+                                 .url("url")
                                  .gitAuthType(GitAuthType.HTTP)
                                  .build();
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
@@ -67,13 +67,14 @@ public class GitConnectorValidatorTest extends CategoryTest {
   public void testConnectorValidationForSuccessfulResponse() {
     GitConfigDTO gitConfig = GitConfigDTO.builder()
                                  .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                              .gitConnectionType(GitConnectionType.REPO)
-                                              .branchName("branchName")
                                               .passwordRef(SecretRefHelper.createSecretRef("acc.abcd"))
-                                              .url("url")
+
                                               .username("username")
                                               .build())
                                  .gitAuthType(GitAuthType.HTTP)
+                                 .gitConnectionType(GitConnectionType.REPO)
+                                 .branchName("branchName")
+                                 .url("url")
                                  .build();
     GitCommandExecutionResponse gitResponse =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
