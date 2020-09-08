@@ -12,7 +12,4 @@ public interface ServiceRepository extends PagingAndSortingRepository<ServiceEnt
   Optional<ServiceEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
       boolean notDeleted);
-
-  void deleteByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
 }
