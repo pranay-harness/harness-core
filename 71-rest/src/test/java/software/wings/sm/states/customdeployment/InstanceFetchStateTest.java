@@ -292,6 +292,28 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             "cd-statefulset-0", "cd-statefulset-1", "k8sv2-statefulset-0", "statefulset-test-0", "statefulset-test-1");
   }
 
+  /*
+  Test with some empty hostnames (Weblogic Deployments)
+   */
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testMapJsonToInstanceElementsWeblogicSample() throws IOException {
+    InstanceFetchStateExecutionData executionData = InstanceFetchStateExecutionData.builder()
+                                                        .hostObjectArrayPath("items")
+                                                        .hostAttributes(ImmutableMap.of("hostname", "listenAddress"))
+                                                        .build();
+    String output = readFile("Weblogic.json");
+
+    final List<InstanceElement> instanceElements =
+        InstanceElementMapperUtils.mapJsonToInstanceElements(executionData.getHostAttributes(),
+            executionData.getHostObjectArrayPath(), output, InstanceFetchState.instanceElementMapper);
+
+    assertThat(instanceElements).hasSize(1);
+    assertThat(instanceElements.stream().map(InstanceElement::getHostName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("172.17.0.3");
+  }
+
   private String readFile(String fileName) throws IOException {
     File file = null;
     try {
