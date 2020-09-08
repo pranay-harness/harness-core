@@ -6,6 +6,7 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
@@ -39,22 +40,26 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
+import static software.wings.beans.trigger.WebhookEventType.PUSH;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTrigger;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTriggerWithArtifactSelections;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewInstanceTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNexusArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipeline;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipelineCondTrigger;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipelineWebhookTriggerWithFileContentChanged;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildScheduledCondTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWebhookCondTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflow;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowScheduledCondTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowWebhookTrigger;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowWebhookTriggerWithFileContentChanged;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.setPipelineStages;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -76,6 +81,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -102,6 +108,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -147,9 +154,11 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.Arrays;
@@ -163,10 +172,12 @@ import java.util.Optional;
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
+  private static final String BUILD_NUMBER = "123";
 
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private WebhookTriggerProcessor webhookTriggerProcessor;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactCollectionService artifactCollectionServiceAsync;
@@ -182,12 +193,20 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private YamlPushService yamlPushService;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private SettingsService settingsService;
+  @Mock private TriggerAuthHandler triggerAuthHandler;
+  @Mock private TriggerExecutionService triggerExecutionService;
 
   @Inject @InjectMocks private TriggerService triggerService;
 
   Trigger webhookConditionTrigger = buildWebhookCondTrigger();
 
+  Trigger pipelineWebhookConditionTriggerWithFileContentChanged =
+      buildPipelineWebhookTriggerWithFileContentChanged("testRepo", "master", UUID, PUSH, "index.yaml");
+
   Trigger artifactConditionTrigger = buildArtifactTrigger();
+
+  Trigger artifactConditionTriggerWithArtifactSelections = buildArtifactTriggerWithArtifactSelections();
 
   Trigger workflowArtifactConditionTrigger = buildWorkflowArtifactTrigger();
 
@@ -199,6 +218,9 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   Trigger workflowWebhookConditionTrigger = buildWorkflowWebhookTrigger();
 
+  Trigger workflowWebhookConditionTriggerWithFileContentChanged =
+      buildWorkflowWebhookTriggerWithFileContentChanged("testRepo", "master", UUID, PUSH, "index.yaml");
+
   Trigger newInstanceTrigger = buildNewInstanceTrigger();
 
   Pipeline pipeline = buildPipeline();
@@ -207,12 +229,16 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   JenkinsArtifactStream artifactStream = buildJenkinsArtifactStream();
 
+  GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).build();
+
   @Before
   public void setUp() {
     Pipeline pipeline = buildPipeline();
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(pipeline);
+    when(pipelineService.pipelineExists(any(), any())).thenReturn(true);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(buildWorkflow());
+    when(workflowService.workflowExists(any(), any())).thenReturn(true);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(buildJenkinsArtifactStream());
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build());
@@ -234,6 +260,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     doNothing().when(auditServiceHelper).reportDeleteForAuditingUsingAccountId(anyString(), any());
     doNothing().when(auditServiceHelper).reportDeleteForAuditing(anyString(), any());
     doNothing().when(auditServiceHelper).reportForAuditingUsingAppId(anyString(), any(), any(), any());
+
+    when(settingsService.fetchGitConfigFromConnectorId(any())).thenReturn(gitConfig);
   }
 
   @Test
@@ -425,6 +453,19 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(pipelineService, times(2)).readPipeline(APP_ID, PIPELINE_ID, true);
   }
 
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotUpdatePipelineConditionTrigger() {
+    Trigger savedPipelineCondTrigger = triggerService.save(pipelineCondTrigger);
+
+    savedPipelineCondTrigger.setArtifactSelections(
+        asList(ArtifactSelection.builder().type(PIPELINE_SOURCE).serviceId(SERVICE_ID).build(),
+            ArtifactSelection.builder().serviceId(SERVICE_ID).type(LAST_DEPLOYED).build()));
+
+    triggerService.update(savedPipelineCondTrigger, false);
+  }
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -535,6 +576,87 @@ public class TriggerServiceTest extends WingsBaseTest {
         .contains(
             "{service=Catalog, buildNumber=Catalog_BUILD_NUMBER_PLACE_HOLDER}, {service=Order, buildNumber=Order_BUILD_NUMBER_PLACE_HOLDER}");
     assertThat(hashMap.get("parameters")).isNotNull().toString().contains("MyVar=MyVar_placeholder");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldSaveWorkflowWebhookTriggerWithFileContentChanged() {
+    Trigger trigger = triggerService.save(workflowWebhookConditionTriggerWithFileContentChanged);
+    Trigger savedTrigger = triggerService.get(APP_ID, trigger.getUuid());
+
+    assertThat(savedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
+    assertThat(savedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
+    WebHookToken webHookToken = ((WebHookTriggerCondition) savedTrigger.getCondition()).getWebHookToken();
+    assertThat(webHookToken).isNotNull();
+    assertThat(webHookToken.getWebHookToken()).isNotNull();
+    assertThat(webHookToken.getPayload()).isNotEmpty();
+
+    HashMap<String, Object> hashMap = new Gson().fromJson(webHookToken.getPayload(), HashMap.class);
+    assertThat(hashMap).containsKeys("application", "parameters");
+    assertThat(hashMap.get("application")).isEqualTo(APP_ID);
+    assertThat(hashMap.get("artifacts")).isNull();
+    assertThat(hashMap.get("parameters")).isNotNull().toString().contains("MyVar=MyVar_placeholder");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWorkflowWebhookTriggerWithoutGitConnectorId() {
+    Trigger workflowWebhookConditionTrigger =
+        buildWorkflowWebhookTriggerWithFileContentChanged("testRepo", "master", null, PUSH, "index.yaml");
+
+    triggerService.save(workflowWebhookConditionTrigger);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWorkflowWebhookTriggerWithoutBranchName() {
+    Trigger workflowWebhookConditionTrigger =
+        buildWorkflowWebhookTriggerWithFileContentChanged("testRepo", null, UUID, PUSH, "index.yaml");
+
+    triggerService.save(workflowWebhookConditionTrigger);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWorkflowWebhookTriggerWithoutRepoName() {
+    Trigger workflowWebhookConditionTrigger =
+        buildWorkflowWebhookTriggerWithFileContentChanged(null, "master", UUID, PUSH, "index.yaml");
+
+    triggerService.save(workflowWebhookConditionTrigger);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWorkflowWebhookTriggerWithoutFilePaths() {
+    Trigger workflowWebhookConditionTrigger =
+        buildWorkflowWebhookTriggerWithFileContentChanged("testRepo", "master", UUID, PUSH, null);
+
+    triggerService.save(workflowWebhookConditionTrigger);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWorkflowWebhookTriggerWithoutEventType() {
+    Trigger workflowWebhookConditionTrigger =
+        buildWorkflowWebhookTriggerWithFileContentChanged("testRepo", "master", UUID, null, "index.yaml");
+
+    triggerService.save(workflowWebhookConditionTrigger);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWorkflowWebhookTriggerWithWrongEventType() {
+    Trigger workflowWebhookConditionTrigger =
+        buildWorkflowWebhookTriggerWithFileContentChanged("testRepo", "master", UUID, PULL_REQUEST, "index.yaml");
+
+    triggerService.save(workflowWebhookConditionTrigger);
   }
 
   @Test
@@ -765,6 +887,28 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
     verify(workflowExecutionService)
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotTriggerExecutionPostArtifactCollectionAsyncNoArtifactsMatched() {
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+                            .build();
+    when(workflowExecutionService.triggerEnvExecution(
+             anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
+        .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
+
+    triggerService.save(artifactConditionTriggerWithArtifactSelections);
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+    verify(workflowExecutionService, times(0))
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
@@ -1539,6 +1683,87 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldTriggerPipelineExecutionByWebhook() {
+    when(webhookTriggerProcessor.checkFileContentOptionSelected(any())).thenReturn(true);
+    triggerService.save(pipelineWebhookConditionTriggerWithFileContentChanged);
+
+    triggerService.triggerExecutionByWebHook(APP_ID,
+        pipelineWebhookConditionTriggerWithFileContentChanged.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).build()), new HashMap<>(),
+        TriggerExecution.builder().build());
+
+    verify(workflowExecutionService)
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldTriggerPipelineExecutionByWebhookWithLastExecution() {
+    when(webhookTriggerProcessor.checkFileContentOptionSelected(any())).thenReturn(true);
+    TriggerExecution lastTriggerExecution =
+        getLastTriggerExecution(pipelineWebhookConditionTriggerWithFileContentChanged);
+    when(webhookTriggerProcessor.fetchLastExecutionForContentChanged(any())).thenReturn(lastTriggerExecution);
+    triggerService.save(pipelineWebhookConditionTriggerWithFileContentChanged);
+
+    triggerService.triggerExecutionByWebHook(APP_ID,
+        pipelineWebhookConditionTriggerWithFileContentChanged.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).build()), new HashMap<>(),
+        TriggerExecution.builder().build());
+
+    verify(webhookTriggerProcessor)
+        .initiateTriggerContentChangeDelegateTask(
+            any(Trigger.class), any(TriggerExecution.class), any(TriggerExecution.class), anyString());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldTriggerWorkflowExecutionByWebhook() {
+    when(webhookTriggerProcessor.checkFileContentOptionSelected(any())).thenReturn(true);
+    triggerService.save(workflowWebhookConditionTriggerWithFileContentChanged);
+
+    triggerService.triggerExecutionByWebHook(APP_ID,
+        workflowWebhookConditionTriggerWithFileContentChanged.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).build()), new HashMap<>(),
+        TriggerExecution.builder().build());
+
+    verify(workflowExecutionService)
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldTriggerWorkflowExecutionByWebhookWithLastExecution() {
+    when(webhookTriggerProcessor.checkFileContentOptionSelected(any())).thenReturn(true);
+    TriggerExecution lastTriggerExecution =
+        getLastTriggerExecution(workflowWebhookConditionTriggerWithFileContentChanged);
+    when(webhookTriggerProcessor.fetchLastExecutionForContentChanged(any())).thenReturn(lastTriggerExecution);
+    triggerService.save(workflowWebhookConditionTriggerWithFileContentChanged);
+
+    triggerService.triggerExecutionByWebHook(APP_ID,
+        workflowWebhookConditionTriggerWithFileContentChanged.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).build()), new HashMap<>(),
+        TriggerExecution.builder().build());
+
+    verify(webhookTriggerProcessor)
+        .initiateTriggerContentChangeDelegateTask(
+            any(Trigger.class), any(TriggerExecution.class), any(TriggerExecution.class), anyString());
+  }
+
+  private TriggerExecution getLastTriggerExecution(Trigger trigger) {
+    return TriggerExecution.builder()
+        .triggerId(trigger.getUuid())
+        .appId(trigger.getAppId())
+        .status(TriggerExecution.Status.SUCCESS)
+        .workflowExecutionId(trigger.getWorkflowId())
+        .build();
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerArtifactCollectionForWebhookTrigger() {
@@ -1551,19 +1776,80 @@ public class TriggerServiceTest extends WingsBaseTest {
     JenkinsArtifactStream jenkinsArtifactStream = buildJenkinsArtifactStream();
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactService.fetchLatestArtifactForArtifactStream(artifactStream)).thenReturn(artifact);
-    String buildNumber = "123";
-    when(artifactService.getArtifactByBuildNumber(artifactStream, buildNumber, false))
+    when(artifactService.getArtifactByBuildNumber(artifactStream, BUILD_NUMBER, false))
         .thenReturn(null)
         .thenReturn(artifact);
 
-    when(artifactCollectionServiceAsync.collectNewArtifacts(APP_ID, jenkinsArtifactStream, buildNumber))
+    when(artifactCollectionServiceAsync.collectNewArtifacts(APP_ID, jenkinsArtifactStream, BUILD_NUMBER))
         .thenReturn(artifact);
 
     triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
-        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(buildNumber).build()), new HashMap<>(), null);
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).build()), new HashMap<>(), null);
 
-    verify(artifactCollectionServiceAsync).collectNewArtifacts(APP_ID, jenkinsArtifactStream, buildNumber);
+    verify(artifactCollectionServiceAsync).collectNewArtifacts(APP_ID, jenkinsArtifactStream, BUILD_NUMBER);
     verify(artifactService).fetchLastCollectedArtifact(artifactStream);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotTriggerExecutionByWebhookWithoutBuildNumber() {
+    setArtifactSelectionsForWebhookTrigger();
+    triggerService.save(webhookConditionTrigger);
+
+    triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(null).build()), new HashMap<>(), null);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotTriggerExecutionByWebhookWithWrongServiceId() {
+    setArtifactSelectionsForWebhookTrigger();
+    triggerService.save(webhookConditionTrigger);
+
+    triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
+        ImmutableMap.of("WrongServiceId", ArtifactSummary.builder().buildNo(BUILD_NUMBER).build()), new HashMap<>(),
+        null);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotTriggerExecutionByWebhookWithoutArtifactStreamIds() {
+    setArtifactSelectionsForWebhookTriggerWithoutStreamId();
+    triggerService.save(webhookConditionTrigger);
+
+    triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).name(null).build()),
+        new HashMap<>(), null);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotTriggerExecutionByWebhookWithMoreThanOneArtifactStreamId() {
+    when(artifactStreamService.fetchArtifactStreamIdsForService(any(), any()))
+        .thenReturn(Arrays.asList(SERVICE_ID, SERVICE_ID.concat("_2")));
+    setArtifactSelectionsForWebhookTriggerWithoutStreamId();
+    triggerService.save(webhookConditionTrigger);
+
+    triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).name(null).build()),
+        new HashMap<>(), null);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotTriggerExecutionByWebhookWithWrongArtifactStreamId() {
+    when(artifactStreamService.fetchArtifactStreamIdsForService(any(), any())).thenReturn(Arrays.asList(SERVICE_ID));
+    setArtifactSelectionsForWebhookTriggerWithoutStreamId();
+    triggerService.save(webhookConditionTrigger);
+
+    triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
+        ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).name(null).build()),
+        new HashMap<>(), null);
   }
 
   @Test
@@ -1622,6 +1908,14 @@ public class TriggerServiceTest extends WingsBaseTest {
             .artifactSourceName(ARTIFACT_SOURCE_NAME)
             .build(),
         ArtifactSelection.builder().type(LAST_DEPLOYED).serviceId(SERVICE_ID).workflowId(PIPELINE_ID).build()));
+  }
+
+  private void setArtifactSelectionsForWebhookTriggerWithoutStreamId() {
+    webhookConditionTrigger.setArtifactSelections(asList(ArtifactSelection.builder()
+                                                             .type(WEBHOOK_VARIABLE)
+                                                             .serviceId(SERVICE_ID)
+                                                             .artifactSourceName(ARTIFACT_SOURCE_NAME)
+                                                             .build()));
   }
 
   @Test
@@ -2411,5 +2705,96 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(webHookToken.getPayload())
         .isEqualTo(
             "{\"application\":\"APP_ID\",\"parameters\":{\"Service\":\"Service_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Service_PLACEHOLDER\",\"buildNumber\":\"Service_BUILD_NUMBER_PLACE_HOLDER\"}]}");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testTriggerActionExistsWorkflowType() {
+    boolean actionExists = triggerService.triggerActionExists(buildWorkflowWebhookTrigger());
+    assertThat(actionExists).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testTriggerActionExistsPipelineType() {
+    boolean actionExists = triggerService.triggerActionExists(buildPipelineCondTrigger());
+    assertThat(actionExists).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testTriggerActionExistsNoType() {
+    boolean actionExists = triggerService.triggerActionExists(buildArtifactTrigger());
+    assertThat(actionExists).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAuthorizeAppAccessEmptyList() {
+    triggerService.authorizeAppAccess(Collections.EMPTY_LIST);
+    verify(triggerAuthHandler, times(0)).authorizeAppAccess(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAuthorizeAppAccessNoAppId() {
+    List<String> appIds = Arrays.asList("");
+    triggerService.authorizeAppAccess(appIds);
+    verify(triggerAuthHandler, times(0)).authorizeAppAccess(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAuthorizeAppAccess() {
+    List<String> appIds = Arrays.asList("appId");
+    when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);
+
+    triggerService.authorizeAppAccess(appIds);
+    verify(triggerAuthHandler, times(1)).authorizeAppAccess(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflow() {
+    when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
+
+    triggerService.authorize(buildWorkflowWebhookTrigger(), true);
+    verify(workflowService, times(1)).readWorkflow(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAuthorizePipeline() {
+    triggerService.authorize(buildPipelineCondTrigger(), true);
+    verify(workflowService, times(0)).readWorkflow(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowAndEnvironment() {
+    setTemplatedWorkflow();
+    when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
+
+    triggerService.authorize(buildWorkflowWebhookTrigger(), true);
+    verify(workflowService, times(1)).readWorkflow(any(), any());
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowAndEnvironmentWithException() {
+    setTemplatedWorkflow();
+    when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
+
+    triggerService.authorize(buildWorkflowWebhookTrigger(), false);
   }
 }

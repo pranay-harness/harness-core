@@ -381,6 +381,7 @@ public class WebHookServiceImpl implements WebHookService {
     webhookEventDetails.setPrAction(webhookEventUtils.obtainPrAction(webhookSource, payLoadMap));
     webhookEventDetails.setGitConnectorId(webhookTriggerCondition.getGitConnectorId());
     webhookEventDetails.setFilePaths(webhookTriggerCondition.getFilePaths());
+    webhookEventDetails.setRepoName(webhookTriggerCondition.getRepoName());
 
     for (Entry<String, String> entry : workflowVariables.entrySet()) {
       String param = entry.getKey();

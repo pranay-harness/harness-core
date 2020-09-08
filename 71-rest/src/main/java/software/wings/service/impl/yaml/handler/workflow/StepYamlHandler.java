@@ -9,7 +9,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
-import static software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidatorFactory.getValidatorForStepType;
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 
 import com.google.common.collect.Lists;
@@ -80,6 +79,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject private TemplateService templateService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private StepCompletionYamlValidatorFactory stepCompletionYamlValidatorFactory;
 
   private static final String GCB_OPTIONS = "gcbOptions";
   private static final String GCP_CONFIG_ID = "gcpConfigId";
@@ -98,9 +98,9 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
 
     StepCompletionYamlValidator stepCompletionYamlValidator =
-        getValidatorForStepType(StepType.valueOf(stepYaml.getType()));
+        stepCompletionYamlValidatorFactory.getValidatorForStepType(StepType.valueOf(stepYaml.getType()));
     if (stepCompletionYamlValidator != null) {
-      stepCompletionYamlValidator.validate(stepYaml);
+      stepCompletionYamlValidator.validate(changeContext);
     }
 
     // template expressions

@@ -28,6 +28,7 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
+import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
@@ -41,6 +42,7 @@ public class TriggerTaskTest extends WingsBaseTest {
 
   @Mock private EncryptionService encryptionService;
   @Mock private GitService gitService;
+  @Mock private GitClientHelper gitClientHelper;
 
   @InjectMocks
   private TriggerTask triggerTask = (TriggerTask) TaskType.TRIGGER_TASK.getDelegateRunnableTask(
@@ -120,8 +122,9 @@ public class TriggerTaskTest extends WingsBaseTest {
   private TriggerDeploymentNeededRequest getTriggerDeploymentNeededRequest() {
     return TriggerDeploymentNeededRequest.builder()
         .accountId(WingsTestConstants.ACCOUNT_ID)
-        .gitConfig(GitConfig.builder().build())
+        .gitConfig(GitConfig.builder().repoName(WingsTestConstants.REPO_NAME).build())
         .gitConnectorId(WingsTestConstants.SETTING_ID)
+        .repoName(WingsTestConstants.REPO_NAME)
         .currentCommitId(CURRENT_COMMIT_ID)
         .oldCommitId(OLD_COMMIT_ID)
         .build();

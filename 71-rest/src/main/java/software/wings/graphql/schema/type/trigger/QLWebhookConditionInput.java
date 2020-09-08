@@ -19,6 +19,7 @@ public class QLWebhookConditionInput {
   QLGitlabEvent gitlabEvent;
   String branchRegex;
   String branchName;
+  String repoName;
   Boolean deployOnlyIfFilesChanged;
   List<String> filePaths;
   String gitConnectorId;

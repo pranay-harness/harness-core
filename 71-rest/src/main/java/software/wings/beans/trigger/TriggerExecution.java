@@ -75,6 +75,7 @@ public class TriggerExecution extends Base {
   public static class WebhookEventDetails {
     String gitConnectorId;
     String branchName;
+    String repoName;
     String commitId;
     String prevCommitId;
     String payload;

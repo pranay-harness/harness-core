@@ -2,8 +2,10 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.emptyList;
@@ -39,6 +41,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 import org.junit.Before;
@@ -85,6 +88,11 @@ public class GcbStateTest extends CategoryTest {
   private static final Activity ACTIVITY_WITH_ID = Activity.builder().uuid(ACTIVITY_ID).build();
   private static final ExecutionResponse EXECUTION_RESPONSE = ExecutionResponse.builder().build();
 
+  private static final String GCP_CONFIG_ID = "gcpConfigId";
+  private static final String GIT_CONFIG_ID = "gitConfigId";
+  private static final String GCP_CONFIG_NAME = "gcpConfigName";
+  private static final String GIT_CONFIG_NAME = "gitConfigName";
+
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private ActivityService activityService;
@@ -129,7 +137,7 @@ public class GcbStateTest extends CategoryTest {
   public void shouldDelegateTask() {
     GcbOptions gcbOption = new GcbOptions();
     gcbOption.setSpecSource(GcbOptions.GcbSpecSource.INLINE);
-    gcbOption.setGcpConfigId("gcpConfigId");
+    gcbOption.setGcpConfigId(GCP_CONFIG_ID);
     state.setGcbOptions(gcbOption);
     Application application = mock(Application.class);
     doReturn(application).when(context).fetchRequiredApp();
@@ -335,12 +343,12 @@ public class GcbStateTest extends CategoryTest {
   public void shouldSetGcpConfigIdAndReturnTrueIfResolvedExpressionIsId() {
     TemplateExpression gcpConfigExp = new TemplateExpression();
     state.setGcbOptions(new GcbOptions());
-    when(templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp)).thenReturn("gcpConfigId");
+    when(templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp)).thenReturn(GCP_CONFIG_ID);
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
-    when(context.getGlobalSettingValue(ACCOUNT_ID, "gcpConfigId")).thenReturn(new GcpConfig());
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GCP_CONFIG_ID)).thenReturn(new GcpConfig());
 
     assertThat(state.resolveGcpTemplateExpression(gcpConfigExp, context)).isTrue();
-    assertThat(state.getGcbOptions().getGcpConfigId()).isEqualTo("gcpConfigId");
+    assertThat(state.getGcbOptions().getGcpConfigId()).isEqualTo(GCP_CONFIG_ID);
   }
 
   @Test
@@ -350,14 +358,14 @@ public class GcbStateTest extends CategoryTest {
     TemplateExpression gcpConfigExp = new TemplateExpression();
     state.setGcbOptions(new GcbOptions());
     SettingAttribute settingAttribute = new SettingAttribute();
-    settingAttribute.setUuid("gcpConfigId");
-    when(templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp)).thenReturn("gcpConfigName");
+    settingAttribute.setUuid(GCP_CONFIG_ID);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp)).thenReturn(GCP_CONFIG_NAME);
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
-    when(context.getGlobalSettingValue(ACCOUNT_ID, "gcpConfigName")).thenReturn(null);
-    when(settingService.getSettingAttributeByName(ACCOUNT_ID, "gcpConfigName")).thenReturn(settingAttribute);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GCP_CONFIG_NAME)).thenReturn(null);
+    when(settingService.getSettingAttributeByName(ACCOUNT_ID, GCP_CONFIG_NAME)).thenReturn(settingAttribute);
 
     assertThat(state.resolveGcpTemplateExpression(gcpConfigExp, context)).isTrue();
-    assertThat(state.getGcbOptions().getGcpConfigId()).isEqualTo("gcpConfigId");
+    assertThat(state.getGcbOptions().getGcpConfigId()).isEqualTo(GCP_CONFIG_ID);
   }
 
   @Test
@@ -381,12 +389,12 @@ public class GcbStateTest extends CategoryTest {
     GcbOptions gcbOption = new GcbOptions();
     gcbOption.setRepositorySpec(new GcbRemoteBuildSpec());
     state.setGcbOptions(gcbOption);
-    when(templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp)).thenReturn("gitConfigId");
+    when(templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp)).thenReturn(GIT_CONFIG_ID);
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
-    when(context.getGlobalSettingValue(ACCOUNT_ID, "gitConfigId")).thenReturn(new GitConfig());
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GIT_CONFIG_ID)).thenReturn(new GitConfig());
 
     assertThat(state.resolveGitTemplateExpression(gitConfigExp, context)).isTrue();
-    assertThat(state.getGcbOptions().getRepositorySpec().getGitConfigId()).isEqualTo("gitConfigId");
+    assertThat(state.getGcbOptions().getRepositorySpec().getGitConfigId()).isEqualTo(GIT_CONFIG_ID);
   }
 
   @Test
@@ -398,14 +406,14 @@ public class GcbStateTest extends CategoryTest {
     gcbOption.setRepositorySpec(new GcbRemoteBuildSpec());
     state.setGcbOptions(gcbOption);
     SettingAttribute settingAttribute = new SettingAttribute();
-    settingAttribute.setUuid("gitConfigId");
-    when(templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp)).thenReturn("gitConfigName");
+    settingAttribute.setUuid(GIT_CONFIG_ID);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp)).thenReturn(GIT_CONFIG_NAME);
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
-    when(context.getGlobalSettingValue(ACCOUNT_ID, "gitConfigName")).thenReturn(null);
-    when(settingService.getSettingAttributeByName(ACCOUNT_ID, "gitConfigName")).thenReturn(settingAttribute);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GIT_CONFIG_NAME)).thenReturn(null);
+    when(settingService.getSettingAttributeByName(ACCOUNT_ID, GIT_CONFIG_NAME)).thenReturn(settingAttribute);
 
     assertThat(state.resolveGitTemplateExpression(gitConfigExp, context)).isTrue();
-    assertThat(state.getGcbOptions().getRepositorySpec().getGitConfigId()).isEqualTo("gitConfigId");
+    assertThat(state.getGcbOptions().getRepositorySpec().getGitConfigId()).isEqualTo(GIT_CONFIG_ID);
   }
 
   @Test
@@ -420,7 +428,7 @@ public class GcbStateTest extends CategoryTest {
     state.setGcbOptions(gcbOption);
     state.setGcbOptions(gcbOption);
     state.setTemplateExpressions(templateExpressions);
-    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "gcpConfigId"))
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, GCP_CONFIG_ID))
         .thenReturn(gcpConfigExp);
     when(templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp)).thenReturn("resolvedExpression");
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
@@ -443,7 +451,7 @@ public class GcbStateTest extends CategoryTest {
     gcbOption.setRepositorySpec(new GcbRemoteBuildSpec());
     state.setGcbOptions(gcbOption);
     state.setTemplateExpressions(templateExpressions);
-    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "gitConfigId"))
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, GIT_CONFIG_ID))
         .thenReturn(gitConfigExp);
     when(templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp)).thenReturn("resolvedExpression");
     when(context.getAccountId()).thenReturn(ACCOUNT_ID);
@@ -453,5 +461,80 @@ public class GcbStateTest extends CategoryTest {
     assertThat(state.executeInternal(context, ACTIVITY_ID).getExecutionStatus()).isEqualTo(FAILED);
     assertThat(state.executeInternal(context, ACTIVITY_ID).getErrorMessage())
         .isEqualTo("Git connector does not exist. Please update with an appropriate git connector.");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithGitConfigAccountType() {
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
+    GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).repoUrl("repoUrl").build();
+
+    GcbOptions gcbOption = new GcbOptions();
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    gcbOption.setGcpConfigId(GCP_CONFIG_ID);
+
+    GcbRemoteBuildSpec gcbRemoteBuildSpec = new GcbRemoteBuildSpec();
+    gcbRemoteBuildSpec.setGitConfigId(GIT_CONFIG_ID);
+    gcbRemoteBuildSpec.setRepoName("repoName");
+    gcbOption.setRepositorySpec(gcbRemoteBuildSpec);
+
+    state.setGcbOptions(gcbOption);
+
+    when(context.renderExpression("repoName")).thenReturn("repoName");
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GCP_CONFIG_ID)).thenReturn(gcpConfig);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GIT_CONFIG_ID)).thenReturn(gitConfig);
+
+    assertThat(state.executeInternal(context, ACTIVITY_ID).getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteWithGitConfigAccountTypeWithoutRepoName() {
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
+    GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).repoUrl("repoUrl").build();
+
+    GcbOptions gcbOption = new GcbOptions();
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    gcbOption.setGcpConfigId(GCP_CONFIG_ID);
+
+    GcbRemoteBuildSpec gcbRemoteBuildSpec = new GcbRemoteBuildSpec();
+    gcbRemoteBuildSpec.setGitConfigId(GIT_CONFIG_ID);
+    gcbRemoteBuildSpec.setRepoName("");
+    gcbOption.setRepositorySpec(gcbRemoteBuildSpec);
+
+    state.setGcbOptions(gcbOption);
+
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GCP_CONFIG_ID)).thenReturn(gcpConfig);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GIT_CONFIG_ID)).thenReturn(gitConfig);
+
+    state.executeInternal(context, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithGitConfigRepoType() {
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
+    GitConfig gitConfig = GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl("repoUrl").build();
+
+    GcbOptions gcbOption = new GcbOptions();
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    gcbOption.setGcpConfigId(GCP_CONFIG_ID);
+
+    GcbRemoteBuildSpec gcbRemoteBuildSpec = new GcbRemoteBuildSpec();
+    gcbRemoteBuildSpec.setGitConfigId(GIT_CONFIG_ID);
+    gcbOption.setRepositorySpec(gcbRemoteBuildSpec);
+
+    state.setGcbOptions(gcbOption);
+
+    when(context.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GCP_CONFIG_ID)).thenReturn(gcpConfig);
+    when(context.getGlobalSettingValue(ACCOUNT_ID, GIT_CONFIG_ID)).thenReturn(gitConfig);
+
+    assertThat(state.executeInternal(context, ACTIVITY_ID).getExecutionStatus()).isEqualTo(SUCCESS);
   }
 }

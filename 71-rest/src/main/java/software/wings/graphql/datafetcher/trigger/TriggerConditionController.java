@@ -146,6 +146,7 @@ public class TriggerConditionController {
                 .webhookEvent(event)
                 .branchRegex(webHookTriggerCondition.getBranchRegex())
                 .branchName(webHookTriggerCondition.getBranchName())
+                .repoName(webHookTriggerCondition.getRepoName())
                 .gitConnectorId(webHookTriggerCondition.getGitConnectorId())
                 .gitConnectorName(gitConnectorName)
                 .filePaths(webHookTriggerCondition.getFilePaths())
@@ -322,6 +323,7 @@ public class TriggerConditionController {
       builder.checkFileContentChanged(true);
       builder.gitConnectorId(qlWebhookConditionInput.getGitConnectorId());
       builder.filePaths(qlWebhookConditionInput.getFilePaths());
+      builder.repoName(qlWebhookConditionInput.getRepoName());
       builder.branchName(qlWebhookConditionInput.getBranchName());
     }
     builder.branchRegex(qlTriggerConditionInput.getWebhookConditionInput().getBranchRegex());

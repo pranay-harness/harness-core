@@ -9,5 +9,6 @@ public class GcbRemoteBuildSpec {
   private String gitConfigId;
   private String sourceId;
   private String filePath;
+  private String repoName;
   private RemoteFileSource fileSource;
 }

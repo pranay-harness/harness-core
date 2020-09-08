@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -52,6 +53,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineAction;
@@ -66,9 +68,12 @@ import software.wings.beans.trigger.TriggerArtifactSelectionWebhook;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.TriggerLastDeployedType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookEventType;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WorkflowAction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +100,25 @@ public class TriggerServiceTestHelper {
         .build();
   }
 
+  public static Trigger buildArtifactTriggerWithArtifactSelections() {
+    return Trigger.builder()
+        .workflowId(PIPELINE_ID)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .artifactSelections(Arrays.asList(ArtifactSelection.builder()
+                                              .serviceId(SERVICE_ID)
+                                              .artifactStreamId(ARTIFACT_STREAM_ID)
+                                              .pipelineId(PIPELINE_ID)
+                                              .type(ArtifactSelection.Type.PIPELINE_SOURCE)
+                                              .build()))
+        .condition(ArtifactTriggerCondition.builder()
+                       .artifactFilter(ARTIFACT_FILTER)
+                       .artifactStreamId(ARTIFACT_STREAM_ID)
+                       .build())
+        .build();
+  }
+
   public static Trigger buildWorkflowArtifactTrigger() {
     return Trigger.builder()
         .workflowId(WORKFLOW_ID)
@@ -114,6 +138,7 @@ public class TriggerServiceTestHelper {
         .workflowId(PIPELINE_ID)
         .uuid(TRIGGER_ID)
         .appId(APP_ID)
+        .workflowType(PIPELINE)
         .name(TRIGGER_NAME)
         .condition(PipelineTriggerCondition.builder().pipelineId(PIPELINE_ID).build())
         .build();
@@ -202,6 +227,28 @@ public class TriggerServiceTestHelper {
         .build();
   }
 
+  public static Trigger buildPipelineWebhookTriggerWithFileContentChanged(
+      String repoName, String branchName, String gitConnectorId, WebhookEventType webhookEventType, String filePath) {
+    return Trigger.builder()
+        .workflowId(PIPELINE_ID)
+        .workflowType(PIPELINE)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .condition(WebHookTriggerCondition.builder()
+                       .webHookToken(WebHookToken.builder().build())
+                       .webhookSource(WebhookSource.GITHUB)
+                       .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                       .checkFileContentChanged(true)
+                       .repoName(repoName)
+                       .branchName(branchName)
+                       .gitConnectorId(gitConnectorId)
+                       .eventTypes(Arrays.asList(webhookEventType))
+                       .filePaths(Arrays.asList(filePath))
+                       .build())
+        .build();
+  }
+
   public static Trigger buildNewInstanceTrigger() {
     return Trigger.builder()
         .uuid(TRIGGER_ID)
@@ -244,6 +291,28 @@ public class TriggerServiceTestHelper {
         .condition(WebHookTriggerCondition.builder()
                        .webHookToken(WebHookToken.builder().build())
                        .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                       .build())
+        .build();
+  }
+
+  public static Trigger buildWorkflowWebhookTriggerWithFileContentChanged(
+      String repoName, String branchName, String gitConnectorId, WebhookEventType webhookEventType, String filePath) {
+    return Trigger.builder()
+        .workflowId(WORKFLOW_ID)
+        .workflowType(ORCHESTRATION)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .condition(WebHookTriggerCondition.builder()
+                       .webHookToken(WebHookToken.builder().build())
+                       .webhookSource(WebhookSource.GITHUB)
+                       .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                       .checkFileContentChanged(true)
+                       .repoName(repoName)
+                       .branchName(branchName)
+                       .gitConnectorId(gitConnectorId)
+                       .eventTypes(Arrays.asList(webhookEventType))
+                       .filePaths(Arrays.asList(filePath))
                        .build())
         .build();
   }
