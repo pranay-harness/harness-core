@@ -20,11 +20,8 @@ import io.harness.event.service.impl.LastReceivedPublishedMessageRepositoryImpl;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.server.GrpcServerModule;
-import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.security.KeySource;
-import io.harness.serializer.EventsServerRegistrars;
-import io.harness.serializer.KryoRegistrar;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AccountKeySource;
@@ -68,6 +65,8 @@ public class EventServiceModule extends AbstractModule {
     install(new GrpcServerModule(eventServiceConfig.getConnectors(), //
         getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
         getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
+
+    install(new RegistrarsModule());
   }
 
   @Provides
@@ -75,18 +74,6 @@ public class EventServiceModule extends AbstractModule {
   @Named("morphiaClasses")
   public Set<Class<?>> morphiaClasses() {
     return Collections.emptySet();
-  }
-
-  @Provides
-  @Singleton
-  public Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-    return EventsServerRegistrars.kryoRegistrars;
-  }
-
-  @Provides
-  @Singleton
-  public Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-    return EventsServerRegistrars.morphiaRegistrars;
   }
 
   @Provides
