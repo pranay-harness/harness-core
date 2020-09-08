@@ -12,6 +12,8 @@ import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVMs;
 import com.microsoft.azure.management.resources.Subscription;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSListResourceGroupsNamesParameters;
@@ -31,9 +33,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +41,7 @@ import java.util.Optional;
 
 public class AzureVMSSSyncTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
-  @Mock private AzureVMSSHelperServiceDelegate mockAzureVMSSHelperServiceDelegate;
+  @Mock private AzureComputeClient mockAzureComputeClient;
   @Mock VirtualMachineScaleSetVMs virtualMachineScaleSetVMs;
   @Mock VirtualMachineScaleSetVM virtualMachineScaleSetVM;
   @Mock VirtualMachineScaleSet virtualMachineScaleSet;
@@ -53,7 +53,7 @@ public class AzureVMSSSyncTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListSubscriptions() throws Exception {
-    doReturn(Collections.singletonList(subscription)).when(mockAzureVMSSHelperServiceDelegate).listSubscriptions(any());
+    doReturn(Collections.singletonList(subscription)).when(mockAzureComputeClient).listSubscriptions(any());
 
     AzureVMSSListSubscriptionsParameters azureVMSSListSubscriptionsParameters =
         AzureVMSSListSubscriptionsParameters.builder().build();
@@ -76,7 +76,7 @@ public class AzureVMSSSyncTaskHandlerTest extends WingsBaseTest {
   public void testListResourceGroupsNames() throws Exception {
     List<String> resourceGroupList = Collections.singletonList("resourceGroup1, resourceGroup2");
     doReturn(resourceGroupList)
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .listResourceGroupsNamesBySubscriptionId(any(), anyString());
 
     AzureVMSSListResourceGroupsNamesParameters azureVMSSTaskParameters =
@@ -99,7 +99,7 @@ public class AzureVMSSSyncTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListVirtualMachineScaleSets() throws Exception {
     doReturn(Collections.singletonList(virtualMachineScaleSet))
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .listVirtualMachineScaleSetsByResourceGroupName(any(), anyString(), anyString());
 
     AzureVMSSListVirtualMachineScaleSetsParameters azureVMSSListVirtualMachineScaleSetsParameters =
@@ -122,7 +122,7 @@ public class AzureVMSSSyncTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetVirtualMachineScaleSets() throws Exception {
     doReturn(Optional.of(virtualMachineScaleSet))
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .getVirtualMachineScaleSetByName(any(), anyString(), anyString(), any());
 
     PagedList<VirtualMachineScaleSetVM> pageList = getPageList();

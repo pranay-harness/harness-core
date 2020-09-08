@@ -16,25 +16,25 @@ import com.google.inject.Inject;
 
 import com.microsoft.azure.CloudException;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.client.AzureNetworkClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
-import software.wings.service.intfc.azure.delegate.AzureNetworkHelperServiceDelegate;
-import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public abstract class AzureVMSSTaskHandler {
-  @Inject protected AzureVMSSHelperServiceDelegate azureVMSSHelperServiceDelegate;
-  @Inject protected AzureAutoScaleSettingsHelperServiceDelegate azureAutoScaleSettingsHelperServiceDelegate;
-  @Inject protected AzureNetworkHelperServiceDelegate azureNetworkHelperServiceDelegate;
+  @Inject protected AzureComputeClient azureComputeClient;
+  @Inject protected AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
+  @Inject protected AzureNetworkClient azureNetworkClient;
   @Inject protected DelegateLogService delegateLogService;
   @Inject protected TimeLimiter timeLimiter;
 
@@ -79,7 +79,7 @@ public abstract class AzureVMSSTaskHandler {
     logCallback.saveExecutionLog(message, INFO, SUCCESS);
   }
 
-  protected ExecutionLogCallback getLogCallBack(AzureVMSSTaskParameters parameters, String commandUnit) {
+  public ExecutionLogCallback getLogCallBack(AzureVMSSTaskParameters parameters, String commandUnit) {
     return new ExecutionLogCallback(
         delegateLogService, parameters.getAccountId(), parameters.getAppId(), parameters.getActivityId(), commandUnit);
   }
@@ -93,7 +93,7 @@ public abstract class AzureVMSSTaskHandler {
     ExecutionLogCallback logCallBack = getLogCallBack(parameters, scaleCommandUnit);
     logCallBack.saveExecutionLog(
         format("Set VMSS : [%s] desired capacity to [%s]", virtualMachineScaleSetName, 0), INFO);
-    VirtualMachineScaleSet updatedVMSS = azureVMSSHelperServiceDelegate.updateVMSSCapacity(
+    VirtualMachineScaleSet updatedVMSS = azureComputeClient.updateVMSSCapacity(
         azureConfig, virtualMachineScaleSetName, subscriptionId, resourceGroupName, capacity);
     logCallBack.saveExecutionLog("Successfully set desired capacity", INFO, SUCCESS);
 
@@ -112,7 +112,7 @@ public abstract class AzureVMSSTaskHandler {
           logCallBack.saveExecutionLog(
               format("Checking if [%d] VM instances of : [%s] are registered", capacity, virtualMachineScaleSet.name()),
               INFO);
-          if (azureVMSSHelperServiceDelegate.checkIsRequiredNumberOfVMInstances(
+          if (azureComputeClient.checkIsRequiredNumberOfVMInstances(
                   azureConfig, subscriptionId, virtualMachineScaleSet.id(), capacity)) {
             return Boolean.TRUE;
           }

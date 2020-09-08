@@ -26,6 +26,9 @@ import com.microsoft.azure.management.network.VirtualMachineScaleSetNicIPConfigu
 import com.microsoft.azure.management.network.implementation.NetworkInterfaceIPConfigurationInner;
 import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
 import com.microsoft.rest.RestException;
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
@@ -38,17 +41,14 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
-import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
-import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 
 public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
-  @Mock private AzureVMSSHelperServiceDelegate azureVMSSHelperServiceDelegate;
-  @Mock private AzureAutoScaleSettingsHelperServiceDelegate azureAutoScaleSettingsHelperServiceDelegate;
+  @Mock private AzureComputeClient azureComputeClient;
+  @Mock private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
   @Mock private TimeLimiter mockTimeLimiter;
   @Inject @InjectMocks AzureVMSSDeployTaskHandler deployTaskHandler;
   @Inject @InjectMocks AzureVMSSRollbackTaskHandler rollbackTaskHandler;
@@ -62,13 +62,13 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
     VirtualMachineScaleSet oldVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
 
     doReturn(Optional.of(newVirtualMachineScaleSet))
-        .when(azureVMSSHelperServiceDelegate)
+        .when(azureComputeClient)
         .getVirtualMachineScaleSetByName(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getNewVirtualMachineScaleSetName()));
 
     doReturn(Optional.of(oldVirtualMachineScaleSet))
-        .when(azureVMSSHelperServiceDelegate)
+        .when(azureComputeClient)
         .getVirtualMachineScaleSetByName(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
@@ -77,13 +77,13 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
     PagedList<VirtualMachineScaleSetVM> oldVirtualMachineScaleSetList = buildScaleSetVMs(oldInstancesSize);
 
     doReturn(newVirtualMachineScaleSetList)
-        .when(azureVMSSHelperServiceDelegate)
+        .when(azureComputeClient)
         .listVirtualMachineScaleSetVMs(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getNewVirtualMachineScaleSetName()));
 
     doReturn(oldVirtualMachineScaleSetList)
-        .when(azureVMSSHelperServiceDelegate)
+        .when(azureComputeClient)
         .listVirtualMachineScaleSetVMs(any(AzureConfig.class), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
@@ -119,7 +119,7 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
     AzureConfig azureConfig = AzureConfig.builder().build();
     AzureVMSSDeployTaskParameters deployTaskParameters = buildDeployTaskParameters();
     doThrow(Exception.class)
-        .when(azureVMSSHelperServiceDelegate)
+        .when(azureComputeClient)
         .getVirtualMachineScaleSetByName(eq(azureConfig), eq(deployTaskParameters.getSubscriptionId()),
             eq(deployTaskParameters.getResourceGroupName()),
             eq(deployTaskParameters.getOldVirtualMachineScaleSetName()));
@@ -136,9 +136,7 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
     AzureConfig azureConfig = AzureConfig.builder().build();
     AzureVMSSDeployTaskParameters deployTaskParameters = buildDeployTaskParameters();
     deployTaskParameters.setOldVirtualMachineScaleSetName(null);
-    doReturn(Optional.empty())
-        .when(azureVMSSHelperServiceDelegate)
-        .getVirtualMachineScaleSetByName(any(), any(), any(), any());
+    doReturn(Optional.empty()).when(azureComputeClient).getVirtualMachineScaleSetByName(any(), any(), any(), any());
 
     AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse =
         deployTaskHandler.executeTaskInternal(deployTaskParameters, azureConfig);
@@ -171,9 +169,7 @@ public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
     AzureVMSSDeployTaskParameters deployTaskParameters = buildDeployTaskParameters();
     deployTaskParameters.setNewDesiredCount(0);
 
-    doThrow(Exception.class)
-        .when(azureVMSSHelperServiceDelegate)
-        .deleteVirtualMachineScaleSetById(eq(azureConfig), anyString());
+    doThrow(Exception.class).when(azureComputeClient).deleteVirtualMachineScaleSetById(eq(azureConfig), anyString());
 
     AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse =
         rollbackTaskHandler.executeTaskInternal(deployTaskParameters, azureConfig);

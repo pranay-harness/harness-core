@@ -1,4 +1,4 @@
-package software.wings.service.impl.azure.delegate;
+package io.harness.azure.impl;
 
 import static io.harness.rule.OwnerRule.IVAN;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,6 +24,9 @@ import com.microsoft.azure.management.monitor.ActivityLogs.ActivityLogsQueryDefi
 import com.microsoft.azure.management.monitor.ActivityLogs.ActivityLogsQueryDefinitionStages.WithEventDataStartTimeFilter;
 import com.microsoft.azure.management.monitor.EventData;
 import com.microsoft.rest.LogLevel;
+import io.harness.CategoryTest;
+import io.harness.azure.AzureClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
@@ -38,23 +41,18 @@ import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Azure.class, AzureHelperService.class, Http.class, TimeLimiter.class})
+@PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-public class AzureMonitorHelperServiceDelegateImplTest extends WingsBaseTest {
-  @Mock private EncryptionService mockEncryptionService;
+public class AzureMonitorClientImplTest extends CategoryTest {
   @Mock private Azure.Configurable configurable;
   @Mock private Azure.Authenticated authenticated;
   @Mock private Azure azure;
 
-  @InjectMocks AzureMonitorHelperServiceDelegateImpl azureMonitorHelperServiceDelegate;
+  @InjectMocks AzureMonitorClientImpl azureMonitorClient;
 
   @Before
   public void before() throws Exception {
@@ -95,8 +93,8 @@ public class AzureMonitorHelperServiceDelegateImplTest extends WingsBaseTest {
     when(queryWithStartAndEndDateAndProperties.filterByResource(resourceId)).thenReturn(queryExecute);
     when(queryExecute.execute()).thenReturn(eventDataList);
 
-    List<EventData> response = azureMonitorHelperServiceDelegate.listEventDataWithAllPropertiesByResourceId(
-        azureConfig, startDate, endDate, resourceId);
+    List<EventData> response =
+        azureMonitorClient.listEventDataWithAllPropertiesByResourceId(azureConfig, startDate, endDate, resourceId);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -112,9 +110,8 @@ public class AzureMonitorHelperServiceDelegateImplTest extends WingsBaseTest {
     AzureConfig azureConfig =
         AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
-    assertThatThrownBy(()
-                           -> azureMonitorHelperServiceDelegate.listEventDataWithAllPropertiesByResourceId(
-                               azureConfig, startDate, endDate, null))
+    assertThatThrownBy(
+        () -> azureMonitorClient.listEventDataWithAllPropertiesByResourceId(azureConfig, startDate, endDate, null))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

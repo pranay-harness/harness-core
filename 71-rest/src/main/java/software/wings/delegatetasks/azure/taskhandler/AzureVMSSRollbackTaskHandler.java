@@ -12,13 +12,13 @@ import static java.lang.String.format;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.Optional;
@@ -52,7 +52,7 @@ public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
       VirtualMachineScaleSet virtualMachineScaleSet = scaleSet.get();
       ExecutionLogCallback logCallback = getLogCallBack(deployTaskParameters, DELETE_NEW_VMSS);
       logCallback.saveExecutionLog(format(REQUEST_DELETE_SCALE_SET, virtualMachineScaleSet.name()));
-      azureVMSSHelperServiceDelegate.deleteVirtualMachineScaleSetById(azureConfig, virtualMachineScaleSet.id());
+      azureComputeClient.deleteVirtualMachineScaleSetById(azureConfig, virtualMachineScaleSet.id());
       logCallback.saveExecutionLog(format(SUCCESS_DELETE_SCALE_SET, virtualMachineScaleSet.name()), INFO, SUCCESS);
     }
   }

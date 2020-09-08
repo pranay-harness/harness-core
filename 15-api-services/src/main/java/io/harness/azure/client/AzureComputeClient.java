@@ -1,4 +1,4 @@
-package software.wings.service.intfc.azure.delegate;
+package io.harness.azure.client;
 
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
@@ -6,13 +6,13 @@ import com.microsoft.azure.management.network.LoadBalancer;
 import com.microsoft.azure.management.network.VirtualMachineScaleSetNetworkInterface;
 import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
 import com.microsoft.azure.management.resources.Subscription;
+import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
-import software.wings.beans.AzureConfig;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface AzureVMSSHelperServiceDelegate {
+public interface AzureComputeClient {
   /**
    * Get Virtual Machine Scale Set by Id.
    *

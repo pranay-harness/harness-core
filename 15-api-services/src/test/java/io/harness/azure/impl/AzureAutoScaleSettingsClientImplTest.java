@@ -1,16 +1,4 @@
-package software.wings.service.impl.azure.delegate;
-
-import static io.harness.rule.OwnerRule.IVAN;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
+package io.harness.azure.impl;
 
 import com.google.common.util.concurrent.TimeLimiter;
 
@@ -25,9 +13,14 @@ import com.microsoft.azure.management.monitor.ScaleCapacity;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleSettingResourceInner;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleSettingsInner;
 import com.microsoft.rest.LogLevel;
+import io.harness.CategoryTest;
+import io.harness.azure.AzureClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
+import org.assertj.core.api.Assertions;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,14 +28,13 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -51,30 +43,29 @@ import java.util.List;
 import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Azure.class, AzureHelperService.class, Http.class, TimeLimiter.class})
+@PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-public class AzureAutoScaleSettingsHelperServiceDelegateImplTest extends WingsBaseTest {
-  @Mock private EncryptionService mockEncryptionService;
+public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   @Mock private Azure.Configurable configurable;
   @Mock private Azure.Authenticated authenticated;
   @Mock private Azure azure;
 
-  @InjectMocks AzureAutoScaleSettingsHelperServiceDelegateImpl azureAutoScaleSettingsHelperServiceDelegate;
+  @InjectMocks AzureAutoScaleSettingsClientImpl azureAutoScaleSettingsClient;
 
   @Before
   public void before() throws Exception {
-    ApplicationTokenCredentials tokenCredentials = mock(ApplicationTokenCredentials.class);
-    whenNew(ApplicationTokenCredentials.class).withAnyArguments().thenReturn(tokenCredentials);
-    when(tokenCredentials.getToken(anyString())).thenReturn("tokenValue");
-    mockStatic(Azure.class);
-    when(Azure.configure()).thenReturn(configurable);
-    when(configurable.withLogLevel(any(LogLevel.class))).thenReturn(configurable);
-    when(configurable.authenticate(any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
-    when(authenticated.withDefaultSubscription()).thenReturn(azure);
+    ApplicationTokenCredentials tokenCredentials = Mockito.mock(ApplicationTokenCredentials.class);
+    PowerMockito.whenNew(ApplicationTokenCredentials.class).withAnyArguments().thenReturn(tokenCredentials);
+    Mockito.when(tokenCredentials.getToken(Matchers.anyString())).thenReturn("tokenValue");
+    PowerMockito.mockStatic(Azure.class);
+    Mockito.when(Azure.configure()).thenReturn(configurable);
+    Mockito.when(configurable.withLogLevel(Matchers.any(LogLevel.class))).thenReturn(configurable);
+    Mockito.when(configurable.authenticate(Matchers.any(ApplicationTokenCredentials.class))).thenReturn(authenticated);
+    Mockito.when(authenticated.withDefaultSubscription()).thenReturn(azure);
   }
 
   @Test
-  @Owner(developers = IVAN)
+  @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testGetAutoScaleSettingByTargetResourceId() throws Exception {
     String resourceGroupName = "resourceGroupName";
@@ -85,15 +76,14 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImplTest extends WingsBa
 
     mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
 
-    Optional<AutoscaleSetting> response =
-        azureAutoScaleSettingsHelperServiceDelegate.getAutoScaleSettingByTargetResourceId(
-            azureConfig, resourceGroupName, targetResourceId);
+    Optional<AutoscaleSetting> response = azureAutoScaleSettingsClient.getAutoScaleSettingByTargetResourceId(
+        azureConfig, resourceGroupName, targetResourceId);
 
-    response.ifPresent(as -> assertThat(as).isNotNull());
+    response.ifPresent(as -> Assertions.assertThat(as).isNotNull());
   }
 
   @Test
-  @Owner(developers = IVAN)
+  @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testAttachAutoScaleSettingToTargetResourceId() throws Exception {
     String resourceGroupName = "resourceGroupName";
@@ -184,34 +174,35 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImplTest extends WingsBa
 
     AutoscaleSettings mockAutoScaleSettings =
         mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
-    AutoscaleSettingResourceInner mockAutoScaleSettingResourceInner = mock(AutoscaleSettingResourceInner.class);
-    AutoscaleSettingsInner mockAutoScaleSettingsInner = mock(AutoscaleSettingsInner.class);
+    AutoscaleSettingResourceInner mockAutoScaleSettingResourceInner = Mockito.mock(AutoscaleSettingResourceInner.class);
+    AutoscaleSettingsInner mockAutoScaleSettingsInner = Mockito.mock(AutoscaleSettingsInner.class);
 
-    when(mockAutoScaleSettings.inner()).thenReturn(mockAutoScaleSettingsInner);
+    Mockito.when(mockAutoScaleSettings.inner()).thenReturn(mockAutoScaleSettingsInner);
     ArgumentCaptor<AutoscaleSettingResourceInner> autoScaleSettingResourceInnerCapture =
         ArgumentCaptor.forClass(AutoscaleSettingResourceInner.class);
 
-    doReturn(mockAutoScaleSettingResourceInner)
+    Mockito.doReturn(mockAutoScaleSettingResourceInner)
         .when(mockAutoScaleSettingsInner)
-        .createOrUpdate(eq(resourceGroupName), anyString(), autoScaleSettingResourceInnerCapture.capture());
+        .createOrUpdate(
+            Matchers.eq(resourceGroupName), Matchers.anyString(), autoScaleSettingResourceInnerCapture.capture());
 
-    azureAutoScaleSettingsHelperServiceDelegate.attachAutoScaleSettingToTargetResourceId(
+    azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
         azureConfig, resourceGroupName, targetResourceId, autoScaleSettingsJSONs, defaultProfileScalePolicy);
 
     AutoscaleSettingResourceInner autoScaleSettingResult = autoScaleSettingResourceInnerCapture.getValue();
-    assertThat(autoScaleSettingResult).isNotNull();
-    assertThat(autoScaleSettingResult.targetResourceUri()).isEqualTo(targetResourceId);
-    assertThat(autoScaleSettingResult.profiles().size()).isEqualTo(3);
-    assertThat(autoScaleSettingResult.profiles().get(0).capacity().minimum())
+    Assertions.assertThat(autoScaleSettingResult).isNotNull();
+    Assertions.assertThat(autoScaleSettingResult.targetResourceUri()).isEqualTo(targetResourceId);
+    Assertions.assertThat(autoScaleSettingResult.profiles().size()).isEqualTo(3);
+    Assertions.assertThat(autoScaleSettingResult.profiles().get(0).capacity().minimum())
         .isEqualTo(defaultProfileScalePolicy.minimum());
-    assertThat(autoScaleSettingResult.profiles().get(0).capacity().defaultProperty())
+    Assertions.assertThat(autoScaleSettingResult.profiles().get(0).capacity().defaultProperty())
         .isEqualTo(defaultProfileScalePolicy.defaultProperty());
-    assertThat(autoScaleSettingResult.profiles().get(0).capacity().maximum())
+    Assertions.assertThat(autoScaleSettingResult.profiles().get(0).capacity().maximum())
         .isEqualTo(defaultProfileScalePolicy.maximum());
   }
 
   @Test
-  @Owner(developers = IVAN)
+  @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testClearAutoScaleSettingOnTargetResourceId() throws Exception {
     String resourceGroupName = "resourceGroupName";
@@ -224,18 +215,18 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImplTest extends WingsBa
         mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
 
     ArgumentCaptor<String> autoScaleSettingIdCapture = ArgumentCaptor.forClass(String.class);
-    doNothing().when(mockAutoScaleSettings).deleteById(autoScaleSettingIdCapture.capture());
+    Mockito.doNothing().when(mockAutoScaleSettings).deleteById(autoScaleSettingIdCapture.capture());
 
-    azureAutoScaleSettingsHelperServiceDelegate.clearAutoScaleSettingOnTargetResourceId(
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(
         azureConfig, resourceGroupName, targetResourceId);
 
     String autoScaleSettingIdResult = autoScaleSettingIdCapture.getValue();
-    assertThat(autoScaleSettingIdResult).isNotNull();
-    assertThat(autoScaleSettingIdResult).isEqualTo(autoScaleSettingId);
+    Assertions.assertThat(autoScaleSettingIdResult).isNotNull();
+    Assertions.assertThat(autoScaleSettingIdResult).isEqualTo(autoScaleSettingId);
   }
 
   @Test
-  @Owner(developers = IVAN)
+  @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testGetDefaultAutoScaleProfile() throws Exception {
     String resourceGroupName = "resourceGroupName";
@@ -246,14 +237,14 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImplTest extends WingsBa
 
     mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
 
-    Optional<AutoscaleProfile> response = azureAutoScaleSettingsHelperServiceDelegate.getDefaultAutoScaleProfile(
-        azureConfig, resourceGroupName, targetResourceId);
+    Optional<AutoscaleProfile> response =
+        azureAutoScaleSettingsClient.getDefaultAutoScaleProfile(azureConfig, resourceGroupName, targetResourceId);
 
-    response.ifPresent(as -> assertThat(as).isNotNull());
+    response.ifPresent(as -> Assertions.assertThat(as).isNotNull());
   }
 
   @Test
-  @Owner(developers = IVAN)
+  @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testListAutoScaleProfilesByTargetResourceId() throws Exception {
     String resourceGroupName = "resourceGroupName";
@@ -264,28 +255,27 @@ public class AzureAutoScaleSettingsHelperServiceDelegateImplTest extends WingsBa
 
     mockAutosScaleSettings(resourceGroupName, targetResourceId, autoScaleSettingId);
 
-    List<AutoscaleProfile> response =
-        azureAutoScaleSettingsHelperServiceDelegate.listAutoScaleProfilesByTargetResourceId(
-            azureConfig, resourceGroupName, targetResourceId);
+    List<AutoscaleProfile> response = azureAutoScaleSettingsClient.listAutoScaleProfilesByTargetResourceId(
+        azureConfig, resourceGroupName, targetResourceId);
 
-    assertThat(response).isNotNull();
-    assertThat(response.size()).isEqualTo(1);
+    Assertions.assertThat(response).isNotNull();
+    Assertions.assertThat(response.size()).isEqualTo(1);
   }
 
   public AutoscaleSettings mockAutosScaleSettings(
       String resourceGroupName, String targetResourceId, String autoScaleSettingId) throws IOException {
-    AutoscaleSettings mockAutoScaleSettings = mock(AutoscaleSettings.class);
-    AutoscaleSetting mockAutoScaleSetting = mock(AutoscaleSetting.class);
+    AutoscaleSettings mockAutoScaleSettings = Mockito.mock(AutoscaleSettings.class);
+    AutoscaleSetting mockAutoScaleSetting = Mockito.mock(AutoscaleSetting.class);
     PagedList<AutoscaleSetting> pageList = getPageList();
     pageList.add(mockAutoScaleSetting);
 
-    when(azure.autoscaleSettings()).thenReturn(mockAutoScaleSettings);
-    when(mockAutoScaleSettings.listByResourceGroup(resourceGroupName)).thenReturn(pageList);
-    when(mockAutoScaleSetting.autoscaleEnabled()).thenReturn(true);
-    when(mockAutoScaleSetting.targetResourceId()).thenReturn(targetResourceId);
-    when(mockAutoScaleSetting.id()).thenReturn(autoScaleSettingId);
-    AutoscaleProfile autoscaleProfile = mock(AutoscaleProfile.class);
-    when(mockAutoScaleSetting.profiles()).thenReturn(new HashMap<String, AutoscaleProfile>() {
+    Mockito.when(azure.autoscaleSettings()).thenReturn(mockAutoScaleSettings);
+    Mockito.when(mockAutoScaleSettings.listByResourceGroup(resourceGroupName)).thenReturn(pageList);
+    Mockito.when(mockAutoScaleSetting.autoscaleEnabled()).thenReturn(true);
+    Mockito.when(mockAutoScaleSetting.targetResourceId()).thenReturn(targetResourceId);
+    Mockito.when(mockAutoScaleSetting.id()).thenReturn(autoScaleSettingId);
+    AutoscaleProfile autoscaleProfile = Mockito.mock(AutoscaleProfile.class);
+    Mockito.when(mockAutoScaleSetting.profiles()).thenReturn(new HashMap<String, AutoscaleProfile>() {
       { put("profile1", autoscaleProfile); }
     });
     return mockAutoScaleSettings;

@@ -14,6 +14,7 @@ import com.microsoft.azure.management.network.PublicIPAddressDnsSettings;
 import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
 import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
+import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
@@ -37,7 +38,6 @@ import io.harness.exception.InvalidRequestException;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.AzureConfig;
 
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +59,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
     AzureVMSSTaskResponse azureVMSSTaskResponse;
     switch (azureVMSSTaskParameters.getCommandType()) {
       case AZURE_VMSS_LIST_SUBSCRIPTIONS: {
-        List<Subscription> subscriptions = azureVMSSHelperServiceDelegate.listSubscriptions(azureConfig);
+        List<Subscription> subscriptions = azureComputeClient.listSubscriptions(azureConfig);
         List<SubscriptionData> subscriptionsData =
             subscriptions.stream().map(toSubscriptionData()).collect(Collectors.toList());
 
@@ -71,7 +71,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
             ((AzureVMSSListResourceGroupsNamesParameters) azureVMSSTaskParameters).getSubscriptionId();
 
         List<String> resourceGroupsNames =
-            azureVMSSHelperServiceDelegate.listResourceGroupsNamesBySubscriptionId(azureConfig, subscriptionId);
+            azureComputeClient.listResourceGroupsNamesBySubscriptionId(azureConfig, subscriptionId);
 
         azureVMSSTaskResponse =
             AzureVMSSListResourceGroupsNamesResponse.builder().resourceGroupsNames(resourceGroupsNames).build();
@@ -84,7 +84,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
             ((AzureVMSSListVirtualMachineScaleSetsParameters) azureVMSSTaskParameters).getResourceGroupName();
 
         List<VirtualMachineScaleSet> virtualMachineScaleSets =
-            azureVMSSHelperServiceDelegate.listVirtualMachineScaleSetsByResourceGroupName(
+            azureComputeClient.listVirtualMachineScaleSetsByResourceGroupName(
                 azureConfig, subscriptionId, resourceGroupName);
         List<VirtualMachineScaleSetData> virtualMachineScaleSetsList =
             virtualMachineScaleSets.stream().map(toVirtualMachineScaleSetData()).collect(Collectors.toList());
@@ -102,9 +102,8 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
         String virtualMachineScaleSetName =
             ((AzureVMSSGetVirtualMachineScaleSetParameters) azureVMSSTaskParameters).getVmssName();
 
-        Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp =
-            azureVMSSHelperServiceDelegate.getVirtualMachineScaleSetByName(
-                azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
+        Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp = azureComputeClient.getVirtualMachineScaleSetByName(
+            azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
 
         if (!virtualMachineScaleSetOp.isPresent()) {
           throw new InvalidRequestException(
@@ -138,7 +137,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
             ((AzureVMSSListLoadBalancersNamesParameters) azureVMSSTaskParameters).getResourceGroupName();
 
         List<LoadBalancer> loadBalancers =
-            azureNetworkHelperServiceDelegate.listLoadBalancersByResourceGroup(azureConfig, resourceGroupName);
+            azureNetworkClient.listLoadBalancersByResourceGroup(azureConfig, resourceGroupName);
 
         List<String> loadBalancersNames = loadBalancers.stream().map(HasName::name).collect(Collectors.toList());
 
@@ -153,8 +152,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
             ((AzureVMSSListLoadBalancerBackendPoolsNamesParameters) azureVMSSTaskParameters).getLoadBalancerName();
 
         List<LoadBalancerBackend> loadBalancerBackendPools =
-            azureNetworkHelperServiceDelegate.listLoadBalancerBackendPools(
-                azureConfig, resourceGroupName, loadBalancerName);
+            azureNetworkClient.listLoadBalancerBackendPools(azureConfig, resourceGroupName, loadBalancerName);
 
         List<String> loadBalancerBackendPoolsNames =
             loadBalancerBackendPools.stream().map(HasName::name).collect(Collectors.toList());
@@ -169,7 +167,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
         String vmssId = ((AzureVMSSListVMDataParameters) azureVMSSTaskParameters).getVmssId();
 
         List<VirtualMachineScaleSetVM> virtualMachines =
-            azureVMSSHelperServiceDelegate.listVirtualMachineScaleSetVMs(azureConfig, subscriptionId, vmssId);
+            azureComputeClient.listVirtualMachineScaleSetVMs(azureConfig, subscriptionId, vmssId);
         List<AzureVMData> vmDataList = virtualMachines.stream().map(toVMData()).collect(Collectors.toList());
 
         azureVMSSTaskResponse = AzureVMSSListVMDataResponse.builder().vmssId(vmssId).vmData(vmDataList).build();
@@ -201,7 +199,7 @@ public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
   private Function<VirtualMachineScaleSetVM, AzureVMData> toVMData() {
     return vm -> {
       String id = vm.id();
-      Optional<PublicIPAddressInner> publicIPAddressOp = azureVMSSHelperServiceDelegate.getVMPublicIPAddress(vm);
+      Optional<PublicIPAddressInner> publicIPAddressOp = azureComputeClient.getVMPublicIPAddress(vm);
       String publicIp = publicIPAddressOp.map(PublicIPAddressInner::ipAddress).orElse(EMPTY);
       String publicDnsName =
           publicIPAddressOp.map(PublicIPAddressInner::dnsSettings).map(PublicIPAddressDnsSettings::fqdn).orElse(EMPTY);

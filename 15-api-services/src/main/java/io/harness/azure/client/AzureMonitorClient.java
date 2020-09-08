@@ -1,12 +1,12 @@
-package software.wings.service.intfc.azure.delegate;
+package io.harness.azure.client;
 
 import com.microsoft.azure.management.monitor.EventData;
+import io.harness.azure.model.AzureConfig;
 import org.joda.time.DateTime;
-import software.wings.beans.AzureConfig;
 
 import java.util.List;
 
-public interface AzureMonitorHelperServiceDelegate {
+public interface AzureMonitorClient {
   /**
    * List event data with all properties by resource id.
    *

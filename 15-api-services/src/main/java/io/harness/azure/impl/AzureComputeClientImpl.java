@@ -1,4 +1,4 @@
-package software.wings.service.impl.azure.delegate;
+package io.harness.azure.impl;
 
 import static io.harness.azure.model.AzureConstants.AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.BACKEND_POOLS_LIST_EMPTY_VALIDATION_MSG;
@@ -23,14 +23,11 @@ import static io.harness.azure.model.AzureConstants.VMSS_IDS_IS_NULL_VALIDATION_
 import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_LIST_EMPTY_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_NOT_NUMBERS_VALIDATION_MSG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.task.utils.AzureVMSSUtils.dateToISO8601BasicStr;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.utils.AsgConvention.getRevisionTagValue;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.PagedList;
@@ -49,13 +46,14 @@ import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import io.fabric8.utils.Objects;
+import io.harness.azure.AzureClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
+import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.AzureConfig;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -70,7 +68,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService implements AzureVMSSHelperServiceDelegate {
+public class AzureComputeClientImpl extends AzureClient implements AzureComputeClient {
   @Override
   public List<VirtualMachineScaleSet> listVirtualMachineScaleSetsByResourceGroupName(
       AzureConfig azureConfig, String subscriptionId, String resourceGroupName) {
@@ -84,8 +82,6 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     Objects.notNull(azure, AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG);
 
-    List<VirtualMachineScaleSet> virtualMachineScaleSetsList = new ArrayList<>();
-
     logger.debug("Start getting Virtual Machine Scale Sets by resourceGroupName: {}, subscriptionId: {}",
         resourceGroupName, subscriptionId);
     Instant startListingVMSS = Instant.now();
@@ -93,9 +89,7 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
         azure.virtualMachineScaleSets().listByResourceGroup(resourceGroupName);
 
     // Lazy listing https://github.com/Azure/azure-sdk-for-java/issues/860
-    for (VirtualMachineScaleSet set : virtualMachineScaleSets) {
-      virtualMachineScaleSetsList.add(set);
-    }
+    List<VirtualMachineScaleSet> virtualMachineScaleSetsList = new ArrayList<>(virtualMachineScaleSets);
 
     long elapsedTime = Duration.between(startListingVMSS, Instant.now()).toMillis();
     logger.info(
@@ -335,8 +329,7 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
     }
   }
 
-  @VisibleForTesting
-  Map<String, String> getTagsForNewVMSS(VirtualMachineScaleSet baseVirtualMachineScaleSet, String infraMappingId,
+  public Map<String, String> getTagsForNewVMSS(VirtualMachineScaleSet baseVirtualMachineScaleSet, String infraMappingId,
       Integer harnessRevision, String newVirtualMachineScaleSetName, boolean isBlueGreen) {
     List<String> harnessTagsList = Arrays.asList(HARNESS_AUTOSCALING_GROUP_TAG_NAME, NAME_TAG);
     Map<String, String> baseVMSSTags = baseVirtualMachineScaleSet.tags()
@@ -345,9 +338,10 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
                                            .filter(tagEntry -> !harnessTagsList.contains(tagEntry.getKey()))
                                            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-    baseVMSSTags.put(HARNESS_AUTOSCALING_GROUP_TAG_NAME, getRevisionTagValue(infraMappingId, harnessRevision));
+    baseVMSSTags.put(
+        HARNESS_AUTOSCALING_GROUP_TAG_NAME, AzureResourceUtility.getRevisionTagValue(infraMappingId, harnessRevision));
     baseVMSSTags.put(NAME_TAG, newVirtualMachineScaleSetName);
-    baseVMSSTags.put(VMSS_CREATED_TIME_STAMP_TAG_NAME, dateToISO8601BasicStr(new Date()));
+    baseVMSSTags.put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureResourceUtility.dateToISO8601BasicStr(new Date()));
 
     if (isBlueGreen) {
       baseVMSSTags.put(BG_VERSION_TAG_NAME, BG_GREEN_TAG_VALUE);
@@ -376,7 +370,7 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
       osProfile.linuxConfiguration().withDisablePasswordAuthentication(true);
 
       SshConfiguration sshConfiguration = new SshConfiguration();
-      sshConfiguration.withPublicKeys(new ArrayList<SshPublicKey>());
+      sshConfiguration.withPublicKeys(new ArrayList<>());
       osProfile.linuxConfiguration().withSsh(sshConfiguration);
 
       SshPublicKey sshPublicKey = new SshPublicKey();
@@ -529,12 +523,6 @@ public class AzureVMSSHelperServiceDelegateImpl extends AzureHelperService imple
     if (vmScaleSetNetworkInterfaces.isEmpty()) {
       return Collections.emptyList();
     }
-
-    List<VirtualMachineScaleSetNetworkInterface> vmScaleSetNetworkInterfacesList = new ArrayList<>();
-    for (VirtualMachineScaleSetNetworkInterface vmScaleSetNetworkInterface : vmScaleSetNetworkInterfaces) {
-      vmScaleSetNetworkInterfacesList.add(vmScaleSetNetworkInterface);
-    }
-
-    return vmScaleSetNetworkInterfacesList;
+    return new ArrayList<>(vmScaleSetNetworkInterfaces);
   }
 }

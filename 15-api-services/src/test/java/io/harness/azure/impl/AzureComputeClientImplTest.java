@@ -1,4 +1,4 @@
-package software.wings.service.impl.azure.delegate;
+package io.harness.azure.impl;
 
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.NAME_TAG;
@@ -38,6 +38,9 @@ import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.Subscriptions;
 import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
+import io.harness.CategoryTest;
+import io.harness.azure.AzureClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
@@ -52,10 +55,6 @@ import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -64,15 +63,14 @@ import java.util.Map;
 import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Azure.class, AzureHelperService.class, Http.class, TimeLimiter.class})
+@PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
-  @Mock private EncryptionService mockEncryptionService;
+public class AzureComputeClientImplTest extends CategoryTest {
   @Mock private Azure.Configurable configurable;
   @Mock private Azure.Authenticated authenticated;
   @Mock private Azure azure;
 
-  @InjectMocks private AzureVMSSHelperServiceDelegateImpl azureVMSSHelperServiceDelegateImpl;
+  @InjectMocks private AzureComputeClientImpl azureComputeClient;
 
   @Before
   public void before() throws Exception {
@@ -97,10 +95,7 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(azure.subscriptions()).thenReturn(subscriptions);
     when(subscriptions.list()).thenReturn(pageList);
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-
-    List<Subscription> response = azureVMSSHelperServiceDelegateImpl.listSubscriptions(azureConfig);
+    List<Subscription> response = azureComputeClient.listSubscriptions(getAzureComputeConfig());
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -118,11 +113,8 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(azure.resourceGroups()).thenReturn(resourceGroups);
     when(resourceGroups.list()).thenReturn(pageList);
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-
     List<String> response =
-        azureVMSSHelperServiceDelegateImpl.listResourceGroupsNamesBySubscriptionId(azureConfig, "subscriptionId");
+        azureComputeClient.listResourceGroupsNamesBySubscriptionId(getAzureComputeConfig(), "subscriptionId");
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -140,11 +132,8 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(azure.virtualMachineScaleSets()).thenReturn(virtualMachineScaleSets);
     when(virtualMachineScaleSets.getById("virtualMachineSetId")).thenReturn(virtualMachineScaleSet);
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-
-    Optional<VirtualMachineScaleSet> response = azureVMSSHelperServiceDelegateImpl.getVirtualMachineScaleSetsById(
-        azureConfig, "subscriptionId", "virtualMachineSetId");
+    Optional<VirtualMachineScaleSet> response = azureComputeClient.getVirtualMachineScaleSetsById(
+        getAzureComputeConfig(), "subscriptionId", "virtualMachineSetId");
 
     response.ifPresent(scaleSet -> assertThat(scaleSet).isNotNull());
   }
@@ -157,11 +146,8 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     VirtualMachineScaleSet virtualMachineScaleSet =
         mockVirtualMachineScaleSet("resourceGroupName", "virtualMachineScaleSetName");
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-
-    Optional<VirtualMachineScaleSet> response = azureVMSSHelperServiceDelegateImpl.getVirtualMachineScaleSetByName(
-        azureConfig, "subscriptionId", "resourceGroupName", "virtualMachineScaleSetName");
+    Optional<VirtualMachineScaleSet> response = azureComputeClient.getVirtualMachineScaleSetByName(
+        getAzureComputeConfig(), "subscriptionId", "resourceGroupName", "virtualMachineScaleSetName");
 
     response.ifPresent(vmm -> assertThat(vmm).isNotNull());
   }
@@ -181,12 +167,8 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(azure.virtualMachineScaleSets()).thenReturn(virtualMachineScaleSets);
     when(virtualMachineScaleSets.listByResourceGroup("resourceGroupName")).thenReturn(pageList);
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-
-    List<VirtualMachineScaleSet> response =
-        azureVMSSHelperServiceDelegateImpl.listVirtualMachineScaleSetsByResourceGroupName(
-            azureConfig, "subscriptionId", "resourceGroupName");
+    List<VirtualMachineScaleSet> response = azureComputeClient.listVirtualMachineScaleSetsByResourceGroupName(
+        getAzureComputeConfig(), "subscriptionId", "resourceGroupName");
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -204,10 +186,7 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(virtualMachineScaleSets.getById("virtualMachineScaleSet")).thenReturn(virtualMachineScaleSet);
     doNothing().when(virtualMachineScaleSets).deleteById("virtualMachineScaleSet");
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-
-    azureVMSSHelperServiceDelegateImpl.deleteVirtualMachineScaleSetById(azureConfig, "virtualMachineScaleSet");
+    azureComputeClient.deleteVirtualMachineScaleSetById(getAzureComputeConfig(), "virtualMachineScaleSet");
 
     verify(azure, times(2)).virtualMachineScaleSets();
   }
@@ -226,11 +205,8 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
 
     doNothing().when(virtualMachineScaleSets).deleteByResourceGroup("resourceGroupName", "virtualMachineScaleSetName");
 
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
-
-    azureVMSSHelperServiceDelegateImpl.deleteVirtualMachineScaleSetByResourceGroupName(
-        azureConfig, "resourceGroupName", "virtualMachineScaleSetName");
+    azureComputeClient.deleteVirtualMachineScaleSetByResourceGroupName(
+        getAzureComputeConfig(), "resourceGroupName", "virtualMachineScaleSetName");
 
     verify(azure, times(2)).virtualMachineScaleSets();
   }
@@ -255,11 +231,9 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(virtualMachineScaleSets.getById("virtualMachineSetId")).thenReturn(virtualMachineScaleSet);
     when(virtualMachineScaleSet.virtualMachines()).thenReturn(virtualMachineScaleSetVMs);
     when(virtualMachineScaleSetVMs.list()).thenReturn(virtualMachineScaleSetVMPagedList);
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
-    assertThat(azureVMSSHelperServiceDelegateImpl.checkIsRequiredNumberOfVMInstances(
-                   azureConfig, "subscriptionId", "virtualMachineSetId", 0))
+    assertThat(azureComputeClient.checkIsRequiredNumberOfVMInstances(
+                   getAzureComputeConfig(), "subscriptionId", "virtualMachineSetId", 0))
         .isTrue();
     assertThat(virtualMachineScaleSet.virtualMachines().list()).isNotNull();
     verify(azure, times(1)).virtualMachineScaleSets();
@@ -280,7 +254,7 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
 
     int harnessRevision = 6;
     boolean isBlueGreen = false;
-    Map<String, String> result = azureVMSSHelperServiceDelegateImpl.getTagsForNewVMSS(
+    Map<String, String> result = azureComputeClient.getTagsForNewVMSS(
         virtualMachineScaleSet, "infraMappingId", harnessRevision, "newVirtualMachineScaleSetName", isBlueGreen);
 
     assertThat(result).isNotNull();
@@ -302,8 +276,6 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     String resourceGroupName = "resourceGroupName";
     String virtualMachineScaleSetName = "virtualMachineScaleSetName";
     String backendPools = "backendPools";
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
     LoadBalancer primaryInternetFacingLoadBalancer = mock(LoadBalancer.class);
     VirtualMachineScaleSet virtualMachineScaleSet =
@@ -322,7 +294,7 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
         .thenReturn(loadBalancerNatPool);
     when(loadBalancerNatPool.apply()).thenReturn(virtualMachineScaleSet);
 
-    VirtualMachineScaleSet response = azureVMSSHelperServiceDelegateImpl.attachVMSSToBackendPools(azureConfig,
+    VirtualMachineScaleSet response = azureComputeClient.attachVMSSToBackendPools(getAzureComputeConfig(),
         primaryInternetFacingLoadBalancer, subscriptionId, resourceGroupName, virtualMachineScaleSetName, backendPools);
 
     assertThat(response).isNotNull();
@@ -339,8 +311,6 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     String resourceGroupName = "resourceGroupName";
     String virtualMachineScaleSetName = "virtualMachineScaleSetName";
     String backendPools = "backendPools";
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
 
     VirtualMachineScaleSet virtualMachineScaleSet =
         mockVirtualMachineScaleSet(resourceGroupName, virtualMachineScaleSetName);
@@ -353,8 +323,8 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
         .thenReturn(withoutPrimaryLoadBalancerBackend);
     when(withoutPrimaryLoadBalancerBackend.apply()).thenReturn(virtualMachineScaleSet);
 
-    VirtualMachineScaleSet response = azureVMSSHelperServiceDelegateImpl.detachVMSSFromBackendPools(
-        azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName, backendPools);
+    VirtualMachineScaleSet response = azureComputeClient.detachVMSSFromBackendPools(
+        getAzureComputeConfig(), subscriptionId, resourceGroupName, virtualMachineScaleSetName, backendPools);
 
     assertThat(response).isNotNull();
   }
@@ -374,7 +344,7 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
     when(virtualMachineScaleSet.virtualMachines()).thenReturn(virtualMachines);
     doNothing().when(virtualMachines).updateInstances(instanceIds);
 
-    azureVMSSHelperServiceDelegateImpl.updateVMInstances(virtualMachineScaleSet, instanceIds);
+    azureComputeClient.updateVMInstances(virtualMachineScaleSet, instanceIds);
 
     verify(virtualMachines, times(1)).updateInstances(instanceIds);
   }
@@ -406,5 +376,9 @@ public class AzureVMSSHelperServiceDelegateImplTest extends WingsBaseTest {
         };
       }
     };
+  }
+
+  private AzureConfig getAzureComputeConfig() {
+    return AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
   }
 }

@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AzureConfig;
 import software.wings.service.intfc.DelegateService;
+import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,8 +33,10 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testListSubscriptions() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
+    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
     DelegateService mockDelegateService = mock(DelegateService.class);
     on(service).set("delegateService", mockDelegateService);
+    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
 
     doReturn(AzureVMSSTaskExecutionResponse.builder()
                  .azureVMSSTaskResponse(AzureVMSSListSubscriptionsResponse.builder()
@@ -59,6 +62,8 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testListResourceGroupsNames() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
+    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
+    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
     DelegateService mockDelegateService = mock(DelegateService.class);
     on(service).set("delegateService", mockDelegateService);
 
@@ -85,6 +90,8 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testListVirtualMachineScaleSets() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
+    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
+    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
     DelegateService mockDelegateService = mock(DelegateService.class);
     on(service).set("delegateService", mockDelegateService);
 
@@ -118,6 +125,8 @@ public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetVirtualMachineScaleSet() throws InterruptedException {
     AzureVMSSHelperServiceManagerImpl service = spy(AzureVMSSHelperServiceManagerImpl.class);
+    AzureVMSSStateHelper azureVMSSStateHelper = mock(AzureVMSSStateHelper.class);
+    on(service).set("azureVMSSStateHelper", azureVMSSStateHelper);
     DelegateService mockDelegateService = mock(DelegateService.class);
     on(service).set("delegateService", mockDelegateService);
 

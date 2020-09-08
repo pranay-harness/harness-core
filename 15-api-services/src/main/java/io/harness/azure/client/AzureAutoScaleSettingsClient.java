@@ -1,14 +1,14 @@
-package software.wings.service.intfc.azure.delegate;
+package io.harness.azure.client;
 
 import com.microsoft.azure.management.monitor.AutoscaleProfile;
 import com.microsoft.azure.management.monitor.AutoscaleSetting;
 import com.microsoft.azure.management.monitor.ScaleCapacity;
-import software.wings.beans.AzureConfig;
+import io.harness.azure.model.AzureConfig;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface AzureAutoScaleSettingsHelperServiceDelegate {
+public interface AzureAutoScaleSettingsClient {
   /**
    * Get Auto Scale Setting in JSON format
    *
