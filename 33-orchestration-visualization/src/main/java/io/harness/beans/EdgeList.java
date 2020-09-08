@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
-import java.util.Map;
 
 @OwnedBy(CDC)
 @Value
@@ -17,14 +16,6 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EdgeList {
-  Map<String, List<Edge>> groupedEdges;
-  List<Edge> edges;
-
-  @Value
-  @Builder
-  public static class Edge {
-    public enum EdgeType { SIBLING, CHILD }
-    String toNodeId;
-    EdgeType edgeType;
-  }
+  List<String> edges;
+  String next;
 }

@@ -26,6 +26,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GraphVertex implements Serializable {
   private String uuid;
+  private String planNodeId;
   private String name;
   private Long startTs;
   private Long endTs;

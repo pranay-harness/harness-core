@@ -1,9 +1,6 @@
 package io.harness.generator;
 
-import static io.harness.beans.EdgeList.Edge.EdgeType.CHILD;
-import static io.harness.beans.EdgeList.Edge.EdgeType.SIBLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.facilitator.modes.ExecutionMode.CHILDREN;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -17,13 +14,12 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EdgeList;
-import io.harness.beans.EdgeList.Edge;
-import io.harness.beans.EdgeList.EdgeListBuilder;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
 import io.harness.beans.Subgraph;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.outcomes.OutcomeService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -32,9 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Redesign
@@ -64,7 +60,7 @@ public class GraphGenerator {
     Map<String, List<String>> parentIdMap = obtainParentIdMap(nodeExecutions);
 
     final GraphGeneratorSession session = new GraphGeneratorSession(nodeExIdMap, parentIdMap);
-    return session.generateList();
+    return session.generateListStartingFrom(startingNodeExId);
   }
 
   GraphVertex generate(String startingNodeExId, List<NodeExecution> nodeExecutions) {
@@ -151,11 +147,42 @@ public class GraphGenerator {
       currentVertex.setNext(generateGraph(nextChainNodeId));
     }
 
-    private OrchestrationAdjacencyList generateList() {
-      Map<String, GraphVertex> graphVertexMap = nodeExIdMap.entrySet().stream().collect(
-          Collectors.toMap(Map.Entry::getKey, e -> convertToGraphVertex(e.getValue())));
-      Map<String, EdgeList> adjacencyList = nodeExIdMap.entrySet().stream().collect(
-          Collectors.toMap(Map.Entry::getKey, e -> convertToEdgeList(e.getKey())));
+    private OrchestrationAdjacencyList generateListStartingFrom(String startingNodeId) {
+      if (startingNodeId == null) {
+        throw new InvalidRequestException("The starting node id cannot be null");
+      }
+
+      Map<String, GraphVertex> graphVertexMap = new HashMap<>();
+      Map<String, EdgeList> adjacencyList = new HashMap<>();
+
+      LinkedList<String> queue = new LinkedList<>();
+      queue.add(startingNodeId);
+
+      while (!queue.isEmpty()) {
+        String currentNodeId = queue.removeFirst();
+        GraphVertex graphVertex = convertToGraphVertex(nodeExIdMap.get(currentNodeId));
+
+        if (graphVertexMap.containsKey(graphVertex.getUuid())) {
+          continue;
+        }
+
+        graphVertexMap.put(graphVertex.getUuid(), graphVertex);
+
+        List<String> edges = new ArrayList<>();
+
+        if (parentIdMap.containsKey(currentNodeId)) {
+          List<String> childNodeIds = parentIdMap.get(currentNodeId);
+          edges.addAll(childNodeIds);
+          queue.addAll(childNodeIds);
+        }
+
+        String nextNodeId = nodeExIdMap.get(currentNodeId).getNextId();
+        if (EmptyPredicate.isNotEmpty(nextNodeId)) {
+          queue.add(nextNodeId);
+        }
+
+        adjacencyList.put(currentNodeId, EdgeList.builder().edges(edges).next(nextNodeId).build());
+      }
 
       return OrchestrationAdjacencyList.builder().graphVertexMap(graphVertexMap).adjacencyList(adjacencyList).build();
     }
@@ -163,6 +190,7 @@ public class GraphGenerator {
     private GraphVertex convertToGraphVertex(NodeExecution nodeExecution) {
       return GraphVertex.builder()
           .uuid(nodeExecution.getUuid())
+          .planNodeId(nodeExecution.getNode().getUuid())
           .name(nodeExecution.getNode().getName())
           .startTs(nodeExecution.getStartTs())
           .endTs(nodeExecution.getEndTs())
@@ -177,33 +205,6 @@ public class GraphGenerator {
               nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid()))
           .retryIds(nodeExecution.getRetryIds())
           .build();
-    }
-
-    private EdgeList convertToEdgeList(String nodeExecutionId) {
-      EdgeListBuilder builder = EdgeList.builder();
-
-      List<Edge> edges = new ArrayList<>();
-      Map<String, List<Edge>> groupedEdges = new HashMap<>();
-
-      if (parentIdMap.containsKey(nodeExecutionId)) {
-        if (CHILDREN == nodeExIdMap.get(nodeExecutionId).getMode()) {
-          groupedEdges.put("PARALLEL", convertToEdge(parentIdMap.get(nodeExecutionId)));
-        } else {
-          edges.addAll(convertToEdge(parentIdMap.get(nodeExecutionId)));
-        }
-      }
-
-      if (nodeExIdMap.get(nodeExecutionId).getNextId() != null) {
-        edges.add(Edge.builder().toNodeId(nodeExIdMap.get(nodeExecutionId).getNextId()).edgeType(SIBLING).build());
-      }
-
-      return builder.groupedEdges(groupedEdges).edges(edges).build();
-    }
-
-    private List<Edge> convertToEdge(List<String> nodeExecutionIds) {
-      return nodeExecutionIds.stream()
-          .map(id -> Edge.builder().toNodeId(id).edgeType(CHILD).build())
-          .collect(Collectors.toList());
     }
   }
 }

@@ -128,6 +128,15 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/get-partial-orchestration-graph")
+  public RestResponse<OrchestrationGraph> getPartialOrchestrationGraph(
+      @QueryParam("startingSetupNodeId") String startingSetupNodeId,
+      @QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(
+        customExecutionService.getPartialOrchestrationGraph(startingSetupNodeId, planExecutionId));
+  }
+
+  @GET
   @Path("/get-graph-visualization")
   @Produces("image/png")
   public StreamingOutput getGraphVisualization(@QueryParam("planExecutionId") String planExecutionId) {

@@ -11,4 +11,5 @@ import io.harness.dto.OrchestrationGraph;
 public interface GraphGenerationService {
   Graph generateGraph(String planExecutionId);
   OrchestrationGraph generateOrchestrationGraph(String planExecutionId);
+  OrchestrationGraph generatePartialOrchestrationGraph(String startingSetupNodeId, String planExecutionId);
 }

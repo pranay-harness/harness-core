@@ -49,6 +49,8 @@ public interface CustomExecutionService {
 
   OrchestrationGraph getOrchestrationGraph(String executionPlanId);
 
+  OrchestrationGraph getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId);
+
   void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException;
 
   PlanExecution executeSingleBarrierPlan();

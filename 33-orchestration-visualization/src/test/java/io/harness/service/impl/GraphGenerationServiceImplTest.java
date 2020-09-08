@@ -11,6 +11,7 @@ import com.google.inject.name.Named;
 
 import io.harness.OrchestrationVisualizationTest;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.Level;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
@@ -193,16 +194,20 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Category(UnitTests.class)
   public void shouldTReturnOrchestrationGraph() {
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
-    NodeExecution dummyStart = NodeExecution.builder()
-                                   .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
-                                   .mode(ExecutionMode.SYNC)
-                                   .node(PlanNode.builder()
-                                             .uuid("node1_plan")
-                                             .name("name")
-                                             .stepType(StepType.builder().type("DUMMY").build())
-                                             .identifier("identifier1")
-                                             .build())
-                                   .build();
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(planExecution.getUuid())
+                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("node1_plan")
+                      .name("name")
+                      .stepType(StepType.builder().type("DUMMY").build())
+                      .identifier("identifier1")
+                      .build())
+            .build();
     nodeExecutionRepository.save(dummyStart);
 
     OrchestrationGraph graphResponse = graphGenerationService.generateOrchestrationGraph(planExecution.getUuid());
@@ -211,8 +216,59 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
     assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
     assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId())).isNotNull();
-    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getGroupedEdges())
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getNext())
+        .isNull();
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getEdges())
         .isEmpty();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldReturnPartialOrchestrationGraph() {
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(planExecution.getUuid())
+                          .levels(Collections.singletonList(Level.builder().setupId("node1_plan").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("node1_plan")
+                      .name("dummyStart")
+                      .stepType(StepType.builder().type("DUMMY").build())
+                      .identifier("identifier1")
+                      .build())
+            .build();
+    NodeExecution dummyFinish =
+        NodeExecution.builder()
+            .ambiance(Ambiance.builder()
+                          .planExecutionId(planExecution.getUuid())
+                          .levels(Collections.singletonList(Level.builder().setupId("node2_plan").build()))
+                          .build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNode.builder()
+                      .uuid("node2_plan")
+                      .name("dummyFinish")
+                      .stepType(StepType.builder().type("DUMMY").build())
+                      .identifier("identifier2")
+                      .build())
+            .build();
+    nodeExecutionRepository.save(dummyStart);
+    nodeExecutionRepository.save(dummyFinish);
+
+    OrchestrationGraph graphResponse = graphGenerationService.generatePartialOrchestrationGraph(
+        dummyFinish.getNode().getUuid(), planExecution.getUuid());
+    assertThat(graphResponse).isNotNull();
+    assertThat(graphResponse.getRootNodeId()).isEqualTo(dummyFinish.getUuid());
+    assertThat(graphResponse.getAdjacencyList()).isNotNull();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap()).isNotEmpty();
+    assertThat(graphResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(1);
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId())).isNotNull();
+    assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getNext())
+        .isNull();
     assertThat(graphResponse.getAdjacencyList().getAdjacencyList().get(graphResponse.getRootNodeId()).getEdges())
         .isEmpty();
   }
