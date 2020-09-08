@@ -41,6 +41,12 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   }
 
   @Override
+  public DelegateProfileDetails updateSelectors(String accountId, String delegateProfileId, List<String> selectors) {
+    logger.info("Update delegate profile selectors");
+    throw new UnsupportedOperationException("not implemented");
+  }
+
+  @Override
   public DelegateProfileDetails add(DelegateProfileDetails delegateProfile) {
     logger.info("Add delegate profile");
     throw new UnsupportedOperationException("not implemented");

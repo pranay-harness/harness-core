@@ -18,4 +18,5 @@ public class DelegateProfileDetails {
   private String startupScript;
 
   private List<ScopingRuleDetails> scopingRules;
+  private List<String> selectors;
 }

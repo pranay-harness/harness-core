@@ -15,6 +15,8 @@ public interface DelegateProfileManagerService {
   DelegateProfileDetails updateScopingRules(
       String accountId, String delegateProfileId, List<ScopingRuleDetails> scopingRules);
 
+  DelegateProfileDetails updateSelectors(String accountId, String delegateProfileId, List<String> selectors);
+
   DelegateProfileDetails add(DelegateProfileDetails delegateProfile);
 
   void delete(String accountId, String delegateProfileId);
