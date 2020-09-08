@@ -3,3 +3,7 @@
 watcher*.log
 msg/
 /file_handle_logs
+1.0.0-dev/
+start.sh
+stop.sh
+setup-proxy.sh
