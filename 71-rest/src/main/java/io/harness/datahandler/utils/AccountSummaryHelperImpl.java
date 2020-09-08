@@ -30,6 +30,7 @@ public class AccountSummaryHelperImpl implements AccountSummaryHelper {
                                         .cloudCostEnabled(account.isCloudCostEnabled())
                                         .companyName(account.getCompanyName())
                                         .licenseInfo(account.getLicenseInfo())
+                                        .ceLicenseInfo(account.getCeLicenseInfo())
                                         .twoFactorAdminEnforced(account.isTwoFactorAdminEnforced())
                                         .povEnabled(account.isPovAccount())
                                         .ceAutoCollectK8sEventsEnabled(account.isCeAutoCollectK8sEvents())
