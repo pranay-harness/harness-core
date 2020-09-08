@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -19,6 +20,9 @@ import io.harness.event.grpc.MessageProcessor;
 import io.harness.event.service.impl.LastReceivedPublishedMessageRepositoryImpl;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
+import io.harness.grpc.exception.GrpcExceptionMapper;
+import io.harness.grpc.exception.WingsExceptionGrpcMapper;
+import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.persistence.HPersistence;
 import io.harness.security.KeySource;
@@ -53,6 +57,15 @@ public class EventServiceModule extends AbstractModule {
     Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
     serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
+
+    Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =
+        Multibinder.newSetBinder(binder(), GrpcExceptionMapper.class);
+    expectionMapperMultibinder.addBinding().to(WingsExceptionGrpcMapper.class);
+
+    Provider<Set<GrpcExceptionMapper>> grpcExceptionMappersProvider =
+        getProvider(Key.get(new TypeLiteral<Set<GrpcExceptionMapper>>() {}));
+    serverInterceptorMultibinder.addBinding().toProvider(
+        () -> new GrpcServerExceptionHandler(grpcExceptionMappersProvider));
 
     MapBinder<MessageProcessorType, MessageProcessor> mapBinder =
         MapBinder.newMapBinder(binder(), MessageProcessorType.class, MessageProcessor.class);

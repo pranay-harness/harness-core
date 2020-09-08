@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Singleton
@@ -61,6 +62,7 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
       request.getMessagesList()
           .stream()
           .map(publishMessage -> toPublishedMessage(accountId, publishMessage))
+          .filter(Objects::nonNull)
           .forEach(publishedMessage -> {
             if (isEmpty(publishedMessage.getCategory())) {
               withoutCategory.add(publishedMessage);
@@ -102,14 +104,19 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
   }
 
   public PublishedMessage toPublishedMessage(String accountId, PublishMessage publishMessage) {
-    return PublishedMessage.builder()
-        .uuid(StringUtils.defaultIfEmpty(publishMessage.getMessageId(), generateUuid()))
-        .accountId(accountId)
-        .data(publishMessage.getPayload().toByteArray())
-        .type(AnyUtils.toFqcn(publishMessage.getPayload()))
-        .attributes(publishMessage.getAttributesMap())
-        .category(publishMessage.getCategory())
-        .occurredAt(HTimestamps.toMillis(publishMessage.getOccurredAt()))
-        .build();
+    try {
+      return PublishedMessage.builder()
+          .uuid(StringUtils.defaultIfEmpty(publishMessage.getMessageId(), generateUuid()))
+          .accountId(accountId)
+          .data(publishMessage.getPayload().toByteArray())
+          .type(AnyUtils.toFqcn(publishMessage.getPayload()))
+          .attributes(publishMessage.getAttributesMap())
+          .category(publishMessage.getCategory())
+          .occurredAt(HTimestamps.toMillis(publishMessage.getOccurredAt()))
+          .build();
+    } catch (Exception e) {
+      logger.error("Error persisting message {}", publishMessage, e);
+      return null;
+    }
   }
 }
