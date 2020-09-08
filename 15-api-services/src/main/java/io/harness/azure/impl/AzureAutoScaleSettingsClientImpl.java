@@ -1,4 +1,4 @@
-package software.wings.service.impl.azure.delegate;
+package io.harness.azure.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -15,12 +15,12 @@ import com.microsoft.azure.management.monitor.ScaleCapacity;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleSettingResourceInner;
 import com.microsoft.azure.serializer.AzureJacksonAdapter;
 import io.fabric8.utils.Objects;
+import io.harness.azure.AzureClient;
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AzureConfig;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,8 +32,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class AzureAutoScaleSettingsHelperServiceDelegateImpl
-    extends AzureHelperService implements AzureAutoScaleSettingsHelperServiceDelegate {
+public class AzureAutoScaleSettingsClientImpl extends AzureClient implements AzureAutoScaleSettingsClient {
   @Override
   public Optional<String> getAutoScaleSettingJSONByTargetResourceId(
       AzureConfig azureConfig, final String resourceGroupName, final String targetResourceId) {

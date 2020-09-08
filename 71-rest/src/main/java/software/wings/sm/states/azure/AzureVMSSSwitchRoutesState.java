@@ -135,8 +135,8 @@ public class AzureVMSSSwitchRoutesState extends State {
     AzureVMSSSwitchRouteTaskParameters azureVMSSSwitchRouteTaskParameters =
         buildAzureVMSSTaskParameters(azureVMSSSetupContextElement, azureVMSSStateData, activity);
     return AzureVMSSCommandRequest.builder()
-        .azureConfig(azureVMSSStateData.getAzureConfig())
-        .azureEncryptionDetails(azureVMSSStateData.getAzureEncryptedDataDetails())
+        .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(
+            azureVMSSStateData.getAzureConfig(), azureVMSSStateData.getAzureEncryptedDataDetails()))
         .azureVMSSTaskParameters(azureVMSSSwitchRouteTaskParameters)
         .build();
   }

@@ -26,6 +26,10 @@ import com.microsoft.azure.management.compute.VirtualMachineScaleSet.UpdateStage
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVMs;
 import com.microsoft.azure.management.network.LoadBalancer;
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.client.AzureNetworkClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
@@ -38,20 +42,16 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
-import software.wings.service.intfc.azure.delegate.AzureNetworkHelperServiceDelegate;
-import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
-  @Mock private AzureVMSSHelperServiceDelegate azureVMSSHelperServiceDelegate;
-  @Mock private AzureNetworkHelperServiceDelegate azureNetworkHelperServiceDelegate;
-  @Mock private AzureAutoScaleSettingsHelperServiceDelegate azureAutoScaleSettingsHelperServiceDelegate;
+  @Mock private AzureComputeClient azureComputeClient;
+  @Mock private AzureNetworkClient azureNetworkClient;
+  @Mock private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
   @Mock private TimeLimiter mockTimeLimiter;
 
   @Inject @InjectMocks AzureVMSSSwitchRouteTaskHandler switchRouteTaskHandler;
@@ -126,53 +126,50 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     doReturn(Boolean.TRUE).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
 
     AzureConfig azureConfig = AzureConfig.builder().build();
-    when(azureVMSSHelperServiceDelegate.getVirtualMachineScaleSetByName(
-             azureConfig, subscriptionId, resourceGroupName, newVMSSName))
+    when(
+        azureComputeClient.getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, newVMSSName))
         .thenReturn(Optional.of(newVirtualMachineScaleSet));
-    when(azureVMSSHelperServiceDelegate.getVirtualMachineScaleSetByName(
-             azureConfig, subscriptionId, resourceGroupName, oldVMSSName))
+    when(
+        azureComputeClient.getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, oldVMSSName))
         .thenReturn(Optional.of(oldVirtualMachineScaleSet));
-    when(azureNetworkHelperServiceDelegate.getLoadBalancerByName(azureConfig, resourceGroupName, loadBalancerName))
+    when(azureNetworkClient.getLoadBalancerByName(azureConfig, resourceGroupName, loadBalancerName))
         .thenReturn(Optional.of(loadBalancer));
 
     // detachVMSSFromBackendPools()
-    when(azureVMSSHelperServiceDelegate.detachVMSSFromBackendPools(
-             azureConfig, newVirtualMachineScaleSet, stageBackendPool))
+    when(azureComputeClient.detachVMSSFromBackendPools(azureConfig, newVirtualMachineScaleSet, stageBackendPool))
         .thenReturn(newVirtualMachineScaleSet);
-    when(azureVMSSHelperServiceDelegate.detachVMSSFromBackendPools(
-             azureConfig, newVirtualMachineScaleSet, prodBackendPool))
+    when(azureComputeClient.detachVMSSFromBackendPools(azureConfig, newVirtualMachineScaleSet, prodBackendPool))
         .thenReturn(newVirtualMachineScaleSet);
-    when(azureVMSSHelperServiceDelegate.detachVMSSFromBackendPools(
-             azureConfig, oldVirtualMachineScaleSet, prodBackendPool))
+    when(azureComputeClient.detachVMSSFromBackendPools(azureConfig, oldVirtualMachineScaleSet, prodBackendPool))
         .thenReturn(oldVirtualMachineScaleSet);
 
     // attachVMSSToBackendPools()
-    when(azureVMSSHelperServiceDelegate.attachVMSSToBackendPools(
+    when(azureComputeClient.attachVMSSToBackendPools(
              azureConfig, newVirtualMachineScaleSet, loadBalancer, prodBackendPool))
         .thenReturn(newVirtualMachineScaleSet);
-    when(azureVMSSHelperServiceDelegate.attachVMSSToBackendPools(
+    when(azureComputeClient.attachVMSSToBackendPools(
              azureConfig, oldVirtualMachineScaleSet, loadBalancer, prodBackendPool))
         .thenReturn(oldVirtualMachineScaleSet);
 
     // updateVMSSCapacity()
-    when(azureVMSSHelperServiceDelegate.updateVMSSCapacity(
+    when(azureComputeClient.updateVMSSCapacity(
              any(), eq(newVMSSName), eq(subscriptionId), eq(resourceGroupName), anyInt()))
         .thenReturn(newVirtualMachineScaleSet);
-    when(azureVMSSHelperServiceDelegate.updateVMSSCapacity(
+    when(azureComputeClient.updateVMSSCapacity(
              any(), eq(oldVMSSName), eq(subscriptionId), eq(resourceGroupName), anyInt()))
         .thenReturn(oldVirtualMachineScaleSet);
 
-    when(azureVMSSHelperServiceDelegate.checkIsRequiredNumberOfVMInstances(any(), anyString(), anyString(), anyInt()))
+    when(azureComputeClient.checkIsRequiredNumberOfVMInstances(any(), anyString(), anyString(), anyInt()))
         .thenReturn(true);
 
-    doNothing().when(azureVMSSHelperServiceDelegate).updateVMInstances(any(), anyString());
+    doNothing().when(azureComputeClient).updateVMInstances(any(), anyString());
     doNothing()
-        .when(azureAutoScaleSettingsHelperServiceDelegate)
+        .when(azureAutoScaleSettingsClient)
         .clearAutoScaleSettingOnTargetResourceId(any(), anyString(), anyString());
     doNothing()
-        .when(azureAutoScaleSettingsHelperServiceDelegate)
+        .when(azureAutoScaleSettingsClient)
         .attachAutoScaleSettingToTargetResourceId(any(), anyString(), anyString(), anyString());
-    doNothing().when(azureVMSSHelperServiceDelegate).deleteVirtualMachineScaleSetById(any(), anyString());
+    doNothing().when(azureComputeClient).deleteVirtualMachineScaleSetById(any(), anyString());
 
     // newVirtualMachineScaleSet updateTags()
     WithPrimaryLoadBalancer newVMSSUpdater = mock(WithPrimaryLoadBalancer.class);

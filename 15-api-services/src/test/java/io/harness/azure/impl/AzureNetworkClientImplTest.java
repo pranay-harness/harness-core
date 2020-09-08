@@ -1,4 +1,4 @@
-package software.wings.service.impl.azure.delegate;
+package io.harness.azure.impl;
 
 import static io.harness.rule.OwnerRule.IVAN;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +22,9 @@ import com.microsoft.azure.management.network.LoadBalancerTcpProbe;
 import com.microsoft.azure.management.network.LoadBalancers;
 import com.microsoft.azure.management.network.LoadBalancingRule;
 import com.microsoft.rest.LogLevel;
+import io.harness.CategoryTest;
+import io.harness.azure.AzureClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
@@ -35,24 +38,19 @@ import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.HashMap;
 import java.util.List;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Azure.class, AzureHelperService.class, Http.class, TimeLimiter.class})
+@PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
-  @Mock private EncryptionService mockEncryptionService;
+public class AzureNetworkClientImplTest extends CategoryTest {
   @Mock private Azure.Configurable configurable;
   @Mock private Azure.Authenticated authenticated;
   @Mock private Azure azure;
 
-  @InjectMocks AzureNetworkHelperServiceDelegateImpl azureNetworkHelperServiceDelegate;
+  @InjectMocks AzureNetworkClientImpl azureNetworkClient;
 
   @Before
   public void before() throws Exception {
@@ -70,8 +68,6 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListLoadBalancersByResourceGroup() {
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
     String resourceGroupName = "resourceGroupName";
 
     LoadBalancers loadBalancers = mock(LoadBalancers.class);
@@ -83,7 +79,7 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
     when(loadBalancers.listByResourceGroup(resourceGroupName)).thenReturn(loadBalancersList);
 
     List<LoadBalancer> response =
-        azureNetworkHelperServiceDelegate.listLoadBalancersByResourceGroup(azureConfig, resourceGroupName);
+        azureNetworkClient.listLoadBalancersByResourceGroup(getAzureComputeConfig(), resourceGroupName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -94,8 +90,6 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListLoadBalancerBackendPools() {
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
 
@@ -109,8 +103,8 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
       { put("loadBalancerBackendKey", loadBalancerBackend); }
     });
 
-    List<LoadBalancerBackend> response = azureNetworkHelperServiceDelegate.listLoadBalancerBackendPools(
-        azureConfig, resourceGroupName, loadBalancerName);
+    List<LoadBalancerBackend> response =
+        azureNetworkClient.listLoadBalancerBackendPools(getAzureComputeConfig(), resourceGroupName, loadBalancerName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -121,8 +115,6 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListLoadBalancerTcpProbes() {
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
 
@@ -137,7 +129,7 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
     });
 
     List<LoadBalancerTcpProbe> response =
-        azureNetworkHelperServiceDelegate.listLoadBalancerTcpProbes(azureConfig, resourceGroupName, loadBalancerName);
+        azureNetworkClient.listLoadBalancerTcpProbes(getAzureComputeConfig(), resourceGroupName, loadBalancerName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -148,8 +140,6 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListBackendPoolRules() {
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
     String backendPoolName = "backendPoolName";
@@ -168,8 +158,8 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
       { put("loadBalancingRule", loadBalancingRule); }
     });
 
-    List<LoadBalancingRule> response = azureNetworkHelperServiceDelegate.listBackendPoolRules(
-        azureConfig, resourceGroupName, loadBalancerName, backendPoolName);
+    List<LoadBalancingRule> response = azureNetworkClient.listBackendPoolRules(
+        getAzureComputeConfig(), resourceGroupName, loadBalancerName, backendPoolName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -180,8 +170,6 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testListBackendPoolProbes() {
-    AzureConfig azureConfig =
-        AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
     String resourceGroupName = "resourceGroupName";
     String loadBalancerName = "loadBalancerName";
     String backendPoolName = "backendPoolName";
@@ -202,8 +190,8 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
     });
     when(loadBalancingRule.probe()).thenReturn(loadBalancerProbe);
 
-    List<LoadBalancerProbe> response = azureNetworkHelperServiceDelegate.listBackendPoolProbes(
-        azureConfig, resourceGroupName, loadBalancerName, backendPoolName);
+    List<LoadBalancerProbe> response = azureNetworkClient.listBackendPoolProbes(
+        getAzureComputeConfig(), resourceGroupName, loadBalancerName, backendPoolName);
 
     assertThat(response).isNotNull();
     assertThat(response.size()).isEqualTo(1);
@@ -227,5 +215,9 @@ public class AzureNetworkHelperServiceDelegateImplTest extends WingsBaseTest {
         };
       }
     };
+  }
+
+  private AzureConfig getAzureComputeConfig() {
+    return AzureConfig.builder().clientId("clientId").tenantId("tenantId").key("key".toCharArray()).build();
   }
 }

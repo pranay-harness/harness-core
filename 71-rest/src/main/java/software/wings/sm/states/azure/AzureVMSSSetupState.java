@@ -225,8 +225,7 @@ public class AzureVMSSSetupState extends State {
 
     AzureVMSSCommandRequestBuilder azureVMSSCommandRequestBuilder =
         AzureVMSSCommandRequest.builder()
-            .azureConfig(azureConfig)
-            .azureEncryptionDetails(azureEncryptionDetails)
+            .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(azureConfig, azureEncryptionDetails))
             .azureVMSSTaskParameters(azureVmssTaskParameters);
 
     if (VMSSAuthType.SSH_PUBLIC_KEY == azureVMSSInfrastructureMapping.getVmssAuthType()) {
@@ -236,8 +235,9 @@ public class AzureVMSSSetupState extends State {
       List<EncryptedDataDetail> hostConnectionAttributesEncryptionDetails =
           azureVMSSStateHelper.getEncryptedDataDetails(context, hostConnectionAttrsKeyRefId);
 
-      azureVMSSCommandRequestBuilder.hostConnectionAttributes(hostConnectionAttributes)
-          .hostConnectionAttributesEncryptionDetails(hostConnectionAttributesEncryptionDetails);
+      azureVMSSCommandRequestBuilder.azureHostConnectionDelegate(azureVMSSStateHelper.createHostConnectionDelegate(
+          hostConnectionAttributes, hostConnectionAttributesEncryptionDetails));
+
     } else if (VMSSAuthType.PASSWORD == azureVMSSInfrastructureMapping.getVmssAuthType()) {
       String passwordSecretTextName = azureVMSSInfrastructureMapping.getPasswordSecretTextName();
       ServiceVariable encryptedServiceVariable = azureVMSSStateHelper.buildEncryptedServiceVariable(
@@ -245,8 +245,8 @@ public class AzureVMSSSetupState extends State {
       List<EncryptedDataDetail> serviceVariableEncryptionDetails =
           azureVMSSStateHelper.getServiceVariableEncryptedDataDetails(context, encryptedServiceVariable);
 
-      azureVMSSCommandRequestBuilder.serviceVariable(encryptedServiceVariable)
-          .serviceVariableEncryptionDetails(serviceVariableEncryptionDetails);
+      azureVMSSCommandRequestBuilder.azureVMCredentialsDelegate(
+          azureVMSSStateHelper.createVMAuthDelegate(encryptedServiceVariable, serviceVariableEncryptionDetails));
     } else {
       throw new InvalidRequestException(
           format("Unsupported Azure VMSS Auth type, %s", azureVMSSInfrastructureMapping.getVmssAuthType()));

@@ -32,6 +32,10 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.encoding.EncodingUtils;
+import io.harness.delegate.beans.azure.AzureConfigDTO;
+import io.harness.delegate.beans.azure.AzureConfigDelegate;
+import io.harness.delegate.beans.azure.AzureVMAuthDTO;
+import io.harness.delegate.beans.azure.AzureVMAuthDelegate;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -66,7 +70,6 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -88,7 +91,6 @@ import java.util.concurrent.TimeUnit;
 public class AzureVMSSStateHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ActivityService activityService;
-  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private AzureStateHelper azureStateHelper;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private SettingsService settingsService;
@@ -382,6 +384,44 @@ public class AzureVMSSStateHelper {
         .infrastructureMapping(azureVMSSInfrastructureMapping)
         .azureConfig(azureConfig)
         .azureEncryptedDataDetails(encryptedDataDetails)
+        .build();
+  }
+
+  public AzureConfigDelegate createDelegateConfig(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    AzureConfigDTO azureConfigDTO = AzureConfigDTO.builder()
+                                        .clientId(azureConfig.getClientId())
+                                        .encryptedKey(azureConfig.getEncryptedKey())
+                                        .tenantId(azureConfig.getTenantId())
+                                        .build();
+
+    return AzureConfigDelegate.builder()
+        .azureConfigDTO(azureConfigDTO)
+        .azureEncryptionDetails(encryptedDataDetails)
+        .build();
+  }
+
+  public AzureVMAuthDelegate createHostConnectionDelegate(
+      HostConnectionAttributes connectionAttributes, List<EncryptedDataDetail> encryptedDataDetails) {
+    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
+                                        .authType(AzureVMAuthDTO.AuthType.SSH)
+                                        .encryptedKey(connectionAttributes.getEncryptedKey())
+                                        .build();
+    return AzureVMAuthDelegate.builder()
+        .azureVMAuthDTO(azureVMAuthDTO)
+        .azureEncryptionDetails(encryptedDataDetails)
+        .build();
+  }
+
+  public AzureVMAuthDelegate createVMAuthDelegate(
+      ServiceVariable serviceVariable, List<EncryptedDataDetail> encryptedDataDetails) {
+    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
+                                        .authType(AzureVMAuthDTO.AuthType.PASSWORD)
+                                        .encryptedKey(serviceVariable.getSecretTextName())
+                                        .build();
+    return AzureVMAuthDelegate.builder()
+        .azureVMAuthDTO(azureVMAuthDTO)
+        .azureEncryptionDetails(encryptedDataDetails)
         .build();
   }
 }

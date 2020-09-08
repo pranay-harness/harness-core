@@ -23,6 +23,7 @@ import com.google.inject.Singleton;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.network.LoadBalancer;
+import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
@@ -33,7 +34,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
@@ -91,8 +91,8 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
     String subscriptionId = switchRouteTaskParameters.getSubscriptionId();
     String resourceGroupName = switchRouteTaskParameters.getResourceGroupName();
 
-    Optional<VirtualMachineScaleSet> vmss = azureVMSSHelperServiceDelegate.getVirtualMachineScaleSetByName(
-        azureConfig, subscriptionId, resourceGroupName, vmssName);
+    Optional<VirtualMachineScaleSet> vmss =
+        azureComputeClient.getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, vmssName);
     return vmss.orElseThrow(
         ()
             -> new InvalidRequestException(
@@ -105,7 +105,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
     String resourceGroupeName = switchRouteTaskParameters.getResourceGroupName();
 
     Optional<LoadBalancer> loadBalancerOp =
-        azureNetworkHelperServiceDelegate.getLoadBalancerByName(azureConfig, resourceGroupeName, loadBalancerName);
+        azureNetworkClient.getLoadBalancerByName(azureConfig, resourceGroupeName, loadBalancerName);
     return loadBalancerOp.orElseThrow(
         ()
             -> new InvalidRequestException(format(
@@ -143,7 +143,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
         format("Sending request to detach blue virtual machine scale set:[%s] from stage backend pool:[%s]",
             newVMSS.name(), stageBackendPool));
     VirtualMachineScaleSet detachedVMSS =
-        azureVMSSHelperServiceDelegate.detachVMSSFromBackendPools(azureConfig, newVMSS, stageBackendPool);
+        azureComputeClient.detachVMSSFromBackendPools(azureConfig, newVMSS, stageBackendPool);
     waitForUpdatingVMInstances(detachedVMSS, timeoutIntervalInMin, bgSwapRoutesLogCallback);
   }
 
@@ -154,7 +154,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
     bgSwapRoutesLogCallback.saveExecutionLog(
         format("Sending request to attach blue virtual machine scale set:[%s] to prod backend pool:[%s]",
             newVMSS.name(), prodBackendPool));
-    VirtualMachineScaleSet attachedVMSS = azureVMSSHelperServiceDelegate.attachVMSSToBackendPools(
+    VirtualMachineScaleSet attachedVMSS = azureComputeClient.attachVMSSToBackendPools(
         azureConfig, newVMSS, primaryInternetFacingLoadBalancer, prodBackendPool);
     waitForUpdatingVMInstances(attachedVMSS, timeoutIntervalInMin, bgSwapRoutesLogCallback);
   }
@@ -183,7 +183,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
         format("Sending request to detach green virtual machine scale set:[%s] from prod backend pool:[%s]",
             oldVMSS.name(), prodBackendPool));
     VirtualMachineScaleSet detachedVMSS =
-        azureVMSSHelperServiceDelegate.detachVMSSFromBackendPools(azureConfig, oldVMSS, prodBackendPool);
+        azureComputeClient.detachVMSSFromBackendPools(azureConfig, oldVMSS, prodBackendPool);
     waitForUpdatingVMInstances(detachedVMSS, timeoutIntervalInMin, bgSwapRoutesLogCallback);
   }
 
@@ -222,7 +222,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
     bgRollbackLogCallback.saveExecutionLog(
         format("Sending request to attach green virtual machine scale set:[%s] to prod backend pool:[%s]",
             oldVMSS.name(), prodBackendPool));
-    VirtualMachineScaleSet attachedVMSS = azureVMSSHelperServiceDelegate.attachVMSSToBackendPools(
+    VirtualMachineScaleSet attachedVMSS = azureComputeClient.attachVMSSToBackendPools(
         azureConfig, oldVMSS, primaryInternetFacingLoadBalancer, prodBackendPool);
     waitForUpdatingVMInstances(attachedVMSS, timeoutIntervalInMin, bgRollbackLogCallback);
   }
@@ -251,7 +251,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
         format("Sending request to detach blue virtual machine scale set:[%s] from prod backend pool:[%s]",
             newVMSS.name(), prodBackendPool));
     VirtualMachineScaleSet detachedVMSS =
-        azureVMSSHelperServiceDelegate.detachVMSSFromBackendPools(azureConfig, newVMSS, prodBackendPool);
+        azureComputeClient.detachVMSSFromBackendPools(azureConfig, newVMSS, prodBackendPool);
     waitForUpdatingVMInstances(detachedVMSS, timeoutIntervalInMin, bgRollbackLogCallback);
   }
 
@@ -265,7 +265,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
         for (String vmId : vmIds) {
           logCallback.saveExecutionLog(
               format("Updating virtual machine instance: [%s] from the scale set: [%s]", vmId, vmss.name()));
-          azureVMSSHelperServiceDelegate.updateVMInstances(vmss, vmId);
+          azureComputeClient.updateVMInstances(vmss, vmId);
         }
 
         logCallback.saveExecutionLog(
@@ -306,15 +306,14 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
   private void attachAutoScalePolicyToVMSS(
       AzureConfig azureConfig, VirtualMachineScaleSet vmss, String resourceGroupName, String scalePolicyJson) {
     String vmssId = vmss.id();
-    azureAutoScaleSettingsHelperServiceDelegate.attachAutoScaleSettingToTargetResourceId(
+    azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
         azureConfig, resourceGroupName, vmssId, scalePolicyJson);
   }
 
   private void clearAutoScalePolicyFromVMSS(
       AzureConfig azureConfig, VirtualMachineScaleSet vmss, String resourceGroupName) {
     String vmssId = vmss.id();
-    azureAutoScaleSettingsHelperServiceDelegate.clearAutoScaleSettingOnTargetResourceId(
-        azureConfig, resourceGroupName, vmssId);
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, vmssId);
   }
 
   private void addTagsToVMSS(VirtualMachineScaleSet vmss, String tagKey, String tagValue) {
@@ -323,7 +322,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
 
   private void deleteVMSS(AzureConfig azureConfig, VirtualMachineScaleSet vmss) {
     String vmssId = vmss.id();
-    azureVMSSHelperServiceDelegate.deleteVirtualMachineScaleSetById(azureConfig, vmssId);
+    azureComputeClient.deleteVirtualMachineScaleSetById(azureConfig, vmssId);
   }
 
   private AzureVMSSTaskExecutionResponse buildAzureVMSSTaskExecutionResponse() {

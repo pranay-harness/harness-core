@@ -22,6 +22,7 @@ import com.microsoft.azure.management.monitor.ScaleCapacity;
 import com.microsoft.azure.management.network.PublicIPAddressDnsSettings;
 import com.microsoft.azure.management.network.VirtualMachineScaleSetNetworkInterface;
 import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
+import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -30,7 +31,6 @@ import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
@@ -60,8 +60,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   protected Optional<VirtualMachineScaleSet> getScaleSet(
       AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters, String scaleSetName) {
-    return azureVMSSHelperServiceDelegate.getVirtualMachineScaleSetByName(azureConfig,
-        deployTaskParameters.getSubscriptionId(), deployTaskParameters.getResourceGroupName(), scaleSetName);
+    return azureComputeClient.getVirtualMachineScaleSetByName(azureConfig, deployTaskParameters.getSubscriptionId(),
+        deployTaskParameters.getResourceGroupName(), scaleSetName);
   }
 
   private AzureVMSSDeployTaskResponse resizeVirtualMachineScaleSet(AzureConfig azureConfig,
@@ -122,8 +122,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     String scaleSetId = scaleSet.id();
     String resourceGroupName = deployTaskParameters.getResourceGroupName();
     logCallBack.saveExecutionLog(format("Clearing scaling policy for scale set = [%s]", scaleSetName));
-    azureAutoScaleSettingsHelperServiceDelegate.clearAutoScaleSettingOnTargetResourceId(
-        azureConfig, resourceGroupName, scaleSetId);
+    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(azureConfig, resourceGroupName, scaleSetId);
   }
 
   private void updateScaleSetCapacity(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
@@ -148,7 +147,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     ScaleCapacity capacity = new ScaleCapacity();
     capacity.withMinimum(minimum).withMinimum(maximum).withDefaultProperty(desired);
 
-    azureAutoScaleSettingsHelperServiceDelegate.attachAutoScaleSettingToTargetResourceId(
+    azureAutoScaleSettingsClient.attachAutoScaleSettingToTargetResourceId(
         azureConfig, resourceGroupName, scaleSetId, scalingPolicyJSONs, capacity);
   }
 
@@ -162,9 +161,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private List<AzureVMInstanceData> getInstances(
       AzureConfig azureConfig, String scaleSetName, AzureVMSSDeployTaskParameters deployTaskParameters) {
-    List<VirtualMachineScaleSetVM> scaleSetVMs =
-        azureVMSSHelperServiceDelegate.listVirtualMachineScaleSetVMs(azureConfig,
-            deployTaskParameters.getSubscriptionId(), deployTaskParameters.getResourceGroupName(), scaleSetName);
+    List<VirtualMachineScaleSetVM> scaleSetVMs = azureComputeClient.listVirtualMachineScaleSetVMs(azureConfig,
+        deployTaskParameters.getSubscriptionId(), deployTaskParameters.getResourceGroupName(), scaleSetName);
 
     return scaleSetVMs.stream().map(this ::generateVMInstanceData).collect(Collectors.toList());
   }
@@ -176,7 +174,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     String publicDnsName = EMPTY;
 
     List<VirtualMachineScaleSetNetworkInterface> vmScaleSetNetworkInterfaces =
-        azureVMSSHelperServiceDelegate.listVMVirtualMachineScaleSetNetworkInterfaces(scaleSetVM);
+        azureComputeClient.listVMVirtualMachineScaleSetNetworkInterfaces(scaleSetVM);
     if (!vmScaleSetNetworkInterfaces.isEmpty()) {
       VirtualMachineScaleSetNetworkInterface virtualMachineScaleSetNetworkInterface =
           vmScaleSetNetworkInterfaces.get(0);

@@ -1,4 +1,4 @@
-package software.wings.service.impl.azure.delegate;
+package io.harness.azure.impl;
 
 import static io.harness.azure.model.AzureConstants.AZURE_MANAGEMENT_CLIENT_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.BACKEND_POOL_NAME_NULL_VALIDATION_MSG;
@@ -17,11 +17,11 @@ import com.microsoft.azure.management.network.LoadBalancerProbe;
 import com.microsoft.azure.management.network.LoadBalancerTcpProbe;
 import com.microsoft.azure.management.network.LoadBalancingRule;
 import io.fabric8.utils.Objects;
+import io.harness.azure.AzureClient;
+import io.harness.azure.client.AzureNetworkClient;
+import io.harness.azure.model.AzureConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import software.wings.beans.AzureConfig;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.intfc.azure.delegate.AzureNetworkHelperServiceDelegate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,8 +31,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class AzureNetworkHelperServiceDelegateImpl
-    extends AzureHelperService implements AzureNetworkHelperServiceDelegate {
+public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkClient {
   @Override
   public Optional<LoadBalancer> getLoadBalancerByName(
       AzureConfig azureConfig, final String resourceGroupName, final String loadBalancerName) {
@@ -68,11 +67,7 @@ public class AzureNetworkHelperServiceDelegateImpl
 
     logger.debug("Start listing load balancers by resourceGroupName {}", resourceGroupName);
     PagedList<LoadBalancer> loadBalancers = azure.loadBalancers().listByResourceGroup(resourceGroupName);
-    List<LoadBalancer> loadBalancersList = new ArrayList<>();
-    for (LoadBalancer loadBalancer : loadBalancers) {
-      loadBalancersList.add(loadBalancer);
-    }
-    return loadBalancersList;
+    return new ArrayList<>(loadBalancers);
   }
 
   @Override
@@ -180,7 +175,6 @@ public class AzureNetworkHelperServiceDelegateImpl
     if (loadBalancerBackendPool == null) {
       return Optional.empty();
     }
-
     return Optional.of(loadBalancerBackendPool);
   }
 }

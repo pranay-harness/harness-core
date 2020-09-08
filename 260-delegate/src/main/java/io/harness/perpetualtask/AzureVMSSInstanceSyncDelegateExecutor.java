@@ -4,6 +4,7 @@ import static io.harness.network.SafeHttpCall.execute;
 
 import com.google.inject.Inject;
 
+import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.request.AzureVMSSListVMDataParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.grpc.utils.AnyUtils;
@@ -14,7 +15,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
-import software.wings.beans.AzureConfig;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -34,7 +34,8 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
     logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
     AzureVmssInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), AzureVmssInstanceSyncPerpetualTaskParams.class);
-    AzureConfig azureConfig = (AzureConfig) kryoSerializer.asObject(taskParams.getAzureConfig().toByteArray());
+    software.wings.beans.AzureConfig azureConfig =
+        (software.wings.beans.AzureConfig) kryoSerializer.asObject(taskParams.getAzureConfig().toByteArray());
     AzureVMSSTaskExecutionResponse azureVMSSTaskExecutionResponse = executeSyncTask(taskParams, azureConfig);
     try {
       logger.info("Publish instance sync result to manager for VMSS id {} and perpetual task {}",
@@ -72,7 +73,7 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
   }
 
   private AzureVMSSTaskExecutionResponse executeSyncTask(
-      AzureVmssInstanceSyncPerpetualTaskParams taskParams, AzureConfig azureConfig) {
+      AzureVmssInstanceSyncPerpetualTaskParams taskParams, software.wings.beans.AzureConfig azureConfig) {
     List<EncryptedDataDetail> encryptedDataDetails =
         (List<EncryptedDataDetail>) kryoSerializer.asObject(taskParams.getAzureEncryptedData().toByteArray());
     encryptionService.decrypt(azureConfig, encryptedDataDetails);
@@ -82,7 +83,7 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
                                                    .vmssId(taskParams.getVmssId())
                                                    .build();
     try {
-      return azureVMSSSyncTaskHandler.executeTask(parameters, azureConfig);
+      return azureVMSSSyncTaskHandler.executeTask(parameters, createAzureConfigForDelegateTask(azureConfig));
     } catch (Exception ex) {
       logger.error("Failed to execute instance sync task for VMSS id {}", taskParams.getVmssId(), ex);
       return AzureVMSSTaskExecutionResponse.builder()
@@ -90,5 +91,12 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
           .errorMessage(ex.getMessage())
           .build();
     }
+  }
+
+  private AzureConfig createAzureConfigForDelegateTask(software.wings.beans.AzureConfig azureConfig) {
+    String clientId = azureConfig.getClientId();
+    String tenantId = azureConfig.getTenantId();
+    char[] key = azureConfig.getKey();
+    return AzureConfig.builder().clientId(clientId).tenantId(tenantId).key(key).build();
   }
 }

@@ -26,7 +26,11 @@ import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVMs;
 import com.microsoft.azure.management.resources.Subscription;
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
+import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
@@ -34,7 +38,6 @@ import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
-import io.harness.delegate.task.utils.AzureVMSSUtils;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,11 +46,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.intfc.azure.delegate.AzureAutoScaleSettingsHelperServiceDelegate;
-import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -59,8 +59,8 @@ import java.util.Optional;
 
 public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
-  @Mock private AzureVMSSHelperServiceDelegate mockAzureVMSSHelperServiceDelegate;
-  @Mock private AzureAutoScaleSettingsHelperServiceDelegate azureAutoScaleSettingsHelperServiceDelegate;
+  @Mock private AzureComputeClient mockAzureComputeClient;
+  @Mock private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
   @Mock private TimeLimiter timeLimiter;
   @Mock VirtualMachineScaleSetVMs virtualMachineScaleSetVMs;
   @Mock VirtualMachineScaleSetVM virtualMachineScaleSetVM;
@@ -114,7 +114,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     when(virtualMachineScaleSetVersion1.tags()).thenReturn(new HashMap<String, String>() {
       {
         put(HARNESS_AUTOSCALING_GROUP_TAG_NAME, "infraMappingId__1");
-        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureVMSSUtils.dateToISO8601BasicStr(dateVersion1));
+        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureResourceUtility.dateToISO8601BasicStr(dateVersion1));
       }
     });
     doReturn("virtualMachineScaleSetVersion1ShouldBeDeleted").when(virtualMachineScaleSetVersion1).name();
@@ -124,7 +124,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     when(virtualMachineScaleSetVersion2.tags()).thenReturn(new HashMap<String, String>() {
       {
         put(HARNESS_AUTOSCALING_GROUP_TAG_NAME, "infraMappingId__2");
-        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureVMSSUtils.dateToISO8601BasicStr(dateVersion2));
+        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureResourceUtility.dateToISO8601BasicStr(dateVersion2));
       }
     });
     doReturn(1).when(virtualMachineScaleSetVersion2).capacity();
@@ -135,7 +135,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     when(virtualMachineScaleSetVersion3.tags()).thenReturn(new HashMap<String, String>() {
       {
         put(HARNESS_AUTOSCALING_GROUP_TAG_NAME, "infraMappingId__3");
-        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureVMSSUtils.dateToISO8601BasicStr(dateVersion3));
+        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureResourceUtility.dateToISO8601BasicStr(dateVersion3));
       }
     });
     doReturn(2).when(virtualMachineScaleSetVersion3).capacity();
@@ -147,7 +147,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     when(virtualMachineScaleSetVersion4.tags()).thenReturn(new HashMap<String, String>() {
       {
         put(HARNESS_AUTOSCALING_GROUP_TAG_NAME, "infraMappingId__4");
-        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureVMSSUtils.dateToISO8601BasicStr(dateVersion4));
+        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureResourceUtility.dateToISO8601BasicStr(dateVersion4));
       }
     });
     doReturn("virtualMachineScaleSetVersion4ShouldBeDownSizedId").when(virtualMachineScaleSetVersion4).id();
@@ -157,7 +157,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     when(virtualMachineScaleSetVersion5.tags()).thenReturn(new HashMap<String, String>() {
       {
         put(HARNESS_AUTOSCALING_GROUP_TAG_NAME, "infraMappingId__5");
-        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureVMSSUtils.dateToISO8601BasicStr(dateVersion5));
+        put(VMSS_CREATED_TIME_STAMP_TAG_NAME, AzureResourceUtility.dateToISO8601BasicStr(dateVersion5));
       }
     });
     doReturn("virtualMachineScaleSetVersion5ShouldBeRetained").when(virtualMachineScaleSetVersion5).name();
@@ -168,44 +168,44 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     // downsizeOrDeleteOlderVirtualMachineScaleSets
     doReturn(Arrays.asList(virtualMachineScaleSetVersion1, virtualMachineScaleSetVersion2,
                  virtualMachineScaleSetVersion3, virtualMachineScaleSetVersion4, virtualMachineScaleSetVersion5))
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .listVirtualMachineScaleSetsByResourceGroupName(
             any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"));
     doReturn(virtualMachineScaleSetVersion4)
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .updateVMSSCapacity(
             any(), eq("virtualMachineScaleSetVersion4ShouldBeDownSized"), anyString(), anyString(), anyInt());
     doReturn(virtualMachineScaleSetVersion2)
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .updateVMSSCapacity(
             any(), eq("virtualMachineScaleSetVersion2ShouldBeDownSized"), anyString(), anyString(), anyInt());
     doNothing()
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .deleteVirtualMachineScaleSetByResourceGroupName(any(), anyString(), anyString());
 
     // createVirtualMachineScaleSet
     doReturn(Optional.of(baseVirtualMachineScaleSet))
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .getVirtualMachineScaleSetByName(
             any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"), anyString());
     doReturn(Optional.of(virtualMachineScaleSetVersion3))
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .getVirtualMachineScaleSetByName(
             any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"), eq("mostRecentActiveVMSSName"));
     doNothing()
-        .when(mockAzureVMSSHelperServiceDelegate)
+        .when(mockAzureComputeClient)
         .createVirtualMachineScaleSet(any(AzureConfig.class), any(VirtualMachineScaleSet.class), eq("infraMappingId"),
             anyString(), anyInt(), any(AzureUserAuthVMInstanceData.class), anyBoolean());
 
     // buildAzureVMSSSetupTaskResponse
     doReturn(Optional.of("{baseScalingPolicies: {...}}"))
-        .when(azureAutoScaleSettingsHelperServiceDelegate)
+        .when(azureAutoScaleSettingsClient)
         .getAutoScaleSettingJSONByTargetResourceId(
             any(AzureConfig.class), eq("resourceGroupName"), eq("baseVirtualMachineScaleSetId"));
 
     // populatePreDeploymentData
     doReturn(Optional.of("{mostRecentScalingPolicies: {...}}"))
-        .when(azureAutoScaleSettingsHelperServiceDelegate)
+        .when(azureAutoScaleSettingsClient)
         .getAutoScaleSettingJSONByTargetResourceId(
             any(AzureConfig.class), eq("resourceGroupName"), eq("mostRecentActiveVMSSId"));
 
@@ -217,11 +217,11 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         azureVMSSSetupTaskHandler.executeTaskInternal(azureVMSSSetupTaskParameters, azureConfig);
 
     // createVirtualMachineScaleSet
-    verify(mockAzureVMSSHelperServiceDelegate, times(3))
+    verify(mockAzureComputeClient, times(3))
         .getVirtualMachineScaleSetByName(
             any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"), anyString());
 
-    verify(mockAzureVMSSHelperServiceDelegate, times(1))
+    verify(mockAzureComputeClient, times(1))
         .createVirtualMachineScaleSet(any(AzureConfig.class), any(VirtualMachineScaleSet.class), eq("infraMappingId"),
             anyString(), anyInt(), any(AzureUserAuthVMInstanceData.class), anyBoolean());
 

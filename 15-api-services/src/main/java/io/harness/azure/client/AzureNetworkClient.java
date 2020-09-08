@@ -1,16 +1,16 @@
-package software.wings.service.intfc.azure.delegate;
+package io.harness.azure.client;
 
 import com.microsoft.azure.management.network.LoadBalancer;
 import com.microsoft.azure.management.network.LoadBalancerBackend;
 import com.microsoft.azure.management.network.LoadBalancerProbe;
 import com.microsoft.azure.management.network.LoadBalancerTcpProbe;
 import com.microsoft.azure.management.network.LoadBalancingRule;
-import software.wings.beans.AzureConfig;
+import io.harness.azure.model.AzureConfig;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface AzureNetworkHelperServiceDelegate {
+public interface AzureNetworkClient {
   /**
    * Get Load Balancer by name.
    *

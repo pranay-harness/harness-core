@@ -28,6 +28,7 @@ import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ public class AzureVMSSInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
   @Inject SettingsService settingsService;
   @Inject SecretManager secretManager;
   @Inject KryoSerializer kryoSerializer;
+  @Inject private transient AzureVMSSStateHelper azureVMSSStateHelper;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -66,11 +68,12 @@ public class AzureVMSSInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
             .resourceGroupName(perpetualTaskData.getResourceGroupName())
             .vmssId(perpetualTaskData.getVmssId())
             .build();
-    AzureVMSSCommandRequest request = AzureVMSSCommandRequest.builder()
-                                          .azureConfig(perpetualTaskData.getAzureConfig())
-                                          .azureEncryptionDetails(perpetualTaskData.getEncryptedDataDetails())
-                                          .azureVMSSTaskParameters(azureVMSSListVMDataParameters)
-                                          .build();
+    AzureVMSSCommandRequest request =
+        AzureVMSSCommandRequest.builder()
+            .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(
+                perpetualTaskData.azureConfig, perpetualTaskData.getEncryptedDataDetails()))
+            .azureVMSSTaskParameters(azureVMSSListVMDataParameters)
+            .build();
 
     return DelegateTask.builder()
         .accountId(accountId)

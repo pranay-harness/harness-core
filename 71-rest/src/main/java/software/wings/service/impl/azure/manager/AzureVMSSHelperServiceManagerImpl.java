@@ -44,6 +44,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
+import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class AzureVMSSHelperServiceManagerImpl implements AzureVMSSHelperServiceManager {
   @Inject private DelegateService delegateService;
+  @Inject private transient AzureVMSSStateHelper azureVMSSStateHelper;
 
   @Override
   public List<SubscriptionData> listSubscriptions(
@@ -137,11 +139,11 @@ public class AzureVMSSHelperServiceManagerImpl implements AzureVMSSHelperService
 
   private AzureVMSSTaskResponse executeTask(String accountId, AzureVMSSTaskParameters parameters,
       AzureConfig azureConfig, List<EncryptedDataDetail> azureEncryptionDetails, String appId) {
-    AzureVMSSCommandRequest request = AzureVMSSCommandRequest.builder()
-                                          .azureConfig(azureConfig)
-                                          .azureEncryptionDetails(azureEncryptionDetails)
-                                          .azureVMSSTaskParameters(parameters)
-                                          .build();
+    AzureVMSSCommandRequest request =
+        AzureVMSSCommandRequest.builder()
+            .azureConfigDelegate(azureVMSSStateHelper.createDelegateConfig(azureConfig, azureEncryptionDetails))
+            .azureVMSSTaskParameters(parameters)
+            .build();
 
     DelegateTask delegateTask =
         DelegateTask.builder()
