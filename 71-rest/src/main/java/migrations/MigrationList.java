@@ -13,6 +13,7 @@ import migrations.accountpermission.ManageDelegatePermissionMigration;
 import migrations.accountpermission.ManageDelegateProfilesPermissionMigration;
 import migrations.accountpermission.ManageDeploymentFreezePermissionMigration;
 import migrations.accountpermission.ManageIPWhitelistPermissionMigration;
+import migrations.accountpermission.ManagePipelineGovernancePermissionMigration;
 import migrations.accountpermission.ManageTagsMigration;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
@@ -389,6 +390,7 @@ public class MigrationList {
         .add(Pair.of(338, ManageTagsMigration.class))
         .add(Pair.of(339, ManageApplicationsPermissionMigration.class))
         .add(Pair.of(340, ManageDeploymentFreezePermissionMigration.class))
+        .add(Pair.of(341, ManagePipelineGovernancePermissionMigration.class))
         .build();
   }
 }

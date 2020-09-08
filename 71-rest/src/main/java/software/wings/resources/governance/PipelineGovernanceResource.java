@@ -1,5 +1,7 @@
 package software.wings.resources.governance;
 
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+
 import com.google.inject.Inject;
 
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
@@ -9,7 +11,6 @@ import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -43,13 +44,13 @@ public class PipelineGovernanceResource {
   }
 
   @GET
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_PIPELINE_GOVERNANCE_STANDARDS)
   public RestResponse<List<PipelineGovernanceConfig>> list(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(pipelineGovernanceService.list(accountId));
   }
 
   @POST
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_PIPELINE_GOVERNANCE_STANDARDS)
   public RestResponse<PipelineGovernanceConfig> add(@QueryParam("accountId") @NotEmpty String accountId,
       @NotNull(message = "governanceConfig missing while trying to add pipeline governance config")
       PipelineGovernanceConfig governanceConfig) {
@@ -58,7 +59,7 @@ public class PipelineGovernanceResource {
 
   @DELETE
   @Path("{uuid}")
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_PIPELINE_GOVERNANCE_STANDARDS)
   public RestResponse<Boolean> update(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("uuid") String uuid) {
     return new RestResponse<>(pipelineGovernanceService.delete(accountId, uuid));
