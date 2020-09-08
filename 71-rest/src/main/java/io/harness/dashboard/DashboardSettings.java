@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 public class DashboardSettings implements NameAccess, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                           UpdatedAtAware, UpdatedByAware, AccountAccess {
   private EmbeddedUser createdBy;
-  private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   private long createdAt;
   private long lastUpdatedAt;
   @FdIndex private String accountId;
