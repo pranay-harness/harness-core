@@ -16,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
@@ -80,6 +81,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
     when(stateMachineQuery.filter(any(), any())).thenReturn(stateMachineQuery);
     when(stateMachineQuery.order(Sort.descending(any()))).thenReturn(stateMachineQuery);
     when(stateMachineQuery.get()).thenReturn(buildStateMachine(AnalysisStatus.RUNNING));
+    when(cvConfigService.get(any())).thenReturn(cvConfig);
   }
 
   @Test
@@ -104,8 +106,11 @@ public class StateMachineServiceTest extends CvNextGenTest {
   public void testCreateStateMachine_forDeployment() {
     String verificationTaskId = generateUuid();
     String deploymentVerificationTaskId = generateUuid();
-    when(verificationTaskService.getDeploymentVerificationTaskId(verificationTaskId))
-        .thenReturn(deploymentVerificationTaskId);
+    when(verificationTaskService.get(verificationTaskId))
+        .thenReturn(VerificationTask.builder()
+                        .deploymentVerificationTaskId(deploymentVerificationTaskId)
+                        .cvConfigId(cvConfigId)
+                        .build());
     when(deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId))
         .thenReturn(DeploymentVerificationTask.builder().build());
 

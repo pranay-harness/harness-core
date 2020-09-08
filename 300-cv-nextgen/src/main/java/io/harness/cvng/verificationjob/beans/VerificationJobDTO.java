@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -36,7 +37,6 @@ public abstract class VerificationJobDTO {
   private Duration parseDuration() {
     return Duration.ofMinutes(Integer.parseInt(duration.substring(0, duration.length() - 1)));
   }
-
-  public abstract VerificationJob getVerificationJob();
+  @JsonIgnore public abstract VerificationJob getVerificationJob();
   public abstract VerificationJobType getType();
 }

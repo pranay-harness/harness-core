@@ -87,7 +87,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return Arrays.asList(timeSeriesTask.getUuid());
   }
   @Override
-  public List<String> scheduleDeploymentVerificationTaskAnalysis(AnalysisInput analysisInput) {
+  public List<String> scheduleCanaryVerificationTaskAnalysis(AnalysisInput analysisInput) {
     TimeSeriesCanaryLearningEngineTask timeSeriesTask = createTimeSeriesCanaryLearningEngineTask(analysisInput);
     learningEngineTaskService.createLearningEngineTasks(Arrays.asList(timeSeriesTask));
     // TODO: find a good way to return all taskIDs

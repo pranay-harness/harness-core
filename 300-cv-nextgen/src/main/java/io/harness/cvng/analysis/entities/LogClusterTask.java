@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.entities;
 
-import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_LOG_CLUSTER;
+import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.LOG_CLUSTER;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import lombok.AllArgsConstructor;
@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ServiceGuardLogClusterTask extends LearningEngineTask {
+public class LogClusterTask extends LearningEngineTask {
   private String testDataUrl;
   private String host;
   private LogClusterLevel clusterLevel;
   @Override
   public LearningEngineTaskType getType() {
-    return SERVICE_GUARD_LOG_CLUSTER;
+    return LOG_CLUSTER;
   }
 }

@@ -10,12 +10,14 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
+import io.harness.cvng.beans.LogDataCollectionInfo;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.service.HostRecordDataStoreService;
 import io.harness.delegate.service.LogRecordDataStoreService;
 import io.harness.delegate.service.TimeSeriesDataStoreService;
 import io.harness.grpc.utils.AnyUtils;
@@ -33,7 +35,10 @@ import software.wings.delegatetasks.DelegateLogService;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
@@ -44,6 +49,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
   @Inject private DelegateLogService delegateLogService;
   @Inject private TimeSeriesDataStoreService timeSeriesDataStoreService;
   @Inject private LogRecordDataStoreService logRecordDataStoreService;
+  @Inject private HostRecordDataStoreService hostRecordDataStoreService;
   @Inject private KryoSerializer kryoSerializer;
 
   @Inject private DataCollectionDSLService dataCollectionDSLService;
@@ -54,8 +60,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     DataCollectionPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
-    logger.info("Executing for !! cvConfigId: {} verificationTaskId: {}", taskParams.getCvConfigId(),
-        taskParams.getVerificationTaskId());
+    logger.info("Executing for !! cvConfigId: {} verificationTaskId: {}", taskParams.getDataCollectionWorkerId());
     CVDataCollectionInfo cvDataCollectionInfo =
         (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
     logger.info("DataCollectionInfo {} ", cvDataCollectionInfo);
@@ -130,6 +135,16 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           // TODO: merge these 2 IDs into a single concepts and use it everywhere in the data collection using models.
           logRecordDataStoreService.save(dataCollectionTask.getAccountId(), dataCollectionTask.getCvConfigId(),
               dataCollectionTask.getVerificationTaskId(), logDataRecords);
+          if (dataCollectionInfo.isCollectHostData()) {
+            LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
+            Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(
+                logDataCollectionInfo.getHostCollectionDSL(), runtimeParameters,
+                new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
+                    delegateLogService)));
+            hostRecordDataStoreService.save(dataCollectionTask.getAccountId(),
+                dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getStartTime(),
+                dataCollectionTask.getEndTime(), hosts);
+          }
           break;
         default:
           throw new IllegalArgumentException("Invalid type " + dataCollectionInfo.getVerificationType());

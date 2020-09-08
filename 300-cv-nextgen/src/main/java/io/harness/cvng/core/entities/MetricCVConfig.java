@@ -34,4 +34,9 @@ public abstract class MetricCVConfig extends CVConfig {
     super.validate();
     checkNotNull(metricPack, generateErrorMessageFromParam(MetricCVConfigKeys.metricPack));
   }
+
+  @Override
+  public boolean queueAnalysisForPreDeploymentTask() {
+    return false;
+  }
 }

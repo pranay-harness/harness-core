@@ -18,7 +18,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -38,7 +37,11 @@ public class ClusteredLog implements PersistentEntity, CreatedAtAware, UpdatedAt
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  @NotEmpty @FdIndex private String cvConfigId;
+  /**
+   * Use verificationTaskId instead
+   */
+  @Deprecated @FdIndex private String cvConfigId;
+  @FdIndex private String verificationTaskId;
   private LogClusterLevel clusterLevel;
   private String log;
   private Instant timestamp;

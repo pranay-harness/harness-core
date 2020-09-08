@@ -12,10 +12,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @Slf4j
-public class DeploymentTimeSeriesAnalysisState extends TimeSeriesAnalysisState {
+public class CanaryTimeSeriesAnalysisState extends TimeSeriesAnalysisState {
   @Override
   protected List<String> scheduleAnalysis(AnalysisInput analysisInput) {
-    return timeSeriesAnalysisService.scheduleDeploymentVerificationTaskAnalysis(analysisInput);
+    return timeSeriesAnalysisService.scheduleCanaryVerificationTaskAnalysis(analysisInput);
   }
 
   @Override

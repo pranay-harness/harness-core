@@ -17,7 +17,13 @@ import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.LogRecord;
+import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -28,6 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -36,14 +43,19 @@ import java.util.List;
 import java.util.Set;
 
 public class LogClusterServiceImplTest extends CvNextGenTest {
-  private String cvConfigId;
+  private String verificationTaskId;
   @Mock LearningEngineTaskService learningEngineTaskService;
   @Inject HPersistence hPersistence;
   @Inject LogClusterService logClusterService;
+  @Inject CVConfigService cvConfigService;
+  @Inject VerificationTaskService verificationTaskService;
 
   @Before
-  public void setup() throws Exception {
-    cvConfigId = generateUuid();
+  public void setup() {
+    CVConfig cvConfig = createCVConfig();
+    cvConfigService.save(cvConfig);
+    verificationTaskId =
+        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
   }
 
   @Test
@@ -53,11 +65,12 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     createLogDataRecords(5, start, end);
-    AnalysisInput input = AnalysisInput.builder().cvConfigId(cvConfigId).startTime(start).endTime(end).build();
+    AnalysisInput input =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
     logClusterService.scheduleClusteringTasks(input, LogClusterLevel.L1);
 
     List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                         .filter(LearningEngineTaskKeys.cvConfigId, cvConfigId)
+                                         .filter(LearningEngineTaskKeys.verificationTaskId, verificationTaskId)
                                          .asList();
     assertThat(tasks.size()).isEqualTo(5);
   }
@@ -70,11 +83,12 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<ClusteredLog> logRecords = createClusteredLogRecords(5, start, end);
     hPersistence.save(logRecords);
-    AnalysisInput input = AnalysisInput.builder().cvConfigId(cvConfigId).startTime(start).endTime(end).build();
+    AnalysisInput input =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
     logClusterService.scheduleClusteringTasks(input, LogClusterLevel.L2);
 
     List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                         .filter(LearningEngineTaskKeys.cvConfigId, cvConfigId)
+                                         .filter(LearningEngineTaskKeys.verificationTaskId, verificationTaskId)
                                          .asList();
     assertThat(tasks.size()).isEqualTo(1);
   }
@@ -85,11 +99,12 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
   public void testScheduleClusteringTasks_l2ClusterNoL1Records() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
-    AnalysisInput input = AnalysisInput.builder().cvConfigId(cvConfigId).startTime(start).endTime(end).build();
+    AnalysisInput input =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
     logClusterService.scheduleClusteringTasks(input, LogClusterLevel.L2);
 
     List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                         .filter(LearningEngineTaskKeys.cvConfigId, cvConfigId)
+                                         .filter(LearningEngineTaskKeys.cvConfigId, verificationTaskId)
                                          .asList();
     assertThat(tasks.size()).isEqualTo(0);
   }
@@ -102,7 +117,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Set<String> taskIds = new HashSet<>();
     taskIds.add("task1");
     taskIds.add("task2");
-    logClusterService.getTaskStatus(cvConfigId, taskIds);
+    logClusterService.getTaskStatus(taskIds);
 
     Mockito.verify(learningEngineTaskService).getTaskStatus(taskIds);
   }
@@ -114,8 +129,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     createLogDataRecords(5, start, end);
-    List<LogClusterDTO> recordsTobeClustered =
-        logClusterService.getDataForLogCluster(cvConfigId, start, "host-0", LogClusterLevel.L1);
+    List<LogClusterDTO> recordsTobeClustered = logClusterService.getDataForLogCluster(
+        verificationTaskId, start, start.plus(Duration.ofMinutes(1)), "host-0", LogClusterLevel.L1);
 
     assertThat(recordsTobeClustered).isNotNull();
     assertThat(recordsTobeClustered.size()).isEqualTo(5);
@@ -129,7 +144,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<ClusteredLog> logRecords = createClusteredLogRecords(5, start, end);
     hPersistence.save(logRecords);
-    List<LogClusterDTO> logClusters = logClusterService.getDataForLogCluster(cvConfigId, end, null, LogClusterLevel.L2);
+    List<LogClusterDTO> logClusters =
+        logClusterService.getDataForLogCluster(verificationTaskId, start, end, null, LogClusterLevel.L2);
 
     assertThat(logClusters).isNotNull();
     assertThat(logClusters.size()).isEqualTo(25);
@@ -142,9 +158,9 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<LogClusterDTO> clusterDTOList = buildLogClusterDtos(5, start, end);
-    logClusterService.saveClusteredData(clusterDTOList, cvConfigId, end, "taskId1", LogClusterLevel.L2);
+    logClusterService.saveClusteredData(clusterDTOList, verificationTaskId, end, "taskId1", LogClusterLevel.L2);
     List<ClusteredLog> clusteredLogList =
-        hPersistence.createQuery(ClusteredLog.class).filter(ClusteredLogKeys.cvConfigId, cvConfigId).asList();
+        hPersistence.createQuery(ClusteredLog.class).filter(ClusteredLogKeys.cvConfigId, verificationTaskId).asList();
     assertThat(clusteredLogList).isNotNull();
   }
 
@@ -161,7 +177,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
       Instant timestamp = startTime;
       while (timestamp.isBefore(endTime)) {
         ClusteredLog record = ClusteredLog.builder()
-                                  .cvConfigId(cvConfigId)
+                                  .verificationTaskId(verificationTaskId)
                                   .timestamp(timestamp)
                                   .host("host-" + i)
                                   .log("sample log record")
@@ -183,7 +199,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
       Instant timestamp = startTime;
       while (timestamp.isBefore(endTime)) {
         LogRecord record = LogRecord.builder()
-                               .cvConfigId(cvConfigId)
+                               .verificationTaskId(verificationTaskId)
                                .timestamp(timestamp)
                                .host("host-" + i)
                                .log("sample log record")
@@ -193,5 +209,25 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
       }
     }
     hPersistence.save(logRecords);
+  }
+
+  private CVConfig createCVConfig() {
+    SplunkCVConfig cvConfig = new SplunkCVConfig();
+    fillCommon(cvConfig);
+    cvConfig.setQuery("exception");
+    cvConfig.setServiceInstanceIdentifier(generateUuid());
+    return cvConfig;
+  }
+
+  private void fillCommon(CVConfig cvConfig) {
+    cvConfig.setVerificationType(VerificationType.LOG);
+    cvConfig.setAccountId(generateUuid());
+    cvConfig.setConnectorIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setGroupId(generateUuid());
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    cvConfig.setProductName(generateUuid());
   }
 }

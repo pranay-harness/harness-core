@@ -29,7 +29,6 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
     Map<String, String> clientParams = clientContext.getClientParams();
     String accountId = clientParams.get("accountId");
     String cvConfigId = clientParams.get("cvConfigId");
-    String verificationTaskId = clientParams.get("verificationTaskId");
     String dataCollectionWorkerId = clientParams.get("dataCollectionWorkerId");
 
     DataCollectionConnectorBundle bundle =
@@ -45,9 +44,6 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
                                                            .setAccountId(accountId)
                                                            .setDataCollectionInfo(bytes)
                                                            .setDataCollectionWorkerId(dataCollectionWorkerId);
-    if (verificationTaskId != null) {
-      params.setVerificationTaskId(verificationTaskId);
-    }
     if (cvConfigId != null) {
       params.setCvConfigId(cvConfigId);
     }
