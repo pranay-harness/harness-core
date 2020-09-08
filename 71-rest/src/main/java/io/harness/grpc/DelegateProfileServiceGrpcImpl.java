@@ -1,12 +1,12 @@
 package io.harness.grpc;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.grpc.stub.StreamObserver;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
@@ -124,7 +124,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       UpdateProfileSelectorsRequest request, StreamObserver<UpdateProfileSelectorsResponse> responseObserver) {
     try {
       List<String> selectors = null;
-      if (EmptyPredicate.isNotEmpty(request.getSelectorsList())) {
+      if (isNotEmpty(request.getSelectorsList())) {
         selectors = request.getSelectorsList().stream().map(ProfileSelector::getSelector).collect(Collectors.toList());
       }
 
@@ -143,7 +143,23 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   public void updateProfileScopingRules(
       UpdateProfileScopingRulesRequest request, StreamObserver<UpdateProfileScopingRulesResponse> responseObserver) {
     try {
-      throw new NotImplementedException("Not yet implemented in DelegateProfileService");
+      List<DelegateProfileScopingRule> scopingRules = null;
+      if (isNotEmpty(request.getScopingRulesList())) {
+        scopingRules = request.getScopingRulesList()
+                           .stream()
+                           .map(scopingRule
+                               -> DelegateProfileScopingRule.builder()
+                                      .description(scopingRule.getDescription())
+                                      .scopingEntities(convertGrpcScopes(scopingRule.getScopingEntitiesMap()))
+                                      .build())
+                           .collect(Collectors.toList());
+      }
+
+      delegateProfileService.updateScopingRules(
+          request.getProfileId().getId(), request.getAccountId().getId(), scopingRules);
+
+      responseObserver.onNext(UpdateProfileScopingRulesResponse.newBuilder().build());
+      responseObserver.onCompleted();
     } catch (Exception ex) {
       logger.error("Unexpected error occurred while processing update profile scoping rules request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
@@ -167,7 +183,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       delegateProfileGrpcBuilder.setStartupScript(delegateProfile.getStartupScript());
     }
 
-    if (EmptyPredicate.isNotEmpty(delegateProfile.getSelectors())) {
+    if (isNotEmpty(delegateProfile.getSelectors())) {
       delegateProfileGrpcBuilder.addAllSelectors(
           delegateProfile.getSelectors()
               .stream()
@@ -175,7 +191,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
               .collect(Collectors.toList()));
     }
 
-    if (EmptyPredicate.isNotEmpty(delegateProfile.getScopingRules())) {
+    if (isNotEmpty(delegateProfile.getScopingRules())) {
       delegateProfileGrpcBuilder.addAllScopingRules(
           delegateProfile.getScopingRules()
               .stream()
@@ -200,14 +216,14 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
 
-    if (EmptyPredicate.isNotEmpty(delegateProfileGrpc.getScopingRulesList())) {
+    if (isNotEmpty(delegateProfileGrpc.getScopingRulesList())) {
       delegateProfileBuilder.selectors(delegateProfileGrpc.getSelectorsList()
                                            .stream()
                                            .map(ProfileSelector::getSelector)
                                            .collect(Collectors.toList()));
     }
 
-    if (EmptyPredicate.isNotEmpty(delegateProfileGrpc.getScopingRulesList())) {
+    if (isNotEmpty(delegateProfileGrpc.getScopingRulesList())) {
       delegateProfileBuilder.scopingRules(
           delegateProfileGrpc.getScopingRulesList()
               .stream()

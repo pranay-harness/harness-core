@@ -113,6 +113,10 @@ public class DelegateProfileServiceGrpcClient {
   public void updateProfileScopingRules(
       AccountId accountId, ProfileId profileId, List<ProfileScopingRule> scopingRules) {
     try {
+      if (scopingRules == null) {
+        scopingRules = Collections.emptyList();
+      }
+
       delegateProfileServiceBlockingStub.updateProfileScopingRules(UpdateProfileScopingRulesRequest.newBuilder()
                                                                        .setAccountId(accountId)
                                                                        .setProfileId(profileId)
