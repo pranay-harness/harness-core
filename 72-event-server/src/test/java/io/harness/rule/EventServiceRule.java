@@ -2,20 +2,15 @@ package io.harness.rule;
 
 import static io.harness.network.LocalhostUtils.findFreePort;
 
-import com.google.common.util.concurrent.ServiceManager;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import io.harness.event.app.EventServiceConfig;
 import io.harness.event.app.EventServiceModule;
-import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.appender.AppenderModule;
-import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.grpc.server.Connector;
-import io.harness.persistence.HPersistence;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import lombok.Getter;
@@ -23,11 +18,10 @@ import org.apache.commons.io.FileUtils;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import software.wings.security.ThreadLocalUserProvider;
 
-import java.io.File;
 import java.lang.annotation.Annotation;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -40,7 +34,7 @@ public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRul
   public static final String QUEUE_FILE_PATH =
       Paths.get(FileUtils.getTempDirectoryPath(), UUID.randomUUID().toString()).toString();
 
-  @Getter private ClosingFactory closingFactory;
+  @Getter private final ClosingFactory closingFactory;
 
   public EventServiceRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory == null ? new ClosingFactory() : closingFactory;
@@ -63,6 +57,7 @@ public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRul
                                      .queueFilePath(QUEUE_FILE_PATH)
                                      .publishTarget("localhost:" + port)
                                      .publishAuthority("localhost")
+                                     .minDelay(Duration.ofMillis(10))
                                      .build()));
 
     modules.add(new EventServiceModule(
@@ -80,22 +75,9 @@ public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRul
         try {
           applyInjector(base, method, target).evaluate();
         } finally {
-          new File(QUEUE_FILE_PATH).delete();
           closingFactory.stopServers();
         }
       }
     };
-  }
-
-  @Override
-  public void initialize(Injector injector, List<Module> modules) {
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class);
-    serviceManager.startAsync().awaitHealthy();
-    closingFactory.addServer(() -> serviceManager.stopAsync().awaitStopped());
-    injector.getInstance(HPersistence.class).registerUserProvider(new ThreadLocalUserProvider());
-    ChronicleEventTailer chronicleEventTailer = injector.getInstance(ChronicleEventTailer.class);
-    chronicleEventTailer.startAsync().awaitRunning();
-    closingFactory.addServer(() -> chronicleEventTailer.stopAsync().awaitTerminated());
-    closingFactory.addServer(() -> injector.getInstance(EventPublisher.class).shutdown());
   }
 }

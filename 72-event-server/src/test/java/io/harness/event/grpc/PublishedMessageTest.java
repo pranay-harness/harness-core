@@ -46,6 +46,6 @@ public class PublishedMessageTest extends CategoryTest {
   public void shouldSetValidUntil() throws Exception {
     Date expected = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
     PublishedMessage message = PublishedMessage.builder().build();
-    assertThat(message.getValidUntil()).isNotNull().isAfter(expected);
+    assertThat(message.getValidUntil()).isNotNull().isAfterOrEqualTo(expected);
   }
 }

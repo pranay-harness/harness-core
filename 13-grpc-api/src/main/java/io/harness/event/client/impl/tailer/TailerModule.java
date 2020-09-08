@@ -53,9 +53,7 @@ public class TailerModule extends ProviderModule {
   @Singleton
   @Named("tailer")
   BackoffScheduler backoffScheduler() {
-    Duration minDelay = Duration.ofSeconds(1);
-    Duration maxDelay = Duration.ofMinutes(5);
-    return new BackoffScheduler(ChronicleEventTailer.class.getSimpleName(), minDelay, maxDelay);
+    return new BackoffScheduler(ChronicleEventTailer.class.getSimpleName(), config.getMinDelay(), config.getMaxDelay());
   }
 
   @Named("event-server-channel")
@@ -85,5 +83,7 @@ public class TailerModule extends ProviderModule {
     String accountId;
     String accountSecret;
     String queueFilePath;
+    @Builder.Default Duration minDelay = Duration.ofSeconds(1);
+    @Builder.Default Duration maxDelay = Duration.ofMinutes(5);
   }
 }
