@@ -22,9 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 import software.wings.beans.Account;
+import software.wings.beans.CeLicenseUpdateInfo;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
-import software.wings.licensing.LicenseService;
 import software.wings.security.annotations.AdminPortalAuth;
 
 import java.util.List;
@@ -48,14 +48,11 @@ import javax.ws.rs.core.MediaType;
 public class AdminAccountResource {
   private AdminAccountService adminAccountService;
   private AdminUserService adminUserService;
-  private LicenseService licenseService;
 
   @Inject
-  public AdminAccountResource(
-      AdminAccountService adminAccountService, AdminUserService adminUserService, LicenseService licenseService) {
+  public AdminAccountResource(AdminAccountService adminAccountService, AdminUserService adminUserService) {
     this.adminAccountService = adminAccountService;
     this.adminUserService = adminUserService;
-    this.licenseService = licenseService;
   }
 
   @GET
@@ -88,12 +85,11 @@ public class AdminAccountResource {
   @Path("{accountId}/license/continuous-efficiency/")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> updateCeLicense(
-      @PathParam("accountId") @NotEmpty String accountId, @NotNull CeLicenseInfo ceLicenseInfo) {
+  public RestResponse<CeLicenseInfo> updateCeLicense(
+      @PathParam("accountId") @NotEmpty String accountId, @NotNull CeLicenseUpdateInfo ceLicenseUpdateInfo) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Updating CE license.");
-      licenseService.updateCeLicense(accountId, ceLicenseInfo);
-      return new RestResponse<>(Boolean.TRUE);
+      return new RestResponse<>(adminAccountService.updateCeLicense(accountId, ceLicenseUpdateInfo.getCeLicenseInfo()));
     }
   }
 

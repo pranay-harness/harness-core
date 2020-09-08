@@ -330,13 +330,14 @@ public class LicenseServiceImpl implements LicenseService {
   }
 
   @Override
-  public void updateCeLicense(@NotEmpty String accountId, CeLicenseInfo ceLicenseInfo) {
+  public boolean updateCeLicense(@NotEmpty String accountId, CeLicenseInfo ceLicenseInfo) {
     accountDao.updateCeLicense(accountId, ceLicenseInfo);
     if (Instant.now().toEpochMilli() < ceLicenseInfo.getExpiryTime()) {
       accountService.updateCloudCostEnabled(accountId, true);
     } else {
       accountService.updateCloudCostEnabled(accountId, false);
     }
+    return true;
   }
 
   @Override

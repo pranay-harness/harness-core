@@ -9,7 +9,8 @@ import java.time.Duration;
 @Value
 @Builder
 public class CeLicenseInfo {
-  public static final int CE_TRIAL_GRACE_PERIOD_DAYS = 15;
+  @JsonIgnore public static final int CE_TRIAL_GRACE_PERIOD_DAYS = 15;
+
   private CeLicenseType licenseType;
   private long expiryTime;
 
