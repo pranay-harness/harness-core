@@ -52,6 +52,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
@@ -264,7 +265,9 @@ public abstract class TerraformProvisionState extends State {
 
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PIPELINE)
                                      .name(variableName)
-                                     .value(TerraformPlanParam.builder().tfplan(format("'%s'", terraformPlan)).build())
+                                     .value(TerraformPlanParam.builder()
+                                                .tfplan(format("'%s'", JsonUtils.prettifyJsonString(terraformPlan)))
+                                                .build())
                                      .build());
     }
   }

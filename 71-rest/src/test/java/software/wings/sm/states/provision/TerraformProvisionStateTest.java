@@ -551,7 +551,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     when(executionContext.getAppId()).thenReturn(APP_ID);
     Map<String, ResponseData> response = new HashMap<>();
     TerraformExecutionData terraformExecutionData =
-        TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
+        TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).tfPlanJson("").build();
     response.put("activityId", terraformExecutionData);
     TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
@@ -578,7 +578,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     state.setRunPlanOnly(true);
     state.setExportPlanToApplyStep(true);
     Map<String, ResponseData> response = new HashMap<>();
-    response.put("activityId", TerraformExecutionData.builder().tfPlanFile("TFPlanFileContent".getBytes()).build());
+    response.put("activityId",
+        TerraformExecutionData.builder().tfPlanFile("TFPlanFileContent".getBytes()).tfPlanJson("{}").build());
     doReturn("workflowExecutionId").when(executionContext).getWorkflowExecutionId();
     state.setProvisionerId(PROVISIONER_ID);
     doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();

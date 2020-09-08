@@ -2,6 +2,10 @@ package io.harness.serializer;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -424,5 +428,12 @@ public class JsonUtils {
 
   public static <T> T convertValue(Object fromValue, Class<T> toValueType) {
     return mapper.convertValue(fromValue, toValueType);
+  }
+
+  public static String prettifyJsonString(String jsonString) {
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    JsonParser jsonParser = new JsonParser();
+    JsonElement jsonElement = jsonParser.parse(jsonString);
+    return gson.toJson(jsonElement);
   }
 }
