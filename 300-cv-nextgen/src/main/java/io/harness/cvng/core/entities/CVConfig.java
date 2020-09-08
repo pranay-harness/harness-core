@@ -106,4 +106,5 @@ public abstract class CVConfig
 
   @JsonIgnore public abstract String getDataCollectionDsl();
   @JsonIgnore public abstract String getVerificationJobDataCollectionDsl();
+  public abstract boolean queueAnalysisForPreDeploymentTask();
 }

@@ -22,7 +22,12 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -43,22 +48,20 @@ import java.util.List;
 
 public class LogAnalysisServiceImplTest extends CvNextGenTest {
   private String cvConfigId;
+  private String verificationTaskId;
   @Inject private HPersistence hPersistence;
   @Mock private LearningEngineTaskService learningEngineTaskService;
   @Inject private LogAnalysisService logAnalysisService;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-
-    cvConfigId = generateUuid();
-    // FieldUtils.writeField(logAnalysisService, "cvConfigService", cvConfigService, true);
-    SplunkCVConfig cvConfig = new SplunkCVConfig();
-    cvConfig.setAccountId(generateUuid());
-    cvConfig.setServiceIdentifier(generateUuid());
-    cvConfig.setEnvIdentifier(generateUuid());
-    cvConfig.setUuid(cvConfigId);
-    hPersistence.save(cvConfig);
+    CVConfig cvConfig = createCVConfig();
+    cvConfigService.save(cvConfig);
+    cvConfigId = cvConfig.getUuid();
+    verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
   }
 
   @Test
@@ -66,7 +69,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void scheduleLogAnalysisTask() {
     AnalysisInput input = AnalysisInput.builder()
-                              .cvConfigId(cvConfigId)
+                              .verificationTaskId(verificationTaskId)
                               .startTime(Instant.now().minus(10, ChronoUnit.MINUTES))
                               .endTime(Instant.now())
                               .build();
@@ -78,7 +81,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
 
     LearningEngineTask task = hPersistence.get(LearningEngineTask.class, taskIds.get(0));
     assertThat(task).isNotNull();
-    assertThat(task.getCvConfigId()).isEqualTo(cvConfigId);
+    assertThat(task.getVerificationTaskId()).isEqualTo(verificationTaskId);
     assertThat(Duration.between(task.getAnalysisStartTime(), input.getStartTime())).isZero();
     assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS.name());
@@ -93,7 +96,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     List<ClusteredLog> l2Logs = createClusteredLogRecords(start, end);
     hPersistence.save(l2Logs);
 
-    List<LogClusterDTO> logClusterDTOList = logAnalysisService.getTestData(cvConfigId, start, end);
+    List<LogClusterDTO> logClusterDTOList = logAnalysisService.getTestData(verificationTaskId, start, end);
 
     assertThat(logClusterDTOList).isNotNull();
     assertThat(logClusterDTOList.size()).isEqualTo(l2Logs.size());
@@ -186,7 +189,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     Instant timestamp = startTime;
     while (timestamp.isBefore(endTime)) {
       ClusteredLog record = ClusteredLog.builder()
-                                .cvConfigId(cvConfigId)
+                                .verificationTaskId(verificationTaskId)
                                 .timestamp(timestamp)
                                 .log("sample log record")
                                 .clusterLabel("1")
@@ -235,5 +238,25 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
       clusters.add(cluster);
     }
     return clusters;
+  }
+
+  private CVConfig createCVConfig() {
+    SplunkCVConfig cvConfig = new SplunkCVConfig();
+    fillCommon(cvConfig);
+    cvConfig.setQuery("exception");
+    cvConfig.setServiceInstanceIdentifier(generateUuid());
+    return cvConfig;
+  }
+
+  private void fillCommon(CVConfig cvConfig) {
+    cvConfig.setVerificationType(VerificationType.LOG);
+    cvConfig.setAccountId(generateUuid());
+    cvConfig.setConnectorIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setGroupId(generateUuid());
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    cvConfig.setProductName(generateUuid());
   }
 }

@@ -15,11 +15,11 @@ import java.util.Set;
  */
 public interface LogClusterService {
   List<String> scheduleClusteringTasks(AnalysisInput input, LogClusterLevel clusterLevel);
-  Map<String, ExecutionStatus> getTaskStatus(String cvConfigId, Set<String> taskIds);
+  Map<String, ExecutionStatus> getTaskStatus(Set<String> taskIds);
   List<LogClusterDTO> getDataForLogCluster(
-      String cvConfig, Instant dataRecordInstant, String host, LogClusterLevel clusterLevel);
+      String verificationTaskId, Instant startTime, Instant endTime, String host, LogClusterLevel clusterLevel);
   List<LogClusterDTO> getClusteredLogData(
       String cvConfigId, Instant startTime, Instant endTime, LogClusterLevel clusterLevel);
-  void saveClusteredData(List<LogClusterDTO> logClusterDTO, String cvConfigId, Instant timestamp, String taskId,
+  void saveClusteredData(List<LogClusterDTO> logClusterDTO, String verificationTaskId, Instant timestamp, String taskId,
       LogClusterLevel clusterLevel);
 }

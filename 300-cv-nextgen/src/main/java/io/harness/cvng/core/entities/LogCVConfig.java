@@ -47,4 +47,8 @@ public abstract class LogCVConfig extends CVConfig {
     super.validate();
     checkNotNull(query, generateErrorMessageFromParam(LogCVConfigKeys.query));
   }
+  @Override
+  public boolean queueAnalysisForPreDeploymentTask() {
+    return true;
+  }
 }

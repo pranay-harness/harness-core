@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
@@ -16,13 +17,17 @@ import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
-import io.harness.cvng.statemachine.entities.DeploymentTimeSeriesAnalysisState;
+import io.harness.cvng.statemachine.entities.CanaryTimeSeriesAnalysisState;
+import io.harness.cvng.statemachine.entities.DeploymentLogClusterState;
+import io.harness.cvng.statemachine.entities.PreDeploymentLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
@@ -38,6 +43,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Inject private CVConfigService cvConfigService;
   @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private VerificationJobService verificationJobService;
 
   @Override
   public void initiateStateMachine(String cvConfigId, AnalysisStateMachine stateMachine) {
@@ -207,6 +213,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
 
   @Override
   public AnalysisStateMachine createStateMachine(AnalysisInput inputForAnalysis) {
+    // TODO: refactor this to make this polymorphic.
     AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
                                             .verificationTaskId(inputForAnalysis.getVerificationTaskId())
                                             .analysisStartTime(inputForAnalysis.getStartTime())
@@ -234,20 +241,46 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       firstState.setInputs(inputForAnalysis);
       stateMachine.setCurrentState(firstState);
     } else {
-      // TODO: create it for cvConfigId also.
-      DeploymentVerificationTask deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(
-          verificationTaskService.getDeploymentVerificationTaskId(inputForAnalysis.getVerificationTaskId()));
-      if (deploymentVerificationTask != null) {
-        DeploymentTimeSeriesAnalysisState deploymentTimeSeriesAnalysisState =
-            DeploymentTimeSeriesAnalysisState.builder().build();
-        deploymentTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
-        deploymentTimeSeriesAnalysisState.setInputs(inputForAnalysis);
-        stateMachine.setCurrentState(deploymentTimeSeriesAnalysisState);
-      } else {
-        logger.error("No verification found to createStateMachine");
-        throw new AnalysisStateMachineException("cvConfigId is null in createStateMachine");
+      VerificationTask verificationTask = verificationTaskService.get(inputForAnalysis.getVerificationTaskId());
+      DeploymentVerificationTask deploymentVerificationTask =
+          deploymentVerificationTaskService.getVerificationTask(verificationTask.getDeploymentVerificationTaskId());
+      CVConfig cvConfigForDeployment = cvConfigService.get(verificationTask.getCvConfigId());
+      Preconditions.checkNotNull(deploymentVerificationTask, "deploymentVerificationTask can not be null");
+      Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
+
+      switch (cvConfigForDeployment.getVerificationType()) {
+        case TIME_SERIES:
+          CanaryTimeSeriesAnalysisState canaryTimeSeriesAnalysisState = CanaryTimeSeriesAnalysisState.builder().build();
+          canaryTimeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
+          canaryTimeSeriesAnalysisState.setInputs(inputForAnalysis);
+          stateMachine.setCurrentState(canaryTimeSeriesAnalysisState);
+          break;
+        case LOG:
+          AnalysisState analysisState = createDeploymentLogState(inputForAnalysis, deploymentVerificationTask);
+          analysisState.setStatus(AnalysisStatus.CREATED);
+          analysisState.setInputs(inputForAnalysis);
+          stateMachine.setCurrentState(analysisState);
+          break;
+        default:
+          throw new IllegalStateException("Invalid verificationType");
       }
     }
     return stateMachine;
+  }
+
+  private AnalysisState createDeploymentLogState(
+      AnalysisInput analysisInput, DeploymentVerificationTask deploymentVerificationTask) {
+    VerificationJob verificationJob = verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
+    if (verificationJob.getPreDeploymentTimeRanges(deploymentVerificationTask.getDeploymentStartTime())
+            .equals(analysisInput.getTimeRange())) {
+      // first task so needs to enqueue clustering task
+      PreDeploymentLogClusterState preDeploymentLogClusterState = PreDeploymentLogClusterState.builder().build();
+      preDeploymentLogClusterState.setClusterLevel(LogClusterLevel.L1);
+      return preDeploymentLogClusterState;
+    } else {
+      DeploymentLogClusterState deploymentLogClusterState = DeploymentLogClusterState.builder().build();
+      deploymentLogClusterState.setClusterLevel(LogClusterLevel.L1);
+      return deploymentLogClusterState;
+    }
   }
 }

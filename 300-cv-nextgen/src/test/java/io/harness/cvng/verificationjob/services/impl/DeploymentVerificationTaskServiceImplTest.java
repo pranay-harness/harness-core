@@ -29,9 +29,9 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
@@ -181,10 +181,10 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     String workerId = getDataCollectionWorkerId(verificationTaskId, connectorId);
     DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
     assertThat(firstTask).isNotNull();
-    assertThat(firstTask.getStartTime()).isEqualTo(Instant.parse("2020-07-27T10:46:00Z"));
-    assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:47:00Z"));
+    assertThat(firstTask.getStartTime()).isEqualTo(Instant.parse("2020-07-27T10:29:00Z"));
+    assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z"));
     assertThat(firstTask.getValidAfter())
-        .isEqualTo(Instant.parse("2020-07-27T10:47:00Z").plus(Duration.ofMinutes(5)).toEpochMilli());
+        .isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(Duration.ofMinutes(5)).toEpochMilli());
   }
 
   @Test
@@ -206,9 +206,9 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     String workerId = getDataCollectionWorkerId(verificationTaskId, connectorId);
     DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
     assertThat(firstTask).isNotNull();
-    assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:45:00Z"));
+    assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z"));
     assertThat(firstTask.getValidAfter())
-        .isEqualTo(Instant.parse("2020-07-27T10:45:00Z").plus(DATA_COLLECTION_DELAY).toEpochMilli());
+        .isEqualTo(Instant.parse("2020-07-27T10:44:00Z").plus(DATA_COLLECTION_DELAY).toEpochMilli());
     assertThat(updated.getExecutionStatus()).isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.RUNNING);
   }
 
@@ -304,19 +304,18 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     return UUID.nameUUIDFromBytes((verificationTaskId + ":" + connectorId).getBytes(Charsets.UTF_8)).toString();
   }
   private VerificationJobDTO newVerificationJob() {
-    TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
-    testVerificationJobDTO.setIdentifier(verificationJobIdentifier);
-    testVerificationJobDTO.setJobName(generateUuid());
-    testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
-    testVerificationJobDTO.setBaselineVerificationTaskIdentifier(null);
-    testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
-    testVerificationJobDTO.setServiceIdentifier(generateUuid());
-    testVerificationJobDTO.setOrgIdentifier(orgIdentifier);
-    testVerificationJobDTO.setProjectIdentifier(projectIdentifier);
-    testVerificationJobDTO.setEnvIdentifier(generateUuid());
-    testVerificationJobDTO.setBaselineVerificationTaskIdentifier(generateUuid());
-    testVerificationJobDTO.setDuration("15m");
-    return testVerificationJobDTO;
+    CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
+    canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);
+    canaryVerificationJobDTO.setJobName(generateUuid());
+    canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
+    canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
+    canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
+    canaryVerificationJobDTO.setProjectIdentifier(projectIdentifier);
+    canaryVerificationJobDTO.setEnvIdentifier(generateUuid());
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
+    canaryVerificationJobDTO.setDuration("15m");
+    return canaryVerificationJobDTO;
   }
 
   private CVConfig newCVConfig() {

@@ -46,6 +46,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       isFirstAnalysis = true;
     }
     AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputForAnalysis);
+    // TODO: can we move it inside null if condition?
     if (orchestrator.getAnalysisStateMachineQueue() == null) {
       orchestrator.setAnalysisStateMachineQueue(new ArrayList<>());
     }

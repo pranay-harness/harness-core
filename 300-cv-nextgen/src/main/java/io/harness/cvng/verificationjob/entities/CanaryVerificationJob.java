@@ -16,7 +16,6 @@ import lombok.experimental.FieldNameConstants;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,13 +50,15 @@ public class CanaryVerificationJob extends VerificationJob {
   }
 
   @Override
+  public TimeRange getPreDeploymentTimeRanges(Instant deploymentStartTime) {
+    return TimeRange.builder()
+        .startTime(deploymentStartTime.minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION))
+        .endTime(deploymentStartTime)
+        .build();
+  }
+
+  @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
-    List<TimeRange> timeRanges = new ArrayList<>();
-    timeRanges.add(TimeRange.builder()
-                       .startTime(startTime.minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION))
-                       .endTime(startTime)
-                       .build());
-    timeRanges.addAll(getTimeRangesForDuration(startTime));
-    return timeRanges;
+    return getTimeRangesForDuration(startTime);
   }
 }

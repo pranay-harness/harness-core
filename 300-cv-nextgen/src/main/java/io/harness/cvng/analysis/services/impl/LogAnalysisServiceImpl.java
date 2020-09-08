@@ -27,6 +27,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -50,6 +51,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Inject private LogClusterService logClusterService;
   @Inject private HeatMapService heatMapService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationTaskService verificationTaskService;
 
   @Override
   public List<String> scheduleLogAnalysisTask(AnalysisInput input) {
@@ -60,7 +62,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   private ServiceGuardLogAnalysisTask createLogAnalysisTask(AnalysisInput input) {
     String taskId = generateUuid();
-    LogCVConfig cvConfig = (LogCVConfig) cvConfigService.get(input.getCvConfigId());
+    String cvConfigId = verificationTaskService.getCVConfigId(input.getVerificationTaskId());
+    LogCVConfig cvConfig = (LogCVConfig) cvConfigService.get(cvConfigId);
     ServiceGuardLogAnalysisTask task = ServiceGuardLogAnalysisTask.builder()
                                            .frequencyPatternUrl(createFrequencyPatternUrl(input))
                                            .testDataUrl(createTestDataUrl(input))

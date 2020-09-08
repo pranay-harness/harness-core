@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,9 +30,11 @@ public class LogRecordServiceImplTest extends CvNextGenTest {
   private String accountId;
   private String cvConfigId;
   private long timestamp;
+  private String verificationTaskId;
   @Before
   public void setup() {
     accountId = generateUuid();
+    verificationTaskId = generateUuid();
     cvConfigId = generateUuid();
     timestamp = Instant.now().toEpochMilli();
   }
@@ -45,6 +48,25 @@ public class LogRecordServiceImplTest extends CvNextGenTest {
                                      .filter(LogRecordKeys.accountId, accountId)
                                      .filter(LogRecordKeys.cvConfigId, cvConfigId)
                                      .asList();
+    assertThat(logRecords).hasSize(3);
+    logRecords.forEach(logRecord -> {
+      assertThat(logRecord.getCvConfigId()).isEqualTo(cvConfigId);
+      assertThat(logRecord.getAccountId()).isEqualTo(accountId);
+      assertThat(logRecord.getHost()).isEqualTo("host");
+      assertThat(logRecord.getLog()).isEqualTo("log message");
+      assertThat(logRecord.getTimestamp()).isEqualTo(Instant.ofEpochMilli(timestamp));
+    });
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLogRecords() {
+    List<LogRecordDTO> logRecordDTOs = IntStream.range(0, 3).mapToObj(index -> create()).collect(Collectors.toList());
+    logRecordService.save(logRecordDTOs);
+    List<LogRecord> logRecords = logRecordService.getLogRecords(verificationTaskId, Instant.ofEpochMilli(timestamp),
+        Instant.ofEpochMilli(timestamp).plus(Duration.ofMillis(1)));
+    assertThat(logRecords).hasSize(3);
     logRecords.forEach(logRecord -> {
       assertThat(logRecord.getCvConfigId()).isEqualTo(cvConfigId);
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
@@ -57,6 +79,7 @@ public class LogRecordServiceImplTest extends CvNextGenTest {
   private LogRecordDTO create() {
     return LogRecordDTO.builder()
         .cvConfigId(cvConfigId)
+        .verificationTaskId(verificationTaskId)
         .accountId(accountId)
         .timestamp(timestamp)
         .log("log message")

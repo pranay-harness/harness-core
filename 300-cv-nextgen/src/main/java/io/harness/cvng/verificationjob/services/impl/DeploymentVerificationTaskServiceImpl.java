@@ -161,6 +161,8 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
 
   private void createDataCollectionTasks(DeploymentVerificationTask deploymentVerificationTask,
       VerificationJob verificationJob, List<CVConfig> cvConfigs) {
+    TimeRange preDeploymentTimeRange =
+        verificationJob.getPreDeploymentTimeRanges(deploymentVerificationTask.getDeploymentStartTime());
     List<TimeRange> timeRanges =
         verificationJob.getDataCollectionTimeRanges(roundDownTo1MinBoundary(deploymentVerificationTask.getStartTime()));
     cvConfigs.forEach(cvConfig -> {
@@ -168,10 +170,29 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
       List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
       String verificationTaskId = verificationTaskService.create(
           cvConfig.getAccountId(), cvConfig.getUuid(), deploymentVerificationTask.getUuid());
+      DataCollectionInfoMapper dataCollectionInfoMapper =
+          injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())));
+
+      DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+      preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getVerificationJobDataCollectionDsl());
+      preDeploymentDataCollectionInfo.setCollectHostData(true);
+      dataCollectionTasks.add(DataCollectionTask.builder()
+                                  .verificationTaskId(verificationTaskId)
+                                  .dataCollectionWorkerId(getDataCollectionWorkerId(
+                                      deploymentVerificationTask, cvConfig.getConnectorIdentifier()))
+                                  .startTime(preDeploymentTimeRange.getStartTime())
+                                  .endTime(preDeploymentTimeRange.getEndTime())
+                                  .validAfter(preDeploymentTimeRange.getEndTime()
+                                                  .plus(deploymentVerificationTask.getDataCollectionDelay())
+                                                  .toEpochMilli())
+                                  .accountId(verificationJob.getAccountId())
+                                  .status(QUEUED)
+                                  .dataCollectionInfo(preDeploymentDataCollectionInfo)
+                                  .queueAnalysis(cvConfig.queueAnalysisForPreDeploymentTask())
+                                  .build());
+
       timeRanges.forEach(timeRange -> {
-        DataCollectionInfo dataCollectionInfo =
-            injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())))
-                .toDataCollectionInfo(cvConfig);
+        DataCollectionInfo dataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
         // TODO: For Now the DSL is same for both. We need to see how this evolves when implementation other provider.
         // Keeping this simple for now.
         dataCollectionInfo.setDataCollectionDsl(cvConfig.getVerificationJobDataCollectionDsl());
@@ -190,8 +211,6 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
                 .dataCollectionInfo(dataCollectionInfo)
                 .build());
       });
-      // TODO: check if getting zero always make sense.
-      dataCollectionTasks.get(0).setQueueAnalysis(false);
       dataCollectionTaskService.createSeqTasks(dataCollectionTasks);
     });
   }

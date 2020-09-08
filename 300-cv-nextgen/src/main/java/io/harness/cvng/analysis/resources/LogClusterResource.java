@@ -28,27 +28,27 @@ public class LogClusterResource {
   @Inject private LogClusterService logClusterService;
 
   @GET
-  @Path("/serviceguard-test-data")
+  @Path("/test-data")
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<List<LogClusterDTO>> getTestData(@QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("clusterLevel") LogClusterLevel logClusterLevel, @QueryParam("timestamp") String logRecordInstant,
-      @QueryParam("host") String host) {
-    return new RestResponse<>(
-        logClusterService.getDataForLogCluster(cvConfigId, Instant.parse(logRecordInstant), host, logClusterLevel));
+  public RestResponse<List<LogClusterDTO>> getTestData(@QueryParam("verificationTaskId") String verificationTaskId,
+      @QueryParam("clusterLevel") LogClusterLevel logClusterLevel, @QueryParam("startTime") Long startTime,
+      @QueryParam("endTime") Long endTime, @QueryParam("host") String host) {
+    return new RestResponse<>(logClusterService.getDataForLogCluster(
+        verificationTaskId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), host, logClusterLevel));
   }
 
   @Produces({"application/json", "application/v1+json"})
   @POST
-  @Path("/serviceguard-save-clustered-logs")
+  @Path("/save-clustered-logs")
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveClusteredData(@QueryParam("taskId") String taskId,
-      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("timestamp") String timestamp,
+      @QueryParam("verificationTaskId") String verificationTaskId, @QueryParam("timestamp") String timestamp,
       @QueryParam("clusterLevel") LogClusterLevel clusterLevel, List<LogClusterDTO> clusterDTO) {
-    logClusterService.saveClusteredData(clusterDTO, cvConfigId, Instant.parse(timestamp), taskId, clusterLevel);
+    logClusterService.saveClusteredData(clusterDTO, verificationTaskId, Instant.parse(timestamp), taskId, clusterLevel);
     return new RestResponse<>(true);
   }
 }

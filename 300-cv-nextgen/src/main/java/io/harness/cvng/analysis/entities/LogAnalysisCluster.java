@@ -30,7 +30,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "LogAnalysisClusterKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "analyzedLogClusters", noClassnameStored = true)
+@Entity(value = "logAnalysisClusters", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;

@@ -1,5 +1,6 @@
 package io.harness.cvng.statemachine.beans;
 
+import io.harness.cvng.core.beans.TimeRange;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -18,4 +19,8 @@ public class AnalysisInput {
    */
   private String cvConfigId;
   private String verificationTaskId;
+
+  public TimeRange getTimeRange() {
+    return TimeRange.builder().startTime(startTime).endTime(endTime).build();
+  }
 }
