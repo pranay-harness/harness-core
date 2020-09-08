@@ -5,12 +5,9 @@ import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRAT
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.http.HttpTaskParameters;
-import io.harness.grpc.DelegateServiceGrpcClient;
-import io.harness.serializer.KryoSerializer;
-import io.harness.service.intfc.DelegateSyncService;
+import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.waiter.WaitNotifyEngine;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -19,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 
-import java.util.function.Supplier;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -35,11 +31,8 @@ import javax.ws.rs.QueryParam;
 public class NGDelegate2TaskResource {
   private static final String HTTP_URL_200 = "http://httpstat.us/200";
 
-  private final DelegateServiceGrpcClient delegateServiceGrpcClient;
-  private final KryoSerializer kryoSerializer;
-  private final DelegateSyncService delegateSyncService;
   private final WaitNotifyEngine waitNotifyEngine;
-  private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
+  private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @POST
   @Path("sync")
@@ -57,7 +50,7 @@ public class NGDelegate2TaskResource {
                                                         .taskSetupAbstraction("orgIdentifier", orgIdentifier)
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
-    return delegateServiceGrpcClient.executeSyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
+    return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
   }
 
   @POST
@@ -76,8 +69,7 @@ public class NGDelegate2TaskResource {
                                                         .taskSetupAbstraction("orgIdentifier", orgIdentifier)
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
-    final String taskId =
-        delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
+    final String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
 
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION, new SimpleNotifyCallback(), taskId);
     return taskId;
