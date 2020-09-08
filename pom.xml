@@ -6,7 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!--<module>990-commons-test</module>-->
         <!--<module>12-commons</module>-->
         <!--<module>13-grpc-api</module>-->
         <!--<module>14-api-services-beans</module>-->
@@ -70,6 +69,7 @@
         <module>270-verification</module>
         <module>300-cv-nextgen</module>
 
+        <!--<module>990-commons-test</module>-->
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
