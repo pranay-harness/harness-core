@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.constraints.NotNull;
 
@@ -22,6 +23,9 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("Git")
 public class GitConfigDTO extends ConnectorConfigDTO {
   @JsonProperty("type") GitAuthType gitAuthType;
+  @JsonProperty("connectionType") GitConnectionType gitConnectionType;
+  @NotBlank String url;
+  String branchName;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
@@ -33,9 +37,12 @@ public class GitConfigDTO extends ConnectorConfigDTO {
 
   @Builder
   public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitSyncConfig gitSyncConfig,
-      String accountId, String reference) {
+      GitConnectionType gitConnectionType, String url, String branchName) {
     this.gitAuthType = gitAuthType;
     this.gitAuth = gitAuth;
     this.gitSyncConfig = gitSyncConfig;
+    this.gitConnectionType = gitConnectionType;
+    this.url = url;
+    this.branchName = branchName;
   }
 }

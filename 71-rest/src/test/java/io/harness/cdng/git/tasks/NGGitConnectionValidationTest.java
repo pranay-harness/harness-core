@@ -42,16 +42,14 @@ public class NGGitConnectionValidationTest extends CategoryTest {
 
   SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
 
-  GitConfigDTO gitConfig = GitConfigDTO.builder()
-                               .gitAuth(GitHTTPAuthenticationDTO.builder()
-                                            .gitConnectionType(GitConnectionType.REPO)
-                                            .branchName("branchName")
-                                            .passwordRef(passwordRef)
-                                            .url("url")
-                                            .username("username")
-                                            .build())
-                               .gitAuthType(GitAuthType.HTTP)
-                               .build();
+  GitConfigDTO gitConfig =
+      GitConfigDTO.builder()
+          .url("url")
+          .gitConnectionType(GitConnectionType.REPO)
+          .branchName("branchName")
+          .gitAuthType(GitAuthType.HTTP)
+          .gitAuth(GitHTTPAuthenticationDTO.builder().passwordRef(passwordRef).username("username").build())
+          .build();
 
   @InjectMocks
   private NGGitConnectionValidation gitConnectionValidation = new NGGitConnectionValidation(generateUuid(),

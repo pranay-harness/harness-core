@@ -37,11 +37,11 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
   }
 
   private String getBranchName(GitConfigDTO gitConfigDTO) {
-    return gitConfigDTO.getGitAuth().getBranchName();
+    return gitConfigDTO.getBranchName();
   }
 
   private GitConnectionType getGitConnectionLevel(GitConfigDTO gitConfigDTO) {
-    return gitConfigDTO.getGitAuth().getGitConnectionType();
+    return gitConfigDTO.getGitConnectionType();
   }
 
   private boolean isGitSyncSupported(GitConfigDTO gitConfigDTO) {
@@ -83,6 +83,6 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
   }
 
   private String getGitURL(GitConfigDTO gitConfig) {
-    return gitConfig.getGitAuth().getUrl();
+    return gitConfig.getUrl();
   }
 }

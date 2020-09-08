@@ -58,8 +58,8 @@ public class GitEntityToDTOTest extends CategoryTest {
     assertThat(gitConfigDTO.getGitSyncConfig().isSyncEnabled()).isEqualTo(true);
     assertThat(gitConfigDTO.getGitSyncConfig().getCustomCommitAttributes()).isEqualTo(customCommitAttributes);
     GitHTTPAuthenticationDTO gitAuthentication = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-    assertThat(gitAuthentication.getGitConnectionType()).isEqualTo(ACCOUNT);
-    assertThat(gitAuthentication.getUrl()).isEqualTo(url);
+    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(ACCOUNT);
+    assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
     assertThat(gitAuthentication.getUsername()).isEqualTo(userName);
     assertThat(gitAuthentication.getPasswordRef().toSecretRefStringValue()).isEqualTo(passwordReference);
   }
@@ -91,7 +91,7 @@ public class GitEntityToDTOTest extends CategoryTest {
     assertThat(gitConfigDTO.getGitSyncConfig().getCustomCommitAttributes()).isEqualTo(customCommitAttributes);
     GitSSHAuthenticationDTO gitAuthentication = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
     assertThat(gitAuthentication.getEncryptedSshKey()).isEqualTo(sshKeyReference);
-    assertThat(gitAuthentication.getUrl()).isEqualTo(url);
-    assertThat(gitAuthentication.getGitConnectionType()).isEqualTo(ACCOUNT);
+    assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
+    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(ACCOUNT);
   }
 }

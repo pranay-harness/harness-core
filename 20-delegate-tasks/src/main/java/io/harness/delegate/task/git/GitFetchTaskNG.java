@@ -99,7 +99,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
     secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getGitAuth().getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
     String fetchTypeInfo = gitStoreDelegateConfig.getFetchType() == FetchType.BRANCH
         ? "Branch: " + gitStoreDelegateConfig.getBranch()
         : "CommitId: " + gitStoreDelegateConfig.getCommitId();
