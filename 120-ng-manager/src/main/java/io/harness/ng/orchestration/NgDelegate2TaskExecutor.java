@@ -3,30 +3,19 @@ package io.harness.ng.orchestration;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.callback.DelegateCallbackToken;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
-import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.tasks.TaskExecutor;
-import io.harness.waiter.WaitNotifyEngine;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public class NgDelegate2TaskExecutor implements TaskExecutor<HDelegateTask> {
-  private final DelegateServiceGrpcClient delegateServiceGrpcClient;
-  private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
-
-  @Inject
-  public NgDelegate2TaskExecutor(DelegateServiceGrpcClient delegateServiceGrpcClient, WaitNotifyEngine waitNotifyEngine,
-      Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier) {
-    this.delegateServiceGrpcClient = delegateServiceGrpcClient;
-    this.delegateCallbackTokenSupplier = delegateCallbackTokenSupplier;
-  }
+  @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
   public String queueTask(Map<String, String> setupAbstractions, HDelegateTask task) {
@@ -39,7 +28,7 @@ public class NgDelegate2TaskExecutor implements TaskExecutor<HDelegateTask> {
                                                         .executionTimeout(Duration.ofMillis(taskData.getTimeout()))
                                                         .taskSetupAbstractions(setupAbstractions)
                                                         .build();
-    return delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
+    return delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
   }
 
   @Override

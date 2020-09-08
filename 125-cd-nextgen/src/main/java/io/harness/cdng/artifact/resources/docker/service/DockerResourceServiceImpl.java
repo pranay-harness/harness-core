@@ -10,7 +10,6 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
-import io.harness.callback.DelegateCallbackToken;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
@@ -31,34 +30,28 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.service.DelegateGrpcClientWrapper;
 import software.wings.beans.TaskType;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 @Singleton
 public class DockerResourceServiceImpl implements DockerResourceService {
-  private final DelegateServiceGrpcClient delegateServiceGrpcClient;
-  private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
   private final ConnectorService connectorService;
   private final SecretManagerClientService secretManagerClientService;
+  @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @VisibleForTesting static final int timeoutInSecs = 30;
 
   @Inject
-  public DockerResourceServiceImpl(DelegateServiceGrpcClient delegateServiceGrpcClient,
-      Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier,
-      @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService,
+  public DockerResourceServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService,
       SecretManagerClientService secretManagerClientService) {
-    this.delegateServiceGrpcClient = delegateServiceGrpcClient;
-    this.delegateCallbackTokenSupplier = delegateCallbackTokenSupplier;
     this.connectorService = connectorService;
     this.secretManagerClientService = secretManagerClientService;
   }
@@ -206,7 +199,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
             .taskSetupAbstraction("orgIdentifier", ngAccess.getOrgIdentifier())
             .taskSetupAbstraction("projectIdentifier", ngAccess.getProjectIdentifier())
             .build();
-    return delegateServiceGrpcClient.executeSyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
+    return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
   }
 
   private ArtifactTaskExecutionResponse getTaskExecutionResponse(

@@ -10,7 +10,6 @@ import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
-import io.harness.callback.DelegateCallbackToken;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
@@ -26,11 +25,11 @@ import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactBuildDetailsNG;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
-import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.service.DelegateGrpcClientWrapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,7 +41,6 @@ import org.mockito.Spy;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 public class DockerResourceServiceImplTest extends CategoryTest {
   private static String ACCOUNT_ID = "accountId";
@@ -50,10 +48,9 @@ public class DockerResourceServiceImplTest extends CategoryTest {
   private static String ORG_IDENTIFIER = "orgIdentifier";
   private static String PROJECT_IDENTIFIER = "projectIdentifier";
 
-  @Mock DelegateServiceGrpcClient delegateServiceGrpcClient;
-  @Mock Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
   @Mock ConnectorService connectorService;
   @Mock SecretManagerClientService secretManagerClientService;
+  @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Spy @InjectMocks DockerResourceServiceImpl dockerResourceService;
 
@@ -83,7 +80,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Lists.newArrayList(encryptedDataDetail));
-    when(delegateServiceGrpcClient.executeSyncTask(any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(
             ArtifactTaskResponse.builder()
                 .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -98,7 +95,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     ArgumentCaptor<DelegateTaskRequest> delegateTaskRequestCaptor = ArgumentCaptor.forClass(DelegateTaskRequest.class);
     verify(connectorService).get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier");
     verify(secretManagerClientService).getEncryptionDetails(any(), any());
-    verify(delegateServiceGrpcClient).executeSyncTask(delegateTaskRequestCaptor.capture(), any());
+    verify(delegateGrpcClientWrapper).executeSyncTask(delegateTaskRequestCaptor.capture());
     DelegateTaskRequest delegateTaskRequest = delegateTaskRequestCaptor.getValue();
     ArtifactTaskParameters artifactTaskParameters = (ArtifactTaskParameters) delegateTaskRequest.getTaskParameters();
     assertThat(artifactTaskParameters.getArtifactTaskType()).isEqualTo(ArtifactTaskType.GET_BUILDS);
@@ -125,7 +122,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Lists.newArrayList(encryptedDataDetail));
-    when(delegateServiceGrpcClient.executeSyncTask(any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(
             ArtifactTaskResponse.builder()
                 .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -140,7 +137,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     ArgumentCaptor<DelegateTaskRequest> delegateTaskRequestCaptor = ArgumentCaptor.forClass(DelegateTaskRequest.class);
     verify(connectorService).get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier");
     verify(secretManagerClientService).getEncryptionDetails(any(), any());
-    verify(delegateServiceGrpcClient).executeSyncTask(delegateTaskRequestCaptor.capture(), any());
+    verify(delegateGrpcClientWrapper).executeSyncTask(delegateTaskRequestCaptor.capture());
     DelegateTaskRequest delegateTaskRequest = delegateTaskRequestCaptor.getValue();
     ArtifactTaskParameters artifactTaskParameters = (ArtifactTaskParameters) delegateTaskRequest.getTaskParameters();
     assertThat(artifactTaskParameters.getArtifactTaskType()).isEqualTo(ArtifactTaskType.GET_LABELS);
@@ -167,7 +164,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Lists.newArrayList(encryptedDataDetail));
-    when(delegateServiceGrpcClient.executeSyncTask(any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(
             ArtifactTaskResponse.builder()
                 .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -186,7 +183,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     ArgumentCaptor<DelegateTaskRequest> delegateTaskRequestCaptor = ArgumentCaptor.forClass(DelegateTaskRequest.class);
     verify(connectorService).get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier");
     verify(secretManagerClientService).getEncryptionDetails(any(), any());
-    verify(delegateServiceGrpcClient).executeSyncTask(delegateTaskRequestCaptor.capture(), any());
+    verify(delegateGrpcClientWrapper).executeSyncTask(delegateTaskRequestCaptor.capture());
     DelegateTaskRequest delegateTaskRequest = delegateTaskRequestCaptor.getValue();
     ArtifactTaskParameters artifactTaskParameters = (ArtifactTaskParameters) delegateTaskRequest.getTaskParameters();
     assertThat(artifactTaskParameters.getArtifactTaskType()).isEqualTo(ArtifactTaskType.GET_LAST_SUCCESSFUL_BUILD);
@@ -212,7 +209,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Lists.newArrayList(encryptedDataDetail));
-    when(delegateServiceGrpcClient.executeSyncTask(any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(
             ArtifactTaskResponse.builder()
                 .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -230,7 +227,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     ArgumentCaptor<DelegateTaskRequest> delegateTaskRequestCaptor = ArgumentCaptor.forClass(DelegateTaskRequest.class);
     verify(connectorService).get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier");
     verify(secretManagerClientService).getEncryptionDetails(any(), any());
-    verify(delegateServiceGrpcClient).executeSyncTask(delegateTaskRequestCaptor.capture(), any());
+    verify(delegateGrpcClientWrapper).executeSyncTask(delegateTaskRequestCaptor.capture());
     DelegateTaskRequest delegateTaskRequest = delegateTaskRequestCaptor.getValue();
     ArtifactTaskParameters artifactTaskParameters = (ArtifactTaskParameters) delegateTaskRequest.getTaskParameters();
     assertThat(artifactTaskParameters.getArtifactTaskType()).isEqualTo(ArtifactTaskType.VALIDATE_ARTIFACT_SERVER);
@@ -256,7 +253,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Lists.newArrayList(encryptedDataDetail));
-    when(delegateServiceGrpcClient.executeSyncTask(any(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(
             ArtifactTaskResponse.builder()
                 .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -275,7 +272,7 @@ public class DockerResourceServiceImplTest extends CategoryTest {
     ArgumentCaptor<DelegateTaskRequest> delegateTaskRequestCaptor = ArgumentCaptor.forClass(DelegateTaskRequest.class);
     verify(connectorService).get(ACCOUNT_ID, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "identifier");
     verify(secretManagerClientService).getEncryptionDetails(any(), any());
-    verify(delegateServiceGrpcClient).executeSyncTask(delegateTaskRequestCaptor.capture(), any());
+    verify(delegateGrpcClientWrapper).executeSyncTask(delegateTaskRequestCaptor.capture());
     DelegateTaskRequest delegateTaskRequest = delegateTaskRequestCaptor.getValue();
     ArtifactTaskParameters artifactTaskParameters = (ArtifactTaskParameters) delegateTaskRequest.getTaskParameters();
     assertThat(artifactTaskParameters.getArtifactTaskType()).isEqualTo(ArtifactTaskType.VALIDATE_ARTIFACT_SOURCE);
