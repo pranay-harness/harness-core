@@ -83,4 +83,13 @@ public class DelegateProfileManagerServiceTest {
     thrown.expectMessage("not implemented");
     delegateProfileManagerService.delete(ACCOUNT_ID, DELEGATE_PROFILE_ID);
   }
+
+  @Test
+  @Owner(developers = OwnerRule.MARKO)
+  @Category(UnitTests.class)
+  public void shouldUpdateSelectors() {
+    thrown.expect(UnsupportedOperationException.class);
+    thrown.expectMessage("not implemented");
+    delegateProfileManagerService.updateSelectors(ACCOUNT_ID, DELEGATE_PROFILE_ID, asList("selector"));
+  }
 }

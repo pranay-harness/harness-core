@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Arrays.asList;
@@ -141,29 +142,6 @@ public class DelegateProfileResourceTest {
     assertThat(resource.getUuid()).isEqualTo(ID_KEY);
   }
 
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldUpdateDelegateProfileSelectors() {
-    List<String> profileSelectorsAdded = Arrays.asList("xxx");
-    List<String> profileSelectorsUpdated = Arrays.asList("yyy");
-
-    DelegateProfile delegateProfile =
-        DelegateProfile.builder().uuid(ID_KEY).accountId(ACCOUNT_ID).selectors(profileSelectorsAdded).build();
-
-    when(delegateProfileService.updateDelegateProfileSelectors(ID_KEY, ACCOUNT_ID, profileSelectorsAdded))
-        .thenReturn(delegateProfile);
-
-    RestResponse<DelegateProfile> restResponse =
-        RESOURCES.client()
-            .target("/delegate-profiles/" + ID_KEY + "/selectors?accountId=" + ACCOUNT_ID + "&selectors=yyy")
-            .request()
-            .put(entity(delegateProfile, MediaType.APPLICATION_JSON),
-                new GenericType<RestResponse<DelegateProfile>>() {});
-    verify(delegateProfileService, atLeastOnce())
-        .updateDelegateProfileSelectors(ID_KEY, ACCOUNT_ID, profileSelectorsUpdated);
-  }
-
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldListDelegateProfilesV2() {
@@ -265,5 +243,31 @@ public class DelegateProfileResourceTest {
     String profileId = generateUuid();
     RESOURCES.client().target("/delegate-profiles/v2/" + profileId + "?accountId=" + ACCOUNT_ID).request().delete();
     verify(delegateProfileManagerService, times(1)).delete(ACCOUNT_ID, profileId);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldUpdateDelegateProfileSelectorsV2() {
+    List<String> profileSelectors = Arrays.asList("xxx");
+
+    DelegateProfileDetails delegateProfileDetails =
+        DelegateProfileDetails.builder().uuid(ID_KEY).accountId(ACCOUNT_ID).selectors(profileSelectors).build();
+
+    when(delegateProfileManagerService.updateSelectors(ACCOUNT_ID, ID_KEY, profileSelectors))
+        .thenReturn(delegateProfileDetails);
+
+    RestResponse<DelegateProfileDetails> restResponse =
+        RESOURCES.client()
+            .target("/delegate-profiles/v2/" + ID_KEY + "/selectors?accountId=" + ACCOUNT_ID + "&selectors=xxx")
+            .request()
+            .put(entity(delegateProfileDetails, MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<DelegateProfileDetails>>() {});
+    verify(delegateProfileManagerService, atLeastOnce()).updateSelectors(ACCOUNT_ID, ID_KEY, profileSelectors);
+
+    DelegateProfileDetails resource = restResponse.getResource();
+    assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(resource.getUuid()).isEqualTo(ID_KEY);
+    assertThat(resource.getSelectors()).isEqualTo(profileSelectors);
   }
 }

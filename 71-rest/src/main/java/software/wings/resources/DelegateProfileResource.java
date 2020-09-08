@@ -13,7 +13,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileDetails;
-import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.ScopingRuleDetails;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
@@ -99,18 +98,6 @@ public class DelegateProfileResource {
     return new RestResponse<>(delegateProfileService.update(delegateProfile));
   }
 
-  @PUT
-  @Path("{delegateProfileId}/scoping-rules")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
-  public RestResponse<DelegateProfile> updateScopingRules(
-      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, List<DelegateProfileScopingRule> scopingRules) {
-    return new RestResponse<>(delegateProfileService.updateScopingRules(accountId, delegateProfileId, scopingRules));
-  }
-
   @POST
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
@@ -118,19 +105,6 @@ public class DelegateProfileResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateProfile delegateProfile) {
     delegateProfile.setAccountId(accountId);
     return new RestResponse<>(delegateProfileService.add(delegateProfile));
-  }
-
-  @PUT
-  @Path("{delegateProfileId}/selectors")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
-  public RestResponse<DelegateProfile> updateDelegateProfileSelector(
-      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selectors") List<String> selectors) {
-    return new RestResponse<>(
-        delegateProfileService.updateDelegateProfileSelectors(delegateProfileId, accountId, selectors));
   }
 
   @GET
@@ -197,5 +171,17 @@ public class DelegateProfileResource {
   @ExceptionMetered
   public RestResponse<List<DelegateProfileDetails>> listV2(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(delegateProfileManagerService.list(accountId));
+  }
+
+  @PUT
+  @Path("/v2/{delegateProfileId}/selectors")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
+  public RestResponse<DelegateProfileDetails> updateSelectorsV2(
+      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("selectors") List<String> selectors) {
+    return new RestResponse<>(delegateProfileManagerService.updateSelectors(accountId, delegateProfileId, selectors));
   }
 }
