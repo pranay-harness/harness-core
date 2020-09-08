@@ -14,7 +14,7 @@ public interface LicenseService {
 
   boolean updateAccountLicense(@NotEmpty String accountId, LicenseInfo licenseInfo);
 
-  void updateCeLicense(@NotEmpty String accountId, CeLicenseInfo ceLicenseInfo);
+  boolean updateCeLicense(@NotEmpty String accountId, CeLicenseInfo ceLicenseInfo);
 
   boolean startCeLimitedTrial(@NotEmpty String accountId);
 

@@ -52,8 +52,11 @@ public class AdminAccountServiceImpl implements AdminAccountService {
 
   @Override
   public CeLicenseInfo updateCeLicense(String accountId, CeLicenseInfo ceLicenseInfo) {
-    licenseService.updateCeLicense(accountId, ceLicenseInfo);
-    return getCeLicense(accountId);
+    boolean success = licenseService.updateCeLicense(accountId, ceLicenseInfo);
+    if (success) {
+      return getCeLicense(accountId);
+    }
+    return null;
   }
 
   @Override

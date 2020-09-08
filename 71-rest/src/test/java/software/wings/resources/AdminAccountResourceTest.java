@@ -1,9 +1,11 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -21,7 +23,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
-import software.wings.licensing.LicenseService;
+import software.wings.beans.CeLicenseUpdateInfo;
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.client.Entity;
@@ -34,13 +36,10 @@ public class AdminAccountResourceTest extends CategoryTest {
 
   private static AdminAccountService adminAccountService = mock(AdminAccountService.class);
   private static AdminUserService adminUserService = mock(AdminUserService.class);
-  private static LicenseService licenseService = mock(LicenseService.class);
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder()
-          .instance(new AdminAccountResource(adminAccountService, adminUserService, licenseService))
-          .build();
+      ResourceTestRule.builder().instance(new AdminAccountResource(adminAccountService, adminUserService)).build();
 
   @Before
   public void setUp() {
@@ -68,11 +67,13 @@ public class AdminAccountResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldUpdateCeLicense() {
     CeLicenseInfo ceLicenseInfo = CeLicenseInfo.builder().build();
+    CeLicenseUpdateInfo ceLicenseUpdateInfo = CeLicenseUpdateInfo.builder().ceLicenseInfo(ceLicenseInfo).build();
     RESOURCES.client()
         .target(format("/admin/accounts/%s/license/continuous-efficiency", accountId))
         .request()
-        .put(entity(ceLicenseInfo, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    verify(licenseService).updateCeLicense(eq(accountId), eq(ceLicenseInfo));
+        .put(
+            entity(ceLicenseUpdateInfo, MediaType.APPLICATION_JSON), new GenericType<RestResponse<CeLicenseInfo>>() {});
+    verify(adminAccountService).updateCeLicense(eq(accountId), eq(ceLicenseInfo));
   }
 
   @Test
@@ -84,5 +85,16 @@ public class AdminAccountResourceTest extends CategoryTest {
         .request()
         .put(Entity.json(""), new GenericType<RestResponse<Boolean>>() {});
     verify(adminAccountService).updatePovFlag(eq(accountId), eq(true));
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testCreateAccount() {
+    RESOURCES.client()
+        .target("/admin/accounts/")
+        .request()
+        .post(entity(account, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    verify(adminAccountService).createAccount(eq(account), anyString());
   }
 }
