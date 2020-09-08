@@ -17,6 +17,7 @@ import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
+import io.harness.dto.OrchestrationGraph;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -47,6 +48,7 @@ import software.wings.beans.Application;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.GenericType;
 
 /**
@@ -86,7 +88,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    Graph response = requestGraph(planExecutionResponse.getUuid());
+    Graph response = requestGraph(planExecutionResponse.getUuid(), "get-graph");
     assertThat(response).isNotNull();
 
     // start dummy node
@@ -202,33 +204,113 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(finalDummyNode.getOutcomes()).isEmpty();
   }
 
-  private Graph requestGraph(String planExecutionId) {
+  @Test
+  @Owner(developers = ALEXEI, intermittent = true)
+  @Category(FunctionalTests.class)
+  public void shouldGenerateOrchestrationGraph() {
+    PlanExecution planExecutionResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
+    assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    OrchestrationGraph response =
+        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
+    assertThat(response).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  public void shouldGeneratePartialOrchestrationGraph() {
+    PlanExecution planExecutionResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
+    assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    OrchestrationGraph response =
+        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
+    assertThat(response).isNotNull();
+
+    GraphVertex forkVertex = response.getAdjacencyList()
+                                 .getGraphVertexMap()
+                                 .values()
+                                 .stream()
+                                 .filter(graphVertex -> graphVertex.getName().equals("fork2"))
+                                 .findFirst()
+                                 .orElse(null);
+    assertThat(forkVertex).isNotNull();
+
+    OrchestrationGraph partialOrchestrationResponse = requestOrchestrationGraph(
+        forkVertex.getPlanNodeId(), planExecutionResponse.getUuid(), "get-partial-orchestration-graph");
+    assertThat(partialOrchestrationResponse).isNotNull();
+    assertThat(partialOrchestrationResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(3);
+    assertThat(partialOrchestrationResponse.getAdjacencyList()
+                   .getGraphVertexMap()
+                   .values()
+                   .stream()
+                   .map(GraphVertex::getName)
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("fork2", "http1", "http2");
+    assertThat(partialOrchestrationResponse.getAdjacencyList().getAdjacencyList().size()).isEqualTo(3);
+    assertThat(
+        partialOrchestrationResponse.getAdjacencyList().getAdjacencyList().get(forkVertex.getUuid()).getEdges().size())
+        .isEqualTo(2);
+    assertThat(partialOrchestrationResponse.getAdjacencyList().getAdjacencyList().get(forkVertex.getUuid()).getEdges())
+        .containsExactlyInAnyOrderElementsOf(partialOrchestrationResponse.getAdjacencyList()
+                                                 .getGraphVertexMap()
+                                                 .values()
+                                                 .stream()
+                                                 .filter(vertex -> vertex.getName().startsWith("http"))
+                                                 .map(GraphVertex::getUuid)
+                                                 .collect(Collectors.toList()));
+  }
+
+  private Graph requestGraph(String planExecutionId, String requestUri) {
     GenericType<RestResponse<Graph>> returnType = new GenericType<RestResponse<Graph>>() {};
 
     Map<String, String> queryParams = new HashMap<>();
-    queryParams.put("accountId", application.getAccountId());
-    queryParams.put("appId", application.getAppId());
     queryParams.put("planExecutionId", planExecutionId);
 
-    RestResponse<Graph> response =
-        Setup.portal()
-            .config(RestAssuredConfig.config()
-                        .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
-                          ObjectMapper mapper = new ObjectMapper();
-                          mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                          mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
-                          mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
-                          return mapper;
-                        }))
-                        .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
-            .auth()
-            .oauth2(bearerToken)
-            .queryParams(queryParams)
-            .contentType(ContentType.JSON)
-            .get("/execute2/get-graph")
-            .as(returnType.getType(), ObjectMapperType.JACKSON_2);
+    RestResponse<Graph> response = internalRequest(returnType, queryParams, requestUri);
 
     return response.getResource();
+  }
+
+  private OrchestrationGraph requestOrchestrationGraph(
+      String startingNodeId, String planExecutionId, String requestUri) {
+    GenericType<RestResponse<OrchestrationGraph>> returnType = new GenericType<RestResponse<OrchestrationGraph>>() {};
+
+    Map<String, String> queryParams = new HashMap<>();
+    queryParams.put("planExecutionId", planExecutionId);
+
+    if (startingNodeId != null) {
+      queryParams.put("startingSetupNodeId", startingNodeId);
+    }
+
+    RestResponse<OrchestrationGraph> response = internalRequest(returnType, queryParams, requestUri);
+
+    return response.getResource();
+  }
+
+  private <T> RestResponse<T> internalRequest(
+      GenericType<RestResponse<T>> returnType, Map<String, String> queryParams, String requestUri) {
+    queryParams.put("accountId", application.getAccountId());
+    queryParams.put("appId", application.getAppId());
+
+    return Setup.portal()
+        .config(RestAssuredConfig.config()
+                    .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
+                      ObjectMapper mapper = new ObjectMapper();
+                      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                      mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
+                      mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
+                      return mapper;
+                    }))
+                    .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
+        .auth()
+        .oauth2(bearerToken)
+        .queryParams(queryParams)
+        .contentType(ContentType.JSON)
+        .get("/execute2/" + requestUri)
+        .as(returnType.getType(), ObjectMapperType.JACKSON_2);
   }
 
   @JsonDeserialize(using = OutcomeTestDeserializer.class)

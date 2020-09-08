@@ -26,6 +26,7 @@ import io.harness.service.GraphGenerationService;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 @Redesign
 @OwnedBy(HarnessTeam.CDC)
@@ -101,6 +102,47 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
     executorService.submit(() -> mongoStore.upsert(orchestrationGraphInternal, Duration.ofDays(10)));
     return OrchestrationGraphConverter.convertFrom(orchestrationGraphInternal);
+  }
+
+  @Override
+  public OrchestrationGraph generatePartialOrchestrationGraph(String startingSetupNodeId, String planExecutionId) {
+    PlanExecution planExecution = planExecutionService.get(planExecutionId);
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
+    if (isEmpty(nodeExecutions)) {
+      throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
+    }
+
+    String startingNodeId = obtainStartingNodeExId(nodeExecutions, startingSetupNodeId);
+
+    OrchestrationGraphInternal orchestrationGraphInternal =
+        OrchestrationGraphInternal.builder()
+            .planExecutionId(planExecution.getUuid())
+            .startTs(planExecution.getStartTs())
+            .endTs(planExecution.getEndTs())
+            .status(planExecution.getStatus())
+            .rootNodeId(startingNodeId)
+            .adjacencyList(graphGenerator.generateAdjacencyList(startingNodeId, nodeExecutions))
+            .build();
+
+    return OrchestrationGraphConverter.convertFrom(orchestrationGraphInternal);
+  }
+
+  private String obtainStartingNodeExId(List<NodeExecution> nodeExecutions, String startingSetupNodeId) {
+    return nodeExecutions.stream()
+        .filter(node -> node.getAmbiance().obtainCurrentLevel().getSetupId().equals(startingSetupNodeId))
+        .collect(Collectors.collectingAndThen(Collectors.toList(),
+            list -> {
+              if (list.isEmpty()) {
+                throw new InvalidRequestException("No nodes found for setupNodeId [" + startingSetupNodeId + "]");
+              }
+              if (list.size() > 1) {
+                throw new InvalidRequestException("Repeated setupNodeIds are not supported. Check the plan for ["
+                    + startingSetupNodeId + "] planNodeId");
+              }
+
+              return list.get(0);
+            }))
+        .getUuid();
   }
 
   private String obtainStartingNodeExId(List<NodeExecution> nodeExecutions) {

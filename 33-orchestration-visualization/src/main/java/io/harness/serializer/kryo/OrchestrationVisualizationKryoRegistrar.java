@@ -2,8 +2,6 @@ package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.beans.EdgeList;
-import io.harness.beans.EdgeList.Edge;
-import io.harness.beans.EdgeList.Edge.EdgeType;
 import io.harness.beans.Graph;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationAdjacencyList;
@@ -20,7 +18,5 @@ public class OrchestrationVisualizationKryoRegistrar implements KryoRegistrar {
     kryo.register(OrchestrationGraphInternal.class, 3304);
     kryo.register(OrchestrationAdjacencyList.class, 3305);
     kryo.register(EdgeList.class, 3306);
-    kryo.register(Edge.class, 3307);
-    kryo.register(EdgeType.class, 3308);
   }
 }

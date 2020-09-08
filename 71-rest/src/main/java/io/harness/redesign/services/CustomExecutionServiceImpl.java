@@ -183,6 +183,11 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public OrchestrationGraph getPartialOrchestrationGraph(String startingSetupNodeId, String executionPlanId) {
+    return graphGenerationService.generatePartialOrchestrationGraph(startingSetupNodeId, executionPlanId);
+  }
+
+  @Override
   public void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException {
     Graph graph = graphGenerationService.generateGraph(executionPlanId);
     graphVisualizer.generateImage(graph, output);
