@@ -6,10 +6,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!--<module>11-commons-test</module>-->
+        <!--<module>990-commons-test</module>-->
         <!--<module>12-commons</module>-->
-        <module>13-grpc-api</module>
-        <module>14-api-services-beans</module>
+        <!--<module>13-grpc-api</module>-->
+        <!--<module>14-api-services-beans</module>-->
         <module>15-api-services</module>
         <module>16-expression-service</module>
         <module>19-delegate-tasks-beans</module>
