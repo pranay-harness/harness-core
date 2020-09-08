@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,6 +18,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.models.V1DaemonSet;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Job;
+import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
@@ -110,6 +112,11 @@ public class K8sWatchServiceDelegate {
           sharedInformerFactory.getExistingSharedIndexInformer(V1PersistentVolumeClaim.class);
       pvcInformer.run();
 
+      NamespaceFetcher namespaceFetcher = watcherFactory.createNamespaceFetcher(apiClient, sharedInformerFactory);
+      SharedInformer<V1Namespace> namespaceInformer =
+          sharedInformerFactory.getExistingSharedIndexInformer(V1Namespace.class);
+      namespaceInformer.run();
+
       Map<String, Store<?>> stores = KNOWN_WORKLOAD_TYPES.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey, e -> sharedInformerFactory.getExistingSharedIndexInformer(e.getValue()).getIndexer()));
 
@@ -118,8 +125,9 @@ public class K8sWatchServiceDelegate {
       watcherFactory.createNodeWatcher(apiClient, clusterDetails, sharedInformerFactory);
       watcherFactory.createPVWatcher(apiClient, clusterDetails, sharedInformerFactory);
 
-      blockingWaitForPVCInformerSync(pvcInformer);
-      watcherFactory.createPodWatcher(apiClient, clusterDetails, controllerFetcher, sharedInformerFactory, pvcFetcher);
+      blockingWaitForFetchersToSync(ImmutableList.of(pvcInformer, namespaceInformer));
+      watcherFactory.createPodWatcher(
+          apiClient, clusterDetails, controllerFetcher, sharedInformerFactory, pvcFetcher, namespaceFetcher);
 
       logger.info("Starting AllRegisteredInformers for watch {}", id);
       sharedInformerFactory.startAllRegisteredInformers();
@@ -131,11 +139,12 @@ public class K8sWatchServiceDelegate {
   }
 
   @SneakyThrows
-  private void blockingWaitForPVCInformerSync(SharedInformer<V1PersistentVolumeClaim> pvcInformer) {
+  private void blockingWaitForFetchersToSync(ImmutableList<SharedInformer<?>> informers) {
     int cnt = 0;
-    while (!pvcInformer.hasSynced() && ++cnt <= 15) {
-      logger.info("Waiting for PVCInformer to sync... {}", cnt);
-      Thread.sleep(200);
+    while (!informers.stream().map(SharedInformer::hasSynced).filter(i -> !i).findFirst().orElse(Boolean.TRUE)
+        && ++cnt <= 25) {
+      logger.info("Waiting for InformerFetchers to sync... {}", cnt);
+      Thread.sleep(300);
     }
   }
 

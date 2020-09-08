@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   private final String clusterId;
   private final EventPublisher eventPublisher;
   private final PVCFetcher pvcFetcher;
+  private final NamespaceFetcher namespaceFetcher;
   private final Set<String> publishedPods;
 
   private final PodInfo podInfoPrototype;
@@ -67,9 +69,10 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   @Inject
   public PodWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
       @Assisted K8sControllerFetcher controllerFetcher, @Assisted SharedInformerFactory sharedInformerFactory,
-      @Assisted PVCFetcher pvcFetcher, EventPublisher eventPublisher) {
+      @Assisted PVCFetcher pvcFetcher, @Assisted NamespaceFetcher namespaceFetcher, EventPublisher eventPublisher) {
     this.controllerFetcher = controllerFetcher;
     this.pvcFetcher = pvcFetcher;
+    this.namespaceFetcher = namespaceFetcher;
     logger.info(
         "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.clusterId = params.getClusterId();
@@ -158,6 +161,8 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
               .setCreationTimestamp(creationTimestamp)
               .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
               .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
+              .putAllNamespaceLabels(
+                  firstNonNull(getNamespaceLabels(pod.getMetadata().getNamespace()), Collections.emptyMap()))
               .setTopLevelOwner(controllerFetcher.getTopLevelOwner(
                   new V1PodBuilder()
                       .withNewMetadata()
@@ -217,6 +222,15 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
       eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
       publishedPods.remove(uid);
     }
+  }
+
+  private Map<String, String> getNamespaceLabels(String namespaceName) {
+    try {
+      return namespaceFetcher.getNamespaceByKey(namespaceName).getMetadata().getLabels();
+    } catch (Exception ex) {
+      logger.warn("Failed to fetch namespaceLabels returning default", ex);
+    }
+    return null;
   }
 
   private List<io.harness.perpetualtask.k8s.watch.Volume> getAllVolumes(V1Pod pod) {

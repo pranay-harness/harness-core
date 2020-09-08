@@ -40,6 +40,7 @@ import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.JSON;
 import io.kubernetes.client.openapi.models.V1ContainerBuilder;
 import io.kubernetes.client.openapi.models.V1ListMeta;
+import io.kubernetes.client.openapi.models.V1NamespaceBuilder;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
@@ -66,10 +67,12 @@ import java.util.Map;
 
 @Slf4j
 public class PodWatcherTest extends CategoryTest {
+  private static final Map<String, String> NAMESPACE_LABELS = ImmutableMap.of("harness-managed", "true");
   private PodWatcher podWatcher;
   private EventPublisher eventPublisher;
   private SharedInformerFactory sharedInformerFactory;
   private PVCFetcher pvcFetcher;
+  private NamespaceFetcher namespaceFetcher;
 
   final DateTime TIMESTAMP = DateTime.now();
   final DateTime DELETION_TIMESTAMP = TIMESTAMP.plusMinutes(5);
@@ -87,6 +90,8 @@ public class PodWatcherTest extends CategoryTest {
     sharedInformerFactory = new SharedInformerFactory();
     eventPublisher = mock(EventPublisher.class);
     pvcFetcher = mock(PVCFetcher.class);
+    namespaceFetcher = mock(NamespaceFetcher.class);
+
     MockitoAnnotations.initMocks(this);
     K8sControllerFetcher controllerFetcher = mock(K8sControllerFetcher.class);
 
@@ -108,6 +113,14 @@ public class PodWatcherTest extends CategoryTest {
                         .endSpec()
                         .build());
 
+    when(namespaceFetcher.getNamespaceByKey(any()))
+        .thenReturn(new V1NamespaceBuilder()
+                        .withNewMetadata()
+                        .withName("harness")
+                        .withLabels(NAMESPACE_LABELS)
+                        .endMetadata()
+                        .build());
+
     podWatcher = new PodWatcher(new ClientBuilder().setBasePath("http://localhost:" + wireMockRule.port()).build(),
         ClusterDetails.builder()
             .clusterName("clusterName")
@@ -115,7 +128,7 @@ public class PodWatcherTest extends CategoryTest {
             .cloudProviderId("cloud-provider-id")
             .kubeSystemUid("cluster-uid")
             .build(),
-        controllerFetcher, sharedInformerFactory, pvcFetcher, eventPublisher);
+        controllerFetcher, sharedInformerFactory, pvcFetcher, namespaceFetcher, eventPublisher);
   }
 
   @Test
@@ -153,7 +166,7 @@ public class PodWatcherTest extends CategoryTest {
     Thread.sleep(200);
 
     WireMock.verify(1, getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("false")));
-    WireMock.verify(1, getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("true")));
+    WireMock.verify(getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("true")));
 
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(), any());
 
@@ -316,6 +329,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(podInfo.getLabelsMap())
         .isEqualTo(
             ImmutableMap.of("app", "manager", "harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1"));
+    assertThat(podInfo.getNamespaceLabelsMap()).isEqualTo(NAMESPACE_LABELS);
     assertThat(podInfo.getTopLevelOwner())
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
                        .setKind("Deployment")

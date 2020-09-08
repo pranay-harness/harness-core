@@ -107,11 +107,13 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
 
-    verify(watcherFactory, atLeastOnce()).createPodWatcher(any(), any(), any(), any(), any());
+    verify(watcherFactory, atLeastOnce()).createPodWatcher(any(), any(), any(), any(), any(), any());
     verify(watcherFactory, atLeastOnce()).createNodeWatcher(any(), any(), any());
     verify(watcherFactory, atLeastOnce()).createPVCFetcher(any(ApiClient.class), any(SharedInformerFactory.class));
     verify(watcherFactory, atLeastOnce())
         .createPVWatcher(any(ApiClient.class), any(ClusterDetails.class), any(SharedInformerFactory.class));
+    verify(watcherFactory, atLeastOnce())
+        .createNamespaceFetcher(any(ApiClient.class), any(SharedInformerFactory.class));
   }
 
   @Test
@@ -146,7 +148,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
     String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watch2).isEqualTo(watch1);
-    verify(watcherFactory, times(1)).createPodWatcher(any(ApiClient.class), any(), any(), any(), any());
+    verify(watcherFactory, times(1)).createPodWatcher(any(ApiClient.class), any(), any(), any(), any(), any());
   }
 
   @Test
@@ -173,7 +175,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
     String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams1);
     String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams2);
     assertThat(watch2).isNotEqualTo(watch1);
-    verify(watcherFactory, times(2)).createPodWatcher(any(ApiClient.class), any(), any(), any(), any());
+    verify(watcherFactory, times(2)).createPodWatcher(any(ApiClient.class), any(), any(), any(), any(), any());
     assertThat(k8sWatchServiceDelegate.watchIds()).containsExactlyInAnyOrder(watch1, watch2);
   }
 

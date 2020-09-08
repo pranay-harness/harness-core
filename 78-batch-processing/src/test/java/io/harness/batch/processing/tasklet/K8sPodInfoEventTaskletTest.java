@@ -1,5 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
@@ -90,6 +92,10 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   private static final String WORKLOAD_NAME = "workload_name";
   private static final String WORKLOAD_TYPE = "workload_type";
   private static final String WORKLOAD_ID = "workload_id";
+  private static final String MAP_KEY_WITH_DOT = "harness.io/created.by";
+  private static final String MAP_VALUE = "harness.io/created.by";
+  Map<String, String> NAMESPACE_LABELS = ImmutableMap.of(MAP_KEY_WITH_DOT, MAP_VALUE);
+
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
@@ -124,6 +130,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
         .thenReturn(instanceData);
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
+
     when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, CLOUD_PROVIDER_ID, NAMESPACE, POD_NAME, label))
         .thenReturn(harnessServiceInfo());
     Map<String, Quantity> requestQuantity = new HashMap<>();
@@ -135,7 +142,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).putAllLimits(limitQuantity).build();
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
-            NAMESPACE, label, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+            NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
 
     when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
         .thenReturn(Arrays.asList(k8sPodInfoMessage));
@@ -207,8 +214,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     InstanceData instanceData = getNodeInstantData();
     when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, POD_UID)).thenReturn(instanceData);
     PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID,
-        ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME, NAMESPACE, Collections.emptyMap(), Resource.newBuilder().build(),
-        START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+        ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME, NAMESPACE, Collections.emptyMap(), Collections.emptyMap(),
+        Resource.newBuilder().build(), START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
     InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     assertThat(instanceInfo.getInstanceId()).isNull();
   }
@@ -234,7 +241,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).putAllLimits(limitQuantity).build();
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
-            NAMESPACE, label, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+            NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
     InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
@@ -255,6 +262,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
         .isEqualTo(CLOUD_PROVIDER_INSTANCE_ID);
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
         .isEqualTo(String.valueOf((double) CPU_AMOUNT));
+    assertThat(instanceInfo.getNamespaceLabels()).isEqualTo(encodeDotsInKey(NAMESPACE_LABELS));
+    assertThat(instanceInfo.getNamespaceLabels()).isNotEqualTo(NAMESPACE_LABELS);
     verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
   }
 
@@ -277,7 +286,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, KUBE_PROXY_POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID,
-            CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, resource, START_TIMESTAMP, "", "", "");
+            CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, "", "", "");
     InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
@@ -324,7 +333,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
 
   private PublishedMessage getK8sPodInfoMessage(String podUid, String podName, String nodeName, String cloudProviderId,
       String accountId, String clusterId, String clusterName, String namespace, Map<String, String> label,
-      Resource resource, Timestamp timestamp, String workloadName, String workloadType, String workloadId) {
+      Map<String, String> namespaceLabels, Resource resource, Timestamp timestamp, String workloadName,
+      String workloadType, String workloadId) {
     PodInfo nodeInfo = PodInfo.newBuilder()
                            .setPodUid(podUid)
                            .setPodName(podName)
@@ -334,6 +344,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
                            .setClusterName(clusterName)
                            .setNamespace(namespace)
                            .putAllLabels(label)
+                           .putAllNamespaceLabels(namespaceLabels)
                            .setTotalResource(resource)
                            .setCreationTimestamp(timestamp)
                            .setTopLevelOwner(getOwner(workloadName, workloadType, workloadId))

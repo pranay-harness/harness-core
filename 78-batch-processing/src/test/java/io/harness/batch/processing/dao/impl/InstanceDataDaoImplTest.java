@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.batch.processing.ccm.InstanceEvent;
@@ -53,6 +54,8 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   private static final String CLUSTER_ID = "cluster_id";
   private final double DEFAULT_INSTANCE_CPU = 36;
   private final double DEFAULT_INSTANCE_MEMORY = 60;
+  private static final Map<String, String> NAMESPACE_LABELS =
+      ImmutableMap.of("harness~io/release~version", "release-1.5000");
   private final Instant NOW = Instant.now();
   private final Instant START_INSTANT = NOW.truncatedTo(ChronoUnit.DAYS);
   private final Instant PREV_START_INSTANT = NOW.minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
@@ -126,6 +129,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
     assertThat(instanceData.getMetaData()).isEqualTo(metaData());
     assertThat(instanceData.getTotalResource()).isEqualTo(resource());
     assertThat(instanceData.getLabels()).isEqualTo(label());
+    assertThat(instanceData.getNamespaceLabels()).isEqualTo(NAMESPACE_LABELS);
     assertThat(instanceData.getUsageStartTime()).isNull();
     assertThat(instanceData.getCloudProviderInstanceId()).isEqualTo(CLOUD_PROVIDER_INSTANCE_ID);
     InstanceData duplicateInstanceData = instanceDataDao.upsert(instanceInfo());
@@ -216,6 +220,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
         .allocatableResource(resource())
         .metaData(metaData())
         .labels(label())
+        .namespaceLabels(NAMESPACE_LABELS)
         .build();
   }
 
