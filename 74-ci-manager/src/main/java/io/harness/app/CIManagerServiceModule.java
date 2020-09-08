@@ -7,6 +7,7 @@ import com.google.inject.name.Named;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.OrchestrationStepsModule;
 import io.harness.app.impl.CIPipelineServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
 import io.harness.app.intfc.CIPipelineService;
@@ -72,6 +73,7 @@ public class CIManagerServiceModule extends DependencyModule {
     bind(ManagerCIResource.class).toProvider(ManagerClientFactory.class);
     bind(CIServiceAuthSecretKey.class).to(CIServiceAuthSecretKeyImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
+    install(OrchestrationStepsModule.getInstance());
   }
 
   @Override
