@@ -7,6 +7,9 @@ derive_targets_from_directories: true
 workspace_type: java
 java_language_level: 8
 
+targets:
+
+
 build_flags:
   --define=ABSOLUTE_JAVABASE=${JAVA_HOME}
   --javabase=@bazel_tools//tools/jdk:absolute_javabase
