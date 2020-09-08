@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.handlers.AbortAllInterruptHandler;
+import io.harness.engine.interrupts.handlers.MarkExpiredInterruptHandler;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.RetryInterruptHandler;
@@ -17,6 +18,7 @@ public class InterruptHandlerFactory {
   @Inject private PauseAllInterruptHandler pauseAllInterruptHandler;
   @Inject private ResumeAllInterruptHandler resumeAllInterruptHandler;
   @Inject private RetryInterruptHandler retryInterruptHandler;
+  @Inject private MarkExpiredInterruptHandler markExpiredInterruptHandler;
 
   public InterruptHandler obtainHandler(ExecutionInterruptType interruptType) {
     switch (interruptType) {
@@ -28,6 +30,8 @@ public class InterruptHandlerFactory {
         return resumeAllInterruptHandler;
       case RETRY:
         return retryInterruptHandler;
+      case MARK_EXPIRED:
+        return markExpiredInterruptHandler;
       default:
         throw new IllegalStateException("No Handler Available for Interrupt Type: " + interruptType);
     }
