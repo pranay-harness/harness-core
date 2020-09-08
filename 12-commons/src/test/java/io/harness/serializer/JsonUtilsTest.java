@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -230,6 +231,18 @@ public class JsonUtilsTest extends CategoryTest {
     response.setResult(result);
     assertThat(response).isNotNull();
     assertThat(response.getResult()).extracting(Result::getBuildNo).contains("1.0", "1.1", "1.2");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testGetPrettyJsonString() {
+    String jsonString = "{\"x\": \"abc\", \"y\": 3}";
+    String prettyJsonString = "{\n"
+        + "  \"x\": \"abc\",\n"
+        + "  \"y\": 3\n"
+        + "}";
+    assertThat(JsonUtils.prettifyJsonString(jsonString)).isEqualTo(prettyJsonString);
   }
 
   public static class CustomResponse {
