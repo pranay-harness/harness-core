@@ -23,7 +23,9 @@ public class Project {
       }
       // condition is applied so that ScmSecretTest works in both maven and bazel environment
       if (someFile.getParentFile().getParentFile().getParentFile().getName().equals("bin")) {
-        return someFile.getParentFile().getParentFile().getAbsolutePath();
+        File modulePath = someFile.getParentFile().getParentFile();
+        return modulePath.getParentFile().getParentFile().getParentFile().getParentFile().getAbsolutePath() + "/"
+            + modulePath.getName();
       } else {
         return someFile.getParentFile().getParentFile().getParentFile().getAbsolutePath();
       }

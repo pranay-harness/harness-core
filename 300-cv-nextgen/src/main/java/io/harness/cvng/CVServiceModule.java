@@ -96,8 +96,9 @@ public class CVServiceModule extends AbstractModule {
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
     try {
-      VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
-          getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
+      VersionInfoManager versionInfoManager = new VersionInfoManager(
+          IOUtils.toString(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml"),
+              StandardCharsets.UTF_8));
       bind(QueueController.class).toInstance(new QueueController() {
         @Override
         public boolean isPrimary() {
