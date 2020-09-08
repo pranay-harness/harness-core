@@ -27,7 +27,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName(StepSpecType.K8S_ROLLOUT_DEPLOY)
+@JsonTypeName(StepSpecType.K8S_ROLLING_DEPLOY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDStepInfo {
   @JsonIgnore private String name;

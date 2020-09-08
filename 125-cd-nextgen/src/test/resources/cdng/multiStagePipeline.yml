@@ -79,7 +79,7 @@ pipeline:
               - step:
                   name: "Rollout Deployment"
                   identifier: rolloutDeployment1
-                  type: K8sRolloutDeploy
+                  type: K8sRollingDeploy
                   spec:
                     timeout: 120000
                     skipDryRun: false
@@ -154,7 +154,7 @@ pipeline:
               - step:
                   name: "Rollout Deployment"
                   identifier: rolloutDeployment2
-                  type: K8sRolloutDeploy
+                  type: K8sRollingDeploy
                   spec:
                     timeout: 120000
                     skipDryRun: false
