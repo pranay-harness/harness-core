@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
@@ -128,7 +128,7 @@ public class TimeSeriesAnalysisResource {
   @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<Void> saveVerificationTaskAnalysis(@QueryParam("taskId") String taskId,
-      @QueryParam("endTime") long endTime, DeploymentVerificationTaskTimeSeriesAnalysisDTO analysisBody) {
+      @QueryParam("endTime") long endTime, DeploymentTimeSeriesAnalysisDTO analysisBody) {
     timeSeriesAnalysisService.saveAnalysis(taskId, analysisBody);
     return new RestResponse<>(null);
   }

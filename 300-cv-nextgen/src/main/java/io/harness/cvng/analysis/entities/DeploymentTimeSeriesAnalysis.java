@@ -2,8 +2,8 @@ package io.harness.cvng.analysis.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO.HostSummary;
-import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO.ResultSummary;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.HostSummary;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.ResultSummary;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -24,11 +24,11 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldNameConstants(innerTypeName = "DeploymentVerificationTaskTimeSeriesAnalysisKeys")
+@FieldNameConstants(innerTypeName = "DeploymentTimeSeriesAnalysisKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "deploymentVerificationTaskTimeSeriesAnalyses", noClassnameStored = true)
+@Entity(value = "deploymentTimeSeriesAnalyses", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DeploymentVerificationTaskTimeSeriesAnalysis
+public class DeploymentTimeSeriesAnalysis
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
   private long createdAt;

@@ -10,7 +10,7 @@ public interface VerificationTaskService {
   String getCVConfigId(String verificationTaskId);
   String getDeploymentVerificationTaskId(String verificationTaskId);
   VerificationTask get(String verificationTaskId);
-  Set<String> getVerificationTaskIds(String accountId, String verificationTaskId);
+  Set<String> getVerificationTaskIds(String accountId, String deploymentVerificationTaskId);
   String getServiceGuardVerificationTaskId(String accountId, String cvConfigId);
   boolean isServiceGuardId(String verificationTaskId);
 }

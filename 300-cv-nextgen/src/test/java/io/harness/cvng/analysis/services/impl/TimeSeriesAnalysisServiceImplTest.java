@@ -12,18 +12,18 @@ import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
-import io.harness.cvng.analysis.entities.DeploymentVerificationTaskTimeSeriesAnalysis;
+import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
-import io.harness.cvng.analysis.services.api.DeploymentVerificationTaskTimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.TimeSeriesMetricType;
@@ -65,8 +65,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject HPersistence hPersistence;
   @Inject VerificationTaskService verificationTaskService;
-  @Inject
-  private DeploymentVerificationTaskTimeSeriesAnalysisService deploymentVerificationTaskTimeSeriesAnalysisService;
+  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
 
   private String cvConfigId;
   private String verificationTaskId;
@@ -243,8 +242,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testSaveAnalysis_deploymentVerification() {
     timeSeriesAnalysisService.saveAnalysis(learningEngineTaskId, buildDeploymentVerificationDTO());
-    List<DeploymentVerificationTaskTimeSeriesAnalysis> results =
-        deploymentVerificationTaskTimeSeriesAnalysisService.getAnalysisResults(verificationTaskId);
+    List<DeploymentTimeSeriesAnalysis> results =
+        deploymentTimeSeriesAnalysisService.getAnalysisResults(verificationTaskId);
     assertThat(results).hasSize(1);
     assertThat(results.get(0).getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
@@ -290,8 +289,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .build();
   }
 
-  private DeploymentVerificationTaskTimeSeriesAnalysisDTO buildDeploymentVerificationDTO() {
-    return DeploymentVerificationTaskTimeSeriesAnalysisDTO.builder().build();
+  private DeploymentTimeSeriesAnalysisDTO buildDeploymentVerificationDTO() {
+    return DeploymentTimeSeriesAnalysisDTO.builder().build();
   }
 
   private List<TimeSeriesAnomalies> buildAnomList() {
