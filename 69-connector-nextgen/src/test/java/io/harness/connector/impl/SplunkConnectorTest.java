@@ -3,6 +3,7 @@ package io.harness.connector.impl;
 import static io.harness.delegate.beans.connector.ConnectorType.SPLUNK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -116,7 +117,8 @@ public class SplunkConnectorTest extends CategoryTest {
   @Owner(developers = OwnerRule.NEMANJA)
   @Category(UnitTests.class)
   public void testConnection() {
-    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+        .thenReturn(Optional.of(connector));
     when(connectionValidatorMap.get(any())).thenReturn(splunkConnectionValidator);
     when(splunkConnectionValidator.validate(any(), anyString(), anyString(), anyString()))
         .thenReturn(ConnectorValidationResult.builder().valid(true).errorMessage("").build());
@@ -142,7 +144,8 @@ public class SplunkConnectorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSplunkConnector() {
     createConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+        .thenReturn(Optional.of(connector));
     ConnectorDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureSplunkConnectorFieldsAreCorrect(connectorDTO);
   }

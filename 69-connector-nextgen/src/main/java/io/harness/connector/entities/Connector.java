@@ -31,7 +31,6 @@ import javax.validation.constraints.Size;
 @Data
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
-// todo deepak: Add index after adding the queries
 @CdUniqueIndex(name = "unique_fullyQualifiedIdentifier", fields = { @Field("fullyQualifiedIdentifier") })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("connectors")
@@ -39,7 +38,6 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
-
   // todo deepak: Where we should keep the scope, it will be used by everyone
   @NotEmpty Scope scope;
   String description;
@@ -49,7 +47,6 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
-
   @NotNull @Singular @Size(max = 128) List<String> tags;
   @CreatedBy private EmbeddedUser createdBy;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
@@ -57,6 +54,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
   ConnectorConnectivityDetails status;
+  Boolean deleted = Boolean.FALSE;
 
   public enum Scope { ACCOUNT, ORGANIZATION, PROJECT }
 

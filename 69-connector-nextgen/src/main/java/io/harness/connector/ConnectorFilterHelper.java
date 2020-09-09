@@ -3,6 +3,7 @@ package io.harness.connector;
 import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
 import static io.harness.ng.NGConstants.TAGS_KEY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import com.google.inject.Singleton;
 
@@ -20,6 +21,8 @@ public class ConnectorFilterHelper {
       String projectIdentifier, String searchTerm, ConnectorType connectorType, List<ConnectorCategory> categories) {
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
+    // todo @deepak: The fist query is for returning old records where the deleted field was not there
+    criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
     if (isNotBlank(orgIdentifier)) {
       criteria.and(ConnectorKeys.orgIdentifier).is(orgIdentifier);
     }
@@ -35,8 +38,9 @@ public class ConnectorFilterHelper {
     }
 
     if (isNotBlank(searchTerm)) {
-      criteria.orOperator(Criteria.where(ConnectorKeys.name).regex(searchTerm),
-          Criteria.where(IDENTIFIER_KEY).regex(searchTerm), Criteria.where(TAGS_KEY).regex(searchTerm));
+      Criteria seachCriteria = new Criteria().orOperator(where(ConnectorKeys.name).regex(searchTerm),
+          where(IDENTIFIER_KEY).regex(searchTerm), where(TAGS_KEY).regex(searchTerm));
+      criteria.andOperator(seachCriteria);
     }
     return criteria;
   }

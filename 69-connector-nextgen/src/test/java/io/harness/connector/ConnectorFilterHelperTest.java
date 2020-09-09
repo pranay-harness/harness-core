@@ -38,7 +38,7 @@ public class ConnectorFilterHelperTest extends CategoryTest {
     Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(accountId, orgId, projectId, null,
         KUBERNETES_CLUSTER, Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER));
     Document criteriaObject = criteria.getCriteriaObject();
-    assertThat(criteriaObject.size()).isEqualTo(5);
+    assertThat(criteriaObject.size()).isEqualTo(6);
     assertThat(criteriaObject.get(ConnectorKeys.accountIdentifier)).isEqualTo(accountId);
     assertThat(criteriaObject.get(ConnectorKeys.orgIdentifier)).isEqualTo(orgId);
     assertThat(criteriaObject.get(ConnectorKeys.projectIdentifier)).isEqualTo(projectId);

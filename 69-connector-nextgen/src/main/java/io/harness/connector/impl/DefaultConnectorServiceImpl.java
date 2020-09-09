@@ -58,7 +58,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> connector = connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+    Optional<Connector> connector =
+        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
     if (connector.isPresent()) {
       return Optional.of(connectorMapper.writeDTO(connector.get()));
     }
@@ -114,7 +115,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifier(),
         connectorRequestDTO.getIdentifier());
     Optional<Connector> existingConnector =
-        connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
     if (!existingConnector.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connectorRequestDTO.getIdentifier()));
@@ -131,8 +132,16 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Long connectorsDeleted = connectorRepository.deleteByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
-    return connectorsDeleted == 1;
+    Optional<Connector> existingConnectorOptional =
+        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    if (!existingConnectorOptional.isPresent()) {
+      throw new InvalidRequestException(
+          createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+    }
+    Connector existingConnector = existingConnectorOptional.get();
+    existingConnector.setDeleted(true);
+    connectorRepository.save(existingConnector);
+    return true;
   }
 
   public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountIdentifier) {
@@ -145,7 +154,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    return !connectorRepository.existsByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+    return !connectorRepository.existsByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
   }
 
   public ConnectorValidationResult testConnection(
@@ -153,7 +162,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Optional<Connector> connectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
     if (connectorOptional.isPresent()) {
       ConnectorDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
       ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
