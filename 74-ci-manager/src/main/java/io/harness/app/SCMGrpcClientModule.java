@@ -13,15 +13,22 @@ import io.harness.product.ci.scm.proto.SCMGrpc;
 import javax.net.ssl.SSLException;
 
 public class SCMGrpcClientModule extends ProviderModule {
+  ScmConnectionConfig scmConnectionConfig;
+
+  public SCMGrpcClientModule(ScmConnectionConfig scmConnectionConfig) {
+    this.scmConnectionConfig = scmConnectionConfig;
+  }
+
   @Provides
   @Singleton
   SCMGrpc.SCMBlockingStub scmServiceBlockingStub() throws SSLException {
-    return newBlockingStub(scmChannel());
+    return newBlockingStub(scmChannel(scmConnectionConfig.getUrl()));
   }
+
   @Singleton
   @Provides
-  public Channel scmChannel() {
-    // TODO: Update it with appropriate host name and authentication
-    return NettyChannelBuilder.forTarget("localhost:8091").usePlaintext().build();
+  public Channel scmChannel(String connectionUrl) {
+    // TODO: Authentication Needs to be added here.
+    return NettyChannelBuilder.forTarget(connectionUrl).usePlaintext().build();
   }
 }

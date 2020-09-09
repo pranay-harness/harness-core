@@ -22,11 +22,14 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
           .build();
   @Builder.Default @JsonProperty("cimanager-mongo") private MongoConfig harnessCIMongo = MongoConfig.builder().build();
   @Builder.Default @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
+
+  private ScmConnectionConfig scmConnectionConfig;
   private String managerUrl;
   private String delegateGrpcServiceTokenSecret;
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
+
   @Override
   public AssetsConfiguration getAssetsConfiguration() {
     return assetsConfiguration;

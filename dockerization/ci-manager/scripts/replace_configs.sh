@@ -45,3 +45,7 @@ if [[ "" != "$CIMANAGER_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE cimanager-mongo.uri "$CIMANAGER_MONGO_URI"
 fi
 
+if [[ "" != "$SCM_SERVICE_URI" ]]; then
+  yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
+fi
+
