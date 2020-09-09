@@ -13,6 +13,10 @@
             <artifactId>google-cloud-bigquerydatatransfer</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.openpojo</groupId>
             <artifactId>openpojo</artifactId>
         </dependency>
@@ -27,6 +31,11 @@
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
             <artifactId>de.flapdoodle.embed.mongo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.9.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -165,6 +174,23 @@
                         <goals>
                             <goal>build</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <version>1.9.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>schema</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/generated/avro/</sourceDirectory>
+                            <outputDirectory>${project.basedir}/src/generated/java/</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
