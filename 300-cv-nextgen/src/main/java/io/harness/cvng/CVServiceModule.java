@@ -4,12 +4,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-import io.harness.cvng.analysis.services.api.DeploymentVerificationTaskTimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
-import io.harness.cvng.analysis.services.impl.DeploymentVerificationTaskTimeSeriesAnalysisServiceImpl;
+import io.harness.cvng.analysis.services.impl.DeploymentTimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
@@ -153,8 +153,7 @@ public class CVServiceModule extends AbstractModule {
 
       bind(ActivityService.class).to(ActivityServiceImpl.class);
       bind(WebhookService.class).to(WebhookServiceImpl.class);
-      bind(DeploymentVerificationTaskTimeSeriesAnalysisService.class)
-          .to(DeploymentVerificationTaskTimeSeriesAnalysisServiceImpl.class);
+      bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
       bind(NextGenService.class).to(NextGenServiceImpl.class);
       bind(HostRecordService.class).to(HostRecordServiceImpl.class);
     } catch (IOException e) {

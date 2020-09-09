@@ -10,13 +10,13 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
-import io.harness.cvng.analysis.entities.DeploymentVerificationTaskTimeSeriesAnalysis;
+import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
@@ -30,7 +30,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesShortTermHistoryKeys;
-import io.harness.cvng.analysis.services.api.DeploymentVerificationTaskTimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -76,8 +76,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject
-  private DeploymentVerificationTaskTimeSeriesAnalysisService deploymentVerificationTaskTimeSeriesAnalysisService;
+  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
 
   @Override
   public List<String> scheduleServiceGuardAnalysis(AnalysisInput analysisInput) {
@@ -321,20 +320,20 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public void saveAnalysis(String taskId, DeploymentVerificationTaskTimeSeriesAnalysisDTO analysis) {
+  public void saveAnalysis(String taskId, DeploymentTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
     learningEngineTaskService.markCompleted(taskId);
 
-    DeploymentVerificationTaskTimeSeriesAnalysis deploymentVerificationTaskTimeSeriesAnalysis =
-        DeploymentVerificationTaskTimeSeriesAnalysis.builder()
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
+        DeploymentTimeSeriesAnalysis.builder()
             .startTime(learningEngineTask.getAnalysisStartTime())
             .endTime(learningEngineTask.getAnalysisEndTime())
             .verificationTaskId(learningEngineTask.getVerificationTaskId())
             .hostSummaries(analysis.getHostSummaries())
             .resultSummary(analysis.getResultSummary())
             .build();
-    deploymentVerificationTaskTimeSeriesAnalysisService.save(deploymentVerificationTaskTimeSeriesAnalysis);
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
   }
 
   @Override

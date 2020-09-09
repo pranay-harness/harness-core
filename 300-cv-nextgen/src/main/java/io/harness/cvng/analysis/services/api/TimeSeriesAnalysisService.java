@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.services.api;
 
-import io.harness.cvng.analysis.beans.DeploymentVerificationTaskTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
@@ -31,5 +31,5 @@ public interface TimeSeriesAnalysisService {
   List<TimeSeriesMetricDefinition> getMetricTemplate(String cvConfigId);
   List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(String verificationTaskId, Instant startTime, Instant endTime);
   void saveAnalysis(String taskId, ServiceGuardMetricAnalysisDTO analysis);
-  void saveAnalysis(String taskId, DeploymentVerificationTaskTimeSeriesAnalysisDTO analysis);
+  void saveAnalysis(String taskId, DeploymentTimeSeriesAnalysisDTO analysis);
 }

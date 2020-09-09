@@ -7,7 +7,7 @@ import java.util.List;
 
 @Value
 @Builder
-public class DeploymentVerificationTaskTimeSeriesAnalysisDTO {
+public class DeploymentTimeSeriesAnalysisDTO {
   ResultSummary resultSummary;
   List<HostSummary> hostSummaries;
   @Value
