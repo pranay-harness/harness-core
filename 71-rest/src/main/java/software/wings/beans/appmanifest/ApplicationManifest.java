@@ -38,7 +38,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private HelmChartConfig helmChartConfig;
   private KustomizeConfig kustomizeConfig;
 
-  private boolean pollForChanges;
+  private Boolean pollForChanges;
   @Transient private String serviceName;
   private enum ManifestCollectionStatus { UNSTABLE, COLLECTING, STABLE }
   private ManifestCollectionStatus collectionStatus;
@@ -69,7 +69,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private GitFileConfig gitFileConfig;
     private HelmChartConfig helmChartConfig;
     private KustomizeConfig kustomizeConfig;
-    private boolean pollForChanges;
+    private Boolean pollForChanges;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,

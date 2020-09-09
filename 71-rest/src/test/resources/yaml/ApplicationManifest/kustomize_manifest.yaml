@@ -7,5 +7,4 @@ gitFileConfig:
 kustomizeConfig:
   kustomizeDirPath: a
   pluginRootDir: b
-pollForChanges: false
 storeType: KustomizeSourceRepo

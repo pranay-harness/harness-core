@@ -76,7 +76,6 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   private static final String CONNECTOR_NAME = "CONNECTOR_NAME";
   private String localValidYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_MANIFEST\n"
-      + "pollForChanges: false\n"
       + "storeType: Local";
 
   private String remoteYamlContent = "harnessApiVersion: '1.0'\n"
@@ -86,7 +85,6 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
       + "  connectorName: CONNECTOR_NAME\n"
       + "  filePath: ABC/\n"
       + "  useBranch: true\n"
-      + "pollForChanges: false\n"
       + "storeType: Remote";
 
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Manifests/Index.yaml";
@@ -94,7 +92,6 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
 
   private String envOverrideLocalValidYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE\n"
-      + "pollForChanges: false\n"
       + "storeType: Local";
   private String envOverrideRemoteValidYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE\n"
@@ -103,13 +100,11 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
       + "  connectorName: CONNECTOR_NAME\n"
       + "  filePath: ABC/\n"
       + "  useBranch: true\n"
-      + "pollForChanges: false\n"
       + "storeType: Remote";
   private String envOverrideValidYamlFilePath = "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Index.yaml";
 
   private String envServiceOverrideLocalValidYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE\n"
-      + "pollForChanges: false\n"
       + "storeType: Local";
   private String envServiceOverrideRemoteValidYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE\n"
@@ -118,7 +113,6 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
       + "  connectorName: CONNECTOR_NAME\n"
       + "  filePath: ABC/\n"
       + "  useBranch: true\n"
-      + "pollForChanges: false\n"
       + "storeType: Remote";
   private String envServiceOverrideValidYamlFilePath =
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Services/SERVICE_NAME/Index.yaml";
