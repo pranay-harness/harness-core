@@ -269,7 +269,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutor;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
-  @Inject @Named("alternativeExecutor") private ExecutorService alternativeExecutor;
   @Inject private ExecutorService syncExecutor;
 
   @Inject private SignalService signalService;
