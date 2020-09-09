@@ -1,6 +1,8 @@
 package io.harness.yaml.core;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.visitor.helpers.executionelement.ExecutionElementVisitorHelper;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.Builder;
 import lombok.Value;
@@ -19,8 +21,8 @@ import java.util.Optional;
  */
 @Value
 @Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ExecutionElement {
+@SimpleVisitorHelper(helperClass = ExecutionElementVisitorHelper.class)
+public class ExecutionElement implements Visitable {
   @NotEmpty List<ExecutionWrapper> steps;
   List<ExecutionWrapper> rollbackSteps;
 
@@ -28,5 +30,13 @@ public class ExecutionElement {
   public ExecutionElement(List<ExecutionWrapper> steps, List<ExecutionWrapper> rollbackSteps) {
     this.steps = Optional.ofNullable(steps).orElse(new ArrayList<>());
     this.rollbackSteps = Optional.ofNullable(rollbackSteps).orElse(new ArrayList<>());
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    List<Object> children = new ArrayList<>();
+    children.add(steps);
+    children.add(rollbackSteps);
+    return children;
   }
 }

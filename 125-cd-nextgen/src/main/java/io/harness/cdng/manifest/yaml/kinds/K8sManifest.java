@@ -1,7 +1,6 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.manifest.ManifestType;
@@ -9,7 +8,10 @@ import io.harness.cdng.manifest.ValuesPathProvider;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.visitor.helpers.serviceconfig.K8sManifestVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -19,15 +21,16 @@ import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestType.K8Manifest)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class K8sManifest implements ManifestAttributes, ValuesPathProvider {
+@SimpleVisitorHelper(helperClass = K8sManifestVisitorHelper.class)
+public class K8sManifest implements ManifestAttributes, ValuesPathProvider, Visitable {
   String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @Wither @Singular List<String> valuesFilePaths;
   @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
@@ -59,5 +62,13 @@ public class K8sManifest implements ManifestAttributes, ValuesPathProvider {
   @Override
   public StoreConfig getStoreConfig() {
     return storeConfigWrapper.getStoreConfig();
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    List<Object> children = new ArrayList<>();
+    children.add(valuesFilePaths);
+    children.add(storeConfigWrapper);
+    return children;
   }
 }

@@ -1,20 +1,25 @@
 package io.harness.cdng.environment.yaml;
 
+import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
 import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Value
 @Builder
-public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYaml> {
+@SimpleVisitorHelper(helperClass = EnvironmentYamlVisitorHelper.class)
+public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYaml>, Visitable {
   @NonFinal @Wither String name;
   @Wither String identifier;
   @Wither EnvironmentType type;
@@ -40,5 +45,11 @@ public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYam
       resultant = resultant.withTags(overrideConfig.getTags());
     }
     return resultant;
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    // returning empty list for now
+    return new ArrayList<>();
   }
 }

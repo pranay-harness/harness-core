@@ -1,10 +1,11 @@
 package io.harness.cdng.infra.yaml;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
+import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
@@ -12,7 +13,7 @@ import lombok.experimental.Wither;
 @Value
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@SimpleVisitorHelper(helperClass = K8SDirectInfrastructureVisitorHelper.class)
 public class K8SDirectInfrastructure implements Infrastructure {
   @Wither String connectorIdentifier;
   @Wither String namespace;

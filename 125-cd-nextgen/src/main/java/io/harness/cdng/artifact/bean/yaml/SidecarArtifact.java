@@ -8,17 +8,23 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
+import io.harness.cdng.visitor.helpers.serviceconfig.SidecarArtifactVisitorHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
 @JsonTypeName("sidecar")
-public class SidecarArtifact implements SidecarArtifactWrapper {
+@SimpleVisitorHelper(helperClass = SidecarArtifactVisitorHelper.class)
+public class SidecarArtifact implements SidecarArtifactWrapper, Visitable {
   String identifier;
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;
   @JsonProperty("spec")
@@ -31,5 +37,12 @@ public class SidecarArtifact implements SidecarArtifactWrapper {
     this.identifier = identifier;
     this.sourceType = sourceType;
     this.artifactConfig = artifactConfig;
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    List<Object> children = new ArrayList<>();
+    children.add(artifactConfig);
+    return children;
   }
 }

@@ -1,16 +1,22 @@
 package io.harness.cdng.service.beans;
 
+import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-public class ServiceConfig implements OverridesApplier<ServiceConfig> {
+@SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
+public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {
   @Wither private ServiceUseFromStage useFromStage;
   @NotNull private String identifier;
   @Wither @NotNull private String name;
@@ -32,5 +38,12 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig> {
       resultantConfig = resultantConfig.withDescription(overrideConfig.getDescription());
     }
     return resultantConfig;
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    List<Object> children = new ArrayList<>();
+    children.add(serviceDefinition);
+    return children;
   }
 }
