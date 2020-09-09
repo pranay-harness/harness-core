@@ -1,8 +1,11 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,15 +27,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -41,6 +48,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
   @Mock private DataFetcherUtils utils;
+  @Mock private ResultSet resultSet;
 
   private final Instant NOW = Instant.now();
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
@@ -48,6 +56,8 @@ public class BillingDataServiceImplTest extends CategoryTest {
   private static final String ACCOUNT_ID = "accountId";
   private static final String CLUSTER_ID = "clusterId";
   private static final String PARENT_INSTANCE_ID = "parentInstanceId";
+
+  final int[] count = {0};
 
   @Before
   public void setup() throws SQLException {
@@ -63,6 +73,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
         .thenReturn(statement);
     when(mockConnection.prepareStatement(billingDataService.PURGE_DATA_QUERY)).thenReturn(statement);
     when(mockConnection.createStatement()).thenReturn(statement);
+    when(statement.executeQuery(any())).thenReturn(resultSet);
     when(utils.getDefaultCalendar()).thenReturn(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
   }
 
@@ -130,6 +141,35 @@ public class BillingDataServiceImplTest extends CategoryTest {
     when(timeScaleDBService.isValid()).thenReturn(true);
     boolean insert = billingDataService.purgeOldHourlyBillingData();
     assertThat(insert).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void readBillingData() throws SQLException {
+    mockResultSet();
+    List<InstanceBillingData> instanceBillingData = billingDataService.read(
+        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS), 500, 0);
+    assertThat(instanceBillingData.size()).isEqualTo(1);
+  }
+
+  private void mockResultSet() throws SQLException {
+    when(resultSet.getDouble(anyString())).thenAnswer((Answer<Double>) invocation -> Double.valueOf(10));
+    when(resultSet.getString(anyString())).thenAnswer((Answer<String>) invocation -> "stringValue");
+    when(resultSet.getBigDecimal(anyString())).thenAnswer((Answer<BigDecimal>) invocation -> BigDecimal.TEN);
+    when(resultSet.getTimestamp(anyString()))
+        .thenAnswer((Answer<Timestamp>) invocation -> Timestamp.from(Instant.now()));
+    returnResultSet(1);
+  }
+
+  private void returnResultSet(int limit) throws SQLException {
+    when(resultSet.next()).then((Answer<Boolean>) invocation -> {
+      if (count[0] < limit) {
+        count[0]++;
+        return true;
+      }
+      return false;
+    });
   }
 
   private InstanceBillingData instanceBillingData() {

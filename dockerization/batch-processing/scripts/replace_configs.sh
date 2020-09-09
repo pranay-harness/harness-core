@@ -71,6 +71,10 @@ if [[ "" != "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.gcsBasePath "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH"
 fi
 
+if [[ "" != "$CLUSTER_DATA_GCS_BUCKET" ]]; then
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.clusterDataGcsBucketName "$CLUSTER_DATA_GCS_BUCKET"
+fi
+
 if [[ "" != "$SMTP_HOST" ]]; then
   yq write -i $CONFIG_FILE smtp.host "$SMTP_HOST"
 fi

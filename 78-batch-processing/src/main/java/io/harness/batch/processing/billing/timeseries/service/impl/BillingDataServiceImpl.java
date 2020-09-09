@@ -6,6 +6,8 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.support.BillingDataTableNameProvider;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.exception.InvalidRequestException;
+import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +16,12 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,6 +33,7 @@ public class BillingDataServiceImpl {
 
   private static final int BATCH_SIZE = 500;
   private static final int MAX_RETRY_COUNT = 2;
+  private static final int SELECT_MAX_RETRY_COUNT = 5;
   static final String INSERT_STATEMENT =
       "INSERT INTO %s (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, TASKID, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION, SYSTEMCOST, CPUSYSTEMCOST, MEMORYSYSTEMCOST, ACTUALIDLECOST, CPUACTUALIDLECOST, MEMORYACTUALIDLECOST, UNALLOCATEDCOST, CPUUNALLOCATEDCOST, MEMORYUNALLOCATEDCOST, INSTANCENAME, CPUREQUEST, MEMORYREQUEST, CPULIMIT, MEMORYLIMIT, MAXCPUUTILIZATIONVALUE, MAXMEMORYUTILIZATIONVALUE, AVGCPUUTILIZATIONVALUE, AVGMEMORYUTILIZATIONVALUE, NETWORKCOST, PRICINGSOURCE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
 
@@ -35,6 +41,9 @@ public class BillingDataServiceImpl {
       "UPDATE %s SET ACTUALIDLECOST = ?, CPUACTUALIDLECOST = ?, MEMORYACTUALIDLECOST = ?, UNALLOCATEDCOST = ?, CPUUNALLOCATEDCOST = ?, MEMORYUNALLOCATEDCOST = ? WHERE ACCOUNTID = ? AND CLUSTERID = ? AND INSTANCEID = ? AND STARTTIME = ?";
 
   static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '16 days', 'billing_data_hourly')";
+
+  private static final String READER_QUERY =
+      "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' OFFSET %s LIMIT %s;";
 
   public boolean create(List<InstanceBillingData> instanceBillingDataList, BatchJobType batchJobType) {
     boolean successfulInsert = false;
@@ -182,5 +191,102 @@ public class BillingDataServiceImpl {
     statement.setDouble(54, instanceBillingData.getAvgMemoryUtilizationValue());
     statement.setDouble(55, instanceBillingData.getNetworkCost());
     statement.setString(56, instanceBillingData.getPricingSource());
+  }
+
+  public List<InstanceBillingData> read(
+      String accountId, Instant startTime, Instant endTime, int batchSize, int offset) {
+    try {
+      if (timeScaleDBService.isValid()) {
+        String query =
+            String.format(READER_QUERY, accountId, startTime.toString(), endTime.toString(), offset, batchSize);
+
+        return getUtilizationDataFromTimescaleDB(query);
+      } else {
+        throw new InvalidRequestException("Cannot process request in ClusterDataToBigQueryTasklet");
+      }
+    } catch (Exception e) {
+      throw new InvalidRequestException("Error while fetching Instance Billing data {}", e);
+    }
+  }
+
+  private List<InstanceBillingData> getUtilizationDataFromTimescaleDB(String query) {
+    ResultSet resultSet = null;
+    List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
+    int retryCount = 0;
+    logger.debug("ClusterDataToBigQueryTasklet read data query : {}", query);
+    while (retryCount < SELECT_MAX_RETRY_COUNT) {
+      retryCount++;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        while (resultSet.next()) {
+          instanceBillingDataList.add(
+              InstanceBillingData.builder()
+                  .endTimestamp(resultSet.getTimestamp("ENDTIME").toInstant().toEpochMilli())
+                  .startTimestamp(resultSet.getTimestamp("STARTTIME").toInstant().toEpochMilli())
+                  .accountId(resultSet.getString("ACCOUNTID"))
+                  .instanceType(resultSet.getString("INSTANCETYPE"))
+                  .billingAccountId(resultSet.getString("BILLINGACCOUNTID"))
+                  .billingAmount(resultSet.getBigDecimal("BILLINGAMOUNT"))
+                  .cpuBillingAmount(resultSet.getBigDecimal("CPUBILLINGAMOUNT"))
+                  .memoryBillingAmount(resultSet.getBigDecimal("MEMORYBILLINGAMOUNT"))
+                  .usageDurationSeconds(resultSet.getDouble("USAGEDURATIONSECONDS"))
+                  .instanceId(resultSet.getString("INSTANCEID"))
+                  .clusterName(resultSet.getString("CLUSTERNAME"))
+                  .clusterId(resultSet.getString("CLUSTERID"))
+                  .settingId(resultSet.getString("SETTINGID"))
+                  .serviceId(resultSet.getString("SERVICEID"))
+                  .appId(resultSet.getString("APPID"))
+                  .cloudProviderId(resultSet.getString("CLOUDPROVIDERID"))
+                  .envId(resultSet.getString("ENVID"))
+                  .cpuUnitSeconds(resultSet.getDouble("CPUUNITSECONDS"))
+                  .memoryMbSeconds(resultSet.getDouble("MEMORYMBSECONDS"))
+                  .parentInstanceId(resultSet.getString("PARENTINSTANCEID"))
+                  .region(resultSet.getString("REGION"))
+                  .launchType(resultSet.getString("LAUNCHTYPE"))
+                  .clusterType(resultSet.getString("CLUSTERTYPE"))
+                  .cloudProvider(resultSet.getString("CLOUDPROVIDER"))
+                  .workloadName(resultSet.getString("WORKLOADNAME"))
+                  .workloadType(resultSet.getString("WORKLOADTYPE"))
+                  .namespace(resultSet.getString("NAMESPACE"))
+                  .cloudServiceName(resultSet.getString("CLOUDSERVICENAME"))
+                  .taskId(resultSet.getString("TASKID"))
+                  .idleCost(resultSet.getBigDecimal("IDLECOST"))
+                  .cpuIdleCost(resultSet.getBigDecimal("CPUIDLECOST"))
+                  .memoryIdleCost(resultSet.getBigDecimal("MEMORYIDLECOST"))
+                  .maxCpuUtilization(resultSet.getDouble("MAXCPUUTILIZATION"))
+                  .maxMemoryUtilization(resultSet.getDouble("MAXMEMORYUTILIZATION"))
+                  .avgCpuUtilization(resultSet.getDouble("AVGCPUUTILIZATION"))
+                  .avgMemoryUtilization(resultSet.getDouble("AVGMEMORYUTILIZATION"))
+                  .systemCost(resultSet.getBigDecimal("SYSTEMCOST"))
+                  .cpuSystemCost(resultSet.getBigDecimal("CPUSYSTEMCOST"))
+                  .memorySystemCost(resultSet.getBigDecimal("MEMORYSYSTEMCOST"))
+                  .actualIdleCost(resultSet.getBigDecimal("ACTUALIDLECOST"))
+                  .cpuActualIdleCost(resultSet.getBigDecimal("CPUACTUALIDLECOST"))
+                  .memoryActualIdleCost(resultSet.getBigDecimal("MEMORYACTUALIDLECOST"))
+                  .unallocatedCost(resultSet.getBigDecimal("UNALLOCATEDCOST"))
+                  .cpuUnallocatedCost(resultSet.getBigDecimal("CPUUNALLOCATEDCOST"))
+                  .memoryUnallocatedCost(resultSet.getBigDecimal("MEMORYUNALLOCATEDCOST"))
+                  .instanceName(resultSet.getString("INSTANCENAME"))
+                  .cpuRequest(resultSet.getDouble("CPUREQUEST"))
+                  .memoryRequest(resultSet.getDouble("MEMORYREQUEST"))
+                  .cpuLimit(resultSet.getDouble("CPULIMIT"))
+                  .memoryLimit(resultSet.getDouble("MEMORYLIMIT"))
+                  .maxCpuUtilizationValue(resultSet.getDouble("MAXCPUUTILIZATIONVALUE"))
+                  .maxMemoryUtilizationValue(resultSet.getDouble("MAXMEMORYUTILIZATIONVALUE"))
+                  .avgCpuUtilizationValue(resultSet.getDouble("AVGCPUUTILIZATIONVALUE"))
+                  .avgMemoryUtilizationValue(resultSet.getDouble("AVGMEMORYUTILIZATIONVALUE"))
+                  .networkCost(resultSet.getDouble("NETWORKCOST"))
+                  .pricingSource(resultSet.getString("PRICINGSOURCE"))
+                  .build());
+        }
+        return instanceBillingDataList;
+      } catch (SQLException e) {
+        logger.error("Error while fetching billing Data data : exception", e);
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return null;
   }
 }

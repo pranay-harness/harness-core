@@ -34,7 +34,9 @@ public enum BatchJobType {
   UNALLOCATED_BILLING(850, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER),
   NODE_POD_COUNT(860, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER),
   K8S_WORKLOAD_RECOMMENDATION(875, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_EVENT), IN_CLUSTER),
-  CE_SEGMENT_CALL(900, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING, UNALLOCATED_BILLING), OTHERS);
+  CE_SEGMENT_CALL(900, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING, UNALLOCATED_BILLING), OTHERS),
+  CLUSTER_DATA_TO_BIG_QUERY(
+      1000, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING, UNALLOCATED_BILLING), IN_CLUSTER);
 
   // Specifies order in which the jobs are to be run
   private final int order;

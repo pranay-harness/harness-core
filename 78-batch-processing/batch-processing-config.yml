@@ -39,6 +39,7 @@ awsS3SyncConfig:
 billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
+  clusterDataGcsBucketName: "clusterdata-qa"
 
 smtp:
   type: SMTP
