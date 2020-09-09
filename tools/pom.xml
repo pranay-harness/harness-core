@@ -8,6 +8,7 @@
     <modules>
         <module>config</module>
         <module>checkstyle</module>
+        <module>cereal-killer</module>
     </modules>
     <build>
         <plugins>
