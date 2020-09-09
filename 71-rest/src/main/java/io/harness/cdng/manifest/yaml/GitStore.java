@@ -1,10 +1,11 @@
 package io.harness.cdng.manifest.yaml;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,7 +18,7 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GIT)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
 public class GitStore implements StoreConfig {
   @Wither private String connectorIdentifier;
   @Wither private FetchType gitFetchType;

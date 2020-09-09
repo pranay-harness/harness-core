@@ -6,13 +6,20 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfrastructureDefVisitorHelper;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
-public class InfrastructureDef {
+@SimpleVisitorHelper(helperClass = InfrastructureDefVisitorHelper.class)
+public class InfrastructureDef implements Visitable {
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
@@ -23,5 +30,12 @@ public class InfrastructureDef {
   public InfrastructureDef(String type, Infrastructure infrastructure) {
     this.type = type;
     this.infrastructure = infrastructure;
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    List<Object> children = new ArrayList<>();
+    children.add(infrastructure);
+    return children;
   }
 }

@@ -1,12 +1,13 @@
 package io.harness.cdng.artifact.bean.yaml;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.visitor.helpers.serviceconfig.GcrArtifactConfigVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,17 +24,27 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ArtifactSourceConstants.GCR_NAME)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@SimpleVisitorHelper(helperClass = GcrArtifactConfigVisitorHelper.class)
 public class GcrArtifactConfig implements ArtifactConfig {
-  /** GCP connector to connect to Google Container Registry. */
+  /**
+   * GCP connector to connect to Google Container Registry.
+   */
   @Wither String gcrConnector;
-  /** Registry where the artifact source is located. */
+  /**
+   * Registry where the artifact source is located.
+   */
   @Wither String registryHostname;
-  /** Images in repos need to be referenced via a path. */
+  /**
+   * Images in repos need to be referenced via a path.
+   */
   @Wither String imagePath;
-  /** Identifier for artifact. */
+  /**
+   * Identifier for artifact.
+   */
   String identifier;
-  /** Whether this config corresponds to primary artifact.*/
+  /**
+   * Whether this config corresponds to primary artifact.
+   */
   boolean isPrimaryArtifact;
 
   @Override

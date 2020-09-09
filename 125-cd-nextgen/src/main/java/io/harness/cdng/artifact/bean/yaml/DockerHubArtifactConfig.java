@@ -1,12 +1,13 @@
 package io.harness.cdng.artifact.bean.yaml;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.visitor.helpers.serviceconfig.DockerHubArtifactConfigVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,17 +26,27 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ArtifactSourceConstants.DOCKER_HUB_NAME)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@SimpleVisitorHelper(helperClass = DockerHubArtifactConfigVisitorHelper.class)
 public class DockerHubArtifactConfig implements ArtifactConfig {
-  /** Docker hub registry connector. */
+  /**
+   * Docker hub registry connector.
+   */
   @Wither String dockerhubConnector;
-  /** Images in repos need to be referenced via a path. */
+  /**
+   * Images in repos need to be referenced via a path.
+   */
   @Wither String imagePath;
-  /** Tag refers to exact tag number. */
+  /**
+   * Tag refers to exact tag number.
+   */
   @Wither String tag;
-  /** Tag regex is used to get latest build from builds matching regex. */
+  /**
+   * Tag regex is used to get latest build from builds matching regex.
+   */
   @Wither String tagRegex;
-  /** Identifier for artifact. */
+  /**
+   * Identifier for artifact.
+   */
   String identifier;
   /** Whether this config corresponds to primary artifact.*/
   boolean primaryArtifact;

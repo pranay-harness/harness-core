@@ -1,15 +1,18 @@
 package io.harness.cdng.artifact.bean.yaml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
+import io.harness.cdng.visitor.helpers.serviceconfig.ArtifactListConfigVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,8 +21,8 @@ import java.util.List;
  */
 @Value
 @Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ArtifactListConfig {
+@SimpleVisitorHelper(helperClass = ArtifactListConfigVisitorHelper.class)
+public class ArtifactListConfig implements Visitable {
   ArtifactSpecWrapper primary;
   @Singular List<SidecarArtifactWrapper> sidecars;
 
@@ -38,5 +41,13 @@ public class ArtifactListConfig {
         sidecar.getArtifactConfig().setPrimaryArtifact(false);
       }
     }
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    List<Object> children = new ArrayList<>();
+    children.add(primary);
+    children.addAll(sidecars);
+    return children;
   }
 }

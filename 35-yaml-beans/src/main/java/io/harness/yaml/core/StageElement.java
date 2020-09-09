@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.visitor.helpers.stage.StageElementHelper;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
 import io.harness.yaml.core.intfc.WithIdentifier;
@@ -15,11 +16,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @JsonTypeName("stage")
 @SimpleVisitorHelper(helperClass = StageElementHelper.class)
-public class StageElement implements StageElementWrapper, WithIdentifier {
+public class StageElement implements StageElementWrapper, WithIdentifier, Visitable {
   String identifier;
   String name;
   String description;
@@ -51,5 +55,12 @@ public class StageElement implements StageElementWrapper, WithIdentifier {
     this.description = description;
     this.type = type;
     this.stageType = stageType;
+  }
+
+  @Override
+  public List<Object> getChildrenToWalk() {
+    List<Object> children = new ArrayList<>();
+    children.add(stageType);
+    return children;
   }
 }
