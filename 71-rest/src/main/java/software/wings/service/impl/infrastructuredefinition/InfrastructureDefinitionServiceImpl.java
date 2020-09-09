@@ -365,7 +365,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
       SearchFilter op2 = SearchFilter.builder()
                              .fieldName(InfrastructureDefinitionKeys.scopedToServices)
-                             .op(Operator.CONTAINS)
+                             .op(Operator.HAS_ALL)
                              .fieldValues(serviceIdsInScope.toArray())
                              .build();
       pageRequest.addFilter(InfrastructureDefinitionKeys.scopedToServices, Operator.OR, op1, op2);
