@@ -245,8 +245,10 @@ public class PageController {
         return fieldEnd.exists();
 
       case NOT_EXISTS:
-        assertNone(filter.getFieldValues());
         return fieldEnd.doesNotExist();
+
+      case HAS_ALL:
+        return fieldEnd.hasAllOf(Arrays.asList(filter.getFieldValues()));
 
       default:
         unhandled(op);

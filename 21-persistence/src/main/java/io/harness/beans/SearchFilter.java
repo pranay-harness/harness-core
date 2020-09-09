@@ -20,6 +20,7 @@ public class SearchFilter {
     NOT_IN,
     EXISTS,
     NOT_EXISTS,
+    HAS_ALL,
     OR,
     AND,
     ELEMENT_MATCH;
