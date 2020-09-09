@@ -49,6 +49,10 @@ cimanager-mongo:
   connectionsPerHost: 300
 delegateGrpcServiceTokenSecret: "j6ErHMBlC2dn6WctNQKt0xfyo_PZuK7ls0Z4d6XCaBg"
 
+
+scmConnectionConfig:
+  url: localhost:8091
+
 managerTarget: localhost:9880
 managerAuthority: localhost
 managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"

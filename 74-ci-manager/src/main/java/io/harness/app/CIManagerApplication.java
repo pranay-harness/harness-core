@@ -107,7 +107,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     logger.info("Leaving startup maintenance mode");
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
-    modules.add(new SCMGrpcClientModule());
+    modules.add(new SCMGrpcClientModule(configuration.getScmConnectionConfig()));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
