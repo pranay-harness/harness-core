@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
@@ -36,6 +37,12 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private GitFileConfig gitFileConfig;
   private HelmChartConfig helmChartConfig;
   private KustomizeConfig kustomizeConfig;
+
+  private boolean pollForChanges;
+  @Transient private String serviceName;
+  private enum ManifestCollectionStatus { UNSTABLE, COLLECTING, STABLE }
+  private ManifestCollectionStatus collectionStatus;
+  private String perpetualTaskId;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()
@@ -62,6 +69,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private GitFileConfig gitFileConfig;
     private HelmChartConfig helmChartConfig;
     private KustomizeConfig kustomizeConfig;
+    private boolean pollForChanges;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,

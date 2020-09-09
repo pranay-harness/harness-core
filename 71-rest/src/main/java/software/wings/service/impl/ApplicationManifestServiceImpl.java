@@ -68,6 +68,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -102,6 +103,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 

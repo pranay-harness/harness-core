@@ -103,6 +103,7 @@ public enum FeatureName {
   YAML_RBAC,
   ROLLBACK_NONE_ARTIFACT,
   EXPORT_TF_PLAN,
+  HELM_CHART_AS_ARTIFACT,
   ;
 
   FeatureName() {
