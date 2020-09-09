@@ -17,8 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.util.Collections;
-
 public class ConnectorFilterHelperTest extends CategoryTest {
   @InjectMocks ConnectorFilterHelper connectorFilterHelper;
 
@@ -35,8 +33,8 @@ public class ConnectorFilterHelperTest extends CategoryTest {
     String name = "name";
     String orgId = "orgId";
     String projectId = "projectId";
-    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(accountId, orgId, projectId, null,
-        KUBERNETES_CLUSTER, Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER));
+    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(
+        accountId, orgId, projectId, null, KUBERNETES_CLUSTER, ConnectorCategory.CLOUD_PROVIDER);
     Document criteriaObject = criteria.getCriteriaObject();
     assertThat(criteriaObject.size()).isEqualTo(6);
     assertThat(criteriaObject.get(ConnectorKeys.accountIdentifier)).isEqualTo(accountId);

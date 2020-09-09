@@ -18,7 +18,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -73,9 +72,9 @@ public class ConnectorResource {
       @NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("searchTerm") String searchTerm, @QueryParam("type") ConnectorType type,
-      @QueryParam("categories") List<ConnectorCategory> categories) {
+      @QueryParam("category") ConnectorCategory category) {
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, categories)));
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
   }
 
   @POST

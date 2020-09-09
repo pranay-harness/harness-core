@@ -21,7 +21,6 @@ import io.harness.exception.InvalidRequestException;
 import org.springframework.data.domain.Page;
 import software.wings.service.impl.security.SecretManagementException;
 
-import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -54,9 +53,9 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, List<ConnectorCategory> categories) {
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
     return defaultConnectorService.list(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, categories);
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
   }
 
   @Override

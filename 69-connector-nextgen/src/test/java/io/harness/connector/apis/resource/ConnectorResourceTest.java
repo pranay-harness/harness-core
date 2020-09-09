@@ -34,7 +34,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
 
 public class ConnectorResourceTest extends CategoryTest {
@@ -114,14 +113,13 @@ public class ConnectorResourceTest extends CategoryTest {
     final Page<ConnectorSummaryDTO> page =
         PageTestUtils.getPage(Arrays.asList(ConnectorSummaryDTO.builder().build()), 1);
     when(connectorService.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
-             KUBERNETES_CLUSTER, Collections.singletonList(CLOUD_PROVIDER)))
+             KUBERNETES_CLUSTER, CLOUD_PROVIDER))
         .thenReturn(page);
-    ResponseDTO<NGPageResponse<ConnectorSummaryDTO>> connectorSummaryListResponse =
-        connectorResource.list(100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm,
-            KUBERNETES_CLUSTER, Collections.singletonList(CLOUD_PROVIDER));
+    ResponseDTO<NGPageResponse<ConnectorSummaryDTO>> connectorSummaryListResponse = connectorResource.list(
+        100, 0, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, KUBERNETES_CLUSTER, CLOUD_PROVIDER);
     Mockito.verify(connectorService, times(1))
         .list(eq(100), eq(0), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(searchTerm),
-            eq(KUBERNETES_CLUSTER), eq(Collections.singletonList(CLOUD_PROVIDER)));
+            eq(KUBERNETES_CLUSTER), eq(CLOUD_PROVIDER));
     assertThat(connectorSummaryListResponse.getData()).isNotNull();
   }
 

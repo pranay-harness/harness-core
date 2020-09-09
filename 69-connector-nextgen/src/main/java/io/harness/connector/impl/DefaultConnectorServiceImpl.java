@@ -37,7 +37,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -84,9 +83,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, List<ConnectorCategory> categories) {
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
     Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, categories);
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
     Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, ConnectorKeys.createdAt));
     Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
     return connectorScopeHelper.createConnectorSummaryListForConnectors(connectors);
