@@ -58,6 +58,7 @@ eventQueue
 **/tfplan
 **/*.lock.info\
 user.bazelrc
+.bazelrc
 profile
 profile.result
 
