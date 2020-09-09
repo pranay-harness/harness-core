@@ -10,11 +10,11 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
 import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.VersionInfo;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
@@ -135,7 +135,11 @@ public interface KubernetesContainerService {
 
   CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource);
 
+  String getVersionAsStringFabric8(KubernetesConfig kubernetesConfig);
+
   VersionInfo getVersion(KubernetesConfig kubernetesConfig);
+
+  String getVersionAsString(KubernetesConfig kubernetesConfig);
 
   void validateCEPermissions(KubernetesConfig kubernetesConfig);
 

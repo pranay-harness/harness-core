@@ -98,7 +98,6 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
@@ -129,8 +128,10 @@ import io.harness.oidc.model.OidcTokenRequestData;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.apis.VersionApi;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
+import io.kubernetes.client.openapi.models.VersionInfo;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
@@ -1639,8 +1640,29 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public String getVersionAsStringFabric8(KubernetesConfig kubernetesConfig) {
+    io.fabric8.kubernetes.client.VersionInfo versionInfo =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig).getVersion();
+    return format("%s.%s", versionInfo.getMajor(), versionInfo.getMinor());
+  }
+
+  @Override
   public VersionInfo getVersion(KubernetesConfig kubernetesConfig) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).getVersion();
+    try {
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      return new VersionApi(apiClient).getCode();
+    } catch (ApiException exception) {
+      String message =
+          format("Unable to retrieve k8s version. Code: %s, message: %s", exception.getCode(), exception.getMessage());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
+  }
+
+  @Override
+  public String getVersionAsString(KubernetesConfig kubernetesConfig) {
+    VersionInfo versionInfo = getVersion(kubernetesConfig);
+    return format("%s.%s", versionInfo.getMajor(), versionInfo.getMinor());
   }
 
   @Override

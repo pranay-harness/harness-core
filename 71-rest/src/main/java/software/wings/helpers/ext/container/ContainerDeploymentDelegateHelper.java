@@ -10,7 +10,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -149,16 +148,18 @@ public class ContainerDeploymentDelegateHelper {
     return kubernetesConfig;
   }
 
-  public boolean useK8sSteadyStateCheck(
-      boolean isK8sSteadyStateCheckEnabled, ContainerServiceParams containerServiceParams, LogCallback logCallback) {
+  public boolean useK8sSteadyStateCheck(boolean isK8sSteadyStateCheckEnabled, boolean deprecateFabric8Enabled,
+      ContainerServiceParams containerServiceParams, LogCallback logCallback) {
     if (!isK8sSteadyStateCheckEnabled) {
       return false;
     }
 
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-    VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig);
-    logCallback.saveExecutionLog(format("Kubernetes version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
-    int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionInfo.getMajor() + versionInfo.getMinor()));
+    String versionAsString = deprecateFabric8Enabled
+        ? kubernetesContainerService.getVersionAsString(kubernetesConfig)
+        : kubernetesContainerService.getVersionAsStringFabric8(kubernetesConfig);
+    logCallback.saveExecutionLog(format("Kubernetes version [%s]", versionAsString));
+    int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionAsString));
 
     return KUBERNETESS_116_VERSION <= versionMajorMin;
   }
