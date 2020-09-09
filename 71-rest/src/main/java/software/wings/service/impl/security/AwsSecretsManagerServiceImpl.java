@@ -61,7 +61,8 @@ import java.util.regex.Pattern;
 @Singleton
 @Slf4j
 public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements AwsSecretsManagerService {
-  private static final int AWS_SECRET_CONTENT_SIZE_LIMIT = 7168;
+  // Secret Size Restriction : https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_CreateSecret.html
+  private static final int AWS_SECRET_CONTENT_SIZE_LIMIT = 65536;
   private static final Pattern AWS_SECRET_NAME_PATTERN = Pattern.compile("^[\\w-/_+=.@!]+$");
 
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";

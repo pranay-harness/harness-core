@@ -383,7 +383,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return timeLimiter.callWithTimeout(
             ()
                 -> encryptInternal(name, value, accountId, settingType, secretsManagerConfig, savedEncryptedData),
-            5, TimeUnit.SECONDS, true);
+            10, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
         logger.warn("encryption failed. trial num: {}", failedAttempts, e);
