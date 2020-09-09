@@ -386,6 +386,7 @@
 71-rest/src/main/java/software/wings/beans/WorkflowPhase.java
 71-rest/src/main/java/software/wings/beans/WorkflowStepMeta.java
 71-rest/src/main/java/software/wings/beans/alert/ArtifactCollectionFailedAlert.java
+71-rest/src/main/java/software/wings/beans/appmanifest/HelmChart.java
 71-rest/src/main/java/software/wings/beans/approval/ApprovalPollingJobEntity.java
 71-rest/src/main/java/software/wings/beans/approval/ApprovalStateParams.java
 71-rest/src/main/java/software/wings/beans/approval/ConditionalOperator.java
@@ -727,6 +728,8 @@
 71-rest/src/main/java/software/wings/service/impl/WorkflowExecutionUpdate.java
 71-rest/src/main/java/software/wings/service/impl/WorkflowLogContext.java
 71-rest/src/main/java/software/wings/service/impl/WorkflowPreDeploymentValidator.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/ApplicationManifestServiceObserverImpl.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/HelmChartServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionServiceAsyncImpl.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionUtils.java

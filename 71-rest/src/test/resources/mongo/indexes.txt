@@ -316,6 +316,8 @@ helmChartSpecifications {"name": "accountId_1", "background": true} {"accountId"
 helmChartSpecifications {"name": "appId_1", "background": true} {"appId": 1}
 helmChartSpecifications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 helmChartSpecifications {"name": "serviceId_1", "unique": true} {"serviceId": 1}
+helmCharts {"name": "accountId_1", "background": true} {"accountId": 1}
+helmCharts {"name": "appId_serviceId", "background": true} {"appId": 1, "serviceId": 1}
 hosts {"name": "appId_1", "background": true} {"appId": 1}
 hosts {"name": "app_inframappingid", "background": true} {"appId": 1, "infraMappingId": 1}
 hosts {"name": "createdAt_1", "background": true} {"createdAt": 1}
