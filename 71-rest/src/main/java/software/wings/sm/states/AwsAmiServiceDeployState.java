@@ -588,14 +588,15 @@ public class AwsAmiServiceDeployState extends State {
     }
 
     // This sweeping element will be used by verification or other consumers.
-    sweepingOutputService.save(
-        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-            .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-            .value(InstanceInfoVariables.builder()
-                       .instanceElements(allInstanceElements)
-                       .instanceDetails(awsStateHelper.generateAmInstanceDetails(allInstanceElements))
-                       .build())
-            .build());
+    List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(allInstanceElements);
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                                   .value(InstanceInfoVariables.builder()
+                                              .instanceElements(allInstanceElements)
+                                              .instanceDetails(instanceDetails)
+                                              .skipVerification(isEmpty(instanceDetails))
+                                              .build())
+                                   .build());
 
     return instanceElements;
   }

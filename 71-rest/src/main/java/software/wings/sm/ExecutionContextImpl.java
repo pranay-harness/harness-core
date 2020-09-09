@@ -149,6 +149,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1386,13 +1387,19 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     Set<String> newHosts = new HashSet<>();
     final List<InstanceInfoVariables> instanceInfoVariables = getAllStateSweepingOutputs(sweepingOutputs);
     final List<InstanceInfoVariables> instanceInfoVariableDeployed = getDeployStateSweepingOutputs(sweepingOutputs);
+    AtomicBoolean skipVerification = new AtomicBoolean(true);
     instanceInfoVariableDeployed.forEach(instanceInfoVariable -> {
       newHosts.addAll(instanceInfoVariable.getInstanceDetails()
                           .stream()
                           .filter(InstanceDetails::isNewInstance)
                           .map(InstanceDetails::getHostName)
                           .collect(Collectors.toSet()));
+
+      if (!instanceInfoVariable.isSkipVerification()) {
+        skipVerification.set(false);
+      }
     });
+
     InstanceInfoVariables finalInstanceInfo = Iterables.getLast(instanceInfoVariableDeployed);
     Set<String> finalInstances =
         finalInstanceInfo.getInstanceElements().stream().map(InstanceElement::getHostName).collect(Collectors.toSet());
@@ -1416,6 +1423,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return InstanceInfoVariables.builder()
         .instanceDetails(instanceDetails)
         .instanceElements(instanceElements)
+        .skipVerification(skipVerification.get())
         .newInstanceTrafficPercent(getMostRecentTrafficShiftToNewInstances(instanceInfoVariables))
         .build();
   }
@@ -1471,6 +1479,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return InstanceApiResponse.builder()
         .instances(list)
         .newInstanceTrafficPercent(instanceInfoVariables.getNewInstanceTrafficPercent())
+        .skipVerification(instanceInfoVariables.isSkipVerification())
         .build();
   }
 

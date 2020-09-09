@@ -13,6 +13,7 @@ import java.util.Optional;
 public class InstanceApiResponse {
   private List<String> instances;
   @Getter(AccessLevel.NONE) private Integer newInstanceTrafficPercent;
+  private boolean skipVerification;
 
   public Optional<Integer> getNewInstanceTrafficPercent() {
     return Optional.ofNullable(newInstanceTrafficPercent);

@@ -222,6 +222,7 @@ public abstract class NodeSelectState extends State {
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
+                                              .skipVerification(isEmpty(instanceDetails))
                                               .build())
                                    .build());
 

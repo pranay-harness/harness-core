@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -23,6 +24,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.deployment.InstanceDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -374,14 +376,15 @@ public class AwsCodeDeployState extends State {
 
       if (isNotEmpty(instanceElements)) {
         // This sweeping element will be used by verification or other consumers.
-        sweepingOutputService.save(
-            context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-                .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-                .value(InstanceInfoVariables.builder()
-                           .instanceElements(instanceElements)
-                           .instanceDetails(awsStateHelper.generateAmInstanceDetails(instanceElements))
-                           .build())
-                .build());
+        List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(instanceElements);
+        sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                       .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                                       .value(InstanceInfoVariables.builder()
+                                                  .instanceElements(instanceElements)
+                                                  .instanceDetails(instanceDetails)
+                                                  .skipVerification(isEmpty(instanceDetails))
+                                                  .build())
+                                       .build());
       }
     }
 

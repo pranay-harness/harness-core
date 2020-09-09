@@ -742,11 +742,13 @@ public class EcsStateHelper {
         List<InstanceElement> allInstanceElements =
             getAllInstanceElements(context, containerDeploymentHelper, deployResponse, finalInstanceElements);
         // This sweeping element will be used by verification or other consumers.
+        List<InstanceDetails> instanceDetails = generateEcsInstanceDetails(allInstanceElements);
         sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
                                        .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                        .value(InstanceInfoVariables.builder()
                                                   .instanceElements(allInstanceElements)
-                                                  .instanceDetails(generateEcsInstanceDetails(allInstanceElements))
+                                                  .instanceDetails(instanceDetails)
+                                                  .skipVerification(isEmpty(instanceDetails))
                                                   .build())
                                        .build());
       }

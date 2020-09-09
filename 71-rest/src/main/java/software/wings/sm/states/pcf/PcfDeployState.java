@@ -24,6 +24,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -406,13 +407,15 @@ public class PcfDeployState extends State {
                                      .build());
 
       // This sweeping element will be used by verification or other consumers.
+      List<InstanceDetails> instanceDetails =
+          pcfStateHelper.generateInstanceDetails(pcfDeployCommandResponse.getPcfInstanceElements());
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                      .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                      .value(InstanceInfoVariables.builder()
                                                 .instanceElements(pcfStateHelper.generateInstanceElement(
                                                     pcfDeployCommandResponse.getPcfInstanceElements()))
-                                                .instanceDetails(pcfStateHelper.generateInstanceDetails(
-                                                    pcfDeployCommandResponse.getPcfInstanceElements()))
+                                                .instanceDetails(instanceDetails)
+                                                .skipVerification(isEmpty(instanceDetails))
                                                 .build())
                                      .build());
     }

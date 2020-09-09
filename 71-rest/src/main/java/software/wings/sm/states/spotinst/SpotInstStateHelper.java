@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
@@ -34,6 +35,7 @@ import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.WingsException;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -450,14 +452,15 @@ public class SpotInstStateHelper {
   void saveInstanceInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements) {
     if (isNotEmpty(instanceElements)) {
       // This sweeping element will be used by verification or other consumers.
-      sweepingOutputService.save(
-          context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-              .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-              .value(InstanceInfoVariables.builder()
-                         .instanceElements(instanceElements)
-                         .instanceDetails(awsStateHelper.generateAmInstanceDetails(instanceElements))
-                         .build())
-              .build());
+      List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(instanceElements);
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                     .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                                     .value(InstanceInfoVariables.builder()
+                                                .instanceElements(instanceElements)
+                                                .instanceDetails(instanceDetails)
+                                                .skipVerification(isEmpty(instanceDetails))
+                                                .build())
+                                     .build());
     }
   }
 
