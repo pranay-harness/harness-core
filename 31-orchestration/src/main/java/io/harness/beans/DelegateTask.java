@@ -178,7 +178,8 @@ public class DelegateTask
     QUEUED,
     STARTED,
     ERROR,
-    ABORTED;
+    ABORTED,
+    PARKED;
 
     private static Set<Status> finalStatuses = EnumSet.of(ERROR, ABORTED);
     private static Set<Status> runningStatuses = EnumSet.of(QUEUED, STARTED);

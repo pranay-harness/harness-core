@@ -19,6 +19,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
+import io.harness.service.intfc.DelegateTaskResultsProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 
@@ -46,6 +47,19 @@ public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
             @Override
             public DelegateCallbackService load(String driverId) {
               return buildDelegateCallbackService(driverId);
+            }
+          });
+
+  private LoadingCache<String, DelegateTaskResultsProvider> delegateTaskResultsProviderCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(100)
+          .expireAfterAccess(10, TimeUnit.MINUTES)
+          .removalListener((RemovalListener<String, DelegateTaskResultsProvider>)
+                               removalNotification -> removalNotification.getValue().destroy())
+          .build(new CacheLoader<String, DelegateTaskResultsProvider>() {
+            @Override
+            public DelegateTaskResultsProvider load(String driverId) {
+              return buildDelegateTaskResultsProvider(driverId);
             }
           });
 
@@ -102,6 +116,43 @@ public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
       DelegateCallback delegateCallback = DelegateCallback.parseFrom(delegateCallbackRecord.getCallbackMetadata());
       if (delegateCallback.hasMongoDatabase()) {
         return new MongoDelegateCallbackService(delegateCallback.getMongoDatabase());
+      }
+    } catch (InvalidProtocolBufferException | IllegalArgumentException e) {
+      throw new UnexpectedException("Invalid callback metadata", e);
+    }
+
+    return null;
+  }
+
+  @Override
+  public DelegateTaskResultsProvider obtainDelegateTaskResultsProvider(String driverId) {
+    if (isBlank(driverId)) {
+      return null;
+    }
+
+    try {
+      return delegateTaskResultsProviderCache.get(driverId);
+    } catch (ExecutionException | InvalidCacheLoadException ex) {
+      logger.error("Unexpected error occurred while fetching callback service from cache.", ex);
+      return null;
+    }
+  }
+
+  @Override
+  public DelegateTaskResultsProvider buildDelegateTaskResultsProvider(String driverId) {
+    if (isBlank(driverId)) {
+      return null;
+    }
+
+    DelegateCallbackRecord delegateCallbackRecord = persistence.get(DelegateCallbackRecord.class, driverId);
+    if (delegateCallbackRecord == null) {
+      return null;
+    }
+
+    try {
+      DelegateCallback delegateCallback = DelegateCallback.parseFrom(delegateCallbackRecord.getCallbackMetadata());
+      if (delegateCallback.hasMongoDatabase()) {
+        return new MongoDelegateTaskResultsProviderImpl(delegateCallback.getMongoDatabase());
       }
     } catch (InvalidProtocolBufferException | IllegalArgumentException e) {
       throw new UnexpectedException("Invalid callback metadata", e);

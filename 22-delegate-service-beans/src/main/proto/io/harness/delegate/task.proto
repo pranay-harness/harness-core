@@ -58,6 +58,10 @@ message TaskDetails {
   // The delegate system offers JIT secret decryption. This token allows for making sure that the expressions for
   // obtaining secrets are system generated, and not a hack from customers input.
   int64 expression_functor_token = 6;
+
+  // This is used when we want to save delegate task for future execution, mainly use by ci to execute tasks from lite
+  // engine on demand.
+  bool parked = 7;
 }
 
 // Task selector will be used as one of the ways to decide which delegate can be assigned to the given task

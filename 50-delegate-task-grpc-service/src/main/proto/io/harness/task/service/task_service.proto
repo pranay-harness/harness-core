@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package io.harness.task.service;
+
+option java_multiple_files = true;
+
+import "io/harness/delegate/account.proto";
+import "io/harness/delegate/progress.proto";
+import "io/harness/delegate/task.proto";
+
+import "google/protobuf/timestamp.proto";
+
+message TaskProgressRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+}
+
+message TaskProgressResponse {
+  io.harness.delegate.TaskExecutionStage currently_at_stage = 1;
+}
+
+message RunParkedTaskRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  google.protobuf.Timestamp total_expiry = 3;
+}
+
+message RunParkedTaskResponse {
+  io.harness.delegate.TaskId task_id = 1;
+}
+
+message GetTaskResultsRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  string driverId = 3;
+  TaskType task_type = 4;  // task type
+}
+
+message GetTaskResultsResponse {
+  io.harness.delegate.TaskId task_id = 1;
+  TaskType task_type = 2;
+  bool have_response_data = 3;
+  oneof response_data {
+    JiraTaskResponse jira_task_response = 4;
+    HTTPTaskResponse http_task_response = 5;
+  }
+}
+
+message HTTPTaskResponse {
+  string httpResponseBody = 1;
+  int32 httpResponseCode = 2;
+}
+
+// Jira Task Response data
+message JiraTaskResponse {
+  string id = 1;           // jira issue id
+  string key = 2;          // jira issue key
+  string description = 3;  // jira description
+}
+
+enum TaskType {
+  JIRA = 0;
+  HTTP = 1;
+}
+
+service TaskService {
+  // resolves JEXL expression with given context
+  rpc RunParkedTask(RunParkedTaskRequest) returns (RunParkedTaskResponse);
+  rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
+  rpc GetTaskResults(GetTaskResultsRequest) returns (GetTaskResultsResponse);
+}

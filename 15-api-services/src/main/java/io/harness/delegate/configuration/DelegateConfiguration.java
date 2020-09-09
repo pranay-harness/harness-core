@@ -44,4 +44,6 @@ public class DelegateConfiguration {
   private boolean grpcServiceEnabled;
   private List<Connector> grpcServiceConnectors;
   private String grpcServiceTokenSecret;
+
+  private String managerServiceSecret;
 }

@@ -111,7 +111,11 @@ public interface DelegateService extends OwnedByAccount {
 
   String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh);
 
-  void saveDelegateTask(DelegateTask task);
+  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
+
+  String queueParkedTask(String accountId, String taskId);
+
+  byte[] getParkedTaskResults(String accountId, String taskId, String driverId);
 
   DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
 

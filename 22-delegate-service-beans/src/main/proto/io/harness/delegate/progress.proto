@@ -12,4 +12,5 @@ enum TaskExecutionStage {
   FINISHED = 4;
   FAILED = 5;
   ABORTED = 6;
+  PARKED = 7;
 }

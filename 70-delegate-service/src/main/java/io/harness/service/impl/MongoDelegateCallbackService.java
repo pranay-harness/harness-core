@@ -18,10 +18,12 @@ import org.bson.conversions.Bson;
 public class MongoDelegateCallbackService implements DelegateCallbackService {
   private static final String SYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateSyncTaskResponses";
   private static final String ASYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateAsyncTaskResponses";
+  private static final String PARKED_TASK_COLLECTION_NAME_SUFFIX = "delegateParkedTaskResponses";
   private final MongoClient mongoClient;
   private final com.mongodb.client.MongoDatabase database;
   private final MongoCollection<Document> syncTaskResponseCollection;
   private final MongoCollection<Document> asyncTaskResponseCollection;
+  private final MongoCollection<Document> parkedTaskResponseCollection;
 
   MongoDelegateCallbackService(MongoDatabase mongoDatabase) {
     String connectionString = mongoDatabase.getConnection();
@@ -37,6 +39,11 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
         ? ASYNC_TASK_COLLECTION_NAME_SUFFIX
         : mongoDatabase.getCollectionNamePrefix() + "_" + ASYNC_TASK_COLLECTION_NAME_SUFFIX;
     asyncTaskResponseCollection = database.getCollection(asyncTaskResponseCollectionName);
+
+    String parkedTaskResponseCollectionName = StringUtils.isBlank(mongoDatabase.getCollectionNamePrefix())
+        ? PARKED_TASK_COLLECTION_NAME_SUFFIX
+        : mongoDatabase.getCollectionNamePrefix() + "_" + PARKED_TASK_COLLECTION_NAME_SUFFIX;
+    parkedTaskResponseCollection = database.getCollection(parkedTaskResponseCollectionName);
   }
 
   @Override
@@ -61,6 +68,20 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
     Bson update = new Document("$set", document);
 
     asyncTaskResponseCollection.updateOne(filter, update, upsert);
+  }
+
+  @Override
+  public void publishParkedTaskResponse(String delegateTaskId, byte[] responseData) {
+    Bson filter = Filters.eq(ID_FIELD_NAME, delegateTaskId);
+
+    Document document = new Document();
+    document.put(ID_FIELD_NAME, delegateTaskId);
+    document.put(DelegateAsyncTaskResponseKeys.responseData, responseData);
+    document.put(DelegateAsyncTaskResponseKeys.processAfter, 0);
+
+    Bson update = new Document("$set", document);
+
+    parkedTaskResponseCollection.updateOne(filter, update, upsert);
   }
 
   @Override

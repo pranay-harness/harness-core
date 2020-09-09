@@ -24,6 +24,9 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @Builder.Default @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
   private String managerUrl;
   private String delegateGrpcServiceTokenSecret;
+  private String managerServiceSecret;
+  private String managerTarget;
+  private String managerAuthority;
   @Override
   public AssetsConfiguration getAssetsConfiguration() {
     return assetsConfiguration;

@@ -2448,7 +2448,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
             .build();
 
-    delegateService.saveDelegateTask(delegateTask);
+    delegateService.saveDelegateTask(delegateTask, QUEUED);
 
     if (status != delegateTask.getStatus()) {
       delegateTask = wingsPersistence.findAndModify(

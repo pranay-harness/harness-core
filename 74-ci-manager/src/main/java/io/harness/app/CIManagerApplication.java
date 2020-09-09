@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -17,6 +17,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -43,6 +44,8 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
+import io.harness.service.impl.DelegateAsyncServiceImpl;
+import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -63,6 +66,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -72,7 +76,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   public static final Store HARNESS_STORE = Store.builder().name("harness").build();
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CIManagerApplication.class);
-  private static String APPNAME = "CI Manager Service Application";
+  private static final String APP_NAME = "CI Manager Service Application";
   public static final String BASE_PACKAGE = "io.harness.app.resources";
 
   public static void main(String[] args) throws Exception {
@@ -90,7 +94,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
   @Override
   public String getName() {
-    return APPNAME;
+    return APP_NAME;
   }
 
   @Override
@@ -127,8 +131,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
         return ImmutableMap.<Class, String>builder()
-            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
-            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
+            .put(DelegateSyncTaskResponse.class, "ciManager_delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "ciManager_delegateAsyncTaskResponses")
             .build();
       }
     });
@@ -164,6 +168,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         });
       }
     });
+
     Injector injector = Guice.createInjector(modules);
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
@@ -201,16 +206,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
   }
 
   private void registerQueueListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    final QueuePublisher<NotifyEvent> publisher =
-        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
-    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
-        injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
-
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
   }
 
@@ -247,7 +250,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
+    notifyQueuePublisherRegister.register(
+        ORCHESTRATION, payload -> publisher.send(singletonList(ORCHESTRATION), payload));
   }
 
   private void registerExecutionPlanCreators(Injector injector) {
