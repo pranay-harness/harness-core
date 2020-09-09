@@ -29,6 +29,7 @@ import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.execution.export.request.ExportExecutionsRequest;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.grpc.ng.manager.DelegateTaskResumeCallback;
+import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
 import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -1102,6 +1103,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("ccm.cluster.entities.DirectKubernetesCluster", DirectKubernetesCluster.class);
     h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);
     h.put("ccm.cluster.entities.GcpKubernetesCluster", GcpKubernetesCluster.class);
+    h.put("marketplace.gcp.events.ProcurementPubsubMessage", ProcurementPubsubMessage.class);
     h.put("grpc.ng.manager.DelegateTaskResumeCallback", DelegateTaskResumeCallback.class);
 
     // Redesign Classes

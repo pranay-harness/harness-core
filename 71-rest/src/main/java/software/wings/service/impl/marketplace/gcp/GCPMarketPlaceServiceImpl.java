@@ -126,7 +126,8 @@ public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {
       return Optional.empty();
     } else {
       MarketPlace marketPlace = marketPlaceMaybe.get();
-      List<Entitlement> entitlements = this.gcpProcurementService.listEntitlements(marketPlace);
+      List<Entitlement> entitlements =
+          this.gcpProcurementService.listEntitlementsForGcpAccountId(marketPlace.getCustomerIdentificationCode());
       List<Entitlement> activeEntitlement =
           entitlements.stream()
               .filter(entitlement -> entitlement.getState().equals(GcpMarketPlaceConstants.ENTITLEMENT_ACTIVATED))

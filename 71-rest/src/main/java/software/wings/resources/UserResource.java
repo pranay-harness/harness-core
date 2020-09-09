@@ -1082,7 +1082,7 @@ public class UserResource {
         companyName = URLDecoder.decode(companyName, StandardCharsets.UTF_8.displayName());
         accountName = URLDecoder.decode(accountName, StandardCharsets.UTF_8.displayName());
       } catch (UnsupportedEncodingException e) {
-        logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {} Err: {}",
+        logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {} Error: {}",
             accountName, companyName, e.getMessage());
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account Name and Company Name must be UTF-8 compliant.");
       }

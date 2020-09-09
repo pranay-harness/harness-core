@@ -40,8 +40,8 @@ public class MarketPlace implements PersistentEntity, UuidAware, CreatedAtAware,
   private String token;
 
   private Integer orderQuantity;
-
   private Date expirationDate;
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @SchemaIgnore private EmbeddedUser createdBy;
