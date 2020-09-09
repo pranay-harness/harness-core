@@ -12,6 +12,7 @@ import java.util.Map;
 @Value
 @Builder
 public class DelegateTaskRequest {
+  @Builder.Default boolean parked = false;
   String taskType;
   TaskParameters taskParameters;
   String accountId;

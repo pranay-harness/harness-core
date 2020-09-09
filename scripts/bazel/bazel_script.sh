@@ -77,6 +77,7 @@ build_java_proto_module 19-delegate-tasks-beans
 build_java_proto_module 20-delegate-beans
 build_java_proto_module 21-delegate-agent-beans
 build_java_proto_module 22-delegate-service-beans
+build_java_proto_module 50-delegate-task-grpc-service proto
 
 build_proto_module 16-expression-service 16-expression-service/src/main/proto/io/harness/expression/service
 build_proto_module ciscm product/ci/scm/proto

@@ -36,6 +36,7 @@ import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.DelegateServiceGrpcLiteClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
@@ -176,6 +177,10 @@ public class DelegateApplication {
                                        .build(),
         () -> getDelegateId().orElse("UNREGISTERED")));
     modules.add(DelegateModule.getInstance());
+
+    if (configuration.isGrpcServiceEnabled()) {
+      modules.add(new DelegateServiceGrpcLiteClientModule(configuration.getManagerServiceSecret()));
+    }
 
     if (configuration.isGrpcServiceEnabled()) {
       modules.add(new DelegateGrpcServiceModule(

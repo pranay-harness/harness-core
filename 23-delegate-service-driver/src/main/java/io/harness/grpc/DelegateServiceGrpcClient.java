@@ -5,7 +5,6 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
@@ -63,7 +62,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-@Singleton
 @Slf4j
 public class DelegateServiceGrpcClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
@@ -151,6 +149,7 @@ public class DelegateServiceGrpcClient {
             .putAllValues(MapUtils.emptyIfNull(taskRequest.getTaskSetupAbstractions()))
             .build(),
         TaskDetails.newBuilder()
+            .setParked(taskRequest.isParked())
             .setMode(taskMode)
             .setType(TaskType.newBuilder().setType(taskRequest.getTaskType()).build())
             .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))

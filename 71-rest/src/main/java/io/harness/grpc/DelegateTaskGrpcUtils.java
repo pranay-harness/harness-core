@@ -9,6 +9,8 @@ import lombok.experimental.UtilityClass;
 public class DelegateTaskGrpcUtils {
   public static TaskExecutionStage mapTaskStatusToTaskExecutionStage(DelegateTask.Status taskStatus) {
     switch (taskStatus) {
+      case PARKED:
+        return TaskExecutionStage.PARKED;
       case QUEUED:
         return TaskExecutionStage.QUEUEING;
       case STARTED:

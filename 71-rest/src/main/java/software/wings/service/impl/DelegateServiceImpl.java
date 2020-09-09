@@ -149,6 +149,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.service.intfc.DelegateTaskResultsProvider;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
@@ -1922,7 +1923,7 @@ public class DelegateServiceImpl implements DelegateService {
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      saveDelegateTask(task);
+      saveDelegateTask(task, QUEUED);
       logger.info("Queueing async task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
@@ -1939,7 +1940,7 @@ public class DelegateServiceImpl implements DelegateService {
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      saveDelegateTask(task);
+      saveDelegateTask(task, QUEUED);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         logger.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
@@ -2030,8 +2031,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   @Override
-  public void saveDelegateTask(DelegateTask task) {
-    task.setStatus(QUEUED);
+  public void saveDelegateTask(DelegateTask task, DelegateTask.Status taskStatus) {
+    task.setStatus(taskStatus);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
 
@@ -2063,6 +2064,40 @@ public class DelegateServiceImpl implements DelegateService {
 
   private Long fetchTaskCount() {
     return wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).count();
+  }
+
+  @Override
+  public String queueParkedTask(String accountId, String taskId) {
+    if (!delegateProcessingController.canProcessAccount(accountId)) {
+      throw new AccountDisabledException(
+          "Account is disabled. Delegates cannot execute tasks", null, ACCOUNT_DISABLED, Level.ERROR, USER, null);
+    }
+
+    DelegateTask task = wingsPersistence.createQuery(DelegateTask.class)
+                            .filter(DelegateTaskKeys.accountId, accountId)
+                            .filter(DelegateTaskKeys.uuid, taskId)
+                            .get();
+
+    task.getData().setAsync(true);
+
+    try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
+             TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
+         AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
+      saveDelegateTask(task, QUEUED);
+      logger.info("Queueing parked task");
+      broadcastHelper.broadcastNewDelegateTaskAsync(task);
+    }
+    return task.getUuid();
+  }
+
+  @Override
+  public byte[] getParkedTaskResults(String accountId, String taskId, String driverId) {
+    DelegateTaskResultsProvider delegateTaskResultsProvider =
+        delegateCallbackRegistry.obtainDelegateTaskResultsProvider(driverId);
+    if (delegateTaskResultsProvider == null) {
+      return new byte[0];
+    }
+    return delegateTaskResultsProvider.getDelegateTaskResults(taskId);
   }
 
   // TODO: Required right now, as at delegateSide based on capabilities are present or not,
@@ -2585,6 +2620,12 @@ public class DelegateServiceImpl implements DelegateService {
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       }
+      if (delegateTask.getData().isParked()) {
+        logger.info("Publishing parked task response...");
+        delegateCallbackService.publishParkedTaskResponse(
+            delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+      }
+
     } catch (Exception ex) {
       logger.error("Failed publishing task response for task", ex);
     }

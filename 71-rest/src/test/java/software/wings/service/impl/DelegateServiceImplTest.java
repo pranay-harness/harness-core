@@ -152,7 +152,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Sync() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
-    delegateService.saveDelegateTask(delegateTask);
+    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
@@ -163,7 +163,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Async() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(true);
-    delegateService.saveDelegateTask(delegateTask);
+    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }

@@ -20,6 +20,11 @@ public class DelegateServiceGrpcClientModule extends ProviderModule {
     this.serviceSecret = serviceSecret;
   }
 
+  @Override
+  protected void configure() {
+    bind(DelegateServiceGrpcClient.class).in(Singleton.class);
+  }
+
   @Provides
   @Singleton
   DelegateServiceBlockingStub delegateServiceBlockingStub(

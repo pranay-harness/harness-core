@@ -24,10 +24,14 @@ import io.harness.delegate.Document;
 import io.harness.delegate.Documents;
 import io.harness.delegate.ObtainDocumentRequest;
 import io.harness.delegate.ObtainDocumentResponse;
+import io.harness.delegate.ParkedTaskResultsRequest;
+import io.harness.delegate.ParkedTaskResultsResponse;
 import io.harness.delegate.RegisterCallbackRequest;
 import io.harness.delegate.RegisterCallbackResponse;
 import io.harness.delegate.ResetPerpetualTaskRequest;
 import io.harness.delegate.ResetPerpetualTaskResponse;
+import io.harness.delegate.RunParkedTaskRequest;
+import io.harness.delegate.RunParkedTaskResponse;
 import io.harness.delegate.SubmitTaskRequest;
 import io.harness.delegate.SubmitTaskResponse;
 import io.harness.delegate.TaskDetails;
@@ -38,6 +42,7 @@ import io.harness.delegate.TaskProgressRequest;
 import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
+import io.harness.delegate.TaskSelector;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
@@ -93,7 +98,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
                                                            capability.getKryoCapability().toByteArray()))
                                                    .collect(Collectors.toList());
       List<String> taskSelectors =
-          request.getSelectorsList().stream().map(selector -> selector.getSelector()).collect(Collectors.toList());
+          request.getSelectorsList().stream().map(TaskSelector::getSelector).collect(Collectors.toList());
 
       DelegateTask task = DelegateTask.builder()
                               .uuid(taskId)
@@ -105,6 +110,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
                               .executionCapabilities(capabilities)
                               .tags(taskSelectors)
                               .data(TaskData.builder()
+                                        .parked(taskDetails.getParked())
                                         .async(taskDetails.getMode() == TaskMode.ASYNC)
                                         .taskType(taskDetails.getType().getType())
                                         .parameters(new Object[] {kryoSerializer.asInflatedObject(
@@ -115,12 +121,15 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
                                         .build())
                               .build();
 
-      if (task.getData().isAsync()) {
-        delegateService.queueTask(task);
+      if (task.getData().isParked()) {
+        delegateService.saveDelegateTask(task, DelegateTask.Status.PARKED);
       } else {
-        delegateService.scheduleSyncTask(task);
+        if (task.getData().isAsync()) {
+          delegateService.queueTask(task);
+        } else {
+          delegateService.scheduleSyncTask(task);
+        }
       }
-
       responseObserver.onNext(SubmitTaskResponse.newBuilder()
                                   .setTaskId(TaskId.newBuilder().setId(taskId).build())
                                   .setTotalExpiry(Timestamps.fromMillis(task.getExpiry() + task.getData().getTimeout()))
@@ -129,6 +138,42 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
 
     } catch (Exception ex) {
       logger.error("Unexpected error occurred while processing submit task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void runParkedTask(RunParkedTaskRequest request, StreamObserver<RunParkedTaskResponse> responseObserver) {
+    try {
+      delegateService.queueParkedTask(request.getAccountId().getId(), request.getTaskId().getId());
+
+      responseObserver.onNext(RunParkedTaskResponse.newBuilder()
+                                  .setTaskId(TaskId.newBuilder().setId(request.getTaskId().getId()).build())
+                                  .build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      logger.error("Unexpected error occurred while processing run parked task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void parkedTaskResults(
+      ParkedTaskResultsRequest request, StreamObserver<ParkedTaskResultsResponse> responseObserver) {
+    try {
+      byte[] delegateTaskResults = delegateService.getParkedTaskResults(
+          request.getAccountId().getId(), request.getTaskId().getId(), request.getDriverId());
+      if (delegateTaskResults.length > 0) {
+        responseObserver.onNext(ParkedTaskResultsResponse.newBuilder()
+                                    .setKryoResultsData(ByteString.copyFrom(delegateTaskResults))
+                                    .setHaveResults(true)
+                                    .build());
+      } else {
+        responseObserver.onNext(ParkedTaskResultsResponse.newBuilder().setHaveResults(false).build());
+      }
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      logger.error("Unexpected error occurred while processing get parked task results request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

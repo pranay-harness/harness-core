@@ -1,6 +1,7 @@
 package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.threading.Morpheus.sleep;
@@ -34,6 +35,13 @@ public class DelegateCallbackRegistryTest extends DelegateServiceTest {
   public void testBuildDelegateCallbackServiceWithNoOrInvalidDriverId() {
     assertThat(delegateCallbackRegistry.buildDelegateCallbackService(null)).isNull();
     assertThat(delegateCallbackRegistry.buildDelegateCallbackService(generateUuid())).isNull();
+  }
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testBuildDelegateTaskResultsProviderNoOrInvalidDriverId() {
+    assertThat(delegateCallbackRegistry.buildDelegateTaskResultsProvider(null)).isNull();
+    assertThat(delegateCallbackRegistry.buildDelegateTaskResultsProvider(generateUuid())).isNull();
   }
 
   @Test
@@ -90,6 +98,14 @@ public class DelegateCallbackRegistryTest extends DelegateServiceTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
+  public void testObtainDelegateTaskResultsProviderWithNoOrInvalidDriverId() {
+    assertThat(delegateCallbackRegistry.obtainDelegateTaskResultsProvider(null)).isNull();
+    assertThat(delegateCallbackRegistry.obtainDelegateTaskResultsProvider(generateUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
   public void testObtainDelegateCallbackServiceWithExistingDriver() {
     String database = generateUuid();
 
@@ -101,9 +117,11 @@ public class DelegateCallbackRegistryTest extends DelegateServiceTest {
     String driverId = delegateCallbackRegistry.ensureCallback(delegateCallback);
 
     assertThat(delegateCallbackRegistry.obtainDelegateCallbackService(driverId)).isNotNull();
+    assertThat(delegateCallbackRegistry.obtainDelegateTaskResultsProvider(driverId)).isNotNull();
 
     assertThat(persistence.delete(DelegateCallbackRecord.class, driverId)).isTrue();
     assertThat(delegateCallbackRegistry.obtainDelegateCallbackService(driverId)).isNotNull();
+    assertThat(delegateCallbackRegistry.obtainDelegateTaskResultsProvider(driverId)).isNotNull();
   }
 
   @Test
