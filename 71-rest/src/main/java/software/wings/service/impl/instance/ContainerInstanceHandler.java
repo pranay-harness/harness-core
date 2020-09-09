@@ -215,7 +215,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       if (info instanceof KubernetesContainerInfo) {
         KubernetesContainerInfo k8sInfo = (KubernetesContainerInfo) info;
         String namespace = isNotBlank(k8sInfo.getNamespace()) ? k8sInfo.getNamespace() : "";
-        latestContainerInfoMap.put(k8sInfo.getPodName() + namespace, info);
+        String releaseName = getReleaseNameKey(k8sInfo);
+        latestContainerInfoMap.put(k8sInfo.getPodName() + namespace + releaseName, info);
         setHelmChartInfoToContainerInfo(helmChartInfo, k8sInfo);
       } else {
         latestContainerInfoMap.put(((EcsContainerInfo) info).getTaskArn(), info);
@@ -229,7 +230,9 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     for (Instance instance : instancesInDB) {
       ContainerInstanceKey key = instance.getContainerInstanceKey();
       String namespace = isNotBlank(key.getNamespace()) ? key.getNamespace() : "";
-      String instanceMapKey = key.getContainerId() + namespace;
+      String releaseName = getReleaseNameKey(instance.getInstanceInfo());
+      String instanceMapKey = key.getContainerId() + namespace + releaseName;
+
       if (!instancesInDBMap.containsKey(instanceMapKey)) {
         instancesInDBMap.put(instanceMapKey, instance);
       } else {
@@ -306,6 +309,17 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         }
       }
     }
+  }
+
+  private String getReleaseNameKey(InstanceInfo instanceInfo) {
+    String releaseName = null;
+    if (instanceInfo instanceof KubernetesContainerInfo) {
+      releaseName = ((KubernetesContainerInfo) instanceInfo).getReleaseName();
+    } else if (instanceInfo instanceof K8sPodInfo) {
+      releaseName = ((K8sPodInfo) instanceInfo).getReleaseName();
+    }
+
+    return isNotBlank(releaseName) ? releaseName : "";
   }
 
   private List<ContainerInfo> getContainerInfos(DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow,

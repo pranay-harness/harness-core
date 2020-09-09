@@ -77,6 +77,23 @@ public class ContainerServiceImplTest extends WingsBaseTest {
         .containsExactly("default", "default");
   }
 
+  @Test
+  @Owner(developers = OwnerRule.ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldGetEmptyContainerInfosWhenReleaseLabelIsMissing() {
+    ContainerServiceParams containerServiceParams =
+        buildContainerSvcParams(null, KubernetesClusterConfig.builder().build());
+    containerServiceParams.setReleaseName(null);
+    final List<ContainerInfo> containerInfosWithReleaseNameNull =
+        containerService.getContainerInfos(containerServiceParams);
+    assertThat(containerInfosWithReleaseNameNull.isEmpty()).isTrue();
+
+    containerServiceParams.setReleaseName("");
+    final List<ContainerInfo> containerInfosWithReleaseNameEmpty =
+        containerService.getContainerInfos(containerServiceParams);
+    assertThat(containerInfosWithReleaseNameEmpty.isEmpty()).isTrue();
+  }
+
   private ContainerServiceParams buildContainerSvcParams(String containerSvcName, SettingValue value) {
     return ContainerServiceParams.builder()
         .containerServiceName(containerSvcName)

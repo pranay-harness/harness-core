@@ -1838,4 +1838,84 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(savedInstanceInfo.getNamespace()).isEqualTo("default");
     assertThat(savedInstanceInfo.getReleaseName()).isNull();
   }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldDeleteOldInstancesWithoutReleaseName() {
+    final List<Instance> instances = asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:1").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_1")
+                              .controllerName("controllerName:1")
+                              .podName("pod:1")
+                              .namespace("default")
+                              .build())
+            .lastWorkflowExecutionId("1")
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_2_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:1").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_1")
+                              .controllerName("controllerName:1")
+                              .podName("pod:1")
+                              .releaseName("release")
+                              .namespace("default")
+                              .build())
+            .lastWorkflowExecutionId("2")
+            .build());
+
+    ContainerSyncResponse responseData = ContainerSyncResponse.builder()
+                                             .containerInfoList(asList(KubernetesContainerInfo.builder()
+                                                                           .controllerName("controllerName:1")
+                                                                           .podName("pod:1")
+                                                                           .namespace("default")
+                                                                           .serviceName("service_a_1")
+                                                                           .clusterName(KUBE_CLUSTER)
+                                                                           .releaseName("release")
+                                                                           .build()))
+                                             .controllerName("controllerName:1")
+                                             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                             .build();
+
+    ContainerInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder()
+            .infraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
+            .build();
+
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(responseData)
+        .when(containerSync)
+        .getInstances(infrastructureMapping,
+            asList(ContainerMetadata.builder()
+                       .releaseName("release")
+                       .namespace("default")
+                       .containerServiceName("controllerName:1")
+                       .type(null)
+                       .build()));
+    doReturn(ContainerSyncResponse.builder()
+                 .containerInfoList(emptyList())
+                 .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                 .build())
+        .when(containerSync)
+        .getInstances(infrastructureMapping,
+            asList(ContainerMetadata.builder()
+                       .namespace("default")
+                       .containerServiceName("controllerName:1")
+                       .type(null)
+                       .build()));
+    doReturn(infrastructureMapping).when(infraMappingService).get(anyString(), anyString());
+
+    containerInstanceHandler.syncInstances("", "", InstanceSyncFlow.ITERATOR);
+
+    verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_1_ID));
+    verify(instanceService, times(0)).save(any(Instance.class));
+  }
 }
