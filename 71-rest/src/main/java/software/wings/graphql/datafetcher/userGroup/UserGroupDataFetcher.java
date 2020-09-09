@@ -17,6 +17,7 @@ import software.wings.service.intfc.UserGroupService;
 public class UserGroupDataFetcher extends AbstractObjectDataFetcher<QLUserGroup, QLUserGroupQueryParameters> {
   @Inject UserGroupService userGroupService;
   @Inject UserGroupController userGroupController;
+
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_READ)
   public QLUserGroup fetch(QLUserGroupQueryParameters qlQuery, String accountId) {
