@@ -7,11 +7,11 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.Cache;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
-import software.wings.rules.Cache;
 
 import javax.cache.annotation.CacheKey;
 import javax.cache.annotation.CacheResult;

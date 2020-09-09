@@ -50,6 +50,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;

@@ -1,4 +1,4 @@
-package software.wings.rules;
+package io.harness.rule;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

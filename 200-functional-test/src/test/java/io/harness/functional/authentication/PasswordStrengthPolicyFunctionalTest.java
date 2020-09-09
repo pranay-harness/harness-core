@@ -69,6 +69,7 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void TC1_updatePasswordPolicy() {
     passwordStrengthPolicy = PasswordStrengthPolicy.builder()
                                  .enabled(PASSWORD_STRENGTH_POLICY_ENABLED)
