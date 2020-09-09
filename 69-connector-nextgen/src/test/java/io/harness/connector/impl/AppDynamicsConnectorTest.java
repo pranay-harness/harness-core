@@ -3,6 +3,7 @@ package io.harness.connector.impl;
 import static io.harness.delegate.beans.connector.ConnectorType.APP_DYNAMICS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -121,7 +122,8 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetAppDynamicsConnector() {
     createConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+        .thenReturn(Optional.of(connector));
     ConnectorDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTO);
   }
@@ -130,7 +132,8 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Owner(developers = OwnerRule.NEMANJA)
   @Category(UnitTests.class)
   public void testConnection() {
-    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+        .thenReturn(Optional.of(connector));
     when(connectionValidatorMap.get(any())).thenReturn(appDynamicsConnectionValidator);
     when(appDynamicsConnectionValidator.validate(any(), anyString(), anyString(), anyString()))
         .thenReturn(ConnectorValidationResult.builder().valid(true).errorMessage("").build());

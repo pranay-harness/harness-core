@@ -10,7 +10,6 @@ import java.util.Optional;
 @HarnessRepo
 @NoRepositoryBean
 public interface ConnectorBaseRepository<T extends Connector> extends PagingAndSortingRepository<T, String> {
-  Optional<T> findByFullyQualifiedIdentifier(String fullyQualifiedIdentifier);
-  Long deleteByFullyQualifiedIdentifier(String fullyQualifiedIdentifier);
-  boolean existsByFullyQualifiedIdentifier(String fullyQualifiedIdentifier);
+  Optional<T> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier, boolean notDeleted);
+  boolean existsByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier, boolean notDeleted);
 }

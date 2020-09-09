@@ -33,6 +33,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -246,7 +247,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
     assertThat(deleted).isTrue();
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testDeleteWhenConnectorDoesNotExists() {
