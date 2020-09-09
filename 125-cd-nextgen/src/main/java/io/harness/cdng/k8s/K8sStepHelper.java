@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.IdentifierRef;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
@@ -35,6 +36,7 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.utils.IdentifierRefHelper;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -66,8 +68,11 @@ public class K8sStepHelper {
   }
 
   public ConnectorDTO getConnector(String connectorId, Ambiance ambiance) {
-    Optional<ConnectorDTO> connectorDTO = connectorService.get(AmbianceHelper.getAccountId(ambiance),
-        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance), connectorId);
+    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
+        connectorId, ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+    Optional<ConnectorDTO> connectorDTO = connectorService.get(identifierRef.getAccountId(),
+        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(
           String.format("Connector not found for identifier : [%s]", connectorId), WingsException.USER);
