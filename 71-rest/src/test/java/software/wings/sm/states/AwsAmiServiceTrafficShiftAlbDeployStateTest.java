@@ -23,6 +23,7 @@ import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiI
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -187,7 +188,9 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
             .preDeploymentData(AwsAmiPreDeploymentData.builder().build())
             .detailsWithTargetGroups(Collections.singletonList(lbDetails))
             .build();
-    doReturn(setupElement).when(mockContext).getContextElement(any());
+    doReturn(setupElement)
+        .when(awsAmiServiceHelper)
+        .getSetupElementFromSweepingOutput(mockContext, AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME);
 
     AwsAmiTrafficShiftAlbData trafficShiftAlbData =
         AwsAmiTrafficShiftAlbData.builder()

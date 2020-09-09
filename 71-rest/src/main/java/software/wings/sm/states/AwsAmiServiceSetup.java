@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -65,6 +67,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -95,6 +98,8 @@ public class AwsAmiServiceSetup extends State {
   @Inject private LogService logService;
   @Inject private DelegateService delegateService;
   @Inject private SpotInstStateHelper spotinstStateHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
 
   private String commandName = AMI_SETUP_COMMAND_NAME;
 
@@ -151,12 +156,16 @@ public class AwsAmiServiceSetup extends State {
             .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
             .build();
 
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(awsAmiServiceStateHelper.getSweepingOutputName(context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME))
+            .value(amiServiceElement)
+            .build());
+
     return ExecutionResponse.builder()
         .executionStatus(amiServiceSetupResponse.getExecutionStatus())
         .errorMessage(amiServiceSetupResponse.getErrorMessage())
         .stateExecutionData(awsAmiExecutionData)
-        .contextElement(amiServiceElement)
-        .notifyElement(amiServiceElement)
         .build();
   }
 

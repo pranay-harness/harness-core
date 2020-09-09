@@ -158,6 +158,7 @@ import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalAuthorization;
@@ -222,6 +223,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidBaselineConfigurationException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.ArtifactStreamHelper;
@@ -4475,7 +4477,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         || DeploymentType.SSH == infrastructureDefinition.getDeploymentType()
         || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType()
         || DeploymentType.ECS == infrastructureDefinition.getDeploymentType()
-        || DeploymentType.KUBERNETES == infrastructureDefinition.getDeploymentType();
+        || DeploymentType.KUBERNETES == infrastructureDefinition.getDeploymentType()
+        || isAmiAsg(infrastructureDefinition);
+  }
+
+  private boolean isAmiAsg(InfrastructureDefinition infrastructureDefinition) {
+    return DeploymentType.AMI == infrastructureDefinition.getDeploymentType()
+        && infrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure
+        && (((AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure()).getAmiDeploymentType()
+               == AmiDeploymentType.AWS_ASG);
   }
 
   @Override

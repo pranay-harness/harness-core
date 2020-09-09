@@ -7,6 +7,7 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.Misc.normalizeExpression;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
@@ -18,6 +19,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
@@ -48,6 +50,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
@@ -77,6 +80,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   @Inject private DelegateService delegateService;
   @Inject private SpotInstStateHelper spotinstStateHelper;
   @Inject private AwsAmiServiceStateHelper awsAmiServiceHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   private static final String COMMAND_NAME = AMI_SETUP_COMMAND_NAME;
 
@@ -219,7 +223,12 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     awsAmiExecutionData.setDesiredInstances(amiServiceSetupResponse.getDesiredInstances());
 
     AmiServiceTrafficShiftAlbSetupElement amiServiceElement = buildContextElement(context, amiServiceSetupResponse);
-    return createAsyncResponse(activityId, amiServiceSetupResponse, awsAmiExecutionData, amiServiceElement);
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(awsAmiServiceHelper.getSweepingOutputName(context, AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME))
+            .value(amiServiceElement)
+            .build());
+    return createAsyncResponse(activityId, amiServiceSetupResponse, awsAmiExecutionData);
   }
 
   private AmiServiceTrafficShiftAlbSetupElement buildContextElement(
@@ -275,7 +284,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder().build();
     String errorMessage = getMessage(exception);
-    return createResponse(activityId, ExecutionStatus.FAILED, errorMessage, awsAmiExecutionData, null, true);
+    return createResponse(activityId, ExecutionStatus.FAILED, errorMessage, awsAmiExecutionData, true);
   }
 
   private ExecutionResponse successResponse(ExecutionContext context, String activityId) {
@@ -289,25 +298,19 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
                     ? null
                     : renderExpression(context, targetInstancesExpr, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
             .build();
-    return createResponse(activityId, ExecutionStatus.SUCCESS, null, awsAmiExecutionData, null, true);
+    return createResponse(activityId, ExecutionStatus.SUCCESS, null, awsAmiExecutionData, true);
   }
 
   private ExecutionResponse createAsyncResponse(String activityId,
-      AwsAmiServiceTrafficShiftAlbSetupResponse amiServiceSetupResponse, AwsAmiSetupExecutionData executionData,
-      AmiServiceTrafficShiftAlbSetupElement serviceSetupElement) {
+      AwsAmiServiceTrafficShiftAlbSetupResponse amiServiceSetupResponse, AwsAmiSetupExecutionData executionData) {
     ExecutionStatus executionStatus = amiServiceSetupResponse.getExecutionStatus();
     String errorMessage = amiServiceSetupResponse.getErrorMessage();
-    return createResponse(activityId, executionStatus, errorMessage, executionData, serviceSetupElement, false);
+    return createResponse(activityId, executionStatus, errorMessage, executionData, false);
   }
 
   private ExecutionResponse createResponse(String activityId, ExecutionStatus status, String errorMessage,
-      AwsAmiSetupExecutionData executionData, AmiServiceTrafficShiftAlbSetupElement serviceSetupElement,
-      boolean isAsync) {
+      AwsAmiSetupExecutionData executionData, boolean isAsync) {
     ExecutionResponseBuilder responseBuilder = ExecutionResponse.builder();
-    if (serviceSetupElement != null) {
-      responseBuilder.contextElement(serviceSetupElement);
-      responseBuilder.notifyElement(serviceSetupElement);
-    }
     return responseBuilder.correlationIds(singletonList(activityId))
         .executionStatus(status)
         .errorMessage(errorMessage)

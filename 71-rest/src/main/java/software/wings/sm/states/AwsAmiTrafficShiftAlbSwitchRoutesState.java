@@ -9,6 +9,7 @@ import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STAT
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_TRAFFIC_SHIFT_WEIGHT;
 import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING_ROUTES;
 
@@ -17,7 +18,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -44,7 +44,6 @@ import software.wings.service.impl.aws.model.AwsConstants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LogService;
-import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
@@ -124,7 +123,9 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, getLogBuilder(activity), activity.getUuid());
     try {
-      AmiServiceTrafficShiftAlbSetupElement setupElement = validateAndGetSetupElement(context);
+      AmiServiceTrafficShiftAlbSetupElement setupElement =
+          (AmiServiceTrafficShiftAlbSetupElement) awsAmiServiceHelper.getSetupElementFromSweepingOutput(
+              context, AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME);
       if (setupElement == null) {
         return skipResponse();
       }
@@ -140,17 +141,6 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
     } catch (Exception exception) {
       return taskCreationFailureResponse(activity, executionLogCallback, exception);
     }
-  }
-
-  private AmiServiceTrafficShiftAlbSetupElement validateAndGetSetupElement(ExecutionContext context) {
-    ContextElement contextElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    if (!(contextElement instanceof AmiServiceTrafficShiftAlbSetupElement)) {
-      if (!isRollback()) {
-        throw new InvalidRequestException("Did not find Setup element of class AmiServiceTrafficShiftAlbSetupElement");
-      }
-      return null;
-    }
-    return (AmiServiceTrafficShiftAlbSetupElement) contextElement;
   }
 
   private AwsAmiTrafficShiftAlbStateExecutionData createAndEnqueueDelegateTask(ExecutionContext context,

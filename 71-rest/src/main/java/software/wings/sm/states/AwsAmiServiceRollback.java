@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_AMI_ALL_PHASE_ROLLBACK_NAME;
 
 import com.google.common.collect.Lists;
@@ -43,6 +44,7 @@ import java.util.List;
 public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Getter @Setter @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhasesAtOnce;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
 
   public AwsAmiServiceRollback(String name) {
     super(name, StateType.AWS_AMI_SERVICE_ROLLBACK.name());
@@ -53,7 +55,9 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     if (allPhaseRollbackDone(context)) {
       return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     }
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    AmiServiceSetupElement serviceSetupElement =
+        (AmiServiceSetupElement) awsAmiServiceStateHelper.getSetupElementFromSweepingOutput(
+            context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
     if (serviceSetupElement == null) {
       return ExecutionResponse.builder()
           .executionStatus(SKIPPED)

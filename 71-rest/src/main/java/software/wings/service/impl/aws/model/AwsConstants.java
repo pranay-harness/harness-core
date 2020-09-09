@@ -17,6 +17,10 @@ public interface AwsConstants {
   int MIN_TRAFFIC_SHIFT_WEIGHT = 0;
   int DEFAULT_TRAFFIC_SHIFT_WEIGHT = 10;
 
+  // AMI Sweeping output constants
+  String AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputAmi";
+  String AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputAmiAlb";
+
   // Main Ecs Container Name
   String MAIN_ECS_CONTAINER_NAME_TAG = "HARNESS_DEPLOYED_MAIN_CONTAINER";
 

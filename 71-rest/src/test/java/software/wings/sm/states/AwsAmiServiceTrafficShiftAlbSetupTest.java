@@ -21,6 +21,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -32,6 +33,8 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
@@ -39,6 +42,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
@@ -56,6 +60,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
@@ -69,6 +74,8 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private SpotInstStateHelper spotInstStateHelper;
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
+  @Captor private ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceArgumentCaptor;
 
   @Test
   @Owner(developers = ANIL)
@@ -123,10 +130,29 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
                           .stageTargetGroupArn("stageTgtArn")
                           .build());
 
+    SweepingOutputInstanceBuilder sweepingOutputInstanceBuilder = SweepingOutputInstance.builder();
+    doReturn("test").when(awsAmiServiceHelper).getSweepingOutputName(mockContext, AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME);
+    doReturn(sweepingOutputInstanceBuilder)
+        .when(mockContext)
+        .prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
+
     AwsAmiServiceTrafficShiftAlbSetupResponse delegateResponse =
         initializeMockSetupForAsyncResponse(state, mockContext, lbDetailsWithTargetGroups, awsAmiExecutionData);
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     verifyAwsAmiTrafficShiftSetupAsyncResponse(awsAmiExecutionData, lbDetailsWithTargetGroups, response);
+    verify(sweepingOutputService, times(1)).save(sweepingOutputInstanceArgumentCaptor.capture());
+    AmiServiceTrafficShiftAlbSetupElement contextElement =
+        (AmiServiceTrafficShiftAlbSetupElement) sweepingOutputInstanceArgumentCaptor.getValue().getValue();
+    assertThat(contextElement).isNotNull();
+    assertThat(contextElement instanceof AmiServiceTrafficShiftAlbSetupElement).isTrue();
+    AmiServiceTrafficShiftAlbSetupElement setupElement = contextElement;
+
+    assertThat(setupElement.getMinInstances()).isEqualTo(1);
+    assertThat(setupElement.getDesiredInstances()).isEqualTo(2);
+    assertThat(setupElement.getMaxInstances()).isEqualTo(4);
+    assertThat(setupElement.getOldAutoScalingGroupName()).isEqualTo("ASG_1");
+    assertThat(setupElement.getNewAutoScalingGroupName()).isEqualTo("ASG_2");
+    assertThat(setupElement.getDetailsWithTargetGroups()).isEqualTo(lbDetailsWithTargetGroups);
   }
 
   private void initializeMockSetup(
@@ -208,6 +234,8 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
       List<LbDetailsForAlbTrafficShift> lbDetailsWithTargetGroups, AwsAmiSetupExecutionData awsAmiExecutionData) {
     on(state).set("useCurrentRunningCount", true);
     on(state).set("autoScalingGroupName", "asg");
+    on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
+    on(state).set("sweepingOutputService", sweepingOutputService);
 
     ActivityService mockActivityService = mock(ActivityService.class);
     SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
@@ -248,17 +276,6 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
 
     List<ContextElement> contextElements = response.getContextElements();
     assertThat(contextElements).isNotNull();
-    assertThat(contextElements.size()).isEqualTo(1);
-    ContextElement contextElement = contextElements.get(0);
-    assertThat(contextElement).isNotNull();
-    assertThat(contextElement instanceof AmiServiceTrafficShiftAlbSetupElement).isTrue();
-    AmiServiceTrafficShiftAlbSetupElement setupElement = (AmiServiceTrafficShiftAlbSetupElement) contextElement;
-
-    assertThat(setupElement.getMinInstances()).isEqualTo(1);
-    assertThat(setupElement.getDesiredInstances()).isEqualTo(2);
-    assertThat(setupElement.getMaxInstances()).isEqualTo(4);
-    assertThat(setupElement.getOldAutoScalingGroupName()).isEqualTo("ASG_1");
-    assertThat(setupElement.getNewAutoScalingGroupName()).isEqualTo("ASG_2");
-    assertThat(setupElement.getDetailsWithTargetGroups()).isEqualTo(lbDetailsWithTargetGroups);
+    assertThat(contextElements.size()).isEqualTo(0);
   }
 }

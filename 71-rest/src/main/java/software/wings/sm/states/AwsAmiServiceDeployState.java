@@ -20,6 +20,7 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -139,6 +140,7 @@ public class AwsAmiServiceDeployState extends State {
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private AwsStateHelper awsStateHelper;
+  @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
 
   public AwsAmiServiceDeployState(String name) {
     this(name, StateType.AWS_AMI_SERVICE_DEPLOY.name());
@@ -161,7 +163,10 @@ public class AwsAmiServiceDeployState extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return awsStateHelper.getAmiStateTimeoutFromContext(context);
+    AmiServiceSetupElement serviceSetupElement =
+        (AmiServiceSetupElement) awsAmiServiceStateHelper.getSetupElementFromSweepingOutput(
+            context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    return awsStateHelper.getAmiStateTimeout(serviceSetupElement);
   }
 
   protected Activity crateActivity(ExecutionContext context) {
@@ -223,7 +228,9 @@ public class AwsAmiServiceDeployState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    AmiServiceSetupElement serviceSetupElement =
+        (AmiServiceSetupElement) awsAmiServiceStateHelper.getSetupElementFromSweepingOutput(
+            context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
     if (serviceSetupElement == null) {
       return ExecutionResponse.builder()
           .executionStatus(SKIPPED)
@@ -483,7 +490,10 @@ public class AwsAmiServiceDeployState extends State {
     Activity activity = activityService.get(awsAmiDeployStateExecutionData.getActivityId(), appId);
     notNullCheck("Activity", activity);
 
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    AmiServiceSetupElement serviceSetupElement =
+        (AmiServiceSetupElement) awsAmiServiceStateHelper.getSetupElementFromSweepingOutput(
+            context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+
     Builder logBuilder = aLog()
                              .appId(activity.getAppId())
                              .activityId(activity.getUuid())
