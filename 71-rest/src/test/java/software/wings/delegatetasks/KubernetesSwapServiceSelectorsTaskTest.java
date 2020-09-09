@@ -63,8 +63,10 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
     Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class))).thenReturn(null);
-    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(service1);
-    when(kubernetesContainerService.getService(any(), eq(service2.getMetadata().getName()))).thenReturn(service2);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName())))
+        .thenReturn(service2);
     when(kubernetesContainerService.createOrReplaceService(any(), any()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[1]);
 
@@ -79,7 +81,7 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
 
     ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
 
-    verify(kubernetesContainerService, times(2)).getService(any(), any());
+    verify(kubernetesContainerService, times(2)).getServiceFabric8(any(), any());
 
     verify(kubernetesContainerService, times(2)).createOrReplaceService(eq(null), serviceArgumentCaptor.capture());
 

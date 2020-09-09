@@ -703,7 +703,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String nodePort = null;
 
     try {
-      service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
+      service = kubernetesContainerService.getServiceFabric8(kubernetesConfig, kubernetesServiceName);
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
     }
@@ -756,7 +756,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     }
 
-    service = kubernetesContainerService.getService(kubernetesConfig, serviceToCreate.getMetadata().getName());
+    service = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceToCreate.getMetadata().getName());
     logger.info("{} service [{}]", service == null ? "Creating" : "Replacing", serviceToCreate.getMetadata().getName());
     service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceToCreate);
     serviceClusterIP = service.getSpec().getClusterIP();
@@ -1420,7 +1420,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         return timeLimiter.callWithTimeout(() -> {
           while (true) {
             LoadBalancerStatus loadBalancerStatus =
-                kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
+                kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceName)
+                    .getStatus()
+                    .getLoadBalancer();
             if (!loadBalancerStatus.getIngress().isEmpty()
                 && (isEmpty(loadBalancerIP) || loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp()))) {
               return getLoadBalancerEndpoint(executionLogCallback, serviceName, loadBalancerStatus);
@@ -1879,8 +1881,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     Service stageService;
 
     try {
-      primaryService = kubernetesContainerService.getService(kubernetesConfig, primaryServiceName);
-      stageService = kubernetesContainerService.getService(kubernetesConfig, stageServiceName);
+      primaryService = kubernetesContainerService.getServiceFabric8(kubernetesConfig, primaryServiceName);
+      stageService = kubernetesContainerService.getServiceFabric8(kubernetesConfig, stageServiceName);
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
       return;

@@ -29,6 +29,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
   private Integer timeoutIntervalInMin;
   @NotEmpty private K8sTaskType commandType;
   private HelmVersion helmVersion;
+  private boolean deprecateFabric8Enabled;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
