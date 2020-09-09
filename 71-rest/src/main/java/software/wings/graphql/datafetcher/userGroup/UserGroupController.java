@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
@@ -41,6 +42,7 @@ import software.wings.graphql.schema.type.usergroup.QLSSOSettingInput;
 import software.wings.graphql.schema.type.usergroup.QLSlackNotificationSetting;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupBuilder;
+import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -61,6 +63,7 @@ public class UserGroupController {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AccountService accountService;
   @Inject private UserGroupPermissionsController userGroupPermissionsController;
+  @Inject private CCMSettingService ccmSettingService;
 
   public UserGroup validateAndGetUserGroup(String accountId, String userGroupId) {
     UserGroup userGroup = userGroupService.get(accountId, userGroupId);
@@ -95,6 +98,9 @@ public class UserGroupController {
   }
 
   public QLUserGroupBuilder populateUserGroupOutput(UserGroup userGroup, QLUserGroupBuilder builder) {
+    if (!ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
+      UserGroupServiceImpl.maskCePermissions(userGroup);
+    }
     QLGroupPermissions permissions = userGroupPermissionsController.populateUserGroupPermissions(userGroup);
     QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
     return builder.name(userGroup.getName())

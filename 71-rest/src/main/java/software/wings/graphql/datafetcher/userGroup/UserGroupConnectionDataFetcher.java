@@ -32,13 +32,13 @@ public class UserGroupConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLUserGroupFilter, QLNoOpSortCriteria, QLUserGroupConnection> {
   @Inject UserGroupController userGroupController;
   @Inject UserGroupQueryHelper userGroupQueryHelper;
+
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_READ)
   public QLUserGroupConnection fetchConnection(List<QLUserGroupFilter> groupFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<UserGroup> query = populateFilters(wingsPersistence, groupFilters, UserGroup.class, true)
                                  .order(Sort.ascending(UserGroupKeys.name));
-
     QLUserGroupConnectionBuilder connectionBuilder = QLUserGroupConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, userGroup -> {
       QLUserGroupBuilder builder = QLUserGroup.builder();

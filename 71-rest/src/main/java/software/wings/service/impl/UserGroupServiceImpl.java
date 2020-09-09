@@ -217,7 +217,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
-      res.getResponse().forEach(this ::maskCePermissions);
+      res.getResponse().forEach(UserGroupServiceImpl::maskCePermissions);
     }
 
     return res;
@@ -358,7 +358,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  private void maskCePermissions(UserGroup userGroup) {
+  public static void maskCePermissions(UserGroup userGroup) {
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     if (accountPermissions != null) {
       Set<PermissionType> accountPermissionSet =
