@@ -1,11 +1,12 @@
 package io.harness.cdng.artifact.bean.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ArtifactListConfigVisitorHelper;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
@@ -35,7 +36,7 @@ public class ArtifactListConfig implements Visitable {
       this.primary.getArtifactConfig().setPrimaryArtifact(true);
     }
     this.sidecars = sidecars;
-    if (EmptyPredicate.isNotEmpty(sidecars)) {
+    if (isNotEmpty(sidecars)) {
       for (SidecarArtifactWrapper sidecar : this.sidecars) {
         sidecar.getArtifactConfig().setIdentifier(sidecar.getIdentifier());
         sidecar.getArtifactConfig().setPrimaryArtifact(false);
@@ -47,7 +48,9 @@ public class ArtifactListConfig implements Visitable {
   public List<Object> getChildrenToWalk() {
     List<Object> children = new ArrayList<>();
     children.add(primary);
-    children.addAll(sidecars);
+    if (isNotEmpty(sidecars)) {
+      children.addAll(sidecars);
+    }
     return children;
   }
 }
