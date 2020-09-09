@@ -9,6 +9,10 @@
     <artifactId>74-ci-manager</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.github.rutledgepaulv</groupId>
+            <artifactId>rest-query-engine</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
         </dependency>

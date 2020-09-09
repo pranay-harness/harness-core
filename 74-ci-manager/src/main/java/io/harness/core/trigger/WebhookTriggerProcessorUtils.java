@@ -7,11 +7,13 @@ import com.google.inject.Singleton;
 
 import io.grpc.StatusRuntimeException;
 import io.harness.beans.execution.BranchWebhookEvent;
+import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.exception.InvalidRequestException;
+import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.GitProvider;
 import io.harness.product.ci.scm.proto.Header;
 import io.harness.product.ci.scm.proto.ParseWebhookRequest;
@@ -23,6 +25,8 @@ import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.product.ci.scm.proto.User;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.ws.rs.core.HttpHeaders;
 
 @Singleton
@@ -85,8 +89,14 @@ public class WebhookTriggerProcessorUtils {
 
   private WebhookEvent convertPushWebhookEvent(PushHook pushHook) {
     // TODO Add required push event details here with commit
+    List<CommitDetails> commitDetailsList = new ArrayList<>();
+    pushHook.getCommitsList().forEach(commit -> commitDetailsList.add(convertCommit(commit)));
 
-    return BranchWebhookEvent.builder().build();
+    return BranchWebhookEvent.builder()
+        .branchName(pushHook.getRepo().getBranch())
+        .link(pushHook.getRepo().getLink())
+        .commitDetailsList(commitDetailsList)
+        .build();
   }
 
   private WebhookEvent convertPRWebhookEvent(PullRequest pullRequest) {
@@ -109,6 +119,17 @@ public class WebhookTriggerProcessorUtils {
         .email(user.getEmail())
         .gitId(user.getLogin())
         .name(user.getName())
+        .build();
+  }
+
+  private CommitDetails convertCommit(Commit commit) {
+    return CommitDetails.builder()
+        .commitId(commit.getSha())
+        .message(commit.getMessage())
+        .link(commit.getLink())
+        .ownerEmail(commit.getAuthor().getEmail())
+        .ownerId(commit.getAuthor().getLogin())
+        .ownerName(commit.getAuthor().getName())
         .build();
   }
 

@@ -12,7 +12,6 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
-import io.harness.yaml.core.Tag;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
 import io.harness.yaml.core.nonyaml.WithNonYamlInfo;
@@ -40,7 +39,7 @@ public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInf
   @EntityIdentifier private String identifier;
   private String name;
   private String description;
-  private List<Tag> tags;
+  private List<String> tags;
   private List<StageElementWrapper> stages;
 
   @FdIndex private String accountId;
