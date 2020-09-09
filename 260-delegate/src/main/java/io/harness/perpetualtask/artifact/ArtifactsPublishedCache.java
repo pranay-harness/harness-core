@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,19 +46,19 @@ import java.util.stream.Collectors;
  *   Now, we can do artifact collection
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ArtifactsPublishedCache {
+public class ArtifactsPublishedCache<P> {
   // Max artifacts published to the manager in one call.
   public static final int ARTIFACT_ONE_TIME_PUBLISH_LIMIT = 500;
 
   Set<String> publishedArtifactKeys;
   Set<String> unpublishedArtifactKeys;
-  List<BuildDetails> unpublishedBuildDetails;
+  List<P> unpublishedBuildDetails;
   Set<String> toBeDeletedArtifactKeys;
-  Function<BuildDetails, String> buildDetailsKeyFunction;
+  Function<P, String> buildDetailsKeyFunction;
   boolean enableCleanup;
 
-  public ArtifactsPublishedCache(Collection<String> publishedArtifactKeys,
-      Function<BuildDetails, String> buildDetailsKeyFunction, boolean enableCleanup) {
+  public ArtifactsPublishedCache(
+      Collection<String> publishedArtifactKeys, Function<P, String> buildDetailsKeyFunction, boolean enableCleanup) {
     this.publishedArtifactKeys =
         new HashSet<>(publishedArtifactKeys == null ? Collections.emptySet() : publishedArtifactKeys);
     this.toBeDeletedArtifactKeys = new HashSet<>();
@@ -75,13 +74,13 @@ public class ArtifactsPublishedCache {
    *
    * @param builds the new build details returned by third party-repo
    */
-  public void addArtifactCollectionResult(List<BuildDetails> builds) {
+  public void addArtifactCollectionResult(List<P> builds) {
     if (isEmpty(builds)) {
       return;
     }
 
     Set<String> newKeys = new HashSet<>();
-    for (BuildDetails build : builds) {
+    for (P build : builds) {
       String key = buildDetailsKeyFunction.apply(build);
       newKeys.add(key);
       if (!publishedArtifactKeys.contains(key) && !unpublishedArtifactKeys.contains(key)) {
@@ -126,7 +125,7 @@ public class ArtifactsPublishedCache {
     updateUnpublishedBuildDetails();
   }
 
-  public void addPublishedBuildDetails(Collection<BuildDetails> builds) {
+  public void addPublishedBuildDetails(Collection<P> builds) {
     if (isEmpty(builds)) {
       return;
     }
@@ -159,7 +158,7 @@ public class ArtifactsPublishedCache {
    *
    * @return the next limited sublist of unpublished build details and boolean indicating if any more are left
    */
-  public ImmutablePair<List<BuildDetails>, Boolean> getLimitedUnpublishedBuildDetails() {
+  public ImmutablePair<List<P>, Boolean> getLimitedUnpublishedBuildDetails() {
     if (isEmpty(unpublishedBuildDetails)) {
       return ImmutablePair.of(new ArrayList<>(), Boolean.FALSE);
     }

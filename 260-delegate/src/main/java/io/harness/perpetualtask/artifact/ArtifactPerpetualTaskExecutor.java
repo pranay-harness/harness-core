@@ -42,7 +42,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private final ManagerClient managerClient;
   private final KryoSerializer kryoSerializer;
 
-  private final Cache<String, ArtifactsPublishedCache> cache = Caffeine.newBuilder().build();
+  private final Cache<String, ArtifactsPublishedCache<BuildDetails>> cache = Caffeine.newBuilder().build();
 
   @Inject
   public ArtifactPerpetualTaskExecutor(ArtifactRepositoryServiceImpl artifactRepositoryService,
@@ -66,7 +66,8 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     String accountId = buildSourceParameters.getAccountId();
 
     // Fetch artifacts published cache for this artifactStreamId.
-    ArtifactsPublishedCache currCache = getArtifactsPublishedCached(artifactStreamId, buildSourceParameters);
+    ArtifactsPublishedCache<BuildDetails> currCache =
+        getArtifactsPublishedCached(artifactStreamId, buildSourceParameters);
     Instant startTime = Instant.now();
     if (!currCache.needsToPublish()) {
       collectArtifacts(accountId, artifactStreamId, taskId, buildSourceParameters, currCache);
@@ -88,7 +89,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   private void collectArtifacts(String accountId, String artifactStreamId, PerpetualTaskId taskId,
-      BuildSourceParameters buildSourceParameters, ArtifactsPublishedCache currCache) {
+      BuildSourceParameters buildSourceParameters, ArtifactsPublishedCache<BuildDetails> currCache) {
     // Fetch new build details if there are no unpublished build details in the cache.
     final BuildSourceExecutionResponse buildSourceExecutionResponse =
         artifactRepositoryService.publishCollectedArtifacts(buildSourceParameters);
@@ -162,8 +163,8 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
    * publishUnpublishedBuildDetails publishes build details to the manager that are in the cache and are unpublished. It
    * returns true if the operation succeeds and there are more build details left after the current batch.
    */
-  private boolean publishUnpublishedBuildDetails(
-      String accountId, String artifactStreamId, PerpetualTaskId taskId, ArtifactsPublishedCache currCache) {
+  private boolean publishUnpublishedBuildDetails(String accountId, String artifactStreamId, PerpetualTaskId taskId,
+      ArtifactsPublishedCache<BuildDetails> currCache) {
     ImmutablePair<List<BuildDetails>, Boolean> resp = currCache.getLimitedUnpublishedBuildDetails();
     List<BuildDetails> builds = resp.getLeft();
     if (isEmpty(builds)) {
@@ -217,7 +218,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     return AnyUtils.unpack(params.getCustomizedParams(), ArtifactCollectionTaskParams.class);
   }
 
-  private ArtifactsPublishedCache getArtifactsPublishedCached(
+  private ArtifactsPublishedCache<BuildDetails> getArtifactsPublishedCached(
       String artifactStreamId, BuildSourceParameters buildSourceParameters) {
     Function<BuildDetails, String> buildDetailsKeyFn = ArtifactCollectionUtils.getBuildDetailsKeyFn(
         buildSourceParameters.getArtifactStreamType(), buildSourceParameters.getArtifactStreamAttributes());
