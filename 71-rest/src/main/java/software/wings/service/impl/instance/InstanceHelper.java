@@ -727,13 +727,19 @@ public class InstanceHelper {
       throw ex;
     } finally {
       Status status = handler.getStatus(infrastructureMapping, response);
+      if (status.isSuccess()) {
+        instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
+            infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),
+            System.currentTimeMillis());
+      }
       if (!status.isRetryable()) {
         logger.info(
             "Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.deletePerpetualTask(
             infrastructureMapping.getAccountId(), infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
-      } else if (!status.isSuccess()) {
+      }
+      if (!status.isSuccess()) {
         logger.info("Sync Failure. Reset Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.resetPerpetualTask(
