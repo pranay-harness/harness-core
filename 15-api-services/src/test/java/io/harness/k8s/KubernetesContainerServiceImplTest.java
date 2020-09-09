@@ -107,6 +107,8 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServiceListBuilder;
+import io.kubernetes.client.openapi.models.VersionInfo;
+import io.kubernetes.client.openapi.models.VersionInfoBuilder;
 import okhttp3.Call;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -839,6 +841,18 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetVersionAsString() throws Exception {
+    VersionInfo versionInfo = new VersionInfoBuilder().withMajor("1").withMinor("16").build();
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(VersionInfo.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), versionInfo));
+
+    String result = kubernetesContainerService.getVersionAsString(KUBERNETES_CONFIG);
+    assertThat(result).isEqualTo("1.16");
+  }
+
+  @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testGetConfigFileContent() throws InterruptedException, ExecutionException, IOException {
@@ -932,5 +946,42 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
                                       .build();
     String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
     assertThat(expected).isEqualTo(configFileContent);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetVersionAsStringFabric8() throws Exception {
+    Map<String, String> jsonData = new HashMap<>();
+    jsonData.put("major", "1");
+    jsonData.put("minor", "16");
+    jsonData.put("buildDate", "2020-06-06T10:54:00Z");
+    io.fabric8.kubernetes.client.VersionInfo version = new io.fabric8.kubernetes.client.VersionInfo(jsonData);
+
+    when(kubernetesClient.getVersion()).thenReturn(version);
+
+    String result = kubernetesContainerService.getVersionAsStringFabric8(KUBERNETES_CONFIG);
+    assertThat(result).isEqualTo("1.16");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetVersion() throws Exception {
+    VersionInfo versionInfo = new VersionInfoBuilder().withMajor("1").withMinor("16").build();
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(VersionInfo.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), versionInfo));
+    VersionInfo result = kubernetesContainerService.getVersion(KUBERNETES_CONFIG);
+    assertThat(result).isEqualTo(versionInfo);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetVersionException() throws Exception {
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(VersionInfo.class).getType()))
+        .thenThrow(new ApiException(409, "Unable to get cluster version"));
+    assertThatThrownBy(() -> kubernetesContainerService.getVersion(KUBERNETES_CONFIG))
+        .hasMessage("Unable to retrieve k8s version. Code: 409, message: Unable to get cluster version");
   }
 }

@@ -201,7 +201,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
+        .thenReturn(true);
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
@@ -250,7 +251,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
+        .thenReturn(true);
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
@@ -911,7 +913,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         KubernetesResourceId.builder().namespace("default-2").name("resource-2").kind(Kind.Deployment.name()).build();
     KubernetesResourceId resource3 =
         KubernetesResourceId.builder().namespace("default-3").name("resource-3").kind(Kind.Deployment.name()).build();
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
+        .thenReturn(true);
 
     HelmInstallCommandResponse result = null;
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -1189,7 +1192,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     List<KubernetesResourceId> resourceIds =
         resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
 
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
+        .thenReturn(true);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), eq(resourceIds), anyString(), anyString(),
              anyString(), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(false);
