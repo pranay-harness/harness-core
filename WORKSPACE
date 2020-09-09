@@ -985,7 +985,7 @@ maven_install(
               "com.google.guava:guava:21.0",
               "com.google.inject:guice:4.2.3",
               "commons-codec:commons-codec:1.10",
-              "net.rcarz:jira-client:0.8-20200519.175253-2",
+              "net.rcarz:jira-client:0.8-SNAPSHOT",
               "org.apache.commons:commons-lang3:3.7",
               "org.assertj:assertj-core:3.16.1",
               "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
@@ -1042,7 +1042,7 @@ maven_install(
               "org.modelmapper:modelmapper:0.7.5",
               "org.mongodb.morphia:morphia:1.3.2",
               "org.projectlombok:lombok:1.18.6",
-              "org.reflections:reflections:0.9.12",
+              "org.reflections:reflections:0.9.12-SNAPSHOT",
               "org.slf4j:slf4j-api:1.7.29",
               "org.zeroturnaround:zt-exec:1.9",
               "net.javacrumbs.json-unit:json-unit-fluent:1.12.1",
@@ -1056,16 +1056,6 @@ maven_install(
               "io.github.resilience4j:resilience4j-circuitbreaker:1.5.0",
               "io.github.resilience4j:resilience4j-retrofit:1.5.0",
               "io.github.resilience4j:resilience4j-retry:1.5.0",
-              "antlr:antlr:2.7.2",
-              "org.antlr:antlr4-runtime:4.7.2",
-              "com.puppycrawl.tools:checkstyle:8.5",
-              "commons-beanutils:commons-beanutils:1.9.2",
-              "info.picocli:picocli:3.8.2",
-              "commons-collections:commons-collections:3.2.2",
-              "com.google.guava:guava:21.0",
-              "org.slf4j:slf4j-simple:1.7.29",
-              "org.slf4j:jcl-over-slf4j:1.7.29",
-              "com.github.sevntu-checkstyle:sevntu-checks:1.35.0",
               "com.squareup.okhttp3:okhttp:3.9.0",
               "commons-cli:commons-cli:1.2",
               "commons-io:commons-io:2.6",
@@ -1127,6 +1117,7 @@ maven_install(
               "org.yaml:snakeyaml:1.15",
               "org.json:json:20160810",
               "org.bouncycastle:bcpkix-jdk15on:1.60",
+              "org.slf4j:jcl-over-slf4j:1.7.29"
     ],
     version_conflict_policy = "pinned",
     repositories = [
@@ -1139,6 +1130,27 @@ maven_install(
 
 load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
+
+maven_install(
+    name="maven_checkstyle",
+    artifacts = [
+        "antlr:antlr:2.7.2",
+        "org.antlr:antlr4-runtime:4.7.2",
+        "com.puppycrawl.tools:checkstyle:8.5",
+        "commons-beanutils:commons-beanutils:1.9.2",
+        "info.picocli:picocli:3.8.2",
+        "commons-collections:commons-collections:3.2.2",
+        "com.google.guava:guava:21.0",
+        "org.slf4j:slf4j-simple:1.7.29",
+        "org.slf4j:jcl-over-slf4j:1.7.29",
+        "com.github.sevntu-checkstyle:sevntu-checks:1.35.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+    ],
+)
 
 go_repository(
     name = "com_github_drone_go_scm",
