@@ -12,10 +12,14 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doReturn;
@@ -27,6 +31,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.gson.reflect.TypeToken;
 
 import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -93,6 +98,16 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.rule.Owner;
+import io.kubernetes.client.openapi.ApiCallback;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.ApiResponse;
+import io.kubernetes.client.openapi.Pair;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServiceBuilder;
+import io.kubernetes.client.openapi.models.V1ServiceList;
+import io.kubernetes.client.openapi.models.V1ServiceListBuilder;
+import okhttp3.Call;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -220,6 +235,9 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Mock private ExtensionsAPIGroupClient extensionsAPIGroupClient;
   @Mock private AppsAPIGroupClient appsAPIGroupClient;
 
+  @Mock private ApiClient k8sApiClient;
+  @Mock private Call k8sApiCall;
+
   @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private TimeLimiter timeLimiter;
   @Mock private Clock clock;
@@ -318,6 +336,13 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
     when(kubernetesHelperService.hpaOperations(KUBERNETES_CONFIG)).thenReturn(namespacedHpa);
     when(namespacedHpa.withName(anyString())).thenReturn(horizontalPodAutoscalerResource);
+
+    when(kubernetesHelperService.getApiClient(KUBERNETES_CONFIG)).thenReturn(k8sApiClient);
+    when(k8sApiClient.buildCall(anyString(), anyString(), anyListOf(Pair.class), anyListOf(Pair.class), any(),
+             anyMapOf(String.class, String.class), anyMapOf(String.class, String.class),
+             anyMapOf(String.class, Object.class), any(String[].class), any(ApiCallback.class)))
+        .thenReturn(k8sApiCall);
+    when(k8sApiClient.escapeString(anyString())).thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
 
     replicationController = new ReplicationController();
     spec = new ReplicationControllerSpec();
@@ -557,10 +582,45 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetService() throws Exception {
+    V1Service service = new V1ServiceBuilder().build();
+    V1ServiceList serviceList = new V1ServiceListBuilder().withItems(service).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ServiceList.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), serviceList));
+
+    V1Service result = kubernetesContainerService.getService(KUBERNETES_CONFIG, "service");
+    assertThat(result).isEqualTo(service);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetServiceExceptioon() throws Exception {
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ServiceList.class).getType()))
+        .thenThrow(new ApiException(403, "", emptyMap(), "{error: \"unable to get service\"}"));
+
+    assertThatThrownBy(() -> kubernetesContainerService.getService(KUBERNETES_CONFIG, "service"))
+        .hasMessageContaining("Unable to get service. Code: 403, message: {error: \"unable to get service\"}");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetServiceWithNulls() throws Exception {
+    assertThatCode(() -> kubernetesContainerService.getService(null, null)).doesNotThrowAnyException();
+    assertThatCode(() -> kubernetesContainerService.getService(KUBERNETES_CONFIG, null)).doesNotThrowAnyException();
+
+    verify(k8sApiClient, never()).execute(k8sApiCall, TypeToken.get(V1ServiceList.class).getType());
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testGetService() {
-    kubernetesContainerService.getService(KUBERNETES_CONFIG, "service");
+  public void testGetServiceFabric8() {
+    kubernetesContainerService.getServiceFabric8(KUBERNETES_CONFIG, "service");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedServices).withName(args.capture());

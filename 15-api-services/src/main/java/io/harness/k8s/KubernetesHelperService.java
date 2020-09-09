@@ -48,6 +48,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
@@ -56,6 +57,7 @@ import io.harness.logging.LogCallback;
 import io.harness.network.Http;
 import io.harness.yaml.YamlRepresenter;
 import io.harness.yaml.YamlUtils;
+import io.kubernetes.client.openapi.ApiClient;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
@@ -133,6 +135,10 @@ public class KubernetesHelperService {
             e, USER);
       }
     }
+  }
+
+  public ApiClient getApiClient(KubernetesConfig kubernetesConfig) {
+    return ApiClientFactoryImpl.fromKubernetesConfig(kubernetesConfig, oidcTokenRetriever);
   }
 
   public KubernetesClient getKubernetesClient(KubernetesConfig kubernetesConfig) {

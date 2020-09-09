@@ -76,6 +76,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -587,6 +588,9 @@ public class K8sStateHelper {
 
     String waitId = generateUuid();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+
+    k8sTaskParameters.setDeprecateFabric8Enabled(
+        featureFlagService.isEnabled(FeatureName.DEPRECATE_FABRIC8_FOR_K8S, context.getAccountId()));
 
     DelegateTask delegateTask =
         DelegateTask.builder()

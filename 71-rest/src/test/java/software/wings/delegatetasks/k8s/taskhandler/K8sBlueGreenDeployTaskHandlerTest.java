@@ -31,7 +31,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.PRIMARY_SERVICE_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.SERVICE_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.STAGE_SERVICE_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.deployment;
@@ -64,6 +66,8 @@ import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import lombok.Data;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -236,9 +240,86 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetPrimaryColorFromService() {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    List<KubernetesResource> resources = new ArrayList<>();
+    resources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    resources.addAll(ManifestHelper.processYaml(PRIMARY_SERVICE_YAML));
+    resources.addAll(ManifestHelper.processYaml(STAGE_SERVICE_YAML));
+    on(k8sBlueGreenDeployTaskHandler).set("resources", resources);
+    V1Service primaryService = new V1ServiceBuilder()
+                                   .withNewSpec()
+                                   .withSelector(ImmutableMap.of(HarnessLabels.color, HarnessLabelValues.colorGreen))
+                                   .endSpec()
+                                   .build();
+    V1Service stageService = new V1ServiceBuilder()
+                                 .withNewSpec()
+                                 .withSelector(ImmutableMap.of(HarnessLabels.color, HarnessLabelValues.colorBlue))
+                                 .endSpec()
+                                 .build();
+
+    when(kubernetesContainerService.getService(null, "primary-service")).thenReturn(primaryService);
+    when(kubernetesContainerService.getService(null, "stage-service")).thenReturn(stageService);
+
+    k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
+        K8sBlueGreenDeployTaskParameters.builder().deprecateFabric8Enabled(true).build(), delegateTaskParams,
+        executionLogCallback);
+
+    String foundPrimaryColor = on(k8sBlueGreenDeployTaskHandler).get("primaryColor");
+    assertThat(foundPrimaryColor).isEqualTo(HarnessLabelValues.colorGreen);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testMissingLabelInServiceUsing() {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(SERVICE_YAML));
+
+    V1Service service = new V1ServiceBuilder()
+                            .withApiVersion("v1")
+                            .withNewMetadata()
+                            .withName("servicename")
+                            .endMetadata()
+                            .withNewSpec()
+                            .withType("LoadBalancer")
+                            .addNewPort()
+                            .withPort(80)
+                            .endPort()
+                            .withClusterIP("1.2.3.4")
+                            .endSpec()
+                            .withNewStatus()
+                            .endStatus()
+                            .build();
+
+    on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
+    on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", releaseHistory);
+
+    when(kubernetesContainerService.getService(null, "servicename")).thenReturn(service);
+
+    boolean result = k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
+        K8sBlueGreenDeployTaskParameters.builder().deprecateFabric8Enabled(true).build(), delegateTaskParams,
+        executionLogCallback);
+    assertThat(result).isFalse();
+
+    verify(kubernetesContainerService, times(2)).getService(any(), any());
+    verify(releaseHistory, times(0)).createNewRelease(any());
+    verify(executionLogCallback, times(1))
+        .saveExecutionLog(
+            "Found conflicting service [servicename] in the cluster. For blue/green deployment, the label [harness.io/color] is required in service selector. Delete this existing service to proceed",
+            ERROR, FAILURE);
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testMissingLabelInService() {
+  public void testMissingLabelInServiceUsingFabric8() {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
 
     List<KubernetesResource> kubernetesResources = new ArrayList<>();
@@ -264,13 +345,13 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", releaseHistory);
 
-    when(kubernetesContainerService.getService(null, "servicename")).thenReturn(service);
+    when(kubernetesContainerService.getServiceFabric8(null, "servicename")).thenReturn(service);
 
     boolean result = k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
         K8sBlueGreenDeployTaskParameters.builder().build(), delegateTaskParams, executionLogCallback);
     assertThat(result).isFalse();
 
-    verify(kubernetesContainerService, times(2)).getService(any(), any());
+    verify(kubernetesContainerService, times(2)).getServiceFabric8(any(), any());
     verify(releaseHistory, times(0)).createNewRelease(any());
     verify(executionLogCallback, times(1))
         .saveExecutionLog(
@@ -400,7 +481,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     clusterPrimary.setSpec(spec);
     doReturn(clusterPrimary)
         .when(kubernetesContainerService)
-        .getService(any(KubernetesConfig.class), eq(primaryService().getResourceId().getName()));
+        .getServiceFabric8(any(KubernetesConfig.class), eq(primaryService().getResourceId().getName()));
     on(k8sBlueGreenDeployTaskHandler)
         .set("resources", new ArrayList<>(asList(primaryService(), stageService(), deployment())));
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", ReleaseHistory.createNew());

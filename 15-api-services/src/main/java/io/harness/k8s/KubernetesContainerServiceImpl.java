@@ -117,7 +117,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
-import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesClusterAuthType;
@@ -129,6 +128,9 @@ import io.harness.logging.Misc;
 import io.harness.oidc.model.OidcTokenRequestData;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServiceList;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
@@ -173,6 +175,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
+  private static final String RESOURCE_NAME_FIELD = "metadata.name";
   public static final String METRICS_SERVER_ABSENT = "CE.MetricsServerCheck: Please install metrics server.";
   public static final String RESOURCE_PERMISSION_REQUIRED =
       "CE: The provided serviceaccount is missing the following permissions: %n %s. Please grant these to the service account.";
@@ -451,7 +454,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   public void validateCEPermissions(KubernetesConfig kubernetesConfig) {
-    ApiClient apiClient = ApiClientFactoryImpl.fromKubernetesConfig(kubernetesConfig);
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
     validateCEMetricsServer(apiClient);
     validateCEResourcePermission(apiClient);
   }
@@ -953,13 +956,33 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Service getService(KubernetesConfig kubernetesConfig, String name) {
+  public Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name) {
     return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                   .services()
                                   .inNamespace(kubernetesConfig.getNamespace())
                                   .withName(name)
                                   .get()
                             : null;
+  }
+
+  @Override
+  public V1Service getService(KubernetesConfig kubernetesConfig, String name) {
+    try {
+      if (kubernetesConfig == null || isBlank(name)) {
+        return null;
+      }
+
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, name);
+      V1ServiceList result = new CoreV1Api(apiClient).listNamespacedService(
+          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
+      return isEmpty(result.getItems()) ? null : result.getItems().get(0);
+    } catch (ApiException exception) {
+      String message =
+          format("Unable to get service. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      logger.error(message);
+      throw new InvalidRequestException(message, exception, USER);
+    }
   }
 
   @Override

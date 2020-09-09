@@ -65,7 +65,7 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   public void setUp() {
     client = server.getClient();
     when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG)).thenReturn(client);
-    apiClient = ApiClientFactoryImpl.fromKubernetesConfig(KUBERNETES_CONFIG);
+    apiClient = ApiClientFactoryImpl.fromKubernetesConfig(KUBERNETES_CONFIG, null);
 
     resourceList = Arrays.asList(new V1ResourceAttributes().verb("verb").resource("resource").group("group"));
     response = Arrays.asList(new V1SubjectAccessReviewStatus());

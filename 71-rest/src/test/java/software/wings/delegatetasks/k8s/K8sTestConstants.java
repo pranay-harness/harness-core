@@ -100,6 +100,36 @@ public interface K8sTestConstants {
       + "  selector:\n"
       + "    app: test";
 
+  String PRIMARY_SERVICE_YAML = "apiVersion: v1\n"
+      + "kind: Service\n"
+      + "metadata:\n"
+      + "  name: primary-service\n"
+      + "  annotations:\n"
+      + "    harness.io/primary-service: true\n"
+      + "spec:\n"
+      + "  type: ClusterIp\n"
+      + "  ports:\n"
+      + "  - port: 80\n"
+      + "    targetPort: 8080\n"
+      + "    protocol: TCP\n"
+      + "  selector:\n"
+      + "    app: test";
+
+  String STAGE_SERVICE_YAML = "apiVersion: v1\n"
+      + "kind: Service\n"
+      + "metadata:\n"
+      + "  name: primary-service\n"
+      + "  annotations:\n"
+      + "    harness.io/stage-service: true\n"
+      + "spec:\n"
+      + "  type: ClusterIp\n"
+      + "  ports:\n"
+      + "  - port: 80\n"
+      + "    targetPort: 8080\n"
+      + "    protocol: TCP\n"
+      + "  selector:\n"
+      + "    app: test";
+
   String CONFIG_MAP_YAML = "apiVersion: v1\n"
       + "kind: ConfigMap\n"
       + "metadata:\n"

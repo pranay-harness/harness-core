@@ -104,6 +104,7 @@ public enum FeatureName {
   ROLLBACK_NONE_ARTIFACT,
   EXPORT_TF_PLAN,
   HELM_CHART_AS_ARTIFACT,
+  DEPRECATE_FABRIC8_FOR_K8S,
   ;
 
   FeatureName() {

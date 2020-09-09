@@ -55,6 +55,7 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
+import io.kubernetes.client.openapi.models.V1Service;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -297,26 +298,24 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
             stageService.getResourceId().getName(), primaryService.getResourceId().getName()));
       }
 
-      Service primaryServiceInCluster;
-      Service stageServiceInCluster;
-
       try {
-        primaryServiceInCluster =
-            kubernetesContainerService.getService(kubernetesConfig, primaryService.getResourceId().getName());
-        if (primaryServiceInCluster == null) {
-          executionLogCallback.saveExecutionLog(
-              "Primary Service [" + primaryService.getResourceId().getName() + "] not found in cluster.");
+        if (k8sBlueGreenDeployTaskParameters.isDeprecateFabric8Enabled()) {
+          primaryColor = getPrimaryColor(executionLogCallback);
+          V1Service stageServiceInCluster =
+              kubernetesContainerService.getService(kubernetesConfig, stageService.getResourceId().getName());
+          if (stageServiceInCluster == null) {
+            executionLogCallback.saveExecutionLog(
+                "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");
+          }
+        } else {
+          primaryColor = getPrimaryColorUsingFabric8(executionLogCallback);
+          Service stageServiceInCluster =
+              kubernetesContainerService.getServiceFabric8(kubernetesConfig, stageService.getResourceId().getName());
+          if (stageServiceInCluster == null) {
+            executionLogCallback.saveExecutionLog(
+                "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");
+          }
         }
-
-        stageServiceInCluster =
-            kubernetesContainerService.getService(kubernetesConfig, stageService.getResourceId().getName());
-        if (stageServiceInCluster == null) {
-          executionLogCallback.saveExecutionLog(
-              "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");
-        }
-
-        primaryColor = (primaryServiceInCluster != null) ? getColorFromService(primaryServiceInCluster)
-                                                         : HarnessLabelValues.colorDefault;
 
         if (primaryColor == null) {
           executionLogCallback.saveExecutionLog(
@@ -401,6 +400,38 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, executionLogCallback);
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  private String getPrimaryColor(ExecutionLogCallback executionLogCallback) {
+    V1Service primaryServiceInCluster =
+        kubernetesContainerService.getService(kubernetesConfig, primaryService.getResourceId().getName());
+    if (primaryServiceInCluster == null) {
+      executionLogCallback.saveExecutionLog(
+          "Primary Service [" + primaryService.getResourceId().getName() + "] not found in cluster.");
+    }
+
+    return (primaryServiceInCluster != null) ? getColorFromService(primaryServiceInCluster)
+                                             : HarnessLabelValues.colorDefault;
+  }
+
+  private String getPrimaryColorUsingFabric8(ExecutionLogCallback executionLogCallback) {
+    Service primaryServiceInCluster =
+        kubernetesContainerService.getServiceFabric8(kubernetesConfig, primaryService.getResourceId().getName());
+    if (primaryServiceInCluster == null) {
+      executionLogCallback.saveExecutionLog(
+          "Primary Service [" + primaryService.getResourceId().getName() + "] not found in cluster.");
+    }
+
+    return (primaryServiceInCluster != null) ? getColorFromService(primaryServiceInCluster)
+                                             : HarnessLabelValues.colorDefault;
+  }
+
+  private String getColorFromService(V1Service service) {
+    if (service.getSpec() == null || service.getSpec().getSelector() == null) {
+      return null;
+    }
+
+    return service.getSpec().getSelector().get(HarnessLabels.color);
   }
 
   private String getColorFromService(Service service) {

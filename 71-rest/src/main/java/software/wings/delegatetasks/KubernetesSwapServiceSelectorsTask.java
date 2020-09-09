@@ -61,10 +61,10 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
 
       Service service1 = null;
       Service service2 = null;
-      service1 =
-          kubernetesContainerService.getService(kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService1());
-      service2 =
-          kubernetesContainerService.getService(kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService2());
+      service1 = kubernetesContainerService.getServiceFabric8(
+          kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService1());
+      service2 = kubernetesContainerService.getServiceFabric8(
+          kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService2());
 
       if (service1 == null) {
         executionLogCallback.saveExecutionLog(
