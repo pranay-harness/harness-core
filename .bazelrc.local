@@ -1,4 +1,3 @@
 import .bazelrc.common
 
 try-import user.bazelrc
-build --spawn_strategy=standalone

@@ -80,7 +80,7 @@ public class ScmSecretTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = GEORGE, intermittent = true)
   @Category(StressTests.class)
   public void rebuildSecretProperties() throws URISyntaxException, IOException {
     assumeThat(scmSecret.isInitialized()).isTrue();
