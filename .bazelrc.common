@@ -1,0 +1,8 @@
+build --javabase=@bazel_tools//tools/jdk:absolute_javabase
+build --host_javabase=@bazel_tools//tools/jdk:absolute_javabase
+build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
+build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
+build --java_header_compilation=false
+build --test_env=LC_ALL="en_US.UTF-8"
+build --test_output=all
+build --javacopt=-XepDisableAllChecks

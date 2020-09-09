@@ -4,16 +4,17 @@ set -x
 
 bazelrc=.bazelrc.local
 local_repo=${HOME}/.m2/repository
-BAZEL_ARGUMENTS=""
-
+BAZEL_ARGUMENTS="--action_env=HARNESS_GENERATION_PASSPHRASE=${HARNESS_GENERATION_PASSPHRASE}"
 if [ "${PLATFORM}" == "jenkins" ]
 then
   GCP="--google_credentials=${GCP_KEY}"
   bazelrc=.bazelrc.remote
   local_repo=/root/.m2/repository
-  BAZEL_ARGUMENTS="--action_env=HARNESS_GENERATION_PASSPHRASE=${HARNESS_GENERATION_PASSPHRASE}"
+  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --action_env=DISTRIBUTE_TESTING_WORKER=${DISTRIBUTE_TESTING_WORKER}"
+  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --action_env=DISTRIBUTE_TESTING_WORKERS=${DISTRIBUTE_TESTING_WORKERS}"
 else
-  BAZEL_ARGUMENTS="--define=ABSOLUTE_JAVABASE=${JAVA_HOME}"
+  bazelrc=.bazelrc.local
+  BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --define=ABSOLUTE_JAVABASE=${JAVA_HOME}"
 fi
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
