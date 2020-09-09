@@ -144,7 +144,7 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   UserGroup cloneUserGroup(
       @NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName, String newDescription);
 
-  List<UserGroup> listByAccountId(String accountId, User user);
+  List<UserGroup> listByAccountId(String accountId, User user, boolean loadUsers);
 
   List<UserGroup> listByAccountId(String accountId);
 

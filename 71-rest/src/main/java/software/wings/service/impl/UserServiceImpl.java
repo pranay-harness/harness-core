@@ -2523,7 +2523,7 @@ public class UserServiceImpl implements UserService {
 
   private boolean isUserAdminOfAnyAccount(User user) {
     return user.getAccounts().stream().anyMatch(account -> {
-      List<UserGroup> userGroupList = userGroupService.listByAccountId(account.getUuid(), user);
+      List<UserGroup> userGroupList = userGroupService.listByAccountId(account.getUuid(), user, true);
       if (isNotEmpty(userGroupList)) {
         return userGroupList.stream().anyMatch(userGroup -> {
           AccountPermissions accountPermissions = userGroup.getAccountPermissions();
