@@ -864,7 +864,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
               .build();
       when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean()))
           .thenReturn(aPageResponse().withResponse(Arrays.asList(userGroup)).build());
-      when(userGroupService.listByAccountId(anyString(), any(User.class)))
+      when(userGroupService.listByAccountId(anyString(), any(User.class), true))
           .thenReturn(aPageResponse().withResponse(Arrays.asList(userGroup)).build());
       filteredSettingAttributesByType =
           settingsService.getFilteredSettingAttributesByType(null, SettingVariableTypes.JENKINS.name(), null, null);

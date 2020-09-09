@@ -665,11 +665,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public List<UserGroup> listByAccountId(String accountId, User user) {
+  public List<UserGroup> listByAccountId(String accountId, User user, boolean loadUsers) {
     PageRequestBuilder pageRequest = aPageRequest()
                                          .addFilter(UserGroupKeys.accountId, Operator.EQ, accountId)
                                          .addFilter(UserGroupKeys.memberIds, Operator.HAS, user.getUuid());
-    return list(accountId, pageRequest.build(), true).getResponse();
+    return list(accountId, pageRequest.build(), loadUsers).getResponse();
   }
 
   @Override

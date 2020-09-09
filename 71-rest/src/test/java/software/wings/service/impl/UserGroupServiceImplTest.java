@@ -374,7 +374,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     UserGroup savedUserGroup2 = userGroupService.save(userGroup2);
     UserGroup savedUserGroup3 = userGroupService.save(userGroup3);
 
-    assertThat(userGroupService.listByAccountId(accountId, user)).containsAll(asList(savedUserGroup2, savedUserGroup3));
+    assertThat(userGroupService.listByAccountId(accountId, user, true))
+        .containsAll(asList(savedUserGroup2, savedUserGroup3));
   }
 
   private AppPermission getEnvPermission() {
@@ -801,7 +802,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(defaultUserGroup);
     wingsPersistence.save(nonDefaultUserGroup);
 
-    assertThat(getIds(userGroupService.listByAccountId(ACCOUNT_ID, user)))
+    assertThat(getIds(userGroupService.listByAccountId(ACCOUNT_ID, user, true)))
         .isEqualTo(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()));
   }
 

@@ -43,8 +43,10 @@ public class AlertVisibilityCheckerImpl implements AlertVisibilityChecker {
   }
 
   private boolean isUserPresentInUserGroups(String accountId, Set<String> userGroupIds, User user) {
-    List<String> userGroupsWithCurrentUser =
-        userGroupService.listByAccountId(accountId, user).stream().map(UserGroup::getUuid).collect(Collectors.toList());
+    List<String> userGroupsWithCurrentUser = userGroupService.listByAccountId(accountId, user, true)
+                                                 .stream()
+                                                 .map(UserGroup::getUuid)
+                                                 .collect(Collectors.toList());
 
     // if the intersection of userGroupIds matching the alertNotificationRule and userGroupIds with current user
     // is not empty, it means that user should be shown given alert.
