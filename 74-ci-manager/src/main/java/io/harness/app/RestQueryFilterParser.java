@@ -18,11 +18,6 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-/**
- * This class still needs improvement.
- * For now, keeping it this way to that UI team can start work.
- * Will re-visit it.s
- */
 @Singleton
 public class RestQueryFilterParser {
   private final QueryConversionPipeline pipeline;
