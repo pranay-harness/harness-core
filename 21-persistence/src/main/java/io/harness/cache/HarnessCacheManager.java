@@ -7,4 +7,7 @@ import javax.cache.expiry.ExpiryPolicy;
 public interface HarnessCacheManager {
   <K, V> Cache<K, V> getCache(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy);
+
+  <K, V> Cache<K, V> getCache(
+      String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy, String keyPrefix);
 }

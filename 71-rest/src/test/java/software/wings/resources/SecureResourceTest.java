@@ -56,6 +56,8 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.version.VersionInfo;
+import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -143,10 +145,11 @@ public class SecureResourceTest extends CategoryTest {
   private static Cache<String, User> userCache = mock(Cache.class);
   private static Cache<String, UserPermissionInfo> cachePermissionInfo = mock(Cache.class);
   private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = mock(Cache.class);
+  private static VersionInfoManager versionInfoManager = mock(VersionInfoManager.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, hPersistence, userService,
       userGroupService, usageRestrictionsService, harnessCacheManager, authTokenCache, userCache, configuration,
-      verificationServiceSecretManager, authHandler, harnessUserGroupService, secretManager);
+      verificationServiceSecretManager, authHandler, harnessUserGroupService, secretManager, versionInfoManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
       accountService, whitelistService, harnessUserGroupService, graphQLUtils);
@@ -251,9 +254,10 @@ public class SecureResourceTest extends CategoryTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(harnessCacheManager.getCache(any(), eq(String.class), eq(UserPermissionInfo.class), any()))
+    when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().buildNo("1234").build());
+    when(harnessCacheManager.getCache(any(), eq(String.class), eq(UserPermissionInfo.class), any(), eq("1234")))
         .thenReturn(cachePermissionInfo);
-    when(harnessCacheManager.getCache(any(), eq(String.class), eq(UserRestrictionInfo.class), any()))
+    when(harnessCacheManager.getCache(any(), eq(String.class), eq(UserRestrictionInfo.class), any(), eq("1234")))
         .thenReturn(cacheRestrictionInfo);
     when(userCache.get(USER_ID)).thenReturn(user);
     when(cachePermissionInfo.get(USER_ID)).thenReturn(userPermissionInfo);

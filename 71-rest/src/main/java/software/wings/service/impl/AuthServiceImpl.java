@@ -58,6 +58,7 @@ import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
+import io.harness.version.VersionInfoManager;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
@@ -143,6 +144,7 @@ public class AuthServiceImpl implements AuthService {
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
+  private VersionInfoManager versionInfoManager;
   private static final String USER_PERMISSION_CACHE_NAME = "userPermissionCache".concat(":%s");
   private static final String USER_RESTRICTION_CACHE_NAME = "userRestrictionCache".concat(":%s");
   @Inject private ExecutorService executorService;
@@ -156,7 +158,8 @@ public class AuthServiceImpl implements AuthService {
       HarnessCacheManager harnessCacheManager, @Named(AUTH_TOKEN_CACHE) Cache<String, AuthToken> authTokenCache,
       @Named(USER_CACHE) Cache<String, User> userCache, MainConfiguration configuration,
       VerificationServiceSecretManager verificationServiceSecretManager, AuthHandler authHandler,
-      HarnessUserGroupService harnessUserGroupService, SecretManager secretManager) {
+      HarnessUserGroupService harnessUserGroupService, SecretManager secretManager,
+      VersionInfoManager versionInfoManager) {
     this.dbCache = dbCache;
     this.persistence = persistence;
     this.userService = userService;
@@ -170,6 +173,7 @@ public class AuthServiceImpl implements AuthService {
     this.authHandler = authHandler;
     this.harnessUserGroupService = harnessUserGroupService;
     this.secretManager = secretManager;
+    this.versionInfoManager = versionInfoManager;
   }
 
   @UtilityClass
@@ -539,12 +543,14 @@ public class AuthServiceImpl implements AuthService {
 
   private Cache<String, UserPermissionInfo> getUserPermissionCache(String accountId) {
     return harnessCacheManager.getCache(String.format(USER_PERMISSION_CACHE_NAME, accountId), String.class,
-        UserPermissionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+        UserPermissionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR),
+        versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   private Cache<String, UserRestrictionInfo> getUserRestrictionCache(String accountId) {
     return harnessCacheManager.getCache(String.format(USER_RESTRICTION_CACHE_NAME, accountId), String.class,
-        UserRestrictionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+        UserRestrictionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR),
+        versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Override

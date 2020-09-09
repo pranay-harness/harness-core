@@ -10,6 +10,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.harness.cache.HarnessCacheManager;
+import io.harness.version.VersionInfoManager;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -28,8 +29,6 @@ public class ManagerCacheRegistrar extends AbstractModule {
   public static final String HARNESS_API_KEY_CACHE = "harnessApiKeyCache";
   public static final String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
   public static final String TRIAL_EMAIL_CACHE = "trialEmailCache";
-  public static final String USER_PERMISSION_CACHE = "userPermissionCache";
-  public static final String USER_RESTRICTION_CACHE = "userRestrictionCache";
   public static final String APIKEY_CACHE = "apiKeyCache";
   public static final String APIKEY_PERMISSION_CACHE = "apiKeyPermissionCache";
   public static final String APIKEY_RESTRICTION_CACHE = "apiKeyRestrictionCache";
@@ -38,9 +37,10 @@ public class ManagerCacheRegistrar extends AbstractModule {
   @Provides
   @Named(AUTH_TOKEN_CACHE)
   @Singleton
-  public Cache<String, AuthToken> getAuthTokenCache(HarnessCacheManager harnessCacheManager) {
-    return harnessCacheManager.getCache(
-        AUTH_TOKEN_CACHE, String.class, AuthToken.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
+  public Cache<String, AuthToken> getAuthTokenCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache(AUTH_TOKEN_CACHE, String.class, AuthToken.class,
+        AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Provides
@@ -62,49 +62,55 @@ public class ManagerCacheRegistrar extends AbstractModule {
   @Provides
   @Named(USER_CACHE)
   @Singleton
-  public Cache<String, User> getUserCache(HarnessCacheManager harnessCacheManager) {
-    return harnessCacheManager.getCache(
-        USER_CACHE, String.class, User.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
+  public Cache<String, User> getUserCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache(USER_CACHE, String.class, User.class,
+        AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Provides
   @Named(APIKEY_CACHE)
   @Singleton
-  public Cache<String, ApiKeyEntry> getApiKeyCache(HarnessCacheManager harnessCacheManager) {
-    return harnessCacheManager.getCache(
-        APIKEY_CACHE, String.class, ApiKeyEntry.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
+  public Cache<String, ApiKeyEntry> getApiKeyCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache(APIKEY_CACHE, String.class, ApiKeyEntry.class,
+        AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Provides
   @Named(NEW_RELIC_APPLICATION_CACHE)
   @Singleton
-  public Cache<String, NewRelicApplications> getNewRelicApplicationCache(HarnessCacheManager harnessCacheManager) {
+  public Cache<String, NewRelicApplications> getNewRelicApplicationCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
     return harnessCacheManager.getCache(NEW_RELIC_APPLICATION_CACHE, String.class, NewRelicApplications.class,
-        AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
+        AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Provides
   @Named(APIKEY_PERMISSION_CACHE)
   @Singleton
-  public Cache<String, UserPermissionInfo> getApiKeyPermissionInfoCache(HarnessCacheManager harnessCacheManager) {
+  public Cache<String, UserPermissionInfo> getApiKeyPermissionInfoCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
     return harnessCacheManager.getCache(APIKEY_PERMISSION_CACHE, String.class, UserPermissionInfo.class,
-        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Provides
   @Named(APIKEY_RESTRICTION_CACHE)
   @Singleton
-  public Cache<String, UserRestrictionInfo> getApiKeyRestrictionInfoCache(HarnessCacheManager harnessCacheManager) {
+  public Cache<String, UserRestrictionInfo> getApiKeyRestrictionInfoCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
     return harnessCacheManager.getCache(APIKEY_RESTRICTION_CACHE, String.class, UserRestrictionInfo.class,
-        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Provides
   @Named(WHITELIST_CACHE)
   @Singleton
-  public Cache<String, WhitelistConfig> getWhitelistConfigCache(HarnessCacheManager harnessCacheManager) {
-    return harnessCacheManager.getCache(
-        WHITELIST_CACHE, String.class, WhitelistConfig.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+  public Cache<String, WhitelistConfig> getWhitelistConfigCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache(WHITELIST_CACHE, String.class, WhitelistConfig.class,
+        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Override
@@ -138,5 +144,6 @@ public class ManagerCacheRegistrar extends AbstractModule {
 
   private void registerRequiredBindings() {
     requireBinding(HarnessCacheManager.class);
+    requireBinding(VersionInfoManager.class);
   }
 }

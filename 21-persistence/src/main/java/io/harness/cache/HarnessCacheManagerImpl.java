@@ -13,8 +13,8 @@ import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.ExpiryPolicy;
 
 public class HarnessCacheManagerImpl implements HarnessCacheManager {
-  private CacheManager cacheManager;
-  private CacheConfig cacheConfig;
+  private final CacheManager cacheManager;
+  private final CacheConfig cacheConfig;
   static final String CACHE_PREFIX = "hCache";
 
   HarnessCacheManagerImpl(CacheManager cacheManager, CacheConfig cacheConfig) {
@@ -24,6 +24,19 @@ public class HarnessCacheManagerImpl implements HarnessCacheManager {
 
   @Override
   public <K, V> Cache<K, V> getCache(
+      String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
+    return getCacheInternal(cacheName, keyType, valueType, expiryPolicy);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <K, V> Cache<K, V> getCache(
+      String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy, String keyVersion) {
+    Cache<VersionedKey<K>, V> jCache = getCacheInternal(cacheName, (Class) VersionedKey.class, valueType, expiryPolicy);
+    return new VersionedCache<>(jCache, keyVersion);
+  }
+
+  private <K, V> Cache<K, V> getCacheInternal(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
     if (isCacheDisabled(cacheName)) {
       return new NoOpCache<>();
@@ -38,7 +51,6 @@ public class HarnessCacheManagerImpl implements HarnessCacheManager {
     jCacheConfiguration.setExpiryPolicyFactory(expiryPolicy);
     jCacheConfiguration.setStatisticsEnabled(true);
     jCacheConfiguration.setManagementEnabled(true);
-
     try {
       return Optional.ofNullable(cacheManager.getCache(internalCacheName, keyType, valueType))
           .orElseGet(() -> cacheManager.createCache(internalCacheName, jCacheConfiguration));

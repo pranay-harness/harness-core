@@ -63,7 +63,6 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
-import software.wings.rules.Cache;
 import software.wings.security.ThreadLocalUserProvider;
 
 import java.io.Closeable;

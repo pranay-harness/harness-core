@@ -15,6 +15,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +67,42 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
     assertThat(cache).isNotNull();
     verify(cacheManager, times(1)).getCache(internalCacheName, String.class, Object.class);
     verify(cacheManager, times(0)).createCache(any(), any());
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getVersionedCache_shouldPass() {
+    String cacheName = "testCache";
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
+    when(cacheManager.getCache(internalCacheName, VersionedKey.class, Object.class)).thenReturn(new NoOpCache<>());
+    Cache<String, Object> cache = harnessCacheManager.getCache(
+        cacheName, String.class, Object.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES), "version");
+    assertThat(cache).isNotNull();
+    verify(cacheManager, times(1)).getCache(internalCacheName, VersionedKey.class, Object.class);
+    verify(cacheManager, times(0)).createCache(any(), any());
+  }
+
+  @Test(expected = InvalidArgumentsException.class)
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getVersionedCache_shouldFail_NullCache() {
+    String cacheName = "testCache";
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
+    when(cacheManager.getCache(internalCacheName, VersionedKey.class, Object.class)).thenReturn(null);
+    Cache<String, Object> cache = harnessCacheManager.getCache(
+        cacheName, String.class, Object.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES), "version");
+  }
+
+  @Test(expected = InvalidArgumentsException.class)
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getVersionedCache_shouldFail_EmptyPrefix() {
+    String cacheName = "testCache";
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
+    when(cacheManager.getCache(internalCacheName, VersionedKey.class, Object.class)).thenReturn(null);
+    Cache<String, Object> cache = harnessCacheManager.getCache(
+        cacheName, String.class, Object.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES), "");
   }
 
   @Test
