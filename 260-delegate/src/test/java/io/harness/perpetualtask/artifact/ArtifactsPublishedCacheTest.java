@@ -18,6 +18,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -27,7 +28,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testAddArtifactCollectionResult() {
-    ArtifactsPublishedCache cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), false);
+    ArtifactsPublishedCache<BuildDetails> cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), false);
     cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     assertThat(cache.needsToPublish()).isTrue();
     assertThat(cache.hasToBeDeletedArtifactKeys()).isFalse();
@@ -53,7 +54,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testRemoveDeletedArtifactKeys() {
-    ArtifactsPublishedCache cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), true);
+    ArtifactsPublishedCache<BuildDetails> cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), true);
     cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     cache.removeDeletedArtifactKeys(null);
     assertThat(cache.needsToPublish()).isTrue();
@@ -75,7 +76,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testAddPublishedBuildDetails() {
-    ArtifactsPublishedCache cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), true);
+    ArtifactsPublishedCache<BuildDetails> cache = prepareCache(asList("0.1.0", "0.2.0", "0.3.0"), true);
     cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     cache.removeDeletedArtifactKeys(asList("0.2.0", "0.3.0"));
     assertThat(cache.needsToPublish()).isTrue();
@@ -115,7 +116,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testEmptyInitialPublishedArtifactKeys() {
-    ArtifactsPublishedCache cache = prepareCache(null, true);
+    ArtifactsPublishedCache<BuildDetails> cache = prepareCache(null, true);
     cache.addArtifactCollectionResult(prepareBuildDetails(asList("0.1.0", "0.4.0", "0.5.0")));
     assertThat(cache.hasToBeDeletedArtifactKeys()).isFalse();
 
@@ -131,7 +132,7 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testBatchingOfUnpublishedArtifacts() {
-    ArtifactsPublishedCache cache = prepareCache(null, true);
+    ArtifactsPublishedCache<BuildDetails> cache = prepareCache(null, true);
     List<String> buildNos = IntStream.rangeClosed(1, ArtifactsPublishedCache.ARTIFACT_ONE_TIME_PUBLISH_LIMIT + 10)
                                 .boxed()
                                 .map(String::valueOf)
@@ -153,8 +154,10 @@ public class ArtifactsPublishedCacheTest extends CategoryTest {
     assertThat(res.getRight()).isFalse();
   }
 
-  private ArtifactsPublishedCache prepareCache(Collection<String> publishedArtifactKeys, boolean enableCleanup) {
-    return new ArtifactsPublishedCache(publishedArtifactKeys, BuildDetails::getNumber, enableCleanup);
+  private ArtifactsPublishedCache<BuildDetails> prepareCache(
+      Collection<String> publishedArtifactKeys, boolean enableCleanup) {
+    Function<BuildDetails, String> buildDetailsFunction = BuildDetails::getNumber;
+    return new ArtifactsPublishedCache(publishedArtifactKeys, buildDetailsFunction, enableCleanup);
   }
 
   private List<BuildDetails> prepareBuildDetails(List<String> buildNos) {
