@@ -46,6 +46,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -158,9 +159,13 @@ public class ContainerServiceImpl implements ContainerService {
           logger.info("Could not get controller {} for account {}", containerServiceName, accountId);
         }
       } else {
-        final List<Pod> pods =
-            kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, containerServiceParams.getNamespace(),
-                ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName()));
+        if (isEmpty(containerServiceParams.getReleaseName())) {
+          return Collections.emptyList();
+        }
+        Map<String, String> labels =
+            ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName());
+        final List<Pod> pods = kubernetesContainerService.getRunningPodsWithLabels(
+            kubernetesConfig, containerServiceParams.getNamespace(), labels);
         return pods.stream()
             .map(pod
                 -> KubernetesContainerInfo.builder()

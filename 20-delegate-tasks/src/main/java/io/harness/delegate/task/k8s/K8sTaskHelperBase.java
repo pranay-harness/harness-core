@@ -131,6 +131,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -359,6 +360,9 @@ public class K8sTaskHelperBase {
 
   public List<K8sPod> getPodDetails(
       KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
+    if (isEmpty(releaseName)) {
+      return Collections.emptyList();
+    }
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }

@@ -103,6 +103,21 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     assertThatK8sPodHas(pods.get(2), "uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3"));
   }
 
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldGetEmptyPodListWhenReleaseLabelIsMissing() throws Exception {
+    KubernetesConfig config = KubernetesConfig.builder().build();
+
+    List<K8sPod> podsWithReleaseNameNull =
+        k8sTaskHelperBase.getPodDetails(config, "default", null, LONG_TIMEOUT_INTERVAL);
+    assertThat(podsWithReleaseNameNull).isEmpty();
+
+    List<K8sPod> podsWithReleaseNameEmpty =
+        k8sTaskHelperBase.getPodDetails(config, "default", "", LONG_TIMEOUT_INTERVAL);
+    assertThat(podsWithReleaseNameEmpty).isEmpty();
+  }
+
   private Pod k8sApiMockPodWith(String uid, Map<String, String> labels, List<String> containerIds) {
     return new PodBuilder()
         .withMetadata(new ObjectMetaBuilder()
