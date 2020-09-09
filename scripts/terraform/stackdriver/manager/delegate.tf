@@ -142,6 +142,25 @@ resource "google_logging_metric" "delegate_tasks_acquire_by_type" {
   }
 }
 
+resource "google_logging_metric" "delegate_tasks_creation_by_rank" {
+  name = join("_", [local.name_prefix, "delegate_tasks_creation_by_rank"])
+  description = "Owner: Platform delegate"
+  filter = join("\n", [local.filter_prefix,
+    "\"Queueing async\" OR \"Executing sync\""])
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type = "INT64"
+    labels {
+      key = "rank"
+      value_type = "STRING"
+      description = "The rank of the task"
+    }
+  }
+  label_extractors = {
+    "rank": "EXTRACT(jsonPayload.harness.rank)",
+  }
+}
+
 resource "google_logging_metric" "delegate_tasks_no_first_pick" {
   name = join("_", [local.name_prefix, "delegate_tasks_no_first_pick"])
   description = "Owner: Platform delegate"
@@ -429,6 +448,39 @@ resource "google_monitoring_dashboard" "delegate_tasks_dashboard" {
                     "crossSeriesReducer": "REDUCE_SUM",
                     "groupByFields": [
                       "metric.label.\"syncAsync\""
+                    ]
+                  },
+                  "secondaryAggregation": {}
+                },
+                "unitOverride": "1"
+              },
+              "plotType": "LINE",
+              "minAlignmentPeriod": "60s"
+            }
+          ],
+          "timeshiftDuration": "0s",
+          "yAxis": {
+            "label": "y1Axis",
+            "scale": "LINEAR"
+          },
+          "chartOptions": {
+            "mode": "COLOR"
+          }
+        }
+      },
+      {
+        "title": "Delegate Task Creation by Rank",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_creation_by_rank\" resource.type=\"k8s_container\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM",
+                    "groupByFields": [
+                      "metric.label.\"rank\""
                     ]
                   },
                   "secondaryAggregation": {}
