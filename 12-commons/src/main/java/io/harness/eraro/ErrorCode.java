@@ -456,7 +456,9 @@ public enum ErrorCode {
 
   NO_INSTALLED_DELEGATES(NOT_FOUND),
 
-  DUPLICATE_DELEGATE_EXCEPTION;
+  DUPLICATE_DELEGATE_EXCEPTION,
+
+  GCP_MARKETPLACE_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -77,10 +77,8 @@ import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
-import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
-import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
@@ -92,7 +90,6 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
-import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoSerializer;
@@ -137,7 +134,6 @@ import software.wings.beans.loginSettings.PasswordStrengthViolations;
 import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.marketplace.MarketPlaceType;
-import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
@@ -148,7 +144,6 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
-import software.wings.licensing.LicenseService;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.PermissionAttribute.Action;
@@ -164,11 +159,9 @@ import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.TOTPAuthHandler;
-import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
-import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -181,7 +174,6 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
 import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupSpamChecker;
 
@@ -246,7 +238,6 @@ public class UserServiceImpl implements UserService {
   @Inject private MainConfiguration configuration;
   @Inject private RoleService roleService;
   @Inject private AccountService accountService;
-  @Inject private LicenseService licenseService;
   @Inject private AuthService authService;
   @Inject private UserGroupService userGroupService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
@@ -254,18 +245,13 @@ public class UserServiceImpl implements UserService {
   @Inject @Named(USER_CACHE) private Cache<String, User> userCache;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
-  @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Inject private SSOSettingService ssoSettingService;
-  @Inject private SamlClientService samlClientService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private EventPublishHelper eventPublishHelper;
-  @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AuthenticationManager authenticationManager;
   @Inject private AuthenticationUtils authenticationUtils;
   @Inject private SSOService ssoService;
   @Inject private LoginSettingsService loginSettingsService;
-  @Inject private LimitConfigurationService limits;
-  @Inject private GCPBillingPollingService gcpBillingPollingService;
   @Inject private GcpProcurementService gcpProcurementService;
   @Inject private SignupService signupService;
   @Inject private SignupSpamChecker spamChecker;
@@ -1325,26 +1311,25 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User completeMarketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType) {
-    userInvite = marketPlaceSignup(user, userInvite, marketPlaceType);
-    if (null == userInvite.getPassword()) {
+    if (userInvite.getPassword() == null) {
       throw new InvalidArgumentsException(Pair.of("args", "Password needs to be specified to login"));
     }
+
+    marketPlaceSignup(user, userInvite, marketPlaceType);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private UserInvite marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
+  private void marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
     validateUser(user);
 
     UserInvite existingInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
     if (existingInvite == null) {
       throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
-    } else if (existingInvite.isCompleted()) {
-      logger.error("Unexpected state: Existing invite is already completed. ID={}, userInvite: {} existingInvite: {}",
-          userInvite.getUuid(), userInvite, existingInvite);
+    }
 
-      // password is marked transient, so won't be saved in existingInvite
-      existingInvite.setPassword(userInvite.getPassword());
-      return userInvite;
+    if (existingInvite.isCompleted()) {
+      logger.error("Unexpected state: Existing invite is already completed. ID = {}", userInvite.getUuid());
+      return;
     }
 
     String email = user.getEmail();
@@ -1358,32 +1343,43 @@ public class UserServiceImpl implements UserService {
           String.format("Marketplace token not found for userInviteID:[{%s}]", userInvite.getUuid()));
     }
 
-    String userInviteID;
-    String marketPlaceID;
-    try {
-      Map<String, Claim> claims =
-          secretManager.verifyJWTToken(userInvite.getMarketPlaceToken(), JWT_CATEGORY.MARKETPLACE_SIGNUP);
-      userInviteID = claims.get(MarketPlaceConstants.USERINVITE_ID_CLAIM_KEY).asString();
-      marketPlaceID = claims.get(MarketPlaceConstants.MARKETPLACE_ID_CLAIM_KEY).asString();
-      if (!userInviteID.equals(userInvite.getUuid())) {
-        throw new GeneralException(String.format(
-            "UserInviteID in claim:[{%s}] does not match the userInviteID:[{%s}]", userInviteID, userInvite.getUuid()));
+    Map<String, Claim> claims =
+        secretManager.verifyJWTToken(userInvite.getMarketPlaceToken(), JWT_CATEGORY.MARKETPLACE_SIGNUP);
+    String userInviteID = claims.get(MarketPlaceConstants.USERINVITE_ID_CLAIM_KEY).asString();
+    if (!userInviteID.equals(userInvite.getUuid())) {
+      throw new GeneralException(String.format(
+          "UserInviteID in claim:[{%s}] does not match the userInviteID:[{%s}]", userInviteID, userInvite.getUuid()));
+    }
+
+    LicenseInfo licenseInfo;
+    MarketPlace marketPlace;
+    if (marketPlaceType == MarketPlaceType.GCP) {
+      String token = claims.get(MarketPlaceConstants.GCP_MARKETPLACE_TOKEN).asString();
+      marketPlace = MarketPlace.builder()
+                        .type(MarketPlaceType.GCP)
+                        .customerIdentificationCode(JWT.decode(token).getSubject())
+                        .token(token)
+                        .build();
+
+      licenseInfo = LicenseInfo.builder()
+                        .accountType(AccountType.PAID)
+                        .licenseUnits(50)
+                        .expiryTime(LicenseUtils.getDefaultPaidExpiryTime())
+                        .accountStatus(AccountStatus.INACTIVE)
+                        .build();
+    } else {
+      String marketPlaceID = claims.get(MarketPlaceConstants.MARKETPLACE_ID_CLAIM_KEY).asString();
+      marketPlace = wingsPersistence.get(MarketPlace.class, marketPlaceID);
+      if (marketPlace == null) {
+        throw new GeneralException(String.format("No MarketPlace found with marketPlaceID=[{%s}]", marketPlaceID));
       }
-    } catch (Exception e) {
-      throw new HintException("Invalid Marketplace token: " + e.getMessage());
+      licenseInfo = LicenseInfo.builder()
+                        .accountType(AccountType.PAID)
+                        .licenseUnits(marketPlace.getOrderQuantity())
+                        .expiryTime(marketPlace.getExpirationDate().getTime())
+                        .accountStatus(AccountStatus.ACTIVE)
+                        .build();
     }
-    MarketPlace marketPlace = wingsPersistence.get(MarketPlace.class, marketPlaceID);
-
-    if (marketPlace == null) {
-      throw new GeneralException(String.format("No MarketPlace found with marketPlaceID=[{%s}]", marketPlaceID));
-    }
-
-    LicenseInfo licenseInfo = LicenseInfo.builder()
-                                  .accountType(AccountType.PAID)
-                                  .licenseUnits(marketPlace.getOrderQuantity())
-                                  .expiryTime(marketPlace.getExpirationDate().getTime())
-                                  .accountStatus(AccountStatus.ACTIVE)
-                                  .build();
 
     Account account = Account.Builder.anAccount()
                           .withAccountName(user.getAccountName())
@@ -1395,25 +1391,16 @@ public class UserServiceImpl implements UserService {
     account = setupAccount(account);
     String accountId = account.getUuid();
     List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
+    saveUserAndUserGroups(user, account, accountAdminGroups);
+
     completeUserInviteForSignup(userInvite, accountId);
 
     marketPlace.setAccountId(accountId);
     wingsPersistence.save(marketPlace);
-    saveUserAndUserGroups(user, account, accountAdminGroups);
 
-    boolean isGcpMarketPlace = MarketPlaceType.GCP == marketPlaceType;
-    if (isGcpMarketPlace) {
-      // 1. Create billing scheduler entry
-      final Instant nextIteration = Instant.now().plus(1, ChronoUnit.HOURS);
-      gcpBillingPollingService.create(new GCPBillingJobEntity(
-          accountId, marketPlace.getCustomerIdentificationCode(), nextIteration.toEpochMilli()));
-
-      // 2. approve call to GCP
-      gcpProcurementService.approve(marketPlace);
-      gcpProcurementService.approveRequestedEntitlement(marketPlace);
+    if (marketPlaceType == MarketPlaceType.GCP) {
+      gcpProcurementService.approveAccount(marketPlace);
     }
-
-    return userInvite;
   }
 
   private void saveUserAndUserGroups(User user, Account account, List<UserGroup> accountAdminGroups) {

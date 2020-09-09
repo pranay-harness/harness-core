@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MOHIT;
@@ -91,7 +92,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
 import io.harness.exception.GeneralException;
-import io.harness.exception.HintException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
@@ -365,7 +365,7 @@ public class UserServiceTest extends WingsBaseTest {
       fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
-      assertThat(e).isInstanceOf(HintException.class);
+      assertThat(e.getCode()).isEqualTo(INVALID_CREDENTIAL);
     }
 
     testInvite.setMarketPlaceToken(token);

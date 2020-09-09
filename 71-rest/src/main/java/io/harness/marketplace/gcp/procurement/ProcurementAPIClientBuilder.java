@@ -29,7 +29,6 @@ public class ProcurementAPIClientBuilder {
     if (null != this.client) {
       return Optional.of(client);
     }
-
     HttpTransport httpTransport = Utils.getDefaultTransport();
     JsonFactory jsonFactory = Utils.getDefaultJsonFactory();
 
@@ -39,16 +38,13 @@ public class ProcurementAPIClientBuilder {
       logger.error("GCP credentials file does NOT exist. Marketplace Approval requests will fail. Path: {}", path);
       return Optional.empty();
     }
-
     InputStream credentialStream;
     try {
       credentialStream = Files.newInputStream(path, StandardOpenOption.READ);
-
     } catch (IOException e) {
       logger.error("Exception reading credentials file. Path: " + path, e);
       return Optional.empty();
     }
-
     GoogleCredential credentials;
     try {
       credentials = GoogleCredential.fromStream(credentialStream);
@@ -56,11 +52,9 @@ public class ProcurementAPIClientBuilder {
       logger.error("Exception creating google credentials from credential stream. Path: " + path, e);
       return Optional.empty();
     }
-
     if (credentials.createScopedRequired()) {
       credentials = credentials.createScoped(CloudCommercePartnerProcurementServiceScopes.all());
     }
-
     CloudCommercePartnerProcurementService service =
         new CloudCommercePartnerProcurementService.Builder(httpTransport, jsonFactory, credentials)
             .setApplicationName("harness-gcp-marketplace")

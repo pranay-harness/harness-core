@@ -6,6 +6,7 @@ import lombok.experimental.UtilityClass;
 public class MarketPlaceConstants {
   public static final String USERINVITE_ID_CLAIM_KEY = "userInviteID";
   public static final String MARKETPLACE_ID_CLAIM_KEY = "marketPlaceID";
+  public static final String GCP_MARKETPLACE_TOKEN = "gcpMarketplaceToken";
   public static final String AWS_MARKETPLACE_50_INSTANCES = "instances_50";
   public static final String AWS_MARKETPLACE_200_INSTANCES = "instances_200";
   public static final String AWS_MARKETPLACE_500_INSTANCES = "instances_500";

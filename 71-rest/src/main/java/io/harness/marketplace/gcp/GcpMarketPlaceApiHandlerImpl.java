@@ -1,98 +1,82 @@
 package io.harness.marketplace.gcp;
 
+import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.ISSUER;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.nimbusds.jose.jwk.JWKSet;
 import io.harness.configuration.DeployMode;
+import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.marketplace.gcp.signup.GcpMarketplaceSignUpHandler;
 import io.harness.marketplace.gcp.signup.annotations.NewSignUp;
-import io.harness.marketplace.gcp.signup.annotations.ReturningUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.MarketPlace;
-import software.wings.beans.marketplace.MarketPlaceType;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.service.intfc.marketplace.MarketPlaceService;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Date;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
+import java.net.URL;
+import java.security.interfaces.RSAKey;
+import java.text.ParseException;
 import javax.ws.rs.core.Response;
 
 @Slf4j
 @Singleton
 public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration configuration;
   @Inject private AuthenticationUtils authenticationUtils;
-  @Inject private MarketPlaceService marketPlaceService;
   @Inject @NewSignUp private GcpMarketplaceSignUpHandler newUserSignUpHandler;
-  @Inject @ReturningUser private GcpMarketplaceSignUpHandler returningUserHandler;
-
-  enum RedirectErrorType { GCP_NO_EVENT_RECEIVED_ERROR, GCP_ON_PREMISE_ERROR }
 
   @Override
   public Response signUp(final String token) {
     logger.info("GCP Marketplace register request. Token: {}", token);
     if (DeployMode.isOnPrem(configuration.getDeployMode().name())) {
-      logger.error(
-          "GCP MarketPlace is disabled in On-Prem, please contact Harness at support@harness.io, customertoken= {}",
-          token);
-      return redirectToErrorPage(RedirectErrorType.GCP_ON_PREMISE_ERROR);
+      logger.error("GCP MarketPlace is disabled in On-Prem");
+      return redirectToErrorPage();
     }
+    // TODO: Verify Gcp Marketplace Token here
 
-    verifyJWT(token);
-    JWT decodedToken = JWT.decode(token);
-    String gcpAccountId = decodedToken.getSubject();
-
-    // GCP entitlements don't have expiry date, so setting an expiry of 1 year
-    final Instant defaultExpiry = Instant.now().plus(365, ChronoUnit.DAYS);
-    MarketPlace newMarketPlace = MarketPlace.builder()
-                                     .type(MarketPlaceType.GCP)
-                                     .customerIdentificationCode(gcpAccountId)
-                                     .token(token)
-                                     .expirationDate(Date.from(defaultExpiry))
-                                     .orderQuantity(GcpMarketPlaceApiHandler.GCP_PRO_PLAN_ORDER_QUANTITY)
-                                     .build();
-
-    Optional<MarketPlace> existingMarketPlace = marketPlaceService.fetchMarketplace(gcpAccountId, MarketPlaceType.GCP);
-    MarketPlace marketPlace = existingMarketPlace.orElse(newMarketPlace);
-    wingsPersistence.save(marketPlace);
-
-    String harnessAccountId = marketPlace.getAccountId();
-    boolean isNewCustomer = null == harnessAccountId;
-
-    URI redirectUrl;
-    if (isNewCustomer) {
-      redirectUrl = newUserSignUpHandler.signUp(marketPlace);
-    } else {
-      redirectUrl = returningUserHandler.signUp(marketPlace);
-    }
-
-    return redirectTo(redirectUrl);
+    return redirectTo(newUserSignUpHandler.signUp(token));
   }
 
   private static Response redirectTo(URI uri) {
     return Response.seeOther(uri).build();
   }
 
-  private Response redirectToErrorPage(RedirectErrorType type) {
+  private Response redirectToErrorPage() {
     try {
       String baseUrl = authenticationUtils.getBaseUrl() + "#/fallback";
-      URI redirectUrl = new URIBuilder(baseUrl).addParameter("type", type.toString()).build();
+      URI redirectUrl = new URIBuilder(baseUrl).addParameter("type", "GCP_ON_PREMISE_ERROR").build();
       return Response.seeOther(redirectUrl).build();
     } catch (URISyntaxException e) {
       throw new WingsException(e);
     }
   }
 
-  // TODO(jatin): implement this
-  private void verifyJWT(final String token) {}
+  private void verifyGcpMarketplaceToken(final String gcpMarketplaceToken) {
+    try {
+      JWKSet jwks = JWKSet.load(new URL(ISSUER));
+      JWT decodedToken = JWT.decode(gcpMarketplaceToken);
+      RSAKey rsaKey = (RSAKey) jwks.getKeyByKeyId(decodedToken.getKeyId());
+      Algorithm algorithm = Algorithm.RSA256(rsaKey);
+      JWTVerifier verifier =
+          JWT.require(algorithm).withIssuer(ISSUER).withClaim("aud", GcpMarketPlaceConstants.PROJECT_ID).build();
+      verifier.verify(gcpMarketplaceToken);
+    } catch (JWTVerificationException e) {
+      throw new InvalidRequestException("Failed to verify JWT Token", e, INVALID_TOKEN, USER);
+    } catch (ParseException | IOException e) {
+      throw new GeneralException("Failed to form URL from " + ISSUER, e);
+    }
+  }
 }
