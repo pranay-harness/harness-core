@@ -16,6 +16,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.Graph;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
+import io.harness.dto.OrchestrationGraph;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.functional.AbstractFunctionalTest;
@@ -25,6 +26,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.state.io.StepParameters;
 import io.harness.testframework.framework.MockServerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.restassured.config.ObjectMapperConfig;
@@ -84,32 +86,88 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
     graphVisualizer.generateImage(harnessGraph, "graph.png");
   }
 
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  @Ignore("This test is used internally only")
+  public void shouldGenerateImageFromAdjacencyList() throws IOException {
+    PlanExecution response =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    OrchestrationGraph harnessGraph = requestOrchestrationGraph(response.getUuid());
+    assertThat(harnessGraph).isNotNull();
+    graphVisualizer.generateImage(harnessGraph, "orchestration-graph.png");
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  @Ignore("This test is used internally only")
+  public void shouldTestBreadthFirstTraversal() {
+    PlanExecution response =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    OrchestrationGraph graph = requestOrchestrationGraph(response.getUuid());
+    assertThat(graph).isNotNull();
+    graphVisualizer.breadthFirstTraversal(graph);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  @Ignore("This test is used internally only")
+  public void shouldTestDepthFirstTraversal() {
+    PlanExecution response =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
+
+    OrchestrationGraph graph = requestOrchestrationGraph(response.getUuid());
+    assertThat(graph).isNotNull();
+    graphVisualizer.depthFirstTraversal(graph);
+  }
+
   private Graph requestGraph(String planExecutionId) {
     GenericType<RestResponse<Graph>> returnType = new GenericType<RestResponse<Graph>>() {};
 
+    RestResponse<Graph> response = internalRequest((GenericType) returnType, planExecutionId, "get-graph");
+
+    return response.getResource();
+  }
+
+  private OrchestrationGraph requestOrchestrationGraph(String planExecutionId) {
+    GenericType<RestResponse<OrchestrationGraph>> returnType = new GenericType<RestResponse<OrchestrationGraph>>() {};
+
+    RestResponse<OrchestrationGraph> response =
+        internalRequest((GenericType) returnType, planExecutionId, "get-orchestration-graph");
+
+    return response.getResource();
+  }
+
+  private RestResponse<?> internalRequest(
+      GenericType<RestResponse<?>> returnType, String planExecutionId, String requestUri) {
     Map<String, String> queryParams = new HashMap<>();
     queryParams.put("accountId", application.getAccountId());
     queryParams.put("appId", application.getAppId());
     queryParams.put("planExecutionId", planExecutionId);
 
-    RestResponse<Graph> response =
-        Setup.portal()
-            .config(RestAssuredConfig.config()
-                        .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
-                          ObjectMapper mapper = new ObjectMapper();
-                          mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                          mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
-                          return mapper;
-                        }))
-                        .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
-            .auth()
-            .oauth2(bearerToken)
-            .queryParams(queryParams)
-            .contentType(ContentType.JSON)
-            .get("/execute2/get-graph")
-            .as(returnType.getType(), ObjectMapperType.JACKSON_2);
-
-    return response.getResource();
+    return Setup.portal()
+        .config(RestAssuredConfig.config()
+                    .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
+                      ObjectMapper mapper = new ObjectMapper();
+                      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                      mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
+                      mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
+                      return mapper;
+                    }))
+                    .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
+        .auth()
+        .oauth2(bearerToken)
+        .queryParams(queryParams)
+        .contentType(ContentType.JSON)
+        .get("/execute2/" + requestUri)
+        .as(returnType.getType(), ObjectMapperType.JACKSON_2);
   }
 
   @JsonDeserialize(using = OutcomeTestDeserializer.class)
@@ -131,6 +189,21 @@ public class GraphVisualizerTest extends AbstractFunctionalTest {
             .build();
       }
       return null;
+    }
+  }
+
+  @JsonDeserialize(using = StepParametersTestDeserializer.class)
+  private abstract static class StepParametersTestMixin {}
+
+  private static class StepParametersTestDeserializer extends StdDeserializer<StepParameters> {
+    StepParametersTestDeserializer() {
+      super(StepParameters.class);
+    }
+
+    @Override
+    public StepParameters deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+      JsonNode node = p.getCodec().readTree(p);
+      return new StepParameters() {};
     }
   }
 }
