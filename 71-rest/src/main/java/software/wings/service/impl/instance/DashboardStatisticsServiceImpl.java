@@ -782,7 +782,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                 grouping(
                     "$first", projection("id", "envId"), projection("name", "envName"), projection("type", "envType"))),
             grouping("artifactInfo",
-                grouping("$first", projection("id", "lastArtifactId"), projection("name", "lastArtifactName"),
+                grouping("$last", projection("id", "lastArtifactId"), projection("name", "lastArtifactName"),
                     projection("buildNo", "lastArtifactBuildNum"), projection("streamId", "lastArtifactStreamId"),
                     projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"),
                     projection("lastWorkflowExecutionId", "lastWorkflowExecutionId"))))
