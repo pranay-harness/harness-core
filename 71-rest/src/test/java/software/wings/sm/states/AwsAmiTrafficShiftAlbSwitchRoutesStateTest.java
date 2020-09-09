@@ -20,6 +20,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -98,6 +99,9 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSwitchRouteExecuteSetupElementFailure() {
     ExecutionContextImpl mockContext = initializeMockSetup(switchRoutesState, false, false);
+    doThrow(new NullPointerException())
+        .when(awsAmiServiceHelper)
+        .getSetupElementFromSweepingOutput(mockContext, AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME);
     ExecutionResponse response = switchRoutesState.execute(mockContext);
     assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
   }
@@ -195,7 +199,9 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
               .preDeploymentData(AwsAmiPreDeploymentData.builder().build())
               .detailsWithTargetGroups(lbDetails)
               .build();
-      doReturn(setupElement).when(mockContext).getContextElement(any());
+      doReturn(setupElement)
+          .when(awsAmiServiceHelper)
+          .getSetupElementFromSweepingOutput(mockContext, AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME);
     }
 
     AwsAmiTrafficShiftAlbStateExecutionData awsAmiTrafficShiftAlbStateExecutionData =

@@ -38,6 +38,7 @@ import static software.wings.beans.command.CommandType.ENABLE;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.service.impl.aws.model.AwsAmiPreDeploymentData.DEFAULT_DESIRED_COUNT;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -145,6 +146,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private ServiceTemplateHelper mockServiceTemplateHelper;
   @Mock private AwsStateHelper mockAwsStateHelper;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
 
   @InjectMocks private AwsAmiServiceDeployState state = new AwsAmiServiceDeployState("stateName");
 
@@ -186,10 +188,9 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(EmbeddedUser.builder().email("user@harness.io").name("user").build()).when(mockParams).getCurrentUser();
     doReturn(serviceSetupElement)
-        .doReturn(mockParams)
-        .doReturn(serviceSetupElement)
-        .when(mockContext)
-        .getContextElement(any());
+        .when(awsAmiServiceStateHelper)
+        .getSetupElementFromSweepingOutput(mockContext, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    doReturn(mockParams).when(mockContext).getContextElement(any());
     Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
     doReturn(environment).when(mockParams).getEnv();
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
@@ -281,11 +282,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(params.getExistingInstanceIds()).containsOnly("instanceId1", "instanceId2");
 
     // BG
-    doReturn(serviceSetupElement)
-        .doReturn(mockParams)
-        .doReturn(serviceSetupElement)
-        .when(mockContext)
-        .getContextElement(any());
+    doReturn(mockParams).when(mockContext).getContextElement(any());
     response = state.execute(mockContext);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService, times(2)).queueTask(captor.capture());
@@ -314,6 +311,9 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecuteException() {
+    doReturn(AmiServiceSetupElement.builder().build())
+        .when(awsAmiServiceStateHelper)
+        .getSetupElementFromSweepingOutput(null, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
     assertThatThrownBy(() -> state.execute(null)).isInstanceOf(InvalidRequestException.class);
   }
 
@@ -343,7 +343,10 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
-    doReturn(serviceSetupElement).doReturn(mockParams).when(mockContext).getContextElement(any());
+    doReturn(serviceSetupElement)
+        .when(awsAmiServiceStateHelper)
+        .getSetupElementFromSweepingOutput(mockContext, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    doReturn(mockParams).when(mockContext).getContextElement(any());
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     doReturn(application).when(mockParams).getApp();
@@ -389,7 +392,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
 
     // Exception Scenario
     doThrow(new InvalidRequestException("Failed")).when(mockInfrastructureMappingService).get(anyString(), anyString());
-    doReturn(serviceSetupElement).doReturn(mockParams).when(mockContext).getContextElement(any());
+    doReturn(mockParams).when(mockContext).getContextElement(any());
     response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(response.getStateExecutionData().getStatus()).isEqualTo(FAILED);
@@ -462,7 +465,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    doReturn(10).when(mockAwsStateHelper).getAmiStateTimeoutFromContext(any());
+    doReturn(10).when(mockAwsStateHelper).getAmiStateTimeout(any());
     assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import io.harness.data.SweepingOutput;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +23,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AmiServiceTrafficShiftAlbSetupElement implements ContextElement {
+public class AmiServiceTrafficShiftAlbSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
   private String commandName;

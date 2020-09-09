@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -122,8 +121,7 @@ public class AwsStateHelper {
         .collect(toList());
   }
 
-  public Integer getAmiStateTimeoutFromContext(ExecutionContext context) {
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+  public Integer getAmiStateTimeout(AmiServiceSetupElement serviceSetupElement) {
     if (serviceSetupElement == null || serviceSetupElement.getAutoScalingSteadyStateTimeout() == null
         || Integer.valueOf(0).equals(serviceSetupElement.getAutoScalingSteadyStateTimeout())) {
       return null;

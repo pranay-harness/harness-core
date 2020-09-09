@@ -15,6 +15,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -59,6 +60,7 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private SecretManager mockSecretManager;
   @Mock private DelegateService mockDelegateService;
   @Mock private AwsStateHelper mockAwsStateHelper;
+  @Mock protected transient AwsAmiServiceStateHelper awsAmiServiceHelper;
 
   @InjectMocks private AwsAmiSwitchRoutesState state = new AwsAmiSwitchRoutesState("stateName");
 
@@ -79,7 +81,9 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
                                                      .newAutoScalingGroupName("foo__2")
                                                      .autoScalingSteadyStateTimeout(10)
                                                      .build();
-    doReturn(serviceSetupElement).when(mockContext).getContextElement(any());
+    doReturn(serviceSetupElement)
+        .when(awsAmiServiceHelper)
+        .getSetupElementFromSweepingOutput(mockContext, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
     String classicLb = "classicLb";
     String stageDlassicLb = "stageClassicLb";
     String targetGroup = "targetGp";
@@ -146,7 +150,7 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    doReturn(10).when(mockAwsStateHelper).getAmiStateTimeoutFromContext(any());
+    doReturn(10).when(mockAwsStateHelper).getAmiStateTimeout(any());
     assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 

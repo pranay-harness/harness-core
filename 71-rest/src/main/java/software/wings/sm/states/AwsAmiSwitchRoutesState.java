@@ -6,6 +6,7 @@ import static java.util.Collections.singletonList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -13,7 +14,6 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -69,6 +69,7 @@ public class AwsAmiSwitchRoutesState extends State {
   @Inject protected transient SecretManager secretManager;
   @Inject protected transient DelegateService delegateService;
   @Inject protected transient AwsStateHelper awsStateHelper;
+  @Inject protected transient AwsAmiServiceStateHelper awsAmiServiceHelper;
 
   public AwsAmiSwitchRoutesState(String name) {
     super(name, StateType.AWS_AMI_SWITCH_ROUTES.name());
@@ -101,14 +102,19 @@ public class AwsAmiSwitchRoutesState extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return awsStateHelper.getAmiStateTimeoutFromContext(context);
+    AmiServiceSetupElement serviceSetupElement =
+        (AmiServiceSetupElement) awsAmiServiceHelper.getSetupElementFromSweepingOutput(
+            context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    return awsStateHelper.getAmiStateTimeout(serviceSetupElement);
   }
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
   protected ExecutionResponse executeInternal(ExecutionContext context, boolean rollback) throws InterruptedException {
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    AmiServiceSetupElement serviceSetupElement =
+        (AmiServiceSetupElement) awsAmiServiceHelper.getSetupElementFromSweepingOutput(
+            context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
     if (serviceSetupElement == null) {
       return ExecutionResponse.builder()
           .errorMessage("Did not find Setup context element. Skipping rollback")

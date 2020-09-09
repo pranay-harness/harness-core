@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.states.AwsAmiServiceDeployState.ASG_COMMAND_NAME;
 
@@ -26,7 +27,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.deployment.InstanceDetails;
@@ -195,7 +195,9 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
-    AmiServiceTrafficShiftAlbSetupElement serviceSetupElement = validateAndGetContextElement(context);
+    AmiServiceTrafficShiftAlbSetupElement serviceSetupElement =
+        (AmiServiceTrafficShiftAlbSetupElement) awsAmiServiceHelper.getSetupElementFromSweepingOutput(
+            context, AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME);
     AwsAmiTrafficShiftAlbData awsAmiTrafficShiftAlbData = awsAmiServiceHelper.populateAlbTrafficShiftSetupData(context);
     Activity activity = crateActivity(context, awsAmiTrafficShiftAlbData);
     ManagerExecutionLogCallback executionLogCallback =
@@ -208,14 +210,6 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
       return taskCreationFailureResponse(exception, activity.getUuid(), executionLogCallback);
     }
     return taskCreationSuccessResponse(activity.getUuid(), serviceSetupElement, context);
-  }
-
-  private AmiServiceTrafficShiftAlbSetupElement validateAndGetContextElement(ExecutionContext context) {
-    ContextElement contextElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    if (!(contextElement instanceof AmiServiceTrafficShiftAlbSetupElement)) {
-      throw new InvalidRequestException("Did not find Setup element of class AmiServiceTrafficShiftAlbSetupElement");
-    }
-    return (AmiServiceTrafficShiftAlbSetupElement) contextElement;
   }
 
   protected Activity crateActivity(ExecutionContext context, AwsAmiTrafficShiftAlbData awsAmiTrafficShiftAlbData) {
