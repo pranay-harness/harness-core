@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import software.wings.service.impl.security.SecretManagementException;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 
@@ -44,7 +43,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   @Override
   public Page<ConnectorSummaryDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, List<ConnectorCategory> categories) {
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory categories) {
     throw new UnsupportedOperationException("This operation is not supported for secret manager");
   }
 
