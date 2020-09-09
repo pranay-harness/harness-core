@@ -10,6 +10,7 @@ import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -38,6 +39,7 @@ import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDelegate;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
@@ -316,14 +318,15 @@ public class AzureVMSSStateHelper {
   public void saveInstanceInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements) {
     if (isNotEmpty(instanceElements)) {
       // This sweeping element will be used by verification or other consumers.
-      sweepingOutputService.save(
-          context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-              .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-              .value(InstanceInfoVariables.builder()
-                         .instanceElements(instanceElements)
-                         .instanceDetails(azureStateHelper.generateAzureVMSSInstanceDetails(instanceElements))
-                         .build())
-              .build());
+      List<InstanceDetails> instanceDetails = azureStateHelper.generateAzureVMSSInstanceDetails(instanceElements);
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                     .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                                     .value(InstanceInfoVariables.builder()
+                                                .instanceElements(instanceElements)
+                                                .instanceDetails(instanceDetails)
+                                                .skipVerification(isEmpty(instanceDetails))
+                                                .build())
+                                     .build());
     }
   }
 

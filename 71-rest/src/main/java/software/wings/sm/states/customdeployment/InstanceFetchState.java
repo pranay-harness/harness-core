@@ -2,6 +2,7 @@ package software.wings.sm.states.customdeployment;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -335,6 +336,7 @@ public class InstanceFetchState extends State {
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
+                                              .skipVerification(isEmpty(instanceDetails))
                                               .build())
                                    .build());
   }

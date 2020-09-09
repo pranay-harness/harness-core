@@ -1086,6 +1086,7 @@ public class K8sStateHelper {
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
+                                              .skipVerification(isEmpty(instanceDetails))
                                               .build())
                                    .build());
   }

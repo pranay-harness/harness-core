@@ -29,6 +29,7 @@ import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -161,14 +162,15 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
     allInstanceElements.addAll(existingInstances);
 
     // This sweeping element will be used by verification or other consumers.
-    sweepingOutputService.save(
-        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-            .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-            .value(InstanceInfoVariables.builder()
-                       .instanceElements(allInstanceElements)
-                       .instanceDetails(awsStateHelper.generateAmInstanceDetails(allInstanceElements))
-                       .build())
-            .build());
+    List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(allInstanceElements);
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                                   .value(InstanceInfoVariables.builder()
+                                              .instanceElements(allInstanceElements)
+                                              .instanceDetails(instanceDetails)
+                                              .skipVerification(isEmpty(instanceDetails))
+                                              .build())
+                                   .build());
 
     return newInstances;
   }
