@@ -9,8 +9,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class CommitDetails {
   @NotEmpty private String commitId;
   private String link;
-  private String description;
-  private String userName;
+  private String message;
+  private String ownerName;
   private String ownerId;
   private String ownerEmail;
 }

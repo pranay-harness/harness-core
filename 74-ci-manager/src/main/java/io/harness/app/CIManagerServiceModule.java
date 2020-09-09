@@ -10,8 +10,10 @@ import com.google.inject.name.Names;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
+import io.harness.app.impl.CIBuildInfoServiceImpl;
 import io.harness.app.impl.CIPipelineServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
+import io.harness.app.intfc.CIBuildInfoService;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.callback.DelegateCallback;
@@ -102,6 +104,7 @@ public class CIManagerServiceModule extends DependencyModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(CIPipelineService.class).to(CIPipelineServiceImpl.class);
+    bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
     bind(ManagerCIResource.class).toProvider(ManagerClientFactory.class);
     bind(CIServiceAuthSecretKey.class).to(CIServiceAuthSecretKeyImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
