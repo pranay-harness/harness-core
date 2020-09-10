@@ -1,10 +1,12 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.io.Files;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.EncryptDecryptException;
 import lombok.experimental.UtilityClass;
 
@@ -21,6 +23,7 @@ import java.util.Arrays;
  * Utility classes used for encryption-related work.
  * Created by mike@ on 4/25/17.
  */
+@OwnedBy(PL)
 @UtilityClass
 public class EncryptionUtils {
   public static final int DEFAULT_SALT_SIZE = 32;

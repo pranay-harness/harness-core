@@ -1,5 +1,6 @@
 package io.harness.lock;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_COLLECTION;
 import static java.util.Arrays.asList;
 
@@ -14,6 +15,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.MongoClient;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.lock.mongo.MongoPersistentLocker;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.Closeable;
 import java.util.List;
 
+@OwnedBy(PL)
 @Slf4j
 public class PersistentLockModule extends ProviderModule implements ServersModule {
   private static volatile PersistentLockModule instance;

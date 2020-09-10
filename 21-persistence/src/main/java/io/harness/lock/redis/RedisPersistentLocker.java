@@ -1,5 +1,6 @@
 package io.harness.lock.redis;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 import static io.harness.exception.WingsException.SRE;
@@ -11,6 +12,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.dropwizard.lifecycle.Managed;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.PersistentLockException;
 import io.harness.exception.UnexpectedException;
@@ -29,6 +31,7 @@ import org.redisson.config.ReadMode;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, Managed {

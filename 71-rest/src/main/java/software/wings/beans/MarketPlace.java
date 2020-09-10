@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
@@ -23,6 +26,7 @@ import software.wings.beans.marketplace.MarketPlaceType;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

@@ -1,5 +1,7 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -8,6 +10,7 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UnexpectedException;
@@ -20,6 +23,7 @@ import java.text.ParseException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class TokenAuthenticator {

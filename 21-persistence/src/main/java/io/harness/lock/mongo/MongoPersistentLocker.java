@@ -1,5 +1,6 @@
 package io.harness.lock.mongo;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 import static io.harness.exception.WingsException.NOBODY;
@@ -16,6 +17,7 @@ import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import io.dropwizard.lifecycle.Managed;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.exception.PersistentLockException;
 import io.harness.exception.WingsException;
@@ -33,6 +35,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
+@OwnedBy(PL)
 @Slf4j
 public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, Managed {
   public static final String LOCKS_COLLECTION = "locks";

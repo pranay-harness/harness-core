@@ -1,8 +1,11 @@
 package software.wings.service.impl.ldap;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.collect.Lists;
 
 import de.danielbechler.util.Collections;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +29,7 @@ import javax.validation.constraints.NotNull;
 /**
  * This class is meant to make parallel call for LDAP search
  */
+@OwnedBy(PL)
 @Slf4j
 public class LdapParallelSearchExecutor {
   int LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = 30;

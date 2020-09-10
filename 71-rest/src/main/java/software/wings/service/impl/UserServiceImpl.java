@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -69,6 +70,7 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import graphql.VisibleForTesting;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -205,6 +207,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by anubhaw on 3/9/16.
  */
+@OwnedBy(PL)
 @ValidateOnExecution
 @Singleton
 @Slf4j

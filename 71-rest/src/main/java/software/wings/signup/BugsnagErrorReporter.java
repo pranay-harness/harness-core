@@ -1,8 +1,11 @@
 package software.wings.signup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
 import com.bugsnag.Bugsnag;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.app.BugsnagErrorReporterConfiguration;
@@ -10,6 +13,7 @@ import software.wings.beans.BugsnagTab;
 import software.wings.beans.ErrorData;
 import software.wings.service.intfc.ErrorReporter;
 
+@OwnedBy(PL)
 @Slf4j
 public class BugsnagErrorReporter implements ErrorReporter {
   @Inject private BugsnagErrorReporterConfiguration bugsnagErrorReporterConfiguration;

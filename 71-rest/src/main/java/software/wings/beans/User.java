@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
@@ -8,6 +9,7 @@ import static java.util.stream.Collectors.toList;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -45,6 +47,7 @@ import javax.security.auth.Subject;
  *
  * @author Rishi
  */
+@OwnedBy(PL)
 @JsonInclude(NON_EMPTY)
 @Entity(value = "users", noClassnameStored = true)
 @HarnessEntity(exportable = true)

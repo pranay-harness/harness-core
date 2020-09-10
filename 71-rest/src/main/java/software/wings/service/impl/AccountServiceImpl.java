@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -39,6 +40,7 @@ import com.google.inject.name.Named;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -178,6 +180,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by peeyushaggarwal on 10/11/16.
  */
+@OwnedBy(PL)
 @Singleton
 @ValidateOnExecution
 @Slf4j

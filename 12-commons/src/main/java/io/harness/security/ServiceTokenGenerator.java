@@ -1,5 +1,6 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.base.Preconditions;
@@ -7,6 +8,7 @@ import com.google.common.base.Preconditions;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 
@@ -19,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Created by rsingh on 9/17/18.
  */
+@OwnedBy(PL)
 public class ServiceTokenGenerator {
   public static final AtomicReference<String> VERIFICATION_SERVICE_SECRET = new AtomicReference<>();
 

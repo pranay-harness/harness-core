@@ -1,7 +1,11 @@
 package software.wings.beans.marketplace;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class MarketPlaceConstants {
   public static final String USERINVITE_ID_CLAIM_KEY = "userInviteID";

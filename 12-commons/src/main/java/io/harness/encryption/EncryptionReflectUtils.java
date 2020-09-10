@@ -1,9 +1,11 @@
 package io.harness.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Encryptable;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.reflection.ReflectionUtils;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @UtilityClass
 public class EncryptionReflectUtils {
   public static List<Field> getEncryptedFields(Class<?> clazz) {

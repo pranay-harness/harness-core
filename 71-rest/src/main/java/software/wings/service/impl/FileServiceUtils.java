@@ -1,8 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.FILE_INTEGRITY_CHECK_FAILED;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileMetadata;
 import io.harness.exception.WingsException;
 import lombok.experimental.UtilityClass;
@@ -17,6 +19,7 @@ import java.util.Base64;
  *
  * @author marklu on 2018-11-30
  */
+@OwnedBy(PL)
 @UtilityClass
 public class FileServiceUtils {
   static final String GCS_ID_PREFIX = "_gcs_:";

@@ -1,9 +1,11 @@
 package software.wings.beans.security.access;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -19,7 +21,7 @@ import software.wings.beans.Base;
 /**
  * @author rktummala on 04/06/2018
  */
-
+@OwnedBy(PL)
 @JsonInclude(NON_EMPTY)
 @Data
 @NoArgsConstructor

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -43,6 +44,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.ReadPreference;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -117,6 +119,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by rishi
  */
+@OwnedBy(PL)
 @ValidateOnExecution
 @Singleton
 @Slf4j

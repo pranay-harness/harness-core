@@ -1,10 +1,13 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
@@ -32,6 +35,7 @@ import javax.crypto.spec.SecretKeySpec;
  * Very simple hardcoded encryption package for encrypting user passwords in persistence.
  * Created by mike@ on 4/24/17.
  */
+@OwnedBy(PL)
 public class SimpleEncryption implements EncryptionInterface {
   @JsonIgnore public static final Charset CHARSET = Charsets.ISO_8859_1;
   @JsonIgnore private static final int AES_256_KEY_LENGTH = 32;

@@ -1,5 +1,7 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -12,6 +14,7 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ import java.util.Date;
 import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class TokenGenerator {

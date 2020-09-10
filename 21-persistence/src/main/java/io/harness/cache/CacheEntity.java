@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Id;
 
 import java.util.Date;
 
+@OwnedBy(PL)
 @CdUniqueIndex(name = "commutativeIdx", fields = { @Field("_id")
                                                    , @Field("contextValue") })
 @OwnedBy(PL)

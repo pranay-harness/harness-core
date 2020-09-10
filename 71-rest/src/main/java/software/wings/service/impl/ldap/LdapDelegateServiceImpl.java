@@ -1,10 +1,13 @@
 package software.wings.service.impl.ldap;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +42,7 @@ import java.util.stream.Collectors;
  * Impl for Ldap Delegate Service  {@link LdapDelegateService}.
  * Created by Pranjal on 08/21/2018
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class LdapDelegateServiceImpl implements LdapDelegateService {

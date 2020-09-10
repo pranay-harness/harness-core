@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Query;
@@ -9,6 +12,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 
+@OwnedBy(PL)
 public class AccountDao {
   @Inject private HPersistence persistence;
 

@@ -1,11 +1,16 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Maps account Id to account key.
  */
+@OwnedBy(PL)
 @ParametersAreNonnullByDefault
 public interface KeySource {
   /**

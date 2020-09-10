@@ -1,10 +1,12 @@
 package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -28,6 +30,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 3/6/17.
  */
+@OwnedBy(PL)
 @Entity(value = "userInvites", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @CdIndex(name = "accountId_email_1", fields = { @Field("accountId")
