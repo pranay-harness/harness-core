@@ -38,6 +38,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
+import static software.wings.service.impl.GitConfigHelperService.cleanupRepositoryName;
 import static software.wings.service.impl.yaml.YamlProcessingLogContext.BRANCH_NAME;
 import static software.wings.service.impl.yaml.YamlProcessingLogContext.CHANGESET_ID;
 import static software.wings.service.impl.yaml.YamlProcessingLogContext.GIT_CONNECTOR_ID;
@@ -148,6 +149,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
 
@@ -761,16 +763,16 @@ public class YamlGitServiceImpl implements YamlGitService {
         throw new InvalidRequestException("Branch not found from webhook payload", USER);
       }
 
-      String repositoryName = null;
+      String repositoryFullName = null;
       if (gitConfig.getUrlType() == UrlType.ACCOUNT) {
-        repositoryName =
-            obtainRepositoryNameFromPayload(yamlWebHookPayload, headers)
+        repositoryFullName =
+            obtainRepositoryFullNameFromPayload(yamlWebHookPayload, headers)
                 .filter(EmptyPredicate::isNotEmpty)
                 .orElseThrow(() -> {
                   logger.info(GIT_YAML_LOG_PREFIX
-                          + "Repository name not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
+                          + "Repository full name not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
                       webhookToken, yamlWebHookPayload, headers);
-                  return new InvalidRequestException("Repository name not found from webhook payload", USER);
+                  return new InvalidRequestException("Repository full name not found from webhook payload", USER);
                 });
       }
 
@@ -792,7 +794,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                .webhookBody(yamlWebHookPayload)
                                                .gitConnectorId(gitConnectorId)
                                                .webhookHeaders(convertHeadersToJsonString(headers))
-                                               .repositoryName(repositoryName)
+                                               .repositoryFullName(repositoryFullName)
                                                .branchName(branchName)
                                                .headCommitId(headCommitId)
                                                .build())
@@ -828,14 +830,57 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     final String gitConnectorId = gitToHarnessChangeSet.getGitWebhookRequestAttributes().getGitConnectorId();
     final String branchName = gitToHarnessChangeSet.getGitWebhookRequestAttributes().getBranchName();
+    final String repositoryFullName = gitToHarnessChangeSet.getGitWebhookRequestAttributes().getRepositoryFullName();
+
+    return getYamlGitConfigs(accountId, gitConnectorId, branchName, repositoryFullName);
+  }
+
+  @Override
+  public List<YamlGitConfig> getYamlGitConfigs(
+      String accountId, String gitConnectorId, String branchName, String repositoryName) {
     checkState(isNotEmpty(gitConnectorId), "gitConnectorId should not be empty");
     checkState(isNotEmpty(branchName), "branchName should not be empty");
+    List<YamlGitConfig> list = wingsPersistence.createQuery(YamlGitConfig.class)
+                                   .filter(YamlGitConfigKeys.accountId, accountId)
+                                   .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
+                                   .filter(BRANCH_NAME_KEY, branchName)
+                                   .asList();
 
-    return wingsPersistence.createQuery(YamlGitConfig.class)
-        .filter(YamlGitConfigKeys.accountId, accountId)
-        .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
-        .filter(BRANCH_NAME_KEY, branchName)
-        .asList();
+    SettingAttribute settingAttribute = settingsService.get(gitConnectorId);
+    if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig
+        && UrlType.ACCOUNT == ((GitConfig) settingAttribute.getValue()).getUrlType()) {
+      if (isEmpty(repositoryName)) {
+        throw new IllegalArgumentException(
+            "Missing repository name when using account level git connector in webhook request attributes");
+      }
+
+      return list.stream()
+          .filter(ygc
+              -> matchesRepositoryFullName(
+                  (GitConfig) settingAttribute.getValue(), ygc.getRepositoryName(), repositoryName))
+          .collect(toList());
+    }
+
+    return list;
+  }
+
+  @Override
+  public List<String> getYamlGitConfigIds(
+      String accountId, String gitConnectorId, String branchName, String repositoryName) {
+    List<String> yamlGitConfigIds = new ArrayList<>();
+    List<YamlGitConfig> yamlGitConfigs = getYamlGitConfigs(accountId, gitConnectorId, branchName, repositoryName);
+    if (isNotEmpty(yamlGitConfigs)) {
+      yamlGitConfigIds = yamlGitConfigs.stream().map(YamlGitConfig::getUuid).collect(Collectors.toList());
+    }
+    return yamlGitConfigIds;
+  }
+
+  private boolean matchesRepositoryFullName(GitConfig gitConfig, String repositoryName, String repositoryFullName) {
+    String processedUrl = gitConfigHelperService.constructRepositoryUrl(gitConfig, repositoryName);
+    processedUrl = cleanupRepositoryName(processedUrl);
+    String processedFullName = cleanupRepositoryName(repositoryFullName);
+
+    return StringUtils.endsWith(processedUrl, processedFullName);
   }
 
   @Override
@@ -874,6 +919,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       String waitId = generateUuid();
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
+      gitConfigHelperService.convertToRepoGitConfig(gitConfig, yamlGitConfig.getRepositoryName());
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(accountId)
                                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -1171,7 +1217,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     return webhookEventUtils.obtainBranchName(webhookSource, headers, payLoadMap);
   }
 
-  private Optional<String> obtainRepositoryNameFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
+  private Optional<String> obtainRepositoryFullNameFromPayload(String yamlWebHookPayload, HttpHeaders headers) {
     if (headers == null) {
       logger.info("Empty header found");
       return Optional.empty();
@@ -1181,7 +1227,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     webhookEventUtils.validatePushEvent(webhookSource, headers);
     Map<String, Object> payLoadMap = webhookEventUtils.obtainPayloadMap(yamlWebHookPayload, headers);
 
-    return webhookEventUtils.obtainRepositoryName(webhookSource, headers, payLoadMap);
+    return webhookEventUtils.obtainRepositoryFullName(webhookSource, headers, payLoadMap);
   }
 
   @Override

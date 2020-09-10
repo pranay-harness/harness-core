@@ -50,6 +50,7 @@ import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -120,8 +121,12 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   private String buildQueueKey(YamlGitConfig yamlGitConfig) {
-    return format(
-        "%s:%s:%s", yamlGitConfig.getAccountId(), yamlGitConfig.getGitConnectorId(), yamlGitConfig.getBranchName());
+    return Arrays
+        .asList(yamlGitConfig.getAccountId(), yamlGitConfig.getGitConnectorId(), yamlGitConfig.getRepositoryName(),
+            yamlGitConfig.getBranchName())
+        .stream()
+        .filter(StringUtils::isNotBlank)
+        .collect(Collectors.joining(":"));
   }
 
   @NotNull
@@ -512,7 +517,9 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.gitConnectorId)
             .equal(yamlGitConfig.getGitConnectorId()),
         query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.branchName)
-            .equal(yamlGitConfig.getBranchName()));
+            .equal(yamlGitConfig.getBranchName()),
+        query.criteria(YamlChangeSetKeys.gitSyncMetadata + "." + GitSyncMetadataKeys.repositoryName)
+            .equal(yamlGitConfig.getRepositoryName()));
   }
 
   private CriteriaContainer getHarnessToGitChangeSetCriteria(Query<YamlChangeSet> query, String appId) {

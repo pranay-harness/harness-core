@@ -8,19 +8,31 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_BRANCH_REF;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_HTTP;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_SSH;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_REPOSITORY_NAME;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PUSH_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REFS_CHANGED_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REPOSITORY_CLONE_HTTP;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REPOSITORY_CLONE_SSH;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REPOSITORY_FULL_NAME;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REPOSITORY_NAME;
+import static software.wings.beans.trigger.WebhookParameters.COMMON_EXPRESSION_PREFIX;
 import static software.wings.beans.trigger.WebhookParameters.GH_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_HEAD_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REF_BRANCH;
+import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REPOSITORY_CLONE_HTTP;
+import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REPOSITORY_CLONE_SSH;
+import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REPOSITORY_FULL_NAME;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REPOSITORY_NAME;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REF_BRANCH;
+import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSITORY_CLONE_HTTP;
+import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSITORY_CLONE_SSH;
+import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSITORY_FULL_NAME;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSITORY_NAME;
 
 import com.google.inject.Inject;
@@ -32,8 +44,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.WebhookEventType;
+import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
@@ -95,6 +110,183 @@ public class WebhookEventUtils {
         USER);
   }
 
+  public Optional<String> obtainCloneUrl(AuthenticationScheme authenticationScheme, WebhookSource webhookSource,
+      HttpHeaders httpHeaders, Map<String, Object> payload) {
+    if (authenticationScheme != AuthenticationScheme.HTTP_PASSWORD
+        && authenticationScheme != AuthenticationScheme.SSH_KEY) {
+      return Optional.empty();
+    }
+
+    try {
+      switch (webhookSource) {
+        case GITHUB:
+          switch (getGitHubEventType(httpHeaders)) {
+            case PUSH:
+            case PULL_REQUEST:
+              if (authenticationScheme == AuthenticationScheme.HTTP_PASSWORD) {
+                return Optional.ofNullable(expressionEvaluator.substitute(GH_PUSH_REPOSITORY_CLONE_HTTP, payload));
+              } else {
+                return Optional.ofNullable(expressionEvaluator.substitute(GH_PUSH_REPOSITORY_CLONE_SSH, payload));
+              }
+            default:
+              return Optional.empty();
+          }
+        case GITLAB:
+          switch (getGitLabEventType(httpHeaders)) {
+            case PUSH:
+            case PULL_REQUEST:
+              if (authenticationScheme == AuthenticationScheme.HTTP_PASSWORD) {
+                return Optional.ofNullable(expressionEvaluator.substitute(GIT_LAB_PUSH_REPOSITORY_CLONE_HTTP, payload));
+              } else {
+                return Optional.ofNullable(expressionEvaluator.substitute(GIT_LAB_PUSH_REPOSITORY_CLONE_SSH, payload));
+              }
+            default:
+              return Optional.empty();
+          }
+        case BITBUCKET:
+          switch (getBitBucketEventType(httpHeaders)) {
+            case PUSH:
+            case REFS_CHANGED:
+            case PULL_REQUEST_CREATED:
+            case PULL_REQUEST_UPDATED:
+            case PULL_REQUEST_APPROVED:
+            case PULL_REQUEST_APPROVAL_REMOVED:
+            case PULL_REQUEST_MERGED:
+            case PULL_REQUEST_DECLINED:
+            case PULL_REQUEST_COMMENT_CREATED:
+            case PULL_REQUEST_COMMENT_UPDATED:
+            case PULL_REQUEST_COMMENT_DELETED:
+              String substitutedValue;
+              if (authenticationScheme == AuthenticationScheme.HTTP_PASSWORD) {
+                substitutedValue =
+                    expressionEvaluator.substitute(BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_HTTP, payload);
+                if (!StringUtils.contains(substitutedValue, WebhookParameters.COMMON_EXPRESSION_PREFIX)) {
+                  return Optional.ofNullable(substitutedValue);
+                }
+                substitutedValue = expressionEvaluator.substitute(BIT_BUCKET_REPOSITORY_CLONE_HTTP, payload);
+                if (!StringUtils.contains(substitutedValue, WebhookParameters.COMMON_EXPRESSION_PREFIX)) {
+                  return Optional.ofNullable(substitutedValue);
+                }
+              } else {
+                substitutedValue =
+                    expressionEvaluator.substitute(BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_SSH, payload);
+                if (!StringUtils.contains(substitutedValue, WebhookParameters.COMMON_EXPRESSION_PREFIX)) {
+                  return Optional.ofNullable(substitutedValue);
+                }
+                substitutedValue = expressionEvaluator.substitute(BIT_BUCKET_REPOSITORY_CLONE_SSH, payload);
+                if (!StringUtils.contains(substitutedValue, WebhookParameters.COMMON_EXPRESSION_PREFIX)) {
+                  return Optional.ofNullable(substitutedValue);
+                }
+              }
+              return Optional.empty();
+
+            default:
+              return Optional.empty();
+          }
+        default:
+          unhandled(webhookSource);
+          return Optional.empty();
+      }
+    } catch (Exception e) {
+      logger.error(
+          "Failed to resolve the repository clone URL from payload {} and headers {}", payload, httpHeaders, e);
+      return Optional.empty();
+    }
+  }
+
+  public Optional<String> obtainRepositoryFullName(
+      WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
+    try {
+      switch (webhookSource) {
+        case GITHUB:
+          switch (getGitHubEventType(httpHeaders)) {
+            case PUSH:
+            case PULL_REQUEST:
+              return substitute(GH_PUSH_REPOSITORY_FULL_NAME, payload);
+            default:
+              return Optional.empty();
+          }
+        case GITLAB:
+          switch (getGitLabEventType(httpHeaders)) {
+            case PUSH:
+            case PULL_REQUEST:
+              return substitute(GIT_LAB_PUSH_REPOSITORY_FULL_NAME, payload);
+            default:
+              return Optional.empty();
+          }
+        case BITBUCKET:
+          switch (getBitBucketEventType(httpHeaders)) {
+            case PUSH:
+            case REFS_CHANGED:
+            case PULL_REQUEST_CREATED:
+            case PULL_REQUEST_UPDATED:
+            case PULL_REQUEST_APPROVED:
+            case PULL_REQUEST_APPROVAL_REMOVED:
+            case PULL_REQUEST_MERGED:
+            case PULL_REQUEST_DECLINED:
+            case PULL_REQUEST_COMMENT_CREATED:
+            case PULL_REQUEST_COMMENT_UPDATED:
+            case PULL_REQUEST_COMMENT_DELETED:
+              Optional<String> substitutedValue = substitute(BIT_BUCKET_REPOSITORY_FULL_NAME, payload);
+
+              if (substitutedValue.isPresent()) {
+                return substitutedValue;
+              }
+
+              Optional<String> httpCloneUrl =
+                  obtainCloneUrl(AuthenticationScheme.HTTP_PASSWORD, webhookSource, httpHeaders, payload);
+              Optional<String> sshCloneUrl =
+                  obtainCloneUrl(AuthenticationScheme.SSH_KEY, webhookSource, httpHeaders, payload);
+
+              if (!httpCloneUrl.isPresent() || !sshCloneUrl.isPresent()) {
+                return Optional.empty();
+              }
+
+              return Optional.of(fullNameFromCloneUrls(httpCloneUrl.get(), sshCloneUrl.get()));
+            default:
+              return Optional.empty();
+          }
+        default:
+          unhandled(webhookSource);
+          return Optional.empty();
+      }
+    } catch (Exception e) {
+      logger.error("Failed to resolve the repository name from payload {} and headers {}", payload, httpHeaders, e);
+      return Optional.empty();
+    }
+  }
+
+  String fullNameFromCloneUrls(String url1, String url2) {
+    String url2Diff = StringUtils.reverse(
+        StringUtils.difference(StringUtils.reverse(urlCleanup(url1)), StringUtils.reverse(urlCleanup(url2))));
+
+    return Optional.of(StringUtils.substringAfter(url2, url2Diff))
+        .map(this ::urlCleanup)
+        .orElseThrow(IllegalArgumentException::new);
+  }
+
+  String urlCleanup(String url) {
+    return Optional.of(url)
+        .map(String::trim)
+        .map(String::toLowerCase)
+        .map(u -> StringUtils.removeEnd(u, "/"))
+        .map(u -> StringUtils.removeEnd(u, ".git"))
+        .map(u -> StringUtils.removeEnd(u, "/"))
+        .map(u -> StringUtils.removeStart(u, "/"))
+        .orElseThrow(IllegalArgumentException::new);
+  }
+
+  private Optional<String> substitute(String expression, Map<String, Object> payload) {
+    String substitutedValue = expressionEvaluator.substitute(expression, payload);
+
+    if (StringUtils.isNotBlank(substitutedValue) && !StringUtils.contains(substitutedValue, COMMON_EXPRESSION_PREFIX)
+        && !"null".equals(substitutedValue)) {
+      return Optional.of(substitutedValue);
+    }
+
+    return Optional.empty();
+  }
+
   public Optional<String> obtainRepositoryName(
       WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
     try {
@@ -149,6 +341,7 @@ public class WebhookEventUtils {
       return Optional.empty();
     }
   }
+
   public String obtainBranchName(WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
     try {
       switch (webhookSource) {

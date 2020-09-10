@@ -29,7 +29,6 @@ import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.impl.yaml.YamlProcessingLogContext;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
 import software.wings.service.impl.yaml.service.YamlHelper;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.gitSync.GitFileActivity;
@@ -44,9 +43,8 @@ import java.util.Set;
 @Singleton
 @Slf4j
 public class GitChangeSetProcesser {
-  @Inject private GitChangeSetHandler gitChangesToEntityConverter;
+  @Inject private GitChangeSetHandler gitChangeSetHandler;
   @Inject private YamlAuditRecordGenerationUtils gitChangeAuditRecordHandler;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private YamlGitService yamlGitService;
   @Inject private GitSyncService gitSyncService;
   @Inject private YamlHelper yamlHelper;
@@ -95,7 +93,7 @@ public class GitChangeSetProcesser {
       Set<String> nameOfTheNewAppsAdded = getNamesOfTheNewAppsAdded(gitFileChanges, accountId);
       preProcessGitFileActivityChanges(
           processingCommitId, gitDiffResult.getCommitTimeMs(), gitDiffResult.getCommitMessage(), gitFileChanges);
-      changeWithErrorMsgs = gitChangesToEntityConverter.ingestGitYamlChangs(accountId, gitDiffResult);
+      changeWithErrorMsgs = gitChangeSetHandler.ingestGitYamlChangs(accountId, gitDiffResult);
       GitCommit.Status status =
           changeWithErrorMsgs.size() > 0 ? GitCommit.Status.COMPLETED_WITH_ERRORS : GitCommit.Status.COMPLETED;
       postProcessGitFileActivityChanges(processingCommitId, accountId, gitFileChanges, status, nameOfTheNewAppsAdded);

@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.gitdiff;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.REPOSITORY_NAME;
 
 import com.google.inject.Inject;
@@ -61,6 +60,5 @@ public class GitChangeSetHandlerTest extends WingsBaseTest {
                 .build());
     assertThat(changeWithErrorMsgMap).isNotNull();
     assertThat(changeWithErrorMsgMap.values().isEmpty()).isEqualTo(true);
-    verify(gitChangeSetHandler).obtainYamlGitConfigIds(accountId, branchName, REPOSITORY_NAME, uuid);
   }
 }

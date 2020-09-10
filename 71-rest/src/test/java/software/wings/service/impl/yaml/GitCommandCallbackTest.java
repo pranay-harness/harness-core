@@ -51,6 +51,7 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.service.impl.yaml.gitdiff.GitChangeSetHandler;
 import software.wings.service.impl.yaml.sync.GitSyncFailureAlertDetails;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -79,6 +80,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Mock private YamlGitService yamlGitService;
   @Mock private GitSyncErrorService gitSyncErrorService;
   @Mock private GitSyncService gitSyncService;
+  @Mock private GitChangeSetHandler gitChangeSetHandler;
 
   @InjectMocks
   private GitCommandCallback commandCallback = new GitCommandCallback(
@@ -272,8 +274,8 @@ public class GitCommandCallbackTest extends CategoryTest {
 
     doReturn(yamlChangeSet).when(yamlChangeSetService).get(ACCOUNT_ID, CHANGESET_ID);
     doReturn(ImmutableList.of("yamlgitconfig1", "yamlgitconfig2"))
-        .when(diffCommandCallback)
-        .obtainYamlGitConfigIds(anyString(), anyString(), anyString(), anyString());
+        .when(yamlGitService)
+        .getYamlGitConfigIds(anyString(), anyString(), anyString(), anyString());
     doReturn(GitCommit.builder().build()).when(yamlGitService).saveCommit(any(GitCommit.class));
     Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
