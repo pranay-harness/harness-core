@@ -2004,6 +2004,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.20.1</version>
                     <configuration>
+                        <runOrder>random</runOrder>
                         <forkCount>6</forkCount>
                         <reuseForks>true</reuseForks>
                         <groups>${categories}</groups>
