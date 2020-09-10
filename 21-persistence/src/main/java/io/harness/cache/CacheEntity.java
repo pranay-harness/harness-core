@@ -20,7 +20,6 @@ import java.util.Date;
 @OwnedBy(PL)
 @CdUniqueIndex(name = "commutativeIdx", fields = { @Field("_id")
                                                    , @Field("contextValue") })
-@OwnedBy(PL)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "CacheEntityKeys")
