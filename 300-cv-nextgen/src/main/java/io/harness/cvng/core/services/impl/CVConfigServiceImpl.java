@@ -2,11 +2,13 @@ package io.harness.cvng.core.services.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import com.mongodb.BasicDBObject;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
@@ -136,14 +138,7 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier) {
-    List<CVConfig> cvConfigs = listConfigsForProject(accountId, orgIdentifier, projectIdentifier);
-    Map<String, Set<String>> envToServicesMap = new HashMap<>();
-    cvConfigs.forEach(cvConfig -> {
-      if (!envToServicesMap.containsKey(cvConfig.getEnvIdentifier())) {
-        envToServicesMap.put(cvConfig.getEnvIdentifier(), new HashSet<>());
-      }
-      envToServicesMap.get(cvConfig.getEnvIdentifier()).add(cvConfig.getServiceIdentifier());
-    });
+    Map<String, Set<String>> envToServicesMap = getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
 
     List<EnvToServicesDTO> envToServicesDTOS = new ArrayList<>();
     envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
@@ -156,6 +151,20 @@ public class CVConfigServiceImpl implements CVConfigService {
       envToServicesDTOS.add(EnvToServicesDTO.builder().environment(environment).services(services).build());
     });
     return envToServicesDTOS;
+  }
+
+  @Override
+  public Map<String, Set<String>> getEnvToServicesMap(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    List<CVConfig> cvConfigs = listConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+    Map<String, Set<String>> envToServicesMap = new HashMap<>();
+    cvConfigs.forEach(cvConfig -> {
+      if (!envToServicesMap.containsKey(cvConfig.getEnvIdentifier())) {
+        envToServicesMap.put(cvConfig.getEnvIdentifier(), new HashSet<>());
+      }
+      envToServicesMap.get(cvConfig.getEnvIdentifier()).add(cvConfig.getServiceIdentifier());
+    });
+    return envToServicesMap;
   }
 
   private List<CVConfig> listConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier) {
@@ -191,13 +200,32 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier) {
+    BasicDBObject cvConfigQuery = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
+    conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
+    cvConfigQuery.put("$and", conditions);
+
+    Set<CVMonitoringCategory> cvMonitoringCategories = new HashSet<>();
+    hPersistence.getCollection(CVConfig.class)
+        .distinct(CVConfigKeys.category, cvConfigQuery)
+        .forEach(categoryName -> cvMonitoringCategories.add(CVMonitoringCategory.valueOf((String) categoryName)));
+    return cvMonitoringCategories;
+  }
+
+  @Override
   public List<CVConfig> list(String accountId, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
                                 .filter(CVConfigKeys.accountId, accountId)
-                                .filter(CVConfigKeys.envIdentifier, environmentIdentifier)
-                                .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
                                 .filter(CVConfigKeys.category, monitoringCategory);
+    if (isNotEmpty(environmentIdentifier)) {
+      query = query.filter(CVConfigKeys.envIdentifier, environmentIdentifier);
+    }
+    if (isNotEmpty(serviceIdentifier)) {
+      query = query.filter(CVConfigKeys.serviceIdentifier, serviceIdentifier);
+    }
     return query.asList();
   }
 }

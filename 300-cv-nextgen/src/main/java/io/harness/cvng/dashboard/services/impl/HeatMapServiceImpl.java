@@ -1,6 +1,8 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.getHeatMapResolution;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.collect.Lists;
@@ -9,8 +11,9 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.DBCollectionUpdateOptions;
 import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
+import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO.ServiceRisk;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
@@ -22,10 +25,12 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,9 +38,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import javax.validation.constraints.NotNull;
 
 public class HeatMapServiceImpl implements HeatMapService {
   @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
 
   @Override
   public void updateRiskScore(String accountId, String projectIdentifier, String serviceIdentifier,
@@ -106,7 +113,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     Instant startTimeBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getResolution());
     Instant endTimeBoundary = getBoundaryOfResolution(endTime, heatMapResolution.getResolution());
 
-    Set<CVMonitoringCategory> cvMonitoringCategories = getAvailableCategories(accountId, projectIdentifier);
+    Set<CVMonitoringCategory> cvMonitoringCategories =
+        cvConfigService.getAvailableCategories(accountId, projectIdentifier);
     for (CVMonitoringCategory category : cvMonitoringCategories) {
       Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(
           projectIdentifier, serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
@@ -129,18 +137,77 @@ public class HeatMapServiceImpl implements HeatMapService {
     return heatMaps;
   }
 
-  private Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier) {
-    BasicDBObject cvConfigQuery = new BasicDBObject();
-    List<BasicDBObject> conditions = new ArrayList<>();
-    conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
-    conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
-    cvConfigQuery.put("$and", conditions);
+  @Override
+  public List<EnvServiceRiskDTO> getEnvServiceRiskScores(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    Map<String, Set<String>> envToServicesMap =
+        cvConfigService.getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
+    List<EnvServiceRiskDTO> envServiceRiskDTOList = new ArrayList<>();
+    envToServicesMap.forEach((envIdentifier, serviceSet) -> {
+      Set<ServiceRisk> serviceRisks = new HashSet<>();
+      serviceSet.forEach(service -> {
+        Map<CVMonitoringCategory, Integer> categoryRisk =
+            getCategoryRiskScoresForSpecificServiceEnv(accountId, projectIdentifier, service, envIdentifier);
 
-    Set<CVMonitoringCategory> cvMonitoringCategories = new HashSet<>();
-    hPersistence.getCollection(CVConfig.class)
-        .distinct(CVConfigKeys.category, cvConfigQuery)
-        .forEach(categoryName -> cvMonitoringCategories.add(CVMonitoringCategory.valueOf((String) categoryName)));
-    return cvMonitoringCategories;
+        if (isNotEmpty(categoryRisk)) {
+          Integer risk = Collections.max(categoryRisk.values());
+          serviceRisks.add(ServiceRisk.builder().serviceIdentifier(service).risk(risk).build());
+        }
+      });
+      if (isNotEmpty(serviceRisks)) {
+        envServiceRiskDTOList.add(EnvServiceRiskDTO.builder()
+                                      .envIdentifier(envIdentifier)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .serviceRisks(serviceRisks)
+                                      .build());
+      }
+    });
+    return envServiceRiskDTOList;
+  }
+
+  @Override
+  public Map<CVMonitoringCategory, Integer> getCategoryRiskScores(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, String serviceIdentifier,
+      String envIdentifier) {
+    if (isNotEmpty(serviceIdentifier) && isEmpty(envIdentifier)) {
+      throw new UnsupportedOperationException("Illeagal state in getCategoryRiskScores. EnvIdentifier is null but"
+          + "serviceIdentifier is not null");
+    }
+
+    if (isEmpty(envIdentifier) && isEmpty(serviceIdentifier)) {
+      serviceIdentifier = null;
+      envIdentifier = null;
+    } else if (isEmpty(serviceIdentifier)) {
+      serviceIdentifier = null;
+    }
+    return getCategoryRiskScoresForSpecificServiceEnv(accountId, projectIdentifier, serviceIdentifier, envIdentifier);
+  }
+
+  private Map<CVMonitoringCategory, Integer> getCategoryRiskScoresForSpecificServiceEnv(
+      @NotNull String accountId, @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier) {
+    HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
+    Map<CVMonitoringCategory, Integer> categoryScoreMap = new HashMap<>();
+    Set<CVMonitoringCategory> cvMonitoringCategories =
+        cvConfigService.getAvailableCategories(accountId, projectIdentifier);
+
+    cvMonitoringCategories.forEach(category -> {
+      Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                        .filter(HeatMapKeys.category, category)
+                                        .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                        .filter(HeatMapKeys.envIdentifier, envIdentifier)
+                                        .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+                                        .order(Sort.descending(HeatMapKeys.heatMapBucketEndTime));
+
+      HeatMap latestHeatMap = heatMapQuery.get();
+      if (latestHeatMap != null) {
+        SortedSet<HeatMapRisk> risks = new TreeSet<>(latestHeatMap.getHeatMapRisks());
+        Double risk = risks.last().getRiskScore() * 100;
+        categoryScoreMap.put(category, risk.intValue());
+      }
+    });
+    return categoryScoreMap;
   }
 
   private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String projectIdentifier, String serviceIdentifier,
