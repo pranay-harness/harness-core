@@ -2142,7 +2142,18 @@
                 <inherited>false</inherited>
                 <executions>
                     <execution>
-                        <id>bazel build</id>
+                        <id>1.populate versionInfo</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <executable>bash</executable>
+                            <commandlineArgs>${basedir}/scripts/bazel/UpdateVersionInfoyaml.sh</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>2.bazel build</id>
                         <goals>
                             <goal>exec</goal>
                         </goals>
