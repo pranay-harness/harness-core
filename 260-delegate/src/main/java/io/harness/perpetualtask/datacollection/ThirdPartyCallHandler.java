@@ -22,16 +22,17 @@ public class ThirdPartyCallHandler implements Consumer<CallDetails> {
 
   @Override
   public void accept(CallDetails callDetails) {
-    //    logger.info("Delegate log: " + callDetails.getRequest());
-    //    logger.info("Delegate log response: " + callDetails.getResponse().body().toString());
     final ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder().stateExecutionId(requestUuid).build();
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("url")
                                      .type(ThirdPartyApiCallLog.FieldType.URL)
                                      .value(callDetails.getRequest().request().url().toString())
                                      .build());
-    apiCallLog.addFieldToResponse(
-        callDetails.getResponse().code(), callDetails.getResponse(), ThirdPartyApiCallLog.FieldType.JSON);
+    apiCallLog.addFieldToResponse(callDetails.getResponse().code(),
+        (callDetails.getResponse() != null && callDetails.getResponse().body() != null)
+            ? callDetails.getResponse().body()
+            : callDetails.getResponse(),
+        ThirdPartyApiCallLog.FieldType.JSON);
     delegateLogService.save(accountId, apiCallLog);
   }
 }

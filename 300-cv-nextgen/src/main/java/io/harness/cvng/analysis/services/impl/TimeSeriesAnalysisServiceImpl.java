@@ -33,7 +33,6 @@ import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesSh
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
-import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -357,8 +356,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (cvConfig != null) {
       double risk = analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
       heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-          cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), CVMonitoringCategory.PERFORMANCE, endTime,
-          risk);
+          cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig.getCategory(), endTime, risk);
 
       handleAnomalyOpenOrClose(cvConfig.getAccountId(), cvConfigId, startTime, endTime, risk, riskSummary);
     }

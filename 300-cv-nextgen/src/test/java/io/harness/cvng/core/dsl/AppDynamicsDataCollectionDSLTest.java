@@ -2,6 +2,7 @@ package io.harness.cvng.core.dsl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -60,7 +62,7 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testExecute_appDyanmicsResourcePackForServiceGuard() throws IOException {
+  public void testExecute_appDyanmicsPerformancePackForServiceGuard() throws IOException {
     String filePath = "appdynamics/performance-service-guard.json";
     rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
     // rule.capture(filePath);
@@ -68,7 +70,7 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("performance-pack.datacollection");
-    Instant instant = Instant.ofEpochMilli(1598017842368L);
+    Instant instant = Instant.ofEpochMilli(1599634954000L);
     List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
@@ -110,7 +112,7 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("performance-pack.datacollection");
-    Instant instant = Instant.ofEpochMilli(1598017842368L);
+    Instant instant = Instant.ofEpochMilli(1599634954000L);
     List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
@@ -139,6 +141,95 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
         (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
     assertThat(Sets.newHashSet(timeSeriesRecords))
         .isEqualTo(new Gson().fromJson(readJson("performance-collection-hosts-expectation.json"),
+            new TypeToken<Set<TimeSeriesRecord>>() {}.getType()));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testExecute_appDyanmicsQualityPackForServiceGuard() throws IOException {
+    String filePath = "appdynamics/quality-service-guard.json";
+    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    //		 rule.capture(filePath);
+
+    DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
+    dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
+    String code = readDSL("quality-pack.datacollection");
+    Instant instant = Instant.ofEpochMilli(1599634954000L);
+    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+
+    AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
+        AppDynamicsDataCollectionInfo.builder()
+            .applicationName("cv-app")
+            .tierName("docker-tier")
+            .metricPack(
+                metricPacks.stream()
+                    .filter(
+                        metricPack -> metricPack.getIdentifier().equals(CVMonitoringCategory.QUALITY.getDisplayName()))
+                    .findFirst()
+                    .get()
+                    .toDTO())
+            .build();
+    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
+    RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                              .startTime(instant.minusSeconds(60))
+                                              .endTime(instant)
+                                              .commonHeaders(headers)
+                                              .otherEnvVariables(params)
+                                              .baseUrl("https://harness-test.saas.appdynamics.com/controller/")
+                                              .build();
+    List<TimeSeriesRecord> timeSeriesRecords =
+        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
+    assertThat(Sets.newHashSet(timeSeriesRecords))
+        .isEqualTo(new Gson().fromJson(
+            readJson("quality-service-guard-expectation.json"), new TypeToken<Set<TimeSeriesRecord>>() {}.getType()));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testExecute_appDyanmicsQualityPackWithHosts() throws IOException {
+    String filePath = "appdynamics/quality-verification-task-collect-hosts.json";
+    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    //		 rule.capture(filePath);
+
+    DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
+    dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
+    String code = readDSL("quality-pack.datacollection");
+    Instant instant = Instant.ofEpochMilli(1599634954000L);
+    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+
+    AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
+        AppDynamicsDataCollectionInfo.builder()
+            .applicationName("cv-app")
+            .tierName("docker-tier")
+            .metricPack(
+                metricPacks.stream()
+                    .filter(
+                        metricPack -> metricPack.getIdentifier().equals(CVMonitoringCategory.QUALITY.getDisplayName()))
+                    .findFirst()
+                    .get()
+                    .toDTO())
+            .build();
+    appDynamicsDataCollectionInfo.setCollectHostData(true);
+    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
+    RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                              .startTime(instant.minusSeconds(60))
+                                              .endTime(instant)
+                                              .commonHeaders(headers)
+                                              .otherEnvVariables(params)
+                                              .baseUrl("https://harness-test.saas.appdynamics.com/controller/")
+                                              .build();
+    List<TimeSeriesRecord> timeSeriesRecords =
+        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
+    assertThat(Sets.newHashSet(timeSeriesRecords))
+        .isEqualTo(new Gson().fromJson(readJson("quality-collection-hosts-expectation.json"),
             new TypeToken<Set<TimeSeriesRecord>>() {}.getType()));
   }
 

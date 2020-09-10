@@ -1,26 +1,17 @@
-Var btUrl = concat(Env:baseUrl, "rest/applications/", Env:applicationName, "/metrics?output=JSON&metric-path=Business Transaction Performance|Business Transactions|")
-btUrl = concat(Var:btUrl, Env:tierName)
-Var btList = sync-call(url=Var:btUrl, header=Env:commonHeaders)
-
 Var metricDataUrl = concat(Env:baseUrl, "rest/applications/", Env:applicationName, "/metric-data?output=JSON&time-range-type=BETWEEN_TIMES&rollup=false&start-time=", Env:startTimeMillis, "&end-time=", Env:endTimeMillis, "&metric-path=")
 Var metricRequests = []
 foreach metricDefinition in Env:metricsToCollect {
-  foreach bt in Var:btList {
-    Var btName = extract(Var:bt,$.name)
-    Var metricPath = concat("", Var:metricDefinition)
-    Var:metricPath.replaceAll("__tier_name__", Env:tierName)
-    if Env:collectHostData != "true" {
-        Var:metricPath.replaceAll("__metric_filter__", Var:btName)
-    }
-    if Env:collectHostData == "true" {
-        Var metricFilter = concat(Var:btName, "|Individual%20Nodes|*")
-        Var:metricPath.replaceAll("__metric_filter__", Var:metricFilter)
-    }
-    print Var:metricPath
-    Var metricCall = concat(Var:metricDataUrl, Var:metricPath)
-    Request metricRequest = new Request(url=Var:metricCall, header=Env:commonHeaders)
-    Var:metricRequests.append(Var:metricRequest)
+  Var metricPath = concat("", Var:metricDefinition)
+  Var:metricPath.replaceAll("__tier_name__", Env:tierName)
+  if Env:collectHostData != "true" {
+      Var:metricPath.replaceAll("__metric_filter__", "*")
   }
+  if Env:collectHostData == "true" {
+      Var:metricPath.replaceAll("__metric_filter__", "*|Individual%20Nodes|*")
+  }
+  Var metricCall = concat(Var:metricDataUrl, Var:metricPath)
+  Request metricRequest = new Request(url=Var:metricCall, header=Env:commonHeaders)
+  Var:metricRequests.append(Var:metricRequest)
 }
 Var metrics = execute-parallel(Var:metricRequests)
 
