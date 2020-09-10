@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.inject.Inject;
@@ -8,6 +9,7 @@ import com.google.inject.Singleton;
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SamlBasedAuthHandler implements AuthHandler {

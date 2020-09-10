@@ -1,6 +1,9 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +24,7 @@ import java.util.Set;
  *
  * @author marklu on 2019-06-17
  */
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

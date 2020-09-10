@@ -1,5 +1,7 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
 import com.github.scribejava.core.builder.ServiceBuilder;
@@ -7,6 +9,7 @@ import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
@@ -23,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 
+@OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class GitlabClient extends BaseOauthClient implements OauthClient {

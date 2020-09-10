@@ -1,9 +1,11 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -38,6 +40,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 10/30/17.
  */
+@OwnedBy(PL)
 public interface SecretManager extends OwnedByAccount {
   String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Secrets Manager";
   String ENCRYPTED_FIELD_MASK = "*******";

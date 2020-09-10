@@ -1,6 +1,7 @@
 package software.wings.security.saml;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
@@ -8,6 +9,7 @@ import com.google.inject.Singleton;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.http.client.utils.URIBuilder;
@@ -31,6 +33,7 @@ import java.util.Iterator;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
+@OwnedBy(PL)
 @Singleton
 public class SamlClientService {
   public static final String SAML_REQUEST_URI_KEY = "SAMLRequest";

@@ -1,5 +1,10 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PL)
 public class SimpleUrlBuilder {
   @SuppressWarnings("PMD.AvoidStringBufferField") private StringBuilder builder;
   private boolean hasQueryParams;

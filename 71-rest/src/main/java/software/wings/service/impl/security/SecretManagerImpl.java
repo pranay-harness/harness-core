@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -61,6 +62,7 @@ import com.google.inject.name.Named;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.mongodb.DuplicateKeyException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -178,6 +180,7 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 10/30/17.
  */
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class SecretManagerImpl implements SecretManager {

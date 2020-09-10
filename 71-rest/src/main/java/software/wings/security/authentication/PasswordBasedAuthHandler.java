@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
@@ -13,6 +14,7 @@ import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -26,6 +28,7 @@ import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededE
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class PasswordBasedAuthHandler implements AuthHandler {

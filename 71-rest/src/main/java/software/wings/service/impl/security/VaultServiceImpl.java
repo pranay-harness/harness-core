@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -25,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -67,6 +69,7 @@ import java.util.Optional;
 /**
  * Created by rsingh on 11/2/17.
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService, RuntimeCredentialsInjector {

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -27,6 +28,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
@@ -58,6 +60,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 9/29/17.
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {

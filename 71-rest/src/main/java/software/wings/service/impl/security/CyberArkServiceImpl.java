@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
@@ -18,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -38,6 +40,7 @@ import java.util.Objects;
 /**
  * @author marklu on 2019-08-01
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements CyberArkService {

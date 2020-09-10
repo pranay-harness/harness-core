@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
@@ -19,6 +20,7 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class SecretManager {

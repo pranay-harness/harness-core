@@ -1,11 +1,13 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.manage.GlobalContextManager;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -22,6 +24,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * Created by anubhaw on 4/20/16.
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AuthResponseFilter implements ContainerResponseFilter {

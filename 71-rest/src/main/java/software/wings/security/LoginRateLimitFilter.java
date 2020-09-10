@@ -1,11 +1,13 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.ratelimit.LoginRequestRateLimiter;
 
@@ -17,6 +19,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+@OwnedBy(PL)
 @Singleton
 @Priority(AUTHENTICATION)
 @Slf4j

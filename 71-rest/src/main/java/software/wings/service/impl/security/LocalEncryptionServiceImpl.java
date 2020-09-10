@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
@@ -11,6 +12,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.security.EncryptionUtils;
 import io.harness.security.SimpleEncryption;
@@ -32,6 +34,7 @@ import java.nio.CharBuffer;
 /**
  * @author marklu on 2019-05-14
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class LocalEncryptionServiceImpl implements LocalEncryptionService {

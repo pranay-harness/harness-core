@@ -1,11 +1,13 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -40,6 +42,7 @@ import java.util.concurrent.ExecutionException;
  * applies the authentication mechanism filters to ensure that user is logging using the
  * correct auth mechanism.
  */
+@OwnedBy(PL)
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j

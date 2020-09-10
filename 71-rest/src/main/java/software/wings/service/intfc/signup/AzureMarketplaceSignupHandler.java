@@ -1,9 +1,11 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.impl.EventPublishHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
@@ -19,6 +21,7 @@ import software.wings.service.intfc.UserService;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(PL)
 @Slf4j
 public class AzureMarketplaceSignupHandler implements SignupHandler {
   private static final String EMAIL = "email";

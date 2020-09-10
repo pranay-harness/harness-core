@@ -1,6 +1,5 @@
 package software.wings.service.impl.security.auth;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
@@ -8,7 +7,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.SERVICE
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ConfigFile;
@@ -27,8 +25,6 @@ import java.util.List;
 /**
  * Created by ujjawal
  */
-
-@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class ConfigFileAuthHandler {

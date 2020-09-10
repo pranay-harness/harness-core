@@ -1,5 +1,8 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
@@ -11,6 +14,7 @@ import java.util.Map;
 /**
  * @author marklu on 9/19/19
  */
+@OwnedBy(PL)
 public class SecretManagementException extends WingsException {
   private static final String MESSAGE_KEY = "message";
 

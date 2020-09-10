@@ -1,8 +1,11 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptedRecord;
@@ -19,6 +22,7 @@ import java.util.Map.Entry;
 /**
  * @author marklu on 2019-02-04
  */
+@OwnedBy(PL)
 @Singleton
 public class DelegateDecryptionServiceImpl implements DelegateDecryptionService {
   @Inject private SecretManagementDelegateService secretManagementDelegateService;

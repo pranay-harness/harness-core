@@ -1,5 +1,8 @@
 package software.wings.service.intfc.marketplace.gcp;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
 
 import java.time.Instant;
@@ -10,6 +13,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 /**
  * This service is used for GCP usage.
  */
+@OwnedBy(PL)
 @ParametersAreNonnullByDefault
 public interface GCPUsageReportService {
   /**

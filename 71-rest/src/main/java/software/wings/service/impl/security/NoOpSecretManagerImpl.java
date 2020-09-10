@@ -1,5 +1,8 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -31,6 +34,7 @@ import java.util.Set;
 /**
  * Created by rsingh on 9/7/18.
  */
+@OwnedBy(PL)
 public class NoOpSecretManagerImpl implements SecretManager {
   @Override
   public List<SecretManagerConfig> listSecretManagers(String accountId) {

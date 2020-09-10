@@ -1,9 +1,11 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.impl.EventPublishHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
@@ -16,6 +18,7 @@ import software.wings.service.intfc.SignupHandler;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
+@OwnedBy(PL)
 @Slf4j
 public class MarketoSignupHandler implements SignupHandler {
   @Inject private EventPublishHelper eventPublishHelper;

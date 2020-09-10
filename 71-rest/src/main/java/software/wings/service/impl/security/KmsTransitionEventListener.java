@@ -1,11 +1,13 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -18,6 +20,7 @@ import java.io.IOException;
 /**
  * Created by rsingh on 10/6/17.
  */
+@OwnedBy(PL)
 @Slf4j
 public class KmsTransitionEventListener extends QueueListener<KmsTransitionEvent> {
   @Inject private SecretManager secretManager;

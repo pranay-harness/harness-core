@@ -1,5 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.settings.SettingVariableTypes;
@@ -10,6 +13,7 @@ import java.io.OutputStream;
 /**
  * @author marklu on 2019-05-07
  */
+@OwnedBy(PL)
 public interface AwsSecretsManagerService {
   EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       AwsSecretsManagerConfig secretsManagerConfig, EncryptedData encryptedData);

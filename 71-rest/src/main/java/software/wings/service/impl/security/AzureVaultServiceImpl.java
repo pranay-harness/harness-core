@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -15,6 +16,7 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureVaultConfig;
@@ -32,6 +34,7 @@ import java.nio.CharBuffer;
 import java.time.Duration;
 import java.util.regex.Pattern;
 
+@OwnedBy(PL)
 @Slf4j
 public class AzureVaultServiceImpl extends AbstractSecretServiceImpl implements AzureVaultService {
   // limit mentioned at

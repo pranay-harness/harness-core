@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -7,6 +8,7 @@ import static io.harness.reflection.ReflectionUtils.getFieldByName;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryption.SecretRefData;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
+@OwnedBy(PL)
 @Slf4j
 public class SecretDecryptionServiceImpl implements SecretDecryptionService {
   @Inject private EncryptionService encryptionService;

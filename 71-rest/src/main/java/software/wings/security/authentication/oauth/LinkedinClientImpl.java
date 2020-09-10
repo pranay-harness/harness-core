@@ -1,5 +1,7 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -12,6 +14,7 @@ import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth20Service;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 
+@OwnedBy(PL)
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j

@@ -1,7 +1,9 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.FailureType;
@@ -9,6 +11,7 @@ import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 
+@OwnedBy(PL)
 public class SignupException extends WingsException {
   private static final String MESSAGE_ARG = "message";
 

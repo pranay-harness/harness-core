@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
@@ -17,6 +18,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -73,6 +75,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * Created by anubhaw on 3/11/16.
  */
+@OwnedBy(PL)
 @Singleton
 @Priority(AUTHORIZATION)
 @Slf4j

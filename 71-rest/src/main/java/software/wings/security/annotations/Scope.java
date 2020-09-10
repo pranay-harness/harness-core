@@ -1,5 +1,8 @@
 package software.wings.security.annotations;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 
@@ -12,6 +15,7 @@ import javax.ws.rs.NameBinding;
 /**
  * @author rktummala on 3/9/18
  */
+@OwnedBy(PL)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
 @NameBinding

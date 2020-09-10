@@ -1,5 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.security.encryption.EncryptedData;
 
@@ -9,6 +12,7 @@ import java.io.OutputStream;
 /**
  * @author marklu on 2019-05-14
  */
+@OwnedBy(PL)
 public interface LocalEncryptionService {
   EncryptedData encrypt(char[] value, String accountId, LocalEncryptionConfig localEncryptionConfig);
 

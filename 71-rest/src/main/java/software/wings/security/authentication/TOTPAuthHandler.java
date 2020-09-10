@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class TOTPAuthHandler implements TwoFactorAuthHandler {

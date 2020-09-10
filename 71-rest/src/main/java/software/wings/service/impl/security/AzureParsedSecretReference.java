@@ -1,11 +1,14 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Value;
 
+@OwnedBy(PL)
 @Value
 public class AzureParsedSecretReference {
   public static final char SECRET_NAME_AND_VERSION_SEPARATOR = '/';

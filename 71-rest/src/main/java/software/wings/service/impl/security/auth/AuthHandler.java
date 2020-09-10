@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -54,6 +55,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -136,6 +138,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * @author rktummala on 3/7/18
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AuthHandler {

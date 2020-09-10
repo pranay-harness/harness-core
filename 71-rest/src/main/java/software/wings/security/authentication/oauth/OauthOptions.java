@@ -1,10 +1,12 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import software.wings.service.impl.SSOSettingServiceImpl;
 
 import java.util.List;
 
+@OwnedBy(PL)
 @Slf4j
 public class OauthOptions {
   @Inject GithubClientImpl githubClient;

@@ -1,5 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.encryption.EncryptedData;
@@ -14,6 +17,7 @@ import java.util.List;
 /**
  * Created by rsingh on 11/2/17.
  */
+@OwnedBy(PL)
 public interface VaultService {
   String VAULT_VAILDATION_URL = "harness_vault_validation";
   String DEFAULT_BASE_PATH = "/harness";
