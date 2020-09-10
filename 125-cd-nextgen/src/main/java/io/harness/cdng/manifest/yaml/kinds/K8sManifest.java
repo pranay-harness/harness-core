@@ -10,6 +10,7 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.serviceconfig.K8sManifestVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.AccessLevel;
@@ -21,7 +22,6 @@ import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -65,10 +65,9 @@ public class K8sManifest implements ManifestAttributes, ValuesPathProvider, Visi
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(valuesFilePaths);
-    children.add(storeConfigWrapper);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("storeConfigWrapper", storeConfigWrapper);
     return children;
   }
 }

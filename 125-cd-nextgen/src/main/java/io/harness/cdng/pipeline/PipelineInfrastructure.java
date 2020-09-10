@@ -6,13 +6,13 @@ import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.PipelineInfrastructureVisitorHelper;
 import io.harness.data.Outcome;
 import io.harness.state.Step;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -30,10 +30,10 @@ public class PipelineInfrastructure implements Outcome, Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(infrastructureDefinition);
-    children.add(environment);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("infrastructureDefinition", infrastructureDefinition);
+    children.add("environment", environment);
     return children;
   }
 }

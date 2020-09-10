@@ -7,14 +7,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.visitor.helpers.serviceconfig.ManifestConfigVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -47,9 +45,9 @@ public class ManifestConfig implements ManifestConfigWrapper, Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(manifestAttributes);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("manifestAttributes", manifestAttributes);
     return children;
   }
 }

@@ -6,6 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cdng.visitor.helpers.serviceconfig.StoreConfigWrapperVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
@@ -15,9 +16,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -46,9 +44,9 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(storeConfig);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("storeConfig", storeConfig);
     return children;
   }
 }

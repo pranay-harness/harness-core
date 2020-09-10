@@ -7,13 +7,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ArtifactListConfigVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,12 +45,10 @@ public class ArtifactListConfig implements Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(primary);
-    if (isNotEmpty(sidecars)) {
-      children.addAll(sidecars);
-    }
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("primary", primary);
+    sidecars.forEach(sidecar -> children.add("sidecars", sidecar));
     return children;
   }
 }

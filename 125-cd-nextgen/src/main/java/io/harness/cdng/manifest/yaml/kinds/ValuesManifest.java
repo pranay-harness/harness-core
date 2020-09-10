@@ -7,6 +7,7 @@ import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ValuesManifestVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.AccessLevel;
@@ -15,9 +16,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Builder
@@ -51,9 +49,9 @@ public class ValuesManifest implements ManifestAttributes, Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(storeConfigWrapper);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("storeConfigWrapper", storeConfigWrapper);
     return children;
   }
 }

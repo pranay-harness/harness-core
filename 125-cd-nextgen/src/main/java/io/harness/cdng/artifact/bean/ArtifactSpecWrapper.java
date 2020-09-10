@@ -6,6 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.AccessLevel;
@@ -14,8 +15,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -36,9 +35,9 @@ public class ArtifactSpecWrapper implements Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(artifactConfig);
-    return children;
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren visitableChildren = VisitableChildren.builder().build();
+    visitableChildren.add("artifactConfig", artifactConfig);
+    return visitableChildren;
   }
 }

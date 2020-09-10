@@ -7,12 +7,12 @@ import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.visitor.helpers.serviceconfig.KubernetesServiceSpecVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Value
@@ -31,10 +31,10 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(artifacts);
-    children.addAll(manifests);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("artifacts", artifacts);
+    manifests.forEach(manifest -> children.add("manifests", manifest));
     // add override sets if necessary
     return children;
   }
