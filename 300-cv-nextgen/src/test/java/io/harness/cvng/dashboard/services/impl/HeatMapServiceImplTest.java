@@ -5,9 +5,11 @@ import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIFTE
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_MIN;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -17,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
@@ -26,12 +29,17 @@ import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -52,9 +60,10 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
   private String accountId;
   @Inject private HPersistence hPersistence;
   @Inject private DSConfigService dsConfigService;
+  @Mock private CVConfigService cvConfigService;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     projectIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
@@ -73,6 +82,10 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
                                                     .tierName(generateUuid())
                                                     .build()));
     dsConfigService.upsert(dsConfig);
+    MockitoAnnotations.initMocks(this);
+    FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
+    when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
   }
 
   @Test
@@ -369,25 +382,109 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
   public void testGetHeatMap_ForSavedCategories() {
     Set<CVMonitoringCategory> categories = new HashSet<>();
     for (CVMonitoringCategory cvMonitoringCategory : CVMonitoringCategory.values()) {
-      AppDynamicsDSConfig dsConfig = new AppDynamicsDSConfig();
-      dsConfig.setProjectIdentifier(projectIdentifier);
-      dsConfig.setAccountId(accountId);
-      dsConfig.setMetricPacks(Sets.newHashSet(MetricPack.builder().category(cvMonitoringCategory).build()));
-      dsConfig.setConnectorIdentifier(generateUuid());
-      dsConfig.setEnvIdentifier(envIdentifier);
-      dsConfig.setProductName(generateUuid());
-      dsConfig.setApplicationName(generateUuid());
-      dsConfig.setIdentifier(generateUuid());
-      dsConfig.setServiceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
-                                                      .serviceIdentifier(serviceIdentifier)
-                                                      .tierName(generateUuid())
-                                                      .build()));
-      dsConfigService.upsert(dsConfig);
       categories.add(cvMonitoringCategory);
+      when(cvConfigService.getAvailableCategories(accountId, projectIdentifier)).thenReturn(categories);
       Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, projectIdentifier,
           serviceIdentifier, envIdentifier, Instant.now().minus(1, ChronoUnit.HOURS), Instant.now());
       assertThat(heatMap.size()).isEqualTo(categories.size());
       categories.forEach(category -> assertThat(heatMap).containsKey(category));
     }
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCategoryRiskScores_singleServiceEnvironment() {
+    String orgId = generateUuid();
+
+    when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.QUALITY)));
+    int numOfRiskUnits = 24;
+    int riskStartBoundary = 30;
+    for (int minuteBoundry = riskStartBoundary;
+         minuteBoundry < riskStartBoundary + numOfRiskUnits * CV_ANALYSIS_WINDOW_MINUTES;
+         minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
+          CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier + "2", envIdentifier,
+          CVMonitoringCategory.QUALITY, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
+    }
+
+    Map<CVMonitoringCategory, Integer> categoryRiskMap =
+        heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, serviceIdentifier, envIdentifier);
+
+    assertThat(categoryRiskMap).isNotNull();
+    assertThat(categoryRiskMap.size()).isEqualTo(1);
+    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCategoryRiskScores_singleEnvironment() {
+    String orgId = generateUuid();
+    Map<String, Set<String>> envServiceMap = new HashMap<>();
+    Set<String> services = new HashSet<>(Arrays.asList(serviceIdentifier, serviceIdentifier + "2"));
+    envServiceMap.put(envIdentifier, services);
+
+    when(cvConfigService.getEnvToServicesMap(accountId, orgId, projectIdentifier)).thenReturn(envServiceMap);
+    when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.QUALITY)));
+    int numOfRiskUnits = 24;
+    int riskStartBoundary = 30;
+    for (int minuteBoundry = riskStartBoundary;
+         minuteBoundry < riskStartBoundary + numOfRiskUnits * CV_ANALYSIS_WINDOW_MINUTES;
+         minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
+          CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier + "2", envIdentifier,
+          CVMonitoringCategory.QUALITY, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
+    }
+
+    Map<CVMonitoringCategory, Integer> categoryRiskMap =
+        heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, null, envIdentifier);
+
+    assertThat(categoryRiskMap).isNotNull();
+    assertThat(categoryRiskMap.size()).isEqualTo(2);
+    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
+    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.QUALITY)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCategoryRiskScores_multipleServices() {
+    String orgId = generateUuid();
+    Map<String, Set<String>> envServiceMap = new HashMap<>();
+    Set<String> services = new HashSet<>(Arrays.asList(serviceIdentifier, serviceIdentifier + "2"));
+    envServiceMap.put(envIdentifier, services);
+
+    when(cvConfigService.getEnvToServicesMap(accountId, orgId, projectIdentifier)).thenReturn(envServiceMap);
+    when(cvConfigService.getAvailableCategories(accountId, projectIdentifier))
+        .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.QUALITY)));
+    int numOfRiskUnits = 24;
+    int riskStartBoundary = 30;
+    for (int minuteBoundry = riskStartBoundary;
+         minuteBoundry < riskStartBoundary + numOfRiskUnits * CV_ANALYSIS_WINDOW_MINUTES;
+         minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier, envIdentifier,
+          CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
+      heatMapService.updateRiskScore(accountId, projectIdentifier, serviceIdentifier + "2", envIdentifier,
+          CVMonitoringCategory.QUALITY, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)),
+          0.01 * minuteBoundry);
+    }
+
+    Map<CVMonitoringCategory, Integer> categoryRiskMap =
+        heatMapService.getCategoryRiskScores(accountId, orgId, projectIdentifier, null, null);
+
+    assertThat(categoryRiskMap).isNotNull();
+    assertThat(categoryRiskMap.size()).isEqualTo(2);
+    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
+    assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.QUALITY)).isTrue();
   }
 }

@@ -6,6 +6,8 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 public interface CVConfigService {
@@ -26,4 +28,6 @@ public interface CVConfigService {
   void setCollectionTaskId(String uuid, String dataCollectionTaskId);
   List<CVConfig> find(String accountId, List<DataSourceType> dataSourceTypes);
   List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier);
+  Map<String, Set<String>> getEnvToServicesMap(String accountId, String orgIdentifier, String projectIdentifier);
+  Set<CVMonitoringCategory> getAvailableCategories(String accountId, String projectIdentifier);
 }
