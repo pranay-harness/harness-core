@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -16,6 +19,7 @@ import java.util.Date;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 @AllArgsConstructor
 @Slf4j
 public class SearchHeartbeatMonitor implements Runnable {

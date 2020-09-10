@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -9,6 +10,7 @@ import static software.wings.sm.states.ShellScriptState.ConnectionType.WINRM;
 
 import com.google.common.collect.Sets;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.InvalidArgumentsException;
@@ -28,6 +30,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @UtilityClass
 public class CustomSecretsManagerValidationUtils {
   static final String OUTPUT_VARIABLE = "secret";

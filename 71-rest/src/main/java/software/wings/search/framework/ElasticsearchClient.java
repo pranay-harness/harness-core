@@ -1,8 +1,11 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -32,6 +35,7 @@ import java.io.IOException;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 @Singleton
 public class ElasticsearchClient {
   @Inject private RestHighLevelClient client;

@@ -1,7 +1,10 @@
 package io.harness.cache;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -12,6 +15,7 @@ import javax.cache.configuration.Factory;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.ExpiryPolicy;
 
+@OwnedBy(PL)
 public class HarnessCacheManagerImpl implements HarnessCacheManager {
   private final CacheManager cacheManager;
   private final CacheConfig cacheConfig;

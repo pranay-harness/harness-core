@@ -1,8 +1,12 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 
+@OwnedBy(PL)
 public interface CustomSecretsManagerService {
   CustomSecretsManagerConfig getSecretsManager(@NotEmpty String accountId, @NotEmpty String configId);
 

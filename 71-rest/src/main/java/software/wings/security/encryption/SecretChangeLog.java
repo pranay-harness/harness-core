@@ -1,6 +1,9 @@
 package software.wings.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
@@ -20,6 +23,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 11/01/17.
  */
+@OwnedBy(PL)
 @Data
 @Builder
 @NoArgsConstructor

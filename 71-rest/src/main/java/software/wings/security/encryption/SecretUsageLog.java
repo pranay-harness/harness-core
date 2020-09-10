@@ -1,8 +1,11 @@
 package software.wings.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -35,6 +38,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 10/27/17.
  */
+@OwnedBy(PL)
 @Data
 @Builder
 @NoArgsConstructor

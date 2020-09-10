@@ -1,7 +1,10 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Variable;
@@ -17,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 class CustomSecretsManagerShellScriptHelper {
   private TemplateService templateService;
 

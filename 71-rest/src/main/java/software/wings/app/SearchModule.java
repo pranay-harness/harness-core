@@ -1,11 +1,14 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
@@ -32,6 +35,7 @@ import java.net.URISyntaxException;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Slf4j
 public class SearchModule extends AbstractModule {
   @Provides

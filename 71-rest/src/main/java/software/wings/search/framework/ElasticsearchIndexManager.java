@@ -1,7 +1,10 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
@@ -26,6 +29,7 @@ import java.util.Set;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Slf4j
 public class ElasticsearchIndexManager {
   @Inject private ElasticsearchClient elasticsearchClient;

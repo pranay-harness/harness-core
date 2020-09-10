@@ -1,5 +1,6 @@
 package software.wings.security.encryption.setupusage.builders;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.expression.SecretString.SECRET_MASK;
@@ -8,6 +9,7 @@ import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NonNull;
@@ -27,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Singleton
 public class ServiceVariableSetupUsageBuilder implements SecretSetupUsageBuilder {
   @Inject private ServiceVariableService serviceVariableService;

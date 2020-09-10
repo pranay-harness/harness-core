@@ -1,9 +1,12 @@
 package software.wings.search.entities.environment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import software.wings.features.AuditTrailFeature;
@@ -19,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(PL)
 public class EnvironmentElasticsearchRequestHandler
     extends AbstractElasticsearchRequestHandler implements ElasticsearchRequestHandler {
   @Inject @Named(AuditTrailFeature.FEATURE_NAME) private PremiumFeature auditTrailFeature;

@@ -1,10 +1,13 @@
 package software.wings.search.entities.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,7 @@ import java.util.Set;
  * @author ujjawal
  */
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class WorkflowChangeHandler implements ChangeHandler {

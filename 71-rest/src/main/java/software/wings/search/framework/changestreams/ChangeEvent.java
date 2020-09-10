@@ -1,6 +1,9 @@
 package software.wings.search.framework.changestreams;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Value
 @Builder
 @AllArgsConstructor

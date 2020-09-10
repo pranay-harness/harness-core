@@ -15,10 +15,12 @@
  */
 package io.harness.stream.redisson;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.stream.redisson.RedissonFactory.REDIS_ENV_NAMESPACE;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.AtmosphereConfig;
@@ -36,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author Michael Gerlyand
  */
+@OwnedBy(PL)
 @NoArgsConstructor
 @Slf4j
 public class RedissonBroadcaster extends AbstractBroadcasterProxy {

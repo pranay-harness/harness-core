@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.gcpkms;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -26,6 +27,7 @@ import com.google.protobuf.ByteString;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.SimpleEncryption;
@@ -54,6 +56,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+@OwnedBy(PL)
 @Slf4j
 public class GcpKmsEncryptDecryptClient {
   private static final int DEFAULT_GCP_KMS_TIMEOUT = 20;

@@ -1,9 +1,11 @@
 package software.wings.search;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.Builder;
@@ -33,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Slf4j
 public class ElasticsearchServiceImpl implements SearchService {
   @Inject private Set<SearchEntity<?>> searchEntities;

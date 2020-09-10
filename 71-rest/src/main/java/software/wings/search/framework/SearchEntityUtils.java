@@ -1,5 +1,7 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -8,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.HObjectFactory;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,7 @@ import java.util.concurrent.TimeUnit;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @UtilityClass
 @Slf4j
 public final class SearchEntityUtils {

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -10,6 +11,7 @@ import static software.wings.service.impl.security.customsecretsmanager.CustomSe
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.CommandExecutionException;
 import io.harness.security.encryption.EncryptedRecord;
@@ -21,6 +23,7 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 import software.wings.service.impl.security.SecretManagementDelegateException;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 
+@OwnedBy(PL)
 @Singleton
 public class CustomSecretsManagerDelegateServiceImpl implements CustomSecretsManagerDelegateService {
   private ShellScriptTaskHandler shellScriptTaskHandler;

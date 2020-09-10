@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -10,6 +13,7 @@ import lombok.experimental.FieldNameConstants;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 @Value
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "EntityInfoKeys")

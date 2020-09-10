@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -13,7 +16,7 @@ import org.mongodb.morphia.annotations.Id;
  *
  * @author utkarsh
  */
-
+@OwnedBy(PL)
 @Value
 @Entity(value = "searchEntitiesIndexState", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "SearchEntityIndexStateKeys")

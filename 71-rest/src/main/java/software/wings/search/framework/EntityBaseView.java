@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +16,7 @@ import software.wings.beans.EntityType;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

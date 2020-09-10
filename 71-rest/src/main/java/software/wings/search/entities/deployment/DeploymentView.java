@@ -1,5 +1,8 @@
 package software.wings.search.entities.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import lombok.Data;
@@ -12,6 +15,7 @@ import software.wings.search.framework.EntityInfo;
 
 import java.util.Set;
 
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

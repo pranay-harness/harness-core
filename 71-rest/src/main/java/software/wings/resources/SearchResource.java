@@ -1,10 +1,12 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HintException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
@@ -24,6 +26,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api("search")
 @Path("/search")
 @Consumes(APPLICATION_JSON)

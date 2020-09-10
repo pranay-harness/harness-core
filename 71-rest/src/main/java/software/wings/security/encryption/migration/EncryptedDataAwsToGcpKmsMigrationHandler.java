@@ -1,5 +1,6 @@
 package software.wings.security.encryption.migration;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import de.danielbechler.util.Collections;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filesystem.FileIo;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -51,6 +53,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)

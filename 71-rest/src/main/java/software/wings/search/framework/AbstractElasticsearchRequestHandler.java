@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
@@ -10,6 +13,7 @@ import software.wings.search.framework.EntityBaseView.EntityBaseViewKeys;
 
 import java.util.List;
 
+@OwnedBy(PL)
 @Slf4j
 public abstract class AbstractElasticsearchRequestHandler implements ElasticsearchRequestHandler {
   private static final int BOOST_VALUE = 15;

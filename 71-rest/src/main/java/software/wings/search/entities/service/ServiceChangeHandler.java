@@ -1,10 +1,13 @@
 package software.wings.search.entities.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
@@ -39,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class ServiceChangeHandler implements ChangeHandler {

@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.search.framework.changestreams.ChangeEvent;
 
 /**
@@ -9,4 +12,7 @@ import software.wings.search.framework.changestreams.ChangeEvent;
  * @author utkarsh
  */
 
-public interface ChangeHandler { boolean handleChange(ChangeEvent<?> changeEvent); }
+@OwnedBy(PL)
+public interface ChangeHandler {
+  boolean handleChange(ChangeEvent<?> changeEvent);
+}

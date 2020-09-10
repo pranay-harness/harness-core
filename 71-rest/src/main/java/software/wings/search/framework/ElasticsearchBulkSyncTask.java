@@ -1,9 +1,11 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -31,6 +33,7 @@ import java.util.Set;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Slf4j
 public class ElasticsearchBulkSyncTask {
   @Inject private WingsPersistence wingsPersistence;

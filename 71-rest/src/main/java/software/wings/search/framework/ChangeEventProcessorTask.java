@@ -1,9 +1,11 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -25,6 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 @Slf4j
 public class ChangeEventProcessorTask implements Runnable {
   private ExecutorService executorService;

@@ -1,6 +1,7 @@
 package io.harness.cache;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -11,6 +12,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheEntity.CacheEntityKeys;
 import io.harness.govern.IgnoreThrowable;
 import io.harness.persistence.HPersistence;
@@ -25,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class MongoStore implements DistributedStore {

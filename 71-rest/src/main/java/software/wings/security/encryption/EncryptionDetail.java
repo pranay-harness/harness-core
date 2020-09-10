@@ -1,9 +1,13 @@
 package software.wings.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Builder;
 import lombok.Data;
 
+@OwnedBy(PL)
 @Data
 @Builder
 public class EncryptionDetail implements Comparable<EncryptionDetail> {

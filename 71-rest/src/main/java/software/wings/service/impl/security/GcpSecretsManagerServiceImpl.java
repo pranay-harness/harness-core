@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GCP_KMS_OPERATION_ERROR;
@@ -18,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.DuplicateFieldException;
@@ -39,6 +41,7 @@ import software.wings.service.intfc.security.GcpSecretsManagerService;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+@OwnedBy(PL)
 @Slf4j
 public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements GcpSecretsManagerService {
   private static final String CREDENTIAL_SUFFIX = "_credentials";

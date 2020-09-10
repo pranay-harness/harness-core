@@ -15,6 +15,9 @@
  */
 package io.harness.stream.redisson;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
 import io.harness.redis.RedisConfig;
 import io.harness.redis.RedissonKryoCodec;
@@ -31,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @UtilityClass
 @Slf4j
 public class RedissonFactory {

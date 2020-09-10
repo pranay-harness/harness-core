@@ -1,5 +1,6 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.FeatureName.CUSTOM_SECRETS_MANAGER;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
@@ -7,6 +8,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HintException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -28,6 +30,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api("custom-secrets-managers")
 @Path("/custom-secrets-managers")
 @Produces("application/json")

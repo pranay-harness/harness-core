@@ -1,5 +1,6 @@
 package software.wings.security.encryption.setupusage;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.security.encryption.setupusage.SecretSetupUsageBuilders.CONFIG_FILE_SETUP_USAGE_BUILDER;
 import static software.wings.security.encryption.setupusage.SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER;
 import static software.wings.security.encryption.setupusage.SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER;
@@ -11,12 +12,14 @@ import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Singleton
 class SecretSetupUsageBuilderRegistry {
   @Inject private Injector injector;

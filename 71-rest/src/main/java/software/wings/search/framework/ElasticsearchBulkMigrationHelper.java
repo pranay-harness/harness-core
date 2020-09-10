@@ -1,8 +1,11 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+@OwnedBy(PL)
 @Slf4j
 class ElasticsearchBulkMigrationHelper {
   @Inject private WingsPersistence wingsPersistence;

@@ -1,9 +1,11 @@
 package migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
@@ -15,6 +17,7 @@ import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
 
+@OwnedBy(PL)
 @Slf4j
 public class VaultConfigRenewalIntervalMigration implements Migration {
   private WingsPersistence wingsPersistence;
