@@ -70,6 +70,7 @@ import static software.wings.sm.StateType.AWS_LAMBDA_ROLLBACK;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
+import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
@@ -154,6 +155,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AwsCodeDeployState;
+import software.wings.sm.states.customdeployment.InstanceFetchState.InstanceFetchStateKeys;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -630,7 +632,7 @@ public class WorkflowServiceHelper {
         spotInstInfra = infraMapping instanceof AwsAmiInfrastructureMapping;
       }
       if (spotInstInfra) {
-        Map<String, Object> defaultData = newHashMap();
+        Map<String, Object> defaultData = new HashMap();
         defaultData.put("blueGreen", false);
         phaseSteps.add(aPhaseStep(PhaseStepType.SPOTINST_SETUP, SPOTINST_SETUP)
                            .addStep(GraphNode.builder()
@@ -2893,7 +2895,14 @@ public class WorkflowServiceHelper {
 
     phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.DEPLOY).build());
     phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.VERIFY_SERVICE).build());
-    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build());
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(CUSTOM_DEPLOYMENT_FETCH_INSTANCES.name())
+                                    .name(FETCH_INSTANCES)
+                                    .properties(ImmutableMap.of(InstanceFetchStateKeys.stateTimeoutInMinutes, 1))
+                                    .build())
+                       .build());
   }
 
   public void generateNewWorkflowPhaseStepsForArtifactCollection(WorkflowPhase workflowPhase) {

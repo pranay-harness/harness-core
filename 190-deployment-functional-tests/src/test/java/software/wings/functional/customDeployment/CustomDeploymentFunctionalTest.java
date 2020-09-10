@@ -69,6 +69,7 @@ import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.StateType;
+import software.wings.sm.states.customdeployment.InstanceFetchState.InstanceFetchStateKeys;
 
 import java.io.File;
 import java.io.IOException;
@@ -313,25 +314,26 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
     properties.put("executeOnDelegate", true);
 
     List<PhaseStep> phaseSteps = new ArrayList<>();
-    phaseSteps.add(
-        aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, FETCH_INSTANCE_SCRIPT_CONSTANT)
-            .addStep(GraphNode.builder()
-                         .id(generateUuid())
-                         .type(StateType.SHELL_SCRIPT.name())
-                         .name(shellScriptTemplate.getName())
-                         .properties(properties)
-                         .templateVariables(shellScriptTemplate.getVariables())
-                         .templateUuid(shellScriptTemplate.getUuid())
-                         .templateVersion("latest")
-                         .build())
-            .addStep(GraphNode.builder()
-                         .id(generateUuid())
-                         .name("Fetch Instance")
-                         .type(CUSTOM_DEPLOYMENT_FETCH_INSTANCES.name())
-                         .templateUuid(customDeploymentTypeTemplateId)
-                         .properties(ImmutableMap.<String, Object>builder().put("stateTimeoutInMinutes", "1").build())
-                         .build())
-            .build());
+    phaseSteps.add(aPhaseStep(CUSTOM_DEPLOYMENT_PHASE_STEP, FETCH_INSTANCE_SCRIPT_CONSTANT)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.SHELL_SCRIPT.name())
+                                    .name(shellScriptTemplate.getName())
+                                    .properties(properties)
+                                    .templateVariables(shellScriptTemplate.getVariables())
+                                    .templateUuid(shellScriptTemplate.getUuid())
+                                    .templateVersion("latest")
+                                    .build())
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .name("Fetch Instance")
+                                    .type(CUSTOM_DEPLOYMENT_FETCH_INSTANCES.name())
+                                    .templateUuid(customDeploymentTypeTemplateId)
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put(InstanceFetchStateKeys.stateTimeoutInMinutes, "1")
+                                                    .build())
+                                    .build())
+                       .build());
 
     phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
 

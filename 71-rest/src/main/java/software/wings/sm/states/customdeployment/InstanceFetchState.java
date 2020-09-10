@@ -37,6 +37,7 @@ import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -81,6 +82,7 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@FieldNameConstants(innerTypeName = "InstanceFetchStateKeys")
 @Slf4j
 public class InstanceFetchState extends State {
   public static final String OUTPUT_PATH_KEY = "INSTANCE_OUTPUT_PATH";
