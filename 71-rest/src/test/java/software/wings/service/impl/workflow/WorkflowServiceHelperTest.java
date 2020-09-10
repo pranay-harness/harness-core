@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -60,6 +61,7 @@ import static software.wings.service.impl.workflow.creation.abstractfactories.Ab
 import static software.wings.service.impl.workflow.creation.abstractfactories.AbstractWorkflowFactory.Category.K8S_V2;
 import static software.wings.sm.StateType.AZURE_VMSS_ROLLBACK;
 import static software.wings.sm.StateType.AZURE_VMSS_SWITCH_ROUTES_ROLLBACK;
+import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
@@ -136,6 +138,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.customdeployment.InstanceFetchState.InstanceFetchStateKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1577,5 +1580,20 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     doReturn(Service.builder().build()).when(serviceResourceService).get(APP_ID, SERVICE_ID, false);
     assertThat(workflowServiceHelper.getCategory(APP_ID, SERVICE_ID)).isEqualTo(GENERAL);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testCustomDeploymentWrapUpPhaseHasFetchInstanceScriptStep() {
+    WorkflowPhase workflowPhase = aWorkflowPhase().deploymentType(CUSTOM).build();
+    workflowServiceHelper.generateNewWorkflowPhaseSteps(APP_ID, ENV_ID, workflowPhase, false, BASIC, null);
+
+    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().size()).isNotEqualTo(0);
+    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().get(0).getType())
+        .isEqualTo(CUSTOM_DEPLOYMENT_FETCH_INSTANCES.name());
+    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().get(0).getProperties().size()).isEqualTo(1);
+    assertThat(workflowPhase.getPhaseSteps().get(2).getSteps().get(0).getProperties())
+        .isEqualTo(ImmutableMap.of(InstanceFetchStateKeys.stateTimeoutInMinutes, 1));
   }
 }
