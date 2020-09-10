@@ -39,7 +39,18 @@ public class WebhookParameters {
   public static final String BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID = "${changes[0].toHash}";
   public static final String BIT_BUCKET_REFS_CHANGED_REF = "${changes[0].refId.split('refs/heads/')[1]}";
   public static final String BIT_BUCKET_REPOSITORY_NAME = "${repository.name}";
+  public static final String BIT_BUCKET_REPOSITORY_FULL_NAME = "${repository.full_name}";
   public static final String BIT_BUCKET_ON_PREM_PULL_REPOSITORY_NAME = "${pullRequest.toRef.repository.name}";
+  // ?
+  public static final String BIT_BUCKET_REPOSITORY_CLONE_HTTP =
+      "${(${repository.links.clone.0.name} eq 'http') ? ${repository.links.clone.0.href} : ${repository.links.clone.1.href}}";
+  public static final String BIT_BUCKET_REPOSITORY_CLONE_SSH =
+      "${(${repository.links.clone.0.name} eq 'ssh') ? ${repository.links.clone.0.href} : ${repository.links.clone.1.href}}";
+  public static final String BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_HTTP =
+      "${(${pullRequest.toRef.repository.links.clone.0.name} eq 'http') ? ${pullRequest.toRef.repository.links.clone.0.href} : ${pullRequest.toRef.repository.links.clone.1.href}}";
+  public static final String BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_SSH =
+      "${(${pullRequest.toRef.repository.links.clone.0.name} eq 'ssh') ? ${pullRequest.toRef.repository.links.clone.0.href} : ${pullRequest.toRef.repository.links.clone.1.href}}";
+  public static final String COMMON_EXPRESSION_PREFIX = "${";
 
   // Git Hub Pull request suggestions
   public static final String GH_PR_ID = "${pull_request.id}";
@@ -68,15 +79,21 @@ public class WebhookParameters {
   public static final String GH_PUSH_COMMIT_ID = "${commits[0].id}";
   public static final String GH_PUSH_HEAD_COMMIT_ID = "${head_commit.id}";
   public static final String GH_PUSH_REPOSITORY_NAME = "${repository.name}";
+  public static final String GH_PUSH_REPOSITORY_FULL_NAME = "${repository.full_name}";
   public static final String GH_PUSH_REPOSITORY_ID = "${repository.id}";
+  public static final String GH_PUSH_REPOSITORY_CLONE_HTTP = "${repository.clone_url}";
+  public static final String GH_PUSH_REPOSITORY_CLONE_SSH = "${repository.ssh_url}";
 
   // Git Lab Push Event Suggestions
   public static final String GIT_LAB_PUSH_REF = "${ref}";
   public static final String GIT_LAB_PUSH_REF_BRANCH = "${ref.split('refs/heads/')[1]}";
   public static final String GIT_LAB_PULL_REF_BRANCH = "${object_attributes.source_branch}";
   public static final String GIT_LAB_PUSH_COMMIT_ID = "${checkout_sha}";
-  public static final String GIT_LAB_PUSH_REPOSITORY_NAME = "${repository.name}";
+  public static final String GIT_LAB_PUSH_REPOSITORY_NAME = "${project.path_with_namespace.split('/')[1]}";
+  public static final String GIT_LAB_PUSH_REPOSITORY_FULL_NAME = "${project.path_with_namespace}";
   public static final String GIT_LAB_PUSH_REPOSITORY_ID = "${repository.id}";
+  public static final String GIT_LAB_PUSH_REPOSITORY_CLONE_HTTP = "${project.http_url}";
+  public static final String GIT_LAB_PUSH_REPOSITORY_CLONE_SSH = "${project.ssh_url}";
 
   public static List<String> bitBucketPullRequestExpressions() {
     List<String> prSuggestions = new ArrayList<>();

@@ -97,6 +97,11 @@ public interface YamlGitService {
 
   List<YamlGitConfig> getYamlGitConfigsForGitToHarnessChangeSet(YamlChangeSet gitToHarnessChangeSet);
 
+  List<YamlGitConfig> getYamlGitConfigs(
+      String accountId, String gitConnectorId, String branchName, String repositoryName);
+
+  List<String> getYamlGitConfigIds(String accountId, String gitConnectorId, String branchName, String repositoryName);
+
   void handleGitChangeSet(YamlChangeSet yamlChangeSets, String accountId);
 
   String validateAndQueueWebhookRequest(

@@ -14,9 +14,6 @@ import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitI
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitTimeOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
-import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
-import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
-import static software.wings.yaml.gitSync.YamlGitConfig.REPOSITORY_NAME_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +29,6 @@ import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -44,17 +40,13 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.gitdiff.GitChangeSetHandler;
 import software.wings.service.impl.yaml.gitdiff.GitChangeSetProcesser;
 import software.wings.service.impl.yaml.sync.GitSyncFailureAlertDetails;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
-import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Utils;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
@@ -93,16 +85,12 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   @Transient @Inject private transient YamlChangeSetService yamlChangeSetService;
-  @Transient @Inject private transient YamlService yamlService;
 
   @Transient @Inject private transient YamlGitService yamlGitService;
-  @Transient @Inject private FeatureFlagService featureFlagService;
-  @Transient @Inject private AppService appService;
-  @Transient @Inject private YamlDirectoryService yamlDirectoryService;
-  @Transient @Inject private WingsPersistence wingsPersistence;
   @Transient @Inject private transient GitChangeSetProcesser gitChangeSetProcesser;
   @Transient @Inject GitSyncService gitSyncService;
   @Transient @Inject private GitSyncErrorService gitSyncErrorService;
+  @Transient @Inject GitChangeSetHandler gitChangeSetHandler;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
@@ -153,7 +141,7 @@ public class GitCommandCallback implements NotifyCallback {
               List<String> yamlSetIdsProcessed =
                   ((GitCommitRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetIds();
               List<String> yamlGitConfigIds =
-                  obtainYamlGitConfigIds(accountId, branchName, repositoryName, gitConnectorId);
+                  yamlGitService.getYamlGitConfigIds(accountId, gitConnectorId, branchName, repositoryName);
 
               saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
               final String processingCommitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
@@ -344,21 +332,6 @@ public class GitCommandCallback implements NotifyCallback {
     }
   }
 
-  @VisibleForTesting
-  List<String> obtainYamlGitConfigIds(
-      String accountId, String branchName, String repositoryName, String gitConnectorId) {
-    return wingsPersistence.createQuery(YamlGitConfig.class)
-        .filter(YamlGitConfig.ACCOUNT_ID_KEY, accountId)
-        .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
-        .filter(BRANCH_NAME_KEY, branchName)
-        .filter(REPOSITORY_NAME_KEY, repositoryName)
-        .project(YamlGitConfig.ID_KEY, true)
-        .asList()
-        .stream()
-        .map(Base::getUuid)
-        .collect(Collectors.toList());
-  }
-
   private ImmutableMap<String, String> getContext() {
     final ImmutableMap.Builder<String, String> context = ImmutableMap.builder();
     context.put("gitCommandCallBackType", gitCommandType.toString());
@@ -380,8 +353,9 @@ public class GitCommandCallback implements NotifyCallback {
       final GitWebhookRequestAttributes gitWebhookRequestAttributes = yamlChangeSet.getGitWebhookRequestAttributes();
       if (isValid(gitWebhookRequestAttributes)) {
         final String headCommitId = gitWebhookRequestAttributes.getHeadCommitId();
+        String repositoryFullName = yamlChangeSet.getGitWebhookRequestAttributes().getRepositoryFullName();
         final List<String> yamlConfigIds =
-            obtainYamlGitConfigIds(accountId, branchName, repositoryName, gitConnectorId);
+            yamlGitService.getYamlGitConfigIds(accountId, gitConnectorId, branchName, repositoryFullName);
 
         GitCommit.Status gitCommitStatus = GitCommit.Status.FAILED;
         if (ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER == errorCode) {
