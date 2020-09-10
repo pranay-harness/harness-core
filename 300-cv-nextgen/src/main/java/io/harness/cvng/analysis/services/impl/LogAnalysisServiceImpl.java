@@ -23,7 +23,6 @@ import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
-import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -132,7 +131,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
 
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), CVMonitoringCategory.PERFORMANCE, analysisEndTime,
+        cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig.getCategory(), analysisEndTime,
         analysisBody.getScore());
   }
 
