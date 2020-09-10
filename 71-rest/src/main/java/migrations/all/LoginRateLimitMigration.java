@@ -1,7 +1,10 @@
 package migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
@@ -11,6 +14,7 @@ import software.wings.beans.Account;
 
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 @Slf4j
 public class LoginRateLimitMigration implements Migration {
   @Inject LimitConfigurationService limitConfigurationService;

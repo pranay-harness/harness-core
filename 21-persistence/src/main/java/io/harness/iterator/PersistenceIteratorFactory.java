@@ -1,5 +1,6 @@
 package io.harness.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR;
@@ -12,6 +13,7 @@ import com.google.inject.Singleton;
 
 import com.codahale.metrics.InstrumentedExecutorService;
 import com.codahale.metrics.MetricRegistry;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.WorkersConfiguration;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -27,6 +29,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public final class PersistenceIteratorFactory {

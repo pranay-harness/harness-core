@@ -1,5 +1,6 @@
 package io.harness.event.handler.impl.segment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.model.EventConstants.ACCOUNT_STATUS;
@@ -19,6 +20,7 @@ import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.IdentifyMessage.Builder;
 import com.segment.analytics.messages.TrackMessage;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.Utils;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -34,6 +36,7 @@ import java.util.Map;
 /**
  * @author rktummala on 11/20/18
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SegmentHelper {

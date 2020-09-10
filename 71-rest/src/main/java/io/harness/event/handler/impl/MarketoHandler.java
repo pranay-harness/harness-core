@@ -1,5 +1,6 @@
 package io.harness.event.handler.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
@@ -37,6 +38,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.marketo.MarketoRestClient;
@@ -73,6 +75,7 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/20/18
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class MarketoHandler implements EventHandler {

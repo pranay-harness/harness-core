@@ -1,7 +1,10 @@
 package software.wings.audit;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -30,6 +33,7 @@ import java.util.List;
  *
  * @author Rishi
  */
+@OwnedBy(PL)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 

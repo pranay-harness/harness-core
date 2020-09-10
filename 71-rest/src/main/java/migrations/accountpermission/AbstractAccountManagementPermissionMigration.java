@@ -1,11 +1,13 @@
 package migrations.accountpermission;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
@@ -18,6 +20,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 
 import java.util.Set;
 
+@OwnedBy(PL)
 @Slf4j
 public abstract class AbstractAccountManagementPermissionMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;

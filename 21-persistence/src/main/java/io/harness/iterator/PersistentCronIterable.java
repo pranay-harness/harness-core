@@ -1,5 +1,6 @@
 package io.harness.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.cronutils.model.Cron;
@@ -7,6 +8,7 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
+import io.harness.annotations.dev.OwnedBy;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -14,6 +16,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@OwnedBy(PL)
 public interface PersistentCronIterable extends PersistentIrregularIterable {
   int INVENTORY_MINIMUM = 2;
 

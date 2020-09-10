@@ -1,12 +1,16 @@
 package io.harness.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.annotations.dev.OwnedBy;
+
 import java.time.Duration;
 import java.util.List;
 
+@OwnedBy(PL)
 public interface PersistentFibonacciIterable extends PersistentIrregularIterable {
   int INVENTORY_MINIMUM = 2;
   int REGULAR_INVENTORY = 10;

@@ -1,5 +1,6 @@
 package io.harness.event.handler.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -26,6 +27,7 @@ import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GRO
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -89,6 +91,7 @@ import javax.annotation.Nullable;
  * Publishes event if all the criteria is met. MarketoHandler handles the event and converts it into a marketo campaign.
  * @author rktummala on 11/27/18
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class EventPublishHelper {

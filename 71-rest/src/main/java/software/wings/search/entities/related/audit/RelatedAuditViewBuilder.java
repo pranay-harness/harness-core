@@ -1,15 +1,19 @@
 package software.wings.search.entities.related.audit;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.EntityType;
 
 import java.util.Map;
 
+@OwnedBy(PL)
 @Singleton
 public class RelatedAuditViewBuilder {
   public RelatedAuditView getAuditRelatedEntityView(AuditHeader auditHeader) {

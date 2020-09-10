@@ -1,6 +1,9 @@
 package software.wings.audit;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -21,6 +24,7 @@ import software.wings.audit.AuditRecord.AuditRecordKeys;
 
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @Entity(value = "entityAuditRecords", noClassnameStored = true)

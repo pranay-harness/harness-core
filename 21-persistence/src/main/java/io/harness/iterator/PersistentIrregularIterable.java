@@ -1,8 +1,13 @@
 package io.harness.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(PL)
 public interface PersistentIrregularIterable extends PersistentIterable {
   // Provides a list of iterations to handle. Note it returns a completely new list of iterations to replace the current
   // one. If some the current one are still valid they should be repeated.

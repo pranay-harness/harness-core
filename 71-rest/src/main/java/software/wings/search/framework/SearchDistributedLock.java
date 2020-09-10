@@ -1,6 +1,9 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAccess;
@@ -21,6 +24,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 @Value
 @Builder
 @Entity(value = "searchDistributedLocks", noClassnameStored = true)

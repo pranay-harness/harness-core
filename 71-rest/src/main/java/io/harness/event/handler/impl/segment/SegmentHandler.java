@@ -1,5 +1,6 @@
 package io.harness.event.handler.impl.segment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
@@ -41,6 +42,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.Utils;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -74,6 +76,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SegmentHandler implements EventHandler {

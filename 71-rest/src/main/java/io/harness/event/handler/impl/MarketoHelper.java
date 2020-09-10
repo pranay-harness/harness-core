@@ -1,5 +1,6 @@
 package io.harness.event.handler.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
@@ -7,6 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.marketo.MarketoRestClient;
 import io.harness.event.model.marketo.Error;
 import io.harness.event.model.marketo.GetLeadResponse;
@@ -34,6 +36,7 @@ import java.util.List;
 /**
  * @author rktummala on 11/20/18
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class MarketoHelper {

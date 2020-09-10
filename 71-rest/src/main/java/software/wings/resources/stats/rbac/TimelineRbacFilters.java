@@ -1,11 +1,13 @@
 package software.wings.resources.stats.rbac;
 
 import static com.google.common.collect.Sets.union;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptySet;
 
 import com.google.common.collect.Sets;
 
+import io.harness.annotations.dev.OwnedBy;
 import org.apache.commons.collections4.SetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
+@OwnedBy(PL)
 public class TimelineRbacFilters {
   private static final Logger log = LoggerFactory.getLogger(TimelineRbacFilters.class);
 
