@@ -1,5 +1,7 @@
 package software.wings.ratelimit;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -8,6 +10,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import es.moki.ratelimitj.core.limiter.request.RequestLimitRule;
 import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
 import es.moki.ratelimitj.inmemory.request.InMemorySlidingWindowRequestRateLimiter;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -21,6 +24,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)

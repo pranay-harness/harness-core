@@ -1,5 +1,7 @@
 package io.harness.event;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
@@ -7,6 +9,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.MarketoHandler;
 import io.harness.event.handler.impl.VerificationEventHandler;
@@ -31,6 +34,7 @@ import javax.annotation.Nullable;
  * Guice Module for initializing events framework classes.
  * @author rktummala on 11/26/18
  */
+@OwnedBy(PL)
 public class EventsModule extends AbstractModule {
   private MainConfiguration mainConfiguration;
 

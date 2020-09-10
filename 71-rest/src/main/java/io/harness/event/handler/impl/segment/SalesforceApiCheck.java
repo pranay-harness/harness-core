@@ -1,8 +1,11 @@
 package io.harness.event.handler.impl.segment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.segment.SalesforceConfig;
 import lombok.AccessLevel;
@@ -26,6 +29,7 @@ import software.wings.beans.Account;
 
 import java.io.IOException;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)

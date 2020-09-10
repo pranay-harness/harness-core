@@ -1,5 +1,6 @@
 package io.harness.event.handler.impl.account;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.model.EventConstants.EMAIL;
@@ -15,6 +16,7 @@ import com.google.inject.Singleton;
 
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.Utils;
@@ -51,6 +53,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @NoArgsConstructor
 @Singleton
 @Slf4j

@@ -1,11 +1,13 @@
 package io.harness.event.handler.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.model.marketo.Error;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
@@ -21,6 +23,7 @@ import java.util.Map;
 /**
  * @author rktummala
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class Utils {

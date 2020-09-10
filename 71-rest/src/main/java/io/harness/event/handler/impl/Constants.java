@@ -1,10 +1,15 @@
 package io.harness.event.handler.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Singleton;
+
+import io.harness.annotations.dev.OwnedBy;
 
 /**
  * @author rktummala
  */
+@OwnedBy(PL)
 @Singleton
 public interface Constants {
   String EMAIL_ID = "email_id";

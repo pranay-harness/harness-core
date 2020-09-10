@@ -1,5 +1,6 @@
 package io.harness.event.handler.impl.notifications;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.event.model.EventType.CLOSE_ALERT;
 import static io.harness.event.model.EventType.OPEN_ALERT;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
@@ -36,6 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(PL)
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j

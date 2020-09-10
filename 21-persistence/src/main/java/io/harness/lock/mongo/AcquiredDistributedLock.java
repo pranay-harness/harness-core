@@ -1,11 +1,13 @@
 package io.harness.lock.mongo;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.AcquiredLock;
 import io.harness.persistence.HPersistence;
 import lombok.Builder;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.util.time.MonotonicSystemClock;
 import org.eclipse.jgit.util.time.ProposedTimestamp;
 
+@OwnedBy(PL)
 @Builder
 @Slf4j
 public class AcquiredDistributedLock implements AcquiredLock<DistributedLock> {
