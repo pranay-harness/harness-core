@@ -1,6 +1,10 @@
 package software.wings.service.impl.marketplace.gcp;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.base.Preconditions;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -12,6 +16,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Given the last sync time, it provides next times since then for which to send instance usage data to GCP.
  * See test for behaviour.
  */
+@OwnedBy(PL)
 @ParametersAreNonnullByDefault
 class GCPUsageReportTimeProvider {
   private Instant currentlyAt;

@@ -1,5 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedRecord;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
@@ -20,6 +23,7 @@ import java.util.List;
 /**
  * Created by rsingh on 10/2/17.
  */
+@OwnedBy(PL)
 public interface SecretManagementDelegateService {
   int NUM_OF_RETRIES = 3;
 

@@ -1,10 +1,13 @@
 package software.wings.service.impl.marketplace.gcp;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.cloudcommerceprocurement.v1.model.Entitlement;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.marketplace.gcp.GcpMarketPlaceConstants;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.marketplace.gcp.servicecontrol.GCPServiceControlService;
@@ -25,6 +28,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class GCPMarketPlaceServiceImpl implements GCPMarketPlaceService {

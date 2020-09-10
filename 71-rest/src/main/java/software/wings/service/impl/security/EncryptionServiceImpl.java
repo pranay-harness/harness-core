@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
@@ -41,6 +43,7 @@ import java.util.concurrent.Future;
 /**
  * Created by rsingh on 10/18/17.
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class EncryptionServiceImpl implements EncryptionService {

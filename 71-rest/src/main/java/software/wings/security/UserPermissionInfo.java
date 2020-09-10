@@ -1,6 +1,9 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.dashboard.Action;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +15,7 @@ import java.util.Set;
 /**
  * Created by rktummala on 2/26/18.
  */
+@OwnedBy(PL)
 @Data
 @Builder
 public class UserPermissionInfo {

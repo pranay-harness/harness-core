@@ -1,6 +1,5 @@
 package software.wings.service.impl.security.auth;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.validation.Validator.notNullCheck;
@@ -12,7 +11,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -36,8 +34,6 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by ujjawal on 05/24/20.
  */
-
-@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class DeploymentAuthHandler {

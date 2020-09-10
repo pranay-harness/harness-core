@@ -1,13 +1,17 @@
 package software.wings.security.authentication.recaptcha;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+@OwnedBy(PL)
 @Singleton
 @ThreadSafe
 public class ReCaptchaClientBuilder {

@@ -1,5 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptionType;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.SecretManagerConfig;
@@ -9,6 +12,7 @@ import java.util.List;
 /**
  * Created by mark.lu on 5/31/2019.
  */
+@OwnedBy(PL)
 public interface SecretManagerConfigService {
   String save(SecretManagerConfig secretManagerConfig);
 

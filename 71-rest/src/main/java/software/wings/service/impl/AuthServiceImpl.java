@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
@@ -48,6 +49,7 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey.ServiceType;
@@ -128,6 +130,7 @@ import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.crypto.spec.SecretKeySpec;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AuthServiceImpl implements AuthService {

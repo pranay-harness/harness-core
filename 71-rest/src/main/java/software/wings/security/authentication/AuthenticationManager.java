@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -22,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
@@ -54,6 +56,7 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.ws.rs.core.Response;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AuthenticationManager {

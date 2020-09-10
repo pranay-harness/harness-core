@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -31,6 +32,7 @@ import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.mongodb.DuplicateKeyException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -58,6 +60,7 @@ import java.util.regex.Pattern;
 /**
  * @author marklu on 2019-05-07
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements AwsSecretsManagerService {

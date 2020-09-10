@@ -1,10 +1,14 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.AzureVaultConfig;
 
 import java.io.IOException;
 import java.util.List;
 
+@OwnedBy(PL)
 public interface AzureSecretsManagerService {
   String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig secretsManagerConfig);
 

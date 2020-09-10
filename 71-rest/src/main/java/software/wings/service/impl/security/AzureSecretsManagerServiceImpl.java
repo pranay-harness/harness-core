@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -16,6 +17,7 @@ import com.google.inject.Singleton;
 import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -33,6 +35,7 @@ import software.wings.service.intfc.security.AzureSecretsManagerService;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements AzureSecretsManagerService {

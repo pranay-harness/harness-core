@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
@@ -10,6 +11,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -28,6 +30,7 @@ import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.Map;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AuthenticationUtils {

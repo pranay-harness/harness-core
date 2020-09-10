@@ -1,5 +1,8 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +14,7 @@ import java.util.Set;
  * @author Vaibhav Tulsyan
  * 12/Jun/2019
  */
+@OwnedBy(PL)
 @Data
 @Builder
 @NoArgsConstructor

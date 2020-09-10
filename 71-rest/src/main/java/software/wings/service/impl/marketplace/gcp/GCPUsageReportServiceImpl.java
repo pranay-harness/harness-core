@@ -1,9 +1,12 @@
 package software.wings.service.impl.marketplace.gcp;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -23,6 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 /**
  * Mongo backed implementation for gcpUsage service.
  */
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 @ParametersAreNonnullByDefault

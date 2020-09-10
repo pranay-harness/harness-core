@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
@@ -11,6 +12,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 /**
  * Created by rsingh on 6/7/18.
  */
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {

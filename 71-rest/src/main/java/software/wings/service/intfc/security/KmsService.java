@@ -1,5 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 
@@ -9,6 +12,7 @@ import java.io.OutputStream;
 /**
  * Created by rsingh on 9/29/17.
  */
+@OwnedBy(PL)
 public interface KmsService {
   EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig);
 

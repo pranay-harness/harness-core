@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
@@ -11,6 +12,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -28,6 +30,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class LdapBasedAuthHandler implements AuthHandler {

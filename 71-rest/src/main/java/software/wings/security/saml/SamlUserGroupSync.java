@@ -1,7 +1,10 @@
 package software.wings.security.saml;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
@@ -13,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(PL)
 @Slf4j
 public class SamlUserGroupSync {
   @Inject private UserGroupService userGroupService;

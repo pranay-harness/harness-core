@@ -1,11 +1,13 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.NoArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.Set;
  * @author Vaibhav Tulsyan
  * 21/May/2019
  */
+@OwnedBy(PL)
 @Singleton
 @NoArgsConstructor
 @Slf4j

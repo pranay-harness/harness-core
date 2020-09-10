@@ -1,5 +1,6 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
@@ -8,6 +9,7 @@ import static software.wings.sm.states.ApprovalState.JSON;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -29,6 +31,7 @@ import software.wings.security.authentication.MarketPlaceConfig;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+@OwnedBy(PL)
 @Slf4j
 public class AzureMarketplaceIntegrationService {
   private OkHttpClient client;

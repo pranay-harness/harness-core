@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -7,6 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -36,6 +38,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 11/6/17.
  */
+@OwnedBy(PL)
 @Slf4j
 public abstract class AbstractSecretServiceImpl {
   static final String SECRET_MASK = SecretString.SECRET_MASK;

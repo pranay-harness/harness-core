@@ -1,7 +1,10 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -17,6 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.core.Response;
 
+@OwnedBy(PL)
 @Slf4j
 public class SignupService {
   @Inject MarketoSignupHandler marketoSignupHandler;

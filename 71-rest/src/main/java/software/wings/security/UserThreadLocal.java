@@ -1,8 +1,12 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.experimental.UtilityClass;
 import software.wings.beans.User;
 
+@OwnedBy(PL)
 @UtilityClass
 public class UserThreadLocal {
   public static class Guard implements AutoCloseable {

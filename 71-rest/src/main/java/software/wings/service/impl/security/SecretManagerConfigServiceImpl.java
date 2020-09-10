@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
@@ -13,6 +14,7 @@ import static software.wings.service.intfc.security.SecretManager.IS_DEFAULT_KEY
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -53,6 +55,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * @author marklu on 2019-05-31
  */
+@OwnedBy(PL)
 @ValidateOnExecution
 @Singleton
 @Slf4j

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
@@ -43,6 +44,7 @@ import com.amazonaws.services.secretsmanager.model.UpdateSecretResult;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -87,6 +89,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {

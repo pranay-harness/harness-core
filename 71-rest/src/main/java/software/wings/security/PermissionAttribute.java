@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT;
 import static software.wings.security.PermissionAttribute.PermissionType.APP;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
@@ -7,6 +8,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.NONE;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import lombok.Data;
 
@@ -15,6 +17,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 3/10/16.
  */
+@OwnedBy(PL)
 @Data
 public class PermissionAttribute {
   private static final Map<String, Action> methodActionMap =

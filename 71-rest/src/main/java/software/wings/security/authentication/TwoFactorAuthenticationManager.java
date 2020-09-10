@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
@@ -31,6 +33,7 @@ import software.wings.service.intfc.UserService;
 import java.util.List;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class TwoFactorAuthenticationManager {

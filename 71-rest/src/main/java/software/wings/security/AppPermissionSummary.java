@@ -1,5 +1,8 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +17,7 @@ import java.util.Set;
  * The data is organized so that the lookup by AuthRuleFilter is faster.
  * @author rktummala on 3/8/18
  */
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 public class AppPermissionSummary {
