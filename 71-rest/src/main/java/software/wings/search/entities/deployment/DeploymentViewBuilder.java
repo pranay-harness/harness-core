@@ -1,9 +1,12 @@
 package software.wings.search.entities.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -25,6 +28,7 @@ import java.util.Set;
  * @author ujjawal
  */
 
+@OwnedBy(PL)
 @Singleton
 class DeploymentViewBuilder {
   @Inject private WingsPersistence wingsPersistence;

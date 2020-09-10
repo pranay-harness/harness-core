@@ -1,9 +1,12 @@
 package software.wings.search.entities.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Sort;
 import software.wings.audit.AuditHeader;
@@ -44,6 +47,7 @@ import java.util.Set;
  * @author ujjawal
  */
 
+@OwnedBy(PL)
 @Singleton
 class ServiceViewBuilder {
   @Inject private WingsPersistence wingsPersistence;

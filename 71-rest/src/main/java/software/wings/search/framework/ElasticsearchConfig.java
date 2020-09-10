@@ -1,6 +1,9 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -10,6 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 @Value
 @Builder
 public class ElasticsearchConfig {

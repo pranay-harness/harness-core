@@ -1,5 +1,9 @@
 package io.harness.cache;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,6 +18,7 @@ import javax.cache.integration.CompletionListener;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorResult;
 
+@OwnedBy(PL)
 public class NoOpCache<K, V> implements Cache<K, V> {
   @Override
   public V get(K key) {

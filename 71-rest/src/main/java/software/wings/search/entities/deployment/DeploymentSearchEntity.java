@@ -1,8 +1,11 @@
 package software.wings.search.entities.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
@@ -16,6 +19,7 @@ import software.wings.search.framework.SearchEntity;
 
 import java.util.List;
 
+@OwnedBy(PL)
 @Slf4j
 public class DeploymentSearchEntity implements SearchEntity<WorkflowExecution> {
   @Inject private DeploymentViewBuilder deploymentViewBuilder;

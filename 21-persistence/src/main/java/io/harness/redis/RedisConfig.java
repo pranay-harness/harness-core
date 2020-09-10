@@ -1,7 +1,10 @@
 package io.harness.redis;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @NoArgsConstructor

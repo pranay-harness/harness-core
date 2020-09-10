@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static software.wings.resources.secretsmanagement.mappers.SecretManagerConfigMapper.updateNGSecretManagerMetadata;
 import static software.wings.service.impl.security.GlobalEncryptDecryptClient.isNgHarnessSecretManager;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -25,6 +27,7 @@ import lombok.experimental.FieldNameConstants;
 import java.util.Arrays;
 import java.util.List;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @AllArgsConstructor

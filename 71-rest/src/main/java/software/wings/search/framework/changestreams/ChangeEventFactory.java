@@ -1,11 +1,14 @@
 package software.wings.search.framework.changestreams;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.PersistentEntity;
 import org.bson.BsonDocument;
@@ -20,6 +23,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 
+@OwnedBy(PL)
 class ChangeEventFactory {
   @Inject private WingsPersistence wingsPersistence;
   private static final Mapper mapper = SearchEntityUtils.getMapper();

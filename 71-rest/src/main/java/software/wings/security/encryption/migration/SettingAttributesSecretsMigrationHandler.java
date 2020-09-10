@@ -1,5 +1,6 @@
 package software.wings.security.encryption.migration;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.persistence.HPersistence.returnNewOptions;
@@ -18,6 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Encryptable;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
@@ -49,6 +51,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class SettingAttributesSecretsMigrationHandler implements Handler<SettingAttribute> {

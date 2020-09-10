@@ -1,5 +1,8 @@
 package software.wings.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.reflection.ReflectionUtils;
@@ -13,6 +16,7 @@ import software.wings.settings.SettingVariableTypes;
 import java.lang.reflect.Field;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @Value
 @Builder
 @AllArgsConstructor

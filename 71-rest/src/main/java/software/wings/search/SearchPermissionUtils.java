@@ -1,5 +1,8 @@
 package software.wings.search;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.experimental.UtilityClass;
 import software.wings.beans.User;
@@ -18,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @UtilityClass
 public final class SearchPermissionUtils {
   public static UserPermissionInfo getUserPermission() {

@@ -1,5 +1,6 @@
 package software.wings.search.framework.changestreams;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -19,6 +20,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ import java.util.concurrent.Future;
  * @author Utkarsh
  */
 
+@OwnedBy(PL)
 @Slf4j
 public class ChangeTracker {
   @Inject private MainConfiguration mainConfiguration;

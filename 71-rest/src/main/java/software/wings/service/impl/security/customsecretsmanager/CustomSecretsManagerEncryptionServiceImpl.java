@@ -1,7 +1,10 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -20,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Slf4j
 public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsManagerEncryptionService {
   private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;

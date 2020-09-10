@@ -1,6 +1,9 @@
 package io.harness.cache;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -16,6 +19,7 @@ import java.util.Date;
 
 @CdUniqueIndex(name = "commutativeIdx", fields = { @Field("_id")
                                                    , @Field("contextValue") })
+@OwnedBy(PL)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "CacheEntityKeys")

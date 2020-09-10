@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 
 import java.util.List;
@@ -10,6 +13,7 @@ import java.util.List;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 public interface SearchEntity<T extends PersistentEntity> {
   String getType();
   String getVersion();

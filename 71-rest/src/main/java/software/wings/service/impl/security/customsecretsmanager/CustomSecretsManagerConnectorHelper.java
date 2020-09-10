@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.BASH;
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.POWERSHELL;
@@ -8,6 +9,7 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.EncryptedDataParams;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -20,6 +22,7 @@ import software.wings.service.intfc.SettingsService;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(PL)
 class CustomSecretsManagerConnectorHelper {
   private SettingsService settingsService;
 

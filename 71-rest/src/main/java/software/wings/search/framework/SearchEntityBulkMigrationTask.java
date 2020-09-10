@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
+@OwnedBy(PL)
 @AllArgsConstructor
 @Slf4j
 public class SearchEntityBulkMigrationTask<T extends PersistentEntity> implements Callable<Boolean> {

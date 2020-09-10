@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.ng.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
@@ -11,6 +12,7 @@ import static software.wings.service.intfc.security.SecretManager.ID_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.persistence.HPersistence;
@@ -41,6 +43,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.CharBuffer;
 import java.util.Arrays;
 
+@OwnedBy(PL)
 @Slf4j
 public class GlobalEncryptDecryptClient {
   @Inject private WingsPersistence wingsPersistence;

@@ -1,7 +1,10 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsPersistence;
@@ -19,6 +22,7 @@ import java.util.Set;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Slf4j
 class ElasticsearchSyncHelper {
   @Inject private Set<SearchEntity<?>> searchEntities;

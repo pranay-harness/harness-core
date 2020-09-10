@@ -1,9 +1,12 @@
 package software.wings.search.entities.application;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -42,6 +45,7 @@ import java.util.Set;
  * @author ujjawal
  */
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class ApplicationChangeHandler implements ChangeHandler {

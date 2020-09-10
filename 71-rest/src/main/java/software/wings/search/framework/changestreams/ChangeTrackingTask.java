@@ -1,5 +1,7 @@
 package software.wings.search.framework.changestreams;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoInterruptedException;
@@ -9,6 +11,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
@@ -26,6 +29,7 @@ import java.util.function.Consumer;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Value
 @Slf4j
 class ChangeTrackingTask implements Runnable {

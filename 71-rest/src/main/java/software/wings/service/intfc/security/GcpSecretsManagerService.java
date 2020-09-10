@@ -1,7 +1,11 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.GcpKmsConfig;
 
+@OwnedBy(PL)
 public interface GcpSecretsManagerService {
   GcpKmsConfig getGcpKmsConfig(String accountId, String configId);
 

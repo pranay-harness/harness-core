@@ -1,7 +1,10 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.ElasticsearchException;
@@ -36,6 +39,7 @@ import java.util.Map;
  *
  * @author ujjawal
  */
+@OwnedBy(PL)
 @Slf4j
 public class ElasticsearchDao implements SearchDao {
   @Inject private ElasticsearchClient elasticsearchClient;

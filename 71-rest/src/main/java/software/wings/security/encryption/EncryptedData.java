@@ -1,5 +1,6 @@
 package software.wings.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdSparseIndex;
@@ -52,6 +54,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 9/29/17.
  */
+@OwnedBy(PL)
 @Data
 @Builder
 @NoArgsConstructor

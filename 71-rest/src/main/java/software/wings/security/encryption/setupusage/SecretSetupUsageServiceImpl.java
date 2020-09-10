@@ -1,5 +1,6 @@
 package software.wings.security.encryption.setupusage;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SecretSetupUsageServiceImpl implements SecretSetupUsageService {

@@ -1,5 +1,6 @@
 package software.wings.security.encryption.migration;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.dropwizard.lifecycle.Managed;
+import io.harness.annotations.dev.OwnedBy;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -23,6 +25,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 @Singleton
 public class SettingAttributesSecretReferenceFeatureFlagJob implements Managed {
   @Inject private FeatureFlagService featureFlagService;

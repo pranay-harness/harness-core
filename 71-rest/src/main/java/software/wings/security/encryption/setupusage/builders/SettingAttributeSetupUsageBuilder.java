@@ -1,11 +1,13 @@
 package software.wings.security.encryption.setupusage.builders;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SearchFilter;
 import io.harness.encryption.EncryptionReflectUtils;
 import lombok.NonNull;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Singleton
 public class SettingAttributeSetupUsageBuilder implements SecretSetupUsageBuilder {
   @Inject private SettingsService settingsService;

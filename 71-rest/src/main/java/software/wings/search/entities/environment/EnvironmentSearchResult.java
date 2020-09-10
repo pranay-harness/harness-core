@@ -1,5 +1,8 @@
 package software.wings.search.entities.environment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

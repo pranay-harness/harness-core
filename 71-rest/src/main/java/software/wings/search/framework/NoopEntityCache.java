@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.cache.EntityCache;
 import org.mongodb.morphia.mapping.cache.EntityCacheStatistics;
@@ -10,6 +13,7 @@ import org.mongodb.morphia.mapping.cache.EntityCacheStatistics;
  *
  * @author utkarsh
  */
+@OwnedBy(PL)
 public class NoopEntityCache implements EntityCache {
   @Override
   public Boolean exists(Key<?> key) {

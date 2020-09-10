@@ -1,9 +1,12 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
 import io.dropwizard.lifecycle.Managed;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
@@ -19,6 +22,7 @@ import java.util.concurrent.Future;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Slf4j
 public class ElasticsearchSyncService implements Managed {
   @Inject private ElasticsearchSyncJob elasticSearchSyncJob;

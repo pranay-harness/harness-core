@@ -1,8 +1,11 @@
 package software.wings.security.encryption.setupusage.builders;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.EncryptionReflectUtils;
 import lombok.NonNull;
 import software.wings.beans.SecretManagerConfig;
@@ -20,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(PL)
 @Singleton
 public class SecretManagerSetupUsageBuilder implements SecretSetupUsageBuilder {
   @Inject private SecretManagerConfigService secretManagerConfigService;

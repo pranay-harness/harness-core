@@ -1,9 +1,12 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsPersistence;
 
@@ -21,6 +24,7 @@ import java.util.concurrent.TimeUnit;
  * @author utkarsh
  */
 
+@OwnedBy(PL)
 @Slf4j
 public class ElasticsearchSyncJob implements Runnable {
   @Inject private WingsPersistence wingsPersistence;

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -14,6 +15,7 @@ import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
@@ -35,6 +37,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(PL)
 public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements CustomSecretsManagerService {
   private CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper;
   private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;

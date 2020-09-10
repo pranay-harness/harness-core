@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -19,6 +20,7 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
@@ -41,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.time.Duration;
 
+@OwnedBy(PL)
 @Slf4j
 public class GcpKmsServiceImpl extends AbstractSecretServiceImpl implements GcpKmsService {
   @Inject private GcpSecretsManagerService gcpSecretsManagerService;

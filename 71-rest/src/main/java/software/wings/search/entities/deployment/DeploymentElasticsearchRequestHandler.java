@@ -1,6 +1,9 @@
 package software.wings.search.entities.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -18,6 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(PL)
 public class DeploymentElasticsearchRequestHandler
     extends AbstractElasticsearchRequestHandler implements ElasticsearchRequestHandler {
   @Override

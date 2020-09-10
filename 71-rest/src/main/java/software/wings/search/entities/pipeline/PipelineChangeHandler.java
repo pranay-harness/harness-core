@@ -1,9 +1,12 @@
 package software.wings.search.entities.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
@@ -42,6 +45,7 @@ import java.util.Optional;
  * @author ujjawal
  */
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class PipelineChangeHandler implements ChangeHandler {

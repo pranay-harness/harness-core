@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provides;
@@ -9,6 +11,7 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.version.VersionInfoManager;
 import software.wings.beans.ApiKeyEntry;
@@ -23,6 +26,7 @@ import javax.cache.Cache;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
 
+@OwnedBy(PL)
 public class ManagerCacheRegistrar extends AbstractModule {
   public static final String AUTH_TOKEN_CACHE = "authTokenCache";
   public static final String USER_CACHE = "userCache";

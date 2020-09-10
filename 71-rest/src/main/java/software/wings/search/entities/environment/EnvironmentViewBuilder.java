@@ -1,9 +1,12 @@
 package software.wings.search.entities.environment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Sort;
@@ -44,6 +47,7 @@ import java.util.Set;
  * @author ujjawal
  */
 
+@OwnedBy(PL)
 @Singleton
 class EnvironmentViewBuilder {
   @Inject private WingsPersistence wingsPersistence;

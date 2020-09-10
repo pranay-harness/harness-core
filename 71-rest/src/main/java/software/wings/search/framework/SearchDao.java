@@ -1,5 +1,9 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +13,7 @@ import java.util.Map;
  *
  * @author ujjawal
  */
+@OwnedBy(PL)
 public interface SearchDao {
   // Upserts the partial document to Elasticsearch
   boolean upsertDocument(String entityType, String entityId, String entityJson);

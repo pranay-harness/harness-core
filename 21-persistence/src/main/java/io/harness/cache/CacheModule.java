@@ -1,5 +1,6 @@
 package io.harness.cache;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.cache.CacheBackend.REDIS;
 import static javax.cache.Caching.getCachingProvider;
 
@@ -15,6 +16,7 @@ import com.google.inject.name.Named;
 
 import com.hazelcast.cache.HazelcastCachingProvider;
 import com.hazelcast.core.HazelcastInstance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import io.harness.hazelcast.HazelcastModule;
@@ -110,6 +112,7 @@ import javax.cache.spi.CachingProvider;
  * @author Michael Stachel
  * @version $Revision$
  */
+@OwnedBy(PL)
 @Slf4j
 public class CacheModule extends DependencyModule implements ServersModule {
   private static final String CACHING_PROVIDER_CLASSPATH = "javax.cache.spi.CachingProvider";

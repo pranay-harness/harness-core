@@ -1,5 +1,8 @@
 package software.wings.search.framework;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import lombok.AllArgsConstructor;
@@ -17,6 +20,7 @@ import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.SearchDistributedLock.SearchDistributedLockKeys;
 
+@OwnedBy(PL)
 @AllArgsConstructor
 public class SearchSyncHeartbeat implements Runnable {
   private WingsPersistence wingsPersistence;
