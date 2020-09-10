@@ -1,9 +1,11 @@
 package software.wings.beans.sso;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
@@ -17,6 +19,7 @@ import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
 
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")

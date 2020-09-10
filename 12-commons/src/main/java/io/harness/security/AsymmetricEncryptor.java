@@ -1,8 +1,11 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import io.harness.annotations.dev.OwnedBy;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.IOException;
@@ -17,6 +20,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+@OwnedBy(PL)
 public class AsymmetricEncryptor {
   private PublicKey publicKey;
 

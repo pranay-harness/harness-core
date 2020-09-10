@@ -1,7 +1,10 @@
 package io.harness.eraro;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StrSubstitutor;
 
@@ -10,6 +13,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
+@OwnedBy(PL)
 @Slf4j
 public class MessageManager {
   private static final MessageManager instance = new MessageManager();

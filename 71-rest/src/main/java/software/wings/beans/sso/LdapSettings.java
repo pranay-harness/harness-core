@@ -1,9 +1,11 @@
 package software.wings.beans.sso;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
@@ -31,6 +33,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Swapnil
  */
+@OwnedBy(PL)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "LdapSettingsKeys")

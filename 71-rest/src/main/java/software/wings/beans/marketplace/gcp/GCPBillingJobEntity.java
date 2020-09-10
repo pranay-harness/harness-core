@@ -1,8 +1,11 @@
 package software.wings.beans.marketplace.gcp;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -20,6 +23,7 @@ import software.wings.jersey.JsonViews;
 import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @FieldNameConstants(innerTypeName = "GCPBillingJobEntityKeys")
 @Getter
 @ToString

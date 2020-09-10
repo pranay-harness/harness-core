@@ -1,9 +1,11 @@
 package software.wings.beans.security;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import lombok.Builder;
@@ -21,6 +23,7 @@ import java.util.Set;
  *
  * @author Rishi
  */
+@OwnedBy(PL)
 @JsonInclude(NON_EMPTY)
 @Data
 @NoArgsConstructor

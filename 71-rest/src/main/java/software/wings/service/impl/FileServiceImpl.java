@@ -1,11 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.service.impl.FileServiceUtils.isMongoFileIdFormat;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ import javax.validation.executable.ValidateOnExecution;
  *
  * @author marklu on 2018-12-04
  */
+@OwnedBy(PL)
 @ValidateOnExecution
 @Singleton
 @Slf4j

@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static java.util.Arrays.asList;
 
 import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
@@ -39,6 +41,7 @@ import java.util.Set;
  *
  * @author Rishi
  */
+@OwnedBy(PL)
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")

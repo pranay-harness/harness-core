@@ -1,15 +1,18 @@
 package software.wings.beans.sso;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class SamlSettings extends SSOSettings {

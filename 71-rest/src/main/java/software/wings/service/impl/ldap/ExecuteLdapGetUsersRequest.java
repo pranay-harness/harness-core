@@ -1,5 +1,8 @@
 package software.wings.service.impl.ldap;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import org.ldaptive.LdapException;
 import org.ldaptive.ResultCode;
@@ -11,6 +14,7 @@ import software.wings.helpers.ext.ldap.LdapUserConfig;
 
 import java.util.function.Function;
 
+@OwnedBy(PL)
 @Slf4j
 public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest, LdapGetUsersResponse> {
   @Override

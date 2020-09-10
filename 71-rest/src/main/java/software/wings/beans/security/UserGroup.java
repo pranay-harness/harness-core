@@ -1,6 +1,7 @@
 package software.wings.beans.security;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
@@ -9,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.mongo.index.CdIndex;
@@ -43,6 +45,7 @@ import javax.annotation.Nullable;
  *
  * @author Rishi
  */
+@OwnedBy(PL)
 @JsonInclude(NON_EMPTY)
 @Data
 @NoArgsConstructor

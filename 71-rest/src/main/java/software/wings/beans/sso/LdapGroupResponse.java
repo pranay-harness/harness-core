@@ -1,5 +1,8 @@
 package software.wings.beans.sso;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -10,6 +13,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import java.util.Collection;
 import java.util.Collections;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

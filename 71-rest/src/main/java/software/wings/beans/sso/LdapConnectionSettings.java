@@ -1,6 +1,9 @@
 package software.wings.beans.sso;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -15,6 +18,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Class denotes Connection settings for Ldap.
  */
+@OwnedBy(PL)
 @JsonIgnoreProperties(value = {"encryptedBindPassword"})
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

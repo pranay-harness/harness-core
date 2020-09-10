@@ -1,5 +1,6 @@
 package io.harness.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
@@ -14,6 +15,7 @@ import com.auth0.jwt.exceptions.InvalidClaimException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import java.util.Map;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 
+@OwnedBy(PL)
 @UtilityClass
 @Slf4j
 public class JWTTokenServiceUtils {

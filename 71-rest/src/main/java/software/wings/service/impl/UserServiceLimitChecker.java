@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
@@ -20,6 +22,7 @@ import software.wings.service.intfc.AccountService;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class UserServiceLimitChecker {

@@ -1,5 +1,8 @@
 package io.harness.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
@@ -11,6 +14,7 @@ import java.util.Set;
  */
 
 // TODO: I cannot use value here because of mokito not liking final classes. Find a solution that will eliminate this.
+@OwnedBy(PL)
 @Data
 @Builder
 @ToString(exclude = {"encryptionKey", "encryptedValue", "backupEncryptionKey", "backupEncryptedValue"})

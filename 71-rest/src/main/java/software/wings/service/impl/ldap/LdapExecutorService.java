@@ -1,7 +1,10 @@
 package software.wings.service.impl.ldap;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.threading.ThreadPool;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
@@ -16,6 +19,7 @@ import java.util.concurrent.TimeUnit;
  * Ideally, I want to mark the class as final but I am not sure
  * whether lombok will work correctly with it. Will test it.
  */
+@OwnedBy(PL)
 @FieldNameConstants(innerTypeName = "LdapExecutorServiceKeys")
 public class LdapExecutorService {
   private static final LdapExecutorService INSTANCE = new LdapExecutorService();

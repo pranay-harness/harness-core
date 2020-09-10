@@ -1,5 +1,8 @@
 package io.harness.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +13,7 @@ import software.wings.annotation.EncryptableSetting;
 
 import java.util.List;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @NoArgsConstructor

@@ -1,7 +1,9 @@
 package io.harness.exception;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 
 import java.util.EnumSet;
@@ -9,6 +11,7 @@ import java.util.EnumSet;
 /**
  * @author marklu on 8/31/19
  */
+@OwnedBy(PL)
 public class EncryptDecryptException extends WingsException {
   private static final String MESSAGE_KEY = "message";
 
