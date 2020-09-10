@@ -565,8 +565,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Map<String, String> mockMetadataForS3Folder() {
     Map<String, String> map = new HashMap<>();
     map.put(ArtifactMetadataKeys.bucketName, BUCKET_NAME);
-    map.put(ArtifactMetadataKeys.artifactFileName, "test1/test2/todolist.zip");
-    map.put(ArtifactMetadataKeys.artifactPath, "test1/test2/todolist.zip");
+    map.put(ArtifactMetadataKeys.artifactFileName, "test1/test2/todolist main.zip");
+    map.put(ArtifactMetadataKeys.artifactPath, "test1/test2/todolist main.zip");
     map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
     map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
     map.put(ArtifactMetadataKeys.key, ACCESS_KEY);
@@ -649,6 +649,6 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         {amazonS3Context,
             " Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/ARTIFACT_PATH\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\ARTIFACT_FILE_NAME\" -Force)"},
         {amazonS3ContextFolder,
-            " Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/test1/test2/todolist.zip\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\test1/test2/todolist.zip\" -Force)"}};
+            " Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/test1/test2/todolist%20main.zip\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\test1/test2/todolist main.zip\" -Force)"}};
   }
 }

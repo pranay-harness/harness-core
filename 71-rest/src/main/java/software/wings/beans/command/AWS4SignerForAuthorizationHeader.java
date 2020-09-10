@@ -161,15 +161,17 @@ public class AWS4SignerForAuthorizationHeader {
    */
   private static String getCanonicalRequest(
       URL endpoint, String canonicalizedHeaderNames, String canonicalizedHeaders) {
-    return HTTP_METHOD + "\n" + getCanonicalizedResourcePath(endpoint) + "\n"
+    return HTTP_METHOD + "\n" + getEndpointWithCanonicalizedResourcePath(endpoint, false) + "\n"
         + ""
         + "\n" + canonicalizedHeaders + "\n" + canonicalizedHeaderNames + "\n" + EMPTY_BODY_SHA256;
   }
 
   /**
    * Returns the canonicalized resource path for the service endpoint.
+   * @param endpoint Url endpoint
+   * @param withEndpoint if true, return endpoint concatenated with canonicalized resource path
    */
-  private static String getCanonicalizedResourcePath(URL endpoint) {
+  protected static String getEndpointWithCanonicalizedResourcePath(URL endpoint, boolean withEndpoint) {
     if (endpoint == null) {
       return "/";
     }
@@ -179,10 +181,11 @@ public class AWS4SignerForAuthorizationHeader {
     }
 
     String encodedPath = urlEncode(path, true);
+    String baseUrl = endpoint.getProtocol() + "://" + endpoint.getAuthority();
     if (isNotEmpty(encodedPath) && encodedPath.charAt(0) == '/') {
-      return encodedPath;
+      return withEndpoint ? baseUrl + encodedPath : encodedPath;
     } else {
-      return "/".concat(encodedPath);
+      return withEndpoint ? baseUrl + "/".concat(encodedPath) : "/".concat(encodedPath);
     }
   }
 
@@ -230,7 +233,7 @@ public class AWS4SignerForAuthorizationHeader {
   private static String urlEncode(String url, boolean keepPathSlash) {
     String encoded;
     try {
-      encoded = URLEncoder.encode(url, "UTF-8");
+      encoded = URLEncoder.encode(url, "UTF-8").replace("+", "%20");
     } catch (UnsupportedEncodingException e) {
       throw new InvalidRequestException("UTF-8 encoding is not supported.", e);
     }

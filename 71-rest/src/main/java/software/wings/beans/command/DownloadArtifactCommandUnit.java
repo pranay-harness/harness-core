@@ -338,14 +338,16 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         endpointUrl, region, awsAccessKey, awsSecretKey, now, awsToken);
     String command;
     switch (this.getScriptType()) {
+      // To account for artifacts that have space, we need to encode the artifact portion of the aws url
       case POWERSHELL:
         command = "$Headers = @{\n"
             + "    Authorization = \"" + authorizationHeader + "\"\n"
             + "    \"x-amz-content-sha256\" = \"" + EMPTY_BODY_SHA256 + "\"\n"
             + "    \"x-amz-date\" = \"" + dateTimeStamp + "\"\n"
             + (isEmpty(awsToken) ? "" : " \"x-amz-security-token\" = \"" + awsToken + "\"\n")
-            + "}\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile (New-Item -Path \""
-            + getCommandPath() + "\\" + artifactFileName + "\""
+            + "}\n Invoke-WebRequest -Uri \""
+            + AWS4SignerForAuthorizationHeader.getEndpointWithCanonicalizedResourcePath(endpointUrl, true)
+            + "\" -Headers $Headers -OutFile (New-Item -Path \"" + getCommandPath() + "\\" + artifactFileName + "\""
             + " -Force)";
         break;
       case BASH:
@@ -354,7 +356,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
           artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
           logger.info("Got filename: " + artifactFileName);
         }
-        command = "curl --fail --progress-bar \"" + url + "\""
+        command = "curl --fail --progress-bar \""
+            + AWS4SignerForAuthorizationHeader.getEndpointWithCanonicalizedResourcePath(endpointUrl, true) + "\""
             + " \\\n"
             + "-H \"Authorization: " + authorizationHeader + "\" \\\n"
             + "-H \"x-amz-content-sha256: " + EMPTY_BODY_SHA256 + "\" \\\n"
