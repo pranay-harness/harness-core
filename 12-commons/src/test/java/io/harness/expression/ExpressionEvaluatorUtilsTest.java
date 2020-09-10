@@ -92,18 +92,18 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
     dummyBInternal.setObj(dummyB);
 
     DummyC dummyC1 = DummyC.builder()
-                         .dummyC(ParameterField.createField(null, true, "random"))
-                         .strVal1(ParameterField.createField(original))
+                         .dummyC(ParameterField.createExpressionField(true, "random", null))
+                         .strVal1(ParameterField.createValueField(original))
                          .strVal2(original)
-                         .intVal1(ParameterField.createField(null, true, originalInt1))
+                         .intVal1(ParameterField.createExpressionField(true, originalInt1, null))
                          .intVal2(15)
                          .build();
-    dummyB.setDummyC1(ParameterField.createField(null, true, originalObject));
+    dummyB.setDummyC1(ParameterField.createExpressionField(true, originalObject, null));
 
     DummyC dummyC2 = DummyC.builder()
-                         .strVal1(ParameterField.createField(original))
+                         .strVal1(ParameterField.createValueField(original))
                          .strVal2(original)
-                         .intVal1(ParameterField.createField(null, true, originalInt2))
+                         .intVal1(ParameterField.createExpressionField(true, originalInt2, null))
                          .intVal2(20)
                          .build();
     dummyB.setDummyC2(dummyC2);

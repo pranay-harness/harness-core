@@ -1117,6 +1117,7 @@ maven_install(
               "org.yaml:snakeyaml:1.15",
               "org.json:json:20160810",
               "org.bouncycastle:bcpkix-jdk15on:1.60",
+              "javax.validation:validation-api:1.1.0.Final",
               "org.slf4j:jcl-over-slf4j:1.7.29"
     ],
     version_conflict_policy = "pinned",

@@ -33,6 +33,7 @@ public class ExpressionEvaluator {
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
   private static final Pattern serviceDefaultArtifactVariablePattern = Pattern.compile("\\$\\{artifact[.}]");
   private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)[.}]");
+  private static final Pattern inputSetVariablePattern = Pattern.compile("\\$\\{input}.*");
 
   private Map<String, Object> expressionFunctorMap = new HashMap<>();
 
@@ -158,6 +159,22 @@ public class ExpressionEvaluator {
       return false;
     }
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).find();
+  }
+
+  public static boolean matchesInputSetPattern(String expression) {
+    if (isEmpty(expression)) {
+      return false;
+    }
+    return ExpressionEvaluator.inputSetVariablePattern.matcher(expression).matches();
+  }
+
+  // Function which matches pattern on given expression,
+  // will return group matching based on given groupIndex else null if not matching.
+  public static boolean containsPattern(Pattern pattern, String expression) {
+    if (isEmpty(expression)) {
+      return false;
+    }
+    return pattern.matcher(expression).find();
   }
 
   public static void updateServiceArtifactVariableNames(String str, Set<String> serviceArtifactVariableNames) {

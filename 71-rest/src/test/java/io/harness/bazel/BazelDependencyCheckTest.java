@@ -26,7 +26,7 @@ import java.util.Set;
 
 public class BazelDependencyCheckTest extends CategoryTest {
   @Test
-  @Owner(developers = BRIJESH)
+  @Owner(developers = BRIJESH, intermittent = true)
   @Category({UnitTests.class})
   public void testDependencyVersionsMatchInBazelWithRestCapsule() throws IOException {
     List<String> depsInMavenInstallJson = getDepsInMavenInstallJson();
