@@ -152,6 +152,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.PipelineElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.api.WorkflowElement;
 import software.wings.api.WorkflowElement.WorkflowElementBuilder;
 import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
@@ -3430,9 +3431,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       for (StateExecutionInstance next = stateExecutionInstance; next != null;
            next = prevInstanceIdMap.get(next.getUuid())) {
         StateType nextStateType = StateType.valueOf(next.getStateType());
-
-        if ((nextStateType == StateType.REPEAT || nextStateType == StateType.FORK || nextStateType == StateType.PHASE
-                || nextStateType == PHASE_STEP || nextStateType == StateType.SUB_WORKFLOW)
+        if (next.fetchStateExecutionData() instanceof SkipStateExecutionData) {
+          instanceStatusSummaries.addAll(new ArrayList<>());
+        } else if ((nextStateType == StateType.REPEAT || nextStateType == StateType.FORK
+                       || nextStateType == StateType.PHASE || nextStateType == PHASE_STEP
+                       || nextStateType == StateType.SUB_WORKFLOW)
             && next.fetchStateExecutionData() instanceof ElementStateExecutionData) {
           ElementStateExecutionData elementStateExecutionData =
               (ElementStateExecutionData) next.fetchStateExecutionData();
