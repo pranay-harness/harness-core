@@ -5,15 +5,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.variables.StageVariables;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.ExecutionElement;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Builder
@@ -30,13 +28,13 @@ public class DeploymentStage implements CDStage, Visitable {
   String skipCondition;
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
     // the ordering [service,infrastructure, execution] is necessary
-    children.add(service);
-    children.add(infrastructure);
-    children.add(execution);
-    children.add(stageVariables);
+    children.add("service", service);
+    children.add("infrastructure", infrastructure);
+    children.add("execution", execution);
+    children.add("stageVariables", stageVariables);
     return children;
   }
 }

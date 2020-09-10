@@ -1,6 +1,7 @@
 package io.harness.yaml.core;
 
 import io.harness.visitor.helpers.executionelement.ExecutionElementVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -33,10 +34,10 @@ public class ExecutionElement implements Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(steps);
-    children.add(rollbackSteps);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    steps.forEach(step -> children.add("steps", step));
+    rollbackSteps.forEach(step -> children.add("rollbackSteps", step));
     return children;
   }
 }

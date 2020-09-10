@@ -6,6 +6,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.Tag;
@@ -17,7 +18,6 @@ import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -37,7 +37,9 @@ public class CDPipeline implements Pipeline, Visitable {
   @Singular List<StageElementWrapper> stages;
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    return stages.stream().map(stage -> (Object) stage).collect(Collectors.toList());
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren visitableChildren = VisitableChildren.builder().build();
+    stages.forEach(stage -> visitableChildren.add("stages", stage));
+    return visitableChildren;
   }
 }

@@ -5,6 +5,7 @@ import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
@@ -13,7 +14,6 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Value
@@ -48,8 +48,8 @@ public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYam
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
+  public VisitableChildren getChildrenToWalk() {
     // returning empty list for now
-    return new ArrayList<>();
+    return VisitableChildren.builder().build();
   }
 }

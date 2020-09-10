@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.harness.visitor.helpers.executionelement.ParallelStepElementVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -13,7 +14,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -34,7 +34,11 @@ public class ParallelStepElement implements ExecutionWrapper, Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    return sections.stream().map(step -> (Object) step).collect(Collectors.toList());
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren visitableChildren = VisitableChildren.builder().build();
+    for (ExecutionWrapper section : sections) {
+      visitableChildren.add("sections", section);
+    }
+    return visitableChildren;
   }
 }

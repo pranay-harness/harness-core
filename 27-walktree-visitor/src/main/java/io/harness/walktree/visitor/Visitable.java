@@ -1,6 +1,7 @@
 package io.harness.walktree.visitor;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.walktree.beans.VisitableChildren;
 
 /**
  * This interface should be implemented by each element which wants
@@ -10,5 +11,5 @@ public interface Visitable {
   /**
    * @return List of objects referring to children on which you want traverse.
    */
-  List<Object> getChildrenToWalk();
+  @JsonIgnore VisitableChildren getChildrenToWalk();
 }

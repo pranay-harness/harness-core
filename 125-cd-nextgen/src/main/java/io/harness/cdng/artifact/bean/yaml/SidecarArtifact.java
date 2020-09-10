@@ -10,14 +10,13 @@ import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.visitor.helpers.serviceconfig.SidecarArtifactVisitorHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -40,9 +39,9 @@ public class SidecarArtifact implements SidecarArtifactWrapper, Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    List<Object> children = new ArrayList<>();
-    children.add(artifactConfig);
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("artifactConfig", artifactConfig);
     return children;
   }
 }

@@ -1,8 +1,10 @@
 package io.harness.walktree.visitor;
 
 import io.harness.walktree.beans.VisitElementResult;
+import io.harness.walktree.beans.VisitableChild;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class Visitor {
   /**
@@ -47,7 +49,11 @@ public abstract class Visitor {
       if (!skipChildren) {
         if (currentElement instanceof Visitable) {
           Visitable visitable = (Visitable) currentElement;
-          List<Object> childrenToWalk = visitable.getChildrenToWalk();
+          List<Object> childrenToWalk = visitable.getChildrenToWalk()
+                                            .getVisitableChildList()
+                                            .stream()
+                                            .map(VisitableChild::getValue)
+                                            .collect(Collectors.toList());
           for (Object child : childrenToWalk) {
             VisitElementResult childVisitResult = walkElementTree(child);
             if (childVisitResult == VisitElementResult.TERMINATE) {

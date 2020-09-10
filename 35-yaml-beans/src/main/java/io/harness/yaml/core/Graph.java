@@ -2,6 +2,7 @@ package io.harness.yaml.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.harness.visitor.helpers.executionelement.GraphVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -9,7 +10,6 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -28,7 +28,9 @@ public class Graph implements ExecutionWrapper, Visitable {
   }
 
   @Override
-  public List<Object> getChildrenToWalk() {
-    return sections.stream().map(step -> (Object) step).collect(Collectors.toList());
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren visitableChildren = VisitableChildren.builder().build();
+    sections.forEach(step -> { visitableChildren.add("sections", step); });
+    return visitableChildren;
   }
 }
