@@ -90,6 +90,7 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.beans.yaml.YamlType;
@@ -1139,6 +1140,8 @@ public class TemplateServiceImpl implements TemplateService {
       return ARTIFACT_SOURCE;
     } else if (templateObject instanceof PcfCommandTemplate) {
       return PCF_PLUGIN;
+    } else if (templateObject instanceof CustomDeploymentTypeTemplate) {
+      return CUSTOM_DEPLOYMENT_TYPE;
     }
     throw new InvalidRequestException("Template Type not yet supported", USER);
   }

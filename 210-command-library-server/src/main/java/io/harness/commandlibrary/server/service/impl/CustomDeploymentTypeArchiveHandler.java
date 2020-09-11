@@ -1,6 +1,6 @@
 package io.harness.commandlibrary.server.service.impl;
 
-import static io.harness.commandlibrary.server.beans.CommandType.SSH;
+import static io.harness.commandlibrary.server.beans.CommandType.CUSTOM_DEPLOYMENT_TYPE;
 import static io.harness.git.model.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
 import static software.wings.beans.yaml.ChangeContext.Builder.aChangeContext;
@@ -16,51 +16,53 @@ import io.harness.commandlibrary.server.utils.YamlUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.template.BaseTemplate;
+import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
-import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateYamlHelper;
+import software.wings.yaml.templatelibrary.CustomDeploymentTypeTemplateYaml;
 import software.wings.yaml.templatelibrary.TemplateLibraryYaml;
-
-import java.util.Collections;
 
 @Singleton
 @Slf4j
-public class ServiceCommandArchiveHandler extends AbstractArchiveHandler implements CommandArchiveHandler {
+public class CustomDeploymentTypeArchiveHandler extends AbstractArchiveHandler implements CommandArchiveHandler {
   public static final String COMMAND_DETAIL_YAML = "content.yaml";
 
-  private final CommandTemplateYamlHelper commandTemplateYamlHelper;
-
   @Inject
-  public ServiceCommandArchiveHandler(CommandService commandService, CommandVersionService commandVersionService,
-      CommandTemplateYamlHelper commandTemplateYamlHelper) {
+  public CustomDeploymentTypeArchiveHandler(
+      CommandService commandService, CommandVersionService commandVersionService) {
     super(commandService, commandVersionService);
-    this.commandTemplateYamlHelper = commandTemplateYamlHelper;
   }
 
   @Override
   public boolean supports(CommandArchiveContext commandArchiveContext) {
-    return SSH.name().equals(commandArchiveContext.getCommandManifest().getType());
+    return CUSTOM_DEPLOYMENT_TYPE.name().equals(commandArchiveContext.getCommandManifest().getType());
   }
 
   @Override
   protected void validateYaml(TemplateLibraryYaml baseYaml) {
-    if (!commandTemplateYamlHelper.getYamlClass().isAssignableFrom(baseYaml.getClass())) {
+    if (!CustomDeploymentTypeTemplateYaml.class.isAssignableFrom(baseYaml.getClass())) {
       throw new InvalidRequestException(COMMAND_DETAIL_YAML + ": incorrect type");
     }
   }
 
   @Override
-  protected TemplateLibraryYaml getBaseYaml(String commandYamlStr) {
-    return YamlUtils.fromYaml(commandYamlStr, TemplateLibraryYaml.class);
+  protected CustomDeploymentTypeTemplateYaml getBaseYaml(String commandYamlStr) {
+    return YamlUtils.fromYaml(commandYamlStr, CustomDeploymentTypeTemplateYaml.class);
   }
 
   @Override
   protected BaseTemplate getBaseTemplate(String commandName, TemplateLibraryYaml yaml) {
-    return commandTemplateYamlHelper.getBaseTemplate(
-        commandName, createChangeContext(commandName, yaml), Collections.emptyList());
+    ChangeContext<CustomDeploymentTypeTemplateYaml> changeContext = createChangeContext(commandName, yaml);
+    CustomDeploymentTypeTemplateYaml customDeploymentTypeTemplateYaml = changeContext.getYaml();
+    return CustomDeploymentTypeTemplate.builder()
+        .fetchInstanceScript(customDeploymentTypeTemplateYaml.getFetchInstanceScript())
+        .hostObjectArrayPath(customDeploymentTypeTemplateYaml.getHostObjectArrayPath())
+        .hostAttributes(customDeploymentTypeTemplateYaml.getHostAttributes())
+        .build();
   }
 
-  private ChangeContext<TemplateLibraryYaml> createChangeContext(String commandName, TemplateLibraryYaml yaml) {
+  private ChangeContext<CustomDeploymentTypeTemplateYaml> createChangeContext(
+      String commandName, TemplateLibraryYaml yaml) {
     return aChangeContext()
         .withYaml(yaml)
         .withChange(aFileChange().withFilePath(commandName).withChangeType(ADD).build())
