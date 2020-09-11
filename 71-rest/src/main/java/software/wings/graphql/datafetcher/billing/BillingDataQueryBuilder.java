@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -125,7 +126,7 @@ public class BillingDataQueryBuilder {
       decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
     }
 
-    if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters)) {
+    if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters, accountId)) {
       selectQuery.addCustomFromTable(schema.getBillingDataTable());
     } else {
       selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
@@ -174,7 +175,7 @@ public class BillingDataQueryBuilder {
 
     decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
 
-    if (!shouldUseHourlyData(filters)) {
+    if (!shouldUseHourlyData(filters, accountId)) {
       selectQuery.addCustomFromTable(schema.getBillingDataTable());
     } else {
       selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
@@ -211,7 +212,7 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
-    if (!shouldUseHourlyData(filters)) {
+    if (!shouldUseHourlyData(filters, accountId)) {
       selectQuery.addCustomFromTable(schema.getBillingDataTable());
     } else {
       selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
@@ -296,7 +297,7 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
-    if (!shouldUseHourlyData(filters)) {
+    if (!shouldUseHourlyData(filters, accountId)) {
       selectQuery.addCustomFromTable(schema.getBillingDataTable());
     } else {
       selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
@@ -1229,7 +1230,10 @@ public class BillingDataQueryBuilder {
     }
   }
 
-  private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters) {
+  private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
+    if (ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
+      return false;
+    }
     List<QLBillingDataFilter> validFilters =
         filters.stream().filter(filter -> filter.getStartTime() != null).collect(Collectors.toList());
     if (!validFilters.isEmpty()) {

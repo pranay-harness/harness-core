@@ -57,9 +57,9 @@ public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String UUID = "uuid_" + OverviewPageStatsDataFetcherTest.class.getSimpleName();
   private static final String GCP_PROJECT_ID = "gcpProjectId";
   private static String clusterQuery =
-      "SELECT count(*) AS count FROM BILLING_DATA_HOURLY WHERE accountid = 'ACCOUNT1_ID' AND clusterid IS NOT NULL AND starttime >= '%s'";
+      "SELECT * FROM BILLING_DATA_HOURLY WHERE accountid = 'ACCOUNT1_ID' AND clusterid IS NOT NULL AND starttime >= '%s' LIMIT 1";
   private static String applicationQuery =
-      "SELECT count(*) AS count FROM BILLING_DATA_HOURLYa WHERE accountid = 'ACCOUNT1_ID' AND appid IS NOT NULL AND starttime >= '%s'";
+      "SELECT * FROM BILLING_DATA_HOURLY WHERE accountid = 'ACCOUNT1_ID' AND appid IS NOT NULL AND starttime >= '%s' LIMIT 1";
 
   @Before
   public void setup() throws SQLException, InterruptedException {
@@ -107,7 +107,7 @@ public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getCloudConnectorsPresent()).isTrue();
     assertThat(data.getAwsConnectorsPresent()).isFalse();
     assertThat(data.getGcpConnectorsPresent()).isFalse();
-    assertThat(data.getApplicationDataPresent()).isFalse();
+    assertThat(data.getApplicationDataPresent()).isTrue();
     assertThat(data.getClusterDataPresent()).isTrue();
     assertThat(data.getCeEnabledClusterPresent()).isTrue();
   }
