@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -22,13 +23,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.WingsBaseTest;
 import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
@@ -39,8 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(MockitoJUnitRunner.class)
-public class InstanceDataDaoImplTest extends WingsBaseTest {
+public class InstanceDataDaoImplTest extends BatchProcessingBaseTest {
   @Inject @InjectMocks private InstanceDataDaoImpl instanceDataDao;
   @Mock private CostEventService costEventService;
   @Captor private ArgumentCaptor<CostEventData> costEventDataArgumentCaptor;

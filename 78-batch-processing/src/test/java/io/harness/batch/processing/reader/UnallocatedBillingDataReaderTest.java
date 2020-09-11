@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBillingDataServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
-import software.wings.WingsBaseTest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(MockitoJUnitRunner.class)
-public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
+public class UnallocatedBillingDataReaderTest extends BatchProcessingBaseTest {
   @Inject @InjectMocks private UnallocatedBillingDataReader unallocatedBillingDataReader;
   @Mock private UnallocatedBillingDataServiceImpl unallocatedBillingDataService;
   @Mock private JobParameters parameters;

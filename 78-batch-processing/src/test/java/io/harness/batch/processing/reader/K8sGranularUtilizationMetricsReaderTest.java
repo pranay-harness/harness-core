@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.category.element.UnitTests;
@@ -19,7 +20,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
-import software.wings.WingsBaseTest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(MockitoJUnitRunner.class)
-public class K8sGranularUtilizationMetricsReaderTest extends WingsBaseTest {
+public class K8sGranularUtilizationMetricsReaderTest extends BatchProcessingBaseTest {
   @Inject @InjectMocks private K8sGranularUtilizationMetricsReader k8sGranularUtilizationMetricsReader;
   @Mock private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Mock private JobParameters parameters;

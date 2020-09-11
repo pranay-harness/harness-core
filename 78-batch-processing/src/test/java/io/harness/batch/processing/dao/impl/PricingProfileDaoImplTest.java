@@ -5,14 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.PricingProfile;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
 
-public class PricingProfileDaoImplTest extends WingsBaseTest {
+public class PricingProfileDaoImplTest extends BatchProcessingBaseTest {
   @Inject private PricingProfileDaoImpl pricingProfileDaoImpl;
 
   @Test

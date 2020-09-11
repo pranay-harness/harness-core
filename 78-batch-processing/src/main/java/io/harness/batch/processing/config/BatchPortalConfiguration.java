@@ -27,6 +27,11 @@ public class BatchPortalConfiguration {
   }
 
   @Bean
+  public BatchProcessingRegistrarsModule batchProcessingRegistrars() {
+    return new BatchProcessingRegistrarsModule();
+  }
+
+  @Bean
   @Profile("!test")
   public Module morphiaClassesModule() {
     return new ProviderModule() {
