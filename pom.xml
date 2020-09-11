@@ -2149,7 +2149,7 @@
                         <phase>generate-sources</phase>
                         <configuration>
                             <executable>bash</executable>
-                            <commandlineArgs>${basedir}/scripts/bazel/UpdateVersionInfoyaml.sh</commandlineArgs>
+                            <commandlineArgs>${basedir}/scripts/bazel/UpdateVersionInfoyaml.sh "${build.number}"</commandlineArgs>
                         </configuration>
                     </execution>
                     <execution>

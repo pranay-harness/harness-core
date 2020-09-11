@@ -1,3 +1,5 @@
+set -x
+
 if [ "${PLATFORM}" != "jenkins" ]
   then
     exit 0
@@ -9,14 +11,14 @@ function getProperty () {
    echo $PROP_VALUE
 }
 
-buildNo=$(getProperty "build.properties" "build.number")
+buildNo=$1
 buildMajorVersion=$(getProperty "build.properties" "build.majorVersion")
 buildMinorVersion=$(getProperty "build.properties" "build.minorVersion")
+timestamp=$( date +'%y%m%d-%H%M')
 
 sed -i.bak "s|\${build.number}|${buildNo}|g"  "12-commons/src/main/resources-filtered/versionInfo.yaml"
-sed -i.bak "s|\${gitCommit}|${gitCommit}|g"  "12-commons/src/main/resources-filtered/versionInfo.yaml"
-sed -i.bak "s|\${gitBranch}|${gitBranch}|g"  "12-commons/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${gitCommit}|${GIT_COMMIT}|g"  "12-commons/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${gitBranch}|${GIT_BRANCH}|g"  "12-commons/src/main/resources-filtered/versionInfo.yaml"
 sed -i.bak "s|\${timestamp}|${timestamp}|g"  "12-commons/src/main/resources-filtered/versionInfo.yaml"
 
 sed -i.bak "s|\${build.fullVersion}|${buildMajorVersion}.${buildMinorVersion}.${buildNo}|g"  "12-commons/src/main/resources-filtered/versionInfo.yaml"
-
