@@ -152,6 +152,7 @@ public class GraphGenerator {
         throw new InvalidRequestException("The starting node id cannot be null");
       }
 
+      Map<String, String> chainMap = new HashMap<>();
       Map<String, GraphVertex> graphVertexMap = new HashMap<>();
       Map<String, EdgeList> adjacencyList = new HashMap<>();
 
@@ -170,14 +171,28 @@ public class GraphGenerator {
 
         List<String> edges = new ArrayList<>();
 
-        if (parentIdMap.containsKey(currentNodeId)) {
+        if (parentIdMap.containsKey(currentNodeId) && !parentIdMap.get(currentNodeId).isEmpty()) {
           List<String> childNodeIds = parentIdMap.get(currentNodeId);
-          edges.addAll(childNodeIds);
-          queue.addAll(childNodeIds);
+
+          if (ExecutionMode.chainModes().contains(graphVertex.getMode())) {
+            String chainStartingId = populateChainMap(chainMap, childNodeIds);
+            edges.add(chainStartingId);
+            queue.add(chainStartingId);
+          } else {
+            edges.addAll(childNodeIds);
+            queue.addAll(childNodeIds);
+          }
         }
 
         String nextNodeId = nodeExIdMap.get(currentNodeId).getNextId();
         if (EmptyPredicate.isNotEmpty(nextNodeId)) {
+          if (chainMap.containsKey(currentNodeId)) {
+            chainMap.put(nextNodeId, chainMap.get(currentNodeId));
+            chainMap.remove(currentNodeId);
+          }
+          queue.add(nextNodeId);
+        } else if (chainMap.containsKey(currentNodeId)) {
+          nextNodeId = chainMap.get(currentNodeId);
           queue.add(nextNodeId);
         }
 
@@ -200,11 +215,28 @@ public class GraphGenerator {
           .status(nodeExecution.getStatus())
           .failureInfo(nodeExecution.getFailureInfo())
           .stepParameters(nodeExecution.getResolvedStepParameters())
+          .mode(nodeExecution.getMode())
           .interruptHistories(nodeExecution.getInterruptHistories())
           .outcomes(outcomeService.findAllByRuntimeId(
               nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid()))
           .retryIds(nodeExecution.getRetryIds())
           .build();
+    }
+
+    /**
+     * Population of chainMap with chainIds except for the last id <br>
+     * Ex.: pin1 -> pin2 -> pin3 <br>
+     *      map = {pin1, pin2}, {pin2, pin3} <br>
+     * <br>
+     * @param chainMap map containing chain order
+     * @param chainIds list which contains ids of the chain
+     * @return starting point of a chain
+     */
+    private String populateChainMap(Map<String, String> chainMap, List<String> chainIds) {
+      for (int i = 1; i < chainIds.size(); ++i) {
+        chainMap.put(chainIds.get(i - 1), chainIds.get(i));
+      }
+      return chainIds.get(0);
     }
   }
 }
