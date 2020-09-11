@@ -34,11 +34,16 @@ import java.util.function.Supplier;
 public class CommandLibraryServiceHttpClientFactory implements Provider<CommandLibraryServiceHttpClient> {
   private final String baseUrl;
   private final ServiceTokenGenerator tokenGenerator;
+  private boolean publishingAllowed;
+  private final String publishingSecret;
   @Inject private MainConfiguration mainConfiguration;
 
-  public CommandLibraryServiceHttpClientFactory(String baseUrl, ServiceTokenGenerator tokenGenerator) {
+  public CommandLibraryServiceHttpClientFactory(
+      String baseUrl, ServiceTokenGenerator tokenGenerator, boolean publishingAllowed, String publishingSecret) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
+    this.publishingAllowed = publishingAllowed;
+    this.publishingSecret = publishingSecret;
   }
 
   @Override
