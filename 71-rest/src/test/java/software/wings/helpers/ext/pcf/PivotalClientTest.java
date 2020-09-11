@@ -6,9 +6,9 @@ import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCAL
 import static io.harness.pcf.model.PcfConstants.CF_DOCKER_CREDENTIALS;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
-import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__IDENTIFIER;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_HTTP;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_TCP;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -274,14 +274,14 @@ public class PivotalClientTest extends WingsBaseTest {
   public void testGetApplicationEnvironmentsByName() throws Exception {
     ApplicationEnvironments applicationEnvironments =
         ApplicationEnvironments.builder()
-            .putAllUserProvided(Collections.singletonMap(HARNESS__STATUS__INDENTIFIER, HARNESS__STAGE__INDENTIFIER))
+            .putAllUserProvided(Collections.singletonMap(HARNESS__STATUS__IDENTIFIER, HARNESS__STAGE__IDENTIFIER))
             .build();
     when(applications.getEnvironments(any())).thenReturn(Mono.just(applicationEnvironments));
 
     ApplicationEnvironments environment = client.getApplicationEnvironmentsByName(getPcfRequestConfig());
     assertThat(environment).isNotNull();
     assertThat(environment.getUserProvided()).isNotNull();
-    assertThat(environment.getUserProvided().get(HARNESS__STATUS__INDENTIFIER)).isEqualTo(HARNESS__STAGE__INDENTIFIER);
+    assertThat(environment.getUserProvided().get(HARNESS__STATUS__IDENTIFIER)).isEqualTo(HARNESS__STAGE__IDENTIFIER);
   }
 
   @Test
@@ -1311,22 +1311,21 @@ public class PivotalClientTest extends WingsBaseTest {
     doReturn(true).when(mockedClient).doLogin(any(), any(), anyString());
     doReturn(0).when(mockedClient).executeCommand(anyString(), anyMap(), any());
     mockedClient.setEnvVariablesForApplication(
-        Collections.singletonMap(HARNESS__STATUS__INDENTIFIER, HARNESS__ACTIVE__INDENTIFIER), pcfRequestConfig, logger);
+        Collections.singletonMap(HARNESS__STATUS__IDENTIFIER, HARNESS__ACTIVE__IDENTIFIER), pcfRequestConfig, logger);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockedClient).executeCommand(commandCaptor.capture(), anyMap(), any());
 
-    assertThat(commandCaptor.getValue()).isEqualTo("cf set-env app HARNESS__STATUS__INDENTIFIER ACTIVE");
+    assertThat(commandCaptor.getValue()).isEqualTo("cf set-env app HARNESS__STATUS__IDENTIFIER ACTIVE");
 
     // Command execution failed, returned 1
     doReturn(1).when(mockedClient).executeCommand(anyString(), anyMap(), any());
     try {
       mockedClient.setEnvVariablesForApplication(
-          Collections.singletonMap(HARNESS__STATUS__INDENTIFIER, HARNESS__ACTIVE__INDENTIFIER), pcfRequestConfig,
-          logger);
+          Collections.singletonMap(HARNESS__STATUS__IDENTIFIER, HARNESS__ACTIVE__IDENTIFIER), pcfRequestConfig, logger);
       fail("should not reach here");
     } catch (Exception e) {
       assertThat(e instanceof PivotalClientApiException).isTrue();
-      assertThat(e.getMessage()).contains("Failed to set env var: <HARNESS__STATUS__INDENTIFIER:ACTIVE>");
+      assertThat(e.getMessage()).contains("Failed to set env var: <HARNESS__STATUS__IDENTIFIER:ACTIVE>");
     }
   }
 
@@ -1354,21 +1353,21 @@ public class PivotalClientTest extends WingsBaseTest {
     doReturn(true).when(mockedClient).doLogin(any(), any(), anyString());
     doReturn(0).when(mockedClient).executeCommand(anyString(), anyMap(), any());
     mockedClient.unsetEnvVariablesForApplication(
-        Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, logger);
+        Collections.singletonList(HARNESS__STATUS__IDENTIFIER), pcfRequestConfig, logger);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockedClient).executeCommand(commandCaptor.capture(), anyMap(), any());
 
-    assertThat(commandCaptor.getValue()).isEqualTo("cf unset-env app HARNESS__STATUS__INDENTIFIER");
+    assertThat(commandCaptor.getValue()).isEqualTo("cf unset-env app HARNESS__STATUS__IDENTIFIER");
 
     // Command execution failed, returned 1
     doReturn(1).when(mockedClient).executeCommand(anyString(), anyMap(), any());
     try {
       mockedClient.unsetEnvVariablesForApplication(
-          Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, logger);
+          Collections.singletonList(HARNESS__STATUS__IDENTIFIER), pcfRequestConfig, logger);
       fail("should not reach here");
     } catch (Exception e) {
       assertThat(e instanceof PivotalClientApiException).isTrue();
-      assertThat(e.getMessage()).contains("Failed to unset env var: HARNESS__STATUS__INDENTIFIER");
+      assertThat(e.getMessage()).contains("Failed to unset env var: HARNESS__STATUS__IDENTIFIER");
     }
   }
 

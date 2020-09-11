@@ -16,8 +16,8 @@ import static io.harness.pcf.model.PcfConstants.DISK_QUOTA_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.DOCKER_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.DOMAINS_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ENV_MANIFEST_YML_ELEMENT;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_HTTP_ENDPOINT_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_TYPE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.HOSTS_MANIFEST_YML_ELEMENT;
@@ -694,7 +694,7 @@ public class PcfCommandTaskHelper {
       envMap = new HashMap<>();
     }
 
-    envMap.put(HARNESS__STATUS__INDENTIFIER, HARNESS__STAGE__INDENTIFIER);
+    envMap.put(HARNESS__STATUS__IDENTIFIER, HARNESS__STAGE__IDENTIFIER);
     map.put(ENV_MANIFEST_YML_ELEMENT, envMap);
   }
 
@@ -849,7 +849,7 @@ public class PcfCommandTaskHelper {
       StringBuilder msgBuilder =
           new StringBuilder(256)
               .append("Invalid PCF Deployment State. Found Multiple applications having Env variable as ")
-              .append(HARNESS__STATUS__INDENTIFIER)
+              .append(HARNESS__STATUS__IDENTIFIER)
               .append(
                   ": ACTIVE' identifier. Cant Determine actual active version.\n Only 1 is expected to have this Status. Active versions found are: \n");
       activeVersions.forEach(activeVersion -> msgBuilder.append(activeVersion.getName()).append(' '));

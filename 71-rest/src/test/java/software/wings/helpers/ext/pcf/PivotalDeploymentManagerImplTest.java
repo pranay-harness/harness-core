@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.pcf;
 
-import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__IDENTIFIER;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -316,7 +316,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
 
     assertThat(map).isNotNull();
     assertThat(map.size()).isEqualTo(1);
-    assertThat(map.get(HARNESS__STATUS__INDENTIFIER)).isEqualTo(HARNESS__ACTIVE__INDENTIFIER);
+    assertThat(map.get(HARNESS__STATUS__IDENTIFIER)).isEqualTo(HARNESS__ACTIVE__IDENTIFIER);
 
     deploymentManager.setEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), false, logCallback);
     verify(client, times(2)).setEnvVariablesForApplication(mapCaptor.capture(), any(), any());
@@ -324,7 +324,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
 
     assertThat(map).isNotNull();
     assertThat(map.size()).isEqualTo(1);
-    assertThat(map.get(HARNESS__STATUS__INDENTIFIER)).isEqualTo(HARNESS__STAGE__INDENTIFIER);
+    assertThat(map.get(HARNESS__STATUS__IDENTIFIER)).isEqualTo(HARNESS__STAGE__IDENTIFIER);
   }
 
   @Test
@@ -332,6 +332,13 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUnsetEnvironmentVariableForAppStatus() throws Exception {
     reset(client);
+    Map<String, String> userProvided = new HashMap<>();
+    userProvided.put(HARNESS__STATUS__IDENTIFIER, HARNESS__STAGE__IDENTIFIER);
+    ApplicationEnvironments applicationEnvironments =
+        ApplicationEnvironments.builder().userProvided(userProvided).build();
+
+    doReturn(applicationEnvironments).when(client).getApplicationEnvironmentsByName(any());
+
     deploymentManager.unsetEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), logCallback);
     ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
     verify(client).unsetEnvVariablesForApplication(listCaptor.capture(), any(), any());
@@ -339,7 +346,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
 
     assertThat(list).isNotNull();
     assertThat(list.size()).isEqualTo(1);
-    assertThat(list).containsExactly(HARNESS__STATUS__INDENTIFIER);
+    assertThat(list).containsExactly(HARNESS__STATUS__IDENTIFIER);
   }
 
   @Test
@@ -787,7 +794,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   public void testIsActiveApplication() throws Exception {
     PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().applicationName("app_1").build();
     Map<String, String> userProvider = new HashMap<>();
-    userProvider.put(HARNESS__STATUS__INDENTIFIER, HARNESS__ACTIVE__INDENTIFIER);
+    userProvider.put(HARNESS__STATUS__IDENTIFIER, HARNESS__ACTIVE__IDENTIFIER);
     ApplicationEnvironments environments = ApplicationEnvironments.builder().userProvided(userProvider).build();
 
     when(client.getApplicationEnvironmentsByName(eq(pcfRequestConfig))).thenReturn(environments);
