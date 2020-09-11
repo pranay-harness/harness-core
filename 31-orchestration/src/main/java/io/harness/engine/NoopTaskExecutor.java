@@ -1,4 +1,4 @@
-package io.harness.utils;
+package io.harness.engine;
 
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.tasks.TaskExecutor;
@@ -9,7 +9,7 @@ import java.util.Map;
  * The type Dummy task executor.
  * This is only to provide a Dummy Binding to Guice else it complains while running tests
  */
-public class DummyTaskExecutor implements TaskExecutor<HDelegateTask> {
+public class NoopTaskExecutor implements TaskExecutor<HDelegateTask> {
   @Override
   public String queueTask(Map<String, String> setupAbstractions, HDelegateTask task) {
     return null;

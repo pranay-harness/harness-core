@@ -20,7 +20,7 @@ public class OnSuccessAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    if (!positiveStatuses().contains(advisingEvent.getStatus())) {
+    if (!positiveStatuses().contains(advisingEvent.getToStatus())) {
       return null;
     }
     OnSuccessAdviserParameters parameters =

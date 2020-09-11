@@ -31,7 +31,7 @@ public class RetryAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    if (!retryableStatuses().contains(advisingEvent.getStatus())) {
+    if (!retryableStatuses().contains(advisingEvent.getToStatus())) {
       return null;
     }
     RetryAdviserParameters parameters = (RetryAdviserParameters) advisingEvent.getAdviserParameters();

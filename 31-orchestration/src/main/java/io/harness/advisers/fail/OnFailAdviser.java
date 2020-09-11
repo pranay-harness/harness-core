@@ -20,7 +20,7 @@ public class OnFailAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    if (!brokeStatuses().contains(advisingEvent.getStatus())) {
+    if (!brokeStatuses().contains(advisingEvent.getToStatus())) {
       return null;
     }
     OnFailAdviserParameters parameters =

@@ -6,6 +6,7 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.advisers.fail.OnFailAdviser;
 import io.harness.advisers.ignore.IgnoreAdviser;
+import io.harness.advisers.manualintervention.ManualInterventionAdviser;
 import io.harness.advisers.retry.RetryAdviser;
 import io.harness.advisers.success.OnSuccessAdviser;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,5 +23,6 @@ public class OrchestrationAdviserRegistrar implements AdviserRegistrar {
     adviserClasses.add(Pair.of(OnSuccessAdviser.ADVISER_TYPE, OnSuccessAdviser.class));
     adviserClasses.add(Pair.of(RetryAdviser.ADVISER_TYPE, RetryAdviser.class));
     adviserClasses.add(Pair.of(OnFailAdviser.ADVISER_TYPE, OnFailAdviser.class));
+    adviserClasses.add(Pair.of(ManualInterventionAdviser.ADVISER_TYPE, ManualInterventionAdviser.class));
   }
 }

@@ -44,7 +44,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
    */
   @Override
   public PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops) {
-    EnumSet<Status> allowedStartStatuses = Status.obtainAllowedStartSet(status);
+    EnumSet<Status> allowedStartStatuses = Status.planAllowedStartSet(status);
     Query query = query(where(PlanExecutionKeys.uuid).is(planExecutionId))
                       .addCriteria(where(PlanExecutionKeys.status).in(allowedStartStatuses));
     Update updateOps = new Update()

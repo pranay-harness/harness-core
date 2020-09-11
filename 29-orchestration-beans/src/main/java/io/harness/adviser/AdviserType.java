@@ -30,6 +30,7 @@ public class AdviserType implements RegistryKey {
   public static final String ABORT = "ABORT";
   public static final String PAUSE = "PAUSE";
   public static final String RESUME = "RESUME";
+  public static final String MANUAL_INTERVENTION = "MANUAL_INTERVENTION";
 
   @NonNull String type;
 }

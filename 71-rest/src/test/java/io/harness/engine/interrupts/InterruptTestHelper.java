@@ -19,7 +19,7 @@ public class InterruptTestHelper {
   @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
 
   public void waitForPlanStatus(String uuid, Status status) {
-    Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(1, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       final PlanExecution planExecution = fetchPlanExecutionStatus(uuid);
       return planExecution != null && status == planExecution.getStatus();
     });
@@ -27,7 +27,7 @@ public class InterruptTestHelper {
 
   public void waitForPlanCompletion(String uuid) {
     final String finalStatusEnding = "ED";
-    Awaitility.await().atMost(10, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(3, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       final PlanExecution planExecution = fetchPlanExecutionStatus(uuid);
       return planExecution != null && planExecution.getStatus().name().endsWith(finalStatusEnding);
     });

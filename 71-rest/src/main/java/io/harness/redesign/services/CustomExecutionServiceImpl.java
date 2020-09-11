@@ -1,7 +1,6 @@
 package io.harness.redesign.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -71,6 +70,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   public PlanExecution executeRetryAbortPlan() {
     return orchestrationService.startExecution(
         customExecutionProvider.provideHttpRetryAbortPlan(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
+  public PlanExecution executeInterventionPlan() {
+    return orchestrationService.startExecution(
+        customExecutionProvider.provideHttpInterventionPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
@@ -158,12 +163,8 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public Interrupt registerInterrupt(String planExecutionId) {
-    return interruptManager.register(InterruptPackage.builder()
-                                         .planExecutionId(planExecutionId)
-                                         .interruptType(ABORT_ALL)
-                                         .embeddedUser(getEmbeddedUser())
-                                         .build());
+  public Interrupt registerInterrupt(InterruptPackage interruptPackage) {
+    return interruptManager.register(interruptPackage);
   }
 
   @Override

@@ -43,8 +43,10 @@ public class SimpleAsyncStep implements Step, AsyncExecutable<SimpleStepAsyncPar
     if (simpleStepAsyncParams.isShouldThrowException()) {
       throw new RuntimeException("Exception for test");
     }
-    executorService.schedule(
-        new SimpleNotifier(waitNotifyEngine, uuid, StringNotifyResponseData.builder().data("SUCCESS").build()),
+
+    StringNotifyResponseData stringNotifyResponseData =
+        StringNotifyResponseData.builder().data(simpleStepAsyncParams.isShouldFail() ? "FAIL" : "SUCCESS").build();
+    executorService.schedule(new SimpleNotifier(waitNotifyEngine, uuid, stringNotifyResponseData),
         simpleStepAsyncParams.getDuration(), TimeUnit.SECONDS);
     return executionResponseBuilder.build();
   }

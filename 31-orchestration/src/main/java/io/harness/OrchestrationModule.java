@@ -10,6 +10,7 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.harness.engine.EngineObtainmentHelper;
+import io.harness.engine.NoopTaskExecutor;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -37,6 +38,8 @@ import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
+import io.harness.tasks.TaskExecutor;
+import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.WaiterModule;
 
@@ -101,6 +104,10 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(String.class)
         .annotatedWith(Names.named(OrchestrationPublisherName.PUBLISHER_NAME))
         .toInstance(config.getPublisherName());
+
+    MapBinder<String, TaskExecutor> taskExecutorMap =
+        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
+    taskExecutorMap.addBinding(TaskMode.NOOP.name()).to(NoopTaskExecutor.class);
   }
 
   @Override
