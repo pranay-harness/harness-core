@@ -2,8 +2,9 @@ package software.wings.helpers.ext.pcf;
 
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
-import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__INDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.PCF_CONNECTIVITY_SUCCESS;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
@@ -22,7 +23,6 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.LogLevel;
-import io.harness.pcf.model.PcfConstants;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
@@ -36,14 +36,18 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public static final String DELIMITER = "__";
+  private static final List<String> STATUS_ENV_VARIABLES =
+      Arrays.asList(HARNESS__STATUS__INDENTIFIER, HARNESS__STATUS__IDENTIFIER);
   @Inject PcfClient pcfClient;
 
   @Override
@@ -406,11 +410,13 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
     ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
-    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())
-        && applicationEnvironments.getUserProvided().containsKey(PcfConstants.HARNESS__STATUS__INDENTIFIER)
-        && HARNESS__ACTIVE__INDENTIFIER.equals(
-               applicationEnvironments.getUserProvided().get(PcfConstants.HARNESS__STATUS__INDENTIFIER))) {
-      return true;
+    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
+      for (String statusKey : STATUS_ENV_VARIABLES) {
+        if (applicationEnvironments.getUserProvided().containsKey(statusKey)
+            && HARNESS__ACTIVE__IDENTIFIER.equals(applicationEnvironments.getUserProvided().get(statusKey))) {
+          return true;
+        }
+      }
     }
     return false;
   }
@@ -419,18 +425,39 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public void setEnvironmentVariableForAppStatus(PcfRequestConfig pcfRequestConfig, boolean activeStatus,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
+    removeOldStatusVariableIfExist(pcfRequestConfig, executionLogCallback);
     pcfClient.setEnvVariablesForApplication(
         Collections.singletonMap(
-            HARNESS__STATUS__INDENTIFIER, activeStatus ? HARNESS__ACTIVE__INDENTIFIER : HARNESS__STAGE__INDENTIFIER),
+            HARNESS__STATUS__IDENTIFIER, activeStatus ? HARNESS__ACTIVE__IDENTIFIER : HARNESS__STAGE__IDENTIFIER),
         pcfRequestConfig, executionLogCallback);
+  }
+
+  private void removeOldStatusVariableIfExist(
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
+    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
+      Map<String, Object> userProvided = applicationEnvironments.getUserProvided();
+      if (userProvided.containsKey(HARNESS__STATUS__INDENTIFIER)) {
+        pcfClient.unsetEnvVariablesForApplication(
+            Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, executionLogCallback);
+      }
+    }
   }
 
   @Override
   public void unsetEnvironmentVariableForAppStatus(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
-    pcfClient.unsetEnvVariablesForApplication(
-        Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, executionLogCallback);
+    ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
+    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
+      Map<String, Object> userProvided = applicationEnvironments.getUserProvided();
+      for (String statusKey : STATUS_ENV_VARIABLES) {
+        if (userProvided.containsKey(statusKey)) {
+          pcfClient.unsetEnvVariablesForApplication(
+              Collections.singletonList(statusKey), pcfRequestConfig, executionLogCallback);
+        }
+      }
+    }
   }
 
   @Override
@@ -456,6 +483,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
 
     return routeBuilder.toString();
   }
+
   private void validateArgs(String host, String domain, String path, boolean tcpRoute, boolean useRandomPort,
       Integer port) throws PivotalClientApiException {
     if (isBlank(domain)) {
