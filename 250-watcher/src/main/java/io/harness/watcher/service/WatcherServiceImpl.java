@@ -115,10 +115,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -132,6 +134,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -154,9 +158,12 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String DELEGATE_RESTART_SCRIPT = "DelegateRestartScript";
   private static final String NO_SPACE_LEFT_ON_DEVICE_ERROR = "No space left on device";
   private static final String FILE_HANDLES_LOGS_FOLDER = "file_handle_logs";
+  private static final String HARNESS_SIGNATURE_FILE_NAME = "META-INF/HARNESSJ.SF";
   private final String watcherJreVersion = System.getProperty("java.version");
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
+
+  private final SecureRandom random = new SecureRandom();
 
   private static final boolean multiVersion;
 
@@ -200,6 +207,7 @@ public class WatcherServiceImpl implements WatcherService {
 
     try {
       logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
+      logger.info("Multiversion: {}", multiVersion);
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
@@ -906,6 +914,13 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void downloadDelegateJar(String version) throws Exception {
     String minorVersion = Integer.toString(getMinorVersion(version));
+
+    File finalDestination = new File(version + "/delegate.jar");
+    if (finalDestination.exists()) {
+      logger.info("Verified delegate jar version {} already exists. Skipping download...", version);
+      return;
+    }
+
     RestResponse<String> restResponse = timeLimiter.callWithTimeout(
         ()
             -> SafeHttpCall.execute(
@@ -917,29 +932,73 @@ public class WatcherServiceImpl implements WatcherService {
 
     String downloadUrl = restResponse.getResource();
     logger.info("Downloading delegate jar version {}", version);
-    File destination = new File(version + "/delegate.jar");
-    if (destination.exists()) {
-      if (destination.lastModified() > System.currentTimeMillis() - Duration.ofHours(1).toMillis()) {
-        logger.warn(
-            "Skipping repetitive download of delegate jar for version {}. Same delegate jar version can be downloaded one hour after the previous download.",
-            version);
-        return;
-      }
-
-      logger.info("Replacing delegate jar version {}", version);
-      FileUtils.forceDelete(destination);
+    File downloadFolder = new File(version);
+    if (!downloadFolder.exists()) {
+      downloadFolder.mkdir();
     }
+
+    File downloadDestination = File.createTempFile("delegate", ".jar", downloadFolder);
+    downloadDestination.deleteOnExit();
     Stopwatch timer = Stopwatch.createStarted();
 
     if (downloadUrl.startsWith("file://")) {
       String sourceFile = downloadUrl.substring(7);
-      FileUtils.copyFile(new File(sourceFile), destination);
+      FileUtils.copyFile(new File(sourceFile), downloadDestination);
+      logger.info("Downloaded delegate jar version {} from file share to the temporary location", version);
+
+      FileUtils.moveFile(downloadDestination, finalDestination);
+      logger.info("Moved delegate jar version {} to the final location", version);
     } else {
       try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, 600, 600)) {
-        FileUtils.copyInputStreamToFile(stream, destination);
+        FileUtils.copyInputStreamToFile(stream, downloadDestination);
+        logger.info("Downloaded delegate jar version {} to the temporary location", version);
+
+        try (JarFile delegateJar = new JarFile(downloadDestination)) {
+          // Check if jar is signed properly (This will pass if jar was not signed at all)
+          boolean verified = verify(delegateJar);
+
+          // Additional check to make sure that jar file was signed by Harness
+          JarEntry harnessSignatureFile = delegateJar.getJarEntry(HARNESS_SIGNATURE_FILE_NAME);
+
+          if (verified && harnessSignatureFile != null) {
+            FileUtils.moveFile(downloadDestination, finalDestination);
+            logger.info("Moved delegate jar version {} to the final location", version);
+          } else {
+            logger.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
+            FileUtils.forceDelete(downloadDestination);
+          }
+        } catch (Exception ex) {
+          logger.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
+        } finally {
+          if (downloadDestination.exists()) {
+            FileUtils.forceDelete(downloadDestination);
+          }
+        }
       }
     }
+
     logger.info("Finished downloading delegate jar version {} in {} seconds", version, timer.elapsed(TimeUnit.SECONDS));
+  }
+
+  private boolean verify(JarFile jar) throws IOException {
+    // Since jarverifier is not available in JRE we will have to manually trigger the verification by reading
+    // some portion of each of the jar entries.
+    Enumeration<JarEntry> entries = jar.entries();
+    while (entries.hasMoreElements()) {
+      JarEntry entry = entries.nextElement();
+      byte[] buffer = new byte[2048];
+      try (InputStream is = jar.getInputStream(entry)) {
+        while ((is.read(buffer, 0, buffer.length)) != -1) {
+          // We just read. This will throw a SecurityException
+          // if a signature/digest check fails.
+          logger.trace("Reading jar entries to trigger signing check...");
+        }
+      } catch (SecurityException se) {
+        logger.error("Jar signing verification failed", se);
+        return false;
+      }
+    }
+    return true;
   }
 
   private void drainDelegateProcess(String delegateProcess) {
