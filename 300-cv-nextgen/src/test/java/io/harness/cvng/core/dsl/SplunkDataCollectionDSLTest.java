@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.HoverflyTest;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -18,12 +18,9 @@ import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
-import io.specto.hoverfly.junit.core.HoverflyConfig;
 import io.specto.hoverfly.junit.core.SimulationSource;
-import io.specto.hoverfly.junit.rule.HoverflyRule;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -37,16 +34,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class SplunkDataCollectionDSLTest extends CategoryTest {
+public class SplunkDataCollectionDSLTest extends HoverflyTest {
   private DataCollectionDSLService dataCollectionDSLService;
   private String code;
-
-  @ClassRule
-  public static final HoverflyRule rule =
-      HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
-  /*@ClassRule
-  public static final HoverflyRule rule =
-      HoverflyRule.inCaptureMode(HoverflyConfig.localConfigs().disableTlsVerification());*/
 
   @Before
   public void setup() {
@@ -57,8 +47,8 @@ public class SplunkDataCollectionDSLTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_splunkDSL() throws IOException {
     String filePath = "splunk/splunk-response.json";
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
-    // rule.capture(filePath);
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk.datacollection");
 
     final RuntimeParameters runtimeParameters = getRuntimeParameters();
@@ -78,8 +68,8 @@ public class SplunkDataCollectionDSLTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_splunkHostDSL() throws IOException {
     String filePath = "splunk/splunk-response-host.json";
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
-    // rule.capture(filePath);
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk_host_collection.datacollection");
     final RuntimeParameters runtimeParameters = getRuntimeParameters();
     Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(code, runtimeParameters));

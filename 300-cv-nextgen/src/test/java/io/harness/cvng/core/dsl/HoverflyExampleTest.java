@@ -3,17 +3,14 @@ package io.harness.cvng.core.dsl;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.HoverflyTest;
 import io.harness.rule.Owner;
-import io.specto.hoverfly.junit.core.HoverflyConfig;
 import io.specto.hoverfly.junit.core.SimulationSource;
 import io.specto.hoverfly.junit.core.SslConfigurer;
-import io.specto.hoverfly.junit.rule.HoverflyRule;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -23,26 +20,18 @@ import java.nio.file.Paths;
 /**
  * Sample test to use Hoverfly with OkHttpClient.
  */
-public class HoverflyExampleTest extends CategoryTest {
+public class HoverflyExampleTest extends HoverflyTest {
   // TODO: This is just zero external dependency basic example for Hoverfly. Can be used to quickly try out Hoverfly
-  //  We need make capture and simulation switching easier.
-  // TODO: trying out if assinging a fixed porr fixes the CI issues. We need a common rule for all tests.
-  @ClassRule
-  public static final HoverflyRule rule = HoverflyRule.inSimulationMode(
-      HoverflyConfig.localConfigs().disableTlsVerification().proxyPort(8053).adminPort(8054));
-  // In capture mode-
-  // public static final HoverflyRule rule =
-  // HoverflyRule.inCaptureMode(HoverflyConfig.localConfigs().disableTlsVerification());
-
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testQAAPI() throws IOException {
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/qa-api-version-test-file.json")));
+    HOVERFLY_RULE.simulate(
+        SimulationSource.file(Paths.get("src/test/resources/hoverfly/qa-api-version-test-file.json")));
     // This needs to be done to run tests faster. uncomment following line to capture the actual request.
-    // rule.capture("qa-api-version-test-file.json");
+    // HOVERFLY_RULE.capture("qa-api-version-test-file.json");
 
-    SslConfigurer sslConfigurer = rule.getSslConfigurer();
+    SslConfigurer sslConfigurer = HOVERFLY_RULE.getSslConfigurer();
 
     OkHttpClient client =
         new OkHttpClient()
@@ -58,10 +47,11 @@ public class HoverflyExampleTest extends CategoryTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testProdAPI() throws IOException {
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/prod-api-version-test-file.json")));
+    HOVERFLY_RULE.simulate(
+        SimulationSource.file(Paths.get("src/test/resources/hoverfly/prod-api-version-test-file.json")));
     // This needs to be done to run tests faster. uncomment following line to capture the actual request.
-    // rule.capture("prod-api-version-test-file.json");
-    SslConfigurer sslConfigurer = rule.getSslConfigurer();
+    // HOVERFLY_RULE.capture("prod-api-version-test-file.json");
+    SslConfigurer sslConfigurer = HOVERFLY_RULE.getSslConfigurer();
 
     OkHttpClient client =
         new OkHttpClient()
