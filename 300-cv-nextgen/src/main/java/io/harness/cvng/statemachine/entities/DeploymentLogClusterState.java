@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.List;
 @Data
 @Builder
@@ -16,7 +17,16 @@ import java.util.List;
 public class DeploymentLogClusterState extends LogClusterState {
   @Override
   protected List<String> scheduleAnalysis(AnalysisInput analysisInput) {
-    return logClusterService.scheduleClusteringTasks(getInputs(), clusterLevel);
+    switch (clusterLevel) {
+      case L1:
+        return logClusterService.scheduleL1ClusteringTasks(analysisInput);
+      case L2:
+        return logClusterService.scheduleDeploymentL2ClusteringTask(analysisInput)
+            .map(Collections::singletonList)
+            .orElseGet(Collections::emptyList);
+      default:
+        throw new IllegalStateException("Invalid clusterLevel: " + clusterLevel);
+    }
   }
 
   @Override
@@ -30,10 +40,18 @@ public class DeploymentLogClusterState extends LogClusterState {
         deploymentLogClusterState.setStatus(AnalysisStatus.CREATED);
         return deploymentLogClusterState;
       case L2:
-        throw new UnsupportedOperationException("create new analysis state here.");
+        DeploymentLogAnalysisState deploymentLogAnalysisState = DeploymentLogAnalysisState.builder().build();
+        deploymentLogAnalysisState.setInputs(getInputs());
+        deploymentLogAnalysisState.setStatus(AnalysisStatus.CREATED);
+        return deploymentLogAnalysisState;
       default:
         throw new AnalysisStateMachineException("Unknown cluster level in handleTransition "
             + "of ServiceGuardLogClusterState: " + clusterLevel);
     }
+  }
+
+  @Override
+  public void handleFinalStatuses(AnalysisStatus finalStatus) {
+    logClusterService.logDeploymentVerificationProgress(getInputs(), finalStatus, clusterLevel);
   }
 }

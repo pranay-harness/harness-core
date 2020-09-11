@@ -49,6 +49,7 @@ public abstract class LearningEngineTask implements PersistentEntity, UuidAware,
     SERVICE_GUARD_TIME_SERIES,
     LOG_CLUSTER,
     SERVICE_GUARD_LOG_ANALYSIS,
+    CANARY_LOG_ANALYSIS,
     TIME_SERIES_CANARY,
     SERVICE_GUARD_FEEDBACK_ANALYSIS
   }

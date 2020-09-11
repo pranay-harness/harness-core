@@ -26,6 +26,7 @@ import io.harness.cvng.statemachine.entities.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.DeploymentVerificationTaskKeys;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -34,7 +35,6 @@ import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -106,21 +106,16 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
   }
 
   @Override
-  public void logProgress(
-      String deploymentVerificationId, Instant startTime, Instant endTime, AnalysisStatus analysisStatus) {
+  public void logProgress(String deploymentVerificationId, ProgressLog progressLog) {
     DeploymentVerificationTask deploymentVerificationTask = getVerificationTask(deploymentVerificationId);
-    DeploymentVerificationTask.ProgressLog progressLog = DeploymentVerificationTask.ProgressLog.builder()
-                                                             .startTime(startTime)
-                                                             .endTime(endTime)
-                                                             .analysisStatus(analysisStatus)
-                                                             .build();
+
     UpdateOperations<DeploymentVerificationTask> deploymentVerificationTaskUpdateOperations =
         hPersistence.createUpdateOperations(DeploymentVerificationTask.class)
             .addToSet(DeploymentVerificationTaskKeys.progressLogs, progressLog);
-    if (endTime.equals(deploymentVerificationTask.getEndTime())
-        || AnalysisStatus.getFailedStatuses().contains(analysisStatus)) {
+    if ((progressLog.getEndTime().equals(deploymentVerificationTask.getEndTime()) && progressLog.isFinalState())
+        || AnalysisStatus.getFailedStatuses().contains(progressLog.getAnalysisStatus())) {
       deploymentVerificationTaskUpdateOperations.set(
-          DeploymentVerificationTaskKeys.executionStatus, mapToExecutionStatus(analysisStatus));
+          DeploymentVerificationTaskKeys.executionStatus, mapToExecutionStatus(progressLog.getAnalysisStatus()));
     }
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
@@ -137,6 +132,13 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
         hPersistence.createUpdateOperations(DeploymentVerificationTask.class);
     updateOperations.unset(DeploymentVerificationTaskKeys.perpetualTaskIds);
     hPersistence.update(entity, updateOperations);
+  }
+
+  @Override
+  public TimeRange getPreDeploymentTimeRange(String deploymentVerificationTaskId) {
+    DeploymentVerificationTask deploymentVerificationTask = getVerificationTask(deploymentVerificationTaskId);
+    VerificationJob verificationJob = verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
+    return verificationJob.getPreDeploymentTimeRange(deploymentVerificationTask.getDeploymentStartTime());
   }
 
   private ExecutionStatus mapToExecutionStatus(AnalysisStatus analysisStatus) {
@@ -162,7 +164,7 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
   private void createDataCollectionTasks(DeploymentVerificationTask deploymentVerificationTask,
       VerificationJob verificationJob, List<CVConfig> cvConfigs) {
     TimeRange preDeploymentTimeRange =
-        verificationJob.getPreDeploymentTimeRanges(deploymentVerificationTask.getDeploymentStartTime());
+        verificationJob.getPreDeploymentTimeRange(deploymentVerificationTask.getDeploymentStartTime());
     List<TimeRange> timeRanges =
         verificationJob.getDataCollectionTimeRanges(roundDownTo1MinBoundary(deploymentVerificationTask.getStartTime()));
     cvConfigs.forEach(cvConfig -> {

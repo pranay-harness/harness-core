@@ -2,9 +2,11 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
@@ -15,9 +17,11 @@ import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.ClusteredLog.ClusteredLogKeys;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
+import io.harness.cvng.analysis.entities.LogClusterLearningEngineTask;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -25,6 +29,12 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
+import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
+import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
+import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -43,68 +53,140 @@ import java.util.List;
 import java.util.Set;
 
 public class LogClusterServiceImplTest extends CvNextGenTest {
-  private String verificationTaskId;
+  private String serviceGuardVerificationTaskId;
+  private String cvConfigId;
   @Mock LearningEngineTaskService learningEngineTaskService;
   @Inject HPersistence hPersistence;
   @Inject LogClusterService logClusterService;
   @Inject CVConfigService cvConfigService;
   @Inject VerificationTaskService verificationTaskService;
+  @Inject VerificationJobService verificationJobService;
+  @Inject DeploymentVerificationTaskService deploymentVerificationTaskService;
+  private String verificationJobIdentifier;
+  private long deploymentStartTimeMs;
+  private Instant now;
 
   @Before
   public void setup() {
     CVConfig cvConfig = createCVConfig();
     cvConfigService.save(cvConfig);
-    verificationTaskId =
+    verificationJobIdentifier = generateUuid();
+    deploymentStartTimeMs = Instant.parse("2020-07-27T10:44:06.000Z").toEpochMilli();
+    now = Instant.parse("2020-07-27T10:44:11.000Z");
+    serviceGuardVerificationTaskId =
         verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
+    cvConfigId = cvConfig.getUuid();
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testScheduleClusteringTasks_l1Cluster() {
+  public void testScheduleL1ClusteringTasks_l1Cluster() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     createLogDataRecords(5, start, end);
-    AnalysisInput input =
-        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
-    logClusterService.scheduleClusteringTasks(input, LogClusterLevel.L1);
+    AnalysisInput input = AnalysisInput.builder()
+                              .verificationTaskId(serviceGuardVerificationTaskId)
+                              .startTime(start)
+                              .endTime(end)
+                              .build();
+    logClusterService.scheduleL1ClusteringTasks(input);
 
-    List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                         .filter(LearningEngineTaskKeys.verificationTaskId, verificationTaskId)
-                                         .asList();
+    List<LearningEngineTask> tasks =
+        hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
+            .filter(LearningEngineTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+            .asList();
     assertThat(tasks.size()).isEqualTo(5);
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testScheduleClusteringTasks_l2Cluster() {
+  public void testScheduleServiceGuardL2ClusteringTask_l2Cluster() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
-    List<ClusteredLog> logRecords = createClusteredLogRecords(5, start, end);
+    List<ClusteredLog> logRecords = createClusteredLogRecords(serviceGuardVerificationTaskId, 5, start, end);
+    hPersistence.save(logRecords);
+    AnalysisInput input = AnalysisInput.builder()
+                              .verificationTaskId(serviceGuardVerificationTaskId)
+                              .startTime(start)
+                              .endTime(end)
+                              .build();
+    logClusterService.scheduleServiceGuardL2ClusteringTask(input);
+
+    List<LearningEngineTask> tasks =
+        hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
+            .filter(LearningEngineTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+            .asList();
+    assertThat(tasks.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testScheduleDeploymentL2ClusteringTask_emptyClusteredLogs() {
+    Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String accountId = generateUuid();
+    VerificationJobDTO verificationJob = newVerificationJob();
+    verificationJobService.upsert(accountId, verificationJob);
+    DeploymentVerificationTaskDTO deploymentVerificationTask = newVerificationTask();
+    String deploymentVerificationTaskId =
+        deploymentVerificationTaskService.create(accountId, deploymentVerificationTask);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, deploymentVerificationTaskId);
+    AnalysisInput input =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
+    logClusterService.scheduleDeploymentL2ClusteringTask(input);
+    List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
+                                         .filter(LearningEngineTaskKeys.verificationTaskId, verificationTaskId)
+                                         .asList();
+    assertThat(tasks.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testScheduleDeploymentL2ClusteringTask_validClustedLogs() {
+    Instant start = now.truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(15, ChronoUnit.MINUTES);
+    String accountId = generateUuid();
+    VerificationJobDTO verificationJob = newVerificationJob();
+    verificationJobService.upsert(accountId, verificationJob);
+    DeploymentVerificationTaskDTO deploymentVerificationTask = newVerificationTask();
+    String deploymentVerificationTaskId =
+        deploymentVerificationTaskService.create(accountId, deploymentVerificationTask);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, deploymentVerificationTaskId);
+    List<ClusteredLog> logRecords = createClusteredLogRecords(verificationTaskId, 5, start, end);
     hPersistence.save(logRecords);
     AnalysisInput input =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
-    logClusterService.scheduleClusteringTasks(input, LogClusterLevel.L2);
-
+    logClusterService.scheduleDeploymentL2ClusteringTask(input);
     List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
                                          .filter(LearningEngineTaskKeys.verificationTaskId, verificationTaskId)
                                          .asList();
     assertThat(tasks.size()).isEqualTo(1);
+    LogClusterLearningEngineTask logCanaryAnalysisLearningEngineTask = (LogClusterLearningEngineTask) tasks.get(0);
+    assertThat(logCanaryAnalysisLearningEngineTask.getTestDataUrl())
+        .isEqualTo("/cv-nextgen/log-cluster/test-data?verificationTaskId=" + verificationTaskId
+            + "&startTime=1595845740000&endTime=1595847540000&clusterLevel=L2");
+    assertThat(logCanaryAnalysisLearningEngineTask.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testScheduleClusteringTasks_l2ClusterNoL1Records() {
+  public void testScheduleServiceGuardL2ClusteringTask_l2ClusterNoL1Records() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
-    AnalysisInput input =
-        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
-    logClusterService.scheduleClusteringTasks(input, LogClusterLevel.L2);
+    AnalysisInput input = AnalysisInput.builder()
+                              .verificationTaskId(serviceGuardVerificationTaskId)
+                              .startTime(start)
+                              .endTime(end)
+                              .build();
+    logClusterService.scheduleServiceGuardL2ClusteringTask(input);
 
     List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                         .filter(LearningEngineTaskKeys.cvConfigId, verificationTaskId)
+                                         .filter(LearningEngineTaskKeys.cvConfigId, serviceGuardVerificationTaskId)
                                          .asList();
     assertThat(tasks.size()).isEqualTo(0);
   }
@@ -130,7 +212,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     createLogDataRecords(5, start, end);
     List<LogClusterDTO> recordsTobeClustered = logClusterService.getDataForLogCluster(
-        verificationTaskId, start, start.plus(Duration.ofMinutes(1)), "host-0", LogClusterLevel.L1);
+        serviceGuardVerificationTaskId, start, start.plus(Duration.ofMinutes(1)), "host-0", LogClusterLevel.L1);
 
     assertThat(recordsTobeClustered).isNotNull();
     assertThat(recordsTobeClustered.size()).isEqualTo(5);
@@ -142,10 +224,10 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
   public void testGetDataForLogCluster_l2() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
-    List<ClusteredLog> logRecords = createClusteredLogRecords(5, start, end);
+    List<ClusteredLog> logRecords = createClusteredLogRecords(serviceGuardVerificationTaskId, 5, start, end);
     hPersistence.save(logRecords);
     List<LogClusterDTO> logClusters =
-        logClusterService.getDataForLogCluster(verificationTaskId, start, end, null, LogClusterLevel.L2);
+        logClusterService.getDataForLogCluster(serviceGuardVerificationTaskId, start, end, null, LogClusterLevel.L2);
 
     assertThat(logClusters).isNotNull();
     assertThat(logClusters.size()).isEqualTo(25);
@@ -158,20 +240,24 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<LogClusterDTO> clusterDTOList = buildLogClusterDtos(5, start, end);
-    logClusterService.saveClusteredData(clusterDTOList, verificationTaskId, end, "taskId1", LogClusterLevel.L2);
-    List<ClusteredLog> clusteredLogList =
-        hPersistence.createQuery(ClusteredLog.class).filter(ClusteredLogKeys.cvConfigId, verificationTaskId).asList();
+    logClusterService.saveClusteredData(
+        clusterDTOList, serviceGuardVerificationTaskId, end, "taskId1", LogClusterLevel.L2);
+    List<ClusteredLog> clusteredLogList = hPersistence.createQuery(ClusteredLog.class)
+                                              .filter(ClusteredLogKeys.cvConfigId, serviceGuardVerificationTaskId)
+                                              .asList();
     assertThat(clusteredLogList).isNotNull();
   }
 
   private List<LogClusterDTO> buildLogClusterDtos(int numHosts, Instant startTime, Instant endTime) {
-    List<ClusteredLog> clusteredLogs = createClusteredLogRecords(numHosts, startTime, endTime);
+    List<ClusteredLog> clusteredLogs =
+        createClusteredLogRecords(serviceGuardVerificationTaskId, numHosts, startTime, endTime);
     List<LogClusterDTO> clusterDTOList = new ArrayList<>();
     clusteredLogs.forEach(log -> clusterDTOList.add(log.toDTO()));
     return clusterDTOList;
   }
 
-  private List<ClusteredLog> createClusteredLogRecords(int numHosts, Instant startTime, Instant endTime) {
+  private List<ClusteredLog> createClusteredLogRecords(
+      String verificationTaskId, int numHosts, Instant startTime, Instant endTime) {
     List<ClusteredLog> logRecords = new ArrayList<>();
     for (int i = 0; i < numHosts; i++) {
       Instant timestamp = startTime;
@@ -199,7 +285,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
       Instant timestamp = startTime;
       while (timestamp.isBefore(endTime)) {
         LogRecord record = LogRecord.builder()
-                               .verificationTaskId(verificationTaskId)
+                               .verificationTaskId(serviceGuardVerificationTaskId)
                                .timestamp(timestamp)
                                .host("host-" + i)
                                .log("sample log record")
@@ -229,5 +315,29 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     cvConfig.setGroupId(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
+  }
+
+  private VerificationJobDTO newVerificationJob() {
+    CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
+    canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);
+    canaryVerificationJobDTO.setJobName(generateUuid());
+    canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
+    canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
+    canaryVerificationJobDTO.setOrgIdentifier(generateUuid());
+    canaryVerificationJobDTO.setProjectIdentifier(generateUuid());
+    canaryVerificationJobDTO.setEnvIdentifier(generateUuid());
+    canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM);
+    canaryVerificationJobDTO.setDuration("15m");
+    return canaryVerificationJobDTO;
+  }
+
+  private DeploymentVerificationTaskDTO newVerificationTask() {
+    return DeploymentVerificationTaskDTO.builder()
+        .verificationJobIdentifier(verificationJobIdentifier)
+        .deploymentStartTimeMs(deploymentStartTimeMs)
+        .verificationTaskStartTimeMs(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
+        .dataCollectionDelayMs(Duration.ofMinutes(5).toMillis())
+        .build();
   }
 }

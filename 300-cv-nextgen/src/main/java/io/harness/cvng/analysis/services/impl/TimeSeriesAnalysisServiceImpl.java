@@ -45,6 +45,7 @@ import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -93,9 +94,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
   @Override
   public void logDeploymentVerificationProgress(AnalysisInput analysisInput, AnalysisStatus analysisStatus) {
+    ProgressLog progressLog = ProgressLog.builder()
+                                  .startTime(analysisInput.getStartTime())
+                                  .endTime(analysisInput.getEndTime())
+                                  .analysisStatus(analysisStatus)
+                                  .isFinalState(true)
+                                  .log("Time series analysis")
+                                  .build();
     deploymentVerificationTaskService.logProgress(
-        verificationTaskService.getDeploymentVerificationTaskId(analysisInput.getVerificationTaskId()),
-        analysisInput.getStartTime(), analysisInput.getEndTime(), analysisStatus);
+        verificationTaskService.getDeploymentVerificationTaskId(analysisInput.getVerificationTaskId()), progressLog);
   }
 
   private TimeSeriesCanaryLearningEngineTask createTimeSeriesCanaryLearningEngineTask(AnalysisInput input) {

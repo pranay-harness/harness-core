@@ -34,6 +34,7 @@ import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
+import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -222,21 +223,44 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     DeploymentVerificationTask deploymentVerificationTask =
         deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
     assertThat(deploymentVerificationTask.getProgressLogs()).isEmpty();
-    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId,
-        deploymentVerificationTask.getStartTime(),
-        deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)), AnalysisStatus.SUCCESS);
+    ProgressLog progressLog = ProgressLog.builder()
+                                  .startTime(deploymentVerificationTask.getStartTime())
+                                  .endTime(deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)))
+                                  .analysisStatus(AnalysisStatus.SUCCESS)
+                                  .log("time series analysis done")
+                                  .build();
+    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
     deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
     assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(1);
     assertThat(deploymentVerificationTask.getProgressLogs().get(0).getAnalysisStatus())
         .isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(deploymentVerificationTask.getProgressLogs().get(0).getLog()).isEqualTo("time series analysis done");
+
     assertThat(deploymentVerificationTask.getExecutionStatus())
         .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.QUEUED);
-    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId,
-        deploymentVerificationTask.getEndTime().minus(Duration.ofMinutes(1)), deploymentVerificationTask.getEndTime(),
-        AnalysisStatus.SUCCESS);
+    progressLog = ProgressLog.builder()
+                      .startTime(deploymentVerificationTask.getEndTime().minus(Duration.ofMinutes(1)))
+                      .endTime(deploymentVerificationTask.getEndTime())
+                      .analysisStatus(AnalysisStatus.SUCCESS)
+                      .isFinalState(false)
+                      .build();
+    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
     deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
     assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(2);
     assertThat(deploymentVerificationTask.getProgressLogs().get(1).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(deploymentVerificationTask.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+
+    progressLog = ProgressLog.builder()
+                      .startTime(deploymentVerificationTask.getEndTime().minus(Duration.ofMinutes(1)))
+                      .endTime(deploymentVerificationTask.getEndTime())
+                      .analysisStatus(AnalysisStatus.SUCCESS)
+                      .isFinalState(true)
+                      .build();
+    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
+    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(3);
+    assertThat(deploymentVerificationTask.getProgressLogs().get(2).getAnalysisStatus())
         .isEqualTo(AnalysisStatus.SUCCESS);
     assertThat(deploymentVerificationTask.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
@@ -251,9 +275,12 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     DeploymentVerificationTask deploymentVerificationTask =
         deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
     assertThat(deploymentVerificationTask.getProgressLogs()).isEmpty();
-    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId,
-        deploymentVerificationTask.getStartTime(),
-        deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)), AnalysisStatus.FAILED);
+    ProgressLog progressLog = ProgressLog.builder()
+                                  .startTime(deploymentVerificationTask.getStartTime())
+                                  .endTime(deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)))
+                                  .analysisStatus(AnalysisStatus.FAILED)
+                                  .build();
+    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
     deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
     assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(1);
     assertThat(deploymentVerificationTask.getProgressLogs().get(0).getAnalysisStatus())

@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -19,7 +20,16 @@ public class ServiceGuardLogClusterState extends LogClusterState {
   }
   @Override
   protected List<String> scheduleAnalysis(AnalysisInput analysisInput) {
-    return logClusterService.scheduleClusteringTasks(getInputs(), clusterLevel);
+    switch (clusterLevel) {
+      case L1:
+        return logClusterService.scheduleL1ClusteringTasks(analysisInput);
+      case L2:
+        return logClusterService.scheduleServiceGuardL2ClusteringTask(analysisInput)
+            .map(Collections::singletonList)
+            .orElseGet(Collections::emptyList);
+      default:
+        throw new IllegalStateException("Invalid clusterLevel: " + clusterLevel);
+    }
   }
 
   @Override

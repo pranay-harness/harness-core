@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class LogClusterTask extends LearningEngineTask {
+public class LogClusterLearningEngineTask extends LearningEngineTask {
   private String testDataUrl;
   private String host;
   private LogClusterLevel clusterLevel;

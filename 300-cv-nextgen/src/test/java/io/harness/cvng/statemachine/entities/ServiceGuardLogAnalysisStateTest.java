@@ -21,7 +21,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +46,7 @@ public class ServiceGuardLogAnalysisStateTest {
     logAnalysisState.setInputs(input);
     logAnalysisState.setLogAnalysisService(logAnalysisService);
 
-    when(logAnalysisService.scheduleLogAnalysisTask(any())).thenReturn(Arrays.asList(generateUuid()));
+    when(logAnalysisService.scheduleServiceGuardLogAnalysisTask(any())).thenReturn(generateUuid());
   }
   @Test
   @Owner(developers = PRAVEEN)

@@ -10,6 +10,7 @@ public interface CVAnalysisConstants {
   String LOG_ANALYSIS_RESOURCE = "log-analysis";
   String MARK_FAILURE_PATH = "mark-failure";
   String LOG_ANALYSIS_SAVE_PATH = "serviceguard-save-analysis";
+  String DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH = "deployment-save-analysis";
   String PREVIOUS_LOG_ANALYSIS_PATH = "serviceguard-shortterm-history";
   String TEST_DATA_PATH = "test-data";
   int ML_RECORDS_TTL_MONTHS = 6;
