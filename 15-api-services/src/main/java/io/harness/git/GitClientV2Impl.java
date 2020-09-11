@@ -853,8 +853,10 @@ public class GitClientV2Impl implements GitClientV2 {
             .build();
 
       } catch (WingsException e) {
+        tryResetWorkingDir(request);
         throw e;
       } catch (Exception e) {
+        tryResetWorkingDir(request);
         logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, e);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files between commits ")
@@ -894,8 +896,10 @@ public class GitClientV2Impl implements GitClientV2 {
             .build();
 
       } catch (WingsException e) {
+        tryResetWorkingDir(request);
         throw e;
       } catch (Exception e) {
+        tryResetWorkingDir(request);
         logger.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, e);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files ")
@@ -983,8 +987,10 @@ public class GitClientV2Impl implements GitClientV2 {
 
         resetWorkingDir(request);
       } catch (WingsException e) {
+        tryResetWorkingDir(request);
         throw e;
       } catch (Exception e) {
+        tryResetWorkingDir(request);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files ")
                                     .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
@@ -996,6 +1002,14 @@ public class GitClientV2Impl implements GitClientV2 {
                                     .toString(),
             e, USER);
       }
+    }
+  }
+
+  private void tryResetWorkingDir(GitBaseRequest request) {
+    try {
+      resetWorkingDir(request);
+    } catch (Exception ex) {
+      logger.info("Not able to reset repository", ex);
     }
   }
 

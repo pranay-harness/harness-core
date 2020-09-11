@@ -578,8 +578,10 @@ public class GitClientImpl implements GitClient {
             .build();
 
       } catch (WingsException e) {
+        tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
         throw e;
       } catch (Exception e) {
+        tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
         logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files between commits ")
@@ -679,8 +681,10 @@ public class GitClientImpl implements GitClient {
 
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
       } catch (WingsException e) {
+        tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
         throw e;
       } catch (Exception e) {
+        tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
         throw new YamlException(
             new StringBuilder()
                 .append("Failed while fetching files ")
@@ -724,8 +728,10 @@ public class GitClientImpl implements GitClient {
             .build();
 
       } catch (WingsException e) {
+        tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
         throw e;
       } catch (Exception e) {
+        tryResetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
         logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
         throw new YamlException(
             new StringBuilder()
@@ -861,6 +867,14 @@ public class GitClientImpl implements GitClient {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out Branch " + branch, USER);
+    }
+  }
+
+  private void tryResetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
+    try {
+      resetWorkingDir(gitConfig, gitConnectorId);
+    } catch (Exception ex) {
+      logger.info("Not able to reset repository", ex);
     }
   }
 
