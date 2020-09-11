@@ -76,7 +76,7 @@ public abstract class VerificationJob
   }
 
   protected abstract void validateParams();
-  public abstract TimeRange getPreDeploymentTimeRanges(Instant deploymentStartTime);
+  public abstract TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime);
   public abstract List<TimeRange> getDataCollectionTimeRanges(Instant startTime);
   protected void populateCommonFields(VerificationJobDTO verificationJobDTO) {
     verificationJobDTO.setIdentifier(this.identifier);

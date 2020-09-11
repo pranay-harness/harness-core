@@ -69,6 +69,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
 
   @Override
   public String createLearningEngineTask(LearningEngineTask learningEngineTask) {
+    learningEngineTask.setTaskStatus(ExecutionStatus.QUEUED);
     return hPersistence.save(learningEngineTask);
   }
 

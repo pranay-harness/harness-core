@@ -33,7 +33,7 @@ public class HealthVerificationJob extends VerificationJob {
   protected void validateParams() {}
 
   @Override
-  public TimeRange getPreDeploymentTimeRanges(Instant deploymentStartTime) {
+  public TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime) {
     throw new UnsupportedOperationException("Not implemented");
   }
 

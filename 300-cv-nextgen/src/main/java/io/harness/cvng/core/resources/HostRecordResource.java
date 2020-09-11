@@ -28,7 +28,6 @@ import javax.ws.rs.QueryParam;
 @ExposeInternalException
 public class HostRecordResource {
   @Inject private HostRecordService hostRecordService;
-
   @POST
   @Timed
   @ExceptionMetered

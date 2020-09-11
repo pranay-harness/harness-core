@@ -50,7 +50,7 @@ public class CanaryVerificationJob extends VerificationJob {
   }
 
   @Override
-  public TimeRange getPreDeploymentTimeRanges(Instant deploymentStartTime) {
+  public TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime) {
     return TimeRange.builder()
         .startTime(deploymentStartTime.minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION))
         .endTime(deploymentStartTime)

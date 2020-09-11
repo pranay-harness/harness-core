@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -25,7 +26,6 @@ import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -270,9 +270,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
 
   private AnalysisState createDeploymentLogState(
       AnalysisInput analysisInput, DeploymentVerificationTask deploymentVerificationTask) {
-    VerificationJob verificationJob = verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
-    if (verificationJob.getPreDeploymentTimeRanges(deploymentVerificationTask.getDeploymentStartTime())
-            .equals(analysisInput.getTimeRange())) {
+    TimeRange preDeploymentTimeRange =
+        deploymentVerificationTaskService.getPreDeploymentTimeRange(deploymentVerificationTask.getUuid());
+    if (preDeploymentTimeRange.equals(analysisInput.getTimeRange())) {
       // first task so needs to enqueue clustering task
       PreDeploymentLogClusterState preDeploymentLogClusterState = PreDeploymentLogClusterState.builder().build();
       preDeploymentLogClusterState.setClusterLevel(LogClusterLevel.L1);

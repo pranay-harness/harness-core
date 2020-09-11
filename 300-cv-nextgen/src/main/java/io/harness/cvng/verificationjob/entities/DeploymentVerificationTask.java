@@ -118,5 +118,7 @@ public class DeploymentVerificationTask
     AnalysisStatus analysisStatus;
     Instant startTime;
     Instant endTime;
+    boolean isFinalState;
+    String log;
   }
 }

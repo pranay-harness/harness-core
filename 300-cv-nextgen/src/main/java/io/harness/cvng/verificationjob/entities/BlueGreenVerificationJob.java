@@ -49,7 +49,7 @@ public class BlueGreenVerificationJob extends VerificationJob {
   }
 
   @Override
-  public TimeRange getPreDeploymentTimeRanges(Instant deploymentStartTime) {
+  public TimeRange getPreDeploymentTimeRange(Instant deploymentStartTime) {
     throw new UnsupportedOperationException("Not implemented");
   }
 

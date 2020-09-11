@@ -4,11 +4,13 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.impl.DeploymentLogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentTimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogAnalysisServiceImpl;
@@ -150,12 +152,12 @@ public class CVServiceModule extends AbstractModule {
       bind(LogRecordService.class).to(LogRecordServiceImpl.class);
       bind(DeploymentVerificationTaskService.class).to(DeploymentVerificationTaskServiceImpl.class);
       bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
-
       bind(ActivityService.class).to(ActivityServiceImpl.class);
       bind(WebhookService.class).to(WebhookServiceImpl.class);
       bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
       bind(NextGenService.class).to(NextGenServiceImpl.class);
       bind(HostRecordService.class).to(HostRecordServiceImpl.class);
+      bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

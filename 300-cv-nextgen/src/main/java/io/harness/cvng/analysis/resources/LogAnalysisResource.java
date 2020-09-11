@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.resources;
 
+import static io.harness.cvng.analysis.CVAnalysisConstants.DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_LOG_ANALYSIS_PATH;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -38,11 +41,11 @@ public class LogAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<List<LogClusterDTO>> getTestData(@QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("analysisStartTime") String analysisStartTime,
-      @QueryParam("analysisEndTime") String analysisEndTime) {
-    return new RestResponse<>(
-        logAnalysisService.getTestData(cvConfigId, Instant.parse(analysisStartTime), Instant.parse(analysisEndTime)));
+  public RestResponse<List<LogClusterDTO>> getTestData(@QueryParam("verificationTaskId") String verificationTaskId,
+      @NotNull @QueryParam("analysisStartTime") Long analysisStartTime,
+      @NotNull @QueryParam("analysisEndTime") Long analysisEndTime) {
+    return new RestResponse<>(logAnalysisService.getTestData(
+        verificationTaskId, Instant.ofEpochMilli(analysisStartTime), Instant.ofEpochMilli(analysisEndTime)));
   }
 
   @GET
@@ -57,6 +60,7 @@ public class LogAnalysisResource {
         cvConfigId, Instant.parse(analysisStartTime), Instant.parse(analysisEndTime)));
   }
 
+  // TODO: make this api similar to saveDeploymentAnalysis
   @Produces({"application/json", "application/v1+json"})
   @POST
   @Path("/" + LOG_ANALYSIS_SAVE_PATH)
@@ -69,5 +73,17 @@ public class LogAnalysisResource {
     logAnalysisService.saveAnalysis(
         cvConfigId, taskId, Instant.parse(analysisStartTime), Instant.parse(analysisEndTime), analysisBody);
     return new RestResponse<>(true);
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/" + DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH)
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<Void> saveDeploymentAnalysis(
+      @QueryParam("taskId") String taskId, DeploymentLogAnalysisDTO deploymentLogAnalysisDTO) {
+    logAnalysisService.saveAnalysis(taskId, deploymentLogAnalysisDTO);
+    return new RestResponse<>(null);
   }
 }
