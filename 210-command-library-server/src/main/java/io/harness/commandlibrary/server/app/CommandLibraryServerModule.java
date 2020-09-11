@@ -12,6 +12,7 @@ import com.google.inject.name.Names;
 import io.harness.commandlibrary.server.service.impl.CommandServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandStoreServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandVersionServiceImpl;
+import io.harness.commandlibrary.server.service.impl.CustomDeploymentTypeArchiveHandler;
 import io.harness.commandlibrary.server.service.impl.ServiceCommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
@@ -105,5 +106,6 @@ public class CommandLibraryServerModule extends AbstractModule {
     final Multibinder<CommandArchiveHandler> commandArchiveHandlerBinder =
         Multibinder.newSetBinder(binder(), CommandArchiveHandler.class);
     commandArchiveHandlerBinder.addBinding().to(ServiceCommandArchiveHandler.class);
+    commandArchiveHandlerBinder.addBinding().to(CustomDeploymentTypeArchiveHandler.class);
   }
 }
