@@ -2,7 +2,6 @@ package io.harness.marketplace.gcp.procurement.pubsub;
 
 import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.DEFAULT_LICENCE_UNITS;
 
-import com.google.cloudcommerceprocurement.v1.model.Entitlement;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -83,15 +82,17 @@ public class GcpEntitlementsHandler {
     wingsPersistence.save(marketPlace);
   }
 
-  public void handleEntitlementCancelled(MarketPlace marketPlace, Entitlement entitlement) {
+  public void handleEntitlementCancelled(MarketPlace marketPlace, ProcurementPubsubMessage pubsubMessage) {
     logger.info("GCP Account: {}, Harness Account: {}, Canceling Entitlement {}",
-        marketPlace.getCustomerIdentificationCode(), marketPlace.getAccountId(), entitlement.getName());
+        marketPlace.getCustomerIdentificationCode(), marketPlace.getAccountId(),
+        pubsubMessage.getEntitlement().getId());
     deactivateAccountUponEntitlementDeactivation(marketPlace);
   }
 
-  public void handleEntitlementDeleted(MarketPlace marketPlace, Entitlement entitlement) {
+  public void handleEntitlementDeleted(MarketPlace marketPlace, ProcurementPubsubMessage pubsubMessage) {
     logger.info("GCP Account: {}, Harness Account: {}, Deleting Entitlement {}",
-        marketPlace.getCustomerIdentificationCode(), marketPlace.getAccountId(), entitlement.getName());
+        marketPlace.getCustomerIdentificationCode(), marketPlace.getAccountId(),
+        pubsubMessage.getEntitlement().getId());
     deactivateAccountUponEntitlementDeactivation(marketPlace);
   }
 
