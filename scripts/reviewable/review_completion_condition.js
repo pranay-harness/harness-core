@@ -4,8 +4,7 @@ let numApprovalsRequired = 1;
 const approvals = review.pullRequest.approvals;
 const requestedTeams = _.pluck(review.pullRequest.requestedTeams, 'slug');
 
-const restAddReviewer = ["george-harness"];
-
+const restAddReviewer = "srinivaswings";
 
 let numApprovals = _.where(approvals, 'approved').length;
 const numRejections = _.where(approvals, 'changes_requested').length;
@@ -24,16 +23,20 @@ let pendingReviewers = _(discussionBlockers)
 
 let required = _.pluck(review.pullRequest.assignees, 'username');
 
-let reviewBigModule = false
+let reviewBigModule = _.some(review.files, function(file) {
+  if (file.path.startsWith('71-rest/') && !file.path.endsWith('Test.java')) {
+    let reviewed = _.some(file.revisions, function(revision) {
+      return _.some(revision.reviewers, function(reviewer) {
+        return reviewer.username === restAddReviewer;
+      })
+    })
 
-_.forEach(review.files, function(file) {
-  if (file.path.startsWith('71-rest/') && file.revisions[file.revisions.length - 1].action === 'added') {
-    reviewBigModule = true;
+    return !reviewed && file.revisions[0].action === 'added';
   }
 })
 
 if (reviewBigModule) {
-  required = required.concat(restAddReviewer);
+  required = required.concat([restAddReviewer]);
 }
 
 _.pull(required, review.pullRequest.author.username);
