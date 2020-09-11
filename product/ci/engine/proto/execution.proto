@@ -12,7 +12,6 @@ import "product/ci/addon/proto/addon.proto";
 message PublishArtifactsStep {
   repeated io.harness.product.ci.addon.proto.UploadFile files = 1;
   repeated io.harness.product.ci.addon.proto.BuildPublishImage images = 2;
-  string callback_id = 3;
 }
 
 message StepContext {
@@ -24,19 +23,16 @@ message RunStep {
   repeated string commands = 1;
   StepContext context = 2;
   repeated string envVarOutputs = 3;  // produced output variables
-  string callback_id = 4;
 }
 
 message SaveCacheStep {
   string key = 1;
   repeated string paths = 2;
-  string callback_id = 3;
 }
 
 message RestoreCacheStep {
   string key = 1;
   bool fail_if_not_exist = 2;
-  string callback_id = 3;
 }
 
 message UnitStep {
@@ -48,6 +44,8 @@ message UnitStep {
     RestoreCacheStep restore_cache = 5;
     PublishArtifactsStep publish_artifacts = 6;
   }
+  string callback_token = 7;
+  string task_id = 8;
 }
 
 message ParallelStep {
@@ -65,6 +63,7 @@ message Step {
 
 message Execution {
   repeated Step steps = 1;
+  string account_id = 2;
 }
 
 // StageOutput is combination of outputs produced by steps in a stage. It can be referenced
@@ -81,6 +80,7 @@ message StageOutput {
 message ExecuteStepRequest {
   UnitStep step = 1;
   StageOutput stage_output = 2;
+  string account_id = 3;
 }
 
 message ExecuteStepResponse {
