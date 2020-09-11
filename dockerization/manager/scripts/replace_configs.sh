@@ -665,3 +665,11 @@ fi
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfig.target "$NG_MANAGER_TARGET"
 fi
+
+if [[ "" != "$COMMAND_LIBRARY_PUBLISHING_ALLOWED" ]]; then
+  yq write -i $CONFIG_FILE commandLibraryServiceConfig.publishingAllowed "$COMMAND_LIBRARY_PUBLISHING_ALLOWED"
+fi
+
+if [[ "" != "$COMMAND_LIBRARY_PUBLISHING_SECRET" ]]; then
+  yq write -i $CONFIG_FILE commandLibraryServiceConfig.publishingSecret "$COMMAND_LIBRARY_PUBLISHING_SECRET"
+fi

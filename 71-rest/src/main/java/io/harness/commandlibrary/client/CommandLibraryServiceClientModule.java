@@ -17,8 +17,8 @@ public class CommandLibraryServiceClientModule extends AbstractModule {
   protected void configure() {
     final ServiceTokenGenerator tokenGenerator = new ServiceTokenGenerator();
     bind(CommandLibraryServiceHttpClient.class)
-        .toProvider(
-            new CommandLibraryServiceHttpClientFactory(commandLibraryServiceConfig.getBaseUrl(), tokenGenerator))
+        .toProvider(new CommandLibraryServiceHttpClientFactory(commandLibraryServiceConfig.getBaseUrl(), tokenGenerator,
+            commandLibraryServiceConfig.isPublishingAllowed(), commandLibraryServiceConfig.getPublishingSecret()))
         .in(Scopes.SINGLETON);
   }
 }

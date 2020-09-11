@@ -50,8 +50,9 @@ public class CommandLibraryServiceHttpClientFactoryTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_get() throws IOException, IllegalAccessException {
     final String baseUrl = mockWebServer.url("/").url().toString();
+    final String publishingSecret = "secret";
     final CommandLibraryServiceHttpClientFactory factory =
-        new CommandLibraryServiceHttpClientFactory(baseUrl, new ServiceTokenGenerator());
+        new CommandLibraryServiceHttpClientFactory(baseUrl, new ServiceTokenGenerator(), false, publishingSecret);
     final MainConfiguration mainConfiguration = new MainConfiguration();
     mainConfiguration.setCommandLibraryServiceConfig(
         CommandLibraryServiceConfig.builder().managerToCommandLibraryServiceSecret("secret").build());

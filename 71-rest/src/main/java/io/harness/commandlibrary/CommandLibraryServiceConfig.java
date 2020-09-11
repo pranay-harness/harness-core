@@ -11,4 +11,6 @@ import lombok.experimental.FieldDefaults;
 public class CommandLibraryServiceConfig {
   String baseUrl;
   String managerToCommandLibraryServiceSecret;
+  boolean publishingAllowed;
+  String publishingSecret;
 }

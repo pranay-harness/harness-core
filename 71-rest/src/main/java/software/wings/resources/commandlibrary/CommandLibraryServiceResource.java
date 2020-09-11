@@ -11,9 +11,11 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
+import io.harness.configuration.DeployMode;
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.security.annotations.PublicApi;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
 import okhttp3.MultipartBody;
@@ -23,7 +25,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.Call;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.commandlibrary.CommandEntity;
-import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.HarnessUserGroupServiceImpl;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -47,7 +48,6 @@ import javax.ws.rs.core.UriInfo;
 @Api("command-library-service")
 @Path("/command-library-service")
 @Produces("application/json")
-@AuthRule(permissionType = LOGGED_IN)
 public class CommandLibraryServiceResource {
   private final CommandLibraryServiceHttpClient serviceHttpClient;
   private final HarnessUserGroupService harnessUserGroupService;
@@ -109,10 +109,19 @@ public class CommandLibraryServiceResource {
         commandStoreName, commandName, prepareQueryMap(uriInfo.getQueryParameters())));
   }
 
-  private void ensureHarnessUser() {
-    if (!harnessUserGroupService.isHarnessSupportUser(UserThreadLocal.get().getUuid())) {
-      throw new UnauthorizedException("You don't have the permissions to perform this action.", WingsException.USER);
+  private void ensureUserHasPublishingSecret(String publishingSecret) {
+    String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
+
+    if (isInvalidConfig(publishingSecret, deployMode)) {
+      throw new UnauthorizedException("API key isn't correct to publish a command.", WingsException.USER);
     }
+  }
+
+  private boolean isInvalidConfig(String publishingSecret, String deployMode) {
+    return mainConfiguration.getCommandLibraryServiceConfig() == null || DeployMode.isOnPrem(deployMode)
+        || !mainConfiguration.getCommandLibraryServiceConfig().isPublishingAllowed()
+        || mainConfiguration.getCommandLibraryServiceConfig().getPublishingSecret() == null
+        || !publishingSecret.equals(mainConfiguration.getCommandLibraryServiceConfig().getPublishingSecret());
   }
 
   @GET
@@ -132,14 +141,15 @@ public class CommandLibraryServiceResource {
   @Path("/command-stores/{commandStoreName}/commands")
   @Consumes(MULTIPART_FORM_DATA)
   @Produces(APPLICATION_JSON)
+  @PublicApi
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN)
   public Response publishCommand(@QueryParam("accountId") final String accountId,
       @PathParam("commandStoreName") String commandStoreName,
-      @FormDataParam("file") final InputStream uploadInputStream, @Context UriInfo uriInfo) {
+      @FormDataParam("file") final InputStream uploadInputStream, @Context UriInfo uriInfo,
+      @FormDataParam("apiKey") String publishingSecret) {
     try {
-      ensureHarnessUser();
+      ensureUserHasPublishingSecret(publishingSecret);
       final byte[] bytes = IOUtils.toByteArray(
           new BoundedInputStream(uploadInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
       final MultipartBody.Part formData =
