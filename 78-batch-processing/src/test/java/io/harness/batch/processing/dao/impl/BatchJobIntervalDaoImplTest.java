@@ -5,20 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.WingsBaseTest;
 
 import java.time.temporal.ChronoUnit;
 
-@RunWith(MockitoJUnitRunner.class)
-public class BatchJobIntervalDaoImplTest extends WingsBaseTest {
+public class BatchJobIntervalDaoImplTest extends BatchProcessingBaseTest {
   @Inject private BatchJobIntervalDaoImpl batchJobIntervalDao;
 
   private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();

@@ -5,23 +5,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountDao;
 import io.harness.rule.Owner;
+import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.WingsBaseTest;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ProductMetricsServiceImplTest extends WingsBaseTest {
+public class ProductMetricsServiceImplTest extends BatchProcessingBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String gcpOrganizationUuid = "1";
 
   @Inject ProductMetricsServiceImpl productMetricsService;
   @Inject GcpBillingAccountDao gcpBillingAccountDao;
+
+  @Mock TimeScaleDBService timeScaleDBService;
 
   @Test
   @Owner(developers = HANTANG)

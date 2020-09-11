@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -13,13 +14,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.WingsBaseTest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 @RunWith(MockitoJUnitRunner.class)
-public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
+public class BatchJobScheduledDataDaoImplTest extends BatchProcessingBaseTest {
   @Inject private BatchJobScheduledDataDaoImpl batchJobScheduledDataDao;
 
   private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();

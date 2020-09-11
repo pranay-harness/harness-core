@@ -5,16 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
 import software.wings.beans.ce.CECluster;
 
 import java.util.List;
 
-public class CEClusterDaoTest extends WingsBaseTest {
+public class CEClusterDaoTest extends BatchProcessingBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String infraAccountId = "123123112";
   private String infraMasterAccountId = "3243223122";
