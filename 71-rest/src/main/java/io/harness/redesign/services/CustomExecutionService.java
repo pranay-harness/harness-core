@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Graph;
 import io.harness.dto.OrchestrationGraph;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
@@ -26,6 +27,8 @@ public interface CustomExecutionService {
   PlanExecution executeRetryIgnorePlan();
 
   PlanExecution executeRetryAbortPlan();
+
+  PlanExecution executeInterventionPlan();
 
   PlanExecution executeRollbackPlan();
 
@@ -63,9 +66,7 @@ public interface CustomExecutionService {
 
   PlanExecution executeResourceRestraintWithWaitPlan();
 
-  // Interrupts
-
-  Interrupt registerInterrupt(String planExecutionId);
-
   PlanExecution executeSkipChildren();
+
+  Interrupt registerInterrupt(InterruptPackage interruptPackage);
 }

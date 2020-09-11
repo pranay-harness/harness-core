@@ -10,7 +10,6 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -32,13 +31,10 @@ import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
-import io.harness.tasks.TaskExecutor;
-import io.harness.tasks.TaskMode;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
-import io.harness.utils.DummyTaskExecutor;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
@@ -123,16 +119,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     });
 
     modules.add(new VersionModule());
-
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        MapBinder<String, TaskExecutor> taskExecutorMap =
-            MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-        taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(DummyTaskExecutor.class);
-      }
-    });
-
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationPersistenceTestModule());
     modules.add(

@@ -434,6 +434,43 @@ public class CustomExecutionProvider {
         .build();
   }
 
+  public Plan provideHttpInterventionPlan() {
+    String httpNodeId = generateUuid();
+    String dummyNodeId = generateUuid();
+    BasicHttpStepParameters basicHttpStateParameters =
+        BasicHttpStepParameters.builder().url("http://httpstat.us/" + BASIC_HTTP_STATE_URL_500).method("GET").build();
+    return Plan.builder()
+        .startingNodeId(httpNodeId)
+        .node(
+            PlanNode.builder()
+                .uuid(httpNodeId)
+                .name("Basic Http 1")
+                .stepType(BasicHttpStep.STEP_TYPE)
+                .identifier("dummy")
+                .stepParameters(basicHttpStateParameters)
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                           .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.MANUAL_INTERVENTION).build())
+                                       .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                       .build())
+                .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
   public Plan provideHttpRollbackPlan() {
     String sectionNodeId = generateUuid();
     String rollbackSectionNodeId = generateUuid();

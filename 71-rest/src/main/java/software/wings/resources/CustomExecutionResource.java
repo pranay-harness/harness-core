@@ -5,12 +5,14 @@ import com.google.inject.Inject;
 import io.harness.annotations.Redesign;
 import io.harness.beans.Graph;
 import io.harness.dto.OrchestrationGraph;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -50,6 +52,12 @@ public class CustomExecutionResource {
   @Path("/http-retry-abort")
   public RestResponse<PlanExecution> executeRetryAbortPlan() {
     return new RestResponse<>(customExecutionService.executeRetryAbortPlan());
+  }
+
+  @GET
+  @Path("/http-intervention")
+  public RestResponse<PlanExecution> executeInterventionPlan() {
+    return new RestResponse<>(customExecutionService.executeInterventionPlan());
   }
 
   @GET
@@ -102,11 +110,10 @@ public class CustomExecutionResource {
     return new RestResponse<>(customExecutionService.executeSectionChainRollbackPlan());
   }
 
-  @GET
-  @Path("/abort-plan")
-  public RestResponse<Interrupt> abortPlan(
-      @QueryParam("accountId") String accountId, @QueryParam("planExecutionId") String planExecutionId) {
-    return new RestResponse<>(customExecutionService.registerInterrupt(planExecutionId));
+  @POST
+  @Path("/register-interrupt")
+  public RestResponse<Interrupt> registerInterrupt(InterruptPackage interruptPackage) {
+    return new RestResponse<>(customExecutionService.registerInterrupt(interruptPackage));
   }
 
   @GET

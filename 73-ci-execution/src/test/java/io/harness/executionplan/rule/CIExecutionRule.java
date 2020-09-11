@@ -3,7 +3,6 @@ package io.harness.executionplan.rule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.multibindings.MapBinder;
 
 import io.harness.CIBeansModule;
 import io.harness.CIExecutionServiceModule;
@@ -16,7 +15,6 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.tasks.TaskExecutor;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -75,13 +73,6 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new CIExecutionServiceModule());
     modules.add(new CIBeansModule());
     modules.add(new ExecutionPlanModule());
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        MapBinder<String, TaskExecutor> taskExecutorMap =
-            MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-      }
-    });
     return modules;
   }
 

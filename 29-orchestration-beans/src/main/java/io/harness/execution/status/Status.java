@@ -35,8 +35,8 @@ public enum Status {
   SUCCEEDED;
 
   // Status Groups
-  private static final EnumSet<Status> FINALIZABLE_STATUSES =
-      EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
+  private static final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(
+      QUEUED, RUNNING, PAUSED, ASYNC_WAITING, INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
   private static final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED);
 
@@ -51,7 +51,7 @@ public enum Status {
   private static final EnumSet<Status> FINAL_STATUSES =
       EnumSet.of(QUEUED, SKIPPED, PAUSED, ABORTED, ERRORED, FAILED, EXPIRED, SUSPENDED, SUCCEEDED);
 
-  private static final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED);
+  private static final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(INTERVENTION_WAITING, FAILED, ERRORED, EXPIRED);
 
   public static EnumSet<Status> finalizableStatuses() {
     return FINALIZABLE_STATUSES;
@@ -81,7 +81,7 @@ public enum Status {
     return FINAL_STATUSES;
   }
 
-  public static EnumSet<Status> obtainAllowedStartSet(Status status) {
+  public static EnumSet<Status> nodeAllowedStartSet(Status status) {
     switch (status) {
       case RUNNING:
         return EnumSet.of(QUEUED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED);
@@ -107,5 +107,12 @@ public enum Status {
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }
+  }
+
+  public static EnumSet<Status> planAllowedStartSet(Status status) {
+    if (status == Status.INTERVENTION_WAITING) {
+      return EnumSet.of(RUNNING);
+    }
+    return nodeAllowedStartSet(status);
   }
 }

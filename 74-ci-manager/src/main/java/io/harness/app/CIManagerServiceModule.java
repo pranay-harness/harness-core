@@ -3,7 +3,6 @@ package io.harness.app;
 import com.google.common.base.Suppliers;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
@@ -33,8 +32,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.tasks.TaskExecutor;
-import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsMongoPersistence;
@@ -95,9 +92,6 @@ public class CIManagerServiceModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    MapBinder<String, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(EmptyTaskExecutor.class);
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
     bind(YAMLToObject.class).toInstance(new YAMLToObjectImpl());
     bind(HPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);

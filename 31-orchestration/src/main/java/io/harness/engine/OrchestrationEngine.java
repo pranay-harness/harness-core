@@ -21,6 +21,7 @@ import com.google.inject.name.Named;
 
 import io.harness.OrchestrationPublisherName;
 import io.harness.adviser.Advise;
+import io.harness.adviser.AdviseType;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdvisingEvent;
@@ -266,38 +267,49 @@ public class OrchestrationEngine {
     Ambiance ambiance = nodeExecution.getAmbiance();
     List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
 
-    NodeExecution updatedNodeExecution =
-        nodeExecutionService.updateStatusWithOps(nodeExecutionId, stepResponse.getStatus(), ops -> {
-          setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis());
-          setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
-          setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
-        });
+    NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
+      setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
+      setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
+    });
+    concludeNodeExecution(updatedNodeExecution, stepResponse.getStatus());
+  }
 
-    PlanNode node = updatedNodeExecution.getNode();
+  public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
+    PlanNode node = nodeExecution.getNode();
+
     if (isEmpty(node.getAdviserObtainments())) {
+      NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
+          nodeExecution.getUuid(), status, ops -> setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis()));
       endTransition(updatedNodeExecution);
       return;
     }
-    Advise advise = null;
+    Advise advise;
     for (AdviserObtainment obtainment : node.getAdviserObtainments()) {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
       injector.injectMembers(adviser);
       advise = adviser.onAdviseEvent(AdvisingEvent.builder()
-                                         .ambiance(ambiance)
-                                         .outcomes(stepResponse.outcomeMap())
-                                         .status(stepResponse.getStatus())
+                                         .ambiance(nodeExecution.getAmbiance())
+                                         .stepOutcomeRef(nodeExecution.getOutcomeRefs())
+                                         .toStatus(status)
+                                         .fromStatus(nodeExecution.getStatus())
                                          .adviserParameters(obtainment.getParameters())
-                                         .failureInfo(stepResponse.getFailureInfo())
+                                         .failureInfo(nodeExecution.getFailureInfo())
                                          .build());
       if (advise != null) {
-        break;
+        Advise finalAdvise = advise;
+        NodeExecution updatedNodeExecution =
+            nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status, ops -> {
+              if (AdviseType.isWaitingAdviseType(finalAdvise.getType())) {
+                ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
+              }
+            });
+        handleAdvise(updatedNodeExecution.getAmbiance(), advise);
+        return;
       }
     }
-    if (advise == null) {
-      endTransition(updatedNodeExecution);
-      return;
-    }
-    handleAdvise(ambiance, advise);
+    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
+        nodeExecution.getUuid(), status, ops -> setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis()));
+    endTransition(updatedNodeExecution);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})

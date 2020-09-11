@@ -62,7 +62,7 @@ public class RetryAdviserTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestInvalidStatus() {
     AdvisingEvent advisingEvent =
-        AdvisingEvent.builder().ambiance(AmbianceTestUtils.buildAmbiance()).status(Status.SUCCEEDED).build();
+        AdvisingEvent.builder().ambiance(AmbianceTestUtils.buildAmbiance()).toStatus(Status.SUCCEEDED).build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
     assertThat(advise).isNull();
   }
@@ -86,7 +86,7 @@ public class RetryAdviserTest extends OrchestrationTest {
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                       .ambiance(ambiance)
-                                      .status(Status.FAILED)
+                                      .toStatus(Status.FAILED)
                                       .adviserParameters(getRetryParamsWithIgnore())
                                       .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
@@ -117,7 +117,7 @@ public class RetryAdviserTest extends OrchestrationTest {
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                       .ambiance(ambiance)
-                                      .status(Status.FAILED)
+                                      .toStatus(Status.FAILED)
                                       .adviserParameters(getRetryParamsWithIgnore())
                                       .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
@@ -148,7 +148,7 @@ public class RetryAdviserTest extends OrchestrationTest {
     when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                       .ambiance(ambiance)
-                                      .status(Status.FAILED)
+                                      .toStatus(Status.FAILED)
                                       .adviserParameters(getRetryParamsWithIgnore())
                                       .build();
     Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
