@@ -11,8 +11,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
-import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.HoverflyCVNextGenTest;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -24,11 +24,8 @@ import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.rule.Owner;
-import io.specto.hoverfly.junit.core.HoverflyConfig;
 import io.specto.hoverfly.junit.core.SimulationSource;
-import io.specto.hoverfly.junit.rule.HoverflyRule;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -43,15 +40,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
+public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   @Inject private MetricPackService metricPackService;
   private String accountId;
   private ExecutorService executorService;
-  @ClassRule
-  public static final HoverflyRule rule =
-      HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
-  /* public static final HoverflyRule rule =
-    HoverflyRule.inCaptureMode(HoverflyConfig.localConfigs().disableTlsVerification()); */
 
   @Before
   public void setup() {
@@ -64,8 +56,8 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testExecute_appDyanmicsPerformancePackForServiceGuard() throws IOException {
     String filePath = "appdynamics/performance-service-guard.json";
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
-    // rule.capture(filePath);
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
@@ -106,8 +98,8 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testExecute_appDyanmicsPerformancePackWithHosts() throws IOException {
     String filePath = "appdynamics/performance-verification-task-collect-hosts.json";
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
-    // rule.capture(filePath);
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    // HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
@@ -149,8 +141,8 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testExecute_appDyanmicsQualityPackForServiceGuard() throws IOException {
     String filePath = "appdynamics/quality-service-guard.json";
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
-    //		 rule.capture(filePath);
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    //		 HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
@@ -193,7 +185,7 @@ public class AppDynamicsDataCollectionDSLTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testExecute_appDyanmicsQualityPackWithHosts() throws IOException {
     String filePath = "appdynamics/quality-verification-task-collect-hosts.json";
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
     //		 rule.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
