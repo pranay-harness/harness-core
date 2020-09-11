@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.execution.status.Status;
+import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
@@ -36,6 +37,7 @@ public class GraphVertex implements Serializable {
   private Status status;
   private FailureInfo failureInfo;
   private StepParameters stepParameters;
+  private ExecutionMode mode;
 
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;

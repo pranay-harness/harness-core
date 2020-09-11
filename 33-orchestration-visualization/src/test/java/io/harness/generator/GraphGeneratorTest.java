@@ -529,8 +529,9 @@ public class GraphGeneratorTest extends OrchestrationVisualizationTest {
 
     assertThat(adjacencyList.getAdjacencyList().size()).isEqualTo(5);
     assertThat(adjacencyList.getAdjacencyList().get(sectionChainParentNode.getUuid()).getEdges())
-        .containsExactlyInAnyOrder(sectionChain1.getUuid(), sectionChain2.getUuid());
+        .containsExactlyInAnyOrder(sectionChain1.getUuid());
     assertThat(adjacencyList.getAdjacencyList().get(sectionChain1.getUuid()).getNext()).isEqualTo(dummyNode1.getUuid());
+    assertThat(adjacencyList.getAdjacencyList().get(dummyNode1.getUuid()).getNext()).isEqualTo(sectionChain2.getUuid());
     assertThat(adjacencyList.getAdjacencyList().get(sectionChain2.getUuid()).getNext()).isEqualTo(dummyNode2.getUuid());
   }
 
