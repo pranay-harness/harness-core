@@ -1,5 +1,6 @@
 package io.harness.dashboard;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @FieldNameConstants(innerTypeName = "keys")
 @Entity(value = "dashboardSettings", noClassnameStored = true)
+@JsonIgnoreProperties(value = {"lastUpdatedBy"}, allowSetters = true)
 @HarnessEntity(exportable = true)
 public class DashboardSettings implements NameAccess, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                           UpdatedAtAware, UpdatedByAware, AccountAccess {
