@@ -53,9 +53,9 @@ public class OverviewPageStatsDataFetcher
   private static final String clusterIdColumnName = "clusterid";
   private static final String countFieldName = "count";
   private static final String queryTemplate =
-      "SELECT count(*) AS count FROM BILLING_DATA_HOURLY WHERE accountid = '%s' AND %s IS NOT NULL AND starttime >= '%s'";
+      "SELECT * FROM BILLING_DATA_HOURLY WHERE accountid = '%s' AND %s IS NOT NULL AND starttime >= '%s' LIMIT 1";
   private static final String queryTemplateDaily =
-      "SELECT count(*) AS count FROM BILLING_DATA WHERE accountid = '%s' AND %s IS NOT NULL AND starttime >= '%s'";
+      "SELECT * FROM BILLING_DATA WHERE accountid = '%s' AND %s IS NOT NULL AND starttime >= '%s' LIMIT 1";
   private static final String bigQueryTemplate =
       "SELECT count(*) AS count, cloudProvider FROM `%s.%s.%s` GROUP BY cloudProvider";
 
@@ -151,7 +151,7 @@ public class OverviewPageStatsDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(query);
         while (resultSet != null && resultSet.next()) {
-          count = resultSet.getInt(countFieldName);
+          count = 1;
         }
       } catch (SQLException e) {
         logger.warn("Failed to execute query in OverviewPageStatsDataFetcher, query=[{}], accountId=[{}], {}", query,
