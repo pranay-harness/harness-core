@@ -1,0 +1,6 @@
+FROM us.gcr.io/platform-205701/alpine:safe
+
+RUN mkdir -p /opt/harness/
+
+# Note: Apm agent is pulled from platform gcr bucket while executing jenkins job: portal-alpine-base-apm
+COPY ./AppServerAgent-4.5.0.23604.tar.gz /opt/harness/
