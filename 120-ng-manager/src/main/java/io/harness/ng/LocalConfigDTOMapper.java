@@ -1,8 +1,8 @@
 package io.harness.ng;
 
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
-import io.harness.secretmanagerclient.dto.LocalConnectorDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.experimental.UtilityClass;
 

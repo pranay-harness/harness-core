@@ -3,7 +3,6 @@ package io.harness.delegate.beans.connector.k8Connector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +14,6 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("K8sCluster")
 public class KubernetesClusterConfigDTO extends ConnectorConfigDTO {
   @NotNull @JsonProperty("type") KubernetesCredentialType kubernetesCredentialType;
 

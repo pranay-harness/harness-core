@@ -6,10 +6,10 @@ import static io.harness.ng.VaultConfigDTOMapper.getVaultConfigDTO;
 
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.secretmanagerclient.dto.GcpKmsConnectorDTO;
-import io.harness.secretmanagerclient.dto.LocalConnectorDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
-import io.harness.secretmanagerclient.dto.VaultConnectorDTO;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

@@ -1,7 +1,6 @@
 package io.harness.delegate.beans.connector.splunkconnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
@@ -24,7 +23,6 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonTypeName("Splunk")
 public class SplunkConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity {
   String splunkUrl;
   String username;

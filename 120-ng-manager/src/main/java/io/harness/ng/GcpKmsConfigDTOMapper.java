@@ -1,9 +1,9 @@
 package io.harness.ng;
 
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
-import io.harness.secretmanagerclient.dto.GcpKmsConnectorDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.experimental.UtilityClass;
 
