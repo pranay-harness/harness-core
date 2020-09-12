@@ -1,8 +1,8 @@
 # to be used when building in Jenkins
-FROM us.gcr.io/platform-205701/alpine:safe
+FROM us.gcr.io/platform-205701/alpine:safe-apm
 
 # Add the capsule JAR and config.yml
-COPY rest-capsule.jar AppServerAgent-4.5.0.23604.tar.gz newrelic.yml keystore.jks config.yml hazelcast.xml redisson-jcache.yaml /opt/harness/
+COPY rest-capsule.jar newrelic.yml keystore.jks config.yml hazelcast.xml redisson-jcache.yaml /opt/harness/
 
 COPY scripts /opt/harness
 

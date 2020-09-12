@@ -2,7 +2,7 @@
 
 set +e
 
-PROJECTS="CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PL|SEC|SWAT|BT"
+PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PL|SEC|SWAT"
 
 # Check commit message if there's a single commit
 if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then

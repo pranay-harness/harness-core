@@ -18,8 +18,6 @@ cp ../../71-rest/cert.pem .
 cp ../../71-rest/newrelic.yml .
 cp ../../71-rest/config.yml .
 cp ../../71-rest/src/main/resources/redisson-jcache.yaml .
-cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
-cp ../../tools/monitoring/datadog/dd-java-agent.jar .
 
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -40,7 +38,6 @@ cd dist/cv-nextgen
 cp ../../300-cv-nextgen/target/cv-nextgen-capsule.jar .
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
-cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -61,7 +58,6 @@ cd dist/verification-service
 cp ../../270-verification/target/verification-capsule.jar .
 cp ../../270-verification/keystore.jks .
 cp ../../270-verification/verification-config.yml .
-cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -82,7 +78,6 @@ cd dist/command-library-server
 cp ../../210-command-library-server/target/command-library-app-capsule.jar .
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
-cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-gcr-openjdk ./Dockerfile-gcr

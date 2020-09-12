@@ -26,10 +26,6 @@ export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCP
 
 export JAVA_OPTS="-Xms${MAX_MEMORY} -Xmx${MIN_MEMORY} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS"
 
-if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] && [[ -e /opt/harness/datadog/dd-java-agent.jar ]]; then
-    JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/datadog/dd-java-agent.jar"
-fi
-
 
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
     java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml
