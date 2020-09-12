@@ -124,6 +124,7 @@ import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
+import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.GuiceObjectFactory;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
@@ -348,8 +349,14 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     CacheModule cacheModule = new CacheModule(configuration.getCacheConfig());
     modules.addAll(cacheModule.cumulativeDependencies());
-    StreamModule streamModule = new StreamModule(configuration.getAtmosphereBroadcaster());
-    modules.addAll(streamModule.cumulativeDependencies());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      AtmosphereBroadcaster atmosphereBroadcaster() {
+        return configuration.getAtmosphereBroadcaster();
+      }
+    });
+    modules.add(StreamModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override
