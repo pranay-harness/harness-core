@@ -1,0 +1,14 @@
+{
+  "type" : "ManualConfig",
+  "spec" : {
+    "masterUrl" : "https://abc.com",
+    "auth" : {
+      "type" : "UsernamePassword",
+      "spec" : {
+        "username" : "userName",
+        "caCertRef" : "acc.caCertRef",
+        "passwordRef" : "acc.passwordRef"
+      }
+    }
+  }
+}

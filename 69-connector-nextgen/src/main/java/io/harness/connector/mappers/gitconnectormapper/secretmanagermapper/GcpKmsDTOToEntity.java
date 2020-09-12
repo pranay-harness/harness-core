@@ -4,7 +4,7 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
-import io.harness.secretmanagerclient.dto.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 
 import java.util.Collections;
 

@@ -38,12 +38,10 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-import org.junit.runners.MethodSorters;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -57,7 +55,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DefaultConnectorServiceImplTest extends ConnectorsBaseTest {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
   @Mock ConnectorRepository connectorRepository;

@@ -2,10 +2,19 @@ package io.harness.connector.apis.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -51,7 +60,18 @@ public class ConnectorDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
+    , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git"),
+        @JsonSubTypes.Type(value = SplunkConnectorDTO.class, name = "Splunk"),
+        @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
+        @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
+        @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
+        @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
+        @JsonSubTypes.Type(value = GcpKmsConfigDTO.class, name = "GcpKms")
+  })
   ConnectorConfigDTO connectorConfig;
+
   Long createdAt;
   Long lastModifiedAt;
   ConnectorConnectivityDetails status;

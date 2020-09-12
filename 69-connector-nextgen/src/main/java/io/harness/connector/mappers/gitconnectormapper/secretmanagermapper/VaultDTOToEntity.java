@@ -4,7 +4,7 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
-import io.harness.secretmanagerclient.dto.VaultConnectorDTO;
+import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 
 import java.util.Collections;
 

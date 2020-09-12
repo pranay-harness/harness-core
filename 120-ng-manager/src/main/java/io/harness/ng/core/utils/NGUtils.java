@@ -6,12 +6,12 @@ import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
-import io.harness.secretmanagerclient.dto.GcpKmsConnectorDTO;
-import io.harness.secretmanagerclient.dto.LocalConnectorDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.experimental.UtilityClass;

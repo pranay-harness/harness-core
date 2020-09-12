@@ -1,0 +1,23 @@
+{
+  "name" : "name",
+  "identifier" : "identifier",
+  "description" : "description",
+  "orgIdentifier" : "orgIdentifier",
+  "projectIdentifier" : "projectIdentifier",
+  "tags" : [ "tag1", "tag2" ],
+  "type" : "K8sCluster",
+  "spec" : {
+    "type" : "ManualConfig",
+    "spec" : {
+      "masterUrl" : "https://abc.com",
+      "auth" : {
+        "type" : "UsernamePassword",
+        "spec" : {
+          "username" : "userName",
+          "caCertRef" : "acc.caCertRef",
+          "passwordRef" : "acc.passwordRef"
+        }
+      }
+    }
+  }
+}

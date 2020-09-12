@@ -4,7 +4,7 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
-import io.harness.secretmanagerclient.dto.LocalConnectorDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 
 import java.util.Collections;
 

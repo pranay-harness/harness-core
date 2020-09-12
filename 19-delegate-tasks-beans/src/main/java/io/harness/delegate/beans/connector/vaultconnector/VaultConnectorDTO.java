@@ -1,4 +1,4 @@
-package io.harness.secretmanagerclient.dto;
+package io.harness.delegate.beans.connector.vaultconnector;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.security.encryption.AccessType;
 import lombok.Builder;
@@ -21,7 +20,6 @@ import lombok.ToString;
 @ToString(exclude = {"authToken", "secretId"})
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("Vault")
 @JsonInclude(Include.NON_NULL)
 public class VaultConnectorDTO extends ConnectorConfigDTO {
   private String authToken;
