@@ -38,7 +38,7 @@ public class CIBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       @Override
       protected void configure() {}
     });
-    modules.addAll(new CIBeansModule().cumulativeDependencies());
+    modules.add(CIBeansModule.getInstance());
     return modules;
   }
 

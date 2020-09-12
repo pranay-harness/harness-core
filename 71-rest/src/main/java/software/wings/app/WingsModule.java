@@ -756,6 +756,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
                                                 .build()));
     install(DelegateServiceDriverModule.getInstance());
     install(PersistentLockModule.getInstance());
+    install(ExecutionPlanModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(SchedulerConfig.class)
@@ -1338,7 +1339,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(ExecutionPlanModule.getInstance());
+    return ImmutableSet.<DependencyModule>of();
   }
 
   @Provides

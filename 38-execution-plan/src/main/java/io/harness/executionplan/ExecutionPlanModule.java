@@ -2,6 +2,7 @@ package io.harness.executionplan;
 
 import static com.google.inject.Scopes.SINGLETON;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
@@ -19,12 +20,8 @@ import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.resolvers.ExpressionStepDependencyResolver;
 import io.harness.executionplan.stepsdependency.resolvers.RefObjectStepDependencyResolver;
 import io.harness.executionplan.stepsdependency.service.StepDependencyServiceImpl;
-import io.harness.govern.DependencyModule;
 
-import java.util.Collections;
-import java.util.Set;
-
-public class ExecutionPlanModule extends DependencyModule {
+public class ExecutionPlanModule extends AbstractModule {
   private static volatile ExecutionPlanModule instance;
 
   public static ExecutionPlanModule getInstance() {
@@ -54,10 +51,5 @@ public class ExecutionPlanModule extends DependencyModule {
         .to(ExpressionStepDependencyResolver.class)
         .in(SINGLETON);
     bind(StepDependencyService.class).to(StepDependencyServiceImpl.class).in(SINGLETON);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return Collections.emptySet();
   }
 }
