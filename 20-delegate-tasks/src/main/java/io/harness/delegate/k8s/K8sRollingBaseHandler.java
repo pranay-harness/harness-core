@@ -20,6 +20,7 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
 import io.harness.logging.CommandExecutionStatus;
@@ -142,9 +143,14 @@ public class K8sRollingBaseHandler {
       return k8sPods;
     }
 
-    for (KubernetesResource kubernetesResource : managedWorkloads) {
-      List<K8sPod> podDetails = k8sTaskHelperBase.getPodDetails(
-          kubernetesConfig, kubernetesResource.getResourceId().getNamespace(), releaseName, timeoutInMillis);
+    final List<String> namespaces = managedWorkloads.stream()
+                                        .map(KubernetesResource::getResourceId)
+                                        .map(KubernetesResourceId::getNamespace)
+                                        .distinct()
+                                        .collect(Collectors.toList());
+    for (String namespace : namespaces) {
+      List<K8sPod> podDetails =
+          k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
 
       if (isNotEmpty(podDetails)) {
         k8sPods.addAll(podDetails);
