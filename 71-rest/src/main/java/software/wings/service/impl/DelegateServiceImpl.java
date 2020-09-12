@@ -2620,12 +2620,6 @@ public class DelegateServiceImpl implements DelegateService {
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       }
-      if (delegateTask.getData().isParked()) {
-        logger.info("Publishing parked task response...");
-        delegateCallbackService.publishParkedTaskResponse(
-            delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
-      }
-
     } catch (Exception ex) {
       logger.error("Failed publishing task response for task", ex);
     }

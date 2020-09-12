@@ -20,6 +20,7 @@ import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
+import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
@@ -442,6 +443,7 @@ public enum TaskType {
   HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK, HelmValuesFetchTask.class, HelmRepoConfigValidation.class),
   SLACK(TaskGroup.SLACK, ServiceImplDelegateTask.class, SlackValidation.class),
   CI_BUILD(TaskGroup.CI, CIBuildCommandTask.class, AlwaysTrueValidation.class),
+  CI_LE_STATUS(TaskGroup.CI, StepStatusTask.class, AlwaysTrueValidation.class),
   EXECUTE_COMMAND(TaskGroup.CI, ExecuteCommandTask.class, AlwaysTrueValidation.class),
   CI_CLEANUP(TaskGroup.CI, CICleanupTask.class, AlwaysTrueValidation.class),
   AWS_S3_TASK(TaskGroup.AWS, AwsS3Task.class, AwsConnectionValidation.class),

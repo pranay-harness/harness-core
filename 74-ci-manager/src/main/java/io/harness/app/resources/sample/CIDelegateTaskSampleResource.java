@@ -1,30 +1,26 @@
 package io.harness.app.resources.sample;
 
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static software.wings.beans.TaskType.CI_LE_STATUS;
+
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.delegate.AccountId;
-import io.harness.delegate.SubmitTaskResponse;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.TaskMode;
-import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.delegate.TaskType;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.grpc.DelegateServiceGrpcClient;
-import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
+import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 import org.hibernate.validator.constraints.NotBlank;
 
-import java.util.Collections;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -42,13 +38,12 @@ public class CIDelegateTaskSampleResource {
   private static final String HTTP_URL_200 = "http://httpstat.us/200";
 
   private final DelegateServiceGrpcClient delegateServiceGrpcClient;
-  private final KryoSerializer kryoSerializer;
   private final WaitNotifyEngine waitNotifyEngine;
   private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
   @POST
   @Path("/parked/http")
   @ApiOperation(value = "Parked task using Delegate 2.0 framework", nickname = "parkedHttp")
-  public String submitTask(@QueryParam("accountId") @NotBlank String accountId,
+  public String parkedHttpTask(@QueryParam("accountId") @NotBlank String accountId,
       @QueryParam("orgIdentifier") @NotBlank String orgIdentifier,
       @QueryParam("projectIdentifier") @NotBlank String projectIdentifier) {
     DelegateCallbackToken delegateCallbackToken = delegateCallbackTokenSupplier.get();
@@ -57,6 +52,7 @@ public class CIDelegateTaskSampleResource {
     final HttpTaskParameters taskParameters = HttpTaskParameters.builder().method("GET").url(HTTP_URL_200).build();
 
     final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                        .parked(true)
                                                         .accountId(accountId)
                                                         .taskType("HTTP")
                                                         .taskParameters(taskParameters)
@@ -65,26 +61,46 @@ public class CIDelegateTaskSampleResource {
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
 
-    final TaskSetupAbstractions taskSetupAbstractions =
-        TaskSetupAbstractions.newBuilder()
-            .putAllValues(MapUtils.emptyIfNull(delegateTaskRequest.getTaskSetupAbstractions()))
-            .build();
-
-    TaskDetails taskDetails =
-        TaskDetails.newBuilder()
-            .setParked(true)
-            .setMode(TaskMode.ASYNC)
-            .setType(TaskType.newBuilder().setType(delegateTaskRequest.getTaskType()).build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))
-            .setExecutionTimeout(Durations.fromSeconds(delegateTaskRequest.getExecutionTimeout().getSeconds()))
-            .build();
-
-    AccountId acctId = AccountId.newBuilder().setId(accountId).build();
-    SubmitTaskResponse submitTaskResponse = delegateServiceGrpcClient.submitTask(delegateCallbackToken, acctId,
-        taskSetupAbstractions, taskDetails, Collections.emptyList(), Collections.emptyList());
-
-    String taskId = submitTaskResponse.getTaskId().getId();
+    String taskId = delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken);
+    waitNotifyEngine.waitForAllOn(ORCHESTRATION, new SampleNotifyCallback(), taskId);
     return String.format("{\"accountId\": \"%s\", \"taskId\": \"%s\", \"token\": \"%s\"}", accountId, taskId,
         delegateCallbackToken.getToken());
+  }
+
+  @POST
+  @Path("/async/output")
+  @ApiOperation(value = "Create a delegate tasks", nickname = "asyncTaskOutput")
+  public String createAsyncStepOutputTask(@QueryParam("accountId") @NotBlank String accountId,
+      @QueryParam("orgIdentifier") @NotBlank String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotBlank String projectIdentifier) {
+    final StepStatusTaskParameters taskParameters = StepStatusTaskParameters.builder().build();
+
+    final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                        .parked(true)
+                                                        .accountId(accountId)
+                                                        .taskType(CI_LE_STATUS.name())
+                                                        .taskParameters(taskParameters)
+                                                        .executionTimeout(java.time.Duration.ofSeconds(20))
+                                                        .taskSetupAbstraction("orgIdentifier", orgIdentifier)
+                                                        .taskSetupAbstraction("projectIdentifier", projectIdentifier)
+                                                        .build();
+    DelegateCallbackToken delegateCallbackToken = delegateCallbackTokenSupplier.get();
+    final String taskId = delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken);
+
+    waitNotifyEngine.waitForAllOn(ORCHESTRATION, new SampleNotifyCallback(), taskId);
+    return String.format("{\"accountId\": \"%s\", \"taskId\": \"%s\", \"token\": \"%s\"}", accountId, taskId,
+        delegateCallbackToken.getToken());
+  }
+
+  public static class SampleNotifyCallback implements NotifyCallback {
+    @Override
+    public void notify(Map<String, ResponseData> response) {
+      logger.info("received response = [{}]", response);
+    }
+
+    @Override
+    public void notifyError(Map<String, ResponseData> response) {
+      logger.error("error : [{}]", response);
+    }
   }
 }

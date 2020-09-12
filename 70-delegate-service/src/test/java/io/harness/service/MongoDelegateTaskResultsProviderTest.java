@@ -70,9 +70,9 @@ public class MongoDelegateTaskResultsProviderTest extends DelegateServiceTest {
   @Category(UnitTests.class)
   public void test() {
     MongoClient mongoClient = new MongoClient(new MongoClientURI(getMongoUri()));
-    mongoClient.getDatabase("harness").createCollection("cx_delegateParkedTaskResponses");
+    mongoClient.getDatabase("harness").createCollection("cx_delegateAsyncTaskResponses");
     MongoCollection<Document> mongoCollection =
-        mongoClient.getDatabase("harness").getCollection("cx_delegateParkedTaskResponses");
+        mongoClient.getDatabase("harness").getCollection("cx_delegateAsyncTaskResponses");
 
     byte[] expectedTaskResults = kryoSerializer.asDeflatedBytes(StringNotifyResponseData.builder().data("OK").build());
 

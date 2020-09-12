@@ -144,6 +144,11 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbSetupResponse;
+import io.harness.delegate.task.stepstatus.StepExecutionStatus;
+import io.harness.delegate.task.stepstatus.StepMapOutput;
+import io.harness.delegate.task.stepstatus.StepStatus;
+import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
+import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.serializer.KryoRegistrar;
 import org.eclipse.jgit.api.GitCommand;
 
@@ -296,5 +301,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitFetchResponse.class, 19326);
     kryo.register(TaskStatus.class, 19327);
     kryo.register(K8sRollingDeployResponse.class, 19328);
+    kryo.register(StepStatusTaskParameters.class, 19329);
+    kryo.register(StepStatusTaskResponseData.class, 19330);
+    kryo.register(StepStatus.class, 19331);
+    kryo.register(StepMapOutput.class, 19332);
+    kryo.register(StepExecutionStatus.class, 19333);
   }
 }
