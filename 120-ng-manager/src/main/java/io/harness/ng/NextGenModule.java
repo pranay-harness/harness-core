@@ -197,6 +197,7 @@ public class NextGenModule extends DependencyModule {
                                                 .build()));
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
+    install(ExecutionPlanModule.getInstance());
 
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
@@ -228,6 +229,6 @@ public class NextGenModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(ExecutionPlanModule.getInstance());
+    return ImmutableSet.of();
   }
 }

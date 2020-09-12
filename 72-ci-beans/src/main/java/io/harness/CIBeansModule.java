@@ -1,6 +1,6 @@
 package io.harness;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
 import graph.GraphOperations;
@@ -15,12 +15,9 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.govern.DependencyModule;
 import io.harness.yaml.core.ExecutionElement;
 
-import java.util.Set;
-
-public class CIBeansModule extends DependencyModule {
+public class CIBeansModule extends AbstractModule {
   private static CIBeansModule instance;
 
   public static CIBeansModule getInstance() {
@@ -39,10 +36,5 @@ public class CIBeansModule extends DependencyModule {
     bind(new TypeLiteral<ProtobufSerializer<RestoreCacheStepInfo>>() {})
         .toInstance(new RestoreCacheStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<PublishStepInfo>>() {}).toInstance(new PublishStepProtobufSerializer());
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of();
   }
 }
