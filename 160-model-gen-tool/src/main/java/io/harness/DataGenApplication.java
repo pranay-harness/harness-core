@@ -35,6 +35,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
+import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -118,8 +119,14 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     CacheModule cacheModule = new CacheModule(CacheConfig.builder().cacheBackend(NOOP).build());
     modules.addAll(cacheModule.cumulativeDependencies());
-    StreamModule streamModule = new StreamModule(MEMORY);
-    modules.addAll(streamModule.cumulativeDependencies());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      AtmosphereBroadcaster atmosphereBroadcaster() {
+        return MEMORY;
+      }
+    });
+    modules.add(StreamModule.getInstance());
 
     modules.add(new AbstractModule() {
       @Override

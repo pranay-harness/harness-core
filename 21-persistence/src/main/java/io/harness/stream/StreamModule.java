@@ -4,13 +4,13 @@ import static io.harness.stream.AtmosphereBroadcaster.HAZELCAST;
 import static io.harness.stream.AtmosphereBroadcaster.REDIS;
 import static io.harness.stream.redisson.RedissonFactory.setInitParameters;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.hazelcast.core.HazelcastInstance;
-import io.harness.govern.DependencyModule;
 import io.harness.hazelcast.HazelcastModule;
 import io.harness.redis.RedisConfig;
 import io.harness.stream.hazelcast.HazelcastBroadcaster;
@@ -22,15 +22,17 @@ import org.atmosphere.cpr.DefaultBroadcaster;
 import org.atmosphere.cpr.DefaultMetaBroadcaster;
 import org.atmosphere.cpr.MetaBroadcaster;
 
-import java.util.Collections;
-import java.util.Set;
+public class StreamModule extends AbstractModule {
+  private static volatile StreamModule instance;
 
-public class StreamModule extends DependencyModule {
-  private AtmosphereBroadcaster atmosphereBroadcaster;
-
-  public StreamModule(AtmosphereBroadcaster atmosphereBroadcaster) {
-    this.atmosphereBroadcaster = atmosphereBroadcaster;
+  public static StreamModule getInstance() {
+    if (instance == null) {
+      instance = new StreamModule();
+    }
+    return instance;
   }
+
+  private StreamModule() {}
 
   @Override
   protected void configure() {
@@ -39,7 +41,8 @@ public class StreamModule extends DependencyModule {
 
   @Provides
   @Singleton
-  AtmosphereServlet getAtmosphereServelet(Provider<HazelcastInstance> hazelcastInstanceProvider,
+  AtmosphereServlet getAtmosphereServelet(AtmosphereBroadcaster atmosphereBroadcaster,
+      Provider<HazelcastInstance> hazelcastInstanceProvider,
       @Named("atmosphere") Provider<RedisConfig> redisConfigProvider) {
     AtmosphereServlet atmosphereServlet = new AtmosphereServlet();
     atmosphereServlet.framework()
@@ -73,10 +76,5 @@ public class StreamModule extends DependencyModule {
     MetaBroadcaster metaBroadcaster = new DefaultMetaBroadcaster();
     metaBroadcaster.configure(atmosphereServlet.framework().getAtmosphereConfig());
     return metaBroadcaster;
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return Collections.emptySet();
   }
 }
