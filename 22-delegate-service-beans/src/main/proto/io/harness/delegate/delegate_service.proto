@@ -14,6 +14,7 @@ import "io/harness/delegate/capability.proto";
 import "io/harness/perpetualtask/perpetual_task.proto";
 import "io/harness/perpetualtask/perpetual_task_client.proto";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
 service DelegateService {
@@ -24,8 +25,9 @@ service DelegateService {
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
   rpc TaskProgressUpdates(TaskProgressUpdatesRequest) returns (stream TaskProgressUpdatesResponse);
 
-  rpc RunParkedTask(RunParkedTaskRequest) returns (RunParkedTaskResponse);
-  rpc ParkedTaskResults(ParkedTaskResultsRequest) returns (ParkedTaskResultsResponse);
+  rpc ExecuteParkedTask(ExecuteParkedTaskRequest) returns (ExecuteParkedTaskResponse);
+  rpc FetchParkedTaskStatus(FetchParkedTaskStatusRequest) returns (FetchParkedTaskStatusResponse);
+  rpc SendTaskStatus(SendTaskStatusRequest) returns (SendTaskStatusResponse);
 
   rpc CreatePerpetualTask(CreatePerpetualTaskRequest) returns (CreatePerpetualTaskResponse);
   rpc DeletePerpetualTask(DeletePerpetualTaskRequest) returns (DeletePerpetualTaskResponse);
@@ -61,25 +63,41 @@ message CancelTaskResponse {
   TaskExecutionStage canceled_at_stage = 1;
 }
 
-message RunParkedTaskRequest {
+message ExecuteParkedTaskRequest {
   AccountId account_id = 1;
   TaskId task_id = 2;
   string results_prefix = 3;
 }
 
-message RunParkedTaskResponse {
+message ExecuteParkedTaskResponse {
   TaskId task_id = 1;
 }
 
-message ParkedTaskResultsRequest {
+message FetchParkedTaskStatusRequest {
   AccountId account_id = 1;
   TaskId task_id = 2;
-  string driver_id = 3;
+  callback.DelegateCallbackToken callback_token = 3;
 }
 
-message ParkedTaskResultsResponse {
-  bool have_results = 1;
-  bytes kryo_results_data = 2;
+message FetchParkedTaskStatusResponse {
+  bool fetch_results = 1;
+  bytes serialized_task_results = 2;
+}
+
+message SendTaskStatusRequest {
+  AccountId account_id = 1;
+  TaskId task_id = 2;
+  callback.DelegateCallbackToken callback_token = 3;
+  TaskResponseData task_response_data = 4;
+}
+
+message TaskResponseData {
+  oneof response_data {
+    bytes kryo_results_data = 1;
+  }
+}
+message SendTaskStatusResponse {
+  bool success = 1;
 }
 
 message TaskProgressRequest {

@@ -8,7 +8,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ExecutionStatusTest {
+public class StepExecutionStatusTest {
   @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)

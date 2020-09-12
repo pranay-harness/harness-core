@@ -8,7 +8,9 @@ import "io/harness/delegate/account.proto";
 import "io/harness/delegate/progress.proto";
 import "io/harness/delegate/task.proto";
 
-import "google/protobuf/timestamp.proto";
+import "io/harness/callback/callback.proto";
+
+import "google/protobuf/duration.proto";
 
 message TaskProgressRequest {
   io.harness.delegate.AccountId account_id = 1;
@@ -16,27 +18,27 @@ message TaskProgressRequest {
 }
 
 message TaskProgressResponse {
-  io.harness.delegate.TaskExecutionStage currently_at_stage = 1;
+  io.harness.delegate.TaskExecutionStage current_stage = 1;
 }
 
-message RunParkedTaskRequest {
+message ExecuteParkedTaskRequest {
   io.harness.delegate.AccountId account_id = 1;
   io.harness.delegate.TaskId task_id = 2;
-  google.protobuf.Timestamp total_expiry = 3;
+  google.protobuf.Duration total_expiry = 3;  // total time in seconds, before execution will be aborted
 }
 
-message RunParkedTaskResponse {
+message ExecuteParkedTaskResponse {
   io.harness.delegate.TaskId task_id = 1;
 }
 
-message GetTaskResultsRequest {
+message FetchParkedTaskStatusRequest {
   io.harness.delegate.AccountId account_id = 1;
   io.harness.delegate.TaskId task_id = 2;
-  string driverId = 3;
-  TaskType task_type = 4;  // task type
+  callback.DelegateCallbackToken callback_token = 3;  // callback id for fetching response provider
+  TaskType task_type = 4;                             // task type
 }
 
-message GetTaskResultsResponse {
+message FetchParkedTaskStatusResponse {
   io.harness.delegate.TaskId task_id = 1;
   TaskType task_type = 2;
   bool have_response_data = 3;
@@ -44,6 +46,7 @@ message GetTaskResultsResponse {
     JiraTaskResponse jira_task_response = 4;
     HTTPTaskResponse http_task_response = 5;
   }
+  bytes serialized_task_results = 6;
 }
 
 message HTTPTaskResponse {
@@ -63,9 +66,48 @@ enum TaskType {
   HTTP = 1;
 }
 
+message SendTaskStatusRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  callback.DelegateCallbackToken callback_token = 3;
+  TaskStatusData task_status_data = 4;
+}
+
+message TaskStatusData {
+  oneof status_data {
+    StepStatus step_status = 1;
+  }
+}
+message StepStatus {
+  int32 num_retries = 1;
+  google.protobuf.Duration total_time_taken = 2;
+  StepExecutionStatus step_execution_status = 3;
+  oneof output {
+    StepMapOutput step_output = 4;
+  }
+  string error_message = 5;
+}
+
+enum StepExecutionStatus {
+  SUCCESS = 0;
+  FAILURE = 1;
+  RUNNING = 2;
+  QUEUED = 3;
+  SKIPPED = 4;
+}
+
+message StepMapOutput {
+  map<string, string> output = 1;
+}
+
+message SendTaskStatusResponse {
+  bool success = 1;
+}
+
 service TaskService {
   // resolves JEXL expression with given context
-  rpc RunParkedTask(RunParkedTaskRequest) returns (RunParkedTaskResponse);
+  rpc ExecuteParkedTask(ExecuteParkedTaskRequest) returns (ExecuteParkedTaskResponse);
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
-  rpc GetTaskResults(GetTaskResultsRequest) returns (GetTaskResultsResponse);
+  rpc FetchParkedTaskStatus(FetchParkedTaskStatusRequest) returns (FetchParkedTaskStatusResponse);
+  rpc SendTaskStatus(SendTaskStatusRequest) returns (SendTaskStatusResponse);
 }

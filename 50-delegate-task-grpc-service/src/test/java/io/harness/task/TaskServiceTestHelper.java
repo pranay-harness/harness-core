@@ -3,16 +3,20 @@ package io.harness.task;
 import com.google.inject.Inject;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.KryoSerializer;
 import io.harness.task.converters.ResponseDataConverter;
 import io.harness.task.converters.ResponseDataConverterRegistry;
 import io.harness.task.service.HTTPTaskResponse;
 import io.harness.task.service.JiraTaskResponse;
+import io.harness.task.service.TaskStatusData;
 import io.harness.task.service.TaskType;
 import io.harness.tasks.ResponseData;
 import lombok.Builder;
 import lombok.Data;
+
+import java.time.Duration;
 
 public class TaskServiceTestHelper {
   public static final String JIRA_ISSUE_KEY = "issueKey";
@@ -45,6 +49,18 @@ public class TaskServiceTestHelper {
         .build();
   }
 
+  private StepStatusTaskResponseData getStepStatusTaskResponseData() {
+    return StepStatusTaskResponseData.builder()
+        .stepStatus(
+            io.harness.delegate.task.stepstatus.StepStatus.builder()
+                .numberOfRetries(1)
+                .totalTimeTaken(Duration.ofSeconds(50))
+                .output(io.harness.delegate.task.stepstatus.StepMapOutput.builder().output("VAR1", "VALUE1").build())
+                .stepExecutionStatus(io.harness.delegate.task.stepstatus.StepExecutionStatus.SUCCESS)
+                .build())
+        .build();
+  }
+
   public DummyJIRAResponseData getDummyJIRAResponseData() {
     return DummyJIRAResponseData.builder().id(JIRA_ISSUE_ID).key(JIRA_ISSUE_KEY).description(JIRA_DESCRIPTION).build();
   }
@@ -55,6 +71,22 @@ public class TaskServiceTestHelper {
 
   public byte[] getDeflatedJiraResponseData() {
     return kryoSerializer.asDeflatedBytes(getDummyJIRAResponseData());
+  }
+
+  public byte[] getDeflatedStepStatusTaskResponseData() {
+    return kryoSerializer.asDeflatedBytes(getStepStatusTaskResponseData());
+  }
+
+  public TaskStatusData getTaskResponseData() {
+    return TaskStatusData.newBuilder()
+        .setStepStatus(
+            io.harness.task.service.StepStatus.newBuilder()
+                .setNumRetries(1)
+                .setTotalTimeTaken(com.google.protobuf.Duration.newBuilder().setSeconds(50))
+                .setStepExecutionStatus(io.harness.task.service.StepExecutionStatus.SUCCESS)
+                .setStepOutput(io.harness.task.service.StepMapOutput.newBuilder().putOutput("VAR1", "VALUE1").build())
+                .build())
+        .build();
   }
 
   @Data
@@ -81,6 +113,14 @@ public class TaskServiceTestHelper {
           .setHttpResponseBody(dummyHTTPResponseData.getHttpResponseBody())
           .build();
     }
+
+    @Override
+    public ResponseData convert(HTTPTaskResponse httpTaskResponse) {
+      return DummyHTTPResponseData.builder()
+          .httpResponseBody(httpTaskResponse.getHttpResponseBody())
+          .httpResponseCode(httpTaskResponse.getHttpResponseCode())
+          .build();
+    }
   }
 
   @Builder
@@ -92,6 +132,15 @@ public class TaskServiceTestHelper {
           .setKey(dummyJIRAResponseData.getKey())
           .setId(dummyJIRAResponseData.getId())
           .setDescription(dummyJIRAResponseData.getDescription())
+          .build();
+    }
+
+    @Override
+    public ResponseData convert(JiraTaskResponse jiraTaskResponse) {
+      return DummyJIRAResponseData.builder()
+          .id(jiraTaskResponse.getId())
+          .key(jiraTaskResponse.getKey())
+          .description(jiraTaskResponse.getDescription())
           .build();
     }
   }
@@ -107,6 +156,7 @@ public class TaskServiceTestHelper {
       int index = 25 * 10000;
       kryo.register(DummyHTTPResponseData.class, ++index);
       kryo.register(DummyJIRAResponseData.class, ++index);
+      kryo.register(Duration.class, ++index);
     }
   }
 
