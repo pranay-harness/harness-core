@@ -2,6 +2,7 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.status.Status.INTERVENTION_WAITING;
+import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.exception.InvalidRequestException;
@@ -25,6 +27,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private InterruptService interruptService;
   @Inject private OrchestrationEngine orchestrationEngine;
+  @Inject private PlanExecutionService planExecutionService;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -62,6 +65,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
                   .tookEffectAt(System.currentTimeMillis())
                   .interruptId(interrupt.getUuid())
                   .build()));
+      planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
       orchestrationEngine.concludeNodeExecution(nodeExecution, status);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);

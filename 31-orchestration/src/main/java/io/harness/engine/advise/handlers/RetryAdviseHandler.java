@@ -35,6 +35,6 @@ public class RetryAdviseHandler implements AdviseHandler<RetryAdvise> {
           new EngineWaitRetryCallback(ambiance.getPlanExecutionId(), advise.getRetryNodeExecutionId()), resumeId);
       return;
     }
-    retryHelper.retryNodeExecution(advise.getRetryNodeExecutionId());
+    retryHelper.retryNodeExecution(advise.getRetryNodeExecutionId(), null);
   }
 }

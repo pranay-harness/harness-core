@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.grpc.TestTransportEntity;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.expression.ManagerExpressionEvaluatorTest;
@@ -23,5 +24,7 @@ public class TestManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ManagerExpressionEvaluatorTest.SweepingOutputData.class, index++);
 
     kryo.register(TestTransportEntity.class, index++);
+
+    kryo.register(SimpleStepAsyncParams.class, index++);
   }
 }

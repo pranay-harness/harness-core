@@ -12,6 +12,7 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.advise.EndPlanAdvise;
+import io.harness.adviser.advise.InterventionWaitAdvise;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
@@ -42,15 +43,13 @@ public class RetryAdviser implements Adviser {
       int waitInterval = calculateWaitInterval(parameters.getWaitIntervalList(), nodeExecution.retryCount());
       return RetryAdvise.builder().retryNodeExecutionId(nodeExecution.getUuid()).waitInterval(waitInterval).build();
     }
-    return handlePostRetry(ambiance, parameters);
+    return handlePostRetry(parameters);
   }
 
-  private Advise handlePostRetry(Ambiance ambiance, RetryAdviserParameters parameters) {
+  private Advise handlePostRetry(RetryAdviserParameters parameters) {
     switch (parameters.getRepairActionCodeAfterRetry()) {
       case MANUAL_INTERVENTION:
-      case ROLLBACK_WORKFLOW:
-      case ROLLBACK_PHASE:
-        return null;
+        return InterventionWaitAdvise.builder().build();
       case END_EXECUTION:
         return EndPlanAdvise.builder().build();
       case IGNORE:

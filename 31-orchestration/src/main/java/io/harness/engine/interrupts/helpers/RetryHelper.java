@@ -19,6 +19,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.PlanNode;
 import io.harness.serializer.KryoSerializer;
+import io.harness.state.io.StepParameters;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -34,11 +35,11 @@ public class RetryHelper {
   @Inject private AmbianceUtils ambianceUtils;
   @Inject private KryoSerializer kryoSerializer;
 
-  public void retryNodeExecution(String nodeExecutionId) {
+  public void retryNodeExecution(String nodeExecutionId, StepParameters parameters) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNode node = nodeExecution.getNode();
     String newUuid = generateUuid();
-    NodeExecution newNodeExecution = cloneForRetry(nodeExecution);
+    NodeExecution newNodeExecution = cloneForRetry(nodeExecution, parameters);
     Ambiance ambiance = ambianceUtils.cloneForFinish(nodeExecution.getAmbiance());
     ambiance.addLevel(Level.builder()
                           .setupId(node.getUuid())
@@ -55,7 +56,7 @@ public class RetryHelper {
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
   }
 
-  private NodeExecution cloneForRetry(NodeExecution nodeExecution) {
+  private NodeExecution cloneForRetry(NodeExecution nodeExecution, StepParameters parameters) {
     NodeExecution newNodeExecution = kryoSerializer.clone(nodeExecution);
     newNodeExecution.setStartTs(null);
     newNodeExecution.setStatus(Status.QUEUED);
@@ -64,6 +65,10 @@ public class RetryHelper {
     newNodeExecution.setRetryIds(retryIds);
     newNodeExecution.setExecutableResponses(new ArrayList<>());
     newNodeExecution.setVersion(null);
+    if (parameters != null) {
+      PlanNode newPlanNode = nodeExecution.getNode().cloneForRetry(parameters);
+      newNodeExecution.setNode(newPlanNode);
+    }
     return newNodeExecution;
   }
 }
