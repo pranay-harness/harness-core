@@ -14,6 +14,9 @@ import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.plan.Plan;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Singleton
 @Slf4j
 public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionService {
@@ -25,8 +28,11 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
     Plan plan = executionPlanCreatorService.createPlanForPipeline(ciPipeline, ciPipeline.getAccountId());
     // TODO set user before execution which will be available once we build authentication
     // User user = UserThreadLocal.get()
-    PlanExecution planExecution = orchestrationService.startExecution(
-        plan, EmbeddedUser.builder().uuid("harsh").email("harsh.jain@harness.io").name("harsh jain").build());
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("accountId", ciPipeline.getAccountId());
+
+    PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions,
+        EmbeddedUser.builder().uuid("harsh").email("harsh.jain@harness.io").name("harsh jain").build());
     createCIBuild(ciPipeline, ciExecutionArgs, planExecution, buildNumber);
     return planExecution;
   }

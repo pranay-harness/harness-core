@@ -27,6 +27,7 @@ import javax.validation.constraints.NotNull;
 public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
+  public static final String CALLBACK_IDS = "callbackIds";
 
   @JsonView(JsonViews.Internal.class)
   @NotNull

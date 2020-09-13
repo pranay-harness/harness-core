@@ -73,6 +73,6 @@ public class TestStepInfo implements CIStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return FacilitatorType.SYNC;
+    return FacilitatorType.ASYNC;
   }
 }

@@ -60,6 +60,9 @@ public class CILiteEngineStepGroupUtils {
                   branchName, gitConnectorIdentifier, buildNumber, usePVC);
 
           mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
+          // Also execute each lite engine step individually on main engine
+          mainEngineExecutionSections.addAll(liteEngineExecutionSections);
+
           liteEngineExecutionSections = new ArrayList<>();
         }
 
@@ -73,6 +76,8 @@ public class CILiteEngineStepGroupUtils {
           liteEngineCounter, integrationStage, branchName, gitConnectorIdentifier, buildNumber, usePVC);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
+      // Also execute each lite engine step individually on main engine
+      mainEngineExecutionSections.addAll(liteEngineExecutionSections);
     }
 
     return mainEngineExecutionSections;

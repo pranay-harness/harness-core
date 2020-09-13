@@ -47,6 +47,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
   public static final String ECR_LOCATION = "aws_account_id.dkr.ecr.region.amazonaws.com/my-web-app";
   public static final String GCR_CONNECTOR = "gcr-connector";
   public static final String GCR_LOCATION = "us.gcr.io/project/image";
+  public static final String CALLBACK_ID = "callbackId";
   @Inject ProtobufSerializer<PublishStepInfo> protobufSerializer;
 
   @Test
@@ -67,7 +68,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
                                           .identifier(PUBLISH_ID)
                                           .publishArtifacts(singletonList(filePatternArtifact))
                                           .build();
-
+    publishStepInfo.setCallbackId(CALLBACK_ID);
     String serialize = protobufSerializer.serialize(publishStepInfo);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
@@ -97,6 +98,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
     PublishStepInfo publishStepInfo = PublishStepInfo.builder()
                                           .name(PUBLISH_NAME)
                                           .identifier(PUBLISH_ID)
+                                          .callbackId(CALLBACK_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
 
@@ -129,6 +131,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
 
     PublishStepInfo publishStepInfo = PublishStepInfo.builder()
                                           .name(PUBLISH_NAME)
+                                          .callbackId(CALLBACK_ID)
                                           .identifier(PUBLISH_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
@@ -164,6 +167,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
     PublishStepInfo publishStepInfo = PublishStepInfo.builder()
                                           .name(PUBLISH_NAME)
                                           .identifier(PUBLISH_ID)
+                                          .callbackId(CALLBACK_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
 

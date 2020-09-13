@@ -26,6 +26,7 @@ public class CIExecutionServiceModule extends AbstractModule {
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                 .build()));
+    install(OrchestrationStepsModule.getInstance());
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =

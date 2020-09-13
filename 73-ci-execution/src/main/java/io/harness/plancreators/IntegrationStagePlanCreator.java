@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCreator<IntegrationStage> {
+  public static final String GROUP_NAME = "INTEGRATION_STAGE";
+
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
   private static final SecureRandom random = new SecureRandom();
@@ -40,7 +42,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     ExecutionElement execution = integrationStage.getExecution();
     ExecutionElement modifiedExecutionPlan =
         ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage);
-
+    integrationStage.setExecution(modifiedExecutionPlan);
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
     final PlanNode deploymentStageNode = prepareDeploymentNode(integrationStage, context, planForExecution, podName);
@@ -70,6 +72,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .name(integrationStage.getIdentifier())
         .identifier(integrationStage.getIdentifier())
         .stepType(IntegrationStageStep.STEP_TYPE)
+        .group(GROUP_NAME)
         .stepParameters(
             IntegrationStageStepParameters.builder()
                 .podName(podName)

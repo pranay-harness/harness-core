@@ -4,6 +4,8 @@ import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
@@ -21,6 +23,7 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
+import io.harness.delegate.task.HDelegateTask;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.DelegateServiceGrpcClientModule;
@@ -32,6 +35,9 @@ import io.harness.persistence.HPersistence;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.states.CIDelegateTaskExecutor;
+import io.harness.tasks.TaskExecutor;
+import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsMongoPersistence;
@@ -103,6 +109,10 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
+
+    MapBinder<String, TaskExecutor<HDelegateTask>> taskExecutorMap = MapBinder.newMapBinder(
+        binder(), new TypeLiteral<String>() {}, new TypeLiteral<TaskExecutor<HDelegateTask>>() {});
+    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(CIDelegateTaskExecutor.class);
 
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())

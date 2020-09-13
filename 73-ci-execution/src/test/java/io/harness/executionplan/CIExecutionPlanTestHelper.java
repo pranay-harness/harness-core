@@ -64,22 +64,20 @@ public class CIExecutionPlanTestHelper {
   }
 
   public List<ExecutionWrapper> getExpectedExecutionWrappers() {
-    return Arrays.asList(StepElement.builder()
-                             .identifier("liteEngineTask1")
-                             .stepSpecType(LiteEngineTaskStepInfo.builder()
-                                               .branchName("master")
-                                               .identifier("liteEngineTask1")
-                                               .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
-                                               .gitConnectorIdentifier("testGitConnector")
-                                               .usePVC(true)
-                                               .steps(getExpectedExecutionElement())
-                                               .build())
-                             .build(),
-        StepElement.builder()
-            .identifier("cleanup")
-            .type("cleanup")
-            .stepSpecType(CleanupStepInfo.builder().identifier("cleanup").build())
-            .build());
+    List<ExecutionWrapper> executionWrappers = new ArrayList<>();
+    executionWrappers.add(StepElement.builder()
+                              .identifier("liteEngineTask1")
+                              .stepSpecType(LiteEngineTaskStepInfo.builder()
+                                                .branchName("master")
+                                                .identifier("liteEngineTask1")
+                                                .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
+                                                .gitConnectorIdentifier("testGitConnector")
+                                                .usePVC(true)
+                                                .steps(getExpectedExecutionElement())
+                                                .build())
+                              .build());
+
+    return executionWrappers;
   }
 
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPod() {
@@ -240,6 +238,7 @@ public class CIExecutionPlanTestHelper {
                               .identifier("run-1")
                               .name("buildScript")
                               .command(singletonList("./build-script.sh"))
+                              .callbackId("run-1-callbackId")
                               .build())
             .build(),
         ParallelStepElement.builder()
@@ -251,6 +250,7 @@ public class CIExecutionPlanTestHelper {
                                                    .identifier("test-p1")
                                                    .name("testScript1")
                                                    .command(singletonList("./test-script1.sh"))
+                                                   .callbackId("test-p1-callbackId")
                                                    .build())
                                  .build(),
                 StepElement.builder()
@@ -261,6 +261,7 @@ public class CIExecutionPlanTestHelper {
                                       .identifier("test-p2")
                                       .name("testScript2")
                                       .command(singletonList("./test-script2.sh"))
+                                      .callbackId("test-p2-callbackId")
                                       .build())
                     .build()))
             .build(),
@@ -270,6 +271,7 @@ public class CIExecutionPlanTestHelper {
                                  .type("publishArtifacts")
                                  .stepSpecType(PublishStepInfo.builder()
                                                    .identifier("publish-1")
+                                                   .callbackId("publish-1-callbackId")
                                                    .publishArtifacts(singletonList(
                                                        DockerFileArtifact.builder()
                                                            .connector(GcrConnector.builder()
@@ -289,6 +291,7 @@ public class CIExecutionPlanTestHelper {
                     .stepSpecType(
                         PublishStepInfo.builder()
                             .identifier("publish-2")
+                            .callbackId("publish-2-callbackId")
                             .publishArtifacts(singletonList(
                                 DockerFileArtifact.builder()
                                     .connector(
@@ -323,7 +326,7 @@ public class CIExecutionPlanTestHelper {
   }
 
   public CIPipeline getCIPipeline() {
-    return CIPipeline.builder().identifier("testPipelineIdentifier").stages(getStages()).build();
+    return CIPipeline.builder().identifier("testPipelineIdentifier").accountId("accountId").stages(getStages()).build();
   }
 
   private List<StageElementWrapper> getStages() {

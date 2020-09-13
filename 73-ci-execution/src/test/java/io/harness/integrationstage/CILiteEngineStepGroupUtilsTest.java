@@ -30,6 +30,9 @@ public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
         ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
             ciExecutionPlanTestHelper.getIntegrationStage(), "master", "testGitConnector");
 
+    List<ExecutionWrapper> expectedExecutionWrapper = ciExecutionPlanTestHelper.getExpectedExecutionWrappers();
+    expectedExecutionWrapper.addAll(ciExecutionPlanTestHelper.getIntegrationStage().getExecution().getSteps());
+
     assertThat(executionWrapperWithLiteEngineSteps.get(0)).isInstanceOf(StepElement.class);
     StepElement stepElement = (StepElement) executionWrapperWithLiteEngineSteps.get(0);
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElement.getStepSpecType();
@@ -45,6 +48,6 @@ public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
         .get(0)
         .setName("");
 
-    assertThat(executionWrapperWithLiteEngineSteps).isEqualTo(ciExecutionPlanTestHelper.getExpectedExecutionWrappers());
+    assertThat(executionWrapperWithLiteEngineSteps).isEqualTo(expectedExecutionWrapper);
   }
 }
