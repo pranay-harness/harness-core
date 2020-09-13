@@ -2,8 +2,8 @@ package software.wings.app;
 
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -63,7 +63,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
-import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
@@ -668,7 +667,6 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -680,7 +678,7 @@ import java.util.concurrent.TimeUnit;
  * @author Rishi
  */
 @Slf4j
-public class WingsModule extends DependencyModule implements ServersModule {
+public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private MainConfiguration configuration;
 
@@ -1335,11 +1333,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
         .bind(SecretSetupUsageBuilder.class)
         .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
         .to(SecretManagerSetupUsageBuilder.class);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of();
   }
 
   @Provides

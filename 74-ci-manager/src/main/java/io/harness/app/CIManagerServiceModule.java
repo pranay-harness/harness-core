@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import com.google.common.base.Suppliers;
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -21,7 +22,6 @@ import io.harness.callback.MongoDatabase;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
-import io.harness.govern.DependencyModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.DelegateServiceGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
@@ -41,13 +41,11 @@ import software.wings.service.impl.ci.CIServiceAuthSecretKeyImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.util.Collections;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
 @Slf4j
-public class CIManagerServiceModule extends DependencyModule {
+public class CIManagerServiceModule extends AbstractModule {
   private final String managerBaseUrl;
   private final CIManagerConfiguration ciManagerConfiguration;
 
@@ -117,10 +115,5 @@ public class CIManagerServiceModule extends DependencyModule {
                                             .target(ciManagerConfiguration.getManagerTarget())
                                             .authority(ciManagerConfiguration.getManagerAuthority())
                                             .build()));
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return Collections.emptySet();
   }
 }

@@ -29,7 +29,6 @@ import io.harness.entityreferenceclient.EntityReferenceClientModule;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
-import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.DelegateServiceGrpcClientModule;
@@ -72,7 +71,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class NextGenModule extends DependencyModule {
+public class NextGenModule extends AbstractModule {
   public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
   public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
   private final NextGenConfiguration appConfig;
@@ -225,10 +224,5 @@ public class NextGenModule extends DependencyModule {
         .configure()
         .parameterNameProvider(new ReflectionParameterNameProvider())
         .buildValidatorFactory();
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of();
   }
 }

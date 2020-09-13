@@ -137,7 +137,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
-    modules.addAll(new WingsModule(configuration).cumulativeDependencies());
+    modules.add(new WingsModule(configuration));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

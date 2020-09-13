@@ -103,7 +103,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void run(NextGenConfiguration appConfig, Environment environment) {
     logger.info("Starting Next Gen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(new NextGenModule(appConfig).cumulativeDependencies());
+    Injector injector = Guice.createInjector(new NextGenModule(appConfig));
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
