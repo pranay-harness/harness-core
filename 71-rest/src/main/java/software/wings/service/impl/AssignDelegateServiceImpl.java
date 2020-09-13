@@ -21,6 +21,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -55,6 +56,9 @@ import software.wings.utils.DelegateTaskUtils;
 
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +78,9 @@ import java.util.stream.Collectors;
 public class AssignDelegateServiceImpl implements AssignDelegateService {
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
+
+  public static final String ERROR_MESSAGE =
+      "Delegate selection log: Delegate id: %s, Name: %s, Host name: %s, Profile name: %s, %s with note: %s at: %s";
 
   private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
   private static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
@@ -519,6 +526,20 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     logger.info("Delegate task is terminated");
 
     String errorMessage = "Unknown";
+
+    List<DelegateSelectionLogParams> delegateSelectionLogs =
+        delegateSelectionLogsService.fetchTaskSelectionLogs(delegateTask.getAccountId(), delegateTask.getUuid());
+    if (!isEmpty(delegateSelectionLogs)) {
+      return delegateSelectionLogs.stream()
+          .map(selectionLog
+              -> String.format(String.format(ERROR_MESSAGE, selectionLog.getDelegateId(),
+                  selectionLog.getDelegateName(), selectionLog.getDelegateHostName(),
+                  selectionLog.getDelegateProfileName(), selectionLog.getConclusion(), selectionLog.getMessage(),
+                  LocalDateTime.ofInstant(
+                      Instant.ofEpochMilli(selectionLog.getEventTimestamp()), ZoneId.systemDefault()))))
+          .distinct()
+          .collect(Collectors.joining(", "));
+    }
 
     try {
       List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
