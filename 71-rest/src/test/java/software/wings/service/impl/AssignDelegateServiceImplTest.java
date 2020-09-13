@@ -25,6 +25,7 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
@@ -43,6 +44,7 @@ import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
@@ -79,6 +81,9 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1202,5 +1207,59 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
 
     assertThat(criteria).containsExactly("localhost");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testGetActiveDelegateAssignmentErrorMessageSelectionLogsAvailable() {
+    String accountId = generateUuid();
+    String uuid = generateUuid();
+    String delegateId = generateUuid();
+
+    DelegateTask delegateTask = DelegateTask.builder().uuid(uuid).accountId(accountId).delegateId(delegateId).build();
+
+    DelegateSelectionLogParams delegateSelectionLog = DelegateSelectionLogParams.builder()
+                                                          .delegateId(delegateTask.getDelegateId())
+                                                          .delegateName("testDelegateName")
+                                                          .delegateHostName("testDelegateHostName")
+                                                          .delegateProfileName("testDelegateProfileName")
+                                                          .conclusion("Disconnected")
+                                                          .message("testMessage")
+                                                          .build();
+
+    List<DelegateSelectionLogParams> delegateSelectionLogs = Arrays.asList(delegateSelectionLog);
+
+    when(delegateSelectionLogsService.fetchTaskSelectionLogs(accountId, uuid)).thenReturn(delegateSelectionLogs);
+
+    String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+
+    String expectedErrorMessage =
+        String.format(ERROR_MESSAGE, delegateSelectionLog.getDelegateId(), delegateSelectionLog.getDelegateName(),
+            delegateSelectionLog.getDelegateHostName(), delegateSelectionLog.getDelegateProfileName(),
+            delegateSelectionLog.getConclusion(), delegateSelectionLog.getMessage(),
+            LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(delegateSelectionLog.getEventTimestamp()), ZoneId.systemDefault()));
+
+    assertThat(errorMessage).isNotNull();
+    assertThat(errorMessage).isEqualTo(expectedErrorMessage);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testGetActiveDelegateAssignmentErrorMessage_emptyActiveDelegates() {
+    String accountId = generateUuid();
+    String uuid = generateUuid();
+    String delegateId = generateUuid();
+
+    DelegateTask delegateTask = DelegateTask.builder().uuid(uuid).accountId(accountId).delegateId(delegateId).build();
+
+    String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+
+    String expectedErrorMessage = "There were no active delegates to complete the task.";
+
+    assertThat(errorMessage).isNotNull();
+    assertThat(errorMessage).isEqualTo(expectedErrorMessage);
   }
 }
