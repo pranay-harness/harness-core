@@ -24,6 +24,7 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.waiter.WaiterModule;
 import org.junit.rules.MethodRule;
@@ -70,6 +71,12 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
+        return ImmutableSet.<Class<? extends AliasRegistrar>>builder().build();
       }
     });
     modules.add(KryoModule.getInstance());

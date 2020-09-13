@@ -46,6 +46,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.spring.AliasRegistrar;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -133,6 +134,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         return ImmutableMap.<Class, String>builder()
             .put(DelegateSyncTaskResponse.class, "ciManager_delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "ciManager_delegateAsyncTaskResponses")
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
+        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+            .addAll(CiExecutionRegistrars.aliasRegistrars)
             .build();
       }
     });

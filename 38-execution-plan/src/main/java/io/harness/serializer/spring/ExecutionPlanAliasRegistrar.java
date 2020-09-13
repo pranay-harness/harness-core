@@ -5,7 +5,7 @@ import io.harness.spring.AliasRegistrar;
 
 import java.util.Map;
 
-public class ExecutionBeansAliasRegistrar implements AliasRegistrar {
+public class ExecutionPlanAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
     orchestrationElements.put("keyAwareStepDependencySpec", KeyAwareStepDependencySpec.class);

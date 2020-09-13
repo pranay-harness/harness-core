@@ -16,6 +16,7 @@ import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
@@ -23,6 +24,7 @@ import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
+import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -68,6 +70,14 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
             .addAll(ManagerRegistrars.morphiaRegistrars)
             .add(CIBeansMorphiaRegistrar.class)
             .add(TestPersistenceMorphiaRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
+        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+            .addAll(CiExecutionRegistrars.aliasRegistrars)
             .build();
       }
     });

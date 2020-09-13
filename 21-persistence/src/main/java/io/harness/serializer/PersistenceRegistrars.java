@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableSet;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.PersistenceKryoRegistrar;
 import io.harness.serializer.morphia.PersistenceMorphiaRegistrar;
+import io.harness.serializer.spring.PersistenceAliasRegistrar;
+import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -20,4 +22,7 @@ public class PersistenceRegistrars {
           .addAll(CommonsRegistrars.morphiaRegistrars)
           .add(PersistenceMorphiaRegistrar.class)
           .build();
+
+  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder().add(PersistenceAliasRegistrar.class).build();
 }

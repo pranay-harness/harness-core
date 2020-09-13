@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NextGenMorphiaClassesRegistrar;
+import io.harness.spring.AliasRegistrar;
 
 public class NextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
@@ -14,4 +15,7 @@ public class NextGenRegistrars {
           .addAll(NGRegistrars.morphiaRegistrars)
           .add(NextGenMorphiaClassesRegistrar.class)
           .build();
+
+  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(NGRegistrars.aliasRegistrars).build();
 }

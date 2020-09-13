@@ -24,6 +24,8 @@ import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
 import io.harness.serializer.morphia.SMCoreMorphiaRegistrar;
 import io.harness.serializer.morphia.SecretManagerClientMorphiaRegistrar;
+import io.harness.serializer.spring.WingsAliasRegistrar;
+import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -62,5 +64,19 @@ public class ManagerRegistrars {
           .add(SMCoreMorphiaRegistrar.class)
           .add(EventMorphiaRegistrar.class)
           .add(DelegateServiceMorphiaRegistrar.class)
+          .build();
+
+  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(DelegateTasksBeansRegistrars.aliasRegistrars)
+          .addAll(PersistenceRegistrars.aliasRegistrars)
+          .addAll(TimeoutEngineRegistrars.aliasRegistrars)
+          .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
+          .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
+          .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
+          .addAll(YamlBeansModuleRegistrars.aliasRegistrars)
+          .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
+          .add(WingsAliasRegistrar.class)
           .build();
 }

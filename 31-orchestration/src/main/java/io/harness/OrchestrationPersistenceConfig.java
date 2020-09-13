@@ -12,7 +12,6 @@ import io.harness.mongo.OrchestrationMongoTemplate;
 import io.harness.mongo.OrchestrationTypeInformationMapper;
 import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceConfig;
-import org.reflections.Reflections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +31,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
@@ -40,11 +40,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
   private static final String ORCHESTRATION_TYPE_KEY = "_orchestrationClass";
   private final Injector injector;
+  private final Set<Class<? extends AliasRegistrar>> aliasRegistrars;
 
   @Inject
-  public OrchestrationPersistenceConfig(Injector injector) {
+  public OrchestrationPersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars) {
     super(injector);
     this.injector = injector;
+    this.aliasRegistrars = aliasRegistrars;
   }
 
   @Override
@@ -56,7 +58,8 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
   @Bean(name = "orchestrationMongoTemplate")
   public MongoTemplate orchestrationMongoTemplate() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
-    TypeInformationMapper typeMapper = OrchestrationTypeInformationMapper.builder().aliasMap(collectAliasMap()).build();
+    TypeInformationMapper typeMapper =
+        OrchestrationTypeInformationMapper.builder().aliasMap(collectAliasMap(aliasRegistrars)).build();
     MongoTypeMapper mongoTypeMapper =
         new DefaultMongoTypeMapper(ORCHESTRATION_TYPE_KEY, Collections.singletonList(typeMapper));
     MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
@@ -67,11 +70,10 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
     return new OrchestrationMongoTemplate(mongoDbFactory(), converter);
   }
 
-  private Map<String, Class<?>> collectAliasMap() {
+  private Map<String, Class<?>> collectAliasMap(Set<Class<? extends AliasRegistrar>> registrars) {
     Map<String, Class<?>> aliases = new ConcurrentHashMap<>();
     try {
-      Reflections reflections = new Reflections("io.harness.serializer.spring");
-      for (Class clazz : reflections.getSubTypesOf(AliasRegistrar.class)) {
+      for (Class<? extends AliasRegistrar> clazz : registrars) {
         Constructor<?> constructor = clazz.getConstructor();
         final AliasRegistrar aliasRegistrar = (AliasRegistrar) constructor.newInstance();
         aliasRegistrar.register(aliases);
