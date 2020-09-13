@@ -16,6 +16,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
 
+import static java.util.Arrays.asList;
+
 @Slf4j
 public class Main {
   private static BuildPulseClient getBuildPulseClient(String baseUrl, String authToken) {
@@ -56,7 +58,7 @@ public class Main {
     BuildPulseClient buildPulseClient = getBuildPulseClient(url, token);
     Set<String> flakyTests = new FlakeFinder(buildPulseClient, maxFailChance).fetchFlakyTests();
     logger.info("Found {} flaky tests with maxFailChance = {}", flakyTests.size(), maxFailChance);
-    logger.info("Flaky tests are: {}", flakyTests);
+    logger.info("Flaky tests are: \n{}", String.join("\n", flakyTests));
     List<String> surefireReports = new ReportFinder(baseDir).findSurefireReports();
     ReportProcessor reportProcessor = new ReportProcessor(flakyTests);
     boolean success = true;
@@ -77,8 +79,15 @@ public class Main {
     ReportProcessor reportProcessor = new ReportProcessor(null);
     int numFailures = 0;
     for (String report : surefireReports) {
-      logger.info("Processing report file {}", report);
-      numFailures += reportProcessor.getFailureCount(report);
+      int failureCount = reportProcessor.getFailureCount(report);
+
+      // keep this report significantly different the issue one to be searchable
+      if (failureCount == 0) {
+        logger.info("{} - is clean", report);
+      } else {
+        logger.info("{} - has {} issue(s)", report, failureCount);
+      }
+      numFailures += failureCount;
     }
     logger.info("Total number of failed tests: {}", numFailures);
     if (numFailures >= maxFailures) {

@@ -36,7 +36,7 @@ public class ReportProcessor {
 
   private NodeList failures(Document document) throws XPathExpressionException {
     XPath xPath = XPathFactory.newInstance().newXPath();
-    String failuresXpath = "/testsuite/testcase[failure]";
+    String failuresXpath = "/testsuite/testcase[error|failure]";
     return (NodeList) xPath.compile(failuresXpath).evaluate(document, XPathConstants.NODESET);
   }
 
