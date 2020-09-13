@@ -147,7 +147,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
     modules.add(new CIPersistenceModule());
     addGuiceValidationModule(modules);
-    modules.addAll(new CIManagerServiceModule(configuration, configuration.getManagerUrl()).cumulativeDependencies());
+    modules.add(new CIManagerServiceModule(configuration, configuration.getManagerUrl()));
     modules.add(CIExecutionServiceModule.getInstance());
     modules.add(CIBeansModule.getInstance());
     modules.add(ExecutionPlanModule.getInstance());
