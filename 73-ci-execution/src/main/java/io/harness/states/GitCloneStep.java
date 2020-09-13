@@ -25,7 +25,6 @@ public class GitCloneStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
   @Inject private BuildSetupUtils buildSetupUtils;
   public static final StepType STEP_TYPE = GitCloneStepInfo.typeInfo.getStepType();
-
   @Override
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData) {

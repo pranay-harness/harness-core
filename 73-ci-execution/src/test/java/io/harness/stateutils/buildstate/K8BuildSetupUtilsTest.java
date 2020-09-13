@@ -18,13 +18,17 @@ import static io.harness.stateutils.buildstate.providers.InternalContainerParams
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.k8s.model.ImageDetails;
@@ -33,6 +37,7 @@ import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvide
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
@@ -52,6 +57,9 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
+
+  @Mock ExecutionSweepingOutputService executionSweepingOutputResolver;
+
   private ImageDetails imageDetails = ImageDetails.builder().name("maven").tag("3.6.3-jdk-8").build();
 
   private static final String UUID = "UUID";
@@ -60,7 +68,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   private static final List<String> command =
       Collections.unmodifiableList(Arrays.asList("/step-exec/.harness/bin/ci-lite-engine"));
   private static final List<String> args = Collections.unmodifiableList(Arrays.asList("stage", "--input",
-      "CjASLgoFcnVuLTESC2J1aWxkU2NyaXB0GhgKES4vYnVpbGQtc2NyaXB0LnNoEgMQsAkKdgp0CghwYXJhbGxlbBIEbmFtZRowCgd0ZXN0LXAxEgt0ZXN0U2NyaXB0MRoYChEuL3Rlc3Qtc2NyaXB0MS5zaBIDELAJGjAKB3Rlc3QtcDISC3Rlc3RTY3JpcHQyGhgKES4vdGVzdC1zY3JpcHQyLnNoEgMQsAkK8AEK7QEKCHBhcmFsbGVsEgRuYW1lGlYKCXB1Ymxpc2gtMTJJEkcKDH4vRG9ja2VyZmlsZRICfi8aMwocdXMuZ2NyLmlvL2NpLXBsYXkvcG9ydGFsOnYwMRIRCg1nY3ItY29ubmVjdG9yEAEYBBqCAQoJcHVibGlzaC0yMnUScwoMfi9Eb2NrZXJmaWxlEgJ+LxpfCkggaHR0cHM6Ly85ODc5MjMxMzI4NzkuZGtyLmVjci5ldS13ZXN0LTEuYW1hem9uYXdzLmNvbS9jaS1wbGF5L3BvcnRhbDp2MDESEQoNZWNyLWNvbm5lY3RvchACGAU=",
+      "CkISQAoFcnVuLTESC2J1aWxkU2NyaXB0GhgKES4vYnVpbGQtc2NyaXB0LnNoEgMQsAlCEHJ1bi0xLWNhbGxiYWNrSWQKnwEKnAEKCHBhcmFsbGVsEgRuYW1lGkQKB3Rlc3QtcDESC3Rlc3RTY3JpcHQxGhgKES4vdGVzdC1zY3JpcHQxLnNoEgMQsAlCEnRlc3QtcDEtY2FsbGJhY2tJZBpECgd0ZXN0LXAyEgt0ZXN0U2NyaXB0MhoYChEuL3Rlc3Qtc2NyaXB0Mi5zaBIDELAJQhJ0ZXN0LXAyLWNhbGxiYWNrSWQKnAIKmQIKCHBhcmFsbGVsEgRuYW1lGmwKCXB1Ymxpc2gtMTJJEkcKDH4vRG9ja2VyZmlsZRICfi8aMwocdXMuZ2NyLmlvL2NpLXBsYXkvcG9ydGFsOnYwMRIRCg1nY3ItY29ubmVjdG9yEAEYBEIUcHVibGlzaC0xLWNhbGxiYWNrSWQamAEKCXB1Ymxpc2gtMjJ1EnMKDH4vRG9ja2VyZmlsZRICfi8aXwpIIGh0dHBzOi8vOTg3OTIzMTMyODc5LmRrci5lY3IuZXUtd2VzdC0xLmFtYXpvbmF3cy5jb20vY2ktcGxheS9wb3J0YWw6djAxEhEKDWVjci1jb25uZWN0b3IQAhgFQhRwdWJsaXNoLTItY2FsbGJhY2tJZA==",
       "--logpath", "/step-exec/.harness/logs/", "--tmppath", "/step-exec/.harness/tmp/", "--ports", "9001", "--debug"));
 
   private static final List<String> args2 = Collections.unmodifiableList(Arrays.asList(
@@ -68,13 +76,15 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
   @Before
   public void setUp() {
-    on(buildSetupUtils).set("k8BuildSetupUtils", k8BuildSetupUtils);
+    on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
   }
 
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldCreatePodParameters() throws IOException {
+    when(executionSweepingOutputResolver.resolve(any(), any())).thenReturn(StepTaskDetails.builder().build());
+
     K8BuildJobEnvInfo.PodsSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod();
 
     CIK8PodParams<CIK8ContainerParams> podParams =

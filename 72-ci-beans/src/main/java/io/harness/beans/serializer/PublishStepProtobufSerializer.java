@@ -2,6 +2,9 @@ package io.harness.beans.serializer;
 
 import static io.harness.product.ci.addon.proto.AuthType.BASIC_AUTH;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
@@ -10,6 +13,7 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactConne
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactoryConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.product.ci.addon.proto.AuthType;
 import io.harness.product.ci.addon.proto.BuildPublishImage;
 import io.harness.product.ci.addon.proto.Connector;
@@ -21,10 +25,13 @@ import io.harness.product.ci.engine.proto.UnitStep;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
+@Singleton
 public class PublishStepProtobufSerializer implements ProtobufSerializer<PublishStepInfo> {
   public static final String TYPE_NOT_SUPPORTED = "%s not supported";
   public static final String TYPE_NOT_IMPLEMENTED_YET = "%s not implemented yet";
+  @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
   public String serialize(PublishStepInfo stepInfo) {
@@ -47,8 +54,11 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
           break;
       }
     });
+
     return UnitStep.newBuilder()
         .setId(publishStepInfo.getIdentifier())
+        .setTaskId(publishStepInfo.getCallbackId())
+        .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
         .setPublishArtifacts(publishArtifactsStepBuilder.build())
         .build();

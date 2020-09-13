@@ -1,5 +1,6 @@
 package io.harness.beans.steps.stepinfo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -34,6 +35,7 @@ public class RunStepInfo implements CIStepInfo {
                                               .stepType(StepType.builder().type(CIStepInfoType.RUN.name()).build())
                                               .build();
 
+  @JsonIgnore private String callbackId;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
@@ -45,9 +47,10 @@ public class RunStepInfo implements CIStepInfo {
   @Builder
 
   @ConstructorProperties(
-      {"identifier", "name", "retry", "timeout", "command", "envVariables", "envVarsOutput", "output"})
-  public RunStepInfo(String identifier, String name, Integer retry, Integer timeout, List<String> command,
-      List<String> envVariables, String envVarsOutput, List<String> output) {
+      {"callbackId", "identifier", "name", "retry", "timeout", "command", "envVariables", "envVarsOutput", "output"})
+  public RunStepInfo(String callbackId, String identifier, String name, Integer retry, Integer timeout,
+      List<String> command, List<String> envVariables, String envVarsOutput, List<String> output) {
+    this.callbackId = callbackId;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -75,6 +78,6 @@ public class RunStepInfo implements CIStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return FacilitatorType.SYNC;
+    return FacilitatorType.ASYNC;
   }
 }

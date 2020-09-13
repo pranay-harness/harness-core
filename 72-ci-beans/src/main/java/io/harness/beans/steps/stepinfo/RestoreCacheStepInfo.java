@@ -1,5 +1,6 @@
 package io.harness.beans.steps.stepinfo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -25,7 +26,7 @@ import javax.validation.constraints.NotNull;
 public class RestoreCacheStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
-
+  @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
   public static final TypeInfo typeInfo =
@@ -42,9 +43,10 @@ public class RestoreCacheStepInfo implements CIStepInfo {
   private boolean failIfNotExist;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "key", "failIfNotExist"})
-  public RestoreCacheStepInfo(
-      String identifier, String name, Integer retry, Integer timeout, String key, boolean failIfNotExist) {
+  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "timeout", "key", "failIfNotExist"})
+  public RestoreCacheStepInfo(String callbackId, String identifier, String name, Integer retry, Integer timeout,
+      String key, boolean failIfNotExist) {
+    this.callbackId = callbackId;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -70,6 +72,6 @@ public class RestoreCacheStepInfo implements CIStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return FacilitatorType.SYNC;
+    return FacilitatorType.ASYNC;
   }
 }

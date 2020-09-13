@@ -14,6 +14,7 @@ import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.serializer.KryoRegistrar;
 
 /**
@@ -36,5 +37,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(RunStepInfo.class, 100011);
     kryo.register(SaveCacheStepInfo.class, 100012);
     kryo.register(TestStepInfo.class, 100013);
+    kryo.register(StepTaskDetails.class, 100014);
   }
 }

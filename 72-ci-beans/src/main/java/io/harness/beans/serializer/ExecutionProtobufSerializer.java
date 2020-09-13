@@ -3,6 +3,7 @@ package io.harness.beans.serializer;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
@@ -24,6 +25,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Singleton
 public class ExecutionProtobufSerializer implements ProtobufSerializer<ExecutionElement> {
   @Inject private RunStepProtobufSerializer runStepProtobufSerializer;
   @Inject private PublishStepProtobufSerializer publishStepProtobufSerializer;

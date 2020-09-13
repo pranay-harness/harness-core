@@ -27,6 +27,7 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.NexusConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.S3Connector;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
@@ -48,6 +49,7 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("gitCloneStepInfo", GitCloneStepInfo.class);
     orchestrationElements.put("integrationStageStepParameters", IntegrationStageStepParameters.class);
     orchestrationElements.put("k8PodDetails", K8PodDetails.class);
+    orchestrationElements.put("stepTaskDetails", StepTaskDetails.class);
     orchestrationElements.put("liteEngineTaskStepInfo", LiteEngineTaskStepInfo.class);
     orchestrationElements.put("publishStepInfo", PublishStepInfo.class);
     orchestrationElements.put("runStepInfo", RunStepInfo.class);

@@ -23,6 +23,7 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
   public static final String MVN_CLEAN_INSTALL = "mvn clean install";
   public static final String OUTPUT = "output";
   public static final int TIMEOUT = 100;
+  public static final String CALLBACK_ID = "callbackId";
   public static final int RETRY = 2;
   @Inject ProtobufSerializer<RunStepInfo> protobufSerializer;
   @Test
@@ -36,8 +37,8 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
                                   .timeout(TIMEOUT)
                                   .command(Arrays.asList(MVN_CLEAN_INSTALL))
                                   .output(Arrays.asList(OUTPUT))
-
                                   .build();
+    runStepInfo.setCallbackId(CALLBACK_ID);
     String serialize = protobufSerializer.serialize(runStepInfo);
     UnitStep runStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(runStep.getId()).isEqualTo(RUN_STEP_ID);

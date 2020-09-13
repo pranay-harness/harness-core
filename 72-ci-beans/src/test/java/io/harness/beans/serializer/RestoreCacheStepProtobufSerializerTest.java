@@ -19,6 +19,7 @@ public class RestoreCacheStepProtobufSerializerTest extends CIBeansTest {
   public static final String RESTORE_ID = "restore-id";
   public static final String RESTORE_CACHE = "restore-cache";
   public static final String RESTORE_KEY = "restore-key";
+  public static final String CALLBACK_ID = "callbackId";
   @Inject ProtobufSerializer<RestoreCacheStepInfo> protobufSerializer;
 
   @Test
@@ -31,13 +32,14 @@ public class RestoreCacheStepProtobufSerializerTest extends CIBeansTest {
                                                     .key(RESTORE_KEY)
                                                     .failIfNotExist(true)
                                                     .build();
-
+    restoreCacheStepInfo.setCallbackId(CALLBACK_ID);
     String serialize = protobufSerializer.serialize(restoreCacheStepInfo);
     UnitStep restoreStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
 
     assertThat(restoreStep.getRestoreCache().getKey()).isEqualTo(RESTORE_KEY);
     assertThat(restoreStep.getDisplayName()).isEqualTo(RESTORE_CACHE);
     assertThat(restoreStep.getId()).isEqualTo(RESTORE_ID);
+    assertThat(restoreStep.getTaskId()).isEqualTo(CALLBACK_ID);
     assertThat(restoreStep.getRestoreCache().getFailIfNotExist()).isTrue();
   }
 }
