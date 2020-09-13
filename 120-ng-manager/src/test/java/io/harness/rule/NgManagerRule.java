@@ -22,6 +22,7 @@ import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
+import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -75,6 +76,12 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return NextGenRegistrars.morphiaRegistrars;
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
+        return NextGenRegistrars.aliasRegistrars;
       }
     });
     return modules;

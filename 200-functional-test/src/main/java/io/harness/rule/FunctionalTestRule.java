@@ -55,6 +55,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.service.DelegateServiceModule;
+import io.harness.spring.AliasRegistrar;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -181,6 +182,14 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
             .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CvNextGenCommonsBeansKryoRegistrar.class)
             .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
+        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+            .addAll(ManagerRegistrars.aliasRegistrars)
             .build();
       }
     });

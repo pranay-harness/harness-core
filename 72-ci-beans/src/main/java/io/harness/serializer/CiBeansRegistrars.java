@@ -7,6 +7,8 @@ import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.YamlMorphiaRegistrar;
+import io.harness.serializer.spring.CIBeansAliasRegistrar;
+import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -23,5 +25,11 @@ public class CiBeansRegistrars {
           .addAll(ManagerRegistrars.morphiaRegistrars)
           .add(CIBeansMorphiaRegistrar.class)
           .add(YamlMorphiaRegistrar.class)
+          .build();
+
+  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(ManagerRegistrars.aliasRegistrars)
+          .add(CIBeansAliasRegistrar.class)
           .build();
 }

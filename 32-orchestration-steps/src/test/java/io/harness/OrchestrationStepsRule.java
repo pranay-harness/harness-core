@@ -28,6 +28,7 @@ import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
+import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -80,6 +81,14 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
+        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+            .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
             .build();
       }
     });
