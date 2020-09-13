@@ -56,7 +56,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     PlanExecution updated = mongoTemplate.findAndModify(
         query, updateOps, new FindAndModifyOptions().upsert(false).returnNew(true), PlanExecution.class);
     if (updated == null) {
-      logger.warn("Cannot update execution status for the node {} with {}", planExecutionId, status);
+      logger.warn("Cannot update execution status for the PlanExecution {} with {}", planExecutionId, status);
     }
     return updated;
   }

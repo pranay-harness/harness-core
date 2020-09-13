@@ -15,7 +15,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
-import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
@@ -23,7 +22,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
-import io.harness.testlib.RealMongo;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +31,6 @@ import software.wings.rules.Listeners;
 
 @Listeners(OrchestrationNotifyEventListener.class)
 public class AbortAllInterruptHandlerTest extends WingsBaseTest {
-  @Inject private InterruptManager interruptManager;
   @Inject private OrchestrationService orchestrationService;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
@@ -46,7 +43,6 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
@@ -54,11 +50,11 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
         ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
-    Interrupt handledInterrupt = interruptManager.register(InterruptPackage.builder()
-                                                               .planExecutionId(execution.getUuid())
-                                                               .interruptType(ABORT_ALL)
-                                                               .embeddedUser(EMBEDDED_USER)
-                                                               .build());
+    Interrupt handledInterrupt = orchestrationService.registerInterrupt(InterruptPackage.builder()
+                                                                            .planExecutionId(execution.getUuid())
+                                                                            .interruptType(ABORT_ALL)
+                                                                            .embeddedUser(EMBEDDED_USER)
+                                                                            .build());
     assertThat(handledInterrupt).isNotNull();
     assertThat(handledInterrupt.getState()).isEqualTo(PROCESSED_SUCCESSFULLY);
 

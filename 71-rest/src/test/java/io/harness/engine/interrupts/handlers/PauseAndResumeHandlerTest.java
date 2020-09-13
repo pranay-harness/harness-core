@@ -17,7 +17,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
-import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptTestHelper;
@@ -41,7 +40,6 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Inject private OrchestrationService orchestrationService;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
-  @Inject private InterruptManager interruptManager;
   @Inject private InterruptService interruptService;
 
   private static final EmbeddedUser EMBEDDED_USER = new EmbeddedUser(generateUuid(), PRASHANT, PRASHANT);
@@ -61,11 +59,11 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt
-    Interrupt handledPauseInterrupt = interruptManager.register(InterruptPackage.builder()
-                                                                    .planExecutionId(execution.getUuid())
-                                                                    .interruptType(PAUSE_ALL)
-                                                                    .embeddedUser(EMBEDDED_USER)
-                                                                    .build());
+    Interrupt handledPauseInterrupt = orchestrationService.registerInterrupt(InterruptPackage.builder()
+                                                                                 .planExecutionId(execution.getUuid())
+                                                                                 .interruptType(PAUSE_ALL)
+                                                                                 .embeddedUser(EMBEDDED_USER)
+                                                                                 .build());
     assertThat(handledPauseInterrupt).isNotNull();
     assertThat(handledPauseInterrupt.getState()).isEqualTo(PROCESSING);
 
@@ -77,11 +75,11 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
     assertThat(pausedPlanExecution.getStatus()).isEqualTo(PAUSED);
 
     // Issue Resume Interrupt
-    Interrupt handledResumeInterrupt = interruptManager.register(InterruptPackage.builder()
-                                                                     .planExecutionId(execution.getUuid())
-                                                                     .interruptType(RESUME_ALL)
-                                                                     .embeddedUser(EMBEDDED_USER)
-                                                                     .build());
+    Interrupt handledResumeInterrupt = orchestrationService.registerInterrupt(InterruptPackage.builder()
+                                                                                  .planExecutionId(execution.getUuid())
+                                                                                  .interruptType(RESUME_ALL)
+                                                                                  .embeddedUser(EMBEDDED_USER)
+                                                                                  .build());
     assertThat(handledResumeInterrupt).isNotNull();
 
     // Wait for Plan To be complete

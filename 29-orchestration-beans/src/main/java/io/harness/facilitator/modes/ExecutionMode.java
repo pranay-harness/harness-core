@@ -13,21 +13,31 @@ import java.util.Set;
 public enum ExecutionMode {
   SYNC,
   ASYNC,
+
   SKIP,
+
   TASK_CHAIN,
   TASK_CHAIN_V2,
   TASK_CHAIN_V3,
-  CHILDREN,
-  CHILD,
+
   TASK,
-  CHILD_CHAIN,
   TASK_V2,
-  TASK_V3;
+  TASK_V3,
+
+  CHILD_CHAIN,
+  CHILDREN,
+  CHILD;
 
   private static final Set<ExecutionMode> CHAIN_MODES =
       EnumSet.of(TASK_CHAIN, TASK_CHAIN_V2, TASK_CHAIN_V3, CHILD_CHAIN);
 
+  private static final Set<ExecutionMode> PARENT_MODES = EnumSet.of(CHILD_CHAIN, CHILDREN, CHILD);
+
   public static Set<ExecutionMode> chainModes() {
     return CHAIN_MODES;
+  }
+
+  public static boolean isParentMode(ExecutionMode mode) {
+    return PARENT_MODES.contains(mode);
   }
 }

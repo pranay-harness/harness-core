@@ -37,4 +37,19 @@ public class PlanNode {
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
 
   boolean skipExpressionChain;
+
+  public PlanNode cloneForRetry(StepParameters parameters) {
+    return PlanNode.builder()
+        .uuid(uuid)
+        .name(name)
+        .stepType(stepType)
+        .identifier(identifier)
+        .group(group)
+        .stepParameters(parameters)
+        .refObjects(refObjects)
+        .adviserObtainments(adviserObtainments)
+        .facilitatorObtainments(facilitatorObtainments)
+        .skipExpressionChain(skipExpressionChain)
+        .build();
+  }
 }
