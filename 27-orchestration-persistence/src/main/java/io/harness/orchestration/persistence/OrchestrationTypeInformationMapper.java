@@ -1,4 +1,4 @@
-package io.harness.mongo;
+package io.harness.orchestration.persistence;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +61,7 @@ public class OrchestrationTypeInformationMapper implements TypeInformationMapper
     try {
       return Optional.of(ClassTypeInformation.from(ClassUtils.forName(typeName, null)));
     } catch (ClassNotFoundException e) {
+      logger.info("Class Information not found for : {}", typeName);
       return Optional.empty();
     }
   }

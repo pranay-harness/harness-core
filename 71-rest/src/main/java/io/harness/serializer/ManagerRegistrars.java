@@ -72,6 +72,7 @@ public class ManagerRegistrars {
           .addAll(PersistenceRegistrars.aliasRegistrars)
           .addAll(TimeoutEngineRegistrars.aliasRegistrars)
           .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
+          .addAll(OrchestrationRegistrars.aliasRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)

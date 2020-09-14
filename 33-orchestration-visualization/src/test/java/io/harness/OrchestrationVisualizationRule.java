@@ -24,11 +24,12 @@ import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationVisualizationModuleRegistrars;
 import io.harness.serializer.kryo.OrchestrationVisualizationTestKryoRegistrar;
+import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -73,6 +74,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
             .add(OrchestrationVisualizationTestKryoRegistrar.class)
+            .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
 
@@ -80,7 +82,8 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
+            .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
+            .add(TestPersistenceMorphiaRegistrar.class)
             .build();
       }
 

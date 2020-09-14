@@ -22,6 +22,7 @@ import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.kryo.OrchestrationBeansTestKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.serializer.morphia.TestPersistenceMorphiaRegistrar;
+import io.harness.spring.AliasRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -67,6 +68,14 @@ public class OrchestrationBeansRule implements MethodRule, InjectorRuleMixin, Mo
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
             .add(TestPersistenceMorphiaRegistrar.class)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
+        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+            .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
             .build();
       }
     });
