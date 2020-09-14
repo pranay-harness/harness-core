@@ -182,7 +182,10 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   private void validateUserInput(GcpKmsConfig gcpKmsConfig, String accountId) {
-    checkIfValidUser(accountId);
+    // TODO{karan} Refactor this valid user/principal check later
+    if (gcpKmsConfig.getNgMetadata() == null) {
+      checkIfValidUser(accountId);
+    }
 
     Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
     Pattern keyValidator = Pattern.compile("^[0-9a-zA-Z-_]+$");

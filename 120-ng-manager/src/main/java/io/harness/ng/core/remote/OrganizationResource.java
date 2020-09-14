@@ -2,16 +2,14 @@ package io.harness.ng.core.remote;
 
 import static io.harness.ng.NGConstants.ACCOUNT_KEY;
 import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
-import static io.harness.ng.NGConstants.PAGE_KEY;
 import static io.harness.ng.NGConstants.SEARCH_TERM_KEY;
-import static io.harness.ng.NGConstants.SIZE_KEY;
-import static io.harness.ng.NGConstants.SORT_KEY;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.NGPageRequest;
 import io.harness.beans.NGPageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -28,13 +26,12 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -76,12 +73,10 @@ public class OrganizationResource {
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
   public ResponseDTO<NGPageResponse<OrganizationDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @QueryParam(PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(SIZE_KEY) @DefaultValue("100") int size,
-      @QueryParam(SORT_KEY) @DefaultValue("[]") List<String> sort) {
+      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @BeanParam NGPageRequest ngPageRequest) {
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     Page<OrganizationDTO> organizations =
-        organizationService.list(accountIdentifier, getPageRequest(page, size, sort), organizationFilterDTO)
+        organizationService.list(accountIdentifier, getPageRequest(ngPageRequest), organizationFilterDTO)
             .map(OrganizationMapper::writeDto);
     return ResponseDTO.newResponse(getNGPageResponse(organizations));
   }

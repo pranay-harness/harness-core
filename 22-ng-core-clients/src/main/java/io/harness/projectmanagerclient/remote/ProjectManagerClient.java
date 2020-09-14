@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProjectManagerClient {
-  String PROJECTS_API = "/projects";
+  String PROJECTS_API = "projects";
 
   @POST(PROJECTS_API)
   Call<ResponseDTO<ProjectDTO>> createProject(@Query(value = ACCOUNT_KEY) String accountIdentifier,
@@ -38,9 +38,9 @@ public interface ProjectManagerClient {
 
   @GET(PROJECTS_API)
   Call<ResponseDTO<NGPageResponse<ProjectDTO>>> listProject(@Query(value = ACCOUNT_KEY) String accountIdentifier,
-      @Query(value = ORG_KEY) String orgIdentifier, @Query(value = MODULE_TYPE_KEY) ModuleType moduleType,
-      @Query(value = SEARCH_TERM_KEY) String searchTerm, @Query(value = PAGE_KEY) int page,
-      @Query(value = SIZE_KEY) int size, @Query(value = SORT_KEY) List<String> sort);
+      @Query(value = ORG_KEY) String orgIdentifier, @Query(value = "hasModule") boolean hasModule,
+      @Query(value = MODULE_TYPE_KEY) ModuleType moduleType, @Query(value = SEARCH_TERM_KEY) String searchTerm,
+      @Query(value = PAGE_KEY) int page, @Query(value = SIZE_KEY) int size, @Query(value = SORT_KEY) List<String> sort);
 
   @PUT(PROJECTS_API + "/{identifier}")
   Call<ResponseDTO<Optional<ProjectDTO>>> updateProject(@Path(value = IDENTIFIER_KEY) String identifier,

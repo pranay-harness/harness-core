@@ -4,16 +4,14 @@ import static io.harness.ng.NGConstants.ACCOUNT_KEY;
 import static io.harness.ng.NGConstants.IDENTIFIER_KEY;
 import static io.harness.ng.NGConstants.MODULE_TYPE_KEY;
 import static io.harness.ng.NGConstants.ORG_KEY;
-import static io.harness.ng.NGConstants.PAGE_KEY;
 import static io.harness.ng.NGConstants.SEARCH_TERM_KEY;
-import static io.harness.ng.NGConstants.SIZE_KEY;
-import static io.harness.ng.NGConstants.SORT_KEY;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.NGPageRequest;
 import io.harness.beans.NGPageResponse;
 import io.harness.ng.ModuleType;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -31,10 +29,10 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -80,14 +78,17 @@ public class ProjectResource {
   @GET
   @ApiOperation(value = "Get Project list", nickname = "getProjectList")
   public ResponseDTO<NGPageResponse<ProjectDTO>> list(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType,
-      @QueryParam(SEARCH_TERM_KEY) String searchTerm, @QueryParam(PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(SIZE_KEY) @DefaultValue("100") int size, @QueryParam(SORT_KEY) List<String> sort) {
-    ProjectFilterDTO projectFilterDTO =
-        ProjectFilterDTO.builder().searchTerm(searchTerm).orgIdentifier(orgIdentifier).moduleType(moduleType).build();
-    Page<ProjectDTO> projects =
-        projectService.list(accountIdentifier, getPageRequest(page, size, sort), projectFilterDTO)
-            .map(ProjectMapper::writeDTO);
+      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
+      @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType, @QueryParam(SEARCH_TERM_KEY) String searchTerm,
+      @BeanParam NGPageRequest ngPageRequest) {
+    ProjectFilterDTO projectFilterDTO = ProjectFilterDTO.builder()
+                                            .searchTerm(searchTerm)
+                                            .orgIdentifier(orgIdentifier)
+                                            .hasModule(hasModule)
+                                            .moduleType(moduleType)
+                                            .build();
+    Page<ProjectDTO> projects = projectService.list(accountIdentifier, getPageRequest(ngPageRequest), projectFilterDTO)
+                                    .map(ProjectMapper::writeDTO);
     return ResponseDTO.newResponse(getNGPageResponse(projects));
   }
 

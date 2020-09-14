@@ -19,7 +19,7 @@ public class FailureDTO {
   ErrorCode code; // enum representing what kind of an error this is (e.g.- secret management error)
   String message; // Short message, something which UI can display directly
   String correlationId;
-  List<ValidationError> validationErrors; // used for denoting which fields of the request have errors
+  List<ValidationError> errors; // used for denoting which fields of the request have errors
 
   private FailureDTO() {}
 
@@ -30,7 +30,7 @@ public class FailureDTO {
     failureDto.setCode(code);
     failureDto.setMessage(message);
     failureDto.setCorrelationId(CorrelationContext.getCorrelationId());
-    failureDto.setValidationErrors(validationErrors);
+    failureDto.setErrors(validationErrors);
     return failureDto;
   }
 }
