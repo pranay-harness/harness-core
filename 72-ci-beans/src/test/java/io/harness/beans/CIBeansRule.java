@@ -1,10 +1,13 @@
 package io.harness.beans;
 
+import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 
 import io.harness.CIBeansModule;
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
@@ -20,6 +23,7 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class CIBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private final ClosingFactory closingFactory;
@@ -36,7 +40,10 @@ public class CIBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(new AbstractModule() {
       @Override
-      protected void configure() {}
+      protected void configure() {
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {})
+            .toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+      }
     });
     modules.add(CIBeansModule.getInstance());
     return modules;

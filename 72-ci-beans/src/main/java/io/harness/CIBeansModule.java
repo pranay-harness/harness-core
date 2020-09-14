@@ -1,6 +1,5 @@
 package io.harness;
 
-import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
@@ -16,10 +15,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.callback.DelegateCallbackToken;
 import io.harness.yaml.core.ExecutionElement;
-
-import java.util.function.Supplier;
 
 public class CIBeansModule extends AbstractModule {
   private static CIBeansModule instance;
@@ -33,8 +29,6 @@ public class CIBeansModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {})
-        .toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
     bind(new TypeLiteral<GraphOperations<CIStepInfo>>() {}).toInstance(new GraphOperations<>());
     bind(new TypeLiteral<ProtobufSerializer<ExecutionElement>>() {}).toInstance(new ExecutionProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<RunStepInfo>>() {}).toInstance(new RunStepProtobufSerializer());
