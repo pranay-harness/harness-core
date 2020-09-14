@@ -36,9 +36,9 @@ import software.wings.settings.SettingVariableTypes;
 import java.util.List;
 
 public interface SecretManagerClient {
-  String SECRETS_API = "/api/ng/secrets";
-  String SECRET_FILES_API = "/api/ng/secret-files";
-  String SECRET_MANAGERS_API = "/api/ng/secret-managers";
+  String SECRETS_API = "ng/secrets";
+  String SECRET_FILES_API = "ng/secret-files";
+  String SECRET_MANAGERS_API = "ng/secret-managers";
 
   // create secret
   @KryoRequest

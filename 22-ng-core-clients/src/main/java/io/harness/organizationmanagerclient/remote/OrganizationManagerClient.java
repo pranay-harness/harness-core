@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrganizationManagerClient {
-  String ORGANIZATIONS_API = "/organizations";
+  String ORGANIZATIONS_API = "organizations";
 
   @POST(ORGANIZATIONS_API)
   Call<ResponseDTO<OrganizationDTO>> createOrganization(

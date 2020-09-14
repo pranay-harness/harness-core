@@ -82,8 +82,7 @@ public class OrganizationServiceImpl implements OrganizationService {
           ngSecretManagerService.getGlobalSecretManager(organization.getAccountIdentifier());
       globalSecretManager.setIdentifier(HARNESS_SECRET_MANAGER_IDENTIFIER);
       globalSecretManager.setDescription("Organisation: " + organization.getName());
-      globalSecretManager.setName(
-          getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()) + ": " + organization.getName());
+      globalSecretManager.setName(getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()));
       globalSecretManager.setProjectIdentifier(null);
       globalSecretManager.setOrgIdentifier(organization.getIdentifier());
       globalSecretManager.setDefault(false);

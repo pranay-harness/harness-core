@@ -12,5 +12,6 @@ import lombok.experimental.FieldDefaults;
 public class ProjectFilterDTO {
   String searchTerm;
   String orgIdentifier;
+  Boolean hasModule;
   ModuleType moduleType;
 }

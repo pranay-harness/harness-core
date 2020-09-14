@@ -67,7 +67,7 @@ mongo:
 #  indexManagerMode: AUTO
 
 managerClientConfig:
-  baseUrl: http://localhost:3457/
+  baseUrl: http://localhost:3457/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 

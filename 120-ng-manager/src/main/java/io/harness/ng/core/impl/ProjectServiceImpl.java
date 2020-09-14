@@ -87,8 +87,7 @@ public class ProjectServiceImpl implements ProjectService {
           ngSecretManagerService.getGlobalSecretManager(project.getAccountIdentifier());
       globalSecretManager.setIdentifier(HARNESS_SECRET_MANAGER_IDENTIFIER);
       globalSecretManager.setDescription("Project: " + project.getName());
-      globalSecretManager.setName(
-          getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()) + ": " + project.getName());
+      globalSecretManager.setName(getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()));
       globalSecretManager.setProjectIdentifier(project.getIdentifier());
       globalSecretManager.setOrgIdentifier(project.getOrgIdentifier());
       globalSecretManager.setDefault(false);
@@ -139,7 +138,11 @@ public class ProjectServiceImpl implements ProjectService {
       criteria.and(ProjectKeys.orgIdentifier).is(projectFilterDTO.getOrgIdentifier());
     }
     if (projectFilterDTO.getModuleType() != null) {
-      criteria.and(ProjectKeys.modules).in(projectFilterDTO.getModuleType());
+      if (Boolean.TRUE.equals(projectFilterDTO.getHasModule())) {
+        criteria.and(ProjectKeys.modules).in(projectFilterDTO.getModuleType());
+      } else {
+        criteria.and(ProjectKeys.modules).nin(projectFilterDTO.getModuleType());
+      }
     }
     if (isNotBlank(projectFilterDTO.getSearchTerm())) {
       criteria.orOperator(Criteria.where(ProjectKeys.name).regex(projectFilterDTO.getSearchTerm(), "i"),
