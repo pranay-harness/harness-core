@@ -571,11 +571,16 @@ public class UserGroupPermissionsController {
   private QLEnvPermissions createEnvFilterOutput(EnvFilter envPermissions) {
     if (isEmpty(envPermissions.getIds())) {
       EnumSet<QLEnvFilterType> filterTypes = EnumSet.noneOf(QLEnvFilterType.class);
-      if (envPermissions.getFilterTypes().contains(PROD)) {
+      if (isEmpty(envPermissions.getFilterTypes())) {
         filterTypes.add(QLEnvFilterType.PRODUCTION_ENVIRONMENTS);
-      }
-      if (envPermissions.getFilterTypes().contains(NON_PROD)) {
         filterTypes.add(QLEnvFilterType.NON_PRODUCTION_ENVIRONMENTS);
+      } else {
+        if (envPermissions.getFilterTypes().contains(PROD)) {
+          filterTypes.add(QLEnvFilterType.PRODUCTION_ENVIRONMENTS);
+        }
+        if (envPermissions.getFilterTypes().contains(NON_PROD)) {
+          filterTypes.add(QLEnvFilterType.NON_PRODUCTION_ENVIRONMENTS);
+        }
       }
       return QLEnvPermissions.builder().envIds(envPermissions.getIds()).filterTypes(filterTypes).build();
     }
@@ -585,11 +590,16 @@ public class UserGroupPermissionsController {
   private QLDeploymentPermissions createDeploymentFilterOutput(EnvFilter envPermissions) {
     if (isEmpty(envPermissions.getIds())) {
       EnumSet<QLDeploymentFilterType> filterTypes = EnumSet.noneOf(QLDeploymentFilterType.class);
-      if (envPermissions.getFilterTypes().contains(PROD)) {
+      if (isEmpty(envPermissions.getFilterTypes())) {
         filterTypes.add(QLDeploymentFilterType.PRODUCTION_ENVIRONMENTS);
-      }
-      if (envPermissions.getFilterTypes().contains(NON_PROD)) {
         filterTypes.add(QLDeploymentFilterType.NON_PRODUCTION_ENVIRONMENTS);
+      } else {
+        if (envPermissions.getFilterTypes().contains(PROD)) {
+          filterTypes.add(QLDeploymentFilterType.PRODUCTION_ENVIRONMENTS);
+        }
+        if (envPermissions.getFilterTypes().contains(NON_PROD)) {
+          filterTypes.add(QLDeploymentFilterType.NON_PRODUCTION_ENVIRONMENTS);
+        }
       }
       return QLDeploymentPermissions.builder().envIds(envPermissions.getIds()).filterTypes(filterTypes).build();
     }
@@ -599,11 +609,17 @@ public class UserGroupPermissionsController {
   private QLPipelinePermissions createPipelineFilterOutput(EnvFilter envPermissions) {
     if (isEmpty(envPermissions.getIds())) {
       EnumSet<QLPipelineFilterType> filterTypes = EnumSet.noneOf(QLPipelineFilterType.class);
-      if (envPermissions.getFilterTypes().contains(PROD)) {
+      if (isEmpty(envPermissions.getFilterTypes())) {
         filterTypes.add(QLPipelineFilterType.PRODUCTION_PIPELINES);
-      }
-      if (envPermissions.getFilterTypes().contains(NON_PROD)) {
         filterTypes.add(QLPipelineFilterType.NON_PRODUCTION_PIPELINES);
+
+      } else {
+        if (envPermissions.getFilterTypes().contains(PROD)) {
+          filterTypes.add(QLPipelineFilterType.PRODUCTION_PIPELINES);
+        }
+        if (envPermissions.getFilterTypes().contains(NON_PROD)) {
+          filterTypes.add(QLPipelineFilterType.NON_PRODUCTION_PIPELINES);
+        }
       }
       return QLPipelinePermissions.builder().envIds(envPermissions.getIds()).filterTypes(filterTypes).build();
     }
