@@ -41,9 +41,9 @@ import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
@@ -65,7 +65,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Inject private HeatMapService heatMapService;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private HostRecordService hostRecordService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
 
@@ -112,15 +112,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     String taskId = generateUuid();
     VerificationTask verificationTask = verificationTaskService.get(input.getVerificationTaskId());
     TimeRange preDeploymentTimeRange =
-        deploymentVerificationTaskService.getPreDeploymentTimeRange(verificationTask.getDeploymentVerificationTaskId());
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(verificationTask.getDeploymentVerificationTaskId());
+        verificationJobInstanceService.getPreDeploymentTimeRange(verificationTask.getVerificationJobInstanceId());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationTask.getVerificationJobInstanceId());
     LogCanaryAnalysisLearningEngineTask task =
         LogCanaryAnalysisLearningEngineTask.builder()
             .controlDataUrl(createDeploymentDataUrl(input.getVerificationTaskId(),
                 preDeploymentTimeRange.getStartTime(), preDeploymentTimeRange.getEndTime()))
             .testDataUrl(createDeploymentDataUrl(
-                input.getVerificationTaskId(), deploymentVerificationTask.getStartTime(), input.getEndTime()))
+                input.getVerificationTaskId(), verificationJobInstance.getStartTime(), input.getEndTime()))
             .controlHosts(getControlHosts(input.getVerificationTaskId(), preDeploymentTimeRange))
             .build();
     task.setAnalysisType(LearningEngineTaskType.CANARY_LOG_ANALYSIS);
@@ -227,8 +227,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                 true) // TODO: analysis is the final state now. We need to change it once feedback is implemented
             .log("Log analysis")
             .build();
-    deploymentVerificationTaskService.logProgress(
-        verificationTaskService.getDeploymentVerificationTaskId(inputs.getVerificationTaskId()), progressLog);
+    verificationJobInstanceService.logProgress(
+        verificationTaskService.getVerificationJobInstanceId(inputs.getVerificationTaskId()), progressLog);
   }
 
   private String createDeploymentAnalysisSaveUrl(String taskId) {

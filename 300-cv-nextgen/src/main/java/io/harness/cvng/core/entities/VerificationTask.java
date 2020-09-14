@@ -24,7 +24,7 @@ public class VerificationTask implements UuidAware, CreatedAtAware, AccountAcces
   @FdIndex private String accountId;
   private long createdAt;
   private String cvConfigId;
-  private String deploymentVerificationTaskId;
+  private String verificationJobInstanceId;
 
   // TODO: figure out a way to cleanup old/deleted mappings.
 }

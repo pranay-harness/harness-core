@@ -25,8 +25,8 @@ import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Inject private Injector injector;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
-  @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobService verificationJobService;
 
@@ -242,10 +242,10 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       stateMachine.setCurrentState(firstState);
     } else {
       VerificationTask verificationTask = verificationTaskService.get(inputForAnalysis.getVerificationTaskId());
-      DeploymentVerificationTask deploymentVerificationTask =
-          deploymentVerificationTaskService.getVerificationTask(verificationTask.getDeploymentVerificationTaskId());
+      VerificationJobInstance verificationJobInstance =
+          verificationJobInstanceService.getVerificationJobInstance(verificationTask.getVerificationJobInstanceId());
       CVConfig cvConfigForDeployment = cvConfigService.get(verificationTask.getCvConfigId());
-      Preconditions.checkNotNull(deploymentVerificationTask, "deploymentVerificationTask can not be null");
+      Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
       Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
 
       switch (cvConfigForDeployment.getVerificationType()) {
@@ -256,7 +256,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
           stateMachine.setCurrentState(canaryTimeSeriesAnalysisState);
           break;
         case LOG:
-          AnalysisState analysisState = createDeploymentLogState(inputForAnalysis, deploymentVerificationTask);
+          AnalysisState analysisState = createDeploymentLogState(inputForAnalysis, verificationJobInstance);
           analysisState.setStatus(AnalysisStatus.CREATED);
           analysisState.setInputs(inputForAnalysis);
           stateMachine.setCurrentState(analysisState);
@@ -269,9 +269,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   }
 
   private AnalysisState createDeploymentLogState(
-      AnalysisInput analysisInput, DeploymentVerificationTask deploymentVerificationTask) {
+      AnalysisInput analysisInput, VerificationJobInstance verificationJobInstance) {
     TimeRange preDeploymentTimeRange =
-        deploymentVerificationTaskService.getPreDeploymentTimeRange(deploymentVerificationTask.getUuid());
+        verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
     if (preDeploymentTimeRange.equals(analysisInput.getTimeRange())) {
       // first task so needs to enqueue clustering task
       PreDeploymentLogClusterState preDeploymentLogClusterState = PreDeploymentLogClusterState.builder().build();

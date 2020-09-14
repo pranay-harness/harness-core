@@ -45,11 +45,11 @@ import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
-import io.harness.cvng.statemachine.jobs.DeploymentVerificationTaskOrchestrationJob;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.DeploymentVerificationTaskKeys;
+import io.harness.cvng.statemachine.jobs.DeploymentVerificationJobInstanceOrchestrationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
+import io.harness.cvng.verificationjob.jobs.CreateDeploymentDataCollectionTaskHandler;
 import io.harness.cvng.verificationjob.jobs.DeletePerpetualTasksHandler;
-import io.harness.cvng.verificationjob.jobs.DeploymentVerificationTaskHandler;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -239,14 +239,13 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerVerificationTaskOrchestrationIterator(Injector injector) {
     ScheduledThreadPoolExecutor workflowVerificationExecutor =
         new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
-    Handler<DeploymentVerificationTask> handler =
-        injector.getInstance(DeploymentVerificationTaskOrchestrationJob.class);
+    Handler<VerificationJobInstance> handler =
+        injector.getInstance(DeploymentVerificationJobInstanceOrchestrationJob.class);
     PersistenceIterator analysisOrchestrationIterator =
-        MongoPersistenceIterator
-            .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
+        MongoPersistenceIterator.<VerificationJobInstance, MorphiaFilterExpander<VerificationJobInstance>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(DeploymentVerificationTask.class)
-            .fieldName(DeploymentVerificationTaskKeys.analysisOrchestrationIteration)
+            .clazz(VerificationJobInstance.class)
+            .fieldName(VerificationJobInstanceKeys.analysisOrchestrationIteration)
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofSeconds(30))
             .executorService(workflowVerificationExecutor)
@@ -254,7 +253,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query
-                -> query.field(DeploymentVerificationTaskKeys.executionStatus)
+                -> query.field(VerificationJobInstanceKeys.executionStatus)
                        .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
             .redistribute(true)
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
@@ -295,11 +294,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     DeletePerpetualTasksHandler handler = injector.getInstance(DeletePerpetualTasksHandler.class);
     // TODO: setup alert if this goes above acceptable threshold.
     PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator
-            .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
+        MongoPersistenceIterator.<VerificationJobInstance, MorphiaFilterExpander<VerificationJobInstance>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(DeploymentVerificationTask.class)
-            .fieldName(DeploymentVerificationTaskKeys.deletePerpetualTaskIteration)
+            .clazz(VerificationJobInstance.class)
+            .fieldName(VerificationJobInstanceKeys.deletePerpetualTaskIteration)
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(10))
             .executorService(verificationTaskExecutor)
@@ -307,9 +305,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query
-                -> query.field(DeploymentVerificationTaskKeys.executionStatus)
+                -> query.field(VerificationJobInstanceKeys.executionStatus)
                        .in(ExecutionStatus.finalStatuses())
-                       .criteria(DeploymentVerificationTaskKeys.perpetualTaskIds)
+                       .criteria(VerificationJobInstanceKeys.perpetualTaskIds)
                        .exists())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
@@ -321,21 +319,21 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerVerificationTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("verification-task-data-collection-iterator").build());
-    DeploymentVerificationTaskHandler handler = injector.getInstance(DeploymentVerificationTaskHandler.class);
+    CreateDeploymentDataCollectionTaskHandler handler =
+        injector.getInstance(CreateDeploymentDataCollectionTaskHandler.class);
     // TODO: setup alert if this goes above acceptable threshold.
     PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator
-            .<DeploymentVerificationTask, MorphiaFilterExpander<DeploymentVerificationTask>>builder()
+        MongoPersistenceIterator.<VerificationJobInstance, MorphiaFilterExpander<VerificationJobInstance>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(DeploymentVerificationTask.class)
-            .fieldName(DeploymentVerificationTaskKeys.dataCollectionTaskIteration)
+            .clazz(VerificationJobInstance.class)
+            .fieldName(VerificationJobInstanceKeys.dataCollectionTaskIteration)
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(verificationTaskExecutor)
             .semaphore(new Semaphore(5))
             .handler(handler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(DeploymentVerificationTaskKeys.perpetualTaskIds).doesNotExist())
+            .filterExpander(query -> query.criteria(VerificationJobInstanceKeys.perpetualTaskIds).doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

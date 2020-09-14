@@ -26,15 +26,15 @@ public class DeploymentTimeSeriesAnalysisResource {
 
   @Produces({"application/json", "application/v1+json"})
   @GET
-  @Path("/{deploymentVerificationTaskId}")
+  @Path("/{verificationJobInstanceId}")
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<TransactionSummaryPageDTO> getMetrics(
-      @PathParam("deploymentVerificationTaskId") String deploymentVerificationTaskId,
+      @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
       @QueryParam("hostName") String hostName, @QueryParam("pageNumber") int pageNumber) {
     return new RestResponse(deploymentTimeSeriesAnalysisService.getMetrics(
-        accountId, deploymentVerificationTaskId, anomalousMetricsOnly, hostName, pageNumber));
+        accountId, verificationJobInstanceId, anomalousMetricsOnly, hostName, pageNumber));
   }
 }

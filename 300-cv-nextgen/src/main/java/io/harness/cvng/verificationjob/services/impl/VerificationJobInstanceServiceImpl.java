@@ -23,12 +23,12 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
-import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.DeploymentVerificationTaskKeys;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
+import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class DeploymentVerificationTaskServiceImpl implements DeploymentVerificationTaskService {
+public class VerificationJobInstanceServiceImpl implements VerificationJobInstanceService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationManagerService verificationManagerService;
@@ -51,42 +51,42 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
   @Inject private MetricPackService metricPackService;
   @Inject private VerificationTaskService verificationTaskService;
   @Override
-  public String create(String accountId, DeploymentVerificationTaskDTO deploymentVerificationTaskDTO) {
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(
-        accountId, deploymentVerificationTaskDTO.getVerificationJobIdentifier());
+  public String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO) {
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, verificationJobInstanceDTO.getVerificationJobIdentifier());
     Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'",
-        deploymentVerificationTaskDTO.getVerificationJobIdentifier());
-    DeploymentVerificationTask deploymentVerificationTask =
-        DeploymentVerificationTask.builder()
+        verificationJobInstanceDTO.getVerificationJobIdentifier());
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
             .verificationJobId(verificationJob.getUuid())
-            .verificationJobIdentifier(deploymentVerificationTaskDTO.getVerificationJobIdentifier())
+            .verificationJobIdentifier(verificationJobInstanceDTO.getVerificationJobIdentifier())
             .accountId(accountId)
             .executionStatus(ExecutionStatus.QUEUED)
-            .deploymentStartTime(deploymentVerificationTaskDTO.getDeploymentStartTime())
-            .startTime(deploymentVerificationTaskDTO.getVerificationStartTime())
-            .dataCollectionDelay(deploymentVerificationTaskDTO.getDataCollectionDelay())
-            .newVersionHosts(deploymentVerificationTaskDTO.getNewVersionHosts())
-            .oldVersionHosts(deploymentVerificationTaskDTO.getOldVersionHosts())
-            .newHostsTrafficSplitPercentage(deploymentVerificationTaskDTO.getNewHostsTrafficSplitPercentage())
+            .deploymentStartTime(verificationJobInstanceDTO.getDeploymentStartTime())
+            .startTime(verificationJobInstanceDTO.getVerificationStartTime())
+            .dataCollectionDelay(verificationJobInstanceDTO.getDataCollectionDelay())
+            .newVersionHosts(verificationJobInstanceDTO.getNewVersionHosts())
+            .oldVersionHosts(verificationJobInstanceDTO.getOldVersionHosts())
+            .newHostsTrafficSplitPercentage(verificationJobInstanceDTO.getNewHostsTrafficSplitPercentage())
             .duration(verificationJob.getDuration())
             .build();
-    hPersistence.save(deploymentVerificationTask);
-    return deploymentVerificationTask.getUuid();
+    hPersistence.save(verificationJobInstance);
+    return verificationJobInstance.getUuid();
   }
 
   @Override
-  public DeploymentVerificationTaskDTO get(String verificationTaskId) {
-    return getVerificationTask(verificationTaskId).toDTO();
+  public VerificationJobInstanceDTO get(String verificationJobInstanceId) {
+    return getVerificationJobInstance(verificationJobInstanceId).toDTO();
   }
 
   @Override
-  public DeploymentVerificationTask getVerificationTask(String verificationTaskId) {
-    return hPersistence.get(DeploymentVerificationTask.class, verificationTaskId);
+  public VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId) {
+    return hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
   }
 
   @Override
-  public void createDataCollectionTasks(DeploymentVerificationTask deploymentVerificationTask) {
-    VerificationJob verificationJob = verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
+  public void createDataCollectionTasks(VerificationJobInstance verificationJobInstance) {
+    VerificationJob verificationJob = verificationJobService.get(verificationJobInstance.getVerificationJobId());
     Preconditions.checkNotNull(verificationJob);
     List<CVConfig> cvConfigs = cvConfigService.find(verificationJob.getAccountId(), verificationJob.getDataSources());
     Set<String> connectorIds = cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
@@ -95,50 +95,50 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
     List<String> perpetualTaskIds = new ArrayList<>();
 
     connectorIds.forEach(connectorId -> {
-      String dataCollectionWorkerId = getDataCollectionWorkerId(deploymentVerificationTask, connectorId);
+      String dataCollectionWorkerId = getDataCollectionWorkerId(verificationJobInstance, connectorId);
       perpetualTaskIds.add(verificationManagerService.createDeploymentVerificationPerpetualTask(
-          deploymentVerificationTask.getAccountId(), connectorId, verificationJob.getOrgIdentifier(),
+          verificationJobInstance.getAccountId(), connectorId, verificationJob.getOrgIdentifier(),
           verificationJob.getProjectIdentifier(), dataCollectionWorkerId));
     });
-    setPerpetualTaskIds(deploymentVerificationTask, perpetualTaskIds);
-    createDataCollectionTasks(deploymentVerificationTask, verificationJob, cvConfigs);
-    markRunning(deploymentVerificationTask.getUuid());
+    setPerpetualTaskIds(verificationJobInstance, perpetualTaskIds);
+    createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);
+    markRunning(verificationJobInstance.getUuid());
   }
 
   @Override
-  public void logProgress(String deploymentVerificationId, ProgressLog progressLog) {
-    DeploymentVerificationTask deploymentVerificationTask = getVerificationTask(deploymentVerificationId);
+  public void logProgress(String verificationJobInstanceId, ProgressLog progressLog) {
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
 
-    UpdateOperations<DeploymentVerificationTask> deploymentVerificationTaskUpdateOperations =
-        hPersistence.createUpdateOperations(DeploymentVerificationTask.class)
-            .addToSet(DeploymentVerificationTaskKeys.progressLogs, progressLog);
-    if ((progressLog.getEndTime().equals(deploymentVerificationTask.getEndTime()) && progressLog.isFinalState())
+    UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class)
+            .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
+    if ((progressLog.getEndTime().equals(verificationJobInstance.getEndTime()) && progressLog.isFinalState())
         || AnalysisStatus.getFailedStatuses().contains(progressLog.getAnalysisStatus())) {
-      deploymentVerificationTaskUpdateOperations.set(
-          DeploymentVerificationTaskKeys.executionStatus, mapToExecutionStatus(progressLog.getAnalysisStatus()));
+      verificationJobInstanceUpdateOperations.set(
+          VerificationJobInstanceKeys.executionStatus, mapToExecutionStatus(progressLog.getAnalysisStatus()));
     }
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
-    hPersistence.getDatastore(DeploymentVerificationTask.class)
-        .update(hPersistence.createQuery(DeploymentVerificationTask.class)
-                    .filter(DeploymentVerificationTaskKeys.uuid, deploymentVerificationId),
-            deploymentVerificationTaskUpdateOperations, options);
+    hPersistence.getDatastore(VerificationJobInstance.class)
+        .update(hPersistence.createQuery(VerificationJobInstance.class)
+                    .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
+            verificationJobInstanceUpdateOperations, options);
   }
 
   @Override
-  public void deletePerpetualTasks(DeploymentVerificationTask entity) {
+  public void deletePerpetualTasks(VerificationJobInstance entity) {
     verificationManagerService.deletePerpetualTasks(entity.getAccountId(), entity.getPerpetualTaskIds());
-    UpdateOperations<DeploymentVerificationTask> updateOperations =
-        hPersistence.createUpdateOperations(DeploymentVerificationTask.class);
-    updateOperations.unset(DeploymentVerificationTaskKeys.perpetualTaskIds);
+    UpdateOperations<VerificationJobInstance> updateOperations =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class);
+    updateOperations.unset(VerificationJobInstanceKeys.perpetualTaskIds);
     hPersistence.update(entity, updateOperations);
   }
 
   @Override
-  public TimeRange getPreDeploymentTimeRange(String deploymentVerificationTaskId) {
-    DeploymentVerificationTask deploymentVerificationTask = getVerificationTask(deploymentVerificationTaskId);
-    VerificationJob verificationJob = verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
-    return verificationJob.getPreDeploymentTimeRange(deploymentVerificationTask.getDeploymentStartTime());
+  public TimeRange getPreDeploymentTimeRange(String verificationJobInstanceId) {
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
+    VerificationJob verificationJob = verificationJobService.get(verificationJobInstance.getVerificationJobId());
+    return verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
   }
 
   private ExecutionStatus mapToExecutionStatus(AnalysisStatus analysisStatus) {
@@ -156,22 +156,22 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
     }
   }
 
-  private String getDataCollectionWorkerId(DeploymentVerificationTask deploymentVerificationTask, String connectorId) {
-    return UUID.nameUUIDFromBytes((deploymentVerificationTask.getUuid() + ":" + connectorId).getBytes(Charsets.UTF_8))
+  private String getDataCollectionWorkerId(VerificationJobInstance verificationJobInstance, String connectorId) {
+    return UUID.nameUUIDFromBytes((verificationJobInstance.getUuid() + ":" + connectorId).getBytes(Charsets.UTF_8))
         .toString();
   }
 
-  private void createDataCollectionTasks(DeploymentVerificationTask deploymentVerificationTask,
-      VerificationJob verificationJob, List<CVConfig> cvConfigs) {
+  private void createDataCollectionTasks(
+      VerificationJobInstance verificationJobInstance, VerificationJob verificationJob, List<CVConfig> cvConfigs) {
     TimeRange preDeploymentTimeRange =
-        verificationJob.getPreDeploymentTimeRange(deploymentVerificationTask.getDeploymentStartTime());
+        verificationJob.getPreDeploymentTimeRange(verificationJobInstance.getDeploymentStartTime());
     List<TimeRange> timeRanges =
-        verificationJob.getDataCollectionTimeRanges(roundDownTo1MinBoundary(deploymentVerificationTask.getStartTime()));
+        verificationJob.getDataCollectionTimeRanges(roundDownTo1MinBoundary(verificationJobInstance.getStartTime()));
     cvConfigs.forEach(cvConfig -> {
       populateMetricPack(cvConfig);
       List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
       String verificationTaskId = verificationTaskService.create(
-          cvConfig.getAccountId(), cvConfig.getUuid(), deploymentVerificationTask.getUuid());
+          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid());
       DataCollectionInfoMapper dataCollectionInfoMapper =
           injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())));
 
@@ -181,11 +181,11 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
       dataCollectionTasks.add(DataCollectionTask.builder()
                                   .verificationTaskId(verificationTaskId)
                                   .dataCollectionWorkerId(getDataCollectionWorkerId(
-                                      deploymentVerificationTask, cvConfig.getConnectorIdentifier()))
+                                      verificationJobInstance, cvConfig.getConnectorIdentifier()))
                                   .startTime(preDeploymentTimeRange.getStartTime())
                                   .endTime(preDeploymentTimeRange.getEndTime())
                                   .validAfter(preDeploymentTimeRange.getEndTime()
-                                                  .plus(deploymentVerificationTask.getDataCollectionDelay())
+                                                  .plus(verificationJobInstance.getDataCollectionDelay())
                                                   .toEpochMilli())
                                   .accountId(verificationJob.getAccountId())
                                   .status(QUEUED)
@@ -203,11 +203,11 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
             DataCollectionTask.builder()
                 .verificationTaskId(verificationTaskId)
                 .dataCollectionWorkerId(
-                    getDataCollectionWorkerId(deploymentVerificationTask, cvConfig.getConnectorIdentifier()))
+                    getDataCollectionWorkerId(verificationJobInstance, cvConfig.getConnectorIdentifier()))
                 .startTime(timeRange.getStartTime())
                 .endTime(timeRange.getEndTime())
                 .validAfter(
-                    timeRange.getEndTime().plus(deploymentVerificationTask.getDataCollectionDelay()).toEpochMilli())
+                    timeRange.getEndTime().plus(verificationJobInstance.getDataCollectionDelay()).toEpochMilli())
                 .accountId(verificationJob.getAccountId())
                 .status(QUEUED)
                 .dataCollectionInfo(dataCollectionInfo)
@@ -225,22 +225,21 @@ public class DeploymentVerificationTaskServiceImpl implements DeploymentVerifica
     }
   }
 
-  private void setPerpetualTaskIds(
-      DeploymentVerificationTask deploymentVerificationTask, List<String> perpetualTaskIds) {
-    UpdateOperations<DeploymentVerificationTask> verificationTaskUpdateOperations =
-        hPersistence.createUpdateOperations(DeploymentVerificationTask.class);
-    verificationTaskUpdateOperations.set(DeploymentVerificationTaskKeys.perpetualTaskIds, perpetualTaskIds);
-    hPersistence.update(deploymentVerificationTask,
-        hPersistence.createUpdateOperations(DeploymentVerificationTask.class)
-            .set(DeploymentVerificationTaskKeys.perpetualTaskIds, perpetualTaskIds));
+  private void setPerpetualTaskIds(VerificationJobInstance verificationJobInstance, List<String> perpetualTaskIds) {
+    UpdateOperations<VerificationJobInstance> verificationTaskUpdateOperations =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class);
+    verificationTaskUpdateOperations.set(VerificationJobInstanceKeys.perpetualTaskIds, perpetualTaskIds);
+    hPersistence.update(verificationJobInstance,
+        hPersistence.createUpdateOperations(VerificationJobInstance.class)
+            .set(VerificationJobInstanceKeys.perpetualTaskIds, perpetualTaskIds));
   }
 
   private void markRunning(String verificationTaskId) {
-    UpdateOperations<DeploymentVerificationTask> updateOperations =
-        hPersistence.createUpdateOperations(DeploymentVerificationTask.class)
-            .set(DeploymentVerificationTaskKeys.executionStatus, ExecutionStatus.RUNNING);
-    Query<DeploymentVerificationTask> query = hPersistence.createQuery(DeploymentVerificationTask.class)
-                                                  .filter(DeploymentVerificationTaskKeys.uuid, verificationTaskId);
+    UpdateOperations<VerificationJobInstance> updateOperations =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class)
+            .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.RUNNING);
+    Query<VerificationJobInstance> query = hPersistence.createQuery(VerificationJobInstance.class)
+                                               .filter(VerificationJobInstanceKeys.uuid, verificationTaskId);
     hPersistence.update(query, updateOperations);
   }
 }

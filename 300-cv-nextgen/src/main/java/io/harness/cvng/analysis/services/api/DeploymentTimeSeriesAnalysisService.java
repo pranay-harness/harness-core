@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface DeploymentTimeSeriesAnalysisService {
   void save(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis);
-  TransactionSummaryPageDTO getMetrics(String accountId, String deploymentVerificationTaskId,
-      boolean anomalousMetricsOnly, String hostName, int pageNumber);
+  TransactionSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId, boolean anomalousMetricsOnly,
+      String hostName, int pageNumber);
   List<DeploymentTimeSeriesAnalysis> getAnalysisResults(String verificationTaskId);
 }

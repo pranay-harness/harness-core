@@ -24,13 +24,13 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
-  public String create(String accountId, String cvConfigId, String verificationTaskId) {
+  public String create(String accountId, String cvConfigId, String verificationJobInstanceId) {
     Preconditions.checkNotNull(cvConfigId, "cvConfigId can not be null");
-    Preconditions.checkNotNull(verificationTaskId, "verificationTaskId can not be null");
+    Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId can not be null");
     VerificationTask verificationTask = VerificationTask.builder()
                                             .accountId(accountId)
                                             .cvConfigId(cvConfigId)
-                                            .deploymentVerificationTaskId(verificationTaskId)
+                                            .verificationJobInstanceId(verificationJobInstanceId)
                                             .build();
     hPersistence.save(verificationTask);
     return verificationTask.getUuid();
@@ -42,8 +42,8 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
-  public String getDeploymentVerificationTaskId(String verificationTaskId) {
-    return get(verificationTaskId).getDeploymentVerificationTaskId();
+  public String getVerificationJobInstanceId(String verificationTaskId) {
+    return get(verificationTaskId).getVerificationJobInstanceId();
   }
 
   @Override
@@ -54,10 +54,10 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
-  public Set<String> getVerificationTaskIds(String accountId, String deploymentVerificationTaskId) {
+  public Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceId) {
     return hPersistence.createQuery(VerificationTask.class)
         .filter(VerificationTaskKeys.accountId, accountId)
-        .filter(VerificationTaskKeys.deploymentVerificationTaskId, deploymentVerificationTaskId)
+        .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
         .asList()
         .stream()
         .map(VerificationTask::getUuid)
@@ -69,7 +69,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
     VerificationTask result = hPersistence.createQuery(VerificationTask.class)
                                   .filter(VerificationTaskKeys.accountId, accountId)
                                   .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
-                                  .field(VerificationTaskKeys.deploymentVerificationTaskId)
+                                  .field(VerificationTaskKeys.verificationJobInstanceId)
                                   .doesNotExist()
                                   .get();
     Preconditions.checkNotNull(
@@ -80,6 +80,6 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   @Override
   public boolean isServiceGuardId(String verificationTaskId) {
     VerificationTask verificationTask = get(verificationTaskId);
-    return verificationTask.getCvConfigId() != null && verificationTask.getDeploymentVerificationTaskId() == null;
+    return verificationTask.getCvConfigId() != null && verificationTask.getVerificationJobInstanceId() == null;
   }
 }

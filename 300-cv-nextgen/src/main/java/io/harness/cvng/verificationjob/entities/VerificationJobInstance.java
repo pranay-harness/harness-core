@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
-import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
+import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -32,12 +32,12 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-@FieldNameConstants(innerTypeName = "DeploymentVerificationTaskKeys")
+@FieldNameConstants(innerTypeName = "VerificationJobInstanceKeys")
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "deploymentVerificationTasks", noClassnameStored = true)
+@Entity(value = "verificationJobInstances", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class DeploymentVerificationTask
+public class VerificationJobInstance
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   @Id private String uuid;
   @NotNull @FdIndex private String accountId;
@@ -61,15 +61,15 @@ public class DeploymentVerificationTask
   @Builder.Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(31).toInstant());
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
-    if (DeploymentVerificationTaskKeys.dataCollectionTaskIteration.equals(fieldName)) {
+    if (VerificationJobInstanceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
-    if (DeploymentVerificationTaskKeys.analysisOrchestrationIteration.equals(fieldName)) {
+    if (VerificationJobInstanceKeys.analysisOrchestrationIteration.equals(fieldName)) {
       this.analysisOrchestrationIteration = nextIteration;
       return;
     }
-    if (DeploymentVerificationTaskKeys.deletePerpetualTaskIteration.equals(fieldName)) {
+    if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
       this.deletePerpetualTaskIteration = nextIteration;
       return;
     }
@@ -78,20 +78,20 @@ public class DeploymentVerificationTask
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    if (DeploymentVerificationTaskKeys.dataCollectionTaskIteration.equals(fieldName)) {
+    if (VerificationJobInstanceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
-    if (DeploymentVerificationTaskKeys.analysisOrchestrationIteration.equals(fieldName)) {
+    if (VerificationJobInstanceKeys.analysisOrchestrationIteration.equals(fieldName)) {
       return this.analysisOrchestrationIteration;
     }
-    if (DeploymentVerificationTaskKeys.deletePerpetualTaskIteration.equals(fieldName)) {
+    if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
       return this.deletePerpetualTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
-  public DeploymentVerificationTaskDTO toDTO() {
-    return DeploymentVerificationTaskDTO.builder()
+  public VerificationJobInstanceDTO toDTO() {
+    return VerificationJobInstanceDTO.builder()
         .verificationJobIdentifier(verificationJobIdentifier)
         .deploymentStartTimeMs(deploymentStartTime.toEpochMilli())
         .newHostsTrafficSplitPercentage(newHostsTrafficSplitPercentage)

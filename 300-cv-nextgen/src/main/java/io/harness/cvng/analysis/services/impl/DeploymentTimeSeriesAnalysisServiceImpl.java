@@ -28,10 +28,10 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Override
-  public TransactionSummaryPageDTO getMetrics(String accountId, String deploymentVerificationTaskId,
+  public TransactionSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
       boolean anomalousMetricsOnly, String hostName, int pageNumber) {
     Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, deploymentVerificationTaskId);
+        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
 
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
         getLatestDeploymentTimeSeriesAnalysis(verificationTaskIds);

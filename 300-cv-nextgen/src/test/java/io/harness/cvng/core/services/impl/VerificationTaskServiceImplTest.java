@@ -49,18 +49,18 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreate_verificationTask() {
     String cvConfigId = generateUuid();
-    String deploymentVerificationTaskId = generateUuid();
-    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, deploymentVerificationTaskId);
+    String verificationJobInstanceId = generateUuid();
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     assertThat(verificationTaskService.getCVConfigId(verificationTaskId)).isEqualTo(cvConfigId);
-    assertThat(verificationTaskService.getDeploymentVerificationTaskId(verificationTaskId))
-        .isEqualTo(deploymentVerificationTaskId);
+    assertThat(verificationTaskService.getVerificationJobInstanceId(verificationTaskId))
+        .isEqualTo(verificationJobInstanceId);
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreate_verificationTaskIsNull() {
-    assertThatThrownBy(() -> verificationTaskService.getDeploymentVerificationTaskId(generateUuid()))
+    assertThatThrownBy(() -> verificationTaskService.getVerificationJobInstanceId(generateUuid()))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("Invalid verificationTaskId. Verification mapping does not exist.");
   }
@@ -69,17 +69,17 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetVerificationTaskIds() {
-    String deploymentVerificationTaskId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
 
     Set<String> cvConfigIds = new HashSet<>();
     Set<String> verificationTaskIds = new HashSet<>();
     for (int i = 0; i < 10; i++) {
       String cvConfigId = generateUuid();
-      String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, deploymentVerificationTaskId);
+      String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
       cvConfigIds.add(cvConfigId);
       verificationTaskIds.add(verificationTaskId);
     }
-    assertThat(verificationTaskService.getVerificationTaskIds(accountId, deploymentVerificationTaskId))
+    assertThat(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
         .isEqualTo(verificationTaskIds);
   }
 
@@ -128,8 +128,8 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testIsServiceGuardId_ifExistDeployment() {
     String cvConfigId = generateUuid();
-    String deploymentVerificationId = generateUuid();
-    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, deploymentVerificationId);
+    String verificationJobInstanceId = generateUuid();
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     assertThat(verificationTaskService.isServiceGuardId(verificationTaskId)).isFalse();
   }
 }

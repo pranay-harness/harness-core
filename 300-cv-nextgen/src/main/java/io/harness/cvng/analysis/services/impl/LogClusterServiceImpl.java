@@ -27,9 +27,9 @@ import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class LogClusterServiceImpl implements LogClusterService {
   @Inject private HPersistence hPersistence;
   @Inject private LogRecordService logRecordService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
 
   @Override
@@ -114,10 +114,10 @@ public class LogClusterServiceImpl implements LogClusterService {
     if (isEmpty(clusterLogs)) {
       return Optional.empty();
     }
-    DeploymentVerificationTask deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(
-        verificationTaskService.getDeploymentVerificationTaskId(input.getVerificationTaskId()));
+    VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
+        verificationTaskService.getVerificationJobInstanceId(input.getVerificationTaskId()));
     TimeRange preDeploymentTimeRange =
-        deploymentVerificationTaskService.getPreDeploymentTimeRange(deploymentVerificationTask.getUuid());
+        verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
     Instant startTime = preDeploymentTimeRange.getStartTime();
     Instant endTime = input.getEndTime();
     String testDataUrl =
@@ -253,7 +253,7 @@ public class LogClusterServiceImpl implements LogClusterService {
                                   .isFinalState(false)
                                   .log("Log clustering for " + clusterLevel)
                                   .build();
-    deploymentVerificationTaskService.logProgress(
-        verificationTaskService.getDeploymentVerificationTaskId(analysisInput.getVerificationTaskId()), progressLog);
+    verificationJobInstanceService.logProgress(
+        verificationTaskService.getVerificationJobInstanceId(analysisInput.getVerificationTaskId()), progressLog);
   }
 }
