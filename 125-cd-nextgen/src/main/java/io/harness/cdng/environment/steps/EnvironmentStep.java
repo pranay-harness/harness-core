@@ -3,8 +3,8 @@ package io.harness.cdng.environment.steps;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.common.AmbianceHelper;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.facilitator.PassThroughData;

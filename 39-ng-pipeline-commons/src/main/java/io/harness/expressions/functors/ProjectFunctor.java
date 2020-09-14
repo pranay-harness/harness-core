@@ -1,7 +1,7 @@
-package io.harness.cdng.expressions;
+package io.harness.expressions.functors;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.common.AmbianceHelper;
+import io.harness.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.LateBindingValue;
 import io.harness.ng.core.services.ProjectService;

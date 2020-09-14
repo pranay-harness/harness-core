@@ -7,7 +7,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
@@ -15,6 +14,7 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.common.AmbianceHelper;
 import io.harness.data.Outcome;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.FailureType;
