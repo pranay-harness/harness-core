@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>78-batch-processing</artifactId>
+    <artifactId>280-batch-processing</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -115,13 +115,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
