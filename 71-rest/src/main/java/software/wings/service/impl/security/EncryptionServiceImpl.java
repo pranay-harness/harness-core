@@ -60,7 +60,7 @@ public class EncryptionServiceImpl implements EncryptionService {
   @Override
   public EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
     logger.debug("Decrypting a secret");
-    if (isEmpty(encryptedDataDetails)) {
+    if (object.isDecrypted() || isEmpty(encryptedDataDetails)) {
       return object;
     }
 
