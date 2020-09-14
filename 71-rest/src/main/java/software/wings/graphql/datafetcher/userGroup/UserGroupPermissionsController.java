@@ -548,14 +548,20 @@ public class UserGroupPermissionsController {
   private QLWorkflowPermissions createWorkflowFilterOutput(WorkflowFilter workflowPermissions) {
     if (isEmpty(workflowPermissions.getIds())) {
       EnumSet<QLWorkflowFilterType> filterTypes = EnumSet.noneOf(QLWorkflowFilterType.class);
-      if (workflowPermissions.getFilterTypes().contains(PROD)) {
+      if (isEmpty(workflowPermissions.getFilterTypes())) {
         filterTypes.add(QLWorkflowFilterType.PRODUCTION_WORKFLOWS);
-      }
-      if (workflowPermissions.getFilterTypes().contains(NON_PROD)) {
         filterTypes.add(QLWorkflowFilterType.NON_PRODUCTION_WORKFLOWS);
-      }
-      if (workflowPermissions.getFilterTypes().contains(TEMPLATES)) {
         filterTypes.add(QLWorkflowFilterType.WORKFLOW_TEMPLATES);
+      } else {
+        if (workflowPermissions.getFilterTypes().contains(PROD)) {
+          filterTypes.add(QLWorkflowFilterType.PRODUCTION_WORKFLOWS);
+        }
+        if (workflowPermissions.getFilterTypes().contains(NON_PROD)) {
+          filterTypes.add(QLWorkflowFilterType.NON_PRODUCTION_WORKFLOWS);
+        }
+        if (workflowPermissions.getFilterTypes().contains(TEMPLATES)) {
+          filterTypes.add(QLWorkflowFilterType.WORKFLOW_TEMPLATES);
+        }
       }
       return QLWorkflowPermissions.builder().filterTypes(filterTypes).build();
     }

@@ -97,6 +97,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
   private String linkedSsoDisplayName;
   private String ssoGroupId;
   private String ssoGroupName;
+
   private boolean importedByScim;
 
   @FdIndex private String accountId;

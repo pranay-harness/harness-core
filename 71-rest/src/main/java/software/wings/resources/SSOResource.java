@@ -164,7 +164,6 @@ public class SSOResource {
       throw new InvalidRequestException(
           String.format("No LDAP SSO Provider settings found for account: %s", accountId));
     }
-
     // Validate ldap settings against provided username password.
     LdapResponse response = ssoService.validateLdapAuthentication(
         settings, authenticationRequest.getEmail(), authenticationRequest.getPassword());
