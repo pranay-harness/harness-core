@@ -19,13 +19,22 @@ import io.harness.engine.expressions.functors.NodeExecutionQualifiedFunctor;
 import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.expression.EngineJexlContext;
+import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
+import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
+import io.harness.expression.field.OrchestrationField;
+import io.harness.expression.field.OrchestrationFieldProcessor;
+import io.harness.expression.field.OrchestrationFieldType;
+import io.harness.expression.field.ProcessorResult;
+import io.harness.registries.field.OrchestrationFieldRegistry;
 import lombok.Builder;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -54,6 +63,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
+  @Inject private OrchestrationFieldRegistry orchestrationFieldRegistry;
 
   protected final Ambiance ambiance;
   private final Set<NodeExecutionEntityType> entityTypes;
@@ -166,5 +176,50 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       listBuilder.add("output");
     }
     return listBuilder.add("child").add("ancestor").add("qualified").addAll(super.fetchPrefixes()).build();
+  }
+
+  @Override
+  public Object resolve(Object o) {
+    return ExpressionEvaluatorUtils.updateExpressions(
+        o, new AmbianceResolveFunctorImpl(this, orchestrationFieldRegistry, ambiance));
+  }
+
+  @Override
+  protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
+    Object value = super.evaluateInternal(expression, ctx);
+    if (value instanceof OrchestrationField) {
+      OrchestrationField orchestrationField = (OrchestrationField) value;
+      return orchestrationField.getValue();
+    }
+    return value;
+  }
+
+  public static class AmbianceResolveFunctorImpl extends ResolveFunctorImpl {
+    private final OrchestrationFieldRegistry orchestrationFieldRegistry;
+    private final Ambiance ambiance;
+
+    public AmbianceResolveFunctorImpl(AmbianceExpressionEvaluator expressionEvaluator,
+        OrchestrationFieldRegistry orchestrationFieldRegistry, Ambiance ambiance) {
+      super(expressionEvaluator);
+      this.orchestrationFieldRegistry = orchestrationFieldRegistry;
+      this.ambiance = ambiance;
+    }
+
+    @Override
+    public ResolveObjectResponse processObject(Object o) {
+      if (!(o instanceof OrchestrationField)) {
+        return new ResolveObjectResponse(false, false);
+      }
+
+      OrchestrationField orchestrationField = (OrchestrationField) o;
+      OrchestrationFieldType type = orchestrationField.getType();
+      OrchestrationFieldProcessor fieldProcessor = orchestrationFieldRegistry.obtain(type);
+      ProcessorResult processorResult = fieldProcessor.process(ambiance, orchestrationField);
+      if (processorResult.getStatus() == ProcessorResult.Status.ERROR) {
+        throw new CriticalExpressionEvaluationException(processorResult.getMessage());
+      }
+
+      return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
+    }
   }
 }

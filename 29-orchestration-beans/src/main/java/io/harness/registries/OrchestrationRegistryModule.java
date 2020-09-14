@@ -12,15 +12,19 @@ import io.harness.adviser.AdviserType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
+import io.harness.expression.field.OrchestrationFieldProcessor;
+import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.references.RefType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
+import io.harness.registries.field.OrchestrationFieldRegistry;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.resolver.ResolverRegistry;
@@ -120,5 +124,22 @@ public class OrchestrationRegistryModule extends AbstractModule {
       handlerRegistry.register(eventHandlerPair.getLeft(), eventHandlerPair.getRight());
     });
     return handlerRegistry;
+  }
+
+  @Provides
+  @Singleton
+  OrchestrationFieldRegistry providesOrchestrationFieldRegistry(
+      Injector injector, Map<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMap) {
+    Set classes = new HashSet<>();
+    orchestrationFieldRegistrarMap.values().forEach(
+        orchestrationFieldRegistrar -> { orchestrationFieldRegistrar.register(classes); });
+    OrchestrationFieldRegistry orchestrationFieldRegistry = new OrchestrationFieldRegistry();
+    injector.injectMembers(orchestrationFieldRegistry);
+    classes.forEach(pair -> {
+      Pair<OrchestrationFieldType, Class<? extends OrchestrationFieldProcessor>> orchestrationFieldPair =
+          (Pair<OrchestrationFieldType, Class<? extends OrchestrationFieldProcessor>>) pair;
+      orchestrationFieldRegistry.register(orchestrationFieldPair.getLeft(), orchestrationFieldPair.getRight());
+    });
+    return orchestrationFieldRegistry;
   }
 }

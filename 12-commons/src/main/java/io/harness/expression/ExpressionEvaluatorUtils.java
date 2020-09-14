@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.exception.CriticalExpressionEvaluationException;
-import io.harness.utils.ParameterField;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlBuilder;
@@ -159,12 +158,6 @@ public class ExpressionEvaluatorUtils {
     }
   }
 
-  public interface ResolveFunctor {
-    String renderExpression(String expression);
-    Object evaluateExpression(String expression);
-    boolean hasVariables(String expression);
-  }
-
   /**
    * Update expression values inside object recursively. The new value is obtained using the functor. If the field has a
    * NotExpression annotation, it is skipped. String fields are rendered and ParameterFields are evaluated if they have
@@ -174,12 +167,12 @@ public class ExpressionEvaluatorUtils {
    * @param functor       the functor which provides the evaluated and rendered values
    * @return the new object with updated objects (this can be done in-place or a new object can be returned)
    */
-  public Object updateExpressions(Object o, ResolveFunctor functor) {
+  public Object updateExpressions(Object o, ExpressionResolveFunctor functor) {
     Object updatedObj = updateExpressionsInternal(o, functor, new HashSet<>());
     return updatedObj == null ? o : updatedObj;
   }
 
-  private Object updateExpressionsInternal(Object obj, ResolveFunctor functor, Set<Integer> cache) {
+  private Object updateExpressionsInternal(Object obj, ExpressionResolveFunctor functor, Set<Integer> cache) {
     if (obj == null) {
       return null;
     }
@@ -220,7 +213,7 @@ public class ExpressionEvaluatorUtils {
     return obj;
   }
 
-  private boolean updateExpressionFields(Object obj, ResolveFunctor functor, Set<Integer> cache) {
+  private boolean updateExpressionFields(Object obj, ExpressionResolveFunctor functor, Set<Integer> cache) {
     if (obj == null) {
       return false;
     }
@@ -232,34 +225,10 @@ public class ExpressionEvaluatorUtils {
       cache.add(hashCode);
     }
 
-    if (obj instanceof ParameterField) {
-      ParameterField<?> parameterField = (ParameterField<?>) obj;
-      Object value;
-      if (parameterField.isExpression()) {
-        value = functor.evaluateExpression(parameterField.getExpressionValue());
-        if (value instanceof String && functor.hasVariables((String) value)) {
-          String newExpression = (String) value;
-          if (newExpression.equals(parameterField.getExpressionValue())) {
-            return false;
-          }
-
-          parameterField.updateWithExpression(newExpression);
-          return true;
-        }
-      } else {
-        value = parameterField.getValue();
-      }
-
-      if (value != null) {
-        Object newValue = updateExpressionsInternal(value, functor, cache);
-        if (newValue == null) {
-          newValue = value;
-        }
-        parameterField.updateWithValue(newValue);
-      } else {
-        parameterField.updateWithValue(null);
-      }
-      return true;
+    // Check if resolveFunctor has any custom handling for this field type.
+    ResolveObjectResponse resp = functor.processObject(obj);
+    if (resp.isProcessed()) {
+      return resp.isChanged();
     }
 
     Class<?> c = obj.getClass();
@@ -288,8 +257,8 @@ public class ExpressionEvaluatorUtils {
     return updated;
   }
 
-  private boolean updateExpressionFieldsInternal(Object o, Field f, ResolveFunctor functor, Set<Integer> cache)
-      throws IllegalAccessException {
+  private boolean updateExpressionFieldsInternal(
+      Object o, Field f, ExpressionResolveFunctor functor, Set<Integer> cache) throws IllegalAccessException {
     if (f == null) {
       return false;
     }

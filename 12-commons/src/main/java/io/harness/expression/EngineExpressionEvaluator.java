@@ -9,7 +9,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.utils.ParameterField;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlBuilder;
@@ -247,18 +246,13 @@ public class EngineExpressionEvaluator {
   /**
    * Evaluate an expression with the given context. This variant is non-recursive.
    */
-  private Object evaluateInternal(String expression, EngineJexlContext ctx) {
+  protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
     if (expression == null) {
       return null;
     }
 
     JexlExpression jexlExpression = engine.createExpression(expression);
-    Object value = jexlExpression.evaluate(ctx);
-    if (value instanceof ParameterField) {
-      ParameterField<?> parameterField = (ParameterField<?>) value;
-      return parameterField.isExpression() ? parameterField.getExpressionValue() : parameterField.getValue();
-    }
-    return value;
+    return jexlExpression.evaluate(ctx);
   }
 
   private EngineJexlContext prepareContext() {
@@ -336,7 +330,7 @@ public class EngineExpressionEvaluator {
     return expr == null ? null : "${" + expr + "}";
   }
 
-  public static class ResolveFunctorImpl implements ExpressionEvaluatorUtils.ResolveFunctor {
+  public static class ResolveFunctorImpl implements ExpressionResolveFunctor {
     private final EngineExpressionEvaluator expressionEvaluator;
 
     public ResolveFunctorImpl(EngineExpressionEvaluator expressionEvaluator) {

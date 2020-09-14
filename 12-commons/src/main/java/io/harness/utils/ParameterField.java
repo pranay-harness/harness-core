@@ -2,11 +2,13 @@ package io.harness.utils;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.harness.expression.ExpressionEvaluatorUtils;
+import io.harness.expression.ExpressionResolveFunctor;
+import io.harness.expression.NotExpression;
 import lombok.Getter;
 
 @Getter
 public class ParameterField<T> {
-  private String expressionValue;
+  @NotExpression private String expressionValue;
   private boolean isExpression;
   private T value;
   // This field is set when runtime input with validation is given.
@@ -87,5 +89,38 @@ public class ParameterField<T> {
       return responseField;
     }
     return value;
+  }
+
+  public boolean process(ExpressionResolveFunctor functor) {
+    // TODO(gpahal): Move this to processor
+    Object newValue;
+    boolean updated = true;
+    if (isExpression) {
+      newValue = functor.evaluateExpression(expressionValue);
+      if (newValue instanceof String && functor.hasVariables((String) newValue)) {
+        String newExpression = (String) newValue;
+        if (newExpression.equals(expressionValue)) {
+          return false;
+        }
+
+        updateWithExpression(newExpression);
+        return true;
+      }
+
+      updateWithValue(newValue);
+    } else {
+      updated = false;
+      newValue = value;
+    }
+
+    if (newValue != null) {
+      Object finalValue = ExpressionEvaluatorUtils.updateExpressions(newValue, functor);
+      if (finalValue != null) {
+        updateWithValue(finalValue);
+        updated = true;
+      }
+    }
+
+    return updated;
   }
 }
