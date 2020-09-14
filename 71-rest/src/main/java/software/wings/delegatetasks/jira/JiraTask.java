@@ -285,6 +285,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           fieldsUpdated = true;
         }
 
+        if (EmptyPredicate.isNotEmpty(parameters.getPriority())) {
+          update.field(Field.PRIORITY, parameters.getPriority());
+          fieldsUpdated = true;
+        }
+
         if (EmptyPredicate.isNotEmpty(parameters.getDescription())) {
           update.field(Field.DESCRIPTION, parameters.getDescription());
           fieldsUpdated = true;
