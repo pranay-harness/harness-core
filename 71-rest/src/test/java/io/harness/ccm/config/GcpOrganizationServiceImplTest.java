@@ -14,6 +14,7 @@ import com.google.api.services.iam.v1.model.ServiceAccount;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpServiceAccountService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -73,6 +74,15 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
     gcpOrganizationService.upsert(gcpOrganization1);
     verify(gcpOrganizationDao).upsert(gcpOrganizationCaptor.capture());
     assertThat(gcpOrganizationCaptor.getValue().getServiceAccountEmail()).isEqualTo(serviceAccountEmail);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldThrowIfUpsertBeyondLimit() {
+    when(gcpOrganizationDao.count(eq(accountId))).thenReturn(1L);
+    gcpOrganizationService.upsert(gcpOrganization1);
+    gcpOrganizationService.upsert(gcpOrganization1);
   }
 
   @Test
