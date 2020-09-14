@@ -56,7 +56,6 @@
         <module>72-event-server</module>
         <module>73-ci-execution</module>
         <module>74-ci-manager</module>
-        <module>75-model-test</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
         <module>125-cd-nextgen</module>
@@ -66,6 +65,7 @@
         <module>200-functional-test</module>
         <module>210-command-library-server</module>
         <module>220-graphql-test</module>
+        <module>230-model-test</module>
         <module>250-watcher</module>
         <module>260-delegate</module>
         <module>270-verification</module>
