@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
@@ -59,6 +60,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
@@ -85,6 +87,7 @@ import org.mongodb.morphia.query.Sort;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
@@ -96,6 +99,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -179,6 +183,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
+  public static final String TRIAL_LIMIT_EXCEEDED =
+      "Please contact sales to enable CE on more than 2 Kubernetes clusters.";
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceClassLocator serviceLocator;
@@ -220,8 +226,13 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
   @Inject @Getter private Subject<SettingAttributeObserver> artifactStreamSubject = new Subject<>();
+  @Inject private SettingAttributeDao settingAttributeDao;
 
   private static final String OPEN_SSH = "OPENSSH";
+
+  public List<SettingAttribute> list(String accountId, SettingCategory category) {
+    return settingAttributeDao.list(accountId, category);
+  }
 
   @Override
   public PageResponse<SettingAttribute> list(
@@ -680,6 +691,10 @@ public class SettingsServiceImpl implements SettingsService {
   @ValidationGroups(Create.class)
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingServiceHelper.updateReferencedSecrets(settingAttribute);
+    if (settingAttribute.getValue() instanceof KubernetesClusterConfig
+        && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
+      checkCeTrialLimit(settingAttribute);
+    }
     settingValidationService.validate(settingAttribute);
     validateAndUpdateCEDetails(settingAttribute, true);
     // e.g. User is saving GitConnector and setWebhookToken is needed.
@@ -706,6 +721,24 @@ public class SettingsServiceImpl implements SettingsService {
     syncCEInfra(settingAttribute);
     artifactStreamSubject.fireInform(SettingAttributeObxxxxxxxx:onSaved, newSettingAttribute);
     return newSettingAttribute;
+  }
+
+  @VisibleForTesting
+  void checkCeTrialLimit(SettingAttribute settingAttribute) {
+    String accountId = settingAttribute.getAccountId();
+    Account account = accountService.get(accountId);
+    CeLicenseInfo ceLicenseInfo =
+        Optional.ofNullable(account.getCeLicenseInfo()).orElse(CeLicenseInfo.builder().build());
+    if (ceLicenseInfo.getLicenseType() == LIMITED_TRIAL) {
+      List<SettingAttribute> settingAttributes = list(accountId, CLOUD_PROVIDER);
+      long count =
+          settingAttributes.stream()
+              .filter(s -> s.getValue() instanceof KubernetesClusterConfig && ccmSettingService.isCloudCostEnabled(s))
+              .count();
+      if (count >= 2) {
+        throw new InvalidRequestException(TRIAL_LIMIT_EXCEEDED);
+      }
+    }
   }
 
   @VisibleForTesting
@@ -902,6 +935,10 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute prevSettingAttribute = existingSetting;
     if (settingAttribute.getValue() instanceof CEAwsConfig) {
       validateAndUpdateCEDetails(settingAttribute, false);
+    }
+    if (settingAttribute.getValue() instanceof KubernetesClusterConfig
+        && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
+      checkCeTrialLimit(settingAttribute);
     }
 
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);

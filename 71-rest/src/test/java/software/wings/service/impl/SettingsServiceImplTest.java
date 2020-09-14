@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -21,21 +23,26 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingService;
+import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.GitConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -47,6 +54,7 @@ import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.features.CeCloudAccountFeature;
 import software.wings.features.GitOpsFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.EnvironmentService;
@@ -54,6 +62,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,6 +76,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   private static final String S3_BUCKET_PREFIX = "prefix";
   private static final String ROLE_ARN = "arn:aws:iam::830767422336:role/harnessCERole";
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
+  private Account account;
+  private SettingAttribute settingAttribute;
 
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private EnvironmentService environmentService;
@@ -75,11 +87,49 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private UsageRestrictionsService usageRestrictionsService;
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private AWSCEConfigValidationService awsCeConfigService;
+  @Mock private AccountService accountService;
   @Mock private CCMSettingService ccmSettingService;
+  @Mock private SettingAttributeDao settingAttributeDao;
   @Mock @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
   @Mock @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
   @Spy @InjectMocks private SettingsServiceImpl settingsService;
+
+  @Before
+  public void setUp() {
+    Account account = Account.Builder.anAccount()
+                          .withCeLicenseInfo(CeLicenseInfo.builder().licenseType(LIMITED_TRIAL).build())
+                          .build();
+    when(accountService.get(eq(ACCOUNT_ID))).thenReturn(account);
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                           .withAccountId(ACCOUNT_ID)
+                           .withValue(kubernetesClusterConfig)
+                           .build();
+    when(ccmSettingService.isCloudCostEnabled(any(SettingAttribute.class))).thenReturn(true);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldReturnIfNotExceedingCeTrialLimit() {
+    when(settingAttributeDao.list(eq(ACCOUNT_ID), any(SettingCategory.class))).thenReturn(new ArrayList<>());
+    settingsService.checkCeTrialLimit(settingAttribute);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldThrowIfExceedingCeTrialLimit() {
+    CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).build();
+    SettingAttribute settingAttribute1 =
+        aSettingAttribute().withValue(KubernetesClusterConfig.builder().ccmConfig(ccmConfig).build()).build();
+    SettingAttribute settingAttribute2 =
+        aSettingAttribute().withValue(KubernetesClusterConfig.builder().ccmConfig(ccmConfig).build()).build();
+    List<SettingAttribute> settingAttributes = Arrays.asList(settingAttribute1, settingAttribute2);
+    when(settingAttributeDao.list(eq(ACCOUNT_ID), any(SettingCategory.class))).thenReturn(settingAttributes);
+    settingsService.checkCeTrialLimit(settingAttribute);
+  }
 
   @Test
   @Owner(developers = OwnerRule.ROHIT)
