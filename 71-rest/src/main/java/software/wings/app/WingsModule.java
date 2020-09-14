@@ -725,6 +725,11 @@ public class WingsModule extends AbstractModule implements ServersModule {
   }
 
   @Provides
+  public DelegateGrpcConfig delegateGrpcConnfig() {
+    return new DelegateGrpcConfig(configuration.getDelegateGrpcServicePort());
+  }
+
+  @Provides
   public BugsnagErrorReporterConfiguration bugsnagErrorReporterConfiguration() {
     return new BugsnagErrorReporterConfiguration(
         configuration.isTrialRegistrationAllowed(), configuration.getBugsnagApiKey());

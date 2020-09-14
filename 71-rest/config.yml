@@ -509,3 +509,5 @@ organizationManagerClient:
 mockServerConfig:
   baseUrl: http://localhost
   port: 8989
+
+delegateGrpcServicePort: 8080

@@ -169,6 +169,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.app.DelegateGrpcConfig;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -343,6 +344,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
   @Inject private EmailNotificationService emailNotificationService;
+  @Inject private DelegateGrpcConfig delegateGrpcConfig;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -882,6 +884,7 @@ public class DelegateServiceImpl implements DelegateService {
     private String delegateProfile;
     private String delegateType;
     private boolean ceEnabled;
+    private boolean ciEnabled;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -980,7 +983,9 @@ public class DelegateServiceImpl implements DelegateService {
               .put("delegateStorageUrl", delegateStorageUrl)
               .put("delegateCheckLocation", delegateCheckLocation)
               .put("deployMode", mainConfiguration.getDeployMode().name())
+              .put("ciEnabled", String.valueOf(inquiry.isCiEnabled()))
               .put("kubectlVersion", mainConfiguration.getKubectlVersion())
+              .put("delegateGrpcServicePort", String.valueOf(delegateGrpcConfig.getPort()))
               .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
       if (isNotBlank(inquiry.getDelegateName())) {
         params.put("delegateName", inquiry.getDelegateName());
@@ -1265,7 +1270,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadKubernetes(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException {
+      String delegateProfile, Boolean isCiEnabled) throws IOException {
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
@@ -1289,6 +1294,7 @@ public class DelegateServiceImpl implements DelegateService {
                                              .delegateName(delegateName)
                                              .delegateProfile(delegateProfile == null ? "" : delegateProfile)
                                              .delegateType(KUBERNETES)
+                                             .ciEnabled(isCiEnabled)
                                              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);

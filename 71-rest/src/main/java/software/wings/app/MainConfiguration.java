@@ -157,6 +157,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(value = "jobsFrequencyConfig") private JobsFrequencyConfig jobsFrequencyConfig;
   @JsonProperty("organizationManagerClient") private OrganizationManagerClientConfig organizationManagerClientConfig;
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
+  @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
 
   private int applicationPort;
   private boolean sslEnabled;

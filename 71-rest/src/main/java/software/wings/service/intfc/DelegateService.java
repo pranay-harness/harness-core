@@ -74,7 +74,7 @@ public interface DelegateService extends OwnedByAccount {
       String delegateProfile) throws IOException;
 
   File downloadKubernetes(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException;
+      String delegateProfile, Boolean isCiEnabled) throws IOException;
 
   File downloadCeKubernetesYaml(String managerHost, String verificationUrl, String accountId, String delegateName,
       String delegateProfile) throws IOException;

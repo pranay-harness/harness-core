@@ -62,6 +62,10 @@ spec:
       - image: ${delegateDockerImage}
         imagePullPolicy: Always
         name: harness-delegate-instance
+        <#if ciEnabled == "true">
+        ports:
+          - containerPort: ${delegateGrpcServicePort}
+        </#if>
         resources:
           limits:
             cpu: "1"
@@ -147,3 +151,20 @@ spec:
         - name: ENABlE_CE
           value: "${enableCE}"
       restartPolicy: Always
+
+<#if ciEnabled == "true">
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: delegate-service
+spec:
+  type: ClusterIP
+  selector:
+    harness.io/app: harness-delegate
+    harness.io/account: ${kubernetesAccountLabel}
+    harness.io/name: ${delegateName}
+  ports:
+    - port: ${delegateGrpcServicePort}
+</#if>

@@ -147,3 +147,4 @@ spec:
         - name: ENABlE_CE
           value: "false"
       restartPolicy: Always
+
