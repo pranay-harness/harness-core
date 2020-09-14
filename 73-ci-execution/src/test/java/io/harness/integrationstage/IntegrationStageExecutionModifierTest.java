@@ -15,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StepElement;
@@ -30,6 +31,8 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   public static final String POD_NAME = "testPod";
   private StageExecutionModifier stageExecutionModifier;
+  private ExecutionPlanCreationContextImpl executionPlanCreationContext =
+      ExecutionPlanCreationContextImpl.builder().build();
 
   @Before
   public void setUp() {
@@ -41,7 +44,8 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldModifyExecutionPlan() {
     IntegrationStage stage = ciExecutionPlanTestHelper.getIntegrationStage();
-    ExecutionElement modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage);
+    ExecutionElement modifiedExecution =
+        stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage, executionPlanCreationContext);
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
 
@@ -66,7 +70,9 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
                                  .build();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
+        .isThrownBy(()
+                        -> stageExecutionModifier.modifyExecutionPlan(
+                            stage.getExecution(), stage, executionPlanCreationContext));
   }
 
   @Test
@@ -84,7 +90,9 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
             .build();
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
+        .isThrownBy(()
+                        -> stageExecutionModifier.modifyExecutionPlan(
+                            stage.getExecution(), stage, executionPlanCreationContext));
   }
 
   @Test

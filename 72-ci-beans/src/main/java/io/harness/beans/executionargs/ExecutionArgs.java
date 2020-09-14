@@ -1,3 +1,3 @@
 package io.harness.beans.executionargs;
 
-public interface ExecutionArgs {}
+public interface ExecutionArgs { String EXEC_ARGS = "executionArgs"; }

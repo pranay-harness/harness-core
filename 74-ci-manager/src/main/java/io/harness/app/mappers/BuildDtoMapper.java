@@ -42,18 +42,20 @@ public class BuildDtoMapper {
             .build();
 
     ExecutionSource executionSource = ciBuild.getExecutionSource();
-    ciBuildResponseDTO.setTriggerType(executionSource.getType().toString().toLowerCase());
-    if (executionSource.getType() == ExecutionSource.Type.Webhook) {
-      WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
-      ciBuildResponseDTO.setAuthor(convertGitAuthor(webhookExecutionSource.getUser()));
-      if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
-        PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
-        ciBuildResponseDTO.setPullRequest(convertPR(prWebhookEvent));
-        ciBuildResponseDTO.setEvent(PR);
-      } else if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
-        BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
-        ciBuildResponseDTO.setBranch(convertBranch(branchWebhookEvent));
-        ciBuildResponseDTO.setEvent(BRANCH);
+    if (executionSource != null) {
+      ciBuildResponseDTO.setTriggerType(executionSource.getType().toString().toLowerCase());
+      if (executionSource.getType() == ExecutionSource.Type.Webhook) {
+        WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
+        ciBuildResponseDTO.setAuthor(convertGitAuthor(webhookExecutionSource.getUser()));
+        if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
+          PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
+          ciBuildResponseDTO.setPullRequest(convertPR(prWebhookEvent));
+          ciBuildResponseDTO.setEvent(PR);
+        } else if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
+          BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
+          ciBuildResponseDTO.setBranch(convertBranch(branchWebhookEvent));
+          ciBuildResponseDTO.setEvent(BRANCH);
+        }
       }
     }
     return ciBuildResponseDTO;

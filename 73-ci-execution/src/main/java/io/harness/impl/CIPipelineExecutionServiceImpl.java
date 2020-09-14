@@ -1,5 +1,7 @@
 package io.harness.impl;
 
+import static io.harness.beans.executionargs.ExecutionArgs.EXEC_ARGS;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -25,7 +27,11 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
   @Inject private CIBuildServiceImpl ciBuildService;
 
   public PlanExecution executePipeline(CIPipeline ciPipeline, CIExecutionArgs ciExecutionArgs, Long buildNumber) {
-    Plan plan = executionPlanCreatorService.createPlanForPipeline(ciPipeline, ciPipeline.getAccountId());
+    Map<String, Object> contextAttributes = new HashMap<>();
+    contextAttributes.put(EXEC_ARGS, ciExecutionArgs);
+
+    Plan plan =
+        executionPlanCreatorService.createPlanForPipeline(ciPipeline, ciPipeline.getAccountId(), contextAttributes);
     // TODO set user before execution which will be available once we build authentication
     // User user = UserThreadLocal.get()
     Map<String, String> setupAbstractions = new HashMap<>();

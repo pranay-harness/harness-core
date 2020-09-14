@@ -1,5 +1,6 @@
 package io.harness.executionplan.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELINE_PLAN_CREATOR;
 
 import com.google.inject.Inject;
@@ -15,6 +16,8 @@ import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.plan.Plan;
 import io.harness.yaml.core.intfc.Pipeline;
 
+import java.util.Map;
+
 public class ExecutionPlanCreatorServiceImpl implements ExecutionPlanCreatorService {
   private final ExecutionPlanCreatorRegistry executionPlanCreatorRegistry;
 
@@ -24,9 +27,15 @@ public class ExecutionPlanCreatorServiceImpl implements ExecutionPlanCreatorServ
   }
 
   @Override
-  public Plan createPlanForPipeline(Pipeline pipeline, String accountId) {
+  public Plan createPlanForPipeline(Pipeline pipeline, String accountId, Map<String, Object> contextAttributes) {
     final ExecutionPlanCreationContext executionPlanCreationContext =
         ExecutionPlanCreationContextImpl.builder().accountId(accountId).build();
+
+    if (isNotEmpty(contextAttributes)) {
+      for (Map.Entry<String, Object> entry : contextAttributes.entrySet()) {
+        executionPlanCreationContext.addAttribute(entry.getKey(), entry.getValue());
+      }
+    }
 
     final PlanCreatorSearchContext<Pipeline> searchContext =
         PlanCreatorSearchContext.<Pipeline>builder()
