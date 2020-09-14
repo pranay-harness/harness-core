@@ -361,6 +361,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         renderedTags.add(context.renderExpression(tag));
       }
       renderedTags = trimStrings(renderedTags);
+      context.resetPreparedCache();
     }
 
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
