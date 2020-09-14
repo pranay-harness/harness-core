@@ -1,15 +1,18 @@
 package io.harness.executionplan.rule;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 
 import io.harness.CIBeansModule;
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -33,6 +36,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Initiates mongo connection and register classes for running UTs
@@ -87,6 +91,13 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     });
     modules.add(new CIExecutionPersistenceTestModule());
     modules.add(new CIExecutionServiceModule());
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {})
+            .toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+      }
+    });
     modules.add(new CIBeansModule());
     modules.add(new ExecutionPlanModule());
     return modules;
