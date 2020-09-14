@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static java.util.Collections.emptyList;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -7,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +23,6 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
-import java.util.Collections;
 import java.util.List;
 
 @JsonTypeName("PCF")
@@ -68,8 +67,12 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(endpointUrl));
+    /*
+     * We do not need HTTP capability for end point Url.
+     * The PcfConnectivityCapability already checks for decryption and
+     * connectivity.
+     */
+    return emptyList();
   }
 
   @Data
