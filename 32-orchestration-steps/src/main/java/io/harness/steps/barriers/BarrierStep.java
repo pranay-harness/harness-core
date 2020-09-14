@@ -12,7 +12,7 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.mongo.OrchestrationMongoTemplate;
+import io.harness.orchestration.persistence.OrchestrationMongoTemplate;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;

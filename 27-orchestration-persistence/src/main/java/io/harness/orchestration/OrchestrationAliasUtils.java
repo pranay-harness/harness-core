@@ -1,17 +1,16 @@
-package io.harness;
+package io.harness.orchestration;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Provider;
 
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.reflection.CodeUtils;
 import io.harness.spring.AliasRegistrar;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -20,15 +19,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@ExcludeRedesign
 @UtilityClass
 @Slf4j
 public class OrchestrationAliasUtils {
-  public static void validateModule() {
+  public static void validateModule(Provider<Set<Class<? extends AliasRegistrar>>> providerClasses) {
     Map<String, Class<?>> allElements = new HashMap<>();
-    Reflections reflections = new Reflections("io.harness.serializer.spring");
     try {
-      for (Class clazz : reflections.getSubTypesOf(AliasRegistrar.class)) {
+      for (Class<? extends AliasRegistrar> clazz : providerClasses.get()) {
         Constructor<?> constructor = null;
         constructor = clazz.getConstructor();
         final AliasRegistrar aliasRegistrar = (AliasRegistrar) constructor.newInstance();

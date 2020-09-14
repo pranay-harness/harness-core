@@ -1,4 +1,4 @@
-package io.harness.mongo;
+package io.harness.orchestration.persistence;
 
 import io.harness.springdata.HMongoTemplate;
 import org.springframework.data.mongodb.MongoDbFactory;

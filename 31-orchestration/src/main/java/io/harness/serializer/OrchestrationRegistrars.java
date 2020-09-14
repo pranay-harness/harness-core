@@ -29,5 +29,10 @@ public class OrchestrationRegistrars {
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().add(OrchestrationAliasRegistrar.class).build();
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
+          .addAll(PersistenceRegistrars.aliasRegistrars)
+          .addAll(TimeoutEngineRegistrars.aliasRegistrars)
+          .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
+          .add(OrchestrationAliasRegistrar.class)
+          .build();
 }
