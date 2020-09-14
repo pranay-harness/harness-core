@@ -65,7 +65,7 @@ public class UserGroupController {
   @Inject private UserGroupPermissionsController userGroupPermissionsController;
   @Inject private CCMSettingService ccmSettingService;
 
-  public UserGroup validateAndGetUserGroup(String accountId, String userGroupId) {
+  UserGroup validateAndGetUserGroup(String accountId, String userGroupId) {
     UserGroup userGroup = userGroupService.get(accountId, userGroupId);
     if (userGroup == null) {
       throw new InvalidRequestException(String.format("No user group exists with the id %s", userGroupId));
