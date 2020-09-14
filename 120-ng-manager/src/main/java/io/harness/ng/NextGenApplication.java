@@ -27,6 +27,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskServiceClient;
 import io.harness.ng.remote.NGObjectMapperHelper;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClientRegistry;
@@ -172,6 +173,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     logger.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

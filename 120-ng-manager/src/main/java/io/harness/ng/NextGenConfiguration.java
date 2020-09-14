@@ -12,6 +12,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
+import io.harness.ng.core.invites.ext.mail.SmtpConfig;
 import io.harness.ng.remote.client.ServiceHttpClientConfig;
 import lombok.Getter;
 import org.reflections.Reflections;
@@ -38,7 +39,9 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
   @JsonProperty("ngManagerClientConfig") private NGManagerClientConfig ngManagerClientConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
-
+  @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  @JsonProperty("ngAPIBaseURL") private String baseURL;
+  @JsonProperty("environment") private String environment;
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
 

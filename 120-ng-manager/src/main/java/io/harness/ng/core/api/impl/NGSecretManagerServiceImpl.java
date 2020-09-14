@@ -1,6 +1,6 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.secretmanagerclient.utils.RestClientUtils.getResponse;
+import static io.harness.ng.remote.client.RestClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

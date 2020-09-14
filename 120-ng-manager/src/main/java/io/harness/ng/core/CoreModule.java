@@ -3,15 +3,12 @@ package io.harness.ng.core;
 import com.google.inject.AbstractModule;
 
 import io.harness.mongo.MongoPersistence;
-import io.harness.ng.core.api.InvitesService;
-import io.harness.ng.core.api.impl.InvitesServiceImpl;
 import io.harness.persistence.HPersistence;
 
 public class CoreModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(HPersistence.class).to(MongoPersistence.class);
-    bind(InvitesService.class).to(InvitesServiceImpl.class);
     registerRequiredBindings();
   }
 

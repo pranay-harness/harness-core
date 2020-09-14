@@ -17,6 +17,7 @@ import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.DelegateServiceBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
 import io.harness.serializer.morphia.EventMorphiaRegistrar;
+import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.LimitsMorphiaRegistrar;
 import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
 import io.harness.serializer.morphia.NGCoreMorphiaClassesRegistrar;
@@ -55,6 +56,7 @@ public class ManagerRegistrars {
           .add(ManagerMorphiaRegistrar.class)
           .add(LimitsMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
+          .add(InvitesMorphiaRegistrar.class)
           .add(CommonEntitiesMorphiaRegister.class)
           .addAll(NGCoreRegistrars.morphiaRegistrars)
           .add(SecretManagerClientMorphiaRegistrar.class)

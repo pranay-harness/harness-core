@@ -2,6 +2,7 @@ package io.harness.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.beans.NGPageRequest;
 import io.harness.beans.NGPageResponse;
 import io.harness.beans.PageResponse;
 import lombok.experimental.UtilityClass;
@@ -35,6 +36,10 @@ public class PageUtils {
     }
 
     return PageRequest.of(page, size, Sort.by(orders));
+  }
+
+  public static Pageable getPageRequest(NGPageRequest pageRequestDTO) {
+    return getPageRequest(pageRequestDTO.getPage(), pageRequestDTO.getSize(), pageRequestDTO.getSort());
   }
 
   public <T> NGPageResponse<T> getNGPageResponse(Page<T> page) {

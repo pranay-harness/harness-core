@@ -46,9 +46,13 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
   }
 
   @Override
-  public List<Module> modules(List<Annotation> annotations) throws Exception {
+  public List<Module> modules(List<Annotation> annotations) {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
-
+    ServiceHttpClientConfig serviceHttpClientConfig = ServiceHttpClientConfig.builder()
+                                                          .baseUrl("http://localhost:3457/")
+                                                          .connectTimeOutSeconds(15)
+                                                          .readTimeOutSeconds(15)
+                                                          .build();
     List<Module> modules = new ArrayList<>();
     modules.add(new AbstractModule() {
       @Override
