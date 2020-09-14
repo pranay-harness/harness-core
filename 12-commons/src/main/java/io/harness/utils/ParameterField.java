@@ -5,8 +5,10 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.ExpressionResolveFunctor;
 import io.harness.expression.NotExpression;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
 public class ParameterField<T> {
   @NotExpression private String expressionValue;
   private boolean isExpression;

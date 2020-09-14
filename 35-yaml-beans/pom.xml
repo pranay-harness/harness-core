@@ -43,7 +43,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>27-walktree-visitor</artifactId>
+            <artifactId>43-walktree-visitor</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
