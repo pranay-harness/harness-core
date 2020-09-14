@@ -7,6 +7,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -44,6 +45,9 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
 
   @Override
   public GcpOrganization upsert(GcpOrganization organization) {
+    if (gcpOrganizationDao.count(organization.getAccountId()) > 0) {
+      throw new InvalidRequestException("Cannot enable Continuous Efficiency for more than one GCP cloud account.");
+    }
     GcpServiceAccount gcpServiceAccount = ceGcpServiceAccountService.getByAccountId(organization.getAccountId());
     checkArgument(
         null != gcpServiceAccount && organization.getServiceAccountEmail().equals(gcpServiceAccount.getEmail()),
