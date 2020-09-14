@@ -11,5 +11,6 @@ import lombok.experimental.FieldDefaults;
 public class NextGenConfig {
   String managerServiceSecret;
   String cvNgServiceSecret;
+  String userVerificationSecret;
   String ngManagerServiceSecret;
 }

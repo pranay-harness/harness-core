@@ -36,6 +36,7 @@ public class UserResourceNG {
   private final UserService userService;
 
   @GET
+  @Path("/search")
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
@@ -67,5 +68,11 @@ public class UserResourceNG {
       }
     }
     return new RestResponse<>(usernames);
+  }
+
+  @GET
+  public RestResponse<Optional<User>> getUserFromEmail(
+      @QueryParam("accountID") String accountId, @QueryParam("emailId") String emailId) {
+    return new RestResponse<>(Optional.ofNullable(userService.getUserByEmail(emailId, accountId)));
   }
 }

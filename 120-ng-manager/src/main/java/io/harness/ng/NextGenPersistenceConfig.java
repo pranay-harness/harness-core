@@ -5,8 +5,11 @@ import com.google.inject.Injector;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.springdata.SpringPersistenceConfig;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
@@ -15,5 +18,10 @@ public class NextGenPersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public NextGenPersistenceConfig(Injector injector) {
     super(injector);
+  }
+
+  @Bean
+  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
+    return new MongoTransactionManager(dbFactory);
   }
 }

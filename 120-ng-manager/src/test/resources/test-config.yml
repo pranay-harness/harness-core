@@ -17,6 +17,7 @@ xxxxxxxx
 
 nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
 
 allowedOrigins:
   - https://localhost:8181
@@ -76,3 +77,16 @@ grpcServer:
       keyFilePath: key.pem
       certFilePath: cert.pem
     - port: 9979
+
+smtp:
+  type: SMTP
+  host: host_placeholder
+  port: 465
+  fromAddress: noreply@harness.io
+  useSSL: true
+  username: smtp_username_placeholder
+  password: "smtp_password_placeholder"
+
+ngAPIBaseURL: "http://localhost:7457"
+
+environment: dev

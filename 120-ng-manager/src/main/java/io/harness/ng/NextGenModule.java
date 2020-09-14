@@ -36,6 +36,7 @@ import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
+import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NgAsyncTaskGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
@@ -146,6 +147,8 @@ public class NextGenModule extends AbstractModule {
     install(new ValidationModule(getValidatorFactory()));
     install(new NextGenPersistenceModule());
     install(new CoreModule());
+    install(new InviteModule(
+        this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ConnectorModule());
     install(new GitSyncModule());
     install(NGModule.getInstance());
@@ -223,9 +226,6 @@ public class NextGenModule extends AbstractModule {
     bind(ConnectorService.class)
         .annotatedWith(Names.named(SECRET_MANAGER_CONNECTOR_SERVICE))
         .to(SecretManagerConnectorServiceImpl.class);
-
-    install(new UserClientModule(
-        this.appConfig.getServiceHttpClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
   }
 
   private ValidatorFactory getValidatorFactory() {

@@ -1,10 +1,12 @@
 package io.harness.ng.core.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
@@ -25,6 +27,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 
 @UtilityClass
+@OwnedBy(PL)
 public class NGUtils {
   private static final Validator validator = Validation.buildDefaultValidatorFactory().usingContext().getValidator();
 
