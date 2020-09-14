@@ -46,6 +46,8 @@ public class PipelineStage {
     private int parallelIndex;
     private Map<String, Object> properties = new HashMap<>();
     private Map<String, String> workflowVariables = new HashMap<>();
+    private RuntimeInputsConfig runtimeInputsConfig;
+
     // Remove this once UI moves away from it
     @NotSaved private boolean disable;
     private String disableAssertion;

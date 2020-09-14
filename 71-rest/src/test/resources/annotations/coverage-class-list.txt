@@ -358,6 +358,7 @@
 71-rest/src/main/java/software/wings/beans/ResourceConstraintNotification.java
 71-rest/src/main/java/software/wings/beans/ResourceConstraintUsage.java
 71-rest/src/main/java/software/wings/beans/RollingOrchestrationWorkflow.java
+71-rest/src/main/java/software/wings/beans/RuntimeInputsConfig.java
 71-rest/src/main/java/software/wings/beans/Service.java
 71-rest/src/main/java/software/wings/beans/ServiceNowConfig.java
 71-rest/src/main/java/software/wings/beans/ServiceTemplate.java
