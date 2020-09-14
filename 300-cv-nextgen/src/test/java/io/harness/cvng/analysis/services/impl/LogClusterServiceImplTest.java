@@ -30,10 +30,10 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -61,7 +61,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
   @Inject CVConfigService cvConfigService;
   @Inject VerificationTaskService verificationTaskService;
   @Inject VerificationJobService verificationJobService;
-  @Inject DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject VerificationJobInstanceService verificationJobInstanceService;
   private String verificationJobIdentifier;
   private long deploymentStartTimeMs;
   private Instant now;
@@ -130,10 +130,9 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     String accountId = generateUuid();
     VerificationJobDTO verificationJob = newVerificationJob();
     verificationJobService.upsert(accountId, verificationJob);
-    DeploymentVerificationTaskDTO deploymentVerificationTask = newVerificationTask();
-    String deploymentVerificationTaskId =
-        deploymentVerificationTaskService.create(accountId, deploymentVerificationTask);
-    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, deploymentVerificationTaskId);
+    VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
+    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     AnalysisInput input =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
     logClusterService.scheduleDeploymentL2ClusteringTask(input);
@@ -152,10 +151,9 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     String accountId = generateUuid();
     VerificationJobDTO verificationJob = newVerificationJob();
     verificationJobService.upsert(accountId, verificationJob);
-    DeploymentVerificationTaskDTO deploymentVerificationTask = newVerificationTask();
-    String deploymentVerificationTaskId =
-        deploymentVerificationTaskService.create(accountId, deploymentVerificationTask);
-    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, deploymentVerificationTaskId);
+    VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
+    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     List<ClusteredLog> logRecords = createClusteredLogRecords(verificationTaskId, 5, start, end);
     hPersistence.save(logRecords);
     AnalysisInput input =
@@ -332,8 +330,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     return canaryVerificationJobDTO;
   }
 
-  private DeploymentVerificationTaskDTO newVerificationTask() {
-    return DeploymentVerificationTaskDTO.builder()
+  private VerificationJobInstanceDTO newVerificationJobInstanceDTO() {
+    return VerificationJobInstanceDTO.builder()
         .verificationJobIdentifier(verificationJobIdentifier)
         .deploymentStartTimeMs(deploymentStartTimeMs)
         .verificationTaskStartTimeMs(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())

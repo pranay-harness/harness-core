@@ -1,15 +1,19 @@
 package io.harness.cvng.verificationjob.jobs;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import lombok.extern.slf4j.Slf4j;
 
-public class DeletePerpetualTasksHandler implements MongoPersistenceIterator.Handler<VerificationJobInstance> {
+@Singleton
+@Slf4j
+public class CreateDeploymentDataCollectionTaskHandler implements Handler<VerificationJobInstance> {
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Override
   public void handle(VerificationJobInstance entity) {
-    verificationJobInstanceService.deletePerpetualTasks(entity);
+    verificationJobInstanceService.createDataCollectionTasks(entity);
   }
 }

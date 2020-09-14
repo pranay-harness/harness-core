@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
-public class DeploymentVerificationTaskDTO {
+public class VerificationJobInstanceDTO {
   @NotNull String verificationJobIdentifier;
   @Getter(AccessLevel.NONE) Long deploymentStartTimeMs;
   @Getter(AccessLevel.NONE) @NotNull Long verificationTaskStartTimeMs;

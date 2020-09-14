@@ -30,12 +30,12 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.DeploymentVerificationTaskDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -51,9 +51,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
+public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Inject private VerificationJobService verificationJobService;
-  @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private CVConfigService cvConfigService;
   @Mock private VerificationManagerService verificationManagerService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
@@ -77,7 +77,7 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     connectorId = generateUuid();
     perpetualTaskId = generateUuid();
     FieldUtils.writeField(
-        deploymentVerificationTaskService, "verificationManagerService", verificationManagerService, true);
+        verificationJobInstanceService, "verificationManagerService", verificationManagerService, true);
     when(verificationManagerService.createDeploymentVerificationPerpetualTask(any(), any(), any(), any(), any()))
         .thenReturn(perpetualTaskId);
   }
@@ -86,7 +86,7 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreate_withInvalidJobIdentifier() {
-    assertThatThrownBy(() -> deploymentVerificationTaskService.create(accountId, newVerificationTask()))
+    assertThatThrownBy(() -> verificationJobInstanceService.create(accountId, newVerificationTask()))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("No Job exists for verificationJobIdentifier: '"
             + "" + verificationJobIdentifier + "'");
@@ -97,12 +97,12 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreate_withValidJobIdentifier() {
     verificationJobService.upsert(accountId, newVerificationJob());
-    DeploymentVerificationTaskDTO deploymentVerificationTaskDTO = newVerificationTask();
-    String verificationTaskId = deploymentVerificationTaskService.create(accountId, deploymentVerificationTaskDTO);
-    DeploymentVerificationTaskDTO saved = deploymentVerificationTaskService.get(verificationTaskId);
+    VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationTask();
+    String verificationTaskId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    VerificationJobInstanceDTO saved = verificationJobInstanceService.get(verificationTaskId);
     assertThat(saved.getVerificationJobIdentifier())
-        .isEqualTo(deploymentVerificationTaskDTO.getVerificationJobIdentifier());
-    assertThat(saved.getDeploymentStartTime()).isEqualTo(deploymentVerificationTaskDTO.getDeploymentStartTime());
+        .isEqualTo(verificationJobInstanceDTO.getVerificationJobIdentifier());
+    assertThat(saved.getDeploymentStartTime()).isEqualTo(verificationJobInstanceDTO.getDeploymentStartTime());
   }
 
   @Test
@@ -110,18 +110,18 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreate_nullOptionalParams() {
     verificationJobService.upsert(accountId, newVerificationJob());
-    DeploymentVerificationTaskDTO deploymentVerificationTaskDTO =
-        DeploymentVerificationTaskDTO.builder()
+    VerificationJobInstanceDTO verificationJobInstanceDTO =
+        VerificationJobInstanceDTO.builder()
             .verificationJobIdentifier(verificationJobIdentifier)
             .deploymentStartTimeMs(deploymentStartTimeMs)
             .verificationTaskStartTimeMs(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
             .dataCollectionDelayMs(Duration.ofMinutes(5).toMillis())
             .build();
-    String verificationTaskId = deploymentVerificationTaskService.create(accountId, deploymentVerificationTaskDTO);
-    DeploymentVerificationTaskDTO saved = deploymentVerificationTaskService.get(verificationTaskId);
+    String verificationTaskId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    VerificationJobInstanceDTO saved = verificationJobInstanceService.get(verificationTaskId);
     assertThat(saved.getVerificationJobIdentifier())
-        .isEqualTo(deploymentVerificationTaskDTO.getVerificationJobIdentifier());
-    assertThat(saved.getDeploymentStartTime()).isEqualTo(deploymentVerificationTaskDTO.getDeploymentStartTime());
+        .isEqualTo(verificationJobInstanceDTO.getVerificationJobIdentifier());
+    assertThat(saved.getDeploymentStartTime()).isEqualTo(verificationJobInstanceDTO.getDeploymentStartTime());
     assertThat(saved.getNewVersionHosts()).isNull();
     assertThat(saved.getOldVersionHosts()).isNull();
     assertThat(saved.getNewHostsTrafficSplitPercentage()).isNull();
@@ -132,8 +132,8 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreate_validOptionalParams() {
     verificationJobService.upsert(accountId, newVerificationJob());
-    DeploymentVerificationTaskDTO deploymentVerificationTaskDTO =
-        DeploymentVerificationTaskDTO.builder()
+    VerificationJobInstanceDTO verificationJobInstanceDTO =
+        VerificationJobInstanceDTO.builder()
             .verificationJobIdentifier(verificationJobIdentifier)
             .deploymentStartTimeMs(deploymentStartTimeMs)
             .verificationTaskStartTimeMs(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
@@ -142,11 +142,11 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
             .oldVersionHosts(Sets.newHashSet("oldHost1", "oldHost2"))
             .newHostsTrafficSplitPercentage(30)
             .build();
-    String verificationTaskId = deploymentVerificationTaskService.create(accountId, deploymentVerificationTaskDTO);
-    DeploymentVerificationTaskDTO saved = deploymentVerificationTaskService.get(verificationTaskId);
+    String verificationTaskId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    VerificationJobInstanceDTO saved = verificationJobInstanceService.get(verificationTaskId);
     assertThat(saved.getVerificationJobIdentifier())
-        .isEqualTo(deploymentVerificationTaskDTO.getVerificationJobIdentifier());
-    assertThat(saved.getDeploymentStartTime()).isEqualTo(deploymentVerificationTaskDTO.getDeploymentStartTime());
+        .isEqualTo(verificationJobInstanceDTO.getVerificationJobIdentifier());
+    assertThat(saved.getDeploymentStartTime()).isEqualTo(verificationJobInstanceDTO.getDeploymentStartTime());
     assertThat(saved.getNewVersionHosts()).isEqualTo(Sets.newHashSet("newHost1", "newHost2"));
     assertThat(saved.getOldVersionHosts()).isEqualTo(Sets.newHashSet("oldHost1", "oldHost2"));
     assertThat(saved.getNewHostsTrafficSplitPercentage()).isEqualTo(30);
@@ -158,14 +158,14 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   public void createDataCollectionTasks_validatePerpetualTaskCreationWithCorrectParams() {
     verificationJobService.upsert(accountId, newVerificationJob());
     cvConfigService.save(newCVConfig());
-    String verificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(verificationTaskId);
-    deploymentVerificationTaskService.createDataCollectionTasks(deploymentVerificationTask);
+    String verificationTaskId = verificationJobInstanceService.create(accountId, newVerificationTask());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
+    verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
     verify(verificationManagerService)
         .createDeploymentVerificationPerpetualTask(eq(accountId), eq(connectorId), eq(orgIdentifier),
             eq(projectIdentifier), eq(getDataCollectionWorkerId(verificationTaskId, connectorId)));
-    DeploymentVerificationTask saved = deploymentVerificationTaskService.getVerificationTask(verificationTaskId);
+    VerificationJobInstance saved = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
     assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
   }
 
@@ -175,10 +175,10 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   public void createDataCollectionTasks_validateDataCollectionTasksCreation() {
     verificationJobService.upsert(accountId, newVerificationJob());
     cvConfigService.save(newCVConfig());
-    String verificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(verificationTaskId);
-    deploymentVerificationTaskService.createDataCollectionTasks(deploymentVerificationTask);
+    String verificationTaskId = verificationJobInstanceService.create(accountId, newVerificationTask());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
+    verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
     String workerId = getDataCollectionWorkerId(verificationTaskId, connectorId);
     DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
     assertThat(firstTask).isNotNull();
@@ -194,16 +194,16 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   public void testCreateDataCollectionTasks_validateDataCollectionTasksCreationWithDefaultDataCollectionDelay() {
     verificationJobService.upsert(accountId, newVerificationJob());
     cvConfigService.save(newCVConfig());
-    DeploymentVerificationTaskDTO dto = DeploymentVerificationTaskDTO.builder()
-                                            .verificationJobIdentifier(verificationJobIdentifier)
-                                            .deploymentStartTimeMs(deploymentStartTimeMs)
-                                            .verificationTaskStartTimeMs(deploymentStartTimeMs)
-                                            .build();
-    String verificationTaskId = deploymentVerificationTaskService.create(accountId, dto);
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(verificationTaskId);
-    deploymentVerificationTaskService.createDataCollectionTasks(deploymentVerificationTask);
-    DeploymentVerificationTask updated = deploymentVerificationTaskService.getVerificationTask(verificationTaskId);
+    VerificationJobInstanceDTO dto = VerificationJobInstanceDTO.builder()
+                                         .verificationJobIdentifier(verificationJobIdentifier)
+                                         .deploymentStartTimeMs(deploymentStartTimeMs)
+                                         .verificationTaskStartTimeMs(deploymentStartTimeMs)
+                                         .build();
+    String verificationTaskId = verificationJobInstanceService.create(accountId, dto);
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
+    verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
+    VerificationJobInstance updated = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
     String workerId = getDataCollectionWorkerId(verificationTaskId, connectorId);
     DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
     assertThat(firstTask).isNotNull();
@@ -219,50 +219,47 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   public void testLogProgress_multipleUpdates() {
     verificationJobService.upsert(accountId, newVerificationJob());
     cvConfigService.save(newCVConfig());
-    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
-    assertThat(deploymentVerificationTask.getProgressLogs()).isEmpty();
+    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, newVerificationTask());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getProgressLogs()).isEmpty();
     ProgressLog progressLog = ProgressLog.builder()
-                                  .startTime(deploymentVerificationTask.getStartTime())
-                                  .endTime(deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)))
+                                  .startTime(verificationJobInstance.getStartTime())
+                                  .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
                                   .analysisStatus(AnalysisStatus.SUCCESS)
                                   .log("time series analysis done")
                                   .build();
-    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
-    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
-    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(1);
-    assertThat(deploymentVerificationTask.getProgressLogs().get(0).getAnalysisStatus())
-        .isEqualTo(AnalysisStatus.SUCCESS);
-    assertThat(deploymentVerificationTask.getProgressLogs().get(0).getLog()).isEqualTo("time series analysis done");
+    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
+    assertThat(verificationJobInstance.getProgressLogs().get(0).getAnalysisStatus()).isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(verificationJobInstance.getProgressLogs().get(0).getLog()).isEqualTo("time series analysis done");
 
-    assertThat(deploymentVerificationTask.getExecutionStatus())
+    assertThat(verificationJobInstance.getExecutionStatus())
         .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.QUEUED);
     progressLog = ProgressLog.builder()
-                      .startTime(deploymentVerificationTask.getEndTime().minus(Duration.ofMinutes(1)))
-                      .endTime(deploymentVerificationTask.getEndTime())
+                      .startTime(verificationJobInstance.getEndTime().minus(Duration.ofMinutes(1)))
+                      .endTime(verificationJobInstance.getEndTime())
                       .analysisStatus(AnalysisStatus.SUCCESS)
                       .isFinalState(false)
                       .build();
-    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
-    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
-    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(2);
-    assertThat(deploymentVerificationTask.getProgressLogs().get(1).getAnalysisStatus())
-        .isEqualTo(AnalysisStatus.SUCCESS);
-    assertThat(deploymentVerificationTask.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getProgressLogs()).hasSize(2);
+    assertThat(verificationJobInstance.getProgressLogs().get(1).getAnalysisStatus()).isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
 
     progressLog = ProgressLog.builder()
-                      .startTime(deploymentVerificationTask.getEndTime().minus(Duration.ofMinutes(1)))
-                      .endTime(deploymentVerificationTask.getEndTime())
+                      .startTime(verificationJobInstance.getEndTime().minus(Duration.ofMinutes(1)))
+                      .endTime(verificationJobInstance.getEndTime())
                       .analysisStatus(AnalysisStatus.SUCCESS)
                       .isFinalState(true)
                       .build();
-    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
-    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
-    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(3);
-    assertThat(deploymentVerificationTask.getProgressLogs().get(2).getAnalysisStatus())
-        .isEqualTo(AnalysisStatus.SUCCESS);
-    assertThat(deploymentVerificationTask.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getProgressLogs()).hasSize(3);
+    assertThat(verificationJobInstance.getProgressLogs().get(2).getAnalysisStatus()).isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -271,21 +268,20 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   public void testLogProgress_onFailure() {
     verificationJobService.upsert(accountId, newVerificationJob());
     cvConfigService.save(newCVConfig());
-    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
-    assertThat(deploymentVerificationTask.getProgressLogs()).isEmpty();
+    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, newVerificationTask());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getProgressLogs()).isEmpty();
     ProgressLog progressLog = ProgressLog.builder()
-                                  .startTime(deploymentVerificationTask.getStartTime())
-                                  .endTime(deploymentVerificationTask.getStartTime().plus(Duration.ofMinutes(1)))
+                                  .startTime(verificationJobInstance.getStartTime())
+                                  .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
                                   .analysisStatus(AnalysisStatus.FAILED)
                                   .build();
-    deploymentVerificationTaskService.logProgress(deploymentVerificationTaskId, progressLog);
-    deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
-    assertThat(deploymentVerificationTask.getProgressLogs()).hasSize(1);
-    assertThat(deploymentVerificationTask.getProgressLogs().get(0).getAnalysisStatus())
-        .isEqualTo(AnalysisStatus.FAILED);
-    assertThat(deploymentVerificationTask.getExecutionStatus())
+    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
+    assertThat(verificationJobInstance.getProgressLogs().get(0).getAnalysisStatus()).isEqualTo(AnalysisStatus.FAILED);
+    assertThat(verificationJobInstance.getExecutionStatus())
         .isEqualTo(io.harness.cvng.analysis.beans.ExecutionStatus.FAILED);
   }
 
@@ -294,15 +290,15 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testDeleteDataCollectionWorkers_whenSuccessful() {
     verificationJobService.upsert(accountId, newVerificationJob());
-    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, newVerificationTask());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     List<String> perpetualTaskIds = Lists.newArrayList(generateUuid(), generateUuid());
-    deploymentVerificationTask.setPerpetualTaskIds(perpetualTaskIds);
-    hPersistence.save(deploymentVerificationTask);
-    deploymentVerificationTaskService.deletePerpetualTasks(deploymentVerificationTask);
-    DeploymentVerificationTask updated =
-        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    verificationJobInstance.setPerpetualTaskIds(perpetualTaskIds);
+    hPersistence.save(verificationJobInstance);
+    verificationJobInstanceService.deletePerpetualTasks(verificationJobInstance);
+    VerificationJobInstance updated =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(updated.getPerpetualTaskIds()).isNull();
   }
 
@@ -311,19 +307,19 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testDeleteDataCollectionWorkers_whenManagerCallFails() {
     verificationJobService.upsert(accountId, newVerificationJob());
-    String deploymentVerificationTaskId = deploymentVerificationTaskService.create(accountId, newVerificationTask());
-    DeploymentVerificationTask deploymentVerificationTask =
-        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, newVerificationTask());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     List<String> perpetualTaskIds = Lists.newArrayList(generateUuid(), generateUuid());
     doThrow(new RuntimeException("exception from manager"))
         .when(verificationManagerService)
         .deletePerpetualTasks(eq(accountId), any());
-    deploymentVerificationTask.setPerpetualTaskIds(perpetualTaskIds);
-    hPersistence.save(deploymentVerificationTask);
-    assertThatThrownBy(() -> deploymentVerificationTaskService.deletePerpetualTasks(deploymentVerificationTask))
+    verificationJobInstance.setPerpetualTaskIds(perpetualTaskIds);
+    hPersistence.save(verificationJobInstance);
+    assertThatThrownBy(() -> verificationJobInstanceService.deletePerpetualTasks(verificationJobInstance))
         .hasMessage("exception from manager");
-    DeploymentVerificationTask updated =
-        deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId);
+    VerificationJobInstance updated =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(updated.getPerpetualTaskIds()).isEqualTo(perpetualTaskIds);
   }
 
@@ -361,8 +357,8 @@ public class DeploymentVerificationTaskServiceImplTest extends CvNextGenTest {
     return cvConfig;
   }
 
-  private DeploymentVerificationTaskDTO newVerificationTask() {
-    return DeploymentVerificationTaskDTO.builder()
+  private VerificationJobInstanceDTO newVerificationTask() {
+    return VerificationJobInstanceDTO.builder()
         .verificationJobIdentifier(verificationJobIdentifier)
         .deploymentStartTimeMs(deploymentStartTimeMs)
         .verificationTaskStartTimeMs(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())

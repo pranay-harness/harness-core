@@ -44,9 +44,9 @@ import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask.ProgressLog;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private HeatMapService heatMapService;
   @Inject private CVConfigService cvConfigService;
   @Inject private AnomalyService anomalyService;
-  @Inject private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
@@ -101,23 +101,23 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                                   .isFinalState(true)
                                   .log("Time series analysis")
                                   .build();
-    deploymentVerificationTaskService.logProgress(
-        verificationTaskService.getDeploymentVerificationTaskId(analysisInput.getVerificationTaskId()), progressLog);
+    verificationJobInstanceService.logProgress(
+        verificationTaskService.getVerificationJobInstanceId(analysisInput.getVerificationTaskId()), progressLog);
   }
 
   private TimeSeriesCanaryLearningEngineTask createTimeSeriesCanaryLearningEngineTask(AnalysisInput input) {
     String taskId = generateUuid();
-    DeploymentVerificationTask deploymentVerificationTask = deploymentVerificationTaskService.getVerificationTask(
-        verificationTaskService.getDeploymentVerificationTaskId(input.getVerificationTaskId()));
+    VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
+        verificationTaskService.getVerificationJobInstanceId(input.getVerificationTaskId()));
     CanaryVerificationJob verificationJob =
-        (CanaryVerificationJob) verificationJobService.get(deploymentVerificationTask.getVerificationJobId());
-    Preconditions.checkNotNull(deploymentVerificationTask, "deploymentVerificationTask can not be null");
+        (CanaryVerificationJob) verificationJobService.get(verificationJobInstance.getVerificationJobId());
+    Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
     TimeSeriesCanaryLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesCanaryLearningEngineTask.builder()
-            .preDeploymentDataUrl(preDeploymentDataUrl(input, deploymentVerificationTask))
-            .postDeploymentDataUrl(postDeploymentDataUrl(input, deploymentVerificationTask))
+            .preDeploymentDataUrl(preDeploymentDataUrl(input, verificationJobInstance))
+            .postDeploymentDataUrl(postDeploymentDataUrl(input, verificationJobInstance))
             .dataLength(
-                (int) Duration.between(deploymentVerificationTask.getStartTime(), input.getStartTime()).toMinutes() + 1)
+                (int) Duration.between(verificationJobInstance.getStartTime(), input.getStartTime()).toMinutes() + 1)
             .metricTemplateUrl(createMetricTemplateUrl(input))
             .tolerance(verificationJob.getSensitivity().getTolerance())
             .build();
@@ -134,9 +134,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     DeploymentVerificationTaskInfo deploymentVerificationTaskInfo =
         DeploymentVerificationTaskInfo.builder()
-            .newHostsTrafficSplitPercentage(deploymentVerificationTask.getNewHostsTrafficSplitPercentage())
-            .newVersionHosts(deploymentVerificationTask.getNewVersionHosts())
-            .oldVersionHosts(deploymentVerificationTask.getOldVersionHosts())
+            .newHostsTrafficSplitPercentage(verificationJobInstance.getNewHostsTrafficSplitPercentage())
+            .newVersionHosts(verificationJobInstance.getNewVersionHosts())
+            .oldVersionHosts(verificationJobInstance.getOldVersionHosts())
             .build();
     timeSeriesLearningEngineTask.setDeploymentVerificationTaskInfo(deploymentVerificationTaskInfo);
 
@@ -209,28 +209,27 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return getUriString(uriBuilder);
   }
 
-  private String postDeploymentDataUrl(AnalysisInput input, DeploymentVerificationTask deploymentVerificationTask) {
+  private String postDeploymentDataUrl(AnalysisInput input, VerificationJobInstance verificationJobInstance) {
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     // TODO: rename params to startTime and endTime.
-    uriBuilder.addParameter("startTime", Long.toString(deploymentVerificationTask.getStartTime().toEpochMilli()));
+    uriBuilder.addParameter("startTime", Long.toString(verificationJobInstance.getStartTime().toEpochMilli()));
     uriBuilder.addParameter("endTime", Long.toString(input.getEndTime().toEpochMilli()));
     return getUriString(uriBuilder);
   }
 
-  private String preDeploymentDataUrl(AnalysisInput input, DeploymentVerificationTask deploymentVerificationTask) {
+  private String preDeploymentDataUrl(AnalysisInput input, VerificationJobInstance verificationJobInstance) {
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
     // TODO: rename params to startTime and endTime and the range should come from task or job.
     //  Change it once more verification jobs are supported to find the right abstraction.
     uriBuilder.addParameter("startTime",
-        Long.toString(deploymentVerificationTask.getDeploymentStartTime()
+        Long.toString(verificationJobInstance.getDeploymentStartTime()
                           .minus(PRE_DEPLOYMENT_DATA_COLLECTION_DURATION)
                           .toEpochMilli()));
-    uriBuilder.addParameter(
-        "endTime", Long.toString(deploymentVerificationTask.getDeploymentStartTime().toEpochMilli()));
+    uriBuilder.addParameter("endTime", Long.toString(verificationJobInstance.getDeploymentStartTime().toEpochMilli()));
     return getUriString(uriBuilder);
   }
 

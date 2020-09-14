@@ -27,8 +27,8 @@ import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
-import io.harness.cvng.verificationjob.entities.DeploymentVerificationTask;
-import io.harness.cvng.verificationjob.services.api.DeploymentVerificationTaskService;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -60,7 +60,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Mock private Query<CVConfig> cvConfigQuery;
   @Mock private CVConfigService cvConfigService;
   @Mock private VerificationTaskService verificationTaskService;
-  @Mock private DeploymentVerificationTaskService deploymentVerificationTaskService;
+  @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @InjectMocks AnalysisStateMachineService stateMachineService = new AnalysisStateMachineServiceImpl();
 
   @Before
@@ -105,14 +105,14 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreateStateMachine_forDeployment() {
     String verificationTaskId = generateUuid();
-    String deploymentVerificationTaskId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
     when(verificationTaskService.get(verificationTaskId))
         .thenReturn(VerificationTask.builder()
-                        .deploymentVerificationTaskId(deploymentVerificationTaskId)
+                        .verificationJobInstanceId(verificationJobInstanceId)
                         .cvConfigId(cvConfigId)
                         .build());
-    when(deploymentVerificationTaskService.getVerificationTask(deploymentVerificationTaskId))
-        .thenReturn(DeploymentVerificationTask.builder().build());
+    when(verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId))
+        .thenReturn(VerificationJobInstance.builder().build());
 
     AnalysisInput inputs = AnalysisInput.builder()
                                .verificationTaskId(verificationTaskId)

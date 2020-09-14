@@ -8,9 +8,9 @@ public interface VerificationTaskService {
   String create(String accountId, String cvConfigId);
   String create(String accountId, String cvConfigId, String verificationTaskId);
   String getCVConfigId(String verificationTaskId);
-  String getDeploymentVerificationTaskId(String verificationTaskId);
+  String getVerificationJobInstanceId(String verificationTaskId);
   VerificationTask get(String verificationTaskId);
-  Set<String> getVerificationTaskIds(String accountId, String deploymentVerificationTaskId);
+  Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceIdF);
   String getServiceGuardVerificationTaskId(String accountId, String cvConfigId);
   boolean isServiceGuardId(String verificationTaskId);
 }

@@ -15,7 +15,6 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,13 +32,13 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
 
   private String accountId;
   private String cvConfigId;
-  private String deploymentVerificationTaskId;
+  private String verificationJobInstanceId;
 
   @Before
   public void setUp() {
     accountId = generateUuid();
     cvConfigId = generateUuid();
-    deploymentVerificationTaskId = generateUuid();
+    verificationJobInstanceId = generateUuid();
   }
 
   @Test
@@ -53,7 +52,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, false, null, 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -76,7 +75,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, false, "node1", 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node1", 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -99,7 +98,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, false, "randomNode", 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "randomNode", 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -119,7 +118,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, true, null, 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -147,7 +146,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, true, null, 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -167,7 +166,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, true, "node1", 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node1", 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -194,7 +193,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, true, "node1", 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node1", 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -227,7 +226,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis2);
 
     TransactionSummaryPageDTO transactionSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, false, null, 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 1);
 
     assertThat(transactionSummaryPageDTO.getPageNumber()).isEqualTo(1);
     assertThat(transactionSummaryPageDTO.getNumberOfPages()).isEqualTo(1);
@@ -259,7 +258,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(deploymentTimeSeriesAnalysis);
 
     TransactionSummaryPageDTO page1 =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, false, null, 1);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 1);
 
     assertThat(page1.getPageNumber()).isEqualTo(1);
     assertThat(page1.getNumberOfPages()).isEqualTo(3);
@@ -269,7 +268,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(page1.getTransactionSummaries().size()).isEqualTo(10);
 
     TransactionSummaryPageDTO page2 =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, false, null, 2);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 2);
 
     assertThat(page2.getPageNumber()).isEqualTo(2);
     assertThat(page2.getNumberOfPages()).isEqualTo(3);
@@ -279,7 +278,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(page2.getTransactionSummaries().size()).isEqualTo(10);
 
     TransactionSummaryPageDTO page3 =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, deploymentVerificationTaskId, false, null, 3);
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 3);
 
     assertThat(page3.getPageNumber()).isEqualTo(3);
     assertThat(page3.getNumberOfPages()).isEqualTo(3);
@@ -293,7 +292,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     return VerificationTask.builder()
         .cvConfigId(cvConfigId)
         .accountId(accountId)
-        .deploymentVerificationTaskId(deploymentVerificationTaskId)
+        .verificationJobInstanceId(verificationJobInstanceId)
         .build();
   }
   private DeploymentTimeSeriesAnalysisDTO.ResultSummary createResultSummary(
