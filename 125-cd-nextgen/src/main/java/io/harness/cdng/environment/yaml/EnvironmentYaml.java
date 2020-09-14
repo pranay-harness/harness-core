@@ -6,7 +6,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.utils.ParameterField;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
@@ -44,11 +43,5 @@ public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYam
       resultant = resultant.withTags(overrideConfig.getTags());
     }
     return resultant;
-  }
-
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    // returning empty list for now
-    return VisitableChildren.builder().build();
   }
 }

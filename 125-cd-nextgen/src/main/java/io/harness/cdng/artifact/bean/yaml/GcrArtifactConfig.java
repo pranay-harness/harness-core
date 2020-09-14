@@ -8,7 +8,6 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.utils.ParameterField;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
@@ -78,10 +77,5 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
       resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactSpecConfig.getRegistryHostname());
     }
     return resultantConfig;
-  }
-
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    return null;
   }
 }

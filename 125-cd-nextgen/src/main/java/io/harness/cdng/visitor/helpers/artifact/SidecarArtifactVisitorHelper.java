@@ -11,7 +11,11 @@ public class SidecarArtifactVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return SidecarArtifact.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    SidecarArtifact sidecarArtifact = (SidecarArtifact) originalElement;
+    return SidecarArtifact.builder()
+        .identifier(sidecarArtifact.getIdentifier())
+        .sourceType(sidecarArtifact.getSourceType())
+        .build();
   }
 }

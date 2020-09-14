@@ -11,7 +11,8 @@ public class GitStoreVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return GitStore.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    GitStore gitStore = (GitStore) originalElement;
+    return GitStore.builder().gitFetchType(gitStore.getGitFetchType()).build();
   }
 }

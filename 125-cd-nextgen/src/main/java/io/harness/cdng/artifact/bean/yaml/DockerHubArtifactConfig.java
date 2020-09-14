@@ -8,7 +8,6 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.utils.ParameterField;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.AllArgsConstructor;
@@ -85,10 +84,5 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
       resultantConfig = resultantConfig.withTagRegex(dockerHubArtifactConfig.getTagRegex());
     }
     return resultantConfig;
-  }
-
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    return null;
   }
 }

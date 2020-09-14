@@ -9,7 +9,6 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.state.StepType;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
@@ -55,10 +54,5 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   @JsonIgnore
   public String getFacilitatorType() {
     return PlanCreatorFacilitatorUtils.decideTaskFacilitatorType();
-  }
-
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    return null;
   }
 }

@@ -11,7 +11,8 @@ public class K8sRollingRollbackStepInfoVisitorHelper implements ConfigValidator 
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return K8sRollingRollbackStepInfo.infoBuilder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    K8sRollingRollbackStepInfo k8sRollingRollbackStepInfo = (K8sRollingRollbackStepInfo) originalElement;
+    return K8sRollingRollbackStepInfo.infoBuilder().identifier(k8sRollingRollbackStepInfo.getIdentifier()).build();
   }
 }

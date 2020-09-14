@@ -11,7 +11,7 @@ public class K8SDirectInfrastructureVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
+  public Object createDummyVisitableElement(Object originalElement) {
     return K8SDirectInfrastructure.builder().build();
   }
 }

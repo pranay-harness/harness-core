@@ -55,6 +55,6 @@ public class HttpStepInfo extends BasicHttpStepParameters implements CDStepInfo,
 
   @Override
   public VisitableChildren getChildrenToWalk() {
-    return null;
+    return VisitableChildren.builder().build();
   }
 }

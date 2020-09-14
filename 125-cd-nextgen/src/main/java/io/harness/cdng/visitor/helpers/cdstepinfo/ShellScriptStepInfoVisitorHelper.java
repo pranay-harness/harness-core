@@ -11,7 +11,8 @@ public class ShellScriptStepInfoVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return ShellScriptStepInfo.infoBuilder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    ShellScriptStepInfo shellScriptStepInfo = (ShellScriptStepInfo) originalElement;
+    return ShellScriptStepInfo.infoBuilder().identifier(shellScriptStepInfo.getIdentifier()).build();
   }
 }

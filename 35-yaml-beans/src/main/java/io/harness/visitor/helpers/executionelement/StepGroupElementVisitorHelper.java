@@ -11,7 +11,8 @@ public class StepGroupElementVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return StepGroupElement.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    StepGroupElement stepGroupElement = (StepGroupElement) originalElement;
+    return StepGroupElement.builder().identifier(stepGroupElement.getIdentifier()).build();
   }
 }

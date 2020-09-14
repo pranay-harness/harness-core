@@ -11,7 +11,10 @@ public interface Visitable extends WithMetadata {
   /**
    * @return List of objects referring to children on which you want traverse.
    */
-  @JsonIgnore VisitableChildren getChildrenToWalk();
+  @JsonIgnore
+  default VisitableChildren getChildrenToWalk() {
+    return null;
+  };
 
   @Override
   default String getMetadata() {

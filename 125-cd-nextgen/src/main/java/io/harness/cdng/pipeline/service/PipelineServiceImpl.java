@@ -121,7 +121,7 @@ public class PipelineServiceImpl implements PipelineService {
       ClassLoader classLoader = this.getClass().getClassLoader();
       return Resources.toString(
           Objects.requireNonNull(classLoader.getResource(
-              String.format("executionStrategyYaml/%s-%s.yaml", serviceDefinitionType.getDisplayName().toLowerCase(),
+              String.format("executionStrategyYaml/%s-%s.yaml", serviceDefinitionType.getYamlName().toLowerCase(),
                   executionStrategyType.getDisplayName().toLowerCase()))),
           StandardCharsets.UTF_8);
     } else {

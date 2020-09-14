@@ -25,11 +25,6 @@ public class InfraUseFromStage implements Serializable, Visitable {
   // For Visitor Framework Impl
   String metadata;
 
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    return null;
-  }
-
   @Data
   @Builder
   @ApiModel(value = "InfraOverrides")

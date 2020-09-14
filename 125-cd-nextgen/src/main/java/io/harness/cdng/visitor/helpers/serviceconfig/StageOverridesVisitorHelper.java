@@ -11,7 +11,7 @@ public class StageOverridesVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
+  public Object createDummyVisitableElement(Object originalElement) {
     return StageOverridesConfig.builder().build();
   }
 }

@@ -17,7 +17,6 @@ import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDepend
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.state.StepType;
 import io.harness.utils.ParameterField;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
@@ -90,10 +89,5 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
             .outcomeExpression(OutcomeExpressionConstants.K8S_ROLL_OUT.getName())
             .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
-  }
-
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    return null;
   }
 }
