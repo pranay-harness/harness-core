@@ -1,12 +1,10 @@
 package io.harness.connector.validator;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ManagerDelegateServiceDriver;
-import io.harness.delegate.beans.TaskData;
+import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -21,20 +19,20 @@ import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.service.DelegateGrpcClientWrapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> {
-  private ManagerDelegateServiceDriver managerDelegateServiceDriver;
+  private DelegateGrpcClientWrapper delegateClient;
   private SecretManagerClientService ngSecretService;
 
   public ConnectorValidationResult validate(
@@ -77,7 +75,6 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
 
   private GitCommandExecutionResponse createValidationDelegateTask(
       GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountIdentifier);
     GitAuthenticationDTO gitAuthenticationDecryptableEntity = gitConfig.getGitAuth();
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountIdentifier)
@@ -86,17 +83,17 @@ public class GitConnectorValidator implements ConnectionValidator<GitConfigDTO> 
                                        .build();
     List<EncryptedDataDetail> encryptedDataDetailList =
         ngSecretService.getEncryptionDetails(basicNGAccessObject, gitAuthenticationDecryptableEntity);
-    TaskData taskData = TaskData.builder()
-                            .async(false)
-                            .taskType("NG_GIT_COMMAND")
-                            .parameters(new Object[] {GitCommandParams.builder()
-                                                          .gitConfig(gitConfig)
-                                                          .gitCommandType(GitCommandType.VALIDATE)
-                                                          .encryptionDetails(encryptedDataDetailList)
-                                                          .build()})
-                            .timeout(TimeUnit.MINUTES.toMillis(1))
-                            .build();
-    return managerDelegateServiceDriver.sendTask(accountIdentifier, setupAbstractions, taskData);
+    DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                  .accountId(accountIdentifier)
+                                                  .taskType("NG_GIT_COMMAND")
+                                                  .taskParameters(GitCommandParams.builder()
+                                                                      .gitConfig(gitConfig)
+                                                                      .gitCommandType(GitCommandType.VALIDATE)
+                                                                      .encryptionDetails(encryptedDataDetailList)
+                                                                      .build())
+                                                  .executionTimeout(Duration.ofMinutes(1))
+                                                  .build();
+    return (GitCommandExecutionResponse) delegateClient.executeSyncTask(delegateTaskRequest);
   }
 
   private void validateRequiredFieldsPresent(Object... fields) {

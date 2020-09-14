@@ -15,5 +15,6 @@ public class ConnectorNextGenRegistrars {
           .add(ProjectAndOrgKryoRegistrar.class)
           .add(ApiServiceBeansKryoRegister.class)
           .add(SecretManagerClientKryoRegistrar.class)
+          .add(WaitEngineKryoRegister.class)
           .build();
 }

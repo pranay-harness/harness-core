@@ -2,13 +2,11 @@ package io.harness.connector.validator;
 
 import static io.harness.delegate.beans.connector.docker.DockerAuthType.USER_PASSWORD;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -19,6 +17,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.service.DelegateGrpcClientWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +28,7 @@ import org.mockito.MockitoAnnotations;
 
 @Slf4j
 public class DockerConnectionValidatorTest extends CategoryTest {
-  @Mock private ManagerDelegateServiceDriver managerDelegateServiceDriver;
+  @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock private SecretManagerClientService ngSecretService;
   @InjectMocks private DockerConnectionValidator dockerConnectionValidator;
 
@@ -56,9 +55,9 @@ public class DockerConnectionValidatorTest extends CategoryTest {
     DockerConnectorDTO dockerConnectorDTO =
         DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).authScheme(dockerAuthenticationDTO).build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
-    when(managerDelegateServiceDriver.sendTask(any(), anyMap(), any()))
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(DockerTestConnectionTaskResponse.builder().connectionSuccessFul(true).build());
     dockerConnectionValidator.validate(dockerConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
-    verify(managerDelegateServiceDriver, times(1)).sendTask(any(), anyMap(), any());
+    verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 }
