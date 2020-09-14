@@ -167,8 +167,19 @@ public class EnvState extends State {
             stdParams.getWorkflowElement().setDescription(workflow.getDescription());
           }
         }
-        boolean assertionResult = (boolean) context.evaluateExpression(
+
+        Object resultObj = context.evaluateExpression(
             disableAssertion, StateExecutionContext.builder().stateExecutionData(envStateExecutionData).build());
+        if (!(resultObj instanceof Boolean)) {
+          return ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Skip Assertion Evaluation Failed : Expression '" + disableAssertion
+                  + "' did not return a boolean value")
+              .stateExecutionData(envStateExecutionData)
+              .build();
+        }
+
+        boolean assertionResult = (boolean) resultObj;
         if (assertionResult) {
           return ExecutionResponse.builder()
               .executionStatus(SKIPPED)
