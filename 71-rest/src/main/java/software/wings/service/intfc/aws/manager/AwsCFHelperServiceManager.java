@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface AwsCFHelperServiceManager {
   List<AwsCFTemplateParamsData> getParamsData(String type, String data, String awsConfigId, String region, String appId,
-      String scmSettingId, String sourceRepoBranch, String templatePath, String commitId, Boolean useBranch);
+      String scmSettingId, String sourceRepoBranch, String templatePath, String commitId, Boolean useBranch,
+      String repoName);
 }

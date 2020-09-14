@@ -226,28 +226,29 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     doReturn(asList())
         .when(awsCFHelperServiceManager)
-        .getParamsData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        .getParamsData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
 
     infrastructureProvisionerService.getCFTemplateParamKeys("GIT", defaultString, defaultString, defaultString,
-        defaultString, defaultString, defaultString, defaultString, defaultString, true);
+        defaultString, defaultString, defaultString, defaultString, defaultString, true, null);
     assertThatThrownBy(
         ()
             -> infrastructureProvisionerService.getCFTemplateParamKeys("GIT", defaultString, defaultString,
-                defaultString, defaultString, "", defaultString, defaultString, defaultString, true))
+                defaultString, defaultString, "", defaultString, defaultString, defaultString, true, null))
         .isInstanceOf(InvalidRequestException.class);
-    assertThatThrownBy(()
-                           -> infrastructureProvisionerService.getCFTemplateParamKeys("GIT", defaultString,
-                               defaultString, defaultString, defaultString, defaultString, "", defaultString, "", true))
+    assertThatThrownBy(
+        ()
+            -> infrastructureProvisionerService.getCFTemplateParamKeys("GIT", defaultString, defaultString,
+                defaultString, defaultString, defaultString, "", defaultString, "", true, null))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(
         ()
             -> infrastructureProvisionerService.getCFTemplateParamKeys("TEMPLATE_BODY", defaultString, defaultString,
-                "", defaultString, defaultString, defaultString, defaultString, defaultString, true))
+                "", defaultString, defaultString, defaultString, defaultString, defaultString, true, null))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(
         ()
             -> infrastructureProvisionerService.getCFTemplateParamKeys("TEMPLATE_URL", defaultString, defaultString, "",
-                defaultString, defaultString, defaultString, defaultString, defaultString, true))
+                defaultString, defaultString, defaultString, defaultString, defaultString, true, null))
         .isInstanceOf(InvalidRequestException.class);
   }
 
