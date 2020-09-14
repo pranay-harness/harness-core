@@ -11,7 +11,8 @@ public class HttpStepInfoVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return HttpStepInfo.infoBuilder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    HttpStepInfo httpStepInfo = (HttpStepInfo) originalElement;
+    return HttpStepInfo.infoBuilder().identifier(httpStepInfo.getIdentifier()).build();
   }
 }

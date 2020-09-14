@@ -11,7 +11,8 @@ public class DeploymentStageVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return DeploymentStage.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    DeploymentStage deploymentStage = (DeploymentStage) originalElement;
+    return DeploymentStage.builder().identifier(deploymentStage.getIdentifier()).build();
   }
 }

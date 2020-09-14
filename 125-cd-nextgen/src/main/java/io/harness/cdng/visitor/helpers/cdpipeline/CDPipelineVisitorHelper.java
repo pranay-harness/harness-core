@@ -11,7 +11,8 @@ public class CDPipelineVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return CDPipeline.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    CDPipeline cdPipeline = (CDPipeline) originalElement;
+    return CDPipeline.builder().identifier(cdPipeline.getIdentifier()).build();
   }
 }

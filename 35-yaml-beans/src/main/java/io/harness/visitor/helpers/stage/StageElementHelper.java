@@ -11,7 +11,8 @@ public class StageElementHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return StageElement.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    StageElement stageElement = (StageElement) originalElement;
+    return StageElement.builder().identifier(stageElement.getIdentifier()).type(stageElement.getType()).build();
   }
 }

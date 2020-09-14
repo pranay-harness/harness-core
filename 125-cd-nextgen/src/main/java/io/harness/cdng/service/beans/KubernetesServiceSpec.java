@@ -17,7 +17,7 @@ import java.util.List;
 
 @Value
 @Builder
-@JsonTypeName("Kubernetes")
+@JsonTypeName(ServiceSpecType.KUBERNETES)
 @SimpleVisitorHelper(helperClass = KubernetesServiceSpecVisitorHelper.class)
 public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   ArtifactListConfig artifacts;
@@ -30,7 +30,7 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
 
   @Override
   public String getType() {
-    return ServiceDefinitionType.KUBERNETES.getDisplayName();
+    return ServiceDefinitionType.KUBERNETES.getYamlName();
   }
 
   @Override

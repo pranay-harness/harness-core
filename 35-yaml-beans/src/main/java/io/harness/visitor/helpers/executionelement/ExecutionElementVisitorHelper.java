@@ -11,7 +11,7 @@ public class ExecutionElementVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
+  public Object createDummyVisitableElement(Object originalElement) {
     return ExecutionElement.builder().build();
   }
 }

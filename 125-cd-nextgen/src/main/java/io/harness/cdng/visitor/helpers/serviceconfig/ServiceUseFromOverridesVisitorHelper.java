@@ -11,7 +11,7 @@ public class ServiceUseFromOverridesVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
+  public Object createDummyVisitableElement(Object originalElement) {
     return ServiceUseFromStage.Overrides.builder().build();
   }
 }

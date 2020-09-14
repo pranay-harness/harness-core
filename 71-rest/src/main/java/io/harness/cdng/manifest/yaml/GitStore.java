@@ -69,6 +69,6 @@ public class GitStore implements StoreConfig, Visitable {
 
   @Override
   public VisitableChildren getChildrenToWalk() {
-    return null;
+    return VisitableChildren.builder().build();
   }
 }

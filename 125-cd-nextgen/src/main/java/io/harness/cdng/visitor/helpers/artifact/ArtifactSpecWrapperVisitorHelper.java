@@ -11,7 +11,8 @@ public class ArtifactSpecWrapperVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return ArtifactSpecWrapper.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    ArtifactSpecWrapper original = (ArtifactSpecWrapper) originalElement;
+    return ArtifactSpecWrapper.builder().sourceType(original.getSourceType()).build();
   }
 }

@@ -11,7 +11,8 @@ public class GcrArtifactConfigVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return GcrArtifactConfig.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) originalElement;
+    return GcrArtifactConfig.builder().identifier(gcrArtifactConfig.getIdentifier()).build();
   }
 }

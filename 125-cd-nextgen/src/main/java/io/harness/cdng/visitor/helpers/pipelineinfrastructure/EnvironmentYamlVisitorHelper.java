@@ -11,7 +11,11 @@ public class EnvironmentYamlVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return EnvironmentYaml.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    EnvironmentYaml environmentYaml = (EnvironmentYaml) originalElement;
+    return EnvironmentYaml.builder()
+        .identifier(environmentYaml.getIdentifier())
+        .type(environmentYaml.getType())
+        .build();
   }
 }

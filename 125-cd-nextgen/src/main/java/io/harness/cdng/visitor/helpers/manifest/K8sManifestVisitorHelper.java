@@ -11,7 +11,8 @@ public class K8sManifestVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return K8sManifest.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    K8sManifest k8sManifest = (K8sManifest) originalElement;
+    return K8sManifest.builder().identifier(k8sManifest.getIdentifier()).build();
   }
 }

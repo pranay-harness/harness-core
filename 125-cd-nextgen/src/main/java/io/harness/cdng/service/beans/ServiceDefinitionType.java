@@ -10,36 +10,41 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum ServiceDefinitionType {
-  @JsonProperty("Ssh") SSH("Ssh", Lists.newArrayList(ExecutionStrategyType.BASIC)),
-  @JsonProperty("Kubernetes")
+  @JsonProperty(ServiceSpecType.SSH) SSH("Ssh", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.SSH),
+  @JsonProperty(ServiceSpecType.KUBERNETES)
   KUBERNETES("Kubernetes",
-      Lists.newArrayList(
-          ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY)),
-  @JsonProperty("Ecs")
+      Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
+      ServiceSpecType.KUBERNETES),
+  @JsonProperty(ServiceSpecType.ECS)
   ECS("Ecs",
-      Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY)),
-  @JsonProperty("Helm") HELM("Helm", Lists.newArrayList(ExecutionStrategyType.BASIC)),
-  @JsonProperty("Pcf")
+      Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
+      ServiceSpecType.ECS),
+  @JsonProperty(ServiceSpecType.HELM)
+  HELM("Helm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.HELM),
+  @JsonProperty(ServiceSpecType.PCF)
   PCF("Pcf",
-      Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY));
+      Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
+      ServiceSpecType.PCF);
 
   private String displayName;
+  private String yamlName;
   private List<ExecutionStrategyType> executionStrategies;
 
   @JsonCreator
-  public static ServiceDefinitionType getServiceDefinitionType(@JsonProperty("type") String displayName) {
+  public static ServiceDefinitionType getServiceDefinitionType(@JsonProperty("type") String yamlName) {
     for (ServiceDefinitionType serviceDefinitionType : ServiceDefinitionType.values()) {
-      if (serviceDefinitionType.displayName.equalsIgnoreCase(displayName)) {
+      if (serviceDefinitionType.yamlName.equalsIgnoreCase(yamlName)) {
         return serviceDefinitionType;
       }
     }
     throw new IllegalArgumentException(String.format(
-        "Invalid value:%s, the expected values are: %s", displayName, Arrays.toString(ServiceDefinitionType.values())));
+        "Invalid value:%s, the expected values are: %s", yamlName, Arrays.toString(ServiceDefinitionType.values())));
   }
 
-  ServiceDefinitionType(String displayName, List<ExecutionStrategyType> executionStrategies) {
+  ServiceDefinitionType(String displayName, List<ExecutionStrategyType> executionStrategies, String yamlName) {
     this.displayName = displayName;
     this.executionStrategies = executionStrategies;
+    this.yamlName = yamlName;
   }
 
   public static List<ExecutionStrategyType> getExecutionStrategies(ServiceDefinitionType serviceDefinitionType) {
@@ -47,8 +52,8 @@ public enum ServiceDefinitionType {
   }
 
   @JsonValue
-  public String getDisplayName() {
-    return displayName;
+  public String getYamlName() {
+    return yamlName;
   }
 
   public static ServiceDefinitionType fromString(final String s) {

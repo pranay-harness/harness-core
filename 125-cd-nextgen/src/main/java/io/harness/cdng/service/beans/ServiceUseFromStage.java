@@ -39,10 +39,5 @@ public class ServiceUseFromStage implements Serializable, Visitable {
   public static class Overrides implements Visitable {
     ParameterField<String> name;
     ParameterField<String> description;
-
-    @Override
-    public VisitableChildren getChildrenToWalk() {
-      return null;
-    }
   }
 }

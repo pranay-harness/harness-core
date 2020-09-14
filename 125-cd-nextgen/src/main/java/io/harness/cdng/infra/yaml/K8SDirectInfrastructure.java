@@ -5,7 +5,6 @@ import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
 import io.harness.utils.ParameterField;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
@@ -51,10 +50,5 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
       resultantInfra = resultantInfra.withReleaseName(config.getReleaseName());
     }
     return resultantInfra;
-  }
-
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    return null;
   }
 }

@@ -11,7 +11,7 @@ public class KubernetesServiceSpecVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
+  public Object createDummyVisitableElement(Object originalElement) {
     return KubernetesServiceSpec.builder().build();
   }
 }

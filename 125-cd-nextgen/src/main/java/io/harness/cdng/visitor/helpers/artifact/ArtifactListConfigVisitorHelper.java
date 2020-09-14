@@ -11,7 +11,7 @@ public class ArtifactListConfigVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
+  public Object createDummyVisitableElement(Object originalElement) {
     return ArtifactListConfig.builder().build();
   }
 }

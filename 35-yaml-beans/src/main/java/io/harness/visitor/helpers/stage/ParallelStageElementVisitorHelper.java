@@ -11,7 +11,7 @@ public class ParallelStageElementVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
+  public Object createDummyVisitableElement(Object originalElement) {
     return ParallelStageElement.builder().build();
   }
 }

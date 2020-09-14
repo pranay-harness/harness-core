@@ -11,7 +11,8 @@ public class ManifestConfigVisitorHelper implements ConfigValidator {
   }
 
   @Override
-  public Object createDummyVisitableElement() {
-    return ManifestConfig.builder().build();
+  public Object createDummyVisitableElement(Object originalElement) {
+    ManifestConfig manifestConfig = (ManifestConfig) originalElement;
+    return ManifestConfig.builder().identifier(manifestConfig.getIdentifier()).type(manifestConfig.getType()).build();
   }
 }

@@ -14,7 +14,6 @@ import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.state.StepType;
 import io.harness.utils.ParameterField;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
@@ -39,15 +38,11 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters
   String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingRollbackStepInfo(
-      ParameterField<Integer> timeout, Map<String, StepDependencySpec> stepDependencySpecs) {
+  public K8sRollingRollbackStepInfo(ParameterField<Integer> timeout,
+      Map<String, StepDependencySpec> stepDependencySpecs, String name, String identifier) {
     super(timeout, stepDependencySpecs);
-  }
-
-  public K8sRollingRollbackStepInfo(String name, String identifier, String metadata) {
     this.name = name;
     this.identifier = identifier;
-    this.metadata = metadata;
   }
 
   @Override
@@ -83,10 +78,5 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters
   @Override
   public String getIdentifier() {
     return identifier;
-  }
-
-  @Override
-  public VisitableChildren getChildrenToWalk() {
-    return null;
   }
 }
