@@ -53,8 +53,8 @@ public class BatchProcessingExecutor {
           return;
         }
         logger.info("Execute the batch-processing from {}", directory);
-        Path jar = Paths.get(directory.getPath(), "78-batch-processing", "target", "batch-processing-capsule.jar");
-        Path config = Paths.get(directory.getPath(), "78-batch-processing", "batch-processing-config.yml");
+        Path jar = Paths.get(directory.getPath(), "280-batch-processing", "target", "batch-processing-capsule.jar");
+        Path config = Paths.get(directory.getPath(), "280-batch-processing", "batch-processing-config.yml");
         String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 
         if (!new File(alpn).exists()) {

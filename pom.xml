@@ -55,7 +55,6 @@
         <module>74-ci-manager</module>
         <module>75-model-test</module>
         <module>76-graphql-test</module>
-        <module>78-batch-processing</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
         <module>125-cd-nextgen</module>
@@ -67,6 +66,7 @@
         <module>250-watcher</module>
         <module>260-delegate</module>
         <module>270-verification</module>
+        <module>280-batch-processing</module>
         <module>300-cv-nextgen</module>
 
         <!--<module>990-commons-test</module>-->
