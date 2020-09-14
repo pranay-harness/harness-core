@@ -33,6 +33,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
+import io.harness.utils.ParameterField;
 import org.joor.Reflect;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,29 +62,33 @@ public class ServiceStepTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateServiceOutcome() {
-    K8sManifest k8Manifest = K8sManifest.builder()
-                                 .identifier("m1")
-                                 .storeConfigWrapper(StoreConfigWrapper.builder()
-                                                         .storeConfig(GitStore.builder()
-                                                                          .path("path")
-                                                                          .connectorIdentifier("g1")
-                                                                          .gitFetchType(FetchType.BRANCH)
-                                                                          .branch("master")
-                                                                          .build())
-                                                         .build())
-                                 .build();
+    K8sManifest k8Manifest =
+        K8sManifest.builder()
+            .identifier("m1")
+            .storeConfigWrapper(
+                StoreConfigWrapper.builder()
+                    .storeConfig(GitStore.builder()
+                                     .paths(ParameterField.createValueField(Collections.singletonList("path")))
+                                     .connectorIdentifier(ParameterField.createValueField("g1"))
+                                     .gitFetchType(FetchType.BRANCH)
+                                     .branch(ParameterField.createValueField("master"))
+                                     .build())
+                    .build())
+            .build();
 
-    K8sManifest k8Manifest1 = K8sManifest.builder()
-                                  .identifier("m2")
-                                  .storeConfigWrapper(StoreConfigWrapper.builder()
-                                                          .storeConfig(GitStore.builder()
-                                                                           .path("path1")
-                                                                           .connectorIdentifier("g1")
-                                                                           .gitFetchType(FetchType.BRANCH)
-                                                                           .branch("master")
-                                                                           .build())
-                                                          .build())
-                                  .build();
+    K8sManifest k8Manifest1 =
+        K8sManifest.builder()
+            .identifier("m2")
+            .storeConfigWrapper(
+                StoreConfigWrapper.builder()
+                    .storeConfig(GitStore.builder()
+                                     .paths(ParameterField.createValueField(Collections.singletonList("path1")))
+                                     .connectorIdentifier(ParameterField.createValueField("g1"))
+                                     .gitFetchType(FetchType.BRANCH)
+                                     .branch(ParameterField.createValueField("master"))
+                                     .build())
+                    .build())
+            .build();
 
     OutcomeService outcomeService = mock(OutcomeService.class);
     doReturn(Collections.singletonList(
@@ -94,8 +99,8 @@ public class ServiceStepTest extends CategoryTest {
     Reflect.on(serviceStep).set("outcomeService", outcomeService);
     ServiceOutcome serviceOutcome = serviceStep.createServiceOutcome(
         ServiceConfig.builder()
-            .identifier("s1")
-            .name("s1")
+            .identifier(ParameterField.createValueField("s1"))
+            .name(ParameterField.createValueField("s1"))
             .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build(),
         Collections.singletonList(
@@ -154,15 +159,15 @@ public class ServiceStepTest extends CategoryTest {
 
     ServiceConfig serviceConfig =
         ServiceConfig.builder()
-            .identifier("IDENTIFIER")
-            .name("DISPLAY")
+            .identifier(ParameterField.createValueField("IDENTIFIER"))
+            .name(ParameterField.createValueField("DISPLAY"))
             .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build();
     ServiceConfig serviceConfigOverrides =
         ServiceConfig.builder()
-            .identifier("IDENTIFIER")
-            .name("DISPLAY")
-            .description("DESCRIPTION")
+            .identifier(ParameterField.createValueField("IDENTIFIER"))
+            .name(ParameterField.createValueField("DISPLAY"))
+            .description(ParameterField.createValueField("DESCRIPTION"))
             .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build();
     ServiceStepParameters stepParameters =

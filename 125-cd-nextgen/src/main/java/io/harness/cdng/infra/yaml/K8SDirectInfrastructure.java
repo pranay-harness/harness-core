@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.utils.ParameterField;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
@@ -14,14 +16,20 @@ import lombok.experimental.Wither;
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
 @SimpleVisitorHelper(helperClass = K8SDirectInfrastructureVisitorHelper.class)
-public class K8SDirectInfrastructure implements Infrastructure {
-  @Wither String connectorIdentifier;
-  @Wither String namespace;
-  @Wither String releaseName;
+public class K8SDirectInfrastructure implements Infrastructure, Visitable {
+  @Wither ParameterField<String> connectorIdentifier;
+  @Wither ParameterField<String> namespace;
+  @Wither ParameterField<String> releaseName;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public InfraMapping getInfraMapping() {
-    return K8sDirectInfraMapping.builder().k8sConnector(connectorIdentifier).namespace(namespace).build();
+    return K8sDirectInfraMapping.builder()
+        .k8sConnector(connectorIdentifier.getValue())
+        .namespace(namespace.getValue())
+        .build();
   }
 
   @Override
@@ -33,15 +41,20 @@ public class K8SDirectInfrastructure implements Infrastructure {
   public Infrastructure applyOverrides(Infrastructure overrideConfig) {
     K8SDirectInfrastructure config = (K8SDirectInfrastructure) overrideConfig;
     K8SDirectInfrastructure resultantInfra = this;
-    if (EmptyPredicate.isNotEmpty(config.getConnectorIdentifier())) {
+    if (config.getConnectorIdentifier() != null) {
       resultantInfra = resultantInfra.withConnectorIdentifier(config.getConnectorIdentifier());
     }
-    if (EmptyPredicate.isNotEmpty(config.getNamespace())) {
+    if (config.getNamespace() != null) {
       resultantInfra = resultantInfra.withNamespace(config.getNamespace());
     }
-    if (EmptyPredicate.isNotEmpty(config.getReleaseName())) {
+    if (config.getReleaseName() != null) {
       resultantInfra = resultantInfra.withReleaseName(config.getReleaseName());
     }
     return resultantInfra;
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    return null;
   }
 }

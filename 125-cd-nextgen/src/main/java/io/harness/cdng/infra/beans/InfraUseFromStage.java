@@ -2,25 +2,48 @@ package io.harness.cdng.infra.beans;
 
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
+import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromOverridesVisitorHelper;
+import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromStageVisitorHelper;
+import io.harness.walktree.beans.VisitableChildren;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import io.swagger.annotations.ApiModel;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 
-@Value
+@Data
 @Builder
-public class InfraUseFromStage implements Serializable {
+@SimpleVisitorHelper(helperClass = InfraUseFromStageVisitorHelper.class)
+public class InfraUseFromStage implements Serializable, Visitable {
   // Stage identifier of the stage to select from.
   @NotNull String stage;
   Overrides overrides;
 
-  @Value
+  // For Visitor Framework Impl
+  String metadata;
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    return null;
+  }
+
+  @Data
   @Builder
   @ApiModel(value = "InfraOverrides")
-  public static class Overrides implements Serializable {
+  @SimpleVisitorHelper(helperClass = InfraUseFromOverridesVisitorHelper.class)
+  public static class Overrides implements Serializable, Visitable {
     EnvironmentYaml environment;
-    InfrastructureDef infrastructureDef;
+    InfrastructureDef infrastructureDefinition;
+
+    @Override
+    public VisitableChildren getChildrenToWalk() {
+      VisitableChildren children = VisitableChildren.builder().build();
+      children.add("infrastructureDefinition", infrastructureDefinition);
+      children.add("environment", environment);
+      return children;
+    }
   }
 }

@@ -1,3 +1,7 @@
 package io.harness.walktree.visitor.validation;
 
-public interface ConfigValidator { void validate(Object object, ValidationVisitor visitor); }
+import io.harness.walktree.visitor.DummyVisitableElement;
+
+public interface ConfigValidator extends DummyVisitableElement {
+  void validate(Object object, ValidationVisitor visitor);
+}

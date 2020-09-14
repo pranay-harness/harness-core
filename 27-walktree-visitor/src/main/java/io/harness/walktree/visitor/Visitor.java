@@ -39,7 +39,7 @@ public abstract class Visitor {
     }
 
     // Visit Element
-    if (!skipToPostVisit) {
+    if (!skipToPostVisit && currentElement instanceof Visitable) {
       VisitElementResult visitElementResult = visitElement(currentElement);
       boolean skipChildren = shouldSkipToPostVisit(visitElementResult);
       if (visitElementResult == VisitElementResult.TERMINATE) {
@@ -47,8 +47,8 @@ public abstract class Visitor {
       }
       // Visit the children
       if (!skipChildren) {
-        if (currentElement instanceof Visitable) {
-          Visitable visitable = (Visitable) currentElement;
+        Visitable visitable = (Visitable) currentElement;
+        if (visitable.getChildrenToWalk() != null) {
           List<Object> childrenToWalk = visitable.getChildrenToWalk()
                                             .getVisitableChildList()
                                             .stream()

@@ -12,6 +12,7 @@ import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
 import io.harness.rule.Owner;
+import io.harness.utils.ParameterField;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -20,7 +21,10 @@ public class ArtifactResponseToOutcomeMapperTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testToArtifactOutcome() {
-    ArtifactConfig artifactConfig = DockerHubArtifactConfig.builder().build();
+    ArtifactConfig artifactConfig = DockerHubArtifactConfig.builder()
+                                        .dockerhubConnector(ParameterField.createValueField("connector"))
+                                        .imagePath(ParameterField.createValueField("IMAGE"))
+                                        .build();
     ArtifactDelegateResponse artifactDelegateResponse = DockerArtifactDelegateResponse.builder().build();
 
     ArtifactOutcome artifactOutcome =

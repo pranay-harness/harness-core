@@ -1,7 +1,9 @@
 package io.harness.cdng.k8s;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.state.io.StepParameters;
+import io.harness.utils.ParameterField;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +16,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class K8sRollingStepParameters implements StepParameters {
-  int timeout;
-  boolean skipDryRun;
-  Map<String, StepDependencySpec> stepDependencySpecs;
+  ParameterField<Integer> timeout;
+  ParameterField<Boolean> skipDryRun;
+  @JsonIgnore Map<String, StepDependencySpec> stepDependencySpecs;
 }

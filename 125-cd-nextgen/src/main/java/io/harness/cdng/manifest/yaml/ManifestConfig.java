@@ -6,7 +6,8 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.visitor.helpers.serviceconfig.ManifestConfigVisitorHelper;
+import io.harness.cdng.visitor.helpers.manifest.ManifestConfigVisitorHelper;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -19,11 +20,14 @@ import lombok.NoArgsConstructor;
 @JsonTypeName("manifest")
 @SimpleVisitorHelper(helperClass = ManifestConfigVisitorHelper.class)
 public class ManifestConfig implements ManifestConfigWrapper, Visitable {
-  String identifier;
+  @EntityIdentifier String identifier;
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY)
   ManifestAttributes manifestAttributes;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   public void setIdentifier(String identifier) {
     this.identifier = identifier;

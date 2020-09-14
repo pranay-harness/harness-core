@@ -6,7 +6,7 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.beans.ConstructorProperties;
@@ -20,17 +20,21 @@ import java.util.Optional;
  * {@link ExecutionElement} is used to represent this dynamic property where object in this list
  * can be another list of steps or single step
  */
-@Value
+@Data
 @Builder
 @SimpleVisitorHelper(helperClass = ExecutionElementVisitorHelper.class)
 public class ExecutionElement implements Visitable {
   @NotEmpty List<ExecutionWrapper> steps;
   List<ExecutionWrapper> rollbackSteps;
 
-  @ConstructorProperties({"steps", "rollbackSteps"})
-  public ExecutionElement(List<ExecutionWrapper> steps, List<ExecutionWrapper> rollbackSteps) {
+  // For Visitor Framework Impl
+  String metadata;
+
+  @ConstructorProperties({"steps", "rollbackSteps", "metadata"})
+  public ExecutionElement(List<ExecutionWrapper> steps, List<ExecutionWrapper> rollbackSteps, String metadata) {
     this.steps = Optional.ofNullable(steps).orElse(new ArrayList<>());
     this.rollbackSteps = Optional.ofNullable(rollbackSteps).orElse(new ArrayList<>());
+    this.metadata = metadata;
   }
 
   @Override

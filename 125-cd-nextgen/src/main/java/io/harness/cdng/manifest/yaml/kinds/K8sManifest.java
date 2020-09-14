@@ -8,8 +8,9 @@ import io.harness.cdng.manifest.ValuesPathProvider;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
-import io.harness.cdng.visitor.helpers.serviceconfig.K8sManifestVisitorHelper;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.cdng.visitor.helpers.manifest.K8sManifestVisitorHelper;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -18,7 +19,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 
@@ -31,20 +31,23 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = K8sManifestVisitorHelper.class)
 public class K8sManifest implements ManifestAttributes, ValuesPathProvider, Visitable {
-  String identifier;
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @Wither @Singular List<String> valuesFilePaths;
+  @EntityIdentifier String identifier;
+  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @Wither ParameterField<List<String>> valuesFilePaths;
   @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public List<String> getValuesPathsToFetch() {
-    return valuesFilePaths;
+    return valuesFilePaths.getValue();
   }
 
   @Override
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     K8sManifest k8sManifest = (K8sManifest) overrideConfig;
     K8sManifest resultantManifest = this;
-    if (EmptyPredicate.isNotEmpty(k8sManifest.getValuesFilePaths())) {
+    if (k8sManifest.getValuesFilePaths() != null) {
       resultantManifest = resultantManifest.withValuesFilePaths(k8sManifest.getValuesFilePaths());
     }
     if (k8sManifest.getStoreConfigWrapper() != null) {

@@ -32,7 +32,7 @@ public class PipelineDtoMapper {
   public CDPipelineSummaryResponseDTO preparePipelineSummary(CDPipelineEntity cdPipelineEntity) {
     return CDPipelineSummaryResponseDTO.builder()
         .identifier(cdPipelineEntity.getIdentifier())
-        .description(cdPipelineEntity.getCdPipeline().getDescription())
+        .description((String) cdPipelineEntity.getCdPipeline().getDescription().getJsonFieldValue())
         .name(cdPipelineEntity.getCdPipeline().getName())
         .tags(cdPipelineEntity.getCdPipeline().getTags())
         .build();

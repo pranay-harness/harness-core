@@ -1,27 +1,34 @@
 package io.harness.yaml.core;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.EntityName;
 import io.harness.visitor.helpers.executionelement.StepGroupElementVisitorHelper;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.intfc.WithIdentifier;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Data
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @JsonTypeName("stepGroup")
 @SimpleVisitorHelper(helperClass = StepGroupElementVisitorHelper.class)
 public class StepGroupElement implements ExecutionWrapper, WithIdentifier, Visitable {
-  String identifier;
-  String name;
+  @EntityIdentifier String identifier;
+  @EntityName String name;
   @NotNull List<ExecutionWrapper> steps;
   List<ExecutionWrapper> rollbackSteps;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public VisitableChildren getChildrenToWalk() {

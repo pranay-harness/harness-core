@@ -15,13 +15,14 @@ public class ArtifactConfigToDelegateReqMapper {
   public DockerArtifactDelegateRequest getDockerDelegateRequest(DockerHubArtifactConfig artifactConfig,
       DockerConnectorDTO connectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
     // If both are empty, regex is latest among all docker artifacts.
-    String tagRegex = "";
-    if (EmptyPredicate.isEmpty(artifactConfig.getTag()) && EmptyPredicate.isEmpty(artifactConfig.getTagRegex())) {
+    String tagRegex = artifactConfig.getTagRegex() != null ? artifactConfig.getTagRegex().getValue() : "";
+    String tag = artifactConfig.getTag() != null ? artifactConfig.getTag().getValue() : "";
+    if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
       tagRegex = "*";
     }
     return DockerArtifactDelegateRequest.builder()
-        .imagePath(artifactConfig.getImagePath())
-        .tag(artifactConfig.getTag())
+        .imagePath(artifactConfig.getImagePath().getValue())
+        .tag(tag)
         .tagRegex(tagRegex)
         .dockerConnectorDTO(connectorDTO)
         .encryptedDataDetails(encryptedDataDetails)

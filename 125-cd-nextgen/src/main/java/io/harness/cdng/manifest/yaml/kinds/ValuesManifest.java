@@ -6,7 +6,7 @@ import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
-import io.harness.cdng.visitor.helpers.serviceconfig.ValuesManifestVisitorHelper;
+import io.harness.cdng.visitor.helpers.manifest.ValuesManifestVisitorHelper;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

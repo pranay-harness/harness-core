@@ -2,34 +2,35 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
-import io.harness.cdng.visitor.helpers.serviceconfig.ArtifactListConfigVisitorHelper;
+import io.harness.cdng.visitor.helpers.artifact.ArtifactListConfigVisitorHelper;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Singular;
-import lombok.Value;
 
+import java.beans.ConstructorProperties;
 import java.util.List;
 
 /**
  * This is Yaml POJO class which may contain expressions as well.
  * Used mainly for converter layer to store yaml.
  */
-@Value
+@Data
 @Builder
 @SimpleVisitorHelper(helperClass = ArtifactListConfigVisitorHelper.class)
 public class ArtifactListConfig implements Visitable {
   ArtifactSpecWrapper primary;
   @Singular List<SidecarArtifactWrapper> sidecars;
 
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  public ArtifactListConfig(@JsonProperty("primary") ArtifactSpecWrapper primary,
-      @JsonProperty("sidecars") List<SidecarArtifactWrapper> sidecars) {
+  // For Visitor Framework Impl
+  String metadata;
+
+  @ConstructorProperties({"primary", "sidecars", "metadata"})
+  public ArtifactListConfig(ArtifactSpecWrapper primary, List<SidecarArtifactWrapper> sidecars, String metadata) {
     this.primary = primary;
     if (primary != null) {
       this.primary.getArtifactConfig().setIdentifier("primary");

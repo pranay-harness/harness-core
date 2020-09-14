@@ -103,9 +103,9 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
       ServiceConfig serviceConfig, List<StepResponseNotifyData> responseNotifyDataList) {
     ServiceOutcomeBuilder outcomeBuilder =
         ServiceOutcome.builder()
-            .displayName(serviceConfig.getName())
-            .identifier(serviceConfig.getIdentifier())
-            .description(serviceConfig.getDescription())
+            .displayName(serviceConfig.getName().getValue())
+            .identifier(serviceConfig.getIdentifier().getValue())
+            .description(serviceConfig.getDescription() != null ? serviceConfig.getDescription().getValue() : "")
             .deploymentType(serviceConfig.getServiceDefinition().getServiceSpec().getType());
 
     // Fetch all outcomes of the children.
@@ -150,9 +150,9 @@ public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParamete
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return ServiceEntity.builder()
-        .identifier(serviceConfig.getIdentifier())
-        .name(serviceConfig.getName())
-        .description(serviceConfig.getDescription())
+        .identifier(serviceConfig.getIdentifier().getValue())
+        .name(serviceConfig.getName().getValue())
+        .description(serviceConfig.getDescription().getValue())
         .projectIdentifier(projectIdentifier)
         .orgIdentifier(orgIdentifier)
         .accountId(accountId)

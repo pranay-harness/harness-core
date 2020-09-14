@@ -5,7 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.cdng.visitor.helpers.serviceconfig.StoreConfigWrapperVisitorHelper;
+import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

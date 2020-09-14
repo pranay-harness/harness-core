@@ -17,6 +17,7 @@ import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
@@ -31,7 +32,6 @@ import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -57,18 +57,24 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
   private PlanNode getEnvStepNode(PipelineInfrastructure pipelineInfrastructure) {
     final String envNodeId = generateUuid();
     EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
-    environment.setName(StringUtils.defaultIfEmpty(environment.getName(), environment.getIdentifier()));
+    if (!environment.getName().isExpression() && EmptyPredicate.isEmpty(environment.getName().getValue())) {
+      environment.setName(environment.getIdentifier());
+    }
     EnvironmentYaml environmentOverrides = null;
     if (pipelineInfrastructure.getUseFromStage() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides() != null) {
       environmentOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getEnvironment();
-      environmentOverrides.setName(StringUtils.defaultIfEmpty(environment.getName(), environment.getIdentifier()));
+      if (!environmentOverrides.getName().isExpression()
+          && EmptyPredicate.isEmpty(environmentOverrides.getName().getValue())) {
+        environmentOverrides.setName(environmentOverrides.getIdentifier());
+      }
     }
 
+    final String environmentIdentifier = "environment";
     return PlanNode.builder()
         .uuid(envNodeId)
-        .name(environment.getName())
-        .identifier(environment.getIdentifier())
+        .name(environmentIdentifier)
+        .identifier(environmentIdentifier)
         .stepType(EnvironmentStep.STEP_TYPE)
         .facilitatorObtainment(
             FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build())
@@ -87,9 +93,9 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
     Infrastructure infraOverrides = null;
     if (pipelineInfrastructure.getUseFromStage() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDef() != null) {
+        && pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition() != null) {
       infraOverrides =
-          pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDef().getInfrastructure();
+          pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition().getInfrastructure();
     }
 
     PlanNodeBuilder planNodeBuilder =

@@ -9,7 +9,9 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.state.StepType;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +25,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(StepSpecType.SHELL_SCRIPT)
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
-public class ShellScriptStepInfo extends ShellScriptStepParameters implements CDStepInfo {
+public class ShellScriptStepInfo extends ShellScriptStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
 
@@ -53,5 +55,10 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   @JsonIgnore
   public String getFacilitatorType() {
     return PlanCreatorFacilitatorUtils.decideTaskFacilitatorType();
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    return null;
   }
 }

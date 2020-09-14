@@ -35,7 +35,6 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -93,7 +92,9 @@ public class ServiceStepPlanCreator
       ServiceConfig serviceConfig, List<String> childNodeIds, ExecutionPlanCreationContext context) {
     final String serviceNodeUid = generateUuid();
 
-    serviceConfig.setName(StringUtils.defaultIfEmpty(serviceConfig.getName(), serviceConfig.getIdentifier()));
+    if (!serviceConfig.getName().isExpression() && EmptyPredicate.isEmpty(serviceConfig.getName().getValue())) {
+      serviceConfig.setName(serviceConfig.getIdentifier());
+    }
 
     ServiceConfig serviceOverrides = null;
     if (serviceConfig.getUseFromStage() != null) {
@@ -138,7 +139,7 @@ public class ServiceStepPlanCreator
       }
       //  Add validation for not chaining of stages
       CDStage previousStage = PlanCreatorConfigUtils.getGivenDeploymentStageFromPipeline(
-          context, serviceConfig.getUseFromStage().getStage());
+          context, serviceConfig.getUseFromStage().getStage().getValue());
       if (previousStage != null) {
         DeploymentStage deploymentStage = (DeploymentStage) previousStage;
         return serviceConfig.applyUseFromStage(deploymentStage.getService());

@@ -2,6 +2,11 @@ package io.harness.cdng.manifest.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.cdng.visitor.helpers.manifest.ManifestOverridesVisitorHelper;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.walktree.beans.VisitableChildren;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverrideSetsWrapper;
 import lombok.Builder;
 import lombok.Value;
@@ -12,7 +17,18 @@ import java.util.List;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("overrideSet")
-public class ManifestOverrideSets implements OverrideSetsWrapper {
-  String identifier;
+@SimpleVisitorHelper(helperClass = ManifestOverridesVisitorHelper.class)
+public class ManifestOverrideSets implements OverrideSetsWrapper, Visitable {
+  @EntityIdentifier String identifier;
   List<ManifestConfigWrapper> manifests;
+
+  // For Visitor Framework Impl
+  String metadata;
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    manifests.forEach(manifest -> children.add("manifests", manifest));
+    return children;
+  }
 }

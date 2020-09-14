@@ -11,6 +11,7 @@ import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.utils.ParameterField;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -22,7 +23,8 @@ public class ArtifactConfigToDelegateReqMapperTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetDockerDelegateRequest() {
-    DockerHubArtifactConfig dockerHubArtifactConfig = DockerHubArtifactConfig.builder().imagePath("IMAGE").build();
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder().imagePath(ParameterField.createValueField("IMAGE")).build();
     DockerConnectorDTO connectorDTO = DockerConnectorDTO.builder().build();
     List<EncryptedDataDetail> encryptedDataDetailList = Collections.emptyList();
 
@@ -31,10 +33,10 @@ public class ArtifactConfigToDelegateReqMapperTest extends CategoryTest {
 
     assertThat(dockerDelegateRequest.getDockerConnectorDTO()).isEqualTo(connectorDTO);
     assertThat(dockerDelegateRequest.getEncryptedDataDetails()).isEqualTo(encryptedDataDetailList);
-    assertThat(dockerDelegateRequest.getImagePath()).isEqualTo(dockerHubArtifactConfig.getImagePath());
+    assertThat(dockerDelegateRequest.getImagePath()).isEqualTo(dockerHubArtifactConfig.getImagePath().getValue());
     assertThat(dockerDelegateRequest.getSourceType()).isEqualTo(ArtifactSourceType.DOCKER_HUB);
     assertThat(dockerDelegateRequest.getTagsList()).isNull();
-    assertThat(dockerDelegateRequest.getTag()).isNull();
+    assertThat(dockerDelegateRequest.getTag()).isEqualTo("");
     assertThat(dockerDelegateRequest.getTagRegex()).isEqualTo("*");
   }
 }

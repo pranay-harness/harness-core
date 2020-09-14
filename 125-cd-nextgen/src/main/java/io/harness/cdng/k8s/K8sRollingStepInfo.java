@@ -16,7 +16,10 @@ import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.state.StepType;
+import io.harness.utils.ParameterField;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,14 +33,22 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(StepSpecType.K8S_ROLLING_DEPLOY)
 @SimpleVisitorHelper(helperClass = K8sRollingStepInfoVisitorHelper.class)
-public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDStepInfo {
+public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;
 
+  // For Visitor Framework Impl
+  String metadata;
+
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingStepInfo(int timeout, boolean skipDryRun, Map<String, StepDependencySpec> stepDependencySpecs,
-      String name, String identifier) {
+  public K8sRollingStepInfo(ParameterField<Integer> timeout, ParameterField<Boolean> skipDryRun,
+      Map<String, StepDependencySpec> stepDependencySpecs, String name, String identifier) {
     super(timeout, skipDryRun, stepDependencySpecs);
+    this.name = name;
+    this.identifier = identifier;
+  }
+
+  public K8sRollingStepInfo(String name, String identifier) {
     this.name = name;
     this.identifier = identifier;
   }
@@ -79,5 +90,10 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
             .outcomeExpression(OutcomeExpressionConstants.K8S_ROLL_OUT.getName())
             .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    return null;
   }
 }

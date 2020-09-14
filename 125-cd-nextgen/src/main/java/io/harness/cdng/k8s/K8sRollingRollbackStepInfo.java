@@ -13,7 +13,10 @@ import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.state.StepType;
+import io.harness.utils.ParameterField;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,13 +31,23 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(StepSpecType.K8S_ROLLING_ROLLBACK)
 @SimpleVisitorHelper(helperClass = K8sRollingRollbackStepInfoVisitorHelper.class)
-public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters implements CDStepInfo {
+public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;
 
+  // For Visitor Framework Impl
+  String metadata;
+
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingRollbackStepInfo(int timeout, Map<String, StepDependencySpec> stepDependencySpecs) {
+  public K8sRollingRollbackStepInfo(
+      ParameterField<Integer> timeout, Map<String, StepDependencySpec> stepDependencySpecs) {
     super(timeout, stepDependencySpecs);
+  }
+
+  public K8sRollingRollbackStepInfo(String name, String identifier, String metadata) {
+    this.name = name;
+    this.identifier = identifier;
+    this.metadata = metadata;
   }
 
   @Override
@@ -70,5 +83,10 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters
   @Override
   public String getIdentifier() {
     return identifier;
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    return null;
   }
 }

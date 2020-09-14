@@ -40,7 +40,7 @@ public class ManifestFetchHelper {
           paths = fetchPathsToFetch(manifestAttribute, gitStore);
 
           if (isNotEmpty(paths)) {
-            String connectorId = gitStore.getConnectorIdentifier();
+            String connectorId = gitStore.getConnectorIdentifier().getValue();
             SettingAttribute settingAttribute = settingsService.get(connectorId);
 
             if (settingAttribute != null) {
@@ -67,7 +67,7 @@ public class ManifestFetchHelper {
     if (manifestAttribute instanceof ValuesPathProvider) {
       paths = ((ValuesPathProvider) manifestAttribute).getValuesPathsToFetch();
     } else {
-      paths = gitStore.getPaths();
+      paths = gitStore.getPaths().getValue();
     }
     return paths;
   }

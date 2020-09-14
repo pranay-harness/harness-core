@@ -25,6 +25,9 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   List<ManifestOverrideSets> manifestOverrideSets;
   List<ArtifactOverrideSets> artifactOverrideSets;
 
+  // For Visitor Framework Impl
+  String metadata;
+
   @Override
   public String getType() {
     return ServiceDefinitionType.KUBERNETES.getDisplayName();
