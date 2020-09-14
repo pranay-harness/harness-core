@@ -87,6 +87,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
@@ -102,6 +103,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.pipeline.PipelineServiceHelper;
+import software.wings.service.impl.pipeline.PipelineServiceValidator;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
@@ -161,6 +163,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private CounterSyncer counterSyncer;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private PipelineServiceValidator pipelineServiceValidator;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
@@ -1896,6 +1899,13 @@ public class PipelineServiceImpl implements PipelineService {
         for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
           if (!isValidPipelineStageName(stageElement.getName())) {
             throw new InvalidArgumentsException("Pipeline step name can only have a-z, A-Z, 0-9, -, (, ) and _", USER);
+          }
+
+          String accountId = pipeline.getAccountId();
+          if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)
+              && stageElement.getRuntimeInputsConfig() != null) {
+            RuntimeInputsConfig runtimeInputsConfig = stageElement.getRuntimeInputsConfig();
+            pipelineServiceValidator.validateRuntimeInputsConfig(runtimeInputsConfig, accountId);
           }
 
           if (!ENV_STATE.name().equals(stageElement.getType())) {

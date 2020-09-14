@@ -5,8 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
+import static io.harness.interrupts.RepairActionCode.isPipelineRuntimeTimeoutAction;
+import static io.harness.validation.Validator.nullCheckForInvalidRequest;
 import static java.lang.String.format;
 import static software.wings.sm.StateType.APPROVAL;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExplanationException;
@@ -16,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RuntimeInputsConfig;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.sm.states.ApprovalState;
 
 import java.util.HashMap;
@@ -23,8 +30,32 @@ import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
+@Singleton
 public class PipelineServiceValidator {
-  private PipelineServiceValidator() {}
+  @Inject UserGroupService userGroupService;
+
+  public void validateRuntimeInputsConfig(RuntimeInputsConfig runtimeInputsConfig, String accountId) {
+    if (isNotEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+      if (runtimeInputsConfig.getTimeout() < 1000) {
+        throw new InvalidRequestException("Timeout value should be greater than 1 secs", USER);
+      }
+      nullCheckForInvalidRequest(runtimeInputsConfig.getTimeoutAction(), "Timeout Action cannot be null", USER);
+      if (!isPipelineRuntimeTimeoutAction(runtimeInputsConfig.getTimeoutAction())) {
+        throw new InvalidRequestException(
+            "Timeout Action should be one of END_EXECUTION or CONTINUE_WITH_DEFAULTS", USER);
+      }
+      List<String> userGroupIds = runtimeInputsConfig.getUserGroupIds();
+      if (isEmpty(userGroupIds)) {
+        throw new InvalidRequestException("User groups should be present for Notification", USER);
+      }
+      for (String uid : userGroupIds) {
+        if (userGroupService.get(accountId, uid) == null) {
+          throw new InvalidRequestException("User group not found for given Id: " + uid, USER);
+        }
+      }
+    }
+  }
+
   public static boolean validateTemplateExpressions(Pipeline pipeline) {
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     if (pipelineStages != null) {
