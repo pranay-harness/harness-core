@@ -9,6 +9,7 @@ import io.harness.registries.OrchestrationRegistryModule;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.registrar.TimeoutRegistrar;
@@ -36,6 +37,7 @@ public class OrchestrationBeansModule extends AbstractModule {
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
     MapBinder.newMapBinder(binder(), String.class, FacilitatorRegistrar.class);
     MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
+    MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
     MapBinder<String, TimeoutRegistrar> timeoutRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TimeoutRegistrar.class);
     timeoutRegistrarMapBinder.addBinding(OrchestrationBeansTimeoutRegistrar.class.getName())

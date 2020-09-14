@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.function.Function;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -156,7 +157,7 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
 
   @Value
   @Builder
-  private static class DummyFunctor implements ExpressionEvaluatorUtils.ResolveFunctor {
+  private static class DummyFunctor implements ExpressionResolveFunctor {
     Map<String, Object> context;
 
     @Override
@@ -184,6 +185,17 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
         }
       }
       return false;
+    }
+
+    @Override
+    public ResolveObjectResponse processObject(Object o) {
+      if (!(o instanceof ParameterField)) {
+        return new ResolveObjectResponse(false, false);
+      }
+
+      ParameterField parameterField = (ParameterField) o;
+      boolean updated = parameterField.process(this);
+      return new ResolveObjectResponse(true, updated);
     }
   }
 

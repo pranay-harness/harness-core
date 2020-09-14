@@ -277,5 +277,15 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     protected List<String> fetchPrefixes() {
       return ImmutableList.of("obj", "");
     }
+
+    @Override
+    protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
+      Object value = super.evaluateInternal(expression, ctx);
+      if (value instanceof ParameterField) {
+        ParameterField<?> field = (ParameterField<?>) value;
+        return field.isExpression() ? field.getExpressionValue() : field.getValue();
+      }
+      return value;
+    }
   }
 }

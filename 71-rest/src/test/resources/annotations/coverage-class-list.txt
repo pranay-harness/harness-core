@@ -76,6 +76,7 @@
 29-orchestration-beans/src/main/java/io/harness/registries/adviser/AdviserRegistry.java
 29-orchestration-beans/src/main/java/io/harness/registries/events/OrchestrationEventHandlerRegistry.java
 29-orchestration-beans/src/main/java/io/harness/registries/facilitator/FacilitatorRegistry.java
+29-orchestration-beans/src/main/java/io/harness/registries/field/OrchestrationFieldRegistry.java
 29-orchestration-beans/src/main/java/io/harness/registries/resolver/ResolverRegistry.java
 29-orchestration-beans/src/main/java/io/harness/registries/state/StepRegistry.java
 29-orchestration-beans/src/main/java/io/harness/resolvers/GroupNotFoundException.java
