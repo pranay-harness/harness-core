@@ -6,6 +6,8 @@ import io.harness.ambiance.Ambiance;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.expressions.functors.OrgFunctor;
+import io.harness.expressions.functors.ProjectFunctor;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 

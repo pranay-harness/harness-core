@@ -9,6 +9,7 @@
         <!--<module>12-commons</module>-->
         <!--<module>13-grpc-api</module>-->
         <!--<module>14-api-services-beans</module>-->
+        <module>13-ng-commons</module>
         <module>15-api-services</module>
         <module>16-expression-service</module>
         <module>19-delegate-tasks-beans</module>
@@ -41,6 +42,7 @@
         <module>33-orchestration-visualization</module>
         <module>35-yaml-beans</module>
         <module>38-execution-plan</module>
+        <module>39-ng-pipeline-commons</module>
         <module>50-delegate-task-grpc-service</module>
         <module>57-command-library-common</module>
         <module>64-events-framework</module>

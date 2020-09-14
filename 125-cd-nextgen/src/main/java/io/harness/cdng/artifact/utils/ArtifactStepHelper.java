@@ -11,7 +11,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.mappers.ArtifactConfigToDelegateReqMapper;
-import io.harness.cdng.common.AmbianceHelper;
+import io.harness.common.AmbianceHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;

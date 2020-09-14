@@ -8,7 +8,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.manifest.ManifestStoreType;
@@ -22,6 +21,7 @@ import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.common.AmbianceHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
