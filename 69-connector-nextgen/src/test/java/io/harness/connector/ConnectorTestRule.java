@@ -2,17 +2,21 @@ package io.harness.connector;
 
 import static org.mockito.Mockito.mock;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 
 import io.harness.ManagerDelegateServiceDriver;
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.services.OrganizationService;
@@ -32,6 +36,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -51,6 +56,9 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(ProjectService.class).toInstance(mock(ProjectService.class));
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
+        bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {})
+            .toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
       }
     });
     modules.add(mongoTypeModule(annotations));
