@@ -1,5 +1,6 @@
 package io.harness.integrationstage;
 
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.intfc.StageType;
 
@@ -15,5 +16,6 @@ public interface StageExecutionModifier {
    * @param stageType StageType object that holds info
    * @return modified execution
    */
-  ExecutionElement modifyExecutionPlan(ExecutionElement execution, StageType stageType);
+  ExecutionElement modifyExecutionPlan(
+      ExecutionElement execution, StageType stageType, ExecutionPlanCreationContext context);
 }

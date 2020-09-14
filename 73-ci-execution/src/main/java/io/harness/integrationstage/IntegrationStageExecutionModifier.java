@@ -18,6 +18,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.exception.InvalidRequestException;
+import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StepElement;
@@ -57,7 +58,8 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   private String podName;
 
   @Override
-  public ExecutionElement modifyExecutionPlan(ExecutionElement execution, StageType stageType) {
+  public ExecutionElement modifyExecutionPlan(
+      ExecutionElement execution, StageType stageType, ExecutionPlanCreationContext context) {
     IntegrationStage integrationStage = (IntegrationStage) stageType;
     List<ExecutionWrapper> steps = execution.getSteps();
     steps.addAll(0, getPreIntegrationExecution(integrationStage).getSteps());

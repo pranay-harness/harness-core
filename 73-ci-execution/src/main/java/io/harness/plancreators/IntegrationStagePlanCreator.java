@@ -41,7 +41,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
     ExecutionElement execution = integrationStage.getExecution();
     ExecutionElement modifiedExecutionPlan =
-        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage);
+        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage, context);
+
     integrationStage.setExecution(modifiedExecutionPlan);
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 

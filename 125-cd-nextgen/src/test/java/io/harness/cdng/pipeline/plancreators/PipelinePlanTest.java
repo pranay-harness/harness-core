@@ -28,13 +28,16 @@ import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PipelinePlanTest extends CDNGBaseTest {
   @Inject ExecutionPlanCreatorRegistrar executionPlanCreatorRegistrar;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
+  Map<String, Object> contextAttributes = new HashMap<>();
 
   @Before
   public void setUp() {
@@ -49,7 +52,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
     final URL testFile = classLoader.getResource("cdng/multiStagePipeline.yml");
     CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
     final Plan planForPipeline =
-        executionPlanCreatorService.createPlanForPipeline(cdPipeline, WingsTestConstants.ACCOUNT_ID);
+        executionPlanCreatorService.createPlanForPipeline(cdPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
     List<PlanNode> planNodes = planForPipeline.getNodes();
     List<PlanNode> pipelinePlanNodeList = getNodesByIdentifier(planNodes, "managerServiceDeployment");
     assertThat(pipelinePlanNodeList.size()).isEqualTo(1);
@@ -97,7 +100,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
     final URL testFile = classLoader.getResource("cdng/rollbackPipeline.yaml");
     CDPipeline cdPipeline = YamlPipelineUtils.read(testFile, CDPipeline.class);
     final Plan planForPipeline =
-        executionPlanCreatorService.createPlanForPipeline(cdPipeline, WingsTestConstants.ACCOUNT_ID);
+        executionPlanCreatorService.createPlanForPipeline(cdPipeline, WingsTestConstants.ACCOUNT_ID, contextAttributes);
     List<PlanNode> planNodes = planForPipeline.getNodes();
 
     // Stage1Node

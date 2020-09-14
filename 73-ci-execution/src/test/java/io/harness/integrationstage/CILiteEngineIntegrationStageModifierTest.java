@@ -16,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StepElement;
@@ -28,6 +29,8 @@ import java.util.Arrays;
 public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private CILiteEngineIntegrationStageModifier stageExecutionModifier;
+  private ExecutionPlanCreationContextImpl executionPlanCreationContext =
+      ExecutionPlanCreationContextImpl.builder().build();
 
   @Before
   public void setUp() {
@@ -40,7 +43,8 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldModifyExecutionPlan() {
     IntegrationStage stage = ciExecutionPlanTestHelper.getIntegrationStage();
-    ExecutionElement modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage);
+    ExecutionElement modifiedExecution =
+        stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage, executionPlanCreationContext);
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
     StepElement step = (StepElement) modifiedExecution.getSteps().get(0);
@@ -77,7 +81,9 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
                                  .build();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
+        .isThrownBy(()
+                        -> stageExecutionModifier.modifyExecutionPlan(
+                            stage.getExecution(), stage, executionPlanCreationContext));
   }
 
   @Test
@@ -95,7 +101,9 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
             .build();
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
+        .isThrownBy(()
+                        -> stageExecutionModifier.modifyExecutionPlan(
+                            stage.getExecution(), stage, executionPlanCreationContext));
   }
 
   @Test

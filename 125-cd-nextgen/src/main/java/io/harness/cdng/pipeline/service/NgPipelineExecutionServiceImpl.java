@@ -17,6 +17,8 @@ import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
@@ -29,7 +31,10 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     final CDPipeline cdPipeline;
     try {
       cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
-      final Plan planForPipeline = executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId);
+      Map<String, Object> contextAttributes = new HashMap<>();
+
+      final Plan planForPipeline =
+          executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId, contextAttributes);
       return orchestrationService.startExecution(planForPipeline,
           ImmutableMap.of(SetupAbstractionKeys.accountId, accountId, SetupAbstractionKeys.orgIdentifier, orgId,
               SetupAbstractionKeys.projectIdentifier, projectId),
