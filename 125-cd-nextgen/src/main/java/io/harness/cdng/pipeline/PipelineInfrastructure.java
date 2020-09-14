@@ -25,6 +25,9 @@ public class PipelineInfrastructure implements Outcome, Visitable {
   private List<Step> steps;
   private List<Step> rollbackSteps;
 
+  // For Visitor Framework Impl
+  String metadata;
+
   public PipelineInfrastructure applyUseFromStage(PipelineInfrastructure infrastructureToUseFrom) {
     return infrastructureToUseFrom.withUseFromStage(this.useFromStage);
   }

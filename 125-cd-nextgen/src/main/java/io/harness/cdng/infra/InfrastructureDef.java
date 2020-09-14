@@ -23,6 +23,9 @@ public class InfrastructureDef implements Visitable {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   Infrastructure infrastructure;
 
+  // For Visitor Framework Impl
+  String metadata;
+
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
   public InfrastructureDef(String type, Infrastructure infrastructure) {

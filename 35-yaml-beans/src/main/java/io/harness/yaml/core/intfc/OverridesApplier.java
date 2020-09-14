@@ -1,3 +1,5 @@
 package io.harness.yaml.core.intfc;
 
-public interface OverridesApplier<T> { T applyOverrides(T overrideConfig); }
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+public interface OverridesApplier<T> { @JsonIgnore T applyOverrides(T overrideConfig); }

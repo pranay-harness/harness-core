@@ -60,7 +60,7 @@ public class K8sStepHelper {
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        return k8SDirectInfrastructure.getReleaseName();
+        return k8SDirectInfrastructure.getReleaseName().getValue();
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
@@ -91,11 +91,11 @@ public class K8sStepHelper {
       case KUBERNETES_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
         SettingAttribute cloudProvider =
-            getSettingAttribute(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
+            getSettingAttribute(k8SDirectInfrastructure.getConnectorIdentifier().getValue(), ambiance);
         List<EncryptedDataDetail> encryptionDetails =
             getEncryptedDataDetails((KubernetesClusterConfig) cloudProvider.getValue());
         k8sClusterConfigBuilder.cloudProvider(cloudProvider.getValue())
-            .namespace(k8SDirectInfrastructure.getNamespace())
+            .namespace(k8SDirectInfrastructure.getNamespace().getValue())
             .cloudProviderEncryptionDetails(encryptionDetails)
             .cloudProviderName(cloudProvider.getName());
         return k8sClusterConfigBuilder.build();
@@ -153,7 +153,7 @@ public class K8sStepHelper {
   public ManifestDelegateConfig getManifestDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
     if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
       GitStore gitStore = (GitStore) storeConfig;
-      ConnectorDTO connectorDTO = getConnector(gitStore.getConnectorIdentifier(), ambiance);
+      ConnectorDTO connectorDTO = getConnector(gitStore.getConnectorIdentifier().getValue(), ambiance);
       GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
 
       NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
@@ -175,9 +175,9 @@ public class K8sStepHelper {
         .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
         .encryptedDataDetails(encryptedDataDetailList)
         .fetchType(gitStore.getGitFetchType())
-        .branch(gitStore.getBranch())
-        .commitId(gitStore.getCommitId())
-        .paths(gitStore.getPaths())
+        .branch(gitStore.getBranch().getValue())
+        .commitId(gitStore.getCommitId().getValue())
+        .paths(gitStore.getPaths().getValue())
         .connectorName(connectorDTO.getName())
         .build();
   }
@@ -208,10 +208,10 @@ public class K8sStepHelper {
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        ConnectorDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
+        ConnectorDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorIdentifier().getValue(), ambiance);
 
         return DirectK8sInfraDelegateConfig.builder()
-            .namespace(k8SDirectInfrastructure.getNamespace())
+            .namespace(k8SDirectInfrastructure.getNamespace().getValue())
             .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
             .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
             .build();

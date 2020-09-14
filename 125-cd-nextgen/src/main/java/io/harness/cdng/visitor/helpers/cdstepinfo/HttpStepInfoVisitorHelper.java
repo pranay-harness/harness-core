@@ -1,3 +1,17 @@
 package io.harness.cdng.visitor.helpers.cdstepinfo;
 
-public class HttpStepInfoVisitorHelper {}
+import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
+import io.harness.walktree.visitor.validation.ConfigValidator;
+import io.harness.walktree.visitor.validation.ValidationVisitor;
+
+public class HttpStepInfoVisitorHelper implements ConfigValidator {
+  @Override
+  public void validate(Object object, ValidationVisitor visitor) {
+    // Nothing to validate.
+  }
+
+  @Override
+  public Object createDummyVisitableElement() {
+    return HttpStepInfo.infoBuilder().build();
+  }
+}

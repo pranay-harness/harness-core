@@ -8,7 +8,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
-import io.harness.cdng.visitor.helpers.serviceconfig.SidecarArtifactVisitorHelper;
+import io.harness.cdng.visitor.helpers.artifact.SidecarArtifactVisitorHelper;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -24,11 +25,14 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("sidecar")
 @SimpleVisitorHelper(helperClass = SidecarArtifactVisitorHelper.class)
 public class SidecarArtifact implements SidecarArtifactWrapper, Visitable {
-  String identifier;
+  @EntityIdentifier String identifier;
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ArtifactConfig artifactConfig;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder

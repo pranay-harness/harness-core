@@ -6,6 +6,9 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.EntityName;
+import io.harness.utils.ParameterField;
 import io.harness.visitor.helpers.stage.StageElementHelper;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -22,13 +25,16 @@ import lombok.NoArgsConstructor;
 @JsonTypeName("stage")
 @SimpleVisitorHelper(helperClass = StageElementHelper.class)
 public class StageElement implements StageElementWrapper, WithIdentifier, Visitable {
-  String identifier;
-  String name;
-  String description;
+  @EntityIdentifier String identifier;
+  @EntityName String name;
+  ParameterField<String> description;
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageType stageType;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   public void setName(String name) {
     this.name = name;
@@ -47,7 +53,8 @@ public class StageElement implements StageElementWrapper, WithIdentifier, Visita
   }
 
   @Builder
-  public StageElement(StageType stageType, String identifier, String name, String description, String type) {
+  public StageElement(
+      StageType stageType, String identifier, String name, ParameterField<String> description, String type) {
     this.identifier = identifier;
     this.name = name;
     this.description = description;

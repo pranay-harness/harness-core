@@ -1,7 +1,8 @@
 package io.harness.cdng.service.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -17,12 +18,16 @@ import javax.validation.constraints.NotNull;
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
 public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {
   @Wither private ServiceUseFromStage useFromStage;
-  @NotNull private String identifier;
-  @Wither @NotNull private String name;
-  @Wither private String description;
+  @NotNull private ParameterField<String> identifier;
+  @Wither private ParameterField<String> name;
+  @Wither private ParameterField<String> description;
   private ServiceDefinition serviceDefinition;
   @Wither private StageOverridesConfig stageOverrides;
 
+  // For Visitor Framework Impl
+  String metadata;
+
+  @JsonIgnore
   public ServiceConfig applyUseFromStage(ServiceConfig serviceConfigToUseFrom) {
     return serviceConfigToUseFrom.withStageOverrides(stageOverrides).withUseFromStage(useFromStage);
   }
@@ -30,10 +35,10 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable
   @Override
   public ServiceConfig applyOverrides(ServiceConfig overrideConfig) {
     ServiceConfig resultantConfig = this;
-    if (EmptyPredicate.isNotEmpty(overrideConfig.getName())) {
+    if (overrideConfig.getName() != null) {
       resultantConfig = resultantConfig.withName(overrideConfig.getName());
     }
-    if (EmptyPredicate.isNotEmpty(overrideConfig.getDescription())) {
+    if (overrideConfig.getDescription() != null) {
       resultantConfig = resultantConfig.withDescription(overrideConfig.getDescription());
     }
     return resultantConfig;

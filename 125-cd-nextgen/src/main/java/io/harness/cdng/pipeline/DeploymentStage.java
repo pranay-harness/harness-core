@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.variables.StageVariables;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
+import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -25,7 +26,10 @@ public class DeploymentStage implements CDStage, Visitable {
   PipelineInfrastructure infrastructure;
   ExecutionElement execution;
   StageVariables stageVariables;
-  String skipCondition;
+  ParameterField<String> skipCondition;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public VisitableChildren getChildrenToWalk() {

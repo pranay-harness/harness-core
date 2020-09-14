@@ -3,13 +3,14 @@ package io.harness.cdng.manifest.yaml;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.utils.ParameterField;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Singular;
 import lombok.experimental.Wither;
 
 import java.util.List;
@@ -19,12 +20,15 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GIT)
 @SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
-public class GitStore implements StoreConfig {
-  @Wither private String connectorIdentifier;
+public class GitStore implements StoreConfig, Visitable {
+  @Wither private ParameterField<String> connectorIdentifier;
   @Wither private FetchType gitFetchType;
-  @Wither private String branch;
-  @Wither private String commitId;
-  @Wither @Singular private List<String> paths;
+  @Wither private ParameterField<String> branch;
+  @Wither private ParameterField<String> commitId;
+  @Wither private ParameterField<List<String>> paths;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public String getKind() {
@@ -45,21 +49,26 @@ public class GitStore implements StoreConfig {
   public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GitStore gitStore = (GitStore) overrideConfig;
     GitStore resultantGitStore = this;
-    if (EmptyPredicate.isNotEmpty(gitStore.getConnectorIdentifier())) {
+    if (gitStore.getConnectorIdentifier() != null) {
       resultantGitStore = resultantGitStore.withConnectorIdentifier(gitStore.getConnectorIdentifier());
     }
-    if (EmptyPredicate.isNotEmpty(gitStore.getPaths())) {
+    if (gitStore.getPaths() != null) {
       resultantGitStore = resultantGitStore.withPaths(gitStore.getPaths());
     }
     if (gitStore.getGitFetchType() != null) {
       resultantGitStore = resultantGitStore.withGitFetchType(gitStore.getGitFetchType());
     }
-    if (EmptyPredicate.isNotEmpty(gitStore.getBranch())) {
+    if (gitStore.getBranch() != null) {
       resultantGitStore = resultantGitStore.withBranch(gitStore.getBranch());
     }
-    if (EmptyPredicate.isNotEmpty(gitStore.getCommitId())) {
+    if (gitStore.getCommitId() != null) {
       resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId());
     }
     return resultantGitStore;
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    return null;
   }
 }

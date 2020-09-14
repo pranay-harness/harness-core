@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -81,7 +82,14 @@ public class JsonPipelineUtils {
   public String writeJsonString(Object value) throws JsonProcessingException {
     return mapper.writeValueAsString(value);
   }
+
   public ObjectMapper getMapper() {
     return mapper;
+  }
+
+  public String writeYamlString(Object value) throws IOException {
+    String jsonString = JsonPipelineUtils.writeJsonString(value);
+    JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
+    return YamlPipelineUtils.writeString(jsonNode);
   }
 }

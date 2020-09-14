@@ -6,6 +6,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
+import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -32,9 +33,12 @@ import java.util.List;
 public class CDPipeline implements Pipeline, Visitable {
   @EntityName String name;
   @EntityIdentifier String identifier;
-  String description;
+  ParameterField<String> description;
   List<Tag> tags;
   @Singular List<StageElementWrapper> stages;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public VisitableChildren getChildrenToWalk() {

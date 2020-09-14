@@ -5,37 +5,36 @@ import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.common.beans.Tag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.utils.ParameterField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
 import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import lombok.Data;
 import lombok.experimental.Wither;
 
 import java.util.List;
 
-@Value
+@Data
 @Builder
 @SimpleVisitorHelper(helperClass = EnvironmentYamlVisitorHelper.class)
 public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYaml>, Visitable {
-  @NonFinal @Wither String name;
-  @Wither String identifier;
+  @Wither ParameterField<String> name;
+  @Wither ParameterField<String> identifier;
   @Wither EnvironmentType type;
   @Wither List<Tag> tags;
 
-  public void setName(String name) {
-    this.name = name;
-  }
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public EnvironmentYaml applyOverrides(EnvironmentYaml overrideConfig) {
     EnvironmentYaml resultant = this;
-    if (EmptyPredicate.isNotEmpty(overrideConfig.getName())) {
+    if (overrideConfig.getName() != null) {
       resultant = resultant.withName(overrideConfig.getName());
     }
-    if (EmptyPredicate.isNotEmpty(identifier)) {
+    if (overrideConfig.getIdentifier() != null) {
       resultant = resultant.withIdentifier(overrideConfig.getIdentifier());
     }
     if (overrideConfig.getType() != null) {

@@ -3,11 +3,14 @@ package io.harness.cdng.artifact.bean.yaml;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
-import io.harness.cdng.visitor.helpers.serviceconfig.DockerHubArtifactConfigVisitorHelper;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.cdng.visitor.helpers.artifact.DockerHubArtifactConfigVisitorHelper;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.utils.ParameterField;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,29 +30,32 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ArtifactSourceConstants.DOCKER_HUB_NAME)
 @SimpleVisitorHelper(helperClass = DockerHubArtifactConfigVisitorHelper.class)
-public class DockerHubArtifactConfig implements ArtifactConfig {
+public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * Docker hub registry connector.
    */
-  @Wither String dockerhubConnector;
+  @Wither ParameterField<String> dockerhubConnector;
   /**
    * Images in repos need to be referenced via a path.
    */
-  @Wither String imagePath;
+  @Wither ParameterField<String> imagePath;
   /**
    * Tag refers to exact tag number.
    */
-  @Wither String tag;
+  @Wither ParameterField<String> tag;
   /**
    * Tag regex is used to get latest build from builds matching regex.
    */
-  @Wither String tagRegex;
+  @Wither ParameterField<String> tagRegex;
   /**
    * Identifier for artifact.
    */
-  String identifier;
+  @EntityIdentifier String identifier;
   /** Whether this config corresponds to primary artifact.*/
   boolean primaryArtifact;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   @Override
   public ArtifactSourceType getSourceType() {
@@ -58,7 +64,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
 
   @Override
   public String getUniqueHash() {
-    List<String> valuesList = Arrays.asList(dockerhubConnector, imagePath);
+    List<String> valuesList = Arrays.asList(dockerhubConnector.getValue(), imagePath.getValue());
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
@@ -66,18 +72,23 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) overrideConfig;
     DockerHubArtifactConfig resultantConfig = this;
-    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getDockerhubConnector())) {
+    if (dockerHubArtifactConfig.getDockerhubConnector() != null) {
       resultantConfig = resultantConfig.withDockerhubConnector(dockerHubArtifactConfig.getDockerhubConnector());
     }
-    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getImagePath())) {
+    if (dockerHubArtifactConfig.getImagePath() != null) {
       resultantConfig = resultantConfig.withImagePath(dockerHubArtifactConfig.getImagePath());
     }
-    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getTag())) {
+    if (dockerHubArtifactConfig.getTag() != null) {
       resultantConfig = resultantConfig.withTag(dockerHubArtifactConfig.getTag());
     }
-    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getTagRegex())) {
+    if (dockerHubArtifactConfig.getTagRegex() != null) {
       resultantConfig = resultantConfig.withTagRegex(dockerHubArtifactConfig.getTagRegex());
     }
     return resultantConfig;
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    return null;
   }
 }

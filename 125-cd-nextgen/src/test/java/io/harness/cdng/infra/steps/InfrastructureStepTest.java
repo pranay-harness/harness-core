@@ -10,6 +10,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.rule.Owner;
+import io.harness.utils.ParameterField;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -20,13 +21,14 @@ public class InfrastructureStepTest extends CategoryTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testCreateInfraMappingObject() {
-    String accountId = "accountId";
     String namespace = "namespace";
     String connector = "connector";
     String serviceIdentifier = "serviceIdentifier";
 
-    Infrastructure infrastructureSpec =
-        K8SDirectInfrastructure.builder().connectorIdentifier(connector).namespace(namespace).build();
+    Infrastructure infrastructureSpec = K8SDirectInfrastructure.builder()
+                                            .connectorIdentifier(ParameterField.createValueField(connector))
+                                            .namespace(ParameterField.createValueField(namespace))
+                                            .build();
 
     InfraMapping expectedInfraMapping = K8sDirectInfraMapping.builder()
                                             .serviceIdentifier(serviceIdentifier)

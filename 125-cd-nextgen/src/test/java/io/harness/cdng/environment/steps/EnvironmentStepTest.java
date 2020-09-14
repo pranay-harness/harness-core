@@ -14,6 +14,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
+import io.harness.utils.ParameterField;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,7 +43,8 @@ public class EnvironmentStepTest extends CategoryTest {
     Ambiance ambiance = Ambiance.builder().setupAbstractions(setupAbstractions).build();
 
     EnvironmentYaml environmentYaml = EnvironmentYaml.builder()
-                                          .identifier("test-id")
+                                          .identifier(ParameterField.createValueField("test-id"))
+                                          .name(ParameterField.createValueField("test-id"))
                                           .type(EnvironmentType.PreProduction)
                                           .tags(Collections.emptyList())
                                           .build();

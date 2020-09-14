@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.cdng.visitor.helpers.artifact.ArtifactSpecWrapperVisitorHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -20,12 +21,15 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@SimpleVisitorHelper(helperClass = ArtifactSpecWrapper.class)
+@SimpleVisitorHelper(helperClass = ArtifactSpecWrapperVisitorHelper.class)
 public class ArtifactSpecWrapper implements Visitable {
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ArtifactConfig artifactConfig;
+
+  // For Visitor Framework Impl
+  String metadata;
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder

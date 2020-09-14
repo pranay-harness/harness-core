@@ -18,6 +18,7 @@ import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.execution.status.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
+import io.harness.utils.ParameterField;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,75 +32,85 @@ public class ManifestStepTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testManifestStepExecuteSync() {
-    K8sManifest k8Manifest1 = K8sManifest.builder()
-                                  .identifier("specsManifest")
-                                  .storeConfigWrapper(StoreConfigWrapper.builder()
-                                                          .storeConfig(GitStore.builder()
-                                                                           .connectorIdentifier("connector")
-                                                                           .path("path1")
-                                                                           .branch("master")
-                                                                           .gitFetchType(FetchType.BRANCH)
-                                                                           .build())
-                                                          .build())
-                                  .build();
+    K8sManifest k8Manifest1 =
+        K8sManifest.builder()
+            .identifier("specsManifest")
+            .storeConfigWrapper(
+                StoreConfigWrapper.builder()
+                    .storeConfig(GitStore.builder()
+                                     .connectorIdentifier(ParameterField.createValueField("connector"))
+                                     .paths(ParameterField.createValueField(Collections.singletonList("path1")))
+                                     .branch(ParameterField.createValueField("master"))
+                                     .gitFetchType(FetchType.BRANCH)
+                                     .build())
+                    .build())
+            .build();
     ManifestConfigWrapper manifestConfig1 =
         ManifestConfig.builder().identifier("specsManifest").manifestAttributes(k8Manifest1).build();
 
-    K8sManifest k8Manifest2 = K8sManifest.builder()
-                                  .identifier("spec1")
-                                  .storeConfigWrapper(StoreConfigWrapper.builder()
-                                                          .storeConfig(GitStore.builder()
-                                                                           .path("override/path1")
-                                                                           .connectorIdentifier("connector")
-                                                                           .branch("commitId")
-                                                                           .gitFetchType(FetchType.COMMIT)
-                                                                           .build())
-                                                          .build())
-                                  .build();
+    K8sManifest k8Manifest2 =
+        K8sManifest.builder()
+            .identifier("spec1")
+            .storeConfigWrapper(StoreConfigWrapper.builder()
+                                    .storeConfig(GitStore.builder()
+                                                     .paths(ParameterField.createValueField(
+                                                         Collections.singletonList("override/path1")))
+                                                     .connectorIdentifier(ParameterField.createValueField("connector"))
+                                                     .branch(ParameterField.createValueField("commitId"))
+                                                     .gitFetchType(FetchType.COMMIT)
+                                                     .build())
+                                    .build())
+            .build();
 
     ManifestConfigWrapper manifestConfig2 =
         ManifestConfig.builder().identifier("spec1").manifestAttributes(k8Manifest2).build();
 
-    ValuesManifest valuesManifest1 = ValuesManifest.builder()
-                                         .identifier("valuesManifest1")
-                                         .storeConfigWrapper(StoreConfigWrapper.builder()
-                                                                 .storeConfig(GitStore.builder()
-                                                                                  .path("overrides/path1")
-                                                                                  .connectorIdentifier("connector1")
-                                                                                  .branch("commitId1")
-                                                                                  .gitFetchType(FetchType.COMMIT)
-                                                                                  .build())
-                                                                 .build())
-                                         .build();
+    ValuesManifest valuesManifest1 =
+        ValuesManifest.builder()
+            .identifier("valuesManifest1")
+            .storeConfigWrapper(StoreConfigWrapper.builder()
+                                    .storeConfig(GitStore.builder()
+                                                     .paths(ParameterField.createValueField(
+                                                         Collections.singletonList("overrides/path1")))
+                                                     .connectorIdentifier(ParameterField.createValueField("connector1"))
+                                                     .branch(ParameterField.createValueField("commitId1"))
+                                                     .gitFetchType(FetchType.COMMIT)
+                                                     .build())
+                                    .build())
+            .build();
     ManifestConfigWrapper manifestConfig3 =
         ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest1).build();
 
-    K8sManifest k8Manifest3 = K8sManifest.builder()
-                                  .identifier("spec1")
-                                  .storeConfigWrapper(StoreConfigWrapper.builder()
-                                                          .storeConfig(GitStore.builder()
-                                                                           .path("overrides/path2")
-                                                                           .connectorIdentifier("connector2")
-                                                                           .branch("commitId2")
-                                                                           .gitFetchType(FetchType.COMMIT)
-                                                                           .build())
-                                                          .build())
-                                  .build();
+    K8sManifest k8Manifest3 =
+        K8sManifest.builder()
+            .identifier("spec1")
+            .storeConfigWrapper(StoreConfigWrapper.builder()
+                                    .storeConfig(GitStore.builder()
+                                                     .paths(ParameterField.createValueField(
+                                                         Collections.singletonList("overrides/path2")))
+                                                     .connectorIdentifier(ParameterField.createValueField("connector2"))
+                                                     .branch(ParameterField.createValueField("commitId2"))
+                                                     .gitFetchType(FetchType.COMMIT)
+                                                     .build())
+                                    .build())
+            .build();
 
     ManifestConfigWrapper manifestConfig4 =
         ManifestConfig.builder().identifier("spec1").manifestAttributes(k8Manifest3).build();
 
-    ValuesManifest valuesManifest2 = ValuesManifest.builder()
-                                         .identifier("valuesManifest1")
-                                         .storeConfigWrapper(StoreConfigWrapper.builder()
-                                                                 .storeConfig(GitStore.builder()
-                                                                                  .path("overrides/path3")
-                                                                                  .connectorIdentifier("connector3")
-                                                                                  .branch("commitId3")
-                                                                                  .gitFetchType(FetchType.COMMIT)
-                                                                                  .build())
-                                                                 .build())
-                                         .build();
+    ValuesManifest valuesManifest2 =
+        ValuesManifest.builder()
+            .identifier("valuesManifest1")
+            .storeConfigWrapper(StoreConfigWrapper.builder()
+                                    .storeConfig(GitStore.builder()
+                                                     .paths(ParameterField.createValueField(
+                                                         Collections.singletonList("overrides/path3")))
+                                                     .connectorIdentifier(ParameterField.createValueField("connector3"))
+                                                     .branch(ParameterField.createValueField("commitId3"))
+                                                     .gitFetchType(FetchType.COMMIT)
+                                                     .build())
+                                    .build())
+            .build();
     ManifestConfigWrapper manifestConfig5 =
         ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest2).build();
 

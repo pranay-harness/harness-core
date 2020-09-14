@@ -44,10 +44,10 @@ public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepPara
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return Environment.builder()
-        .name(environmentYaml.getName())
+        .name(environmentYaml.getName().getValue())
         .accountId(accountId)
         .type(environmentYaml.getType())
-        .identifier(environmentYaml.getIdentifier())
+        .identifier(environmentYaml.getIdentifier().getValue())
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .tags(environmentYaml.getTags())

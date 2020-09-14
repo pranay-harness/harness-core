@@ -28,6 +28,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
+import io.harness.utils.ParameterField;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,8 +84,11 @@ public class ArtifactStepTest extends CategoryTest {
 
   private ArtifactStepParameters getStepParametersForDocker() {
     return ArtifactStepParameters.builder()
-        .artifact(
-            DockerHubArtifactConfig.builder().dockerhubConnector("CONNECTOR").imagePath("imagePath").tag("tag").build())
+        .artifact(DockerHubArtifactConfig.builder()
+                      .dockerhubConnector(ParameterField.createValueField("CONNECTOR"))
+                      .imagePath(ParameterField.createValueField("imagePath"))
+                      .tag(ParameterField.createValueField("tag"))
+                      .build())
         .build();
   }
 
@@ -145,14 +149,17 @@ public class ArtifactStepTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testApplyArtifactOverrides() {
-    DockerHubArtifactConfig dockerHubArtifactConfig = DockerHubArtifactConfig.builder()
-                                                          .primaryArtifact(true)
-                                                          .dockerhubConnector("CONNECTOR")
-                                                          .imagePath("IMAGE")
-                                                          .tag("TAG1")
-                                                          .build();
-    DockerHubArtifactConfig dockerHubArtifactConfig2 =
-        DockerHubArtifactConfig.builder().imagePath("IMAGE2").tag("TAG2").build();
+    DockerHubArtifactConfig dockerHubArtifactConfig =
+        DockerHubArtifactConfig.builder()
+            .primaryArtifact(true)
+            .dockerhubConnector(ParameterField.createValueField("CONNECTOR"))
+            .imagePath(ParameterField.createValueField("IMAGE"))
+            .tag(ParameterField.createValueField("TAG1"))
+            .build();
+    DockerHubArtifactConfig dockerHubArtifactConfig2 = DockerHubArtifactConfig.builder()
+                                                           .imagePath(ParameterField.createValueField("IMAGE2"))
+                                                           .tag(ParameterField.createValueField("TAG2"))
+                                                           .build();
 
     ArtifactStepParameters stepParameters = ArtifactStepParameters.builder()
                                                 .artifact(dockerHubArtifactConfig)
@@ -162,9 +169,9 @@ public class ArtifactStepTest extends CategoryTest {
     assertThat(finalArtifact).isInstanceOf(DockerHubArtifactConfig.class);
     DockerHubArtifactConfig artifact = (DockerHubArtifactConfig) finalArtifact;
     assertThat(artifact.isPrimaryArtifact()).isTrue();
-    assertThat(artifact.getDockerhubConnector()).isEqualTo("CONNECTOR");
-    assertThat(artifact.getTag()).isEqualTo("TAG2");
-    assertThat(artifact.getImagePath()).isEqualTo("IMAGE2");
+    assertThat(artifact.getDockerhubConnector().getValue()).isEqualTo("CONNECTOR");
+    assertThat(artifact.getTag().getValue()).isEqualTo("TAG2");
+    assertThat(artifact.getImagePath().getValue()).isEqualTo("IMAGE2");
     assertThat(artifact.getTagRegex()).isEqualTo(null);
   }
 }

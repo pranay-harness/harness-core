@@ -52,13 +52,13 @@ public class ArtifactYamlTest extends CategoryTest {
     ArtifactConfig primary = serviceSpec.getArtifacts().getPrimary().getArtifactConfig();
     assertThat(primary).isInstanceOf(DockerHubArtifactConfig.class);
     DockerHubArtifactConfig dockerArtifact = (DockerHubArtifactConfig) primary;
-    assertThat(dockerArtifact.getImagePath()).isEqualTo("library/ubuntu");
-    assertThat(dockerArtifact.getTag()).isEqualTo("latest");
-    assertThat(dockerArtifact.getTagRegex()).isEqualTo("groov*");
+    assertThat(dockerArtifact.getImagePath().getValue()).isEqualTo("library/ubuntu");
+    assertThat(dockerArtifact.getTag().getValue()).isEqualTo("latest");
+    assertThat(dockerArtifact.getTagRegex().getValue()).isEqualTo("groov*");
     assertThat(dockerArtifact.isPrimaryArtifact()).isTrue();
     assertThat(dockerArtifact.getUniqueHash())
-        .isEqualTo(ArtifactUtils.generateUniqueHashFromStringList(
-            Arrays.asList(dockerArtifact.getDockerhubConnector(), dockerArtifact.getImagePath())));
+        .isEqualTo(ArtifactUtils.generateUniqueHashFromStringList(Arrays.asList(
+            dockerArtifact.getDockerhubConnector().getValue(), dockerArtifact.getImagePath().getValue())));
 
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
     assertThat(sidecarArtifactWrapper).isInstanceOf(SidecarArtifact.class);
@@ -67,8 +67,8 @@ public class ArtifactYamlTest extends CategoryTest {
     assertThat(sidecarArtifact.getIdentifier()).isEqualTo("sidecar1");
     dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifactConfig();
     assertThat(dockerArtifact.getIdentifier()).isEqualTo("sidecar1");
-    assertThat(dockerArtifact.getImagePath()).isEqualTo("library/redis");
-    assertThat(dockerArtifact.getTag()).isEqualTo("latest");
+    assertThat(dockerArtifact.getImagePath().getValue()).isEqualTo("library/redis");
+    assertThat(dockerArtifact.getTag().getValue()).isEqualTo("latest");
     assertThat(dockerArtifact.isPrimaryArtifact()).isFalse();
   }
 }
