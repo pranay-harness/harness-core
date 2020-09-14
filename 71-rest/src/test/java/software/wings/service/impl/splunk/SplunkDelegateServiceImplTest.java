@@ -283,6 +283,25 @@ public class SplunkDelegateServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testGetValidationResponse_emptyQuery() throws IOException {
+    Service service = mock(Service.class);
+    doReturn(service).when(splunkDelegateService).initSplunkService(any());
+    JobCollection jobCollection = mock(JobCollection.class);
+    when(service.getJobs()).thenReturn(jobCollection);
+    Job job = mock(Job.class);
+    when(jobCollection.create(any(), any())).thenReturn(job);
+    when(job.getResults(any()))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_query.json"))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
+
+    assertThatThrownBy(
+        () -> splunkDelegateService.getValidationResponse(splunkConnectorDTO, new ArrayList<>(), "", requestGuid))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("query can not be empty");
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testGetValidationResponse_withErrorMessage() throws IOException {
     Service service = mock(Service.class);
     doReturn(service).when(splunkDelegateService).initSplunkService(any());

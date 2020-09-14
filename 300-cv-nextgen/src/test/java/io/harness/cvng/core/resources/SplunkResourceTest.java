@@ -86,4 +86,24 @@ public class SplunkResourceTest extends CvNextGenTest {
     assertThat(validationError.get(0).getField()).isEqualTo("query");
     assertThat(validationError.get(0).getMessage()).isEqualTo("may not be null");
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetValidationResponse_emptyQuery() {
+    Response response = RESOURCES.client()
+                            .target("http://localhost:9998/splunk/validation")
+                            .queryParam("accountId", accountId)
+                            .queryParam("connectorIdentifier", connectorId)
+                            .queryParam("requestGuid", generateUuid())
+                            .queryParam("orgIdentifier", "orgIdentifier")
+                            .queryParam("query", "")
+                            .queryParam("projectIdentifier", "project")
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .get();
+    assertThat(response.getStatus()).isEqualTo(400);
+    List<ValidationError> validationError = response.readEntity(new GenericType<List<ValidationError>>() {});
+    assertThat(validationError.get(0).getField()).isEqualTo("query");
+    assertThat(validationError.get(0).getMessage()).isEqualTo("may not be empty");
+  }
 }

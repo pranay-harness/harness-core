@@ -1,10 +1,12 @@
 package software.wings.service.impl.splunk;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -338,6 +340,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   public SplunkValidationResponse getValidationResponse(SplunkConnectorDTO splunkConnectorDTO,
       List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
+    Preconditions.checkState(isNotEmpty(query), "query can not be empty");
     secretDecryptionService.decrypt(splunkConnectorDTO, encryptedDataDetails);
     SplunkSampleResponse splunkSampleResponse = getSamples(splunkConnectorDTO, query, requestGuid);
     Histogram histogram = getHistogram(splunkConnectorDTO, query, requestGuid);

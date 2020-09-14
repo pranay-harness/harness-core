@@ -9,6 +9,7 @@ import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -44,8 +45,8 @@ public class SplunkResource {
       @NotNull @QueryParam("accountId") final String accountId,
       @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @NotNull @QueryParam("query") String query,
-      @QueryParam("requestGuid") @NotNull String requestGuid) {
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @NotNull @NotEmpty @QueryParam("query") String query, @QueryParam("requestGuid") @NotNull String requestGuid) {
     return new RestResponse<>(splunkService.getValidationResponse(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, query, requestGuid));
   }
