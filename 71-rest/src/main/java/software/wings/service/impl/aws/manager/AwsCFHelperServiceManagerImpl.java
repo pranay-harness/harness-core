@@ -22,6 +22,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsRequest;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsResponse;
 import software.wings.service.impl.aws.model.AwsCFRequest;
@@ -44,6 +45,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   @Inject private SecretManager secretManager;
   @Inject private GitUtilsManager gitUtilsManager;
   @Inject private AwsHelperServiceManager helper;
+  @Inject private GitConfigHelperService gitConfigHelperService;
 
   private AwsConfig getAwsConfig(String awsConfigId) {
     SettingAttribute attribute = settingService.get(awsConfigId);
@@ -56,7 +58,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   @Override
   public List<AwsCFTemplateParamsData> getParamsData(String type, String data, String awsConfigId, String region,
       String appId, String sourceRepoSettingId, String sourceRepoBranch, String templatePath, String commitId,
-      Boolean useBranch) {
+      Boolean useBranch, String repoName) {
     AwsConfig awsConfig = getAwsConfig(awsConfigId);
     List<EncryptedDataDetail> details =
         secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : GLOBAL_APP_ID, null);
@@ -67,6 +69,8 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
       gitFileConfig.setConnectorId(sourceRepoSettingId);
       gitFileConfig.setUseBranch(useBranch);
       gitFileConfig.setFilePath(templatePath);
+      gitFileConfig.setRepoName(repoName);
+
       if (isNotEmpty(sourceRepoBranch)) {
         gitConfig.setBranch(sourceRepoBranch);
         gitFileConfig.setBranch(sourceRepoBranch);
@@ -75,6 +79,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
         gitConfig.setReference(commitId);
         gitFileConfig.setCommitId(commitId);
       }
+      gitConfigHelperService.convertToRepoGitConfig(gitConfig, repoName);
     }
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCFGetTemplateParamsRequest.builder()

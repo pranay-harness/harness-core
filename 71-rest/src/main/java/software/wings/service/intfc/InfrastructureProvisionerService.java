@@ -61,7 +61,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   List<AwsCFTemplateParamsData> getCFTemplateParamKeys(String type, String region, String awsConfigId, String data,
       String appId, String scmSettingId, String sourceRepoBranch, String templatePath, String commitId,
-      Boolean useBranch);
+      Boolean useBranch, String repoName);
 
   void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit);
 

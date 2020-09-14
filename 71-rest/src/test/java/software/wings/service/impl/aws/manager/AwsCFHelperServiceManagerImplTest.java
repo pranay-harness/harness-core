@@ -11,7 +11,9 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.REPO_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import io.harness.CategoryTest;
@@ -21,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsResponse;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.DelegateService;
@@ -40,13 +43,16 @@ public class AwsCFHelperServiceManagerImplTest extends CategoryTest {
     SettingsService mockSettingService = mock(SettingsService.class);
     SecretManager mockSecretManager = mock(SecretManager.class);
     GitUtilsManager mockGitUtilsManager = mock(GitUtilsManager.class);
+    GitConfigHelperService mockGitConfigHelperService = mock(GitConfigHelperService.class);
     on(service).set("delegateService", mockDelegateService);
     on(service).set("settingService", mockSettingService);
     on(service).set("secretManager", mockSecretManager);
     on(service).set("gitUtilsManager", mockGitUtilsManager);
+    on(service).set("gitConfigHelperService", mockGitConfigHelperService);
     doReturn(aSettingAttribute().withValue(AwsConfig.builder().build()).build()).when(mockSettingService).get(any());
     doReturn(emptyList()).when(mockSecretManager).getEncryptionDetails(any(), anyString(), anyString());
-    doReturn(GitConfig.builder().build()).when(mockGitUtilsManager).getGitConfig(anyString());
+    GitConfig gitConfig = GitConfig.builder().build();
+    doReturn(gitConfig).when(mockGitUtilsManager).getGitConfig(anyString());
     doReturn(AwsCFGetTemplateParamsResponse.builder()
                  .parameters(asList(AwsCFTemplateParamsData.builder().paramKey("k1").paramType("TEXT").build(),
                      AwsCFTemplateParamsData.builder().paramKey("k2").paramType("ENCRYPTED_TEXT").build()))
@@ -57,10 +63,11 @@ public class AwsCFHelperServiceManagerImplTest extends CategoryTest {
     on(service).set("helper", mockHelper);
     doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsCFTemplateParamsData> data = service.getParamsData(
-        "GIT", "data", SETTING_ID, "us-east-1", "appId", SETTING_ID, "branch", "path", "commitId", true);
+        "GIT", "data", SETTING_ID, "us-east-1", "appId", SETTING_ID, "branch", "path", "commitId", true, REPO_NAME);
     assertThat(data).isNotNull();
     assertThat(data.size()).isEqualTo(2);
     assertThat(data.get(0).getParamKey()).isEqualTo("k1");
     assertThat(data.get(1).getParamKey()).isEqualTo("k2");
+    verify(mockGitConfigHelperService).convertToRepoGitConfig(gitConfig, REPO_NAME);
   }
 }
