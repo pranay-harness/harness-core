@@ -29,8 +29,6 @@ import java.util.Arrays;
 public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private CILiteEngineIntegrationStageModifier stageExecutionModifier;
-  private ExecutionPlanCreationContextImpl executionPlanCreationContext =
-      ExecutionPlanCreationContextImpl.builder().build();
 
   @Before
   public void setUp() {
@@ -43,8 +41,10 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldModifyExecutionPlan() {
     IntegrationStage stage = ciExecutionPlanTestHelper.getIntegrationStage();
-    ExecutionElement modifiedExecution =
-        stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage, executionPlanCreationContext);
+    ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
+        ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
+    ExecutionElement modifiedExecution = stageExecutionModifier.modifyExecutionPlan(
+        stage.getExecution(), stage, executionPlanCreationContextWithExecutionArgs);
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
     StepElement step = (StepElement) modifiedExecution.getSteps().get(0);
@@ -74,6 +74,8 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testExpectingGitConnector() {
+    ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
+        ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
     IntegrationStage stage = IntegrationStage.builder()
                                  .execution(ciExecutionPlanTestHelper.getExecutionElement())
                                  .gitConnector(GitConnectorYaml.builder().type("***").build())
@@ -83,13 +85,15 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(()
                         -> stageExecutionModifier.modifyExecutionPlan(
-                            stage.getExecution(), stage, executionPlanCreationContext));
+                            stage.getExecution(), stage, executionPlanCreationContextWithExecutionArgs));
   }
 
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testExpectingGitConnectorWithoutGitStep() {
+    ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
+        ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
     IntegrationStage stage =
         IntegrationStage.builder()
             .execution(
@@ -103,7 +107,7 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(()
                         -> stageExecutionModifier.modifyExecutionPlan(
-                            stage.getExecution(), stage, executionPlanCreationContext));
+                            stage.getExecution(), stage, executionPlanCreationContextWithExecutionArgs));
   }
 
   @Test

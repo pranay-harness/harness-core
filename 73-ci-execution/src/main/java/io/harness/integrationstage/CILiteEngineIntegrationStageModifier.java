@@ -68,16 +68,17 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
   }
 
   private String getBranchNameFromExecutionSource(CIExecutionArgs ciExecutionArgs) {
-    if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.Webhook) {
-      WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) ciExecutionArgs.getExecutionSource();
-      if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
-        BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
-        return branchWebhookEvent.getBranchName();
-      }
-
-      if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
-        PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
-        return prWebhookEvent.getSourceBranch();
+    if (ciExecutionArgs != null && (ciExecutionArgs.getExecutionSource() != null)) {
+      if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.Webhook) {
+        WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) ciExecutionArgs.getExecutionSource();
+        if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
+          BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
+          return branchWebhookEvent.getBranchName();
+        }
+        if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
+          PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
+          return prWebhookEvent.getSourceBranch();
+        }
       }
     }
     return EMPTY_BRANCH;
