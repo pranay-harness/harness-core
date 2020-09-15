@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDC)
-public interface OrchestrationField<T> {
+public interface OrchestrationField {
   OrchestrationFieldType getType();
-  T getValue();
+  Object getFinalValue();
 }

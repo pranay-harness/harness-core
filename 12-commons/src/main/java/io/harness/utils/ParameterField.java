@@ -2,14 +2,17 @@ package io.harness.utils;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.expression.ExpressionResolveFunctor;
 import io.harness.expression.NotExpression;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+// public class ParameterField<T> implements OrchestrationField {
 public class ParameterField<T> {
+  //  public static final OrchestrationFieldType ORCHESTRATION_FIELD_TYPE =
+  //      OrchestrationFieldType.builder().type("PARAMETER_FIELD").build();
+
   @NotExpression private String expressionValue;
   private boolean isExpression;
   private T value;
@@ -93,36 +96,13 @@ public class ParameterField<T> {
     return value;
   }
 
-  public boolean process(ExpressionResolveFunctor functor) {
-    // TODO(gpahal): Move this to processor
-    Object newValue;
-    boolean updated = true;
-    if (isExpression) {
-      newValue = functor.evaluateExpression(expressionValue);
-      if (newValue instanceof String && functor.hasVariables((String) newValue)) {
-        String newExpression = (String) newValue;
-        if (newExpression.equals(expressionValue)) {
-          return false;
-        }
-
-        updateWithExpression(newExpression);
-        return true;
-      }
-
-      updateWithValue(newValue);
-    } else {
-      updated = false;
-      newValue = value;
-    }
-
-    if (newValue != null) {
-      Object finalValue = ExpressionEvaluatorUtils.updateExpressions(newValue, functor);
-      if (finalValue != null) {
-        updateWithValue(finalValue);
-        updated = true;
-      }
-    }
-
-    return updated;
-  }
+  //  @Override
+  //  public OrchestrationFieldType getType() {
+  //    return ORCHESTRATION_FIELD_TYPE;
+  //  }
+  //
+  //  @Override
+  //  public Object getFinalValue() {
+  //    return isExpression ? expressionValue : value;
+  //  }
 }

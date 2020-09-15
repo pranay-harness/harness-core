@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.orchestration.OrchestrationPersistenceModule;
+import io.harness.registrars.OrchestrationBeansFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansTimeoutRegistrar;
 import io.harness.registries.OrchestrationRegistryModule;
 import io.harness.registries.registrar.AdviserRegistrar;
@@ -37,7 +38,10 @@ public class OrchestrationBeansModule extends AbstractModule {
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
     MapBinder.newMapBinder(binder(), String.class, FacilitatorRegistrar.class);
     MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
-    MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
+    MapBinder<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
+    orchestrationFieldRegistrarMapBinder.addBinding(OrchestrationBeansFieldRegistrar.class.getName())
+        .to(OrchestrationBeansFieldRegistrar.class);
     MapBinder<String, TimeoutRegistrar> timeoutRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TimeoutRegistrar.class);
     timeoutRegistrarMapBinder.addBinding(OrchestrationBeansTimeoutRegistrar.class.getName())
