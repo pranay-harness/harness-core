@@ -433,6 +433,9 @@ public class BillingDataHelper {
       if (endTimeFromFilters == currentDay - 1000) {
         days = (currentDay - startTimeFromFilters) / ONE_DAY_MILLIS;
       }
+      if (endTimeFromFilters == currentDay + ONE_DAY_MILLIS - 1000) {
+        days = (currentDay + ONE_DAY_MILLIS - startTimeFromFilters) / ONE_DAY_MILLIS;
+      }
     }
     return days != 0 ? Instant.ofEpochMilli(currentDay + (days - 1) * ONE_DAY_MILLIS - 1000)
                      : Instant.ofEpochMilli(currentDay - ONE_DAY_MILLIS);

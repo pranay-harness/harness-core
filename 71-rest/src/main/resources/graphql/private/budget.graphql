@@ -7,7 +7,7 @@ extend type Query {
 
   budgetTrendStats(budgetId: String!): BudgetTrendStats @dataFetcher(name: budgetTrendStats)
 
-  budgetNotifications: BudgetNotificationsData @dataFetcher(name: budgetNotifications)
+  budgetNotifications(filters: [CCMFilter]): BudgetNotificationsData @dataFetcher(name: budgetNotifications)
 }
 
 type BudgetDataList {

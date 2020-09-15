@@ -77,7 +77,7 @@ public class PodCountComputationServiceImpl {
     Map<Long, Long> podCount = getDefaultCountMap(startTime);
     while (startTime < endTime) {
       int offset = 0;
-      while (index < times.size() && times.get(index).getTime() < startTime + FIVE_MINUTES_IN_MILLIS - 1) {
+      while (index < times.size() && times.get(index).getTime() <= startTime + FIVE_MINUTES_IN_MILLIS - 1) {
         if (times.get(index).getType().equals("START")) {
           count++;
         } else {
@@ -147,8 +147,8 @@ public class PodCountComputationServiceImpl {
           successful = true;
           while (resultSet.next()) {
             String nodeId = resultSet.getString("INSTANCEID");
-            String clusterid = resultSet.getString("CLUSTERID");
-            nodePodIdList.add(NodePodId.builder().clusterId(clusterid).nodeId(nodeId).build());
+            String clusterId = resultSet.getString("CLUSTERID");
+            nodePodIdList.add(NodePodId.builder().clusterId(clusterId).nodeId(nodeId).build());
           }
         } catch (SQLException e) {
           retryCount++;
