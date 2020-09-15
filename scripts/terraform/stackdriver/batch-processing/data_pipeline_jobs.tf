@@ -1,5 +1,5 @@
 resource "google_logging_metric" "ce_failed_data_pipeline_jobs" {
-  name = join("_", [local.name_prefix, "ce_failed_data_pipeline_jobs"])
+  name        = join("_", [local.name_prefix, "ce_failed_data_pipeline_jobs"])
   description = "Number of failed Data Pipeline jobs. Owner: CE"
   filter = join("\n", [
     local.filter_prefix,
@@ -8,27 +8,37 @@ resource "google_logging_metric" "ce_failed_data_pipeline_jobs" {
   ])
   metric_descriptor {
     metric_kind = "DELTA"
-    value_type = "INT64"
+    value_type  = "INT64"
   }
 }
 
 resource "google_monitoring_alert_policy" "ce_failed_data_pipeline_jobs" {
-  count = var.deployment == "prod" ? 1 : 0
-  enabled = var.deployment == "prod" ? true: false
-  notification_channels = var.deployment == "prod" ? ["projects/${var.projectId}/notificationChannels/10185135917587539827"] : []
+  notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}"] :
+    ((var.deployment == "qa" || var.deployment == "qa_free") ? ["${local.slack_qa_channel}"] :
+  ["${local.slack_dev_channel}"]))
+
   display_name = join("_", [local.name_prefix, "ce_failed_data_pipeline_jobs"])
-  combiner = "OR"
+  combiner     = "OR"
   conditions {
     display_name = "ce_failed_data_pipeline_jobs"
     condition_threshold {
-      filter =  "resource.type=\"global\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_failed_data_pipeline_jobs.id}\""
-      duration = "300s"
-      comparison = "COMPARISON_GT"
-      threshold_value  = 0
+      threshold_value = 0
+      filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_failed_data_pipeline_jobs.id}\""
+      duration        = "180s"
+      comparison      = "COMPARISON_GT"
       aggregations {
-        alignment_period = "300s"
-        per_series_aligner = "ALIGN_COUNT"
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_SUM"
+        cross_series_reducer = "REDUCE_SUM"
       }
     }
+  }
+
+  documentation {
+    content = <<EOF
+    To troubleshoot: https://harness.atlassian.net/wiki/spaces/CE/pages/962724257/CE+Troubleshooting
+    EOF
+
+    mime_type = "text/markdown"
   }
 }
