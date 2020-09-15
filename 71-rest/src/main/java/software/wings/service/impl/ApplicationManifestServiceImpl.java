@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -38,9 +39,13 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.observer.Subject;
 import io.harness.tasks.Cd1SetupFields;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -70,6 +75,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.applicationmanifest.ApplicationManifestServiceObserver;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
@@ -104,6 +110,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private FeatureFlagService featureFlagService;
+
+  @Inject @Getter private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -312,6 +320,35 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     return query.get();
   }
 
+  @Override
+  public boolean detachPerpetualTask(String perpetualTaskId) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class, excludeAuthority)
+                                           .filter(ApplicationManifestKeys.perpetualTaskId, perpetualTaskId);
+    UpdateOperations<ApplicationManifest> updateOperations =
+        wingsPersistence.createUpdateOperations(ApplicationManifest.class)
+            .unset(ApplicationManifestKeys.perpetualTaskId);
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+
+    return updateResults.getUpdatedCount() >= 1;
+  }
+
+  @Override
+  public boolean attachPerpetualTask(String accountId, String appManifestId, String perpetualTaskId) {
+    // NOTE: Before using this method, ensure that perpetualTaskId does not exist for application manifest, otherwise
+    // we'll have an extra perpetual task running for this.
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifestKeys.accountId, accountId)
+                                           .filter(ApplicationManifest.ID_KEY, appManifestId)
+                                           .field(ApplicationManifestKeys.perpetualTaskId)
+                                           .doesNotExist();
+    UpdateOperations<ApplicationManifest> updateOperations =
+        wingsPersistence.createUpdateOperations(ApplicationManifest.class)
+            .set(ApplicationManifestKeys.perpetualTaskId, perpetualTaskId);
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+
+    return updateResults.getUpdatedCount() == 1;
+  }
+
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
     validateApplicationManifest(applicationManifest);
     sanitizeApplicationManifestConfigs(applicationManifest);
@@ -362,6 +399,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   void resetReadOnlyProperties(ApplicationManifest applicationManifest) {
     ApplicationManifest savedAppManifest = getById(applicationManifest.getAppId(), applicationManifest.getUuid());
     applicationManifest.setKind(savedAppManifest.getKind());
+    applicationManifest.setPerpetualTaskId(savedAppManifest.getPerpetualTaskId());
   }
 
   private void validateManifestFileName(ManifestFile manifestFile) {
