@@ -101,6 +101,14 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
             .add(OrchestrationTestSpringAliasRegistrar.class)
             .build();
       }
+
+      @Provides
+      @Singleton
+      public OrchestrationModuleConfig orchestrationModuleConfig() {
+        return OrchestrationModuleConfig.builder()
+            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -131,10 +139,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationPersistenceTestModule());
-    modules.add(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()));
+    modules.add(OrchestrationModule.getInstance());
     return modules;
   }
 

@@ -88,6 +88,14 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
         return ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(NGRegistrars.aliasRegistrars).build();
       }
+
+      @Provides
+      @Singleton
+      public OrchestrationModuleConfig orchestrationModuleConfig() {
+        return OrchestrationModuleConfig.builder()
+            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+            .build();
+      }
     });
     modules.add(new AbstractModule() {
       @Override
@@ -105,10 +113,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(TimeModule.getInstance());
     modules.add(NGModule.getInstance());
     modules.add(new CDNGPersistenceTestModule());
-    modules.add(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()));
+    modules.add(OrchestrationModule.getInstance());
     modules.add(new ExecutionPlanModule());
     modules.add(mongoTypeModule(annotations));
 

@@ -9,22 +9,18 @@ import io.harness.registries.registrar.OrchestrationFieldRegistrar;
 public class NGPipelineCommonsModule extends AbstractModule {
   private static NGPipelineCommonsModule instance;
 
-  public static NGPipelineCommonsModule getInstance(OrchestrationModuleConfig config) {
+  public static NGPipelineCommonsModule getInstance() {
     if (instance == null) {
-      instance = new NGPipelineCommonsModule(config);
+      instance = new NGPipelineCommonsModule();
     }
     return instance;
   }
 
-  private final OrchestrationModuleConfig config;
-
-  private NGPipelineCommonsModule(OrchestrationModuleConfig config) {
-    this.config = config;
-  }
+  private NGPipelineCommonsModule() {}
 
   @Override
   protected void configure() {
-    install(OrchestrationModule.getInstance(config));
+    install(OrchestrationModule.getInstance());
 
     MapBinder<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);

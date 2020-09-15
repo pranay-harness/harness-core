@@ -2,12 +2,13 @@ package io.harness;
 
 import static java.util.Arrays.asList;
 
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Names;
+import com.google.inject.name.Named;
 
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.NoopTaskExecutor;
@@ -51,18 +52,14 @@ import java.util.concurrent.TimeUnit;
 public class OrchestrationModule extends AbstractModule implements ServersModule {
   private static OrchestrationModule instance;
 
-  public static OrchestrationModule getInstance(OrchestrationModuleConfig config) {
+  public static OrchestrationModule getInstance() {
     if (instance == null) {
-      instance = new OrchestrationModule(config);
+      instance = new OrchestrationModule();
     }
     return instance;
   }
 
-  private final OrchestrationModuleConfig config;
-
-  public OrchestrationModule(OrchestrationModuleConfig config) {
-    this.config = Preconditions.checkNotNull(config);
-  }
+  private OrchestrationModule() {}
 
   @Override
   protected void configure() {
@@ -79,11 +76,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
     bind(EngineObtainmentHelper.class).toInstance(new EngineObtainmentHelper());
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("EngineExecutorService"))
-        .toInstance(ThreadPool.create(config.getCorePoolSize(), config.getMaxPoolSize(), config.getIdleTimeInSecs(),
-            TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("EngineExecutorService-%d").build()));
-    bind(ExpressionEvaluatorProvider.class).toInstance(config.getExpressionEvaluatorProvider());
 
     MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
@@ -101,13 +93,30 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
         MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
     orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationModuleEventHandlerRegistrar.class.getName())
         .to(OrchestrationModuleEventHandlerRegistrar.class);
-    bind(String.class)
-        .annotatedWith(Names.named(OrchestrationPublisherName.PUBLISHER_NAME))
-        .toInstance(config.getPublisherName());
 
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.NOOP.name()).to(NoopTaskExecutor.class);
+  }
+
+  @Provides
+  @Singleton
+  @Named("EngineExecutorService")
+  public ExecutorService engineExecutionServiceThreadPool(OrchestrationModuleConfig config) {
+    return ThreadPool.create(config.getCorePoolSize(), config.getMaxPoolSize(), config.getIdleTimeInSecs(),
+        TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("EngineExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  public ExpressionEvaluatorProvider expressionEvaluatorProvider(OrchestrationModuleConfig config) {
+    return config.getExpressionEvaluatorProvider();
+  }
+
+  @Provides
+  @Named(OrchestrationPublisherName.PUBLISHER_NAME)
+  public String publisherName(OrchestrationModuleConfig config) {
+    return config.getPublisherName();
   }
 
   @Override

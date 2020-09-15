@@ -94,6 +94,14 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
             .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
             .build();
       }
+
+      @Provides
+      @Singleton
+      public OrchestrationModuleConfig orchestrationModuleConfig() {
+        return OrchestrationModuleConfig.builder()
+            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -125,10 +133,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationStepsPersistenceTestModule());
-    modules.add(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()));
+    modules.add(OrchestrationModule.getInstance());
     modules.add(OrchestrationStepsModule.getInstance());
     return modules;
   }
