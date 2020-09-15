@@ -13,7 +13,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileDetails;
-import io.harness.delegate.beans.ScopingRuleDetails;
+import io.harness.delegate.beans.ScopingRules;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -148,9 +148,9 @@ public class DelegateProfileResource {
   @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
   public RestResponse<DelegateProfileDetails> updateScopingRulesV2(
       @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
-      @QueryParam("accountId") @NotEmpty String accountId, List<ScopingRuleDetails> scopingRules) {
-    return new RestResponse<>(
-        delegateProfileManagerService.updateScopingRules(accountId, delegateProfileId, scopingRules));
+      @QueryParam("accountId") @NotEmpty String accountId, ScopingRules scopingRules) {
+    return new RestResponse<>(delegateProfileManagerService.updateScopingRules(
+        accountId, delegateProfileId, scopingRules.getScopingRuleDetails()));
   }
 
   @DELETE

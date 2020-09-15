@@ -25,8 +25,8 @@ import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
-import io.harness.grpc.DelegateServiceGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.managerclient.ManagerCIResource;
@@ -120,7 +120,8 @@ public class CIManagerServiceModule extends AbstractModule {
                                                 .build()));
     install(OrchestrationStepsModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
-    install(new DelegateServiceGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret()));
+    install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
+        ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
     install(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
                                             .target(ciManagerConfiguration.getManagerTarget())
                                             .authority(ciManagerConfiguration.getManagerAuthority())

@@ -36,8 +36,8 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.grpc.DelegateServiceGrpcClientModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -262,8 +262,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
     modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
         ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
-    modules.add(new DelegateServiceGrpcClientModule(
-        ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
     return modules;
   }
 
@@ -279,6 +277,10 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     grpcServerConfig.setConnectors(Arrays.asList(
         Connector.builder().port(9880).secure(true).keyFilePath("key.pem").certFilePath("cert.pem").build()));
     configuration.setGrpcServerConfig(grpcServerConfig);
+
+    configuration.setGrpcDelegateServiceClientConfig(
+        GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.setElasticsearchConfig(elasticsearchConfig);
     configuration.setSearchEnabled(isSearchEnabled);

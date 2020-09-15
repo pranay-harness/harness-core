@@ -658,6 +658,14 @@ if [[ "" != "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.managerToCommandLibraryServiceSecret "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET"
 fi
 
+if [[ "" != "$DELEGATE_SERVICE_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcDelegateServiceClientConfig.target "$DELEGATE_SERVICE_TARGET"
+fi
+
+if [[ "" != "$DELEGATE_SERVICE_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcDelegateServiceClientConfig.authority "$DELEGATE_SERVICE_AUTHORITY"
+fi
+
 if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfig.authority "$NG_MANAGER_AUTHORITY"
 fi

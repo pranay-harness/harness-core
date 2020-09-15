@@ -71,6 +71,7 @@ import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
+import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -758,6 +759,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                 .build()));
     install(DelegateServiceDriverModule.getInstance());
+    install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
+        configuration.getGrpcDelegateServiceClientConfig().getTarget(),
+        configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
     install(PersistentLockModule.getInstance());
     install(ExecutionPlanModule.getInstance());
 

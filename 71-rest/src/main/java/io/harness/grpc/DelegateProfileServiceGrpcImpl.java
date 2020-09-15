@@ -155,10 +155,16 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                            .collect(Collectors.toList());
       }
 
-      delegateProfileService.updateScopingRules(
-          request.getProfileId().getId(), request.getAccountId().getId(), scopingRules);
+      DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(
+          request.getAccountId().getId(), request.getProfileId().getId(), scopingRules);
 
-      responseObserver.onNext(UpdateProfileScopingRulesResponse.newBuilder().build());
+      if (updatedDelegateProfile != null) {
+        responseObserver.onNext(
+            UpdateProfileScopingRulesResponse.newBuilder().setProfile(convert(updatedDelegateProfile)).build());
+      } else {
+        responseObserver.onNext(UpdateProfileScopingRulesResponse.newBuilder().build());
+      }
+
       responseObserver.onCompleted();
     } catch (Exception ex) {
       logger.error("Unexpected error occurred while processing update profile scoping rules request.", ex);
@@ -216,7 +222,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
 
-    if (isNotEmpty(delegateProfileGrpc.getScopingRulesList())) {
+    if (isNotEmpty(delegateProfileGrpc.getSelectorsList())) {
       delegateProfileBuilder.selectors(delegateProfileGrpc.getSelectorsList()
                                            .stream()
                                            .map(ProfileSelector::getSelector)

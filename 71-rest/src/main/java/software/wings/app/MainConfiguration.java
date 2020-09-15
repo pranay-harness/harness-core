@@ -142,6 +142,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("grpcDelegateServiceClientConfig") private GrpcClientConfig grpcDelegateServiceClientConfig;
   @JsonProperty("grpcClientConfig") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
