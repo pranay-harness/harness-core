@@ -52,7 +52,6 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -98,7 +97,6 @@ import software.wings.utils.ServiceVersionConvention;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -189,13 +187,10 @@ public class PcfSetupState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     boolean valuesInGit = false;
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
-    Application app = appService.get(context.getAppId());
 
-    if (isPcfManifestRefactorEnabled(app.getAccountId())) {
-      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.PCF_OVERRIDE);
-      valuesInGit = pcfStateHelper.isManifestInGit(appManifestMap);
-    }
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.PCF_OVERRIDE);
+    valuesInGit = pcfStateHelper.isManifestInGit(appManifestMap);
 
     Activity activity = createActivity(context, valuesInGit);
 
@@ -204,10 +199,6 @@ public class PcfSetupState extends State {
     } else {
       return executePcfTask(context, activity.getUuid(), appManifestMap);
     }
-  }
-
-  private boolean isPcfManifestRefactorEnabled(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
   }
 
   protected ExecutionResponse executePcfTask(
@@ -257,14 +248,12 @@ public class PcfSetupState extends State {
     PcfManifestsPackage pcfManifestsPackage =
         pcfStateHelper.generateManifestMap(context, appManifestMap, app, serviceElement);
 
-    boolean manifestRefactorFlagEnabled = isPcfManifestRefactorEnabled(app.getAccountId());
     String applicationManifestYmlContent = pcfManifestsPackage.getManifestYml();
-    String pcfAppNameSuffix =
-        generateAppNamePrefix(context, app, serviceElement, env, manifestRefactorFlagEnabled, pcfManifestsPackage);
-    boolean isOriginalRoute = shouldUseOriginalRoute(manifestRefactorFlagEnabled);
+    String pcfAppNameSuffix = generateAppNamePrefix(context, app, serviceElement, env, pcfManifestsPackage);
+    boolean isOriginalRoute = shouldUseOriginalRoute();
     List<String> tempRouteMaps = fetchTempRoutes(context, pcfInfrastructureMapping);
     List<String> routeMaps = fetchRouteMaps(context, pcfManifestsPackage, pcfInfrastructureMapping);
-    Integer maxCount = fetchMaxCount(manifestRefactorFlagEnabled, pcfManifestsPackage);
+    Integer maxCount = fetchMaxCount(pcfManifestsPackage);
 
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         Collectors.toMap(Entry::getKey, e -> e.getValue().toString()));
@@ -389,14 +378,13 @@ public class PcfSetupState extends State {
   }
 
   @VisibleForTesting
-  Integer fetchMaxCount(boolean manifestRefactorFlagEnabled, PcfManifestsPackage pcfManifestsPackage) {
+  Integer fetchMaxCount(PcfManifestsPackage pcfManifestsPackage) {
     Integer maxCount;
     maxInstances = maxInstances == null || maxInstances < 0
         ? Integer.valueOf(PcfConstants.MANIFEST_INSTANCE_COUNT_DEFAULT)
         : maxInstances;
-    maxCount = manifestRefactorFlagEnabled ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage,
-                                                 Integer.valueOf(PcfConstants.MANIFEST_INSTANCE_COUNT_DEFAULT))
-                                           : maxInstances;
+    maxCount = pcfStateHelper.fetchMaxCountFromManifest(
+        pcfManifestsPackage, Integer.valueOf(PcfConstants.MANIFEST_INSTANCE_COUNT_DEFAULT));
 
     return maxCount;
   }
@@ -491,7 +479,7 @@ public class PcfSetupState extends State {
   }
 
   @VisibleForTesting
-  boolean shouldUseOriginalRoute(boolean manifestRefactorFlagEnabled) {
+  boolean shouldUseOriginalRoute() {
     // These constants were used in legacy pcf workflows
     String infraRouteConstLegacy = INFRA_ROUTE;
     String infraRouteConst = PCF_INFRA_ROUTE;
@@ -502,7 +490,7 @@ public class PcfSetupState extends State {
       return false;
     }
 
-    if (manifestRefactorFlagEnabled || route == null || infraRouteConstLegacy.equalsIgnoreCase(route.trim())
+    if (route == null || infraRouteConstLegacy.equalsIgnoreCase(route.trim())
         || infraRouteConst.equalsIgnoreCase(route.trim())) {
       isOriginalRoute = true;
     } else {
@@ -514,17 +502,13 @@ public class PcfSetupState extends State {
 
   @VisibleForTesting
   String generateAppNamePrefix(ExecutionContext context, Application app, ServiceElement serviceElement,
-      Environment env, boolean manifestRefactorFlagEnabled, PcfManifestsPackage pcfManifestsPackage) {
+      Environment env, PcfManifestsPackage pcfManifestsPackage) {
     String pcfAppNameSuffix = isNotBlank(pcfAppName) ? normalizeExpression(context.renderExpression(pcfAppName))
                                                      : normalizeExpression(ServiceVersionConvention.getPrefix(
                                                            app.getName(), serviceElement.getName(), env.getName()));
 
-    if (manifestRefactorFlagEnabled) {
-      pcfAppNameSuffix = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, pcfAppNameSuffix);
-      pcfAppNameSuffix = normalizeExpression(context.renderExpression(pcfAppNameSuffix));
-    }
-
-    return pcfAppNameSuffix;
+    pcfAppNameSuffix = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, pcfAppNameSuffix);
+    return normalizeExpression(context.renderExpression(pcfAppNameSuffix));
   }
 
   @VisibleForTesting
