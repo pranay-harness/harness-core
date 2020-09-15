@@ -62,4 +62,6 @@ public interface VaultService {
   List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig);
 
   KmsSetupAlert getRenewalAlert(VaultConfig vaultConfig);
+
+  void validateVaultConfig(String accountId, VaultConfig vaultConfig);
 }

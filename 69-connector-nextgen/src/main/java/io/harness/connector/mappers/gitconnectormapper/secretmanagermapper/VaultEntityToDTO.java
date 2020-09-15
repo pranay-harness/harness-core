@@ -13,6 +13,7 @@ public class VaultEntityToDTO implements ConnectorEntityToDTOMapper<VaultConnect
         .isReadOnly(connector.isReadOnly())
         .vaultUrl(connector.getVaultUrl())
         .secretEngineName(connector.getSecretEngineName())
+        .secretEngineVersion(connector.getSecretEngineVersion())
         .renewIntervalHours(connector.getRenewalIntervalHours())
         .build();
   }

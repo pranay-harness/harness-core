@@ -19,7 +19,7 @@ public interface GcpSecretsManagerService {
 
   boolean deleteGcpKmsConfig(String accountId, String configId);
 
-  void validateSecretsManagerConfig(GcpKmsConfig gcpKmsConfig);
+  void validateSecretsManagerConfig(String accountId, GcpKmsConfig gcpKmsConfig);
 
   void decryptGcpConfigSecrets(GcpKmsConfig gcpKmsConfig, boolean maskSecret);
 }

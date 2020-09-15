@@ -20,5 +20,7 @@ public interface NGSecretManagerService {
   SecretManagerConfigDTO getSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
+  boolean validate(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
   SecretManagerConfigDTO getGlobalSecretManager(String accountIdentifier);
 }

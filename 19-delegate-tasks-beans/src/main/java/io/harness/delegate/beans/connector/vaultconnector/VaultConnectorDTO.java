@@ -31,6 +31,7 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
   private String appRoleId;
   private String secretId;
   private boolean isDefault;
+  private int secretEngineVersion;
 
   @JsonIgnore
   public AccessType getAccessType() {

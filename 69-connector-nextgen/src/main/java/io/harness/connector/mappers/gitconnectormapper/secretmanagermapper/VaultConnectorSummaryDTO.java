@@ -18,4 +18,5 @@ public class VaultConnectorSummaryDTO implements ConnectorConfigSummaryDTO {
   boolean isDefault;
   boolean isReadOnly;
   int renewalIntervalHours;
+  int secretEngineVersion;
 }

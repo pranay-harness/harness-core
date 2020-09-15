@@ -25,4 +25,5 @@ public class VaultConfigDTO extends SecretManagerConfigDTO {
   private String secretEngineName;
   private String appRoleId;
   private String secretId;
+  private int secretEngineVersion;
 }

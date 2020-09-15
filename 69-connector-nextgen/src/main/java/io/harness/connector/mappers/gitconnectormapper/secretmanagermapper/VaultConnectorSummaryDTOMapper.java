@@ -13,6 +13,7 @@ public class VaultConnectorSummaryDTOMapper implements ConnectorConfigSummaryDTO
         .accessType(connector.getAccessType())
         .isDefault(connector.isDefault())
         .isReadOnly(connector.isReadOnly())
+        .secretEngineVersion(connector.getSecretEngineVersion())
         .renewalIntervalHours(connector.getRenewalIntervalHours())
         .build();
   }

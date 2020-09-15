@@ -28,4 +28,6 @@ public interface LocalEncryptionService {
   void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output);
 
   String saveLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig);
+
+  void validateLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig);
 }

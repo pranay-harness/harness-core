@@ -17,6 +17,7 @@ public class VaultDTOToEntity implements ConnectorDTOToEntityMapper<VaultConnect
                                         .isReadOnly(connectorDTO.isReadOnly())
                                         .secretEngineName(connectorDTO.getSecretEngineName())
                                         .vaultUrl(connectorDTO.getVaultUrl())
+                                        .secretEngineVersion(connectorDTO.getSecretEngineVersion())
                                         .build();
     vaultConnector.setCategories(Collections.singletonList(ConnectorCategory.SECRET_MANAGER));
     return vaultConnector;

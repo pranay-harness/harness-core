@@ -50,6 +50,14 @@ public class SecretManagerResourceNG {
   }
 
   @GET
+  @Path("{identifier}/validate")
+  public RestResponse<Boolean> validateSecretManager(@PathParam("identifier") String identifier,
+      @QueryParam(ACCOUNT_KEY) String account, @QueryParam(ORG_KEY) String org,
+      @QueryParam(PROJECT_KEY) String project) {
+    return new RestResponse<>(ngSecretManagerService.validate(account, org, project, identifier));
+  }
+
+  @GET
   public RestResponse<List<SecretManagerConfigDTO>> getSecretManagers(
       @QueryParam(ACCOUNT_KEY) @NotNull String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier) {

@@ -103,6 +103,7 @@ public class ConnectorResource {
 
   @POST
   @Path("validate")
+  @Deprecated
   @ApiOperation(value = "Get the connectivity status of the Connector", nickname = "getConnectorStatus")
   public ResponseDTO<ConnectorValidationResult> validate(
       ConnectorRequestDTO connectorDTO, @PathParam("accountIdentifier") String accountIdentifier) {

@@ -18,6 +18,7 @@ public class VaultConfigMapper {
                                   .name(vaultConfigDTO.getName())
                                   .authToken(vaultConfigDTO.getAuthToken())
                                   .secretEngineName(vaultConfigDTO.getSecretEngineName())
+                                  .secretEngineVersion(vaultConfigDTO.getSecretEngineVersion())
                                   .basePath(vaultConfigDTO.getBasePath())
                                   .appRoleId(vaultConfigDTO.getAppRoleId())
                                   .renewIntervalHours(vaultConfigDTO.getRenewIntervalHours())
@@ -41,6 +42,7 @@ public class VaultConfigMapper {
     vaultConfig.setSecretId(vaultConfigDTO.getSecretId());
     vaultConfig.setReadOnly(vaultConfigDTO.isReadOnly());
     vaultConfig.setDefault(vaultConfigDTO.isDefault());
+    vaultConfig.setSecretEngineVersion(vaultConfigDTO.getSecretEngineVersion());
     if (!Optional.ofNullable(vaultConfig.getNgMetadata()).isPresent()) {
       vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder().build());
     }

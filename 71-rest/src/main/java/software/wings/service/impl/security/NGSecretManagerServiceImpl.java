@@ -9,9 +9,8 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
-import io.harness.security.encryption.EncryptedDataDetail;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
+@Slf4j
 public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   @Inject private SecretManager secretManager;
   @Inject private VaultService vaultService;
@@ -76,6 +76,37 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       }
     }
     throw new UnsupportedOperationException("secret manager not supported in NG");
+  }
+
+  @Override
+  public boolean validate(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    Optional<SecretManagerConfig> secretManagerConfigOptional =
+        getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (secretManagerConfigOptional.isPresent()) {
+      secretManagerConfigService.decryptEncryptionConfigSecrets(
+          accountIdentifier, secretManagerConfigOptional.get(), false);
+      try {
+        switch (secretManagerConfigOptional.get().getEncryptionType()) {
+          case VAULT:
+            vaultService.validateVaultConfig(accountIdentifier, (VaultConfig) secretManagerConfigOptional.get());
+            return true;
+          case GCP_KMS:
+            gcpSecretsManagerService.validateSecretsManagerConfig(
+                accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
+            return true;
+          case LOCAL:
+            localEncryptionService.validateLocalEncryptionConfig(
+                accountIdentifier, (LocalEncryptionConfig) secretManagerConfigOptional.get());
+            return true;
+          default:
+            return false;
+        }
+      } catch (SecretManagementException secretManagementException) {
+        logger.info("Error while validating secret manager config with details: {}, {}, {}, {}, error: ",
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier, secretManagementException);
+      }
+    }
+    return false;
   }
 
   private boolean checkForDuplicate(
@@ -136,11 +167,6 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       default:
         throw new UnsupportedOperationException("Secret Manager not supported in NG");
     }
-  }
-
-  @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object) {
-    return secretManager.getEncryptionDetails(object);
   }
 
   @Override

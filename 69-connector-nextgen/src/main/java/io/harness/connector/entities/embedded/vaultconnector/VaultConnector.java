@@ -24,4 +24,5 @@ public class VaultConnector extends Connector {
   boolean isReadOnly;
   int renewalIntervalHours;
   AccessType accessType;
+  int secretEngineVersion;
 }
