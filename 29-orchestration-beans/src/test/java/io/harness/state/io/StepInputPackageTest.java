@@ -4,16 +4,22 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.OrchestrationBeansModuleListProvider;
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.utils.DummyOutcome;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import java.util.List;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationBeansModuleListProvider.class)
 public class StepInputPackageTest extends OrchestrationBeansTest {
   StepInputPackage inputPackage = StepInputPackage.builder()
                                       .input(ResolvedRefInput.builder()

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.events.AsyncOrchestrationEventHandlerProxy;
@@ -23,12 +24,17 @@ import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.execution.events.SyncOrchestrationEventHandlerProxy;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class OrchestrationEventEmitterTest extends OrchestrationTest {
   @InjectMocks @Inject private OrchestrationEventEmitter eventEmitter;
   @Mock OrchestrationEventHandlerRegistry registry;

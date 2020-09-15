@@ -5,14 +5,20 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.OrchestrationBeansModuleListProvider;
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.StepType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationBeansModuleListProvider.class)
 public class PlanTest extends OrchestrationBeansTest {
   private static final String PLAN_ID = generateUuid();
   private static final String DUMMY_NODE_1_ID = generateUuid();

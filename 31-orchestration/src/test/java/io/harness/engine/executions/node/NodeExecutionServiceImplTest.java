@@ -6,23 +6,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.StepType;
-import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class NodeExecutionServiceImplTest extends OrchestrationTest {
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestSave() {

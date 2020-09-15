@@ -6,27 +6,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.Outcome;
 import io.harness.references.OutcomeRefObject;
 import io.harness.rule.Owner;
-import io.harness.testlib.RealMongo;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummyOutcome;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class OutcomeServiceImplTest extends OrchestrationTest {
   @Inject private OutcomeService outcomeService;
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestSaveAndFind() {
@@ -49,7 +53,6 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestSaveAndFindForNull() {
@@ -62,7 +65,6 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldFetchAllOutcomesByRuntimeId() {
@@ -80,7 +82,6 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchOutcomes() {
@@ -101,7 +102,6 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchOutcome() {

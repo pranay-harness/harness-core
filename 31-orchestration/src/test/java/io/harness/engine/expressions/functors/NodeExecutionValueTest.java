@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
@@ -20,6 +21,8 @@ import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.StepType;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.steps.TestStepParameters;
@@ -30,12 +33,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.util.Collections;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class NodeExecutionValueTest extends OrchestrationTest {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock OutcomeService outcomeService;

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.AmbianceUtils;
@@ -17,13 +18,17 @@ import io.harness.references.SweepingOutputRefObject;
 import io.harness.resolvers.GroupNotFoundException;
 import io.harness.resolvers.ResolverUtils;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.StepType;
-import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummySweepingOutput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   private static final String STEP_RUNTIME_ID = generateUuid();
   private static final String STEP_SETUP_ID = generateUuid();
@@ -32,7 +37,6 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   @Inject private AmbianceUtils ambianceUtils;
 
   @Test
-  @RealMongo
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testConsumeAndFind() {
@@ -58,7 +62,6 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testSaveWithLevelsToKeepAndFind() {
@@ -84,7 +87,6 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testSaveAtScopeAndFind() {
@@ -133,7 +135,6 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldTestSaveAndFindForNull() {

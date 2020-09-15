@@ -6,19 +6,25 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationBeansModuleListProvider;
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationBeansModuleListProvider.class)
 public class StepRegistryTest extends OrchestrationBeansTest {
   @Inject private StepRegistry stepRegistry;
 

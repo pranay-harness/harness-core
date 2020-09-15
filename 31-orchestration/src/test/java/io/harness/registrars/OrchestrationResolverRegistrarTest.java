@@ -5,12 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
@@ -18,6 +22,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class OrchestrationResolverRegistrarTest extends OrchestrationTest {
   @Inject Map<String, ResolverRegistrar> resolverRegistrars;
   @Test

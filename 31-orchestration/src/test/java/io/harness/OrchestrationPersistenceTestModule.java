@@ -1,7 +1,5 @@
-package io.harness.rule;
+package io.harness;
 
-import io.harness.OrchestrationPersistenceConfig;
-import io.harness.TimeoutEnginePersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
 

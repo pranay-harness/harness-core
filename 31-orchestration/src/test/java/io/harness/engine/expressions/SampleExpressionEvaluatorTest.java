@@ -3,17 +3,23 @@ package io.harness.engine.expressions;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CategoryTest;
+import io.harness.OrchestrationModuleListProvider;
+import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
-public class SampleExpressionEvaluatorTest extends CategoryTest {
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
+public class SampleExpressionEvaluatorTest extends OrchestrationTest {
   private Ambiance ambiance;
 
   @Before

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationBeansModuleListProvider;
 import io.harness.OrchestrationBeansTest;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
@@ -16,9 +17,14 @@ import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationBeansModuleListProvider.class)
 public class AdviserRegistryTest extends OrchestrationBeansTest {
   @Inject private AdviserRegistry adviserRegistry;
 

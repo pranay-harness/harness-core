@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
@@ -19,23 +20,24 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.StepType;
-import io.harness.testlib.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class RetryAdviseHandlerTest extends OrchestrationTest {
   @InjectMocks @Inject private RetryAdviseHandler retryAdviseHandler;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Mock private ExecutorService executorService;
 
   private static final String PLAN_EXECUTION_ID = generateUuid();
   private static final String NODE_EXECUTION_ID = generateUuid();
@@ -73,7 +75,6 @@ public class RetryAdviseHandlerTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleAdvise() {

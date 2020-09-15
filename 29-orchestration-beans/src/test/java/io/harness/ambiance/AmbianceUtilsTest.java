@@ -7,16 +7,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationBeansModuleListProvider;
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.StepType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationBeansModuleListProvider.class)
 public class AmbianceUtilsTest extends OrchestrationBeansTest {
   private static final String ACCOUNT_ID = generateUuid();
   private static final String APP_ID = generateUuid();

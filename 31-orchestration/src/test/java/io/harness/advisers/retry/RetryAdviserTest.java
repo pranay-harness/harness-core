@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
@@ -22,16 +23,21 @@ import io.harness.execution.status.Status;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.state.StepType;
 import io.harness.utils.AmbianceTestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import java.util.Arrays;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class RetryAdviserTest extends OrchestrationTest {
   public static final String DUMMY_NODE_ID = generateUuid();
   public static final String NODE_EXECUTION_ID = generateUuid();

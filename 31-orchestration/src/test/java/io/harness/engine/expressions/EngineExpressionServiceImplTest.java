@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.OrchestrationModuleListProvider;
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.EmbeddedUser;
@@ -14,13 +15,17 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.PlanExecution;
 import io.harness.rule.Owner;
-import io.harness.testlib.RealMongo;
+import io.harness.runners.GuiceRunner;
+import io.harness.runners.ModuleProvider;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummyOutcome;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
+@RunWith(GuiceRunner.class)
+@ModuleProvider(OrchestrationModuleListProvider.class)
 public class EngineExpressionServiceImplTest extends OrchestrationTest {
   @Inject EngineExpressionService engineExpressionService;
   @Inject OutcomeService outcomeService;
@@ -34,6 +39,7 @@ public class EngineExpressionServiceImplTest extends OrchestrationTest {
 
   @Before
   public void setup() {
+    super.setup();
     ambiance = AmbianceTestUtils.buildAmbiance();
     planExecutionService.save(
         PlanExecution.builder().uuid(ambiance.getPlanExecutionId()).createdBy(EMBEDDED_USER).build());
@@ -41,7 +47,6 @@ public class EngineExpressionServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRenderExpression() {
@@ -52,7 +57,6 @@ public class EngineExpressionServiceImplTest extends OrchestrationTest {
   }
 
   @Test
-  @RealMongo
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestEvaluateExpression() {
