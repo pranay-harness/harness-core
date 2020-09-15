@@ -34,7 +34,7 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 			Output: o.GetOutput(),
 		}
 	}
-	stepOutput, err := h.unitExecutor.Run(ctx, in.GetStep(), stageOutput)
+	stepOutput, err := h.unitExecutor.Run(ctx, in.GetStep(), stageOutput, in.GetAccountId())
 	response := &pb.ExecuteStepResponse{}
 	if stepOutput != nil {
 		response.Output = stepOutput.Output

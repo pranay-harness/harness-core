@@ -72,16 +72,17 @@ func (e *stageExecutor) Run() error {
 		return err
 	}
 
+	accountID := execution.GetAccountId()
 	for _, step := range execution.GetSteps() {
 		switch x := step.GetStep().(type) {
 		case *pb.Step_Unit:
-			stepOutput, err := e.unitExecutor.Run(ctx, step.GetUnit(), e.stageOutput)
+			stepOutput, err := e.unitExecutor.Run(ctx, step.GetUnit(), e.stageOutput, accountID)
 			if err != nil {
 				return err
 			}
 			e.stageOutput[step.GetUnit().GetId()] = stepOutput
 		case *pb.Step_Parallel:
-			stepOutputByID, err := e.parallelExecutor.Run(ctx, step.GetParallel(), e.stageOutput)
+			stepOutputByID, err := e.parallelExecutor.Run(ctx, step.GetParallel(), e.stageOutput, accountID)
 			if err != nil {
 				return err
 			}

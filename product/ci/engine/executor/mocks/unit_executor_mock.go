@@ -36,16 +36,16 @@ func (m *MockUnitExecutor) EXPECT() *MockUnitExecutorMockRecorder {
 }
 
 // Run mocks base method.
-func (m *MockUnitExecutor) Run(ctx context.Context, step *proto.UnitStep, so output.StageOutput) (*output.StepOutput, error) {
+func (m *MockUnitExecutor) Run(ctx context.Context, step *proto.UnitStep, so output.StageOutput, accountID string) (*output.StepOutput, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", ctx, step, so)
+	ret := m.ctrl.Call(m, "Run", ctx, step, so, accountID)
 	ret0, _ := ret[0].(*output.StepOutput)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Run indicates an expected call of Run.
-func (mr *MockUnitExecutorMockRecorder) Run(ctx, step, so interface{}) *gomock.Call {
+func (mr *MockUnitExecutorMockRecorder) Run(ctx, step, so, accountID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockUnitExecutor)(nil).Run), ctx, step, so)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockUnitExecutor)(nil).Run), ctx, step, so, accountID)
 }
