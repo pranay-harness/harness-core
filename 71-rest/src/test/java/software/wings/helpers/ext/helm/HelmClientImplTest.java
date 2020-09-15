@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -7,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,7 +38,6 @@ import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 public class HelmClientImplTest extends WingsBaseTest {
@@ -359,25 +360,12 @@ public class HelmClientImplTest extends WingsBaseTest {
     return getHelmCommandPassedToExecutor(consumer, request);
   }
 
-  private void testWithoutValueOverride(ConsumerWrapper<HelmCommandRequest> consumer) throws Exception {
-    String command_v2 = getCommandWithNoValueOverride(HelmVersion.V2, consumer, helmInstallCommandRequest);
-    String command_v3 = getCommandWithNoValueOverride(HelmVersion.V3, consumer, helmInstallCommandRequest);
-    assertThat(command_v2)
-        .isEqualTo(
-            "KUBECONFIG=~/.kube/dummy-config helm install  harness --repo https://oci-registry --version 0.0.1  --name crazy-helm --namespace helm-namespace");
-    assertThat(command_v3)
-        .isEqualTo(
-            "KUBECONFIG=~/.kube/dummy-config /client-tools/v3.1/helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
-  }
-
   private String getCommandWithNoValueOverride(HelmVersion helmVersion, ConsumerWrapper<HelmCommandRequest> consumer,
       HelmInstallCommandRequest request) throws Exception {
     request.setHelmVersion(helmVersion);
     request.setVariableOverridesYamlFiles(null);
     return getHelmCommandPassedToExecutor(consumer, request).trim();
   }
-
-  ;
 
   private String getHelmCommandPassedToExecutor(
       ConsumerWrapper<HelmCommandRequest> consumer, HelmCommandRequest request) throws Exception {
@@ -388,26 +376,19 @@ public class HelmClientImplTest extends WingsBaseTest {
     return stringCaptor.getValue();
   }
 
-  private void testWithoutValueOverrideV3()
-      throws InterruptedException, TimeoutException, IOException, ExecutionException {
-    helmInstallCommandRequest.setHelmVersion(HelmVersion.V3);
-    helmInstallCommandRequest.setVariableOverridesYamlFiles(null);
-    helmClient.install(helmInstallCommandRequest);
-    verify(helmClient, Mockito.times(1)).executeHelmCLICommand(stringCaptor.capture());
-    String command = stringCaptor.getValue();
-    assertThat(command).doesNotContain("$");
-  }
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteHelmCLICommand() throws Exception {
+    String successCommand = "exit 0";
+    String failCommand = "exit 1";
+    // Override @Before setup
+    doCallRealMethod().when(helmClient).executeHelmCLICommand(anyString(), anyLong());
 
-  private void testInstallV2() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-    helmInstallCommandRequest.setHelmVersion(HelmVersion.V2);
-    helmClient.install(helmInstallCommandRequest);
-    verify(helmClient, Mockito.times(1)).executeHelmCLICommand(stringCaptor.capture());
-    String command = stringCaptor.getValue();
-    assertThat(command).doesNotContain("$");
-  }
-
-  private void testInstallV3() {
-    helmInstallCommandRequest.setHelmVersion(HelmVersion.V3);
+    assertThat(helmClient.executeHelmCLICommand(successCommand).getCommandExecutionStatus())
+        .isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(helmClient.executeHelmCLICommand(failCommand).getCommandExecutionStatus())
+        .isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @FunctionalInterface
