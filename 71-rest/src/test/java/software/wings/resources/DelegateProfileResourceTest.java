@@ -23,6 +23,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.ScopingRuleDetails;
+import io.harness.delegate.beans.ScopingRules;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -212,7 +213,8 @@ public class DelegateProfileResourceTest {
         RESOURCES.client()
             .target("/delegate-profiles/v2/" + profileId + "/scoping-rules?accountId=" + ACCOUNT_ID)
             .request()
-            .put(entity(rules, MediaType.APPLICATION_JSON), new GenericType<RestResponse<DelegateProfileDetails>>() {});
+            .put(entity(ScopingRules.builder().scopingRuleDetails(rules).build(), MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<DelegateProfileDetails>>() {});
     verify(delegateProfileManagerService, times(1)).updateScopingRules(ACCOUNT_ID, profileId, rules);
     assertThat(restResponse.getResource()).isEqualTo(result);
   }

@@ -67,6 +67,7 @@ message UpdateProfileScopingRulesRequest {
 }
 
 message UpdateProfileScopingRulesResponse {
+  DelegateProfileGrpc profile = 1;
 }
 
 message UpdateProfileSelectorsRequest {

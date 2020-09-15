@@ -40,6 +40,8 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
@@ -263,6 +265,11 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     configuration.getServiceSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
 
+    configuration.setGrpcDelegateServiceClientConfig(
+        GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+    configuration.setGrpcClientConfig(
+        GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+
     MarketPlaceConfig marketPlaceConfig =
         MarketPlaceConfig.builder().azureMarketplaceAccessKey("qwertyu").azureMarketplaceSecretKey("qwertyu").build();
     configuration.setMarketPlaceConfig(marketPlaceConfig);
@@ -342,6 +349,11 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new AuthModule());
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
+    modules.add(new ManagerGrpcClientModule(
+        ManagerGrpcClientModule.Config.builder()
+            .target(((MainConfiguration) configuration).getGrpcClientConfig().getTarget())
+            .authority(((MainConfiguration) configuration).getGrpcClientConfig().getAuthority())
+            .build()));
 
     return modules;
   }

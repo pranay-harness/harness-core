@@ -20,6 +20,7 @@ import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.UpdateProfileRequest;
 import io.harness.delegateprofile.UpdateProfileResponse;
 import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
+import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.exception.DelegateServiceDriverException;
 import lombok.extern.slf4j.Slf4j;
@@ -110,18 +111,26 @@ public class DelegateProfileServiceGrpcClient {
     }
   }
 
-  public void updateProfileScopingRules(
+  public DelegateProfileGrpc updateProfileScopingRules(
       AccountId accountId, ProfileId profileId, List<ProfileScopingRule> scopingRules) {
     try {
       if (scopingRules == null) {
         scopingRules = Collections.emptyList();
       }
 
-      delegateProfileServiceBlockingStub.updateProfileScopingRules(UpdateProfileScopingRulesRequest.newBuilder()
-                                                                       .setAccountId(accountId)
-                                                                       .setProfileId(profileId)
-                                                                       .addAllScopingRules(scopingRules)
-                                                                       .build());
+      UpdateProfileScopingRulesResponse updateProfileScopingRulesResponse =
+          delegateProfileServiceBlockingStub.updateProfileScopingRules(UpdateProfileScopingRulesRequest.newBuilder()
+                                                                           .setAccountId(accountId)
+                                                                           .setProfileId(profileId)
+                                                                           .addAllScopingRules(scopingRules)
+                                                                           .build());
+
+      if (!updateProfileScopingRulesResponse.hasProfile()) {
+        return null;
+      }
+
+      return updateProfileScopingRulesResponse.getProfile();
+
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while updating profile scoping rules.", ex);
     }

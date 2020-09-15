@@ -2,11 +2,13 @@ package io.harness.delegate.beans;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "DelegateProfileDetailsKeys")
 public class DelegateProfileDetails {
   private String uuid;
   private String accountId;

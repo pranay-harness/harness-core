@@ -30,8 +30,8 @@ import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
-import io.harness.grpc.DelegateServiceGrpcClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
@@ -159,7 +159,8 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
     install(new NgAsyncTaskGrpcServerModule(
         this.appConfig.getGrpcServerConfig(), "manager", this.appConfig.getNextGenConfig().getManagerServiceSecret()));
-    install(new DelegateServiceGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
+        this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
     install(new EntityReferenceClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
     install(new ProviderModule() {

@@ -397,7 +397,7 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     String accountId = generateUuid();
     String profileId = generateUuid();
 
-    doThrow(new RuntimeException()).when(delegateProfileService).updateScopingRules(profileId, accountId, null);
+    doThrow(new RuntimeException()).when(delegateProfileService).updateScopingRules(accountId, profileId, null);
 
     // Test exception
     assertThatThrownBy(
@@ -408,27 +408,33 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
         .hasMessage("Unexpected error occurred while updating profile scoping rules.");
 
     // Test update scoping rules
-    try {
-      Map<String, ScopingValues> profileScopingRuleValues =
-          ImmutableMap.of("testKey", ScopingValues.newBuilder().addAllValue(Arrays.asList("scopingValues")).build());
+    Map<String, ScopingValues> profileScopingRuleValues =
+        ImmutableMap.of("testKey", ScopingValues.newBuilder().addAllValue(Arrays.asList("scopingValues")).build());
 
-      delegateProfileServiceGrpcClient.updateProfileScopingRules(AccountId.newBuilder().setId(accountId).build(),
-          ProfileId.newBuilder().setId(profileId).build(),
-          Arrays.asList(ProfileScopingRule.newBuilder()
-                            .setDescription("testDescription")
-                            .putAllScopingEntities(profileScopingRuleValues)
-                            .build()));
+    when(delegateProfileService.updateScopingRules(eq(accountId), eq(profileId), any(List.class)))
+        .thenReturn(DelegateProfile.builder().uuid(profileId).accountId(accountId).name(NAME).build());
 
-      ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
-      verify(delegateProfileService, times(2))
-          .updateScopingRules(eq(profileId), eq(accountId), argumentCaptor.capture());
+    DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.updateProfileScopingRules(
+        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(profileId).build(),
+        Arrays.asList(ProfileScopingRule.newBuilder()
+                          .setDescription("testDescription")
+                          .putAllScopingEntities(profileScopingRuleValues)
+                          .build()));
 
-      List<PermissionAttribute> scopingEntities = argumentCaptor.getValue();
-      assertThat(scopingEntities).isNotNull();
-      assertThat(scopingEntities).hasSize(1);
+    assertThat(delegateProfileGrpc).isNotNull();
+    ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(delegateProfileService, times(2)).updateScopingRules(eq(accountId), eq(profileId), argumentCaptor.capture());
 
-    } catch (Exception ex) {
-      fail("Unexpected error occurred while testing update of the profile scoping rules");
-    }
+    List<PermissionAttribute> scopingEntities = argumentCaptor.getValue();
+    assertThat(scopingEntities).isNotNull();
+    assertThat(scopingEntities).hasSize(1);
+
+    // Test profile not found
+    when(delegateProfileService.updateScopingRules(accountId, profileId, null)).thenReturn(null);
+
+    delegateProfileGrpc = delegateProfileServiceGrpcClient.updateProfileScopingRules(
+        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(profileId).build(), null);
+
+    assertThat(delegateProfileGrpc).isNull();
   }
 }
