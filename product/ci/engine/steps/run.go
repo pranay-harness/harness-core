@@ -33,7 +33,7 @@ var (
 
 // RunStep represents interface to execute a run step
 type RunStep interface {
-	Run(ctx context.Context) (*output.StepOutput, error)
+	Run(ctx context.Context) (*output.StepOutput, int32, error)
 }
 
 type runStep struct {
@@ -79,21 +79,21 @@ func NewRunStep(step *pb.UnitStep, relLogPath string, tmpFilePath string,
 }
 
 // Executes customer provided run step commands with retries and timeout handling
-func (e *runStep) Run(ctx context.Context) (*output.StepOutput, error) {
+func (e *runStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	var err error
 	var o *output.StepOutput
 	if err = e.validate(); err != nil {
-		return nil, err
+		return nil, int32(1), err
 	}
 	if err = e.resolveJEXL(ctx); err != nil {
-		return nil, err
+		return nil, int32(1), err
 	}
 	for i := int32(1); i <= e.numRetries; i++ {
 		if o, err = e.execute(ctx, i); err == nil {
-			return o, nil
+			return o, i, nil
 		}
 	}
-	return nil, err
+	return nil, e.numRetries, err
 }
 
 func (e *runStep) validate() error {

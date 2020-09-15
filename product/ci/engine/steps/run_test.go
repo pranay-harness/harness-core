@@ -351,9 +351,10 @@ func TestRunValidateErr(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
 	executor := NewRunStep(nil, logFilePath, tmpPath, nil, fs, log.Sugar())
-	o, err := executor.Run(ctx)
+	o, numRetries, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 	assert.Nil(t, o)
+	assert.Equal(t, numRetries, int32(1))
 }
 
 func TestRunExecuteErr(t *testing.T) {
@@ -375,9 +376,10 @@ func TestRunExecuteErr(t *testing.T) {
 	fs.EXPECT().Create(gomock.Any()).Return(nil, os.ErrPermission)
 
 	executor := NewRunStep(step, logFilePath, tmpPath, nil, fs, log.Sugar())
-	o, err := executor.Run(ctx)
+	o, numRetries, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 	assert.Nil(t, o)
+	assert.Equal(t, numRetries, int32(1))
 }
 
 func TestRunStepResolveJEXL(t *testing.T) {

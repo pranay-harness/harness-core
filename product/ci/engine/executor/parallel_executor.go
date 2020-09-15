@@ -15,7 +15,7 @@ import (
 
 // ParallelExecutor represents an interface to execute a parallel step
 type ParallelExecutor interface {
-	Run(ctx context.Context, step *pb.ParallelStep, so output.StageOutput) (map[string]*output.StepOutput, error)
+	Run(ctx context.Context, step *pb.ParallelStep, so output.StageOutput, accountID string) (map[string]*output.StepOutput, error)
 }
 
 type parallelExecutor struct {
@@ -61,7 +61,8 @@ func NewParallelExecutor(stepLogPath, tmpFilePath string, workerPorts []uint, lo
 // 2. All the non-run steps i.e. save/restore & publish artifacts are executed in parallel on main lite-engine.
 //	  Publish artifacts is executed on CI-addon. Hence, there is no reason for sending them to worker lite-engines.
 //	  Save/restore cache are not memory/cpu intensive tasks. Hence, executing them on main lite-engine.
-func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so output.StageOutput) (map[string]*output.StepOutput, error) {
+func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so output.StageOutput,
+	accountID string) (map[string]*output.StepOutput, error) {
 	start := time.Now()
 	if err := e.validate(ps); err != nil {
 		return nil, err
@@ -80,7 +81,7 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so outp
 			numRunSteps++
 		default:
 			go func() {
-				stepOutput, err := e.unitExecutor.Run(ctx, s, so)
+				stepOutput, err := e.unitExecutor.Run(ctx, s, so, accountID)
 				results <- unitStepResponse{
 					stepID:     s.GetId(),
 					stepOutput: stepOutput,
@@ -99,9 +100,9 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so outp
 				var err error
 				var stepOutput *output.StepOutput
 				if w.mainOnly {
-					stepOutput, err = e.unitExecutor.Run(ctx, t, so)
+					stepOutput, err = e.unitExecutor.Run(ctx, t, so, accountID)
 				} else {
-					stepOutput, err = e.executeRemoteStep(ctx, w, t, so)
+					stepOutput, err = e.executeRemoteStep(ctx, w, t, so, accountID)
 				}
 
 				results <- unitStepResponse{
@@ -166,7 +167,7 @@ func (e *parallelExecutor) getWorkers(numRunSteps int) []worker {
 
 // Create worker lite-engine client and send task to execute run step
 func (e *parallelExecutor) executeRemoteStep(ctx context.Context, w worker, step *pb.UnitStep,
-	so output.StageOutput) (*output.StepOutput, error) {
+	so output.StageOutput, accountID string) (*output.StepOutput, error) {
 	c, err := newLiteEngineClient(w.port, e.log)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not create worker lite engine client")
@@ -178,7 +179,11 @@ func (e *parallelExecutor) executeRemoteStep(ctx context.Context, w worker, step
 	for stepID, stepOutput := range so {
 		pbStepOutputs = append(pbStepOutputs, &pb.StageOutput_StepOutput{StepId: stepID, Output: stepOutput.Output})
 	}
-	request := &pb.ExecuteStepRequest{Step: step, StageOutput: &pb.StageOutput{StepOutputs: pbStepOutputs}}
+	request := &pb.ExecuteStepRequest{
+		AccountId:   accountID,
+		Step:        step,
+		StageOutput: &pb.StageOutput{StepOutputs: pbStepOutputs},
+	}
 	response, err := c.Client().ExecuteStep(ctx, request)
 	if err != nil {
 		e.log.Warnw("Failed to execute remote step request", "error_msg", zap.Error(err))

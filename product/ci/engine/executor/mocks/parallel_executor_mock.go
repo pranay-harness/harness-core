@@ -36,16 +36,16 @@ func (m *MockParallelExecutor) EXPECT() *MockParallelExecutorMockRecorder {
 }
 
 // Run mocks base method.
-func (m *MockParallelExecutor) Run(ctx context.Context, step *proto.ParallelStep, so output.StageOutput) (map[string]*output.StepOutput, error) {
+func (m *MockParallelExecutor) Run(ctx context.Context, step *proto.ParallelStep, so output.StageOutput, accountID string) (map[string]*output.StepOutput, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", ctx, step, so)
+	ret := m.ctrl.Call(m, "Run", ctx, step, so, accountID)
 	ret0, _ := ret[0].(map[string]*output.StepOutput)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Run indicates an expected call of Run.
-func (mr *MockParallelExecutorMockRecorder) Run(ctx, step, so interface{}) *gomock.Call {
+func (mr *MockParallelExecutorMockRecorder) Run(ctx, step, so, accountID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockParallelExecutor)(nil).Run), ctx, step, so)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockParallelExecutor)(nil).Run), ctx, step, so, accountID)
 }
