@@ -17,6 +17,7 @@ import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
+import io.harness.delegate.task.gcp.GcpTask;
 import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
@@ -114,6 +115,7 @@ import software.wings.delegatetasks.validation.DockerValidation;
 import software.wings.delegatetasks.validation.DynaTraceValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
 import software.wings.delegatetasks.validation.GcbValidation;
+import software.wings.delegatetasks.validation.GcpValidationTask;
 import software.wings.delegatetasks.validation.GcrValidation;
 import software.wings.delegatetasks.validation.GcsValidation;
 import software.wings.delegatetasks.validation.GitFetchFilesValidation;
@@ -451,7 +453,8 @@ public enum TaskType {
   VALIDATE_KUBERNETES_CONFIG(
       TaskGroup.CONTAINER, KubernetesTestConnectionDelegateTask.class, KubernetesConnectionDelegateValidation.class),
   NG_GIT_COMMAND(TaskGroup.GIT, NGGitCommandTask.class, NGGitConnectionValidation.class),
-  DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.GIT, DockerTestConnectionDelegateTask.class, NGDockerValidation.class);
+  DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.GIT, DockerTestConnectionDelegateTask.class, NGDockerValidation.class),
+  GCP_TASK(TaskGroup.GCP, GcpTask.class, GcpValidationTask.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

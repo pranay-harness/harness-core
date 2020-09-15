@@ -22,6 +22,8 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(gcpConfig.getType())
                     .serviceAccountKeyFileContent(getEncryptedValue(gcpConfig, "serviceAccountKeyFileContent", false))
+                    .useDelegate(gcpConfig.isUseDelegate())
+                    .delegateSelector(gcpConfig.getDelegateSelector())
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
@@ -37,6 +39,8 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
     GcpConfig config = GcpConfig.builder()
                            .accountId(accountId)
                            .encryptedServiceAccountKeyFileContent(yaml.getServiceAccountKeyFileContent())
+                           .delegateSelector(yaml.getDelegateSelector())
+                           .delegateSelector(yaml.getDelegateSelector())
                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }
