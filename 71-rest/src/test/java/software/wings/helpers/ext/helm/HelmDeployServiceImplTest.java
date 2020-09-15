@@ -10,7 +10,9 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +37,11 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static software.wings.helpers.ext.helm.HelmDeployServiceImpl.WORKING_DIR;
+import static software.wings.utils.WingsTestConstants.BRANCH_NAME;
+import static software.wings.utils.WingsTestConstants.COMMIT_REFERENCE;
+import static software.wings.utils.WingsTestConstants.FILE_PATH;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -77,7 +83,9 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
+import software.wings.delegatetasks.helm.HelmDeployChartSpec;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -87,6 +95,7 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
@@ -1312,5 +1321,177 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     ArgumentCaptor<String> savedLogsCaptor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, atLeastOnce()).saveExecutionLog(savedLogsCaptor.capture());
     assertThat(savedLogsCaptor.getAllValues()).contains(expectedLoggedYaml);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderHelmChartFailed() throws Exception {
+    String expectedMessage = "Failed to render chart location: %s. Reason %s";
+    String namespace = "default";
+    String chartLocation = "/chart";
+    String output = "cli failed";
+    List<String> valueOverrides = emptyList();
+    doReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).output(output).build())
+        .when(helmClient)
+        .renderChart(helmInstallCommandRequest, chartLocation, namespace, valueOverrides);
+
+    assertThatThrownBy(
+        () -> helmDeployService.renderHelmChart(helmInstallCommandRequest, namespace, chartLocation, valueOverrides))
+        .hasMessageContaining(format(expectedMessage, chartLocation, output));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeployWithHelmChartSpecFromValuesYaml() throws Exception {
+    GitConfig gitConfig = GitConfig.builder().build();
+    GitFile gitFileWithSimpleValuesYaml = GitFile.builder().fileContent("values").build();
+    GitFile gitFileWithChartSpec = GitFile.builder().fileContent("chartSpec").build();
+    HelmDeployChartSpec chartSpec =
+        HelmDeployChartSpec.builder().name("fileChart").url("fileChartUrl").version("fileChartVer").build();
+    GitFetchFilesResult gitFiles =
+        GitFetchFilesResult.builder().files(asList(gitFileWithSimpleValuesYaml, gitFileWithChartSpec)).build();
+    helmInstallCommandRequest.setChartSpecification(null);
+    helmInstallCommandRequest.setGitConfig(gitConfig);
+    helmInstallCommandRequest.setGitFileConfig(GitFileConfig.builder()
+                                                   .connectorId(SETTING_ID)
+                                                   .commitId(COMMIT_REFERENCE)
+                                                   .branch(BRANCH_NAME)
+                                                   .filePath(FILE_PATH)
+                                                   .useBranch(true)
+                                                   .build());
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doReturn(gitFiles)
+        .when(gitService)
+        .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true);
+    doReturn(Optional.empty()).when(helmCommandHelper).generateHelmDeployChartSpecFromYaml("values");
+    doReturn(Optional.of(HarnessHelmDeployConfig.builder().helmDeployChartSpec(chartSpec).build()))
+        .when(helmCommandHelper)
+        .generateHelmDeployChartSpecFromYaml("chartSpec");
+
+    helmDeployService.deploy(helmInstallCommandRequest);
+
+    HelmChartSpecification deployedSpec = helmInstallCommandRequest.getChartSpecification();
+    assertThat(deployedSpec).isNotNull();
+    assertThat(deployedSpec.getChartName()).isEqualTo("fileChart");
+    assertThat(deployedSpec.getChartUrl()).isEqualTo("fileChartUrl");
+    assertThat(deployedSpec.getChartVersion()).isEqualTo("fileChartVer");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDeployWithHelmChartSpecFromValuesYamlWithEmptyValues() throws Exception {
+    GitConfig gitConfig = GitConfig.builder().build();
+    GitFile gitFileWithChartSpec = GitFile.builder().fileContent("chartSpec").build();
+    HelmDeployChartSpec chartSpec = HelmDeployChartSpec.builder().name(null).url(null).version("fileVersion").build();
+    GitFetchFilesResult gitFiles = GitFetchFilesResult.builder().files(singletonList(gitFileWithChartSpec)).build();
+
+    helmInstallCommandRequest.setGitConfig(gitConfig);
+    helmInstallCommandRequest.setGitFileConfig(GitFileConfig.builder()
+                                                   .connectorId(SETTING_ID)
+                                                   .commitId(COMMIT_REFERENCE)
+                                                   .branch(BRANCH_NAME)
+                                                   .filePath(FILE_PATH)
+                                                   .useBranch(true)
+                                                   .build());
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doReturn(gitFiles)
+        .when(gitService)
+        .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true);
+    doReturn(Optional.of(HarnessHelmDeployConfig.builder().helmDeployChartSpec(chartSpec).build()))
+        .when(helmCommandHelper)
+        .generateHelmDeployChartSpecFromYaml("chartSpec");
+
+    helmDeployService.deploy(helmInstallCommandRequest);
+
+    HelmChartSpecification deployedSpec = helmInstallCommandRequest.getChartSpecification();
+    assertThat(deployedSpec).isNotNull();
+    assertThat(deployedSpec.getChartName()).isEqualTo(HelmTestConstants.CHART_NAME_KEY);
+    assertThat(deployedSpec.getChartVersion()).isEqualTo("fileVersion");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetHelmChartInfoFromChartSpec() throws Exception {
+    helmInstallCommandRequest.setRepoConfig(null);
+    String searchChartResponse = "NAME\tCHART VERSION\tAPP VERSION\nchartName\tchartVersion\tappVersion";
+    String helmRepoListResponse = "NAME\tURL\nchartName\trepoUrl";
+    helmInstallCommandRequest.getChartSpecification().setChartUrl("repoUrl");
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doReturn(helmInstallCommandResponse).when(helmClient).upgrade(helmInstallCommandRequest);
+    doReturn(helmCliListReleasesResponse).when(helmClient).listReleases(helmInstallCommandRequest);
+
+    doReturn(HelmCliResponse.builder().output(searchChartResponse).build())
+        .when(helmClient)
+        .searchChart(any(HelmInstallCommandRequest.class), anyString());
+    doReturn(HelmCliResponse.builder().output(helmRepoListResponse).build())
+        .when(helmClient)
+        .getHelmRepoList(helmInstallCommandRequest);
+
+    HelmInstallCommandResponse response =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+
+    assertThat(response.getHelmChartInfo()).isNotNull();
+    assertThat(response.getHelmChartInfo().getName()).isEqualTo(HelmTestConstants.CHART_NAME_KEY);
+    assertThat(response.getHelmChartInfo().getVersion()).isEqualTo("chartVersion");
+    assertThat(response.getHelmChartInfo().getRepoUrl()).isEqualTo("repoUrl");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetHelmChartInfoFromChartSpecEmptyValues() throws Exception {
+    helmInstallCommandRequest.setRepoConfig(null);
+    helmInstallCommandRequest.getChartSpecification().setChartName("chartName");
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doReturn(helmInstallCommandResponse).when(helmClient).upgrade(helmInstallCommandRequest);
+    doReturn(helmCliListReleasesResponse).when(helmClient).listReleases(helmInstallCommandRequest);
+
+    doReturn(HelmCliResponse.builder().output("").build())
+        .when(helmClient)
+        .searchChart(any(HelmInstallCommandRequest.class), anyString());
+    doReturn(HelmCliResponse.builder().output("").build()).when(helmClient).getHelmRepoList(helmInstallCommandRequest);
+
+    HelmInstallCommandResponse response =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+
+    assertThat(response.getHelmChartInfo().getName()).isEqualTo("chartName");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetHelmChartInfoFromRemoteRepo() throws Exception {
+    testGetHelmChartInfoFromRemoteRepo(StoreType.HelmChartRepo);
+    testGetHelmChartInfoFromRemoteRepo(StoreType.HelmSourceRepo);
+  }
+
+  private void testGetHelmChartInfoFromRemoteRepo(StoreType storeType) throws Exception {
+    K8sDelegateManifestConfig manifestConfig =
+        K8sDelegateManifestConfig.builder()
+            .manifestStoreTypes(storeType)
+            .helmChartConfigParams(HelmChartConfigParams.builder().chartName("chartName").build())
+            .gitConfig(GitConfig.builder().build())
+            .gitFileConfig(GitFileConfig.builder().build())
+            .build();
+    helmInstallCommandRequest.setRepoConfig(manifestConfig);
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chartName").build();
+
+    doReturn(helmCliReleaseHistoryResponse).when(helmClient).releaseHistory(helmInstallCommandRequest);
+    doReturn(helmInstallCommandResponse).when(helmClient).upgrade(helmInstallCommandRequest);
+    doReturn(helmCliListReleasesResponse).when(helmClient).listReleases(helmInstallCommandRequest);
+    doReturn(helmChartInfo).when(helmTaskHelper).getHelmChartInfoFromChartsYamlFile(helmInstallCommandRequest);
+
+    HelmInstallCommandResponse response =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+
+    assertThat(response.getHelmChartInfo()).isEqualTo(helmChartInfo);
   }
 }
