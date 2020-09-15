@@ -369,6 +369,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setStatus(Status.DELETED);
 
+    // these three delegates should be returned
     Delegate delegateWithScalingGroup1 = createDelegateBuilder().build();
     delegateWithScalingGroup1.setAccountId(accountId);
     delegateWithScalingGroup1.setDelegateGroupName("test1");
@@ -378,12 +379,17 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegateWithScalingGroup3 = createDelegateBuilder().build();
     delegateWithScalingGroup3.setAccountId(accountId);
     delegateWithScalingGroup3.setDelegateGroupName("test2");
+    // these two delegates should not appear.
     Delegate delegateWithScalingGroup4 = createDelegateBuilder().build();
     delegateWithScalingGroup4.setAccountId(accountId);
     delegateWithScalingGroup4.setDelegateGroupName("test2");
+    // this delegate should cause an empty group to be returned
+    Delegate delegateWithScalingGroup5 = createDelegateBuilder().build();
+    delegateWithScalingGroup5.setAccountId(accountId);
+    delegateWithScalingGroup5.setDelegateGroupName("test3");
 
     wingsPersistence.save(Arrays.asList(deletedDelegate, delegateWithScalingGroup1, delegateWithScalingGroup2,
-        delegateWithScalingGroup3, delegateWithScalingGroup4));
+        delegateWithScalingGroup3, delegateWithScalingGroup4, delegateWithScalingGroup5));
     delegateService.registerHeartbeat(accountId, delegateWithScalingGroup1.getUuid(),
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build(),
         ConnectionMode.POLLING);
@@ -398,10 +404,10 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
 
-    assertThat(delegateStatus.getScalingGroups()).hasSize(2);
+    assertThat(delegateStatus.getScalingGroups()).hasSize(3);
     assertThat(delegateStatus.getScalingGroups())
         .extracting(DelegateScalingGroup::getGroupName)
-        .containsOnly("test1", "test2");
+        .containsOnly("test1", "test2", "test3");
 
     for (DelegateScalingGroup group : delegateStatus.getScalingGroups()) {
       if (group.getGroupName().equals("test1")) {
@@ -412,6 +418,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       } else if (group.getGroupName().equals("test2")) {
         assertThat(group.getDelegates()).hasSize(1);
         assertThat(group.getDelegates().get(0).getUuid()).isEqualTo(delegateWithScalingGroup3.getUuid());
+      } else if (group.getGroupName().equals("test3")) {
+        assertThat(group.getDelegates()).hasSize(0);
       }
     }
   }
