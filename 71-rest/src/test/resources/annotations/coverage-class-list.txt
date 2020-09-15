@@ -292,6 +292,8 @@
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsRequestService.java
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsRequestSummary.java
 71-rest/src/main/java/io/harness/execution/export/request/ExportExecutionsUserParams.java
+71-rest/src/main/java/io/harness/manifest/ManifestCollectionPTaskClientParams.java
+71-rest/src/main/java/io/harness/manifest/ManifestCollectionPTaskServiceClient.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviser.java
 71-rest/src/main/java/io/harness/redesign/advisers/HttpResponseCodeSwitchAdviserParameters.java
 71-rest/src/main/java/io/harness/redesign/services/CustomExecutionProvider.java
@@ -679,6 +681,7 @@
 71-rest/src/main/java/software/wings/helpers/ext/gcb/models/Volume.java
 71-rest/src/main/java/software/wings/helpers/ext/gcr/GcrServiceImpl.java
 71-rest/src/main/java/software/wings/helpers/ext/gcs/GcsServiceImpl.java
+71-rest/src/main/java/software/wings/helpers/ext/helm/request/HelmChartCollectionParams.java
 71-rest/src/main/java/software/wings/helpers/ext/jenkins/CustomJenkinsHttpClient.java
 71-rest/src/main/java/software/wings/helpers/ext/jenkins/CustomJenkinsServer.java
 71-rest/src/main/java/software/wings/helpers/ext/jenkins/JenkinsImpl.java
@@ -733,8 +736,10 @@
 71-rest/src/main/java/software/wings/service/impl/WorkflowExecutionUpdate.java
 71-rest/src/main/java/software/wings/service/impl/WorkflowLogContext.java
 71-rest/src/main/java/software/wings/service/impl/WorkflowPreDeploymentValidator.java
-71-rest/src/main/java/software/wings/service/impl/applicationmanifest/ApplicationManifestServiceObserverImpl.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/AppManifestPTaskHelper.java
 71-rest/src/main/java/software/wings/service/impl/applicationmanifest/HelmChartServiceImpl.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/ManifestCollectionUtils.java
+71-rest/src/main/java/software/wings/service/impl/applicationmanifest/ManifestPerpetualTaskManger.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionServiceAsyncImpl.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionServiceImpl.java
 71-rest/src/main/java/software/wings/service/impl/artifact/ArtifactCollectionUtils.java

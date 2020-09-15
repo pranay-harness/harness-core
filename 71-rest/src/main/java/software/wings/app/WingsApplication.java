@@ -85,6 +85,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
@@ -198,6 +199,7 @@ import software.wings.security.encryption.migration.SettingAttributesSecretRefer
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.security.encryption.migration.VaultManuallyEnteredSecretEngineFlagHandler;
 import software.wings.service.impl.AccountServiceImpl;
+import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
@@ -209,6 +211,7 @@ import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.PollingModeDelegateDisconnectedDetector;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
+import software.wings.service.impl.applicationmanifest.ManifestPerpetualTaskManger;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskManager;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskMigrationJob;
 import software.wings.service.impl.artifact.ArtifactStreamSettingAttributePTaskManager;
@@ -221,6 +224,7 @@ import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.DelegateProfileService;
@@ -586,6 +590,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         PerpetualTaskType.DATA_COLLECTION_TASK, injector.getInstance(DataCollectionPerpetualTaskServiceClient.class));
     clientRegistry.registerClient(PerpetualTaskType.CUSTOM_DEPLOYMENT_INSTANCE_SYNC,
         injector.getInstance(CustomDeploymentInstanceSyncClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.MANIFEST_COLLECTION, injector.getInstance(ManifestCollectionPTaskServiceClient.class));
   }
 
   private void registerRemotePerpetualTaskServiceClients(Injector injector) {
@@ -820,6 +826,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     PollingModeDelegateDisconnectedDetector pollingModeDelegateDisconnectedDetector =
         injector.getInstance(Key.get(PollingModeDelegateDisconnectedDetector.class));
     pollingModeDelegateDisconnectedDetector.getSubject().register(perpetualTaskService);
+
+    ApplicationManifestServiceImpl applicationManifestService =
+        (ApplicationManifestServiceImpl) injector.getInstance(Key.get(ApplicationManifestService.class));
+    applicationManifestService.getSubject().register(injector.getInstance(Key.get(ManifestPerpetualTaskManger.class)));
 
     registerSharedObservers(injector);
   }

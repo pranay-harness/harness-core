@@ -14,6 +14,7 @@ import software.wings.yaml.directory.DirectoryNode;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 
 public interface ApplicationManifestService extends OwnedByService, OwnedByEnvironment {
   ApplicationManifest create(ApplicationManifest applicationManifest);
@@ -83,4 +84,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   PageResponse<ApplicationManifest> list(PageRequest<ApplicationManifest> pageRequest);
 
   List<ManifestFile> getOverrideManifestFilesByEnvId(String appId, String envId);
+
+  boolean detachPerpetualTask(@NotNull String perpetualTaskId);
+
+  boolean attachPerpetualTask(String accountId, @NotNull String appManifestId, @NotNull String perpetualTaskId);
 }
