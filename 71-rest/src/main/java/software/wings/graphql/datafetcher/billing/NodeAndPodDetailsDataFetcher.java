@@ -48,6 +48,7 @@ public class NodeAndPodDetailsDataFetcher
   private static final String NAMESPACE = "namespace";
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
+  private static final String NODE_POOL_NAME = "node_pool_name";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -203,6 +204,7 @@ public class NodeAndPodDetailsDataFetcher
       builder.name(entry.getInstanceName())
           .id(entry.getInstanceId())
           .clusterName(entry.getClusterName())
+          .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
@@ -239,6 +241,7 @@ public class NodeAndPodDetailsDataFetcher
           .workload(entry.getMetaData().get(WORKLOAD))
           .clusterName(entry.getClusterName())
           .node(entry.getMetaData().get(PARENT_RESOURCE_ID))
+          .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
