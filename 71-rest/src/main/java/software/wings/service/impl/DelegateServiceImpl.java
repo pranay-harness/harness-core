@@ -492,7 +492,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
-        .delegates(buildInnerDelegates(delegates, perDelegateConnections))
+        .delegates(buildInnerDelegates(delegates, perDelegateConnections, false))
         .build();
   }
 
@@ -510,7 +510,7 @@ public class DelegateServiceImpl implements DelegateService {
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
         .scalingGroups(scalingGroups)
-        .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections))
+        .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
   }
 
@@ -523,8 +523,6 @@ public class DelegateServiceImpl implements DelegateService {
                                          .exists()
                                          .field(DelegateKeys.status)
                                          .hasAnyOf(Arrays.asList(Status.ENABLED, Status.WAITING_FOR_APPROVAL))
-                                         .field(DelegateKeys.uuid)
-                                         .hasAnyOf(activeDelegateConnections.keySet())
                                          .asList();
 
     return activeDelegates.stream()
@@ -534,7 +532,7 @@ public class DelegateServiceImpl implements DelegateService {
         .map(entry
             -> DelegateScalingGroup.builder()
                    .groupName(entry.getKey())
-                   .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections))
+                   .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections, true))
                    .build())
         .collect(toList());
   }
@@ -551,8 +549,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @NotNull
   private List<DelegateStatus.DelegateInner> buildInnerDelegates(List<Delegate> delegates,
-      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> perDelegateConnections) {
+      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> perDelegateConnections,
+      boolean filterInactiveDelegates) {
     return delegates.stream()
+        .filter(delegate -> !filterInactiveDelegates || perDelegateConnections.containsKey(delegate.getUuid()))
         .map(delegate
             -> DelegateStatus.DelegateInner.builder()
                    .uuid(delegate.getUuid())
