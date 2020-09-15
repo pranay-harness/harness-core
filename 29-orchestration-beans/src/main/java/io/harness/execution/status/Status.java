@@ -103,6 +103,7 @@ public enum Status {
       case ERRORED:
       case SUSPENDED:
       case FAILED:
+      case EXPIRED:
         return FINALIZABLE_STATUSES;
       default:
         throw new IllegalStateException("Unexpected value: " + status);
