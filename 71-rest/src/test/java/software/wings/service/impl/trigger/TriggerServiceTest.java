@@ -6,12 +6,14 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -2796,5 +2798,59 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
 
     triggerService.authorize(buildWorkflowWebhookTrigger(), false);
+  }
+
+  private void validateUpdate(Trigger trigger) {
+    assertThatThrownBy(() -> triggerService.update(trigger, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(
+            "Deploy if files has changed, Git Connector, Branch Name, and File Paths cannot be changed on updating Trigger");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateTriggerToWebhookTriggerWithFileContentChanged() {
+    triggerService.save(scheduledConditionTrigger);
+    WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) webhookConditionTrigger.getCondition();
+    webHookTriggerCondition.setCheckFileContentChanged(true);
+    validateUpdate(webhookConditionTrigger);
+
+    webHookTriggerCondition.setCheckFileContentChanged(false);
+    webHookTriggerCondition.setBranchName("master");
+    validateUpdate(webhookConditionTrigger);
+
+    webHookTriggerCondition.setBranchName(null);
+    webHookTriggerCondition.setGitConnectorId(UUID);
+    validateUpdate(webhookConditionTrigger);
+
+    webHookTriggerCondition.setGitConnectorId(null);
+    webHookTriggerCondition.setFilePaths(asList("test.yaml", "test1.yaml"));
+    validateUpdate(webhookConditionTrigger);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateWebhookTriggerWithFileContentChanged() {
+    Trigger webhookTrigger =
+        buildWorkflowWebhookTriggerWithFileContentChanged("testRepo", "master", UUID, PUSH, "index.yaml");
+    WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) webhookTrigger.getCondition();
+    triggerService.save(webhookTrigger);
+
+    webHookTriggerCondition.setCheckFileContentChanged(false);
+    validateUpdate(webhookTrigger);
+
+    webHookTriggerCondition.setCheckFileContentChanged(true);
+    webHookTriggerCondition.setBranchName(null);
+    validateUpdate(webhookTrigger);
+
+    webHookTriggerCondition.setBranchName("master");
+    webHookTriggerCondition.setGitConnectorId("Git-connector");
+    validateUpdate(webhookTrigger);
+
+    webHookTriggerCondition.setGitConnectorId(UUID);
+    webHookTriggerCondition.setFilePaths(asList("test1.yaml", "test2.yaml"));
+    validateUpdate(webhookTrigger);
   }
 }
