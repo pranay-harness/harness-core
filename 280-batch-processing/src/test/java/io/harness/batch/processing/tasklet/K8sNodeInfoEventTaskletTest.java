@@ -74,6 +74,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Mock private BatchMainConfig config;
 
   private static final String NODE_UID = "node_uid";
+  private static final String NODE_POOL_NAME = "manager-pool";
   private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
   private static final long MEMORY_AMOUNT = 1024L * 1024; // 1Mi in bytes
   private static final String NODE_NAME = "node_name";
@@ -211,6 +212,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
     label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    label.put(K8sCCMConstants.GKE_NODE_POOL_KEY, NODE_POOL_NAME);
     Map<String, Quantity> requestQuantity = new HashMap<>();
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "n"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, ""));
@@ -233,6 +235,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
     assertThat(metaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY)).isEqualTo(InstanceCategory.ON_DEMAND.name());
     assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.GCP.name());
+    assertThat(metaData.get(InstanceMetaDataConstants.NODE_POOL_NAME)).isEqualTo(NODE_POOL_NAME);
   }
 
   @Test

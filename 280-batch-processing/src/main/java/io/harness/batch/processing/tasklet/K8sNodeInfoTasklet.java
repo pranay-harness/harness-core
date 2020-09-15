@@ -1,5 +1,8 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.populateNodePoolNameFromLabel;
+import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
@@ -117,6 +120,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
     if (null != labelsMap.get(K8sCCMConstants.COMPUTE_TYPE)) {
       metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, labelsMap.get(K8sCCMConstants.COMPUTE_TYPE));
     }
+    populateNodePoolNameFromLabel(labelsMap, metaData);
 
     Resource allocatableResource = K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap());
     Resource totalResource = allocatableResource;
@@ -142,7 +146,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
         .instanceState(InstanceState.INITIALIZING)
         .resource(totalResource)
         .allocatableResource(allocatableResource)
-        .labels(nodeInfo.getLabelsMap())
+        .labels(encodeDotsInKey(labelsMap))
         .metaData(metaData)
         .build();
   }
